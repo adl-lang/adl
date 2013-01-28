@@ -1,0 +1,16 @@
+module sys.rpc
+{
+
+// Given the one-way asynchronous nature of sink<> communications,
+// for a RPC protocol we need to capture in the request both the
+// parameters and the the response target.
+
+struct rpc<I,O>
+{
+    I params;
+    sink<O> replyTo;
+};
+
+typedef sink<rpcreq<I,O>> rpcsvc<I,O>;
+
+}

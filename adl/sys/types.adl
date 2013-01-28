@@ -1,0 +1,32 @@
+module sys.types
+{
+// Some standard types
+
+typedef string Date;
+typedef string DateTime;
+
+struct pair<T1,T2>
+{
+    T1 v1;
+    T2 v2;
+};
+
+union either<T1,T2>
+{
+    T1 v1;
+    T2 v2;
+};
+
+union maybe<T>
+{
+    void nothing;
+    T just;
+};
+
+union error<T>
+{
+    T value;
+    string error;
+};
+
+};

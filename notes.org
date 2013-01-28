@@ -1,0 +1,7 @@
+* ADL Questions
+
+** What naming conventions should be used for modules, types and field names?
+** Do we support custom parameterised types?
+** Do we suppot partial type constructor application in typedefs?
+** Can structs and unions use type expressions, or are the restricted to named types?
+** actor<> or sync<> ?

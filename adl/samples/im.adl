@@ -1,0 +1,98 @@
+module samples.im
+{
+    import sys.types;
+    import sys.rpc;
+
+    typedef string Nickname;
+
+    struct AuthenticateReq
+    {
+         string username;
+         string password;
+         ClientActor client;
+    };
+
+    // The AuthenticateActor is the initial connection point for clients.
+    // It is published well known address, that clients use to connect to
+    // the service.
+    typedef rpcsvc<AuthenticateReq,error<ServiceActor> AuthenticateActor;
+
+    union Presence
+    {
+         void active;
+         void idle;
+         void absent;
+    };
+
+    union ServiceReq
+    {
+         // Set my nickname
+         rpc<Nickname,error<void>> setNickName;
+
+         // Set my online presence
+         Presence setPresence;
+
+         // Create a new conversation
+         rpc<void,ConversationRefActor> createConversation;
+    };
+
+    // The ServiceActor allows clients to create :
+    //      - change user settings and state
+    //      - create new conversations
+    //      - query the user db
+    typedef sink<ServiceReq> ServiceActor;
+
+    struct SubscriptionReq
+    {
+        Nickname from;
+        ConversationActor toConversation;
+    };
+
+    struct PresenceNotification
+    {
+        Nickname nickname;
+        Presence presences;
+    };
+
+    union ClientMessage
+    {
+         SubscriptionReq subscriptionReq;
+         PresenceNotification presence;
+    };
+
+    // Asynchronous events specific to a client are sent
+    // to a ClientActor
+    typedef sink<ClientMessage> ClientActor;
+
+    union ConversationRReq
+    {
+         rpc<ConversationClientActor,ConversationActor> subscribe;
+         Nickname invite;
+    };
+
+    typedef sink<ConversationRReq> ConversationRefActor;
+
+    struct Posting
+    {
+        datetime datetime;
+        Nickname nickname;
+        string message;                 
+    };
+
+    union ConversationReq
+    {
+        string postMessage;
+        void unsubscribe;
+    };
+
+    typedef sink<ConversationReq> ConversationActor;
+
+    union ConversationMessage
+    {
+        Posting posting;
+        Nickname subscribed;
+        Nickname unsubscribed;
+    };
+
+    typedef sink<ConversationMessage> ConversationClientActor; 
+};
