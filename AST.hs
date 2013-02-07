@@ -1,8 +1,14 @@
 module AST where
 
+import Data.Foldable
+import Data.Traversable
+import Data.Monoid
+import Control.Applicative
+
 import qualified Data.Text as T
 
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 
 data JSONValue = JSONValue
   deriving (Show)
@@ -61,22 +67,35 @@ data Decl t = Decl {
 data Module t = Module {
   m_name :: ModuleName,
   m_imports :: [ModuleName],
-  m_decls :: [Decl t]
+  m_decls :: Map.Map Ident (Decl t)
   }  
   deriving (Show)
 
-newtype NameRefDecl = NameRefDecl (Decl ScopedName)
-newtype ResolvedDecl = ResolvedDecl (Decl ResolvedDecl)
+instance Foldable TypeExpr where
+    foldMap f (TE_Ref t) = f t
+    foldMap f (TE_Apply t ts) = f t `mappend` foldMap (foldMap f) ts
+instance Foldable Field where
+    foldMap f (Field{f_type=t}) = foldMap f t
+instance Foldable Struct where
+    foldMap f Struct{s_fields=fs} = foldMap (foldMap f) fs
+instance Foldable Union where
+    foldMap f Union{u_fields=fs} = foldMap (foldMap f) fs
+instance Foldable Typedef where
+    foldMap f Typedef{t_typeExpr=t} = foldMap f t
+instance Foldable DeclType where
+    foldMap f (Decl_Struct s) = foldMap f s
+    foldMap f (Decl_Union u) = foldMap f u
+    foldMap f (Decl_Typedef t) = foldMap f t
+instance Foldable Decl where
+    foldMap f Decl{d_type=d} = foldMap f d
+instance Foldable Module where
+    foldMap f Module{m_decls=ds} = foldMap (foldMap f) ds
 
-resolveTypes :: Map.Map ScopedName NameRefDecl
-             -> Map.Map ScopedName ResolvedDecl
-resolveTypes map = rmap
+getReferencedModules :: Module ScopedName -> Set.Set ModuleName
+getReferencedModules m = Set.fromList (m_imports m) `Set.union` foldMap ref m
   where
-    rmap = Map.map resolve1 map
-
-    resolve1 :: NameRefDecl -> ResolvedDecl
-    resolve1 (NameRefDecl d) = ResolvedDecl d{d_type=resolve2 (d_type d)}
-
-    resolve2 :: DeclType ScopedName -> DeclType ResolvedDecl
-    resolve2 = undefined
+    ref :: ScopedName -> Set.Set ModuleName
+    ref ScopedName{sn_moduleName=[]} = Set.empty
+    ref sn = Set.singleton (sn_moduleName sn)
+    
 

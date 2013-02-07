@@ -13,4 +13,4 @@ struct rpc<I,O>
 
 typedef sink<rpcreq<I,O>> rpcsvc<I,O>;
 
-}
+};

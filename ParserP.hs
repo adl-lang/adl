@@ -1,4 +1,4 @@
-module Parser where
+module ParserP where
 
 import Data.Char
 
@@ -103,13 +103,16 @@ decl =   (mkStruct <$> struct)
 importP :: P.Parser ModuleName
 importP = token "import" *> moduleName
 
+declMap :: P.Parser (Map.Map Ident (Decl ScopedName))
+declMap = Map.fromList . map (\d -> (d_name d, d)) <$> P.many (decl <* ctoken ';')
+
 moduleP :: P.Parser (Module ScopedName)
 moduleP = do
     token "module"
     name <- moduleName
     ctoken '{'
     imports <- P.many (importP <* ctoken ';')
-    decls <- P.many (decl <* ctoken ';')
+    decls <- declMap
     ctoken '}'
     return (Module name imports decls)
 
@@ -118,7 +121,7 @@ module2 :: P.Parser (Module ScopedName)
 module2 = token "module" *> (
     Module <$> ( moduleName <* ctoken '{' )
            <*> P.many (importP <* ctoken ';')
-           <*> P.many (decl <* ctoken ';')
+           <*> declMap
     ) <* ctoken '}'
 
 moduleFile :: P.Parser (Module ScopedName)

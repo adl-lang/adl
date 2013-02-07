@@ -15,13 +15,24 @@ module samples.im
     // The AuthenticateActor is the initial connection point for clients.
     // It is published well known address, that clients use to connect to
     // the service.
-    typedef rpcsvc<AuthenticateReq,error<ServiceActor> AuthenticateActor;
+    typedef rpcsvc<AuthenticateReq,error<ServiceActor>> AuthenticateActor;
 
     union Presence
     {
          void active;
          void idle;
          void absent;
+    };
+
+    struct QueryUsersReq
+    {
+        string queryString;
+    };
+
+    struct QueryUsersResp
+    {
+        int nlMatches;
+        vector<NickName> users;
     };
 
     union ServiceReq
@@ -34,6 +45,15 @@ module samples.im
 
          // Create a new conversation
          rpc<void,ConversationRefActor> createConversation;
+
+         // Query users
+         rpc<QueryUsersReq,QuerUsersResp> queryUsers;
+
+         // Follow some users
+         vector<NickName> follow;
+
+         // Unfollow some users
+         vector<NickName> unfollow;
     };
 
     // The ServiceActor allows clients to create :
