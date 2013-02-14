@@ -32,7 +32,6 @@ loadModule fpath findm mm = do
   where
     addDeps :: SModule -> SModuleMap -> EIO P.ParseError SModuleMap
     addDeps m mm = do
-       liftIO $ print (getReferencedModules m)
        foldM addDep mm (Set.toList (getReferencedModules m))
 
     addDep :: SModuleMap -> ModuleName -> EIO P.ParseError SModuleMap
@@ -51,32 +50,24 @@ loadModule fpath findm mm = do
             (Left (ioe::IOError)) -> findModule mname fpaths
             (Right em) -> eioFromEither (return em)
 
-type ErrorLog = [T.Text]
-
 data Duplicate = D_StructField Ident Ident
                | D_StructParam Ident Ident
                | D_UnionField Ident Ident
                | D_UnionParam Ident Ident
                | D_Decl Ident
 
-checkDuplicates :: Module t -> ErrorLog
+checkDuplicates :: Module t -> [Duplicate]
 checkDuplicates m = declErrors ++ structErrors ++ unionErrors
   where
-    declErrors = map dupMessage1 $ findDuplicates [ d_name d | d <- Map.elems (m_decls m) ]
+    declErrors = map D_Decl $ findDuplicates [ d_name d | d <- Map.elems (m_decls m) ]
     structErrors = concat [ structErrors1 n s | Decl{d_name=n,d_type=Decl_Struct s} <- Map.elems (m_decls m) ]
     unionErrors = concat [ unionErrors1 n u | Decl{d_name=n,d_type=Decl_Union u} <- Map.elems (m_decls m) ]
 
-    structErrors1 n s = (map (dupMessage2 "struct" "field" n) . findDuplicates) [ f_name f | f <- s_fields s ] ++
-                        (map (dupMessage2 "struct" "type param" n) . findDuplicates) [t | t <- s_typeParams s ]
+    structErrors1 n s = (map (D_StructField n) . findDuplicates) [ f_name f | f <- s_fields s ] ++
+                        (map (D_StructParam n) . findDuplicates) [ t | t <- s_typeParams s ]
 
-    unionErrors1 n u = (map (dupMessage2 "union" "field" n) . findDuplicates) [ f_name f | f <- u_fields u ] ++
-                       (map (dupMessage2 "union" "type param" n) . findDuplicates) [t | t <- u_typeParams u ]
-
-    dupMessage2 s1 s2 n i = T.concat [ mname (m_name m), ", in ", s1, " ", n, " duplicate ", s2, " ", i ]
-    dupMessage1 i = T.concat [ mname (m_name m), ", duplicate definition of ", i ]
-      
-    mname :: ModuleName -> T.Text
-    mname m = "In module " `T.append` moduleName m
+    unionErrors1 n u = (map (D_UnionField n) . findDuplicates) [ f_name f | f <- u_fields u ] ++
+                       (map (D_UnionParam n) . findDuplicates) [t | t <- u_typeParams u ]
 
     findDuplicates :: (Ord a) => [a] -> [a]
     findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) a 1) Map.empty as),

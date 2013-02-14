@@ -1,5 +1,6 @@
 module EIO where
 
+import Data.Either
 import Control.Monad.Trans
 
 newtype EIO e a = EIO { unEIO :: IO (Either e a) }
@@ -24,4 +25,7 @@ eioFromEither mea = do
     case ea of
         (Left e) -> eioError e
         (Right a) -> return a
-    
+
+mapError :: (a->b) -> EIO a c -> EIO b c
+mapError f (EIO e) = EIO $ fmap (either (Left . f) (Right . id)) e
+

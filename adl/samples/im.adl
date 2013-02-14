@@ -13,7 +13,7 @@ module samples.im
     };
 
     // The AuthenticateActor is the initial connection point for clients.
-    // It is published well known address, that clients use to connect to
+    // It is a published well known address, that clients use to connect to
     // the service.
     typedef rpcsvc<AuthenticateReq,error<ServiceActor>> AuthenticateActor;
 
