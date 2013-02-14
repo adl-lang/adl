@@ -8,12 +8,13 @@ import qualified Data.Text as T
 
 import AST
 import Processing
+import EIO
 
-test modulePath searchPaths = do
+verify modulePath searchPaths = do
   em <-unEIO (loadModule modulePath (moduleFinder searchPaths) Map.empty)
   case em of
     (Left perr) -> print perr
-    (Right (m,mm)) -> print (m,mm)
+    (Right (m,mm)) -> doverify m mm
 
 moduleFinder :: [FilePath] -> ModuleName -> [FilePath]
 moduleFinder rootpaths mname = [ joinPath ([path]++names++[name0++".adl"])
@@ -23,10 +24,10 @@ moduleFinder rootpaths mname = [ joinPath ([path]++names++[name0++".adl"])
     name0 = T.unpack (last mname)
       
 usage = do
-    putStrLn "Usage: adl <searchPath> <modulePath"
+    putStrLn "Usage: adl verify <searchPath> <modulePath>"
     
 main = do
     args <- getArgs
     case args of
-      [searchPath,modulePath] -> test modulePath [searchPath]
+      ["verify",searchPath,modulePath] -> verify modulePath [searchPath]
       _ -> usage

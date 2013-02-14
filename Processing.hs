@@ -5,44 +5,24 @@ module Processing where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.Trans.Error
 import Control.Exception
 import Data.List(intercalate)
+import Data.Foldable(foldMap)
+import Data.Monoid
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Text as T
-
 import qualified Text.Parsec as P
+
 import qualified ParserP as P
+
 import AST
+import EIO
 
 type SModule = Module ScopedName
 type SModuleMap = Map.Map ModuleName SModule
 
-newtype EIO e a = EIO { unEIO :: IO (Either e a) }
-
-instance Monad (EIO e) where
-    return a = EIO (return (Right a))
-    (EIO mea) >>= fmb = EIO $ do
-        ea <- mea
-        case ea of
-            (Left e) -> return (Left e)
-            (Right a) -> unEIO (fmb a)
-
-instance MonadIO (EIO e) where
-    liftIO a = EIO (fmap Right a)
-
-eioError :: e -> EIO e a
-eioError e = EIO (return (Left e))
-
-eioFromEither :: IO (Either e a) -> EIO e a
-eioFromEither mea = do
-    ea <- liftIO mea
-    case ea of
-        (Left e) -> eioError e
-        (Right a) -> return a
-    
 loadModule :: FilePath -> (ModuleName -> [FilePath]) -> SModuleMap -> EIO P.ParseError (SModule,SModuleMap)
 loadModule fpath findm mm = do
     m0 <- eioFromEither $ P.fromFile P.moduleFile fpath
@@ -72,7 +52,13 @@ loadModule fpath findm mm = do
             (Right em) -> eioFromEither (return em)
 
 type ErrorLog = [T.Text]
-      
+
+data Duplicate = D_StructField Ident Ident
+               | D_StructParam Ident Ident
+               | D_UnionField Ident Ident
+               | D_UnionParam Ident Ident
+               | D_Decl Ident
+
 checkDuplicates :: Module t -> ErrorLog
 checkDuplicates m = declErrors ++ structErrors ++ unionErrors
   where
@@ -99,18 +85,106 @@ checkDuplicates m = declErrors ++ structErrors ++ unionErrors
 moduleName :: ModuleName -> T.Text
 moduleName m = T.intercalate "." m
 
-newtype NameRefDecl = NameRefDecl (Decl ScopedName)
-newtype ResolvedDecl = ResolvedDecl (Decl ResolvedDecl)
+data ResolvedType = RT_Named (ScopedName,Decl ResolvedType)
+                  | RT_Param Ident
 
-resolveTypes :: Map.Map ScopedName NameRefDecl
-             -> Map.Map ScopedName ResolvedDecl
-resolveTypes map = rmap
+type RModule = Module ResolvedType
+type RModuleMap = Map.Map ModuleName RModule
+
+type TMap = Map.Map ScopedName ResolvedType
+
+-- Naming Scope
+    -- Decls in referenced modules (imported and explicitly referenced)
+    -- Decls in current modules
+    -- Type params for the current object
+
+data NameScope = NameScope {
+    ns_globals :: Map.Map ScopedName (Decl ResolvedType),
+    ns_locals :: Map.Map Ident (Decl ResolvedType),
+    ns_currentModule :: Map.Map Ident (Decl ScopedName),
+    ns_typeParams :: Set.Set Ident
+}
+
+data LookupResult = LR_Defined (Decl ResolvedType)
+                  | LR_New (Decl ScopedName)
+                  | LR_TypeVar
+                  | LR_NotFound
+
+nlookup :: NameScope -> ScopedName -> LookupResult
+nlookup ns sn | sn_moduleName sn == [] = global sn
+              | otherwise = local (sn_name sn)
   where
-    rmap = Map.map resolve1 map
+    global sn = case Map.lookup sn (ns_globals ns) of
+        (Just decl) -> LR_Defined decl
+        Nothing -> LR_NotFound
 
-    resolve1 :: NameRefDecl -> ResolvedDecl
-    resolve1 (NameRefDecl d) = ResolvedDecl d{d_type=resolve2 (d_type d)}
+    local ident = case Map.lookup ident (ns_currentModule ns) of
+        (Just decl) -> LR_New decl
+        Nothing -> case Map.lookup ident (ns_locals ns) of
+            (Just decl) -> LR_Defined decl
+            Nothing -> if Set.member ident (ns_typeParams ns) then LR_TypeVar else LR_NotFound
+             
+type UndefinedNames = [ScopedName]
 
-    resolve2 :: DeclType ScopedName -> DeclType ResolvedDecl
-    resolve2 = undefined
+undefinedNames :: Module ScopedName -> NameScope -> UndefinedNames
+undefinedNames m ns = foldMap checkDecl (m_decls m)
+    where
+      checkDecl :: (Decl ScopedName) -> UndefinedNames
+      checkDecl Decl{d_type=Decl_Struct s} = checkFields (withTypeParams (s_typeParams s)) (s_fields s)
+      checkDecl Decl{d_type=Decl_Union u} = checkFields  (withTypeParams (u_typeParams u)) (u_fields u)
+      checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (withTypeParams (t_typeParams t)) (t_typeExpr t)
 
+      withTypeParams :: [Ident] -> NameScope
+      withTypeParams ids = ns{ns_typeParams=Set.fromList ids}
+
+      checkFields :: NameScope -> [Field ScopedName] -> UndefinedNames
+      checkFields ns fs = foldMap (checkTypeExpr ns.f_type) fs
+
+      checkTypeExpr :: NameScope -> TypeExpr ScopedName -> UndefinedNames
+      checkTypeExpr ns (TE_Ref sn) = checkScopedName ns sn
+      checkTypeExpr ns (TE_Apply t args) = checkScopedName ns t `mappend` foldMap (checkTypeExpr ns) args
+
+      checkScopedName :: NameScope -> ScopedName -> UndefinedNames
+      checkScopedName ns sn = case nlookup ns sn of
+          LR_NotFound -> [sn]
+          _ -> []
+
+-- Resolve all type references in a module. This assumes that all types
+-- are resolvable, ie there are no undefined Types
+resolveModule :: Module ScopedName -> NameScope -> Module ResolvedType
+resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
+  where
+    ns' = ns{ns_currentModule=m_decls m}
+
+    resolveDecl :: NameScope -> Decl ScopedName -> Decl ResolvedType
+
+    resolveDecl ns d@Decl{d_type=Decl_Struct s} = d{d_type=Decl_Struct (s{s_fields=fields'})}
+      where
+        fields' = resolveFields (withTypeParams ns (s_typeParams s)) (s_fields s)
+
+    resolveDecl ns d@Decl{d_type=Decl_Union u} = d{d_type=Decl_Union (u{u_fields=fields'})}
+      where
+        fields' = resolveFields (withTypeParams ns (u_typeParams u)) (u_fields u)
+                                                
+    resolveDecl ns d@Decl{d_type=Decl_Typedef t} = d{d_type=Decl_Typedef (t{t_typeExpr=expr'})}
+      where
+        expr' = resolveTypeExpr (withTypeParams ns (t_typeParams t)) (t_typeExpr t)
+
+    resolveFields :: NameScope -> [Field ScopedName] -> [Field ResolvedType]
+    resolveFields ns fields = [f{f_type=resolveTypeExpr ns (f_type f)} | f <- fields]
+
+    resolveTypeExpr :: NameScope -> TypeExpr ScopedName -> TypeExpr ResolvedType
+    resolveTypeExpr ns (TE_Ref sn) = TE_Ref (resolveName ns sn)
+    resolveTypeExpr ns (TE_Apply t args) = TE_Apply (resolveName ns t) (map (resolveTypeExpr ns) args)
+
+    resolveName :: NameScope -> ScopedName -> ResolvedType
+    resolveName ns sn = case nlookup ns sn of
+        LR_Defined decl -> RT_Named (sn,decl)
+        LR_New decl -> let decl1 = resolveDecl ns1 decl
+                           ns1 = ns{ns_locals=Map.insert (sn_name sn) decl1 (ns_locals ns)}
+                       in RT_Named (sn,decl1)
+        LR_TypeVar -> RT_Param (sn_name sn)
+        LR_NotFound -> error ("PRECONDITION FAIL: unable to resolve type for " ++ show sn)
+
+    withTypeParams :: NameScope -> [Ident] -> NameScope
+    withTypeParams ns ids = ns{ns_typeParams=Set.fromList ids}

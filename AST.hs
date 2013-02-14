@@ -24,7 +24,7 @@ type ModuleName = [Ident]
 data ScopedName = ScopedName {
   sn_moduleName :: ModuleName,
   sn_name :: Ident
-  } deriving (Show)
+  } deriving (Show, Eq, Ord)
 
 data Field t = Field {
   f_name :: Ident,
