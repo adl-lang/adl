@@ -2,6 +2,8 @@
 
 module Processing where
 
+import Debug.Trace
+
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
@@ -19,6 +21,7 @@ import qualified ParserP as P
 
 import AST
 import EIO
+import Format
 
 type SModule = Module ScopedName
 type SModuleMap = Map.Map ModuleName SModule
@@ -43,7 +46,7 @@ loadModule fpath findm mm = do
           addDeps m mm'
 
     findModule :: ModuleName -> [FilePath] -> EIO P.ParseError SModule
-    findModule mname [] = liftIO $ ioError $ userError $ "Unable to find module '" ++ T.unpack (moduleName mname) ++ "'"
+    findModule mname [] = liftIO $ ioError $ userError $ "Unable to find module '" ++ format mname ++ "'"
     findModule mname (fpath:fpaths) = do
         em <-  liftIO $ try (P.fromFile P.moduleFile fpath)
         case em of
@@ -73,11 +76,10 @@ checkDuplicates m = declErrors ++ structErrors ++ unionErrors
     findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) a 1) Map.empty as),
                           n > 1 ]
 
-moduleName :: ModuleName -> T.Text
-moduleName m = T.intercalate "." m
-
 data ResolvedType = RT_Named (ScopedName,Decl ResolvedType)
                   | RT_Param Ident
+                  | RT_Primitive PrimitiveType
+    deriving (Show)                    
 
 type RModule = Module ResolvedType
 type RModuleMap = Map.Map ModuleName RModule
@@ -94,39 +96,62 @@ data NameScope = NameScope {
     ns_locals :: Map.Map Ident (Decl ResolvedType),
     ns_currentModule :: Map.Map Ident (Decl ScopedName),
     ns_typeParams :: Set.Set Ident
-}
+} deriving Show
+
+data PrimitiveType = P_Void
+                   | P_Int
+                   | P_Double
+                   | P_ByteVector
+                   | P_Vector
+                   | P_Sink
+  deriving (Show)                     
+
+primitiveTypes :: Map.Map Ident PrimitiveType
+primitiveTypes = Map.fromList
+  [ ("void",P_Int)
+  , ("int",P_Int)
+  , ("double",P_Double)
+  , ("bytes",P_ByteVector)
+  , ("vector",P_Vector)
+  , ("sink",P_Sink)
+  ]
 
 data LookupResult = LR_Defined (Decl ResolvedType)
                   | LR_New (Decl ScopedName)
+                  | LR_Primitive PrimitiveType
                   | LR_TypeVar
                   | LR_NotFound
 
 nlookup :: NameScope -> ScopedName -> LookupResult
-nlookup ns sn | sn_moduleName sn == [] = global sn
-              | otherwise = local (sn_name sn)
+nlookup ns sn | unModuleName (sn_moduleName sn) == [] = local (sn_name sn)
+              | otherwise = global sn
   where
     global sn = case Map.lookup sn (ns_globals ns) of
         (Just decl) -> LR_Defined decl
         Nothing -> LR_NotFound
 
-    local ident = case Map.lookup ident (ns_currentModule ns) of
-        (Just decl) -> LR_New decl
-        Nothing -> case Map.lookup ident (ns_locals ns) of
-            (Just decl) -> LR_Defined decl
-            Nothing -> if Set.member ident (ns_typeParams ns) then LR_TypeVar else LR_NotFound
+    local ident = case Map.lookup ident primitiveTypes of
+        (Just pt) -> LR_Primitive pt
+        Nothing -> case Map.lookup ident (ns_currentModule ns) of
+            (Just decl) -> LR_New decl
+            Nothing -> case Map.lookup ident (ns_locals ns) of
+                (Just decl) -> LR_Defined decl
+                Nothing -> if Set.member ident (ns_typeParams ns) then LR_TypeVar else LR_NotFound
              
 type UndefinedNames = [ScopedName]
 
 undefinedNames :: Module ScopedName -> NameScope -> UndefinedNames
 undefinedNames m ns = foldMap checkDecl (m_decls m)
     where
+      ns' = namescopeForModule m ns
+
       checkDecl :: (Decl ScopedName) -> UndefinedNames
       checkDecl Decl{d_type=Decl_Struct s} = checkFields (withTypeParams (s_typeParams s)) (s_fields s)
       checkDecl Decl{d_type=Decl_Union u} = checkFields  (withTypeParams (u_typeParams u)) (u_fields u)
       checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (withTypeParams (t_typeParams t)) (t_typeExpr t)
 
       withTypeParams :: [Ident] -> NameScope
-      withTypeParams ids = ns{ns_typeParams=Set.fromList ids}
+      withTypeParams ids = ns'{ns_typeParams=Set.fromList ids}
 
       checkFields :: NameScope -> [Field ScopedName] -> UndefinedNames
       checkFields ns fs = foldMap (checkTypeExpr ns.f_type) fs
@@ -141,11 +166,11 @@ undefinedNames m ns = foldMap checkDecl (m_decls m)
           _ -> []
 
 -- Resolve all type references in a module. This assumes that all types
--- are resolvable, ie there are no undefined Types
+-- are resolvable, ie there are no undefined names
 resolveModule :: Module ScopedName -> NameScope -> Module ResolvedType
 resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
   where
-    ns' = ns{ns_currentModule=m_decls m}
+    ns' = namescopeForModule m ns
 
     resolveDecl :: NameScope -> Decl ScopedName -> Decl ResolvedType
 
@@ -175,7 +200,19 @@ resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
                            ns1 = ns{ns_locals=Map.insert (sn_name sn) decl1 (ns_locals ns)}
                        in RT_Named (sn,decl1)
         LR_TypeVar -> RT_Param (sn_name sn)
+        LR_Primitive pt -> RT_Primitive pt
         LR_NotFound -> error ("PRECONDITION FAIL: unable to resolve type for " ++ show sn)
 
     withTypeParams :: NameScope -> [Ident] -> NameScope
     withTypeParams ns ids = ns{ns_typeParams=Set.fromList ids}
+
+namescopeForModule :: Module ScopedName -> NameScope -> NameScope
+namescopeForModule m ns = ns
+    { ns_locals = Map.fromList [ (sn_name sn,d)
+                               | (sn,d)<- Map.toList (ns_globals ns),
+                                 Set.member (sn_moduleName sn) imports  ]
+    , ns_currentModule=m_decls m
+    }
+  where
+    imports = Set.fromList (m_imports m)
+

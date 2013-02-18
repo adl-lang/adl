@@ -32,13 +32,13 @@ module samples.im
     struct QueryUsersResp
     {
         int nlMatches;
-        vector<NickName> users;
+        vector<Nickname> users;
     };
 
     union ServiceReq
     {
          // Set my nickname
-         rpc<Nickname,error<void>> setNickName;
+         rpc<Nickname,error<void>> setNickname;
 
          // Set my online presence
          Presence setPresence;
@@ -47,13 +47,13 @@ module samples.im
          rpc<void,ConversationRefActor> createConversation;
 
          // Query users
-         rpc<QueryUsersReq,QuerUsersResp> queryUsers;
+         rpc<QueryUsersReq,QueryUsersResp> queryUsers;
 
          // Follow some users
-         vector<NickName> follow;
+         vector<Nickname> follow;
 
          // Unfollow some users
-         vector<NickName> unfollow;
+         vector<Nickname> unfollow;
     };
 
     // The ServiceActor allows clients to create :

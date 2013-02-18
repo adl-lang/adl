@@ -2,8 +2,14 @@ module sys.types
 {
 // Some standard types
 
-typedef string Date;
-typedef string DateTime;
+// A UTF-8 encoded string
+typedef bytes string;
+
+// An ISO-8601 date in ASCII 
+typedef bytes date;
+
+// An ISO-8601 datetime in ASSCI
+typedef bytes datetime;
 
 struct pair<T1,T2>
 {

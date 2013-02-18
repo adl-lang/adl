@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module AST where
 
 import Data.Foldable
@@ -10,6 +12,8 @@ import qualified Data.Text as T
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
+import Format
+
 data JSONValue = JSONValue
   deriving (Show)
            
@@ -19,12 +23,20 @@ type Annotations = Map.Map String String
 
 type Ident = T.Text
 
-type ModuleName = [Ident]
+newtype ModuleName = ModuleName { unModuleName :: [Ident] }
+  deriving (Eq,Ord,Show)
+
+instance Format ModuleName where
+  formatText (ModuleName m) = T.intercalate "." m
 
 data ScopedName = ScopedName {
   sn_moduleName :: ModuleName,
   sn_name :: Ident
   } deriving (Show, Eq, Ord)
+
+instance Format ScopedName where
+  formatText sn = T.intercalate "." ((unModuleName (sn_moduleName sn) ++ [sn_name sn]))
+  
 
 data Field t = Field {
   f_name :: Ident,
@@ -95,7 +107,7 @@ getReferencedModules :: Module ScopedName -> Set.Set ModuleName
 getReferencedModules m = Set.fromList (m_imports m) `Set.union` foldMap ref m
   where
     ref :: ScopedName -> Set.Set ModuleName
-    ref ScopedName{sn_moduleName=[]} = Set.empty
+    ref ScopedName{sn_moduleName=ModuleName []} = Set.empty
     ref sn = Set.singleton (sn_moduleName sn)
     
 

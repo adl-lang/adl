@@ -39,10 +39,10 @@ name :: P.Parser Ident
 name = ident0 <* whiteSpace
 
 moduleName :: P.Parser ModuleName
-moduleName = P.sepBy1 ident0 (P.char '.') <* whiteSpace
+moduleName = ModuleName <$> P.sepBy1 ident0 (P.char '.') <* whiteSpace
 
 scopedName :: P.Parser ScopedName
-scopedName = (\is -> ScopedName (init is) (last is))  <$> moduleName
+scopedName = (\(ModuleName is) -> ScopedName (ModuleName (init is)) (last is))  <$> moduleName
 
 angleList :: P.Parser a -> P.Parser [a]
 angleList p = P.between (ctoken '<') (ctoken '>') (P.sepBy p (ctoken ','))
