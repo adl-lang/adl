@@ -20,6 +20,7 @@ import qualified Text.Parsec as P
 import qualified ParserP as P
 
 import AST
+import Primitive
 import EIO
 import Format
 
@@ -79,7 +80,12 @@ checkDuplicates m = declErrors ++ structErrors ++ unionErrors
 data ResolvedType = RT_Named (ScopedName,Decl ResolvedType)
                   | RT_Param Ident
                   | RT_Primitive PrimitiveType
-    deriving (Show)                    
+    deriving (Show)
+
+instance Format ResolvedType where
+    format (RT_Named (sn,_)) = format sn
+    format (RT_Param i) = format i
+    format (RT_Primitive pt) = format pt
 
 type RModule = Module ResolvedType
 type RModuleMap = Map.Map ModuleName RModule
@@ -98,24 +104,6 @@ data NameScope = NameScope {
     ns_typeParams :: Set.Set Ident
 } deriving Show
 
-data PrimitiveType = P_Void
-                   | P_Int
-                   | P_Double
-                   | P_ByteVector
-                   | P_Vector
-                   | P_Sink
-  deriving (Show)                     
-
-primitiveTypes :: Map.Map Ident PrimitiveType
-primitiveTypes = Map.fromList
-  [ ("void",P_Int)
-  , ("int",P_Int)
-  , ("double",P_Double)
-  , ("bytes",P_ByteVector)
-  , ("vector",P_Vector)
-  , ("sink",P_Sink)
-  ]
-
 data LookupResult = LR_Defined (Decl ResolvedType)
                   | LR_New (Decl ScopedName)
                   | LR_Primitive PrimitiveType
@@ -130,7 +118,7 @@ nlookup ns sn | unModuleName (sn_moduleName sn) == [] = local (sn_name sn)
         (Just decl) -> LR_Defined decl
         Nothing -> LR_NotFound
 
-    local ident = case Map.lookup ident primitiveTypes of
+    local ident = case ptFromText ident of
         (Just pt) -> LR_Primitive pt
         Nothing -> case Map.lookup ident (ns_currentModule ns) of
             (Just decl) -> LR_New decl
@@ -205,6 +193,36 @@ resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
 
     withTypeParams :: NameScope -> [Ident] -> NameScope
     withTypeParams ns ids = ns{ns_typeParams=Set.fromList ids}
+
+-- | Check that the all applications of type constructors are passed the
+-- correct number of parameters
+type TypeCtorAppErrors = [ (ResolvedType,Int,Int) ]
+checkTypeCtorApps :: RModule -> TypeCtorAppErrors
+checkTypeCtorApps m = foldMap checkDecl (m_decls m)
+  where
+      checkDecl :: (Decl ResolvedType) -> TypeCtorAppErrors
+      checkDecl Decl{d_type=Decl_Struct s} = checkFields (s_fields s)
+      checkDecl Decl{d_type=Decl_Union u} = checkFields (u_fields u)
+      checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (t_typeExpr t)
+
+      checkFields :: [Field ResolvedType] -> TypeCtorAppErrors
+      checkFields fs = foldMap (checkTypeExpr . f_type) fs
+
+      checkTypeExpr :: TypeExpr ResolvedType -> TypeCtorAppErrors
+      checkTypeExpr (TE_Apply t exprs) = checkTypeCtorApp t exprs
+      checkTypeExpr (TE_Ref sn) = mempty
+
+      checkTypeCtorApp :: ResolvedType -> [TypeExpr ResolvedType] -> TypeCtorAppErrors
+      checkTypeCtorApp (RT_Param _) _ = mempty -- can't check this
+      checkTypeCtorApp rt@(RT_Primitive pt) expr = check0 rt (ptArgCount pt) (length expr)
+      checkTypeCtorApp rt@(RT_Named (_,decl)) expr = check0 rt (declTypeArgCount (d_type decl)) (length expr)
+
+      check0 rt expectedN actualN | expectedN == actualN = mempty
+                                  | otherwise = [(rt,expectedN,actualN)]
+
+      declTypeArgCount (Decl_Struct s) = length (s_typeParams s)
+      declTypeArgCount (Decl_Union u) = length (u_typeParams u)
+      declTypeArgCount (Decl_Typedef t) = length (t_typeParams t)
 
 namescopeForModule :: Module ScopedName -> NameScope -> NameScope
 namescopeForModule m ns = ns

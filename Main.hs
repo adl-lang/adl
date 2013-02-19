@@ -54,12 +54,23 @@ verify modulePath searchPaths = do
     resolve1 :: SModule -> NameScope -> EIO String (NameScope,RModule)
     resolve1 m ns = do
         liftIO $ putStrLn ("processing " ++ format (m_name m) ++ "...")
-        case undefinedNames m ns of
-            [] -> let rm = resolveModule m ns
-                      mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (m_decls rm)
-                      ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
-                  in return (ns', rm)
-            udefs -> eioError (moduleErrorMessage m (map (\s -> "undefined type " ++ format s) udefs))
+        checkUndefined1 m ns
+        let rm = resolveModule m ns
+            mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (m_decls rm)
+            ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
+        checkTypeCtorApps1 rm
+        return (ns', rm)
+
+    checkUndefined1 :: SModule -> NameScope -> EIO String ()
+    checkUndefined1 m ns = case undefinedNames m ns of
+        [] -> return ()
+        udefs -> eioError (moduleErrorMessage m (map (\s -> "undefined type " ++ format s) udefs))
+
+    checkTypeCtorApps1 :: RModule -> EIO String ()
+    checkTypeCtorApps1 m = case checkTypeCtorApps m of
+        [] -> return ()      
+        errs -> eioError (moduleErrorMessage m (map (\(s,n1,n2) -> "type constructor " ++ format s ++ " expected " ++ show n1 ++ " argument(s), but was passed " ++ show n2) errs))
+        
 
     moduleErrorMessage m ss = "In module " ++ format (m_name m) ++ ":\n  " ++
                               intercalate "\n  " ss
