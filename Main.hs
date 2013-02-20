@@ -34,16 +34,9 @@ verify modulePath searchPaths = do
     checkModuleForDuplicates :: SModule -> EIO String ()
     checkModuleForDuplicates m = case dups of
         [] -> return ()
-        _ -> eioError (dupMessage dups)
+        _ -> eioError (moduleErrorMessage m (map format dups))
       where
         dups = checkDuplicates m
-        dupMessage dups = moduleErrorMessage m (map dupMessage0 dups)
-        dupMessage0 (D_Decl n) = ds ++ T.unpack n
-        dupMessage0 (D_StructField s f) = ds ++ "field " ++ T.unpack f ++ " in struct " ++ T.unpack s
-        dupMessage0 (D_StructParam s p) = ds ++ "type parameter " ++ T.unpack p ++ " in struct " ++ T.unpack s
-        dupMessage0 (D_UnionField u f) = ds ++ "field " ++ T.unpack f ++ " in union " ++ T.unpack u
-        dupMessage0 (D_UnionParam u p) = ds ++ "type parameter " ++ T.unpack p ++ " in union " ++ T.unpack u
-        ds = "duplicate definition of "
 
     resolveN :: [SModule] -> NameScope -> EIO String NameScope
     resolveN [] ns = return ns
@@ -64,13 +57,12 @@ verify modulePath searchPaths = do
     checkUndefined1 :: SModule -> NameScope -> EIO String ()
     checkUndefined1 m ns = case undefinedNames m ns of
         [] -> return ()
-        udefs -> eioError (moduleErrorMessage m (map (\s -> "undefined type " ++ format s) udefs))
+        udefs -> eioError (moduleErrorMessage m (map format udefs))
 
     checkTypeCtorApps1 :: RModule -> EIO String ()
     checkTypeCtorApps1 m = case checkTypeCtorApps m of
         [] -> return ()      
-        errs -> eioError (moduleErrorMessage m (map (\(s,n1,n2) -> "type constructor " ++ format s ++ " expected " ++ show n1 ++ " argument(s), but was passed " ++ show n2) errs))
-        
+        errs -> eioError (moduleErrorMessage m (map format errs))
 
     moduleErrorMessage m ss = "In module " ++ format (m_name m) ++ ":\n  " ++
                               intercalate "\n  " ss

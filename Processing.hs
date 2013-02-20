@@ -60,6 +60,16 @@ data Duplicate = D_StructField Ident Ident
                | D_UnionParam Ident Ident
                | D_Decl Ident
 
+instance Format Duplicate where
+  format d = case d of
+    (D_Decl n) -> ds ++ T.unpack n
+    (D_StructField s f) -> ds ++ "field " ++ T.unpack f ++ " in struct " ++ T.unpack s
+    (D_StructParam s p) -> ds ++ "type parameter " ++ T.unpack p ++ " in struct " ++ T.unpack s
+    (D_UnionField u f) -> ds ++ "field " ++ T.unpack f ++ " in union " ++ T.unpack u
+    (D_UnionParam u p) -> ds ++ "type parameter " ++ T.unpack p ++ " in union " ++ T.unpack u
+    where
+      ds = "duplicate definition of "
+
 checkDuplicates :: Module t -> [Duplicate]
 checkDuplicates m = declErrors ++ structErrors ++ unionErrors
   where
@@ -125,15 +135,18 @@ nlookup ns sn | unModuleName (sn_moduleName sn) == [] = local (sn_name sn)
             Nothing -> case Map.lookup ident (ns_locals ns) of
                 (Just decl) -> LR_Defined decl
                 Nothing -> if Set.member ident (ns_typeParams ns) then LR_TypeVar else LR_NotFound
-             
-type UndefinedNames = [ScopedName]
 
-undefinedNames :: Module ScopedName -> NameScope -> UndefinedNames
+newtype UndefinedName = UndefinedName ScopedName
+
+instance Format UndefinedName where
+  formatText (UndefinedName sn) = T.intercalate " " ["undefined type", formatText sn]
+
+undefinedNames :: Module ScopedName -> NameScope -> [UndefinedName]
 undefinedNames m ns = foldMap checkDecl (m_decls m)
     where
       ns' = namescopeForModule m ns
 
-      checkDecl :: (Decl ScopedName) -> UndefinedNames
+      checkDecl :: (Decl ScopedName) -> [UndefinedName]
       checkDecl Decl{d_type=Decl_Struct s} = checkFields (withTypeParams (s_typeParams s)) (s_fields s)
       checkDecl Decl{d_type=Decl_Union u} = checkFields  (withTypeParams (u_typeParams u)) (u_fields u)
       checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (withTypeParams (t_typeParams t)) (t_typeExpr t)
@@ -141,16 +154,16 @@ undefinedNames m ns = foldMap checkDecl (m_decls m)
       withTypeParams :: [Ident] -> NameScope
       withTypeParams ids = ns'{ns_typeParams=Set.fromList ids}
 
-      checkFields :: NameScope -> [Field ScopedName] -> UndefinedNames
+      checkFields :: NameScope -> [Field ScopedName] -> [UndefinedName]
       checkFields ns fs = foldMap (checkTypeExpr ns.f_type) fs
 
-      checkTypeExpr :: NameScope -> TypeExpr ScopedName -> UndefinedNames
+      checkTypeExpr :: NameScope -> TypeExpr ScopedName -> [UndefinedName]
       checkTypeExpr ns (TE_Ref sn) = checkScopedName ns sn
       checkTypeExpr ns (TE_Apply t args) = checkScopedName ns t `mappend` foldMap (checkTypeExpr ns) args
 
-      checkScopedName :: NameScope -> ScopedName -> UndefinedNames
+      checkScopedName :: NameScope -> ScopedName -> [UndefinedName]
       checkScopedName ns sn = case nlookup ns sn of
-          LR_NotFound -> [sn]
+          LR_NotFound -> [UndefinedName sn]
           _ -> []
 
 -- Resolve all type references in a module. This assumes that all types
@@ -196,29 +209,36 @@ resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
 
 -- | Check that the all applications of type constructors are passed the
 -- correct number of parameters
-type TypeCtorAppErrors = [ (ResolvedType,Int,Int) ]
-checkTypeCtorApps :: RModule -> TypeCtorAppErrors
+newtype TypeCtorAppError = TypeCtorAppError (ResolvedType,Int,Int)
+
+instance Format TypeCtorAppError where
+  formatText (TypeCtorAppError (s,0,a)) =
+    T.intercalate " " ["type",formatText s,"doesn't take arguments"]
+  formatText (TypeCtorAppError (s,e,a)) =
+    T.intercalate " " ["type constructor",formatText s,"expected" ,fshow e,"arguments, but was passed",fshow a]
+
+checkTypeCtorApps :: RModule -> [TypeCtorAppError]
 checkTypeCtorApps m = foldMap checkDecl (m_decls m)
   where
-      checkDecl :: (Decl ResolvedType) -> TypeCtorAppErrors
+      checkDecl :: (Decl ResolvedType) -> [TypeCtorAppError]
       checkDecl Decl{d_type=Decl_Struct s} = checkFields (s_fields s)
       checkDecl Decl{d_type=Decl_Union u} = checkFields (u_fields u)
       checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (t_typeExpr t)
 
-      checkFields :: [Field ResolvedType] -> TypeCtorAppErrors
+      checkFields :: [Field ResolvedType] -> [TypeCtorAppError]
       checkFields fs = foldMap (checkTypeExpr . f_type) fs
 
-      checkTypeExpr :: TypeExpr ResolvedType -> TypeCtorAppErrors
-      checkTypeExpr (TE_Apply t exprs) = checkTypeCtorApp t exprs
-      checkTypeExpr (TE_Ref sn) = mempty
+      checkTypeExpr :: TypeExpr ResolvedType -> [TypeCtorAppError]
+      checkTypeExpr (TE_Apply t exprs) = checkTypeCtorApp t exprs `mappend` foldMap checkTypeExpr exprs
+      checkTypeExpr (TE_Ref t) = checkTypeCtorApp t []
 
-      checkTypeCtorApp :: ResolvedType -> [TypeExpr ResolvedType] -> TypeCtorAppErrors
+      checkTypeCtorApp :: ResolvedType -> [TypeExpr ResolvedType] -> [TypeCtorAppError]
       checkTypeCtorApp (RT_Param _) _ = mempty -- can't check this
       checkTypeCtorApp rt@(RT_Primitive pt) expr = check0 rt (ptArgCount pt) (length expr)
       checkTypeCtorApp rt@(RT_Named (_,decl)) expr = check0 rt (declTypeArgCount (d_type decl)) (length expr)
 
       check0 rt expectedN actualN | expectedN == actualN = mempty
-                                  | otherwise = [(rt,expectedN,actualN)]
+                                  | otherwise = [TypeCtorAppError (rt,expectedN,actualN)]
 
       declTypeArgCount (Decl_Struct s) = length (s_typeParams s)
       declTypeArgCount (Decl_Union u) = length (u_typeParams u)
