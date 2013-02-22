@@ -1,20 +1,12 @@
 module ADL.Core(
   module ADL.Core.DefaultV,
-  AToJSON(..),
-  AFromJSON(..),
+  module ADL.Core.JSON,
   Sink(..)
   )
   where
 
 import ADL.Core.DefaultV
-
-import qualified Data.Aeson as JSON
-
-class AToJSON a where
-  atoJSON :: a -> JSON.Value
-
-class AFromJSON a where
-  afromJSON :: JSON.Value -> Maybe a
+import ADL.Core.JSON
 
 data Sink a = NullSink
   deriving (Ord,Eq,Show)

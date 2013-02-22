@@ -254,18 +254,18 @@ writeModuleFile hmf fpf m = do
   liftIO $ do
     createDirectoryIfMissing True (takeDirectory fpath)
     T.writeFile fpath t
+    putStrLn ("writing " ++ fpath ++ "...")
     
 
-moduleMapper :: ModuleName -> HaskellModule
-moduleMapper mn = HaskellModule (T.intercalate "." (prefix ++path) )
+moduleMapper :: String -> ModuleName -> HaskellModule
+moduleMapper sprefix mn = HaskellModule (T.intercalate "." (prefix ++path) )
   where
-    prefix = ["ADL","Compiled"]
+    prefix = T.splitOn "." (T.pack sprefix)
     path = map upper1 (unModuleName mn)
 
-fileMapper :: HaskellModule -> FilePath
-fileMapper (HaskellModule t) = addExtension (joinPath (root:ps)) "hs"
+fileMapper :: FilePath -> HaskellModule -> FilePath
+fileMapper root (HaskellModule t) = addExtension (joinPath (root:ps)) "hs"
   where
-    root = "/tmp/adltest"
     ps = map T.unpack (T.splitOn "." t)
       
 
