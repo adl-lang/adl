@@ -107,14 +107,18 @@ type TMap = Map.Map ScopedName ResolvedType
     -- Decls in current modules
     -- Type params for the current object
 
+data LocalDecl = LocalDecl (Decl ResolvedType)
+               | ImportedDecl ModuleName (Decl ResolvedType)
+  deriving Show            
+
 data NameScope = NameScope {
     ns_globals :: Map.Map ScopedName (Decl ResolvedType),
-    ns_locals :: Map.Map Ident (Decl ResolvedType),
+    ns_locals :: Map.Map Ident LocalDecl,
     ns_currentModule :: Map.Map Ident (Decl ScopedName),
     ns_typeParams :: Set.Set Ident
 } deriving Show
 
-data LookupResult = LR_Defined (Decl ResolvedType)
+data LookupResult = LR_Defined LocalDecl
                   | LR_New (Decl ScopedName)
                   | LR_Primitive PrimitiveType
                   | LR_TypeVar
@@ -125,7 +129,7 @@ nlookup ns sn | unModuleName (sn_moduleName sn) == [] = local (sn_name sn)
               | otherwise = global sn
   where
     global sn = case Map.lookup sn (ns_globals ns) of
-        (Just decl) -> LR_Defined decl
+        (Just decl) -> LR_Defined (ImportedDecl (sn_moduleName sn) decl)
         Nothing -> LR_NotFound
 
     local ident = case ptFromText ident of
@@ -133,7 +137,7 @@ nlookup ns sn | unModuleName (sn_moduleName sn) == [] = local (sn_name sn)
         Nothing -> case Map.lookup ident (ns_currentModule ns) of
             (Just decl) -> LR_New decl
             Nothing -> case Map.lookup ident (ns_locals ns) of
-                (Just decl) -> LR_Defined decl
+                (Just localDecl) -> LR_Defined localDecl
                 Nothing -> if Set.member ident (ns_typeParams ns) then LR_TypeVar else LR_NotFound
 
 newtype UndefinedName = UndefinedName ScopedName
@@ -196,9 +200,10 @@ resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
 
     resolveName :: NameScope -> ScopedName -> ResolvedType
     resolveName ns sn = case nlookup ns sn of
-        LR_Defined decl -> RT_Named (sn,decl)
+        LR_Defined (LocalDecl decl) -> RT_Named (sn,decl)
+        LR_Defined (ImportedDecl mn decl) -> RT_Named (sn{sn_moduleName=mn},decl)
         LR_New decl -> let decl1 = resolveDecl ns1 decl
-                           ns1 = ns{ns_locals=Map.insert (sn_name sn) decl1 (ns_locals ns)}
+                           ns1 = ns{ns_locals=Map.insert (sn_name sn) (LocalDecl decl1) (ns_locals ns)}
                        in RT_Named (sn,decl1)
         LR_TypeVar -> RT_Param (sn_name sn)
         LR_Primitive pt -> RT_Primitive pt
@@ -246,7 +251,7 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
 
 namescopeForModule :: Module ScopedName -> NameScope -> NameScope
 namescopeForModule m ns = ns
-    { ns_locals = Map.fromList [ (sn_name sn,d)
+    { ns_locals = Map.fromList [ (sn_name sn,ImportedDecl (sn_moduleName sn) d)
                                | (sn,d)<- Map.toList (ns_globals ns),
                                  Set.member (sn_moduleName sn) imports  ]
     , ns_currentModule=m_decls m

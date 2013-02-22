@@ -139,7 +139,7 @@ hTypeExpr1 (RT_Named (sn,d)) = do
       ModuleName [] -> return (hTypeName (sn_name sn))
       mn -> do
         hm <- importADLModule mn
-        return (T.intercalate "." [formatText hm,sn_name sn])
+        return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
         
 hTypeExpr1 (RT_Param i) = return (hTypeParamName i)
 hTypeExpr1 (RT_Primitive pt) = hPrimitiveType pt
