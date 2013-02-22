@@ -15,7 +15,7 @@ import EIO
 import Format
 import AST
 import Processing
-import Backends.Haskell
+import qualified Backends.Haskell as H
 
 type EIOT a = EIO T.Text a
 
@@ -101,7 +101,7 @@ verify searchPaths modulePath =
 
 haskell searchPaths modulePath = runEIO $ do
     rm <- loadAndCheckModule (moduleFinder searchPaths) modulePath
-    generateHaskell rm
+    H.writeModuleFile H.moduleMapper H.fileMapper rm
 
 usage = do
     putStrLn "Usage: adl verify <searchPath> <modulePath>"
