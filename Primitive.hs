@@ -15,6 +15,7 @@ data PrimitiveType = P_Void
                    | P_Int
                    | P_Double
                    | P_ByteVector
+                   | P_String
                    | P_Vector
                    | P_Sink
   deriving (Eq,Ord,Show)
@@ -33,6 +34,7 @@ primitiveDetails =
   , PrimitiveDetails P_Int "int" 0
   , PrimitiveDetails P_Double "double" 0
   , PrimitiveDetails P_ByteVector "bytes" 0
+  , PrimitiveDetails P_String "string" 0
   , PrimitiveDetails P_Vector "vector" 1
   , PrimitiveDetails P_Sink "sink" 1
   ]
