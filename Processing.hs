@@ -77,14 +77,14 @@ checkDuplicates m = declErrors ++ structErrors ++ unionErrors
     structErrors = concat [ structErrors1 n s | Decl{d_name=n,d_type=Decl_Struct s} <- Map.elems (m_decls m) ]
     unionErrors = concat [ unionErrors1 n u | Decl{d_name=n,d_type=Decl_Union u} <- Map.elems (m_decls m) ]
 
-    structErrors1 n s = (map (D_StructField n) . findDuplicates) [ f_name f | f <- s_fields s ] ++
-                        (map (D_StructParam n) . findDuplicates) [ t | t <- s_typeParams s ]
+    structErrors1 n s = (map (D_StructField n) . findDuplicates ) [ f_name f | f <- s_fields s ] ++
+                        (map (D_StructParam n) . findDuplicates ) [ t | t <- s_typeParams s ]
 
-    unionErrors1 n u = (map (D_UnionField n) . findDuplicates) [ f_name f | f <- u_fields u ] ++
-                       (map (D_UnionParam n) . findDuplicates) [t | t <- u_typeParams u ]
+    unionErrors1 n u = (map (D_UnionField n) . findDuplicates ) [ f_name f | f <- u_fields u ] ++
+                       (map (D_UnionParam n) . findDuplicates ) [t | t <- u_typeParams u ]
 
-    findDuplicates :: (Ord a) => [a] -> [a]
-    findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) a 1) Map.empty as),
+    findDuplicates :: [Ident] -> [Ident]
+    findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) (T.toCaseFold a) 1) Map.empty as),
                           n > 1 ]
 
 data ResolvedType = RT_Named (ScopedName,Decl ResolvedType)

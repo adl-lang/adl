@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import System.Environment (getArgs)
@@ -8,43 +9,43 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 import EIO
 import Format
 import AST
 import Processing
+import Backends.Haskell
 
-verify modulePath searchPaths = do
-    e <- unEIO actions
-    case e of
-        (Left perr) -> putStrLn perr
-        (Right ()) -> return ()
+type EIOT a = EIO T.Text a
+
+loadAndCheckModule :: ModuleFinder -> FilePath -> EIOT RModule
+loadAndCheckModule moduleFinder modulePath = do
+    (m,mm) <- loadModule1 
+    mapM_ checkModuleForDuplicates (Map.elems mm)
+    checkModuleForDuplicates m
+    ns <- resolveN (sortByDeps (Map.elems mm)) emptyNameScope
+    (_,rm) <- resolve1 m ns
+    return rm
+
   where
-    actions = do
-      (m,mm) <- loadModule1 
-      mapM_ checkModuleForDuplicates (Map.elems mm)
-      checkModuleForDuplicates m
-      ns <- resolveN (sortByDeps (Map.elems mm)) emptyNameScope
-      (_,rm) <- resolve1 m ns
-      return ()
+    loadModule1 :: EIOT (SModule, SModuleMap)
+    loadModule1 = mapError (T.pack . show) $ loadModule modulePath moduleFinder Map.empty
 
-    loadModule1 :: EIO String (SModule, SModuleMap)
-    loadModule1 = mapError show $ loadModule modulePath (moduleFinder searchPaths) Map.empty
-
-    checkModuleForDuplicates :: SModule -> EIO String ()
+    checkModuleForDuplicates :: SModule -> EIOT ()
     checkModuleForDuplicates m = case dups of
         [] -> return ()
-        _ -> eioError (moduleErrorMessage m (map format dups))
+        _ -> eioError (moduleErrorMessage m (map formatText dups))
       where
         dups = checkDuplicates m
 
-    resolveN :: [SModule] -> NameScope -> EIO String NameScope
+    resolveN :: [SModule] -> NameScope -> EIOT NameScope
     resolveN [] ns = return ns
     resolveN (m:ms) ns = do
         (ns',rm) <- resolve1 m ns
         resolveN ms ns'
     
-    resolve1 :: SModule -> NameScope -> EIO String (NameScope,RModule)
+    resolve1 :: SModule -> NameScope -> EIOT (NameScope,RModule)
     resolve1 m ns = do
         liftIO $ putStrLn ("processing " ++ format (m_name m) ++ "...")
         checkUndefined1 m ns
@@ -54,18 +55,18 @@ verify modulePath searchPaths = do
         checkTypeCtorApps1 rm
         return (ns', rm)
 
-    checkUndefined1 :: SModule -> NameScope -> EIO String ()
+    checkUndefined1 :: SModule -> NameScope -> EIOT ()
     checkUndefined1 m ns = case undefinedNames m ns of
         [] -> return ()
-        udefs -> eioError (moduleErrorMessage m (map format udefs))
+        udefs -> eioError (moduleErrorMessage m (map formatText udefs))
 
-    checkTypeCtorApps1 :: RModule -> EIO String ()
+    checkTypeCtorApps1 :: RModule -> EIOT ()
     checkTypeCtorApps1 m = case checkTypeCtorApps m of
         [] -> return ()      
-        errs -> eioError (moduleErrorMessage m (map format errs))
+        errs -> eioError (moduleErrorMessage m (map formatText errs))
 
-    moduleErrorMessage m ss = "In module " ++ format (m_name m) ++ ":\n  " ++
-                              intercalate "\n  " ss
+    moduleErrorMessage m ss = T.intercalate " " ["In module",formatText(m_name m),":\n"] `T.append`
+                              T.intercalate "\n  " ss
           
     emptyNameScope = NameScope Map.empty Map.empty Map.empty Set.empty
 
@@ -79,20 +80,35 @@ sortByDeps ms = map fst (sort0 (modulesWithDeps ms) Set.empty)
                          
     modulesWithDeps ms = map (\m -> (m,getReferencedModules m)) ms
 
-        
-    
-moduleFinder :: [FilePath] -> ModuleName -> [FilePath]
+type ModuleFinder = ModuleName -> [FilePath]
+
+moduleFinder :: [FilePath] -> ModuleFinder
 moduleFinder rootpaths (ModuleName mname) =
     [ joinPath ([path]++names++[name0++".adl"]) | path <- rootpaths ]
   where
     names = map T.unpack (init mname)
     name0 = T.unpack (last mname)
+
+runEIO :: EIOT a -> IO ()
+runEIO eio = do
+    e <- unEIO $ eio
+    case e of
+        (Left perr) -> T.putStrLn perr
+        (Right _) -> return ()
       
+verify searchPaths modulePath =
+    runEIO $ loadAndCheckModule (moduleFinder searchPaths) modulePath 
+
+haskell searchPaths modulePath = runEIO $ do
+    rm <- loadAndCheckModule (moduleFinder searchPaths) modulePath
+    generateHaskell rm
+
 usage = do
     putStrLn "Usage: adl verify <searchPath> <modulePath>"
     
 main = do
     args <- getArgs
     case args of
-      ["verify",searchPath,modulePath] -> verify modulePath [searchPath]
+      ["verify",searchPath,modulePath] -> verify [searchPath] modulePath
+      ["haskell",searchPath,modulePath] -> haskell [searchPath] modulePath
       _ -> usage
