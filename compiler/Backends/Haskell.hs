@@ -167,11 +167,11 @@ generateDecl :: Decl ResolvedType -> HGen ()
 generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
     let (wl,nl,wt,indent) = helpers
         sname = hTypeName (d_name d)
-        prefixes = ["{"] ++ repeat ","
+        commas = repeat ","
 
     wt "data $1$2 = $1" [sname,hTParams (s_typeParams s)]
     indent $ do
-        forM_ (zip prefixes (s_fields s)) $ \(fp,f) -> do
+        forM_ (zip ("{":commas) (s_fields s)) $ \(fp,f) -> do
           t <- hTypeExpr (f_type f)
           wt "$1 $2 :: $3" [fp,
                             hFieldName (d_name d) (f_name f),
@@ -185,7 +185,12 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
     nl
     wl $ hInstanceHeader "AToJSON" sname (s_typeParams s)
     indent $ do
-        wl "atoJSON = undefined"
+        wl "atoJSON flags v = JSON.Object (HM.fromList"
+        indent $ do
+          forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do
+            wt "$1 (\"$2\",atoJSON flags ($3 v))"
+               [fp,(f_name f),hFieldName (d_name d) (f_name f)]
+          wl "] )"
     nl
     wl $ hInstanceHeader "AFromJSON" sname (s_typeParams s)
     indent $ do
@@ -228,10 +233,13 @@ generateModule m = do
   addImport "import Prelude(Show,Eq,Ord,Int,Double,undefined)"
   importModule (HaskellModule "ADL.Core")
   importQualifiedModuleAs (HaskellModule "Data.Aeson") "JSON"
+  importQualifiedModuleAs (HaskellModule "Data.HashMap.Strict") "HM"
   mapM_ genDecl (Map.elems $ m_decls m)
   ms <- get
   hm <- haskellModule (ms_name ms)
-  let header = [template "module $1 where" [formatText hm]]
+  let header = [ "{-# LANGUAGE OverloadedStrings #-}"
+               , template "module $1 where" [formatText hm]
+               ]
       imports = case Set.toList (ms_imports ms) of
         [] -> []
         lines -> "" : lines

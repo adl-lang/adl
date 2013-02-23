@@ -1,4 +1,4 @@
-module samples.im
+module examples.im
 {
     import sys.types;
     import sys.rpc;
