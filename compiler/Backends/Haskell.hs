@@ -179,21 +179,17 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
         wl "}"
         wl "deriving (Eq,Ord,Show)"
     nl
-    wl $ hInstanceHeader "DefaultV" sname (s_typeParams s)
+    wl $ hInstanceHeader "ADLValue" sname (s_typeParams s)
     indent $ do
         wt "defaultv = $1 $2" [sname, T.intercalate " " ["defaultv" | f <- s_fields s]]
-    nl
-    wl $ hInstanceHeader "AToJSON" sname (s_typeParams s)
-    indent $ do
+        nl
         wl "atoJSON flags v = JSON.Object (HM.fromList"
         indent $ do
           forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do
             wt "$1 (\"$2\",atoJSON flags ($3 v))"
                [fp,(f_name f),hFieldName (d_name d) (f_name f)]
           wl "] )"
-    nl
-    wl $ hInstanceHeader "AFromJSON" sname (s_typeParams s)
-    indent $ do
+        nl
         wl "afromJSON = undefined"
 
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
@@ -208,17 +204,13 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
         wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
       wl "deriving (Eq,Ord,Show)"
     nl
-    wl $ hInstanceHeader "DefaultV" sname (u_typeParams u)
+    wl $ hInstanceHeader "ADLValue" sname (u_typeParams u)
     indent $ do
         wt "defaultv = $1 defaultv"
            [hDiscName (d_name d) (f_name (head (u_fields u)))]
-    nl
-    wl $ hInstanceHeader "AToJSON" sname (u_typeParams u)
-    indent $ do
+        nl
         wl "atoJSON = undefined"
-    nl
-    wl $ hInstanceHeader "AFromJSON" sname (u_typeParams u)
-    indent $ do
+        nl
         wl "afromJSON = undefined"
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
