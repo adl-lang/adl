@@ -21,11 +21,17 @@ import EIO
 import Processing
 import Primitive
 
+newtype HaskellModule = HaskellModule T.Text
+
+instance Format HaskellModule where
+  formatText (HaskellModule hm) = hm
+
 data MState = MState {
    ms_name :: ModuleName,
    ms_moduleMapper :: ModuleName -> HaskellModule,
    ms_indent :: T.Text,
    ms_imports :: Set.Set T.Text,
+   ms_languageFeatures :: Set.Set T.Text,
    ms_lines :: [T.Text]
 }
 
@@ -34,20 +40,19 @@ type HGen = State MState
 updateMState :: (MState->MState) -> HGen ()
 updateMState = modify
 
-writeLine :: T.Text -> HGen ()
-writeLine t = updateMState addLine
+wl :: T.Text -> HGen ()
+wl t = updateMState addLine
   where
     addLine ms = ms{ms_lines=(ms_indent ms) `T.append` t:ms_lines ms}
 
--- | `template src substs` will replace all occurences the string $i
--- in src with `substs !! i`
-template :: T.Text -> [T.Text] -> T.Text
-template t substs = foldr replace t (zip [1,2..] substs)
-  where
-    replace (i,s) t = T.replace (T.pack ('$':show i)) s t
+nl :: HGen ()
+nl = wl ""
 
-withIndent :: HGen a -> HGen a
-withIndent g = do
+wt :: T.Text -> [T.Text] -> HGen ()
+wt pattern args = wl (template pattern args)
+
+indent :: HGen a -> HGen a
+indent g = do
     updateMState
       (\ms -> ms{ ms_indent=T.append is (ms_indent ms)})
     a <- g
@@ -57,11 +62,10 @@ withIndent g = do
   where
     is = "    "
 
-newtype HaskellModule = HaskellModule T.Text
 
-instance Format HaskellModule where
-  formatText (HaskellModule hm) = hm
-
+addLanguageFeature :: T.Text -> HGen ()
+addLanguageFeature t = updateMState
+  (\ms -> ms{ ms_languageFeatures=Set.insert t (ms_languageFeatures ms)} )
 
 addImport :: T.Text -> HGen ()
 addImport t = updateMState
@@ -90,12 +94,6 @@ importADLModule mn = do
   importQualifiedModule hm
   return hm
 
-helpers = ( writeLine
-          , writeLine ""  
-          , \t ss -> writeLine (template t ss)
-          , withIndent
-          )
-
 upper1,lower1 :: T.Text -> T.Text
 upper1 t = T.toUpper (T.pack [(T.head t)]) `T.append` T.tail t
 lower1 t = T.toLower (T.pack [(T.head t)]) `T.append` T.tail t
@@ -114,14 +112,14 @@ hDiscName sn fn = T.concat [upper1 sn,"_",fn]
 
 hPrimitiveType :: PrimitiveType -> HGen T.Text
 hPrimitiveType P_Void = return "()"
-hPrimitiveType P_Int = return "Int"
-hPrimitiveType P_Double = return "Double"
+hPrimitiveType P_Int = return "Prelude.Int"
+hPrimitiveType P_Double = return "Prelude.Double"
 hPrimitiveType P_ByteVector = do
-  importQualifiedModuleAs (HaskellModule "Data.ByteString")  "B"
+  importByteString
   return "B.ByteString"
 hPrimitiveType P_Vector = return "[]" -- never called
 hPrimitiveType P_String = do
-  importQualifiedModuleAs (HaskellModule "Data.Text") "T"
+  importText
   return "T.Text"
 hPrimitiveType P_Sink = do
   return "Sink"
@@ -162,14 +160,35 @@ hInstanceHeader klass sname tps =
                                      | tp <- tps ]
   
 
+enableScopedTypeVariables :: [Ident] -> HGen ()
+enableScopedTypeVariables [] = return ()
+enableScopedTypeVariables _ = addLanguageFeature "ScopedTypeVariables"
+
+importText = importQualifiedModuleAs (HaskellModule "Data.Text") "T"
+importByteString = importQualifiedModuleAs (HaskellModule "Data.ByteString")  "B"
+
+declareAType :: ScopedName -> [Ident] -> HGen ()
+declareAType gname [] = wt "atype _ = \"$1\"" [formatText gname]
+declareAType gname tvars = do
+  importText
+  wl "atype _ = T.concat"
+  indent $ do
+    wt "[ \"$1\"" [formatText gname]
+    forM_ (zip (", \"<\",": repeat ", \",\",") tvars) $ \(p,tv) -> do
+      wt "$1 atype (Prelude.undefined ::$2)" [p, hTypeParamName tv]
+    wl ", \">\" ]"
+
+derivingStdClasses = wl "deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)"
 
 generateDecl :: Decl ResolvedType -> HGen ()
 generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
-    let (wl,nl,wt,indent) = helpers
-        sname = hTypeName (d_name d)
+    enableScopedTypeVariables (s_typeParams s)
+    mn <- fmap ms_name get    
+
+    let lname = hTypeName (d_name d)
         commas = repeat ","
 
-    wt "data $1$2 = $1" [sname,hTParams (s_typeParams s)]
+    wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
     indent $ do
         forM_ (zip ("{":commas) (s_fields s)) $ \(fp,f) -> do
           t <- hTypeExpr (f_type f)
@@ -177,59 +196,84 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
                             hFieldName (d_name d) (f_name f),
                             t ]
         wl "}"
-        wl "deriving (Eq,Ord,Show)"
+        derivingStdClasses
     nl
-    wl $ hInstanceHeader "ADLValue" sname (s_typeParams s)
+    wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
     indent $ do
-        wt "defaultv = $1 $2" [sname, T.intercalate " " ["defaultv" | f <- s_fields s]]
+        declareAType (ScopedName mn (d_name d)) (s_typeParams s)
         nl
-        wl "atoJSON flags v = JSON.Object (HM.fromList"
+        wt "defaultv = $1 $2" [lname, T.intercalate " " ["defaultv" | f <- s_fields s]]
+        nl
+        wl "atoJSON f v = toJSONObject f (atype v) ("
         indent $ do
           forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do
-            wt "$1 (\"$2\",atoJSON flags ($3 v))"
+            wt "$1 (\"$2\",atoJSON f ($3 v))"
                [fp,(f_name f),hFieldName (d_name d) (f_name f)]
           wl "] )"
         nl
-        wl "afromJSON = undefined"
+        wt "afromJSON f (JSON.Object hm) = $1" [lname]
+        indent $ do
+          forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
+            wt "$1 fieldFromJSON f \"$2\" defaultv hm" [p, (f_name f)]
+        wl "afromJSON _ _ = Prelude.Nothing"
 
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
-    let (wl,nl,wt,indent) = helpers
-        sname = hTypeName (d_name d)
+    mn <- fmap ms_name get    
+
+    let lname = hTypeName (d_name d)
+        gname = ScopedName mn (d_name d)
         prefixes = ["="] ++ repeat "|"
 
-    wt "data $1$2" [sname,hTParams (u_typeParams u)]
+    wt "data $1$2" [lname,hTParams (u_typeParams u)]
     indent $ do
       forM_ (zip prefixes (u_fields u)) $ \(fp,f) -> do
         t <- hTypeExpr (f_type f)
         wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
-      wl "deriving (Eq,Ord,Show)"
+      derivingStdClasses
     nl
-    wl $ hInstanceHeader "ADLValue" sname (u_typeParams u)
+    wl $ hInstanceHeader "ADLValue" lname (u_typeParams u)
     indent $ do
+        declareAType (ScopedName mn (d_name d)) (u_typeParams u)
+        nl
         wt "defaultv = $1 defaultv"
            [hDiscName (d_name d) (f_name (head (u_fields u)))]
         nl
-        wl "atoJSON = undefined"
+        wl "atoJSON f v = toJSONObject f (atype v) [case v of"
+        indent $ do
+          forM_ (u_fields u) $ \f -> do
+            wt "($1 v) -> (\"$2\",atoJSON f v)"
+               [hDiscName (d_name d) (f_name f),(f_name f)]
+          wl "]"
         nl
-        wl "afromJSON = undefined"
+        wl "afromJSON f o = "
+        indent $ do
+          wl "let umap = HM.fromList"
+          indent $ do
+              forM_ (zip ("[":repeat ",") (u_fields u)) $ \(fp,f) -> do
+                wt "$1 (\"$2\", \\f v -> $3 <$> afromJSON f v)" [fp,f_name f,hDiscName (d_name d) (f_name f)]
+              wl "]"
+          wl "in unionFromJSON f umap o"
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
-    let (wl,nl,wt,indent) = helpers
-        sname = hTypeName (d_name d)
+    let lname = hTypeName (d_name d)
 
     ts <- hTypeExpr (t_typeExpr t)
-    wt "type $1$2 = $3" [sname,hTParams (t_typeParams t),ts]
+    wt "type $1$2 = $3" [lname,hTParams (t_typeParams t),ts]
 
 generateModule :: Module ResolvedType -> HGen T.Text
 generateModule m = do
-  addImport "import Prelude(Show,Eq,Ord,Int,Double,undefined)"
+  addLanguageFeature "OverloadedStrings"
+  addImport "import qualified Prelude"
+  addImport "import Control.Applicative( (<$>), (<*>) )"
   importModule (HaskellModule "ADL.Core")
   importQualifiedModuleAs (HaskellModule "Data.Aeson") "JSON"
   importQualifiedModuleAs (HaskellModule "Data.HashMap.Strict") "HM"
+
   mapM_ genDecl (Map.elems $ m_decls m)
   ms <- get
   hm <- haskellModule (ms_name ms)
-  let header = [ "{-# LANGUAGE OverloadedStrings #-}"
+  let lfeatures = T.intercalate ", " (Set.toList (ms_languageFeatures ms))
+      header = [ template "{-# LANGUAGE $1 #-}" [lfeatures]
                , template "module $1 where" [formatText hm]
                ]
       imports = case Set.toList (ms_imports ms) of
@@ -238,7 +282,7 @@ generateModule m = do
       body = reverse (ms_lines ms)
   return (T.intercalate "\n" (header ++ imports ++ body))
   where
-    genDecl d = writeLine "" >> generateDecl d
+    genDecl d = wl "" >> generateDecl d
 
 -- | Generate he haskell code for a module into a file. The mappings
 -- from adl module names to haskell modules, and from haskell module
@@ -248,7 +292,7 @@ writeModuleFile :: (ModuleName -> HaskellModule) ->
                    Module ResolvedType ->
                    EIO a ()
 writeModuleFile hmf fpf m = do
-  let s0 = MState (m_name m) hmf "" Set.empty []
+  let s0 = MState (m_name m) hmf "" Set.empty Set.empty []
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
   liftIO $ do

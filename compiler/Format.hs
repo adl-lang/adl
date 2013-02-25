@@ -17,3 +17,11 @@ instance Format T.Text where
 
 fshow :: (Show a) => a -> T.Text
 fshow = T.pack . show
+
+-- | `template src substs` will replace all occurences the string $i
+-- in src with `substs !! i`
+template :: T.Text -> [T.Text] -> T.Text
+template t substs = foldr replace t (zip [1,2..] substs)
+  where
+    replace (i,s) t = T.replace (T.pack ('$':show i)) s t
+

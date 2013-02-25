@@ -15,3 +15,6 @@ test1:
 	$(GHCI) $(GHCIFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Rpc.hs </dev/null
 	$(GHCI) $(GHCIFLAGS) -i$(ADLLIBDIR) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs </dev/null
 
+test2:
+#	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/sys/types.adl
+	$(GHCI) $(GHCIFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Types.hs </dev/null

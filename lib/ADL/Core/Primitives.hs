@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Core.Primitives where
 
 import qualified Data.Aeson as JSON
@@ -9,6 +10,8 @@ import Data.Attoparsec.Number
 import ADL.Core.Value
 
 instance ADLValue () where
+  atype _ = "void"
+  
   defaultv = ()
 
   atoJSON _ () = JSON.Null
@@ -17,6 +20,8 @@ instance ADLValue () where
   afromJSON _ _ = Nothing
 
 instance ADLValue Int where
+  atype _ = "int"
+
   defaultv = 0
 
   atoJSON _ v = JSON.Number (I (fromIntegral v))
@@ -25,6 +30,8 @@ instance ADLValue Int where
   afromJSON _ _ = Nothing
 
 instance ADLValue Double where
+  atype _ = "double"
+
   defaultv = 0
 
   atoJSON _ v = JSON.Number (D v)
@@ -33,6 +40,8 @@ instance ADLValue Double where
   afromJSON _ _ = Nothing
 
 instance ADLValue T.Text where
+  atype _ = "string"
+
   defaultv = T.empty
 
   atoJSON _ v = JSON.String v
@@ -40,7 +49,9 @@ instance ADLValue T.Text where
   afromJSON _ (JSON.String v) = Just v
   afromJSON _ _ = Nothing
 
-instance (ADLValue a) => ADLValue [a] where
+instance forall a . (ADLValue a) => ADLValue [a] where
+  atype _ = T.concat ["vector<",atype (undefined :: a),">"]
+
   defaultv = []
 
   atoJSON flags vs = JSON.Array (V.fromList (map (atoJSON flags) vs))
