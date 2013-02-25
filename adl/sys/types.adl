@@ -32,4 +32,8 @@ union error<T>
     string error;
 };
 
+typedef vector<pair<K,V>> map<K,V>;
+
+typedef vector<T> set<T>;
+
 };

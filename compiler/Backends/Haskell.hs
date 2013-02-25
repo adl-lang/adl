@@ -143,19 +143,25 @@ hTypeExpr (TE_Apply c args) = do
 
 hTypeExpr1 :: ResolvedType -> HGen T.Text
 hTypeExpr1 (RT_Named (sn,d)) = do
-  case sn_moduleName sn of
-      ModuleName [] -> return (hTypeName (sn_name sn))
-      mn -> do
-        -- Map to a custom type if we have one defined, otherwise
-        -- the adl generated one
-        customTypes <- fmap ms_customTypes get
-        case Map.lookup sn customTypes of
-          (Just ct) -> do
-            mapM_ importModule (ct_hImports ct)
-            return (ct_hTypeName ct)
-          Nothing -> do
-            hm <- importADLModule mn
-            return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
+  ms <- get
+  let isLocalName = case sn_moduleName sn of
+        ModuleName [] -> True
+        _ -> False
+      fullyScopedName = if isLocalName then sn{sn_moduleName=ms_name ms} else sn
+
+  case Map.lookup fullyScopedName (ms_customTypes ms) of
+    (Just ct) -> do
+      -- custom type in an imported module
+      mapM_ importModule (ct_hImports ct)
+      return (ct_hTypeName ct)
+    Nothing -> case isLocalName of
+      True ->
+        -- ADL type defined in this module
+        return (hTypeName (sn_name sn))
+      False -> do
+        -- ADL type defined in an imported module
+        hm <- importADLModule (sn_moduleName sn)
+        return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
         
 hTypeExpr1 (RT_Param i) = return (hTypeParamName i)
 hTypeExpr1 (RT_Primitive pt) = hPrimitiveType pt
@@ -320,18 +326,24 @@ writeModuleFile hmf fpf m = do
   let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty []
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
-      customTypes = Map.fromList
-        [ (ScopedName (ModuleName ["sys","types"]) "maybe",
-           CustomType "Prelude.Maybe" [HaskellModule "ADL.Core.CustomTypes"] )
-        , (ScopedName (ModuleName ["sys","types"]) "either",
-           CustomType "Prelude.Either" [HaskellModule "ADL.Core.CustomTypes"] )
-        , (ScopedName (ModuleName ["sys","types"]) "pair",
-           CustomType "Pair" [HaskellModule "ADL.Core.CustomTypes"] )
-        ]
   liftIO $ do
     createDirectoryIfMissing True (takeDirectory fpath)
     T.writeFile fpath t
     putStrLn ("writing " ++ fpath ++ "...")
+
+customTypes = Map.fromList
+    [ (ScopedName (ModuleName ["sys","types"]) "maybe",
+       CustomType "Prelude.Maybe" [HaskellModule "ADL.Core.CustomTypes"] )
+    , (ScopedName (ModuleName ["sys","types"]) "either",
+       CustomType "Prelude.Either" [HaskellModule "ADL.Core.CustomTypes"] )
+    , (ScopedName (ModuleName ["sys","types"]) "pair",
+       CustomType "Pair" [HaskellModule "ADL.Core.CustomTypes"] )
+    , (ScopedName (ModuleName ["sys","types"]) "map",
+       CustomType "Map" [HaskellModule "ADL.Core.CustomTypes"] )
+    , (ScopedName (ModuleName ["sys","types"]) "set",
+       CustomType "Set" [HaskellModule "ADL.Core.CustomTypes"] )
+    ]
+    
     
 
 moduleMapper :: String -> ModuleName -> HaskellModule

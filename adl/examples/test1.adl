@@ -1,0 +1,13 @@
+module examples.test1 {
+
+import sys.types;
+
+struct S1 {
+    maybe<double> v1;
+    either<string,int> v2;
+    pair<double,double> v3;
+    map<string,double> v4;
+    set<string> v5;
+};
+
+};
