@@ -16,8 +16,8 @@ struct pair<T1,T2>
 
 union either<T1,T2>
 {
-    T1 v1;
-    T2 v2;
+    T1 left;
+    T2 right;
 };
 
 union maybe<T>

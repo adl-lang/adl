@@ -16,5 +16,11 @@ test1:
 	$(GHCI) $(GHCIFLAGS) -i$(ADLLIBDIR) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs </dev/null
 
 test2:
-#	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/sys/types.adl
+	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/sys/types.adl
 	$(GHCI) $(GHCIFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Types.hs </dev/null
+
+test3:
+	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/sys/types.adl
+	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/examples/test1.adl
+	$(GHCI) $(GHCIFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Types.hs </dev/null
+	$(GHCI) $(GHCIFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs </dev/null

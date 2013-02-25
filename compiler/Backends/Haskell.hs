@@ -26,9 +26,15 @@ newtype HaskellModule = HaskellModule T.Text
 instance Format HaskellModule where
   formatText (HaskellModule hm) = hm
 
+data CustomType = CustomType {
+   ct_hTypeName :: Ident,
+   ct_hImports :: [HaskellModule]
+}
+
 data MState = MState {
    ms_name :: ModuleName,
    ms_moduleMapper :: ModuleName -> HaskellModule,
+   ms_customTypes :: Map.Map ScopedName CustomType,
    ms_indent :: T.Text,
    ms_imports :: Set.Set T.Text,
    ms_languageFeatures :: Set.Set T.Text,
@@ -140,8 +146,16 @@ hTypeExpr1 (RT_Named (sn,d)) = do
   case sn_moduleName sn of
       ModuleName [] -> return (hTypeName (sn_name sn))
       mn -> do
-        hm <- importADLModule mn
-        return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
+        -- Map to a custom type if we have one defined, otherwise
+        -- the adl generated one
+        customTypes <- fmap ms_customTypes get
+        case Map.lookup sn customTypes of
+          (Just ct) -> do
+            mapM_ importModule (ct_hImports ct)
+            return (ct_hTypeName ct)
+          Nothing -> do
+            hm <- importADLModule mn
+            return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
         
 hTypeExpr1 (RT_Param i) = return (hTypeParamName i)
 hTypeExpr1 (RT_Primitive pt) = hPrimitiveType pt
@@ -218,6 +232,7 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
         wl "afromJSON _ _ = Prelude.Nothing"
 
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
+    enableScopedTypeVariables (u_typeParams u)
     mn <- fmap ms_name get    
 
     let lname = hTypeName (d_name d)
@@ -248,7 +263,7 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
         wl "afromJSON f o = "
         indent $ do
           wl "let umap = HM.fromList"
-          indent $ do
+          indent $ indent $ do
               forM_ (zip ("[":repeat ",") (u_fields u)) $ \(fp,f) -> do
                 wt "$1 (\"$2\", \\f v -> $3 <$> afromJSON f v)" [fp,f_name f,hDiscName (d_name d) (f_name f)]
               wl "]"
@@ -269,20 +284,30 @@ generateModule m = do
   importQualifiedModuleAs (HaskellModule "Data.Aeson") "JSON"
   importQualifiedModuleAs (HaskellModule "Data.HashMap.Strict") "HM"
 
-  mapM_ genDecl (Map.elems $ m_decls m)
   ms <- get
-  hm <- haskellModule (ms_name ms)
-  let lfeatures = T.intercalate ", " (Set.toList (ms_languageFeatures ms))
-      header = [ template "{-# LANGUAGE $1 #-}" [lfeatures]
-               , template "module $1 where" [formatText hm]
+  let mname = ms_name ms
+      hasCustomDefinition n = Map.member (ScopedName mname n) (ms_customTypes ms)
+      genDecl (n,d) = do
+          wl ""
+          if hasCustomDefinition n
+            then wt "-- $1 excluded due to custom definition" [n]
+            else generateDecl d
+
+  mapM_ genDecl (Map.toList (m_decls m))
+  ms <- get
+  hm <- haskellModule mname
+
+  let lang = case Set.toList (ms_languageFeatures ms) of
+        [] -> []
+        fs ->  [template "{-# LANGUAGE $1 #-}" [T.intercalate ", " fs]]
+      header = [ template "module $1 where" [formatText hm]
                ]
       imports = case Set.toList (ms_imports ms) of
         [] -> []
         lines -> "" : lines
       body = reverse (ms_lines ms)
-  return (T.intercalate "\n" (header ++ imports ++ body))
-  where
-    genDecl d = wl "" >> generateDecl d
+
+  return (T.intercalate "\n" (lang ++ header ++ imports ++ body))
 
 -- | Generate he haskell code for a module into a file. The mappings
 -- from adl module names to haskell modules, and from haskell module
@@ -292,9 +317,17 @@ writeModuleFile :: (ModuleName -> HaskellModule) ->
                    Module ResolvedType ->
                    EIO a ()
 writeModuleFile hmf fpf m = do
-  let s0 = MState (m_name m) hmf "" Set.empty Set.empty []
+  let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty []
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
+      customTypes = Map.fromList
+        [ (ScopedName (ModuleName ["sys","types"]) "maybe",
+           CustomType "Prelude.Maybe" [HaskellModule "ADL.Core.CustomTypes"] )
+        , (ScopedName (ModuleName ["sys","types"]) "either",
+           CustomType "Prelude.Either" [HaskellModule "ADL.Core.CustomTypes"] )
+        , (ScopedName (ModuleName ["sys","types"]) "pair",
+           CustomType "Pair" [HaskellModule "ADL.Core.CustomTypes"] )
+        ]
   liftIO $ do
     createDirectoryIfMissing True (takeDirectory fpath)
     T.writeFile fpath t
