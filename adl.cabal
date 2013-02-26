@@ -1,0 +1,26 @@
+name:                adl
+version:             0.1.0.0
+synopsis:            A compiler for the Actor Definition Language (ADL)
+-- description:         
+license:             GPL-3
+license-file:        LICENSE
+author:              Tim Docker
+maintainer:          tim@dockerz.net
+-- copyright:           
+category:            Network
+build-type:          Simple
+cabal-version:       >=1.8
+
+library
+  hs-source-dirs:      lib
+  exposed-modules:     ADL.Core, ADL.Core.CustomTypes, ADL.Core.Value, ADL.Core.Sink, ADL.Core.Primitives
+  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
+                       parsec ==3.1.*, mtl ==2.0.*, transformers ==0.2.*,
+                       unordered-containers, aeson, attoparsec, vector
+
+executable adlc
+  hs-source-dirs:      compiler
+  main-is:             Main.hs
+  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
+                       parsec ==3.1.*, mtl ==2.0.*, transformers ==0.2.*,
+                       filepath, directory
