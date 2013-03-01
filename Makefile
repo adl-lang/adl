@@ -7,14 +7,19 @@ ADLLIBDIR=lib
 GHC=GHC_PACKAGE_PATH=cabal-dev/packages-7.4.1.conf: ghc
 GHCFLAGS=-i$(TESTOUTDIR)
 
+ADLFILES= \
+    $(ADLDIR)/sys/types.adl \
+    $(ADLDIR)/sys/rpc.adl \
+    $(ADLDIR)/examples/im.adl \
+    $(ADLDIR)/examples/workerpool.adl \
+    $(ADLDIR)/examples/test1.adl
+
 tests:
-	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/sys/types.adl
-	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/sys/rpc.adl
-	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/examples/im.adl
-	$(ADLC) haskell $(ADLCFLAGS) $(ADLDIR)/examples/test1.adl
+	$(ADLC) haskell $(ADLCFLAGS) $(ADLFILES)
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Types.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Rpc.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs
+	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Workerpool.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs
 
 tools:

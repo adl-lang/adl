@@ -6,6 +6,9 @@ import qualified Data.Text as T
 
 import ADL.Core.Value
 
+-- | `Sink a` is a reference to a sink to which messages of type `a`
+-- may be sent. Such a reference is an ADLValue and hence may be
+-- serialised between processes.
 data Sink a = NullSink
   deriving (Ord,Eq,Show)
 
@@ -17,3 +20,9 @@ instance forall a . (ADLValue a) => ADLValue (Sink a) where
   atoJSON flags NullSink = JSON.Null
 
   afromJSON flags JSON.Null = Just NullSink
+
+
+
+
+
+
