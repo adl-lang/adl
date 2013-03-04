@@ -1,29 +1,30 @@
-ADLDIR=adl
+MKFILE = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+
 TESTOUTDIR=/tmp/adltest
 MODULEPREFIX=ADL.Compiled
-ADLCFLAGS=-I $(ADLDIR) -O $(TESTOUTDIR) --moduleprefix=$(MODULEPREFIX)
+ADLCFLAGS=-O $(TESTOUTDIR) --moduleprefix=$(MODULEPREFIX)
 ADLC=cabal-dev/bin/adlc
 ADLLIBDIR=lib
 GHC=GHC_PACKAGE_PATH=cabal-dev/packages-7.4.1.conf: ghc
 GHCFLAGS=-i$(TESTOUTDIR)
 
-ADLFILES= \
-    $(ADLDIR)/sys/types.adl \
-    $(ADLDIR)/sys/rpc.adl \
-    $(ADLDIR)/examples/im.adl \
-    $(ADLDIR)/examples/workerpool.adl \
-    $(ADLDIR)/examples/test1.adl
+PATH:=$(dir $(MKFILE))cabal-dev/bin:$(PATH)
+
+EXAMPLEADLFILES=\
+    examples/adl/examples/im.adl \
+    examples/adl/examples/test1.adl
 
 tests:
-	$(ADLC) haskell $(ADLCFLAGS) $(ADLFILES)
+	$(ADLC) haskell $(ADLCFLAGS) -I lib/adl -I examples/adl $(EXAMPLEADLFILES)
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Types.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Rpc.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs
-	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Workerpool.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs
 
 tools:
-	cabal-dev install
+	(cd compiler && cabal-dev -s ../cabal-dev install)
+	(cd lib && cabal-dev -s ../cabal-dev install)
 
 clean: 
-	rm -r $(TESTOUTDIR)
+	(cd compiler && cabal-dev -s ../cabal-dev clean)
+	(cd lib && cabal-dev -s ../cabal-dev clean)
