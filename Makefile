@@ -21,10 +21,23 @@ tests:
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs
 
-tools:
+all: compiler lib tools
+
+compiler:
 	(cd compiler && cabal-dev -s ../cabal-dev install)
+
+lib:
 	(cd lib && cabal-dev -s ../cabal-dev install)
+
+examples:
+	(cd examples && cabal-dev -s ../cabal-dev install)
 
 clean: 
 	(cd compiler && cabal-dev -s ../cabal-dev clean)
+
 	(cd lib && cabal-dev -s ../cabal-dev clean)
+	cabal-dev ghc-pkg unregister adl-lib
+
+	(cd examples && cabal-dev -s ../cabal-dev clean)
+
+.PHONY : examples compile lib clean

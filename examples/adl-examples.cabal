@@ -1,0 +1,18 @@
+name:                adl-example
+version:             0.1.0.0
+synopsis:            Examples for the Actor Definition Language (ADL)
+-- description:         
+license:             GPL-2
+license-file:        ../LICENSE
+author:              Tim Docker
+maintainer:          tim@dockerz.net
+-- copyright:           
+category:            Network
+build-type:          Custom
+cabal-version:       >=1.8
+
+executable echocmd
+  main-is:             EchoMain.hs
+  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
+                       parsec ==3.1.*, mtl ==2.0.*, transformers ==0.2.*,
+                       aeson, unordered-containers, adl-lib

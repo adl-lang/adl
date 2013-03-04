@@ -1,0 +1,14 @@
+module examples.echo
+{
+
+struct EchoRequest<T> {
+    T body;
+    sink<EchoResponse<T>> replyTo;
+};
+
+struct EchoResponse<T> {
+    T body;       
+};
+
+typedef sink<EchoRequest<void>> EchoServer;
+};
