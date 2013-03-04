@@ -2,7 +2,7 @@ name:                adl
 version:             0.1.0.0
 synopsis:            A compiler for the Actor Definition Language (ADL)
 -- description:         
-license:             GPL-3
+license:             GPL-2
 license-file:        LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
@@ -17,7 +17,8 @@ library
   exposed-modules:     ADL.Core, ADL.Core.CustomTypes, ADL.Core.Value, ADL.Core.Sink, ADL.Core.Primitives, ADL.Core.Comms
   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
                        parsec ==3.1.*, mtl ==2.0.*, transformers ==0.2.*,
-                       unordered-containers, aeson, attoparsec, vector
+                       network, unordered-containers, aeson, attoparsec, vector, stm,
+                       uuid, zeromq-haskell, hslogger
 
 executable adlc
   hs-source-dirs:      compiler
