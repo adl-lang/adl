@@ -21,7 +21,7 @@ tests:
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs
 
-all: compiler lib tools
+all: compiler lib examples
 
 compiler:
 	(cd compiler && cabal-dev -s ../cabal-dev install)

@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module ADL.Core.Comms(
   Context,
   ADL.Core.Comms.init,
@@ -16,20 +16,25 @@ module ADL.Core.Comms(
   scClose
   ) where
 
+import Data.Monoid
 import Control.Exception
+import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.STM
-import Network.BSD
+import Control.Concurrent.TVar
+import Control.Concurrent.TMVar
+import Network.BSD(getHostName,HostName)
 
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Data.Vector as V
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
 import qualified System.ZMQ as ZMQ
 import qualified Data.Aeson as JSON
-import qualified Data.Attoparsec.ByteString as AP
+import qualified Data.Aeson.Encode as JSON
 import qualified System.Log.Logger as L
 
 import ADL.Core.Value
@@ -55,11 +60,11 @@ close c = ZMQ.term (c_zcontext c)
 -- | To receive messages, a communications endpoint is required.
 data EndPoint = EndPoint {
   ep_context :: Context,
-  ep_hostname :: String,
+  ep_hostname :: HostName,
   ep_port :: Int,
   ep_socket :: ZMQ.Socket ZMQ.Pull,
   ep_reader :: ThreadId,
-  ep_sinks :: TVar (Map.Map UUID.UUID (JSON.Value -> IO ()))
+  ep_sinks :: TVar (Map.Map T.Text (JSON.Value -> IO ()))
 }  
 
 -- | Create a new communications endpoint, on the specifed
@@ -77,18 +82,14 @@ epOpen ctx port = do
       where
         loop = do
           bs <- ZMQ.receive s []
-          case UUID.fromByteString (LBS.fromChunks [bs]) of
-            Nothing -> discard "too short for UUID"
-            (Just uuid) -> do
-              let bs' = BS.drop 16 bs
-              case AP.parseOnly JSON.json' bs' of
-                (Left emsg) -> discard ("cannot parse JSON: " ++ emsg )
-                (Right v) -> do
-                  sinks <- atomically $ readTVar vsinks
-                  case Map.lookup uuid sinks  of
-                    Nothing -> discard ("No handler for sink with UUID " ++ show uuid)
-                    (Just actionf) -> do
-                      Control.Exception.catch (actionf v) eHandler
+          case parseMessage (LBS.fromChunks [bs]) of
+            (Left emsg) -> discard ("cannot parse message header & JSON body: " ++ emsg )
+            (Right (sid,v)) -> do
+              sinks <- atomically $ readTVar vsinks
+              case Map.lookup sid sinks  of
+                Nothing -> discard ("No handler for sink with SID " ++ show sid)
+                (Just actionf) -> do
+                  Control.Exception.catch (actionf v) eHandler
           loop
 
     eHandler :: SomeException -> IO ()
@@ -105,10 +106,10 @@ epOpen ctx port = do
 -- thread chosen by the ADL communications runtime.
 epNewSink :: forall a . (ADLValue a) => EndPoint -> (a -> IO ()) -> IO (LocalSink a)
 epNewSink ep handler = do
-  uuid <- UUID.nextRandom
+  uuid <- fmap (T.pack . UUID.toString) UUID.nextRandom
   let at = atype (defaultv :: a)
   atomically $ modifyTVar (ep_sinks ep) (Map.insert uuid (action at))
-  return (LocalSink ep (ZMQSink (ep_hostname ep) (ep_port ep) uuid at ))
+  return (LocalSink ep (ZMQSink (ep_hostname ep) (ep_port ep) uuid))
   where
     action at v = case (afromJSON fjf v) of
       Nothing -> L.errorM "Sink.action" 
@@ -138,12 +139,31 @@ lsSink = ls_sink
 -- | Close a local sink. No more messages will be processed.
 lsClose :: LocalSink a -> IO ()
 lsClose ls = atomically $
-  modifyTVar (ep_sinks (ls_endpoint ls)) (Map.delete (zmqs_uuid (ls_sink ls)))
+  modifyTVar (ep_sinks (ls_endpoint ls)) (Map.delete (zmqs_sid (ls_sink ls)))
 
 data SinkConnection a = SinkConnection {
   sc_send :: a -> IO (),
   sc_close :: IO ()
   }
+
+-- A message is a sink id and a json value. We represent this on the
+-- wire as a 2 element JSON array.
+type Message = (T.Text,JSON.Value)
+
+packMessage :: Message -> LBS.ByteString
+packMessage (sid,v) = JSON.encode (JSON.Array(V.fromList [JSON.String sid,v]))
+
+parseMessage :: LBS.ByteString -> Either String Message
+parseMessage lbs = do
+  v <- JSON.eitherDecode' lbs
+  case v of
+    (Right (JSON.Array v)) -> case V.toList v of
+      [JSON.String sid,v] -> Right (sid,v)
+      _ -> Left msg
+    (Right _) -> Left msg
+    (Left e) -> Left e
+  where
+    msg = "Top level JSON object must be a two element vector"
 
 -- | Create a new connection to a remote sink
 connect :: (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)
@@ -153,7 +173,7 @@ connect ctx NullSink = return (SinkConnection nullSend nullClose)
     nullSend a = return ()
     nullClose =  return ()
 
-connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_uuid=uuid}) = do
+connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
   let key = (host,port)
   socket <- getSocket key
   return (SinkConnection (zmqSend socket) (zmqClose key) )
@@ -162,7 +182,7 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_uuid=uuid}) = do
 
     zmqSend socket a = do
       let tjf = ToJSONFlags True
-          lbs = LBS.append (UUID.toByteString uuid) (JSON.encode [(atoJSON tjf a)])
+          lbs = packMessage (sid,atoJSON tjf a)
       ZMQ.send' socket lbs []
 
     zmqClose key = atomically $ do
