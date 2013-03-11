@@ -9,11 +9,10 @@ import Control.Concurrent.STM
 import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
-import qualified ADL.Core.Comms.ZMQ as ZMQ
 
 import ADL.Sys.Rpc
 
-rpc :: (ADLValue i, ADLValue o) => (Rpc i o -> IO ()) -> ZMQ.EndPoint -> Int-> i -> IO (Maybe o)
+rpc :: (ADLValue i, ADLValue o) => (Rpc i o -> IO ()) -> EndPoint -> Int-> i -> IO (Maybe o)
 rpc sendf ep timeout i = do
   (sink,waitForValue) <- oneShotSinkWithTimeout ep timeout
   sendf (Rpc i sink)
@@ -23,10 +22,10 @@ rpc sendf ep timeout i = do
 -- action that will wait for a value to arrive at that sink. The value
 -- will be returned, unless a timeout occurs. Either way, the sink
 -- will be closed.
-oneShotSinkWithTimeout :: forall a . (ADLValue a) =>  ZMQ.EndPoint -> Int -> IO (Sink a, IO (Maybe a))
+oneShotSinkWithTimeout :: forall a . (ADLValue a) =>  EndPoint -> Int -> IO (Sink a, IO (Maybe a))
 oneShotSinkWithTimeout ep timeout = do
   rv <- atomically $ newEmptyTMVar 
-  ls <- ZMQ.epNewSink ep (handleResponse rv)
+  ls <- epNewSink ep (handleResponse rv)
   return (lsSink ls,(getResponse rv ls))
   where
     handleResponse :: TMVar a -> a -> IO ()

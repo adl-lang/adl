@@ -4,10 +4,8 @@ module ADL.Core.Comms.ZMQ.Internals(
   ADL.Core.Comms.ZMQ.Internals.init,
   close,
   connect,
-  EndPoint,
-  epOpen,
-  epNewSink,
-  epClose,
+  EndPointData,
+  epOpen
   ) where
 
 import Data.Monoid
@@ -53,7 +51,7 @@ init = do
 close c = ZMQ.term (c_zcontext c)
 
 -- | To receive messages, a communications endpoint is required.
-data EndPoint = EndPoint {
+data EndPointData = EndPointData {
   ep_context :: Context,
   ep_hostname :: HostName,
   ep_port :: Int,
@@ -64,14 +62,19 @@ data EndPoint = EndPoint {
 
 -- | Create a new communications endpoint, on the specifed
 -- TCP port.
-epOpen :: Context -> Int-> IO EndPoint
+epOpen :: Context -> Int -> IO EndPoint
 epOpen ctx port = do
+  ed <- epOpen1 ctx port
+  return (epCreate (epNewSink1 ed) (epClose1 ed))
+
+epOpen1 :: Context -> Int-> IO EndPointData
+epOpen1 ctx port = do
   hn <- getHostName
   s <- ZMQ.socket (c_zcontext ctx) ZMQ.Pull
   ZMQ.bind s ("tcp://*:" ++ (show port))
   vsinks <- atomically $ newTVar (Map.empty)
   tid <- forkIO (reader s vsinks)
-  return (EndPoint ctx hn port s tid vsinks)
+  return (EndPointData ctx hn port s tid vsinks)
   where
     reader s vsinks = loop
       where
@@ -100,8 +103,8 @@ epOpen ctx port = do
 -- | Create a new local sink from an endpoint and a message processing
 -- function. The processing function will be called in an arbitrary
 -- thread chosen by the ADL communications runtime.
-epNewSink :: forall a . (ADLValue a) => EndPoint -> (a -> IO ()) -> IO (LocalSink a)
-epNewSink ep handler = do
+epNewSink1 :: forall a . (ADLValue a) => EndPointData -> (a -> IO ()) -> IO (LocalSink a)
+epNewSink1 ep handler = do
   uuid <- fmap (T.pack . UUID.toString) UUID.nextRandom
   let at = atype (defaultv :: a)
       sink = ZMQSink (ep_hostname ep) (ep_port ep) uuid
@@ -119,8 +122,8 @@ epNewSink ep handler = do
 
 -- | Close an endpoint. This implicitly closes all
 -- local sinks associated with that endpoint.
-epClose :: EndPoint -> IO ()
-epClose ep = do
+epClose1 :: EndPointData -> IO ()
+epClose1 ep = do
   ZMQ.close (ep_socket ep)
   killThread (ep_reader ep)
 

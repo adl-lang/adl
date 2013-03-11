@@ -25,8 +25,8 @@ sec = 1000000
 
 echoServer rfile = do
   bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx 6700) ZMQ.epClose $ \ep -> do
-      ls <- ZMQ.epNewSink ep (processRequest ctx)
+    bracket (ZMQ.epOpen ctx 6700) epClose $ \ep -> do
+      ls <- epNewSink ep (processRequest ctx)
       T.writeFile rfile (sinkToText (lsSink ls))
       putStrLn ("Wrote echo server reference to " ++ show rfile)
       threadDelay (1000*sec)
@@ -38,7 +38,7 @@ echoServer rfile = do
 
 echoClient rfile = do
   bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx 6701) ZMQ.epClose $ \ep -> do
+    bracket (ZMQ.epOpen ctx 6701) epClose $ \ep -> do
       ms <- fmap sinkFromText (T.readFile rfile)
       case ms of
         Nothing -> putStrLn ("Unable to read sink from " ++ rfile)
@@ -55,10 +55,10 @@ echoClient rfile = do
 -- action that will wait for a value to arrive at that sink. The value
 -- will be returned, unless a timeout occurs. Either way, the sink
 -- will be closed.
-oneShotSinkWithTimeout :: forall a . (ADLValue a) =>  ZMQ.EndPoint -> Int -> IO (Sink a, IO (Maybe a))
+oneShotSinkWithTimeout :: forall a . (ADLValue a) =>  EndPoint -> Int -> IO (Sink a, IO (Maybe a))
 oneShotSinkWithTimeout ep timeout = do
   rv <- atomically $ newEmptyTMVar 
-  ls <- ZMQ.epNewSink ep (handleResponse rv)
+  ls <- epNewSink ep (handleResponse rv)
   return (lsSink ls,(getResponse rv ls))
   where
     handleResponse :: TMVar a -> a -> IO ()

@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 module ADL.Core.Comms.Types(
   SinkConnection,
   scCreate,
@@ -6,7 +7,11 @@ module ADL.Core.Comms.Types(
   LocalSink,
   lsCreate,
   lsClose,
-  lsSink
+  lsSink,
+  EndPoint,
+  epCreate,
+  epNewSink,
+  epClose
   ) where
 
 import ADL.Core.Sink
@@ -46,3 +51,19 @@ lsSink = ls_sink
 -- | Close a local sink. No more messages will be processed.
 lsClose :: LocalSink a -> IO ()
 lsClose = ls_close
+
+data EndPoint = EndPoint {
+  ep_newSink :: forall a . (ADLValue a) => (a -> IO ()) -> IO (LocalSink a),
+  ep_close :: IO ()
+}  
+
+epCreate :: (forall a . (ADLValue a) => (a -> IO ()) -> IO (LocalSink a))
+         -> IO ()
+         -> EndPoint
+epCreate = EndPoint
+
+epNewSink :: forall a . (ADLValue a) => EndPoint -> (a -> IO ()) -> IO (LocalSink a)
+epNewSink = ep_newSink
+
+epClose :: EndPoint -> IO ()
+epClose = ep_close

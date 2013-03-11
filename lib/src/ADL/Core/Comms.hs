@@ -3,13 +3,8 @@ module ADL.Core.Comms(
   zmqContext,
   ADL.Core.Comms.init,
   close,
-  SinkConnection,
-  connect,
-  scSend,
-  scClose,
-  LocalSink,
-  lsSink,
-  lsClose
+  module ADL.Core.Comms.Types,
+  connect
   ) where
 
 import Control.Applicative
