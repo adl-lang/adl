@@ -40,4 +40,4 @@ clean:
 
 	(cd examples && cabal-dev -s ../cabal-dev clean)
 
-.PHONY : examples compile lib clean
+.PHONY : examples compiler lib clean

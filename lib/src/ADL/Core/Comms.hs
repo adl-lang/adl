@@ -21,8 +21,7 @@ import Control.Exception
 import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.STM
-import Control.Concurrent.TVar
-import Control.Concurrent.TMVar
+import Control.Concurrent.STM.TVar
 import Network.BSD(getHostName,HostName)
 
 import qualified Data.Map as Map
@@ -82,6 +81,7 @@ epOpen ctx port = do
       where
         loop = do
           bs <- ZMQ.receive s []
+          L.debugM logger ("Received message body:" ++ show bs)
           case parseMessage (LBS.fromChunks [bs]) of
             (Left emsg) -> discard ("cannot parse message header & JSON body: " ++ emsg )
             (Right (sid,v)) -> do
@@ -157,11 +157,9 @@ parseMessage :: LBS.ByteString -> Either String Message
 parseMessage lbs = do
   v <- JSON.eitherDecode' lbs
   case v of
-    (Right (JSON.Array v)) -> case V.toList v of
+    (JSON.Array v) -> case V.toList v of
       [JSON.String sid,v] -> Right (sid,v)
       _ -> Left msg
-    (Right _) -> Left msg
-    (Left e) -> Left e
   where
     msg = "Top level JSON object must be a two element vector"
 
@@ -183,6 +181,7 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
     zmqSend socket a = do
       let tjf = ToJSONFlags True
           lbs = packMessage (sid,atoJSON tjf a)
+      L.debugM logger ("Sending message to " ++ host ++ "/" ++ show port ++ ":" ++ show lbs)
       ZMQ.send' socket lbs []
 
     zmqClose key = atomically $ do
@@ -218,6 +217,8 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
           ZMQ.connect socket ("tcp://" ++ host ++ ":" ++ show port)
           atomically $ modifyTVar cmapv (Map.insert key (Just (socket,1)))
           return socket
+
+    logger = "SinkConnection.zmqSend"
 
 
 -- | Send a message to a sink
