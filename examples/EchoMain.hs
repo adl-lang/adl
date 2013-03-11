@@ -17,6 +17,7 @@ import qualified System.Log.Logger as L
 
 import ADL.Core.Comms
 import qualified ADL.Core.Comms.ZMQ as ZMQ
+import ADL.Core.Comms.Rpc(oneShotSinkWithTimeout)
 import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Examples.Echo
@@ -50,32 +51,6 @@ echoClient rfile = do
           case mv of
             Just (EchoResponse ()) -> putStrLn "Received response"
             Nothing -> putStrLn "Request timed out"
-
--- | Create a new sink to receive a value of type a. Return an IO
--- action that will wait for a value to arrive at that sink. The value
--- will be returned, unless a timeout occurs. Either way, the sink
--- will be closed.
-oneShotSinkWithTimeout :: forall a . (ADLValue a) =>  EndPoint -> Int -> IO (Sink a, IO (Maybe a))
-oneShotSinkWithTimeout ep timeout = do
-  rv <- atomically $ newEmptyTMVar 
-  ls <- epNewSink ep (handleResponse rv)
-  return (lsSink ls,(getResponse rv ls))
-  where
-    handleResponse :: TMVar a -> a -> IO ()
-    handleResponse v a = atomically $ putTMVar v a
-
-    getResponse :: TMVar a -> LocalSink a -> IO (Maybe a)
-    getResponse rv ls = do
-      dv <- registerDelay timeout
-      r <- atomically $ (Just <$> takeTMVar rv) `orElse` (tryTimeout dv)
-      lsClose ls
-      return r
-
-    tryTimeout :: TVar Bool -> STM (Maybe a)
-    tryTimeout dv = do
-      v <- readTVar dv
-      if v == False then retry else return Nothing
-      
 
 usage = do
   putStrLn "Usage:"
