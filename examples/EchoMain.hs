@@ -25,8 +25,7 @@ sec = 1000000
 
 echoServer rfile = do
   bracket ADL.Core.Comms.init close $ \ctx -> do
-    zctx <- zmqContext ctx
-    bracket (ZMQ.epOpen zctx 6700) ZMQ.epClose $ \ep -> do
+    bracket (ZMQ.epOpen ctx 6700) ZMQ.epClose $ \ep -> do
       ls <- ZMQ.epNewSink ep (processRequest ctx)
       T.writeFile rfile (sinkToText (lsSink ls))
       putStrLn ("Wrote echo server reference to " ++ show rfile)
@@ -39,8 +38,7 @@ echoServer rfile = do
 
 echoClient rfile = do
   bracket ADL.Core.Comms.init close $ \ctx -> do
-    zctx <- zmqContext ctx
-    bracket (ZMQ.epOpen zctx 6701) ZMQ.epClose $ \ep -> do
+    bracket (ZMQ.epOpen ctx 6701) ZMQ.epClose $ \ep -> do
       ms <- fmap sinkFromText (T.readFile rfile)
       case ms of
         Nothing -> putStrLn ("Unable to read sink from " ++ rfile)

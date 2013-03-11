@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
-module ADL.Core.Comms.ZMQ(
+module ADL.Core.Comms.ZMQ.Internals(
   Context,
-  ADL.Core.Comms.ZMQ.init,
+  ADL.Core.Comms.ZMQ.Internals.init,
   close,
   connect,
   EndPoint,
