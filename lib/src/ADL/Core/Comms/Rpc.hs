@@ -12,10 +12,11 @@ import ADL.Core.Comms
 
 import ADL.Sys.Rpc
 
-rpc :: (ADLValue i, ADLValue o) => (Rpc i o -> IO ()) -> EndPoint -> Int-> i -> IO (Maybe o)
-rpc sendf ep timeout i = do
+rpc :: (ADLValue i, ADLValue o, ADLValue a)
+    => (Rpc i o -> a) -> SinkConnection a -> EndPoint -> Int-> i -> IO (Maybe o)
+rpc selectorf sc ep timeout i = do
   (sink,waitForValue) <- oneShotSinkWithTimeout ep timeout
-  sendf (Rpc i sink)
+  scSend sc (selectorf (Rpc i sink))
   waitForValue
 
 -- | Create a new sink to receive a value of type a. Return an IO
