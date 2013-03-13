@@ -1,5 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module ADL.Core.Comms.Rpc(
+  module ADL.Sys.Rpc,
+  callRPC,
+  handleRPC,
   oneShotSinkWithTimeout
   ) where
 
@@ -12,12 +15,20 @@ import ADL.Core.Comms
 
 import ADL.Sys.Rpc
 
-rpc :: (ADLValue i, ADLValue o, ADLValue a)
+-- | Make an RPC request from the client side
+callRPC :: (ADLValue i, ADLValue o, ADLValue a)
     => (Rpc i o -> a) -> SinkConnection a -> EndPoint -> Int-> i -> IO (Maybe o)
-rpc selectorf sc ep timeout i = do
+callRPC selectorf sc ep timeout i = do
   (sink,waitForValue) <- oneShotSinkWithTimeout ep timeout
   scSend sc (selectorf (Rpc i sink))
   waitForValue
+
+-- | Respond to an RPC request on the server side
+handleRPC :: (ADLValue o) => Context -> Rpc i o -> (i -> IO o) -> IO ()
+handleRPC ctx rpc f = do
+  o <- f (rpc_params rpc)
+  sc <- connect ctx (rpc_replyTo rpc)
+  scSend sc o
 
 -- | Create a new sink to receive a value of type a. Return an IO
 -- action that will wait for a value to arrive at that sink. The value

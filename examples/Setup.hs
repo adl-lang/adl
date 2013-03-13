@@ -10,7 +10,8 @@ import Data.List(intercalate)
 generateHaskellFromADL pkg lbi = do
   let odir = autogenModulesDir lbi
       adlFiles =
-        [ "adl/examples/echo.adl"
+        [ "adl/examples/echo.adl",
+          "adl/examples/kvstore1.adl"
         ]
           
       cmd = "adlc haskell -I adl -I ../lib/adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles

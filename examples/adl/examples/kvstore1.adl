@@ -1,0 +1,22 @@
+module examples.kvstore1
+{
+
+import sys.types;
+import sys.rpc;
+
+typedef string Key;
+typedef string Value;
+typedef string Pattern;
+typedef pair<Key,Value> KVPair;
+typedef vector<KVPair> QueryResults;
+
+union KVRequest
+{
+    rpc<KVPair,void> put;
+    rpc<Key,void> delete;
+    rpc<Pattern,QueryResults> query;
+};
+
+typedef sink<KVRequest> KVService;
+
+};
