@@ -1,4 +1,5 @@
 MKFILE = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+MKDIR = $(dir $(MKFILE))
 
 TESTOUTDIR=/tmp/adltest
 MODULEPREFIX=ADL.Compiled
@@ -8,7 +9,7 @@ ADLLIBDIR=lib
 GHC=GHC_PACKAGE_PATH=cabal-dev/packages-7.4.1.conf: ghc
 GHCFLAGS=-i$(TESTOUTDIR)
 
-PATH:=$(dir $(MKFILE))cabal-dev/bin:$(PATH)
+PATH:=$(MKDIR)cabal-dev/bin:$(PATH)
 
 EXAMPLEADLFILES=\
     examples/adl/examples/im.adl \
@@ -33,11 +34,33 @@ examples:
 	(cd examples && cabal-dev -s ../cabal-dev install)
 
 clean: 
+	-cabal-dev ghc-pkg unregister adl-lib
+
 	(cd compiler && cabal-dev -s ../cabal-dev clean)
 
 	(cd lib && cabal-dev -s ../cabal-dev clean)
-	cabal-dev ghc-pkg unregister adl-lib
 
 	(cd examples && cabal-dev -s ../cabal-dev clean)
 
+cleanext:
+	-cabal-dev ghc-pkg unregister zeromq3-haskell
+	(cd ext && rm -rf include lib share)
+
+ext: zeromq3-haskell
+
+zeromq3-haskell: ext/lib/libzmq.so.3.0.0
+	 cabal-dev install zeromq3-haskell --extra-include-dirs=$(MKDIR)ext/include --extra-lib-dirs=$(MKDIR)/ext/lib --enable-documentation
+
+ext/lib/libzmq.so.3.0.0: ext/downloads/zeromq-3.2.2.tar.gz
+	(cd ext && tar -xzf downloads/zeromq-3.2.2.tar.gz)
+	(cd ext/zeromq-3.2.2 && ./configure --prefix $(MKDIR)ext)
+	(cd ext/zeromq-3.2.2 && make)
+	(cd ext/zeromq-3.2.2 && make install)
+	rm -r ext/zeromq-3.2.2
+
+ext/downloads/zeromq-3.2.2.tar.gz:
+	mkdir -p ext/downloads
+	(cd ext/downloads && wget http://download.zeromq.org/zeromq-3.2.2.tar.gz)
+
 .PHONY : examples compiler lib clean
+

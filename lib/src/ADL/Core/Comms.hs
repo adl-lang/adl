@@ -15,6 +15,7 @@ import ADL.Core.Sink
 import ADL.Core.Comms.Types
 import qualified ADL.Core.Comms.Null as Null
 import qualified ADL.Core.Comms.ZMQ.Internals as ZMQ
+import qualified System.Log.Logger as L
 
 newtype Context = Context ZMQ.Context
 

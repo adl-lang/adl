@@ -23,7 +23,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
-import qualified System.ZMQ as ZMQ
+import qualified System.ZMQ3 as ZMQ
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Encode as JSON
 import qualified System.Log.Logger as L
@@ -43,12 +43,15 @@ data Context = Context {
 -- | Initialise the ZMQ communications runtime.
 init :: IO Context
 init = do
-    zctx <- ZMQ.init 2
+    zctx <- ZMQ.context
     cv <- atomically $ (newTVar Map.empty)
     return (Context zctx cv)
 
 -- | Close the ZMQ communications runtime.
-close c = ZMQ.term (c_zcontext c)
+close c = do
+  L.debugM "ZMQ.destroy" "starting ZMQ.destroy..."
+  ZMQ.destroy (c_zcontext c)
+  L.debugM "ZMQ.destroy" "ZMQ.destroy done"
 
 -- | To receive messages, a communications endpoint is required.
 data EndPointData = EndPointData {
@@ -72,34 +75,60 @@ epOpen1 ctx port = do
   hn <- getHostName
   s <- ZMQ.socket (c_zcontext ctx) ZMQ.Pull
   ZMQ.bind s ("tcp://*:" ++ (show port))
-  vsinks <- atomically $ newTVar (Map.empty)
-  tid <- forkIO (reader s vsinks)
-  return (EndPointData ctx hn port s tid vsinks)
+  sinksv <- atomically $ newTVar (Map.empty)
+  nextactionv <- atomically $ newEmptyTMVar
+  tid <- forkIO (reader s sinksv nextactionv)
+  forkIO (runner nextactionv)
+  return (EndPointData ctx hn port s tid sinksv)
   where
-    reader s vsinks = loop
+    -- The reader thread reads messages from the transport, parses
+    -- them and pushes them to the runner. This thread expects to be
+    -- killed when the endpoint is closed.
+    reader s sinksv nextactionv = Control.Exception.handleJust isThreadKilled (threadKilledHandler s nextactionv) loop 
       where
-        loop = do
-          bs <- ZMQ.receive s []
+        loop = do 
+          bs <- ZMQ.receive s
           L.debugM logger ("Received message body:" ++ show bs)
           case parseMessage (LBS.fromChunks [bs]) of
             (Left emsg) -> discard ("cannot parse message header & JSON body: " ++ emsg )
             (Right (sid,v)) -> do
-              sinks <- atomically $ readTVar vsinks
+              sinks <- atomically $ readTVar sinksv
               case Map.lookup sid sinks  of
                 Nothing -> discard ("No handler for sink with SID " ++ show sid)
                 (Just actionf) -> do
-                  Control.Exception.catch (actionf v) eHandler
+                  atomically $ putTMVar nextactionv (Just (actionf v))
           loop
 
-    eHandler :: SomeException -> IO ()
-    eHandler e = do
+    isThreadKilled ThreadKilled = Just ThreadKilled
+    isThreadKilled _ = Nothing
+
+    threadKilledHandler s nextactionv e = do
+      ZMQ.close s
+      atomically $ putTMVar nextactionv Nothing
+
+    -- The runner thread executes the actions. This thread will never
+    -- be killed (actions always run to completion). It shuts down
+    -- when signalled via a Nothing value.
+    runner nextactionv = loop
+      where
+        loop = do
+          ma <- atomically $ takeTMVar nextactionv
+          case ma of
+            Nothing -> return ()
+            (Just action) -> do
+              Control.Exception.handle actionExceptionHandler action
+              loop
+
+    actionExceptionHandler :: SomeException -> IO ()
+    actionExceptionHandler e = do
       L.errorM logger ("Failed to execute action:" ++ show e)
       return ()
 
+
     discard s = L.errorM logger ("Message discarded: " ++ s)
 
-    logger = "Endpoint.reader"
-      
+    logger = "Endpoint"
+
 -- | Create a new local sink from an endpoint and a message processing
 -- function. The processing function will be called in an arbitrary
 -- thread chosen by the ADL communications runtime.
@@ -123,9 +152,7 @@ epNewSink1 ep handler = do
 -- | Close an endpoint. This implicitly closes all
 -- local sinks associated with that endpoint.
 epClose1 :: EndPointData -> IO ()
-epClose1 ep = do
-  ZMQ.close (ep_socket ep)
-  killThread (ep_reader ep)
+epClose1 ep = killThread (ep_reader ep)
 
 
 -- A message is a sink id and a json value. We represent this on the
@@ -159,7 +186,7 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
       let tjf = ToJSONFlags True
           lbs = packMessage (sid,atoJSON tjf a)
       L.debugM logger ("Sending message to " ++ host ++ "/" ++ show port ++ ":" ++ show lbs)
-      ZMQ.send' socket lbs []
+      ZMQ.send' socket [] lbs
 
     zmqClose key = atomically $ do
         cs <- readTVar cmapv

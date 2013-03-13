@@ -11,7 +11,7 @@ import ADL.Core.Comms.Types
 connect :: (ADLValue a) => IO (SinkConnection a)
 connect = return (scCreate nullSend nullClose)
   where
-    nullSend a = L.debugM logger ("Dropped sent message of type " ++ T.unpack (atype a))
+    nullSend a = L.debugM logger ("Dropped message to null sink of type " ++ T.unpack (atype a))
     nullClose  = return ()
 
     logger = "NullSink"

@@ -44,13 +44,14 @@ echoClient rfile = do
       case ms of
         Nothing -> putStrLn ("Unable to read sink from " ++ rfile)
         (Just s) -> do
-          sc <- connect ctx s
-          (sink, getValue) <- oneShotSinkWithTimeout ep (20 * sec)
-          scSend sc (EchoRequest () sink)
-          mv <- getValue
-          case mv of
-            Just (EchoResponse ()) -> putStrLn "Received response"
-            Nothing -> putStrLn "Request timed out"
+          bracket (connect ctx s) scClose $ \sc -> do 
+            (sink, getValue) <- oneShotSinkWithTimeout ep (20 * sec)
+            scSend sc (EchoRequest () sink)
+            mv <- getValue
+            case mv of
+              Just (EchoResponse ()) -> putStrLn "Received response"
+              Nothing -> putStrLn "Request timed out"
+            return ()
 
 usage = do
   putStrLn "Usage:"
