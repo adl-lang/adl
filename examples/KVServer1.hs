@@ -25,7 +25,7 @@ type MapV = TVar (Map.Map T.Text T.Text)
 kvServer rfile = do
 --    bracket ADL.Core.Comms.init close $ \ctx -> do
     bracket ADL.Core.Comms.init (const (return ())) $ \ctx -> do
-    bracket (ZMQ.epOpen ctx 6700) epClose $ \ep -> do
+    bracket (ZMQ.epOpen ctx (Left 6700)) epClose $ \ep -> do
       mapv <- atomically $ newTVar Map.empty
       ls <- epNewSink ep (processRequest mapv ctx)
       T.writeFile rfile (sinkToText (lsSink ls))

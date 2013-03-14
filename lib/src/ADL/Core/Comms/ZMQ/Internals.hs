@@ -8,6 +8,7 @@ module ADL.Core.Comms.ZMQ.Internals(
   epOpen
   ) where
 
+import Prelude hiding (catch)
 import Data.Monoid
 import Control.Exception
 import Control.Applicative
@@ -65,34 +66,48 @@ data EndPointData = EndPointData {
   ep_sinks :: TVar (Map.Map T.Text (JSON.Value -> IO ()))
 }  
 
--- | Create a new communications endpoint, on the specifed
--- TCP port.
-epOpen :: Context -> Int -> IO EndPoint
+-- | Create a new communications endpoint, either on a specified
+-- tcp port, or on an unused port a specified range.
+epOpen :: Context -> Either Int (Int,Int) -> IO EndPoint
 epOpen ctx port = do
   ed <- epOpen1 ctx port
   return (epCreate (epNewSink1 ed) (epClose1 ed))
 
-epOpen1 :: Context -> Int-> IO EndPointData
-epOpen1 ctx port = do
+epOpen1 :: Context -> Either Int (Int,Int)-> IO EndPointData
+epOpen1 ctx rport = do
   hn <- getHostName
-  let addr = "tcp://*:" ++ (show port)
-  L.debugM zmqLogger ("socket ZMQ.Pull, bound to " ++ addr)
-  s <- ZMQ.socket (c_zcontext ctx) ZMQ.Pull
-  ZMQ.bind s addr
-  sinksv <- atomically $ newTVar (Map.empty)
-  nextactionv <- atomically $ newEmptyTMVar
-  tid <- forkIO (reader s sinksv nextactionv)
-  forkIO (runner nextactionv)
-  return (EndPointData ctx hn port s tid sinksv)
+  bracketOnError (zmqSocket (c_zcontext ctx) ZMQ.Pull) zmqClose $ \s -> do
+    port <- bind s rport
+    sinksv <- atomically $ newTVar (Map.empty)
+    nextactionv <- atomically $ newEmptyTMVar
+    tid <- forkIO (reader s sinksv nextactionv)
+    forkIO (runner nextactionv)
+    return (EndPointData ctx hn port s tid sinksv)
   where
+    -- Bind to a specified port
+    bind socket (Left port) =  do
+      let addr = "tcp://*:" ++ (show port)
+      zmqBind socket addr
+      return port
+
+    -- Bind to any port within a range
+    bind socket (Right (port,maxPort))
+      | port > maxPort = ioError (userError "Unable to find available port in range")
+      | otherwise = do                  
+          let addr = "tcp://*:" ++ (show port)
+          catch (zmqBind socket addr >> return port) tryNextPort
+      where
+        tryNextPort :: ZMQ.ZMQError -> IO Int
+        tryNextPort e = bind socket (Right (port+1,maxPort))
+
     -- The reader thread reads messages from the transport, parses
     -- them and pushes them to the runner. This thread expects to be
-    -- killed when the endpoint is closed.
-    reader s sinksv nextactionv = Control.Exception.handleJust isThreadKilled (threadKilledHandler s nextactionv) loop 
+    -- killed when the endpoint is closed, at which time it will close
+    -- the socket.
+    reader s sinksv nextactionv = finally loop (zmqClose s)
       where
         loop = do 
-          bs <- ZMQ.receive s
-          L.debugM zmqLogger ("received message body:" ++ show bs)
+          bs <- zmqReceive s
           case parseMessage (LBS.fromChunks [bs]) of
             (Left emsg) -> discard ("cannot parse message header & JSON body: " ++ emsg )
             (Right (sid,v)) -> do
@@ -102,14 +117,6 @@ epOpen1 ctx port = do
                 (Just actionf) -> do
                   atomically $ putTMVar nextactionv (Just (actionf v))
           loop
-
-    isThreadKilled ThreadKilled = Just ThreadKilled
-    isThreadKilled _ = Nothing
-
-    threadKilledHandler s nextactionv e = do
-      L.debugM zmqLogger ("close")
-      ZMQ.close s
-      atomically $ putTMVar nextactionv Nothing
 
     -- The runner thread executes the actions. This thread will never
     -- be killed (actions always run to completion). It shuts down
@@ -181,18 +188,17 @@ connect :: (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)
 connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
   let key = (host,port)
   socket <- getSocket key
-  return (scCreate (zmqSend socket) (zmqClose key) )
+  return (scCreate (zmqSend1 socket) (zmqClose1 key) )
   where
     addr = "tcp://" ++ host ++ ":" ++ show port
     cmapv = c_connections ctx
 
-    zmqSend socket a = do
+    zmqSend1 socket a = do
       let tjf = ToJSONFlags True
           lbs = packMessage (sid,atoJSON tjf a)
-      L.debugM zmqLogger ("send' to " ++ addr ++ ":" ++ show lbs)
-      ZMQ.send' socket [] lbs
+      zmqSend' socket [] lbs
 
-    zmqClose key = do
+    zmqClose1 key = do
       ms <- atomically $ do
         cs <- readTVar cmapv
         case Map.lookup key cs of
@@ -207,7 +213,7 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
         Nothing -> return ()
         (Just socket) -> do
           L.debugM zmqLogger ("close")
-          ZMQ.close socket
+          zmqClose socket
     
     getSocket key = do
       ms <- atomically $ do
@@ -228,14 +234,47 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
       case ms of
         (Just socket) -> return socket
         Nothing -> do
-          socket <- ZMQ.socket (c_zcontext ctx) ZMQ.Push
+          socket <- zmqSocket (c_zcontext ctx) ZMQ.Push
           let (host,port) = key
-          ZMQ.connect socket addr
-          L.debugM zmqLogger ("socket ZMQ.Push, connected to " ++ addr)
+          zmqConnect socket addr
           atomically $ modifyTVar cmapv (Map.insert key (Just (socket,1)))
           return socket
 
+instance Show ZMQ.Push where show _ = "Push"
+instance Show ZMQ.Pull where show _ = "Pull"
 
+zmqSocket ctx type_ = do
+   s <- ZMQ.socket ctx type_
+   fd <- ZMQ.fileDescriptor s 
+   L.debugM zmqLogger ("create " ++ show type_ ++ " socket<"++show fd ++">")
+   return s
+
+zmqBind s addr = do
+   fd <- ZMQ.fileDescriptor s
+   ZMQ.bind s addr
+   L.debugM zmqLogger ("bound socket<"++show fd ++"> to " ++ addr)
+
+zmqConnect s addr = do
+   fd <- ZMQ.fileDescriptor s
+   ZMQ.connect s addr
+   L.debugM zmqLogger ("connect socket<"++show fd ++"> to " ++ addr)
+
+zmqClose s = do
+   fd <- ZMQ.fileDescriptor s 
+   ZMQ.close s
+   L.debugM zmqLogger ("close socket<"++show fd ++">")
+
+zmqReceive s = do
+   bs <- ZMQ.receive s
+   fd <- ZMQ.fileDescriptor s 
+   L.debugM zmqLogger ("received on socket<" ++ show fd ++ ">  message body:" ++ show bs)
+   return bs
+
+zmqSend' s flags lbs = do
+  ZMQ.send' s flags lbs
+  fd <- ZMQ.fileDescriptor s 
+  L.debugM zmqLogger ("send on socket<" ++ show fd ++ ">  message body:" ++ show lbs)
+  
 modifyTVar :: TVar a -> (a->a) -> STM ()
 modifyTVar v f = do
   a <- readTVar v
