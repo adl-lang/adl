@@ -40,18 +40,20 @@ data Context = Context {
   c_connections :: TVar (Map.Map (HostName,Int) (Maybe (ZMQ.Socket ZMQ.Push,Int)))
   }
 
+zmqLogger = "ZMQ"
+
 -- | Initialise the ZMQ communications runtime.
 init :: IO Context
 init = do
-    zctx <- ZMQ.context
-    cv <- atomically $ (newTVar Map.empty)
-    return (Context zctx cv)
+  L.debugM zmqLogger "context"
+  zctx <- ZMQ.context
+  cv <- atomically $ (newTVar Map.empty)
+  return (Context zctx cv)
 
 -- | Close the ZMQ communications runtime.
 close c = do
-  L.debugM "ZMQ.destroy" "starting ZMQ.destroy..."
+  L.debugM zmqLogger "destroy"
   ZMQ.destroy (c_zcontext c)
-  L.debugM "ZMQ.destroy" "ZMQ.destroy done"
 
 -- | To receive messages, a communications endpoint is required.
 data EndPointData = EndPointData {
@@ -73,8 +75,10 @@ epOpen ctx port = do
 epOpen1 :: Context -> Int-> IO EndPointData
 epOpen1 ctx port = do
   hn <- getHostName
+  let addr = "tcp://*:" ++ (show port)
+  L.debugM zmqLogger ("socket ZMQ.Pull, bound to " ++ addr)
   s <- ZMQ.socket (c_zcontext ctx) ZMQ.Pull
-  ZMQ.bind s ("tcp://*:" ++ (show port))
+  ZMQ.bind s addr
   sinksv <- atomically $ newTVar (Map.empty)
   nextactionv <- atomically $ newEmptyTMVar
   tid <- forkIO (reader s sinksv nextactionv)
@@ -88,7 +92,7 @@ epOpen1 ctx port = do
       where
         loop = do 
           bs <- ZMQ.receive s
-          L.debugM logger ("Received message body:" ++ show bs)
+          L.debugM zmqLogger ("received message body:" ++ show bs)
           case parseMessage (LBS.fromChunks [bs]) of
             (Left emsg) -> discard ("cannot parse message header & JSON body: " ++ emsg )
             (Right (sid,v)) -> do
@@ -103,6 +107,7 @@ epOpen1 ctx port = do
     isThreadKilled _ = Nothing
 
     threadKilledHandler s nextactionv e = do
+      L.debugM zmqLogger ("close")
       ZMQ.close s
       atomically $ putTMVar nextactionv Nothing
 
@@ -121,13 +126,11 @@ epOpen1 ctx port = do
 
     actionExceptionHandler :: SomeException -> IO ()
     actionExceptionHandler e = do
-      L.errorM logger ("Failed to execute action:" ++ show e)
+      L.errorM zmqLogger ("Failed to execute action:" ++ show e)
       return ()
 
 
-    discard s = L.errorM logger ("Message discarded: " ++ s)
-
-    logger = "Endpoint"
+    discard s = L.errorM zmqLogger ("Message discarded: " ++ s)
 
 -- | Create a new local sink from an endpoint and a message processing
 -- function. The processing function will be called in an arbitrary
@@ -180,22 +183,31 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
   socket <- getSocket key
   return (scCreate (zmqSend socket) (zmqClose key) )
   where
+    addr = "tcp://" ++ host ++ ":" ++ show port
     cmapv = c_connections ctx
 
     zmqSend socket a = do
       let tjf = ToJSONFlags True
           lbs = packMessage (sid,atoJSON tjf a)
-      L.debugM logger ("Sending message to " ++ host ++ "/" ++ show port ++ ":" ++ show lbs)
+      L.debugM zmqLogger ("send' to " ++ addr ++ ":" ++ show lbs)
       ZMQ.send' socket [] lbs
 
-    zmqClose key = atomically $ do
+    zmqClose key = do
+      ms <- atomically $ do
         cs <- readTVar cmapv
         case Map.lookup key cs of
           Just (Just (socket,0)) -> do
             writeTVar cmapv (Map.delete key cs)
+            return Nothing
           Just (Just (socket,refs)) -> do
             writeTVar cmapv (Map.insert key (Just (socket,refs-1)) cs)
-          _ -> return ()
+            return (Just socket)
+          _ -> return Nothing
+      case ms of
+        Nothing -> return ()
+        (Just socket) -> do
+          L.debugM zmqLogger ("close")
+          ZMQ.close socket
     
     getSocket key = do
       ms <- atomically $ do
@@ -218,11 +230,10 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
         Nothing -> do
           socket <- ZMQ.socket (c_zcontext ctx) ZMQ.Push
           let (host,port) = key
-          ZMQ.connect socket ("tcp://" ++ host ++ ":" ++ show port)
+          ZMQ.connect socket addr
+          L.debugM zmqLogger ("socket ZMQ.Push, connected to " ++ addr)
           atomically $ modifyTVar cmapv (Map.insert key (Just (socket,1)))
           return socket
-
-    logger = "SinkConnection.zmqSend"
 
 
 modifyTVar :: TVar a -> (a->a) -> STM ()
