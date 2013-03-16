@@ -14,6 +14,8 @@ module ADL.Core.Comms.Types(
   epClose
   ) where
 
+import qualified Data.Text as T
+
 import ADL.Core.Sink
 import ADL.Core.Value
 
@@ -52,17 +54,17 @@ lsSink = ls_sink
 lsClose :: LocalSink a -> IO ()
 lsClose = ls_close
 
+type MkSink = forall a . (ADLValue a) => Maybe T.Text -> (a -> IO ()) -> IO (LocalSink a)
+
 data EndPoint = EndPoint {
-  ep_newSink :: forall a . (ADLValue a) => (a -> IO ()) -> IO (LocalSink a),
+  ep_newSink :: MkSink,
   ep_close :: IO ()
 }  
 
-epCreate :: (forall a . (ADLValue a) => (a -> IO ()) -> IO (LocalSink a))
-         -> IO ()
-         -> EndPoint
+epCreate :: MkSink -> IO () -> EndPoint
 epCreate = EndPoint
 
-epNewSink :: forall a . (ADLValue a) => EndPoint -> (a -> IO ()) -> IO (LocalSink a)
+epNewSink :: EndPoint -> MkSink
 epNewSink = ep_newSink
 
 epClose :: EndPoint -> IO ()

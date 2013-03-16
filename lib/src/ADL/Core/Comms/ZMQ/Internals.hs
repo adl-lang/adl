@@ -68,6 +68,8 @@ data EndPointData = EndPointData {
 
 -- | Create a new communications endpoint, either on a specified
 -- tcp port, or on an unused port a specified range.
+
+
 epOpen :: Context -> Either Int (Int,Int) -> IO EndPoint
 epOpen ctx port = do
   ed <- epOpen1 ctx port
@@ -142,12 +144,16 @@ epOpen1 ctx rport = do
 -- | Create a new local sink from an endpoint and a message processing
 -- function. The processing function will be called in an arbitrary
 -- thread chosen by the ADL communications runtime.
-epNewSink1 :: forall a . (ADLValue a) => EndPointData -> (a -> IO ()) -> IO (LocalSink a)
-epNewSink1 ep handler = do
-  uuid <- fmap (T.pack . UUID.toString) UUID.nextRandom
+epNewSink1 :: forall a . (ADLValue a) => EndPointData -> Maybe T.Text -> (a -> IO ()) -> IO (LocalSink a)
+epNewSink1 ep msid handler = do
+  -- If the caller supplied an ID use it. Otherwise choose one at random
+  sid <- case msid of
+    (Just sid) -> return sid
+    Nothing -> fmap (T.pack . UUID.toString) UUID.nextRandom
+
   let at = atype (defaultv :: a)
-      sink = ZMQSink (ep_hostname ep) (ep_port ep) uuid
-  atomically $ modifyTVar (ep_sinks ep) (Map.insert uuid (action at))
+      sink = ZMQSink (ep_hostname ep) (ep_port ep) sid
+  atomically $ modifyTVar (ep_sinks ep) (Map.insert sid (action at))
   return (lsCreate sink (closef sink))
   where
     action at v = case (afromJSON fjf v) of
@@ -202,18 +208,16 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
       ms <- atomically $ do
         cs <- readTVar cmapv
         case Map.lookup key cs of
-          Just (Just (socket,0)) -> do
+          Just (Just (socket,1)) -> do
             writeTVar cmapv (Map.delete key cs)
-            return Nothing
+            return (Just socket)
           Just (Just (socket,refs)) -> do
             writeTVar cmapv (Map.insert key (Just (socket,refs-1)) cs)
-            return (Just socket)
+            return Nothing
           _ -> return Nothing
       case ms of
         Nothing -> return ()
-        (Just socket) -> do
-          L.debugM zmqLogger ("close")
-          zmqClose socket
+        (Just socket) -> zmqClose socket
     
     getSocket key = do
       ms <- atomically $ do

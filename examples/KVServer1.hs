@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module Main where
 
 import Control.Exception(bracket)
@@ -23,11 +23,10 @@ import ADL.Examples.Kvstore1
 type MapV = TVar (Map.Map T.Text T.Text)
 
 kvServer rfile = do
---    bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket ADL.Core.Comms.init (const (return ())) $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Left 6700)) epClose $ \ep -> do
+    bracket ADL.Core.Comms.init close $ \ctx -> do
+    bracket (ZMQ.epOpen ctx (Left 2001)) epClose $ \ep -> do
       mapv <- atomically $ newTVar Map.empty
-      ls <- epNewSink ep (processRequest mapv ctx)
+      ls <- epNewSink ep (Just "kvstore") (processRequest mapv ctx)
       T.writeFile rfile (sinkToText (lsSink ls))
       putStrLn ("Wrote kv server reference to " ++ show rfile)
       threadDelay (1000*sec)

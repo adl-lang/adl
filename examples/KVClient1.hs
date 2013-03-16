@@ -23,7 +23,7 @@ withConnection rfile f = do
   (Just s) <- fmap sinkFromText (T.readFile rfile)
 --  bracket ADL.Core.Comms.init close $ \ctx -> do
   bracket ADL.Core.Comms.init (const (return ())) $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Left 6701)) epClose $ \ep -> do
+    bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
       bracket (connect ctx s) scClose $ \sc -> do
         f sc ep
 
