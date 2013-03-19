@@ -118,6 +118,7 @@ hDiscName sn fn = T.concat [upper1 sn,"_",fn]
 
 hPrimitiveType :: PrimitiveType -> HGen T.Text
 hPrimitiveType P_Void = return "()"
+hPrimitiveType P_Bool = return "Prelude.Bool"
 hPrimitiveType P_Int = return "Prelude.Int"
 hPrimitiveType P_Double = return "Prelude.Double"
 hPrimitiveType P_ByteVector = do
@@ -336,6 +337,8 @@ customTypes = Map.fromList
        CustomType "Prelude.Maybe" [HaskellModule "ADL.Core.CustomTypes"] )
     , (ScopedName (ModuleName ["sys","types"]) "either",
        CustomType "Prelude.Either" [HaskellModule "ADL.Core.CustomTypes"] )
+    , (ScopedName (ModuleName ["sys","types"]) "error",
+       CustomType "Error" [HaskellModule "ADL.Core.CustomTypes"] )
     , (ScopedName (ModuleName ["sys","types"]) "pair",
        CustomType "Pair" [HaskellModule "ADL.Core.CustomTypes"] )
     , (ScopedName (ModuleName ["sys","types"]) "map",

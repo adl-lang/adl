@@ -14,6 +14,7 @@ import Format
 data PrimitiveType = P_Void
                    | P_Int
                    | P_Double
+                   | P_Bool  
                    | P_ByteVector
                    | P_String
                    | P_Vector
@@ -31,6 +32,7 @@ data PrimitiveDetails = PrimitiveDetails {
 
 primitiveDetails =
   [ PrimitiveDetails P_Void "void" 0
+  , PrimitiveDetails P_Bool "bool" 0
   , PrimitiveDetails P_Int "int" 0
   , PrimitiveDetails P_Double "double" 0
   , PrimitiveDetails P_ByteVector "bytes" 0

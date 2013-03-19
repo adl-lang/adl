@@ -52,6 +52,8 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
                 ]
         in unionFromJSON f umap o
 
+type Error t = Either T.Text t
+
 type Pair t1 t2 = (t1,t2)
 
 instance (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where

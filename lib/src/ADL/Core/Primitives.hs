@@ -19,6 +19,16 @@ instance ADLValue () where
   afromJSON _ JSON.Null = Just ()
   afromJSON _ _ = Nothing
 
+instance ADLValue Bool where
+  atype _ = "bool"
+
+  defaultv = False
+
+  atoJSON _ v = JSON.Bool v
+
+  afromJSON _ (JSON.Bool v) = Just v
+  afromJSON _ _ = Nothing
+
 instance ADLValue Int where
   atype _ = "int"
 
