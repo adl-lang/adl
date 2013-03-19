@@ -225,18 +225,18 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
         nl
         wt "defaultv = $1 $2" [lname, T.intercalate " " ["defaultv" | f <- s_fields s]]
         nl
-        wl "atoJSON f v = toJSONObject f (atype v) ("
+        wl "aToJSON f v = toJSONObject f (atype v) ("
         indent $ do
           forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do
-            wt "$1 (\"$2\",atoJSON f ($3 v))"
+            wt "$1 (\"$2\",aToJSON f ($3 v))"
                [fp,(f_name f),hFieldName (d_name d) (f_name f)]
           wl "] )"
         nl
-        wt "afromJSON f (JSON.Object hm) = $1" [lname]
+        wt "aFromJSON f (JSON.Object hm) = $1" [lname]
         indent $ do
           forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
             wt "$1 fieldFromJSON f \"$2\" defaultv hm" [p, (f_name f)]
-        wl "afromJSON _ _ = Prelude.Nothing"
+        wl "aFromJSON _ _ = Prelude.Nothing"
 
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
     enableScopedTypeVariables (u_typeParams u)
@@ -260,19 +260,19 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
         wt "defaultv = $1 defaultv"
            [hDiscName (d_name d) (f_name (head (u_fields u)))]
         nl
-        wl "atoJSON f v = toJSONObject f (atype v) [case v of"
+        wl "aToJSON f v = toJSONObject f (atype v) [case v of"
         indent $ do
           forM_ (u_fields u) $ \f -> do
-            wt "($1 v) -> (\"$2\",atoJSON f v)"
+            wt "($1 v) -> (\"$2\",aToJSON f v)"
                [hDiscName (d_name d) (f_name f),(f_name f)]
           wl "]"
         nl
-        wl "afromJSON f o = "
+        wl "aFromJSON f o = "
         indent $ do
           wl "let umap = HM.fromList"
           indent $ indent $ do
               forM_ (zip ("[":repeat ",") (u_fields u)) $ \(fp,f) -> do
-                wt "$1 (\"$2\", \\f v -> $3 <$> afromJSON f v)" [fp,f_name f,hDiscName (d_name d) (f_name f)]
+                wt "$1 (\"$2\", \\f v -> $3 <$> aFromJSON f v)" [fp,f_name f,hDiscName (d_name d) (f_name f)]
               wl "]"
           wl "in unionFromJSON f umap o"
 

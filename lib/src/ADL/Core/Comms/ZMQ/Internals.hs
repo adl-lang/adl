@@ -156,14 +156,14 @@ epNewSink1 ep msid handler = do
   atomically $ modifyTVar (ep_sinks ep) (Map.insert sid (action at))
   return (lsCreate sink (closef sink))
   where
-    action at v = case (afromJSON fjf v) of
+    action at v = case (aFromJSON fjf v) of
       Nothing -> L.errorM "Sink.action" 
           ("Message discarded: unable to parse value of type " ++ T.unpack at)
       (Just a) -> handler a
 
     closef sink = atomically $ modifyTVar (ep_sinks ep) (Map.delete (zmqs_sid sink))
 
-    fjf = FromJSONFlags True
+    fjf = JSONFlags True
 
 -- | Close an endpoint. This implicitly closes all
 -- local sinks associated with that endpoint.
@@ -200,8 +200,8 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
     cmapv = c_connections ctx
 
     zmqSend1 socket a = do
-      let tjf = ToJSONFlags True
-          lbs = packMessage (sid,atoJSON tjf a)
+      let tjf = JSONFlags True
+          lbs = packMessage (sid,aToJSON tjf a)
       zmqSend' socket [] lbs
 
     zmqClose1 key = do

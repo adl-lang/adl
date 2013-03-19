@@ -28,10 +28,10 @@ instance forall a . (ADLValue a) => ADLValue (Sink a) where
 
   defaultv = NullSink
 
-  atoJSON flags s = JSON.String (sinkToText s)
+  aToJSON flags s = JSON.String (sinkToText s)
 
-  afromJSON flags (JSON.String s) = sinkFromText s
-  afromJSON flags _ = Nothing
+  aFromJSON flags (JSON.String s) = sinkFromText s
+  aFromJSON flags _ = Nothing
 
 sinkToText :: forall a . (ADLValue a) => Sink a -> T.Text
 sinkToText NullSink = "null"

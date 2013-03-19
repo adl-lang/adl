@@ -1,0 +1,47 @@
+module examples.kvstore2
+{
+
+import sys.types;
+import sys.rpc;
+
+typedef string Key;
+typedef string Value;
+typedef string Pattern;
+typedef pair<Key,Value> KVPair;
+typedef vector<KVPair> QueryResults;
+
+union KVRequest
+{
+    // put and delete don't return results,
+    // but may generate an error, due to permissions 
+    // problems.
+    rpc<KVPair,error<void>> put;
+    rpc<Key,error<void>> delete;
+
+    rpc<Pattern,QueryResults> query;
+};
+
+typedef sink<KVRequest> KVService;
+
+struct Credentials
+{
+    string username;
+    string password;        
+};
+
+// For authentication, we provide the credentials, and on
+// success get back a reference to the service, otherwise
+// an error message.
+typedef rpc<Credentials,error<KVService>> AuthenticateReq;
+
+typedef sink<AuthenticateReq> Authenticator;
+
+struct User
+{
+    Credentials credentials;
+    bool has_write_access;
+};
+
+typedef vector<User> UserDetails;
+
+};

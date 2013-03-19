@@ -19,15 +19,15 @@ instance (ADLValue t) => ADLValue (Maybe t) where
     
     defaultv = Nothing
     
-    atoJSON f v = toJSONObject f (atype v) [case v of
+    aToJSON f v = toJSONObject f (atype v) [case v of
         (Nothing) -> ("nothing",JSON.Null)
-        (Just v) -> ("just",atoJSON f v)
+        (Just v) -> ("just",aToJSON f v)
         ]
     
-    afromJSON f o = 
+    aFromJSON f o = 
         let umap = HM.fromList
                 [ ("nothing", \f v -> Nothing)
-                , ("just", \f v -> Just <$> afromJSON f v)
+                , ("just", \f v -> Just <$> aFromJSON f v)
                 ]
         in unionFromJSON f umap o
 
@@ -40,15 +40,15 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
     
     defaultv = Left defaultv
     
-    atoJSON f v = toJSONObject f (atype v) [case v of
-        (Left v) -> ("left",atoJSON f v)
-        (Right v) -> ("right",atoJSON f v)
+    aToJSON f v = toJSONObject f (atype v) [case v of
+        (Left v) -> ("left",aToJSON f v)
+        (Right v) -> ("right",aToJSON f v)
         ]
     
-    afromJSON f o = 
+    aFromJSON f o = 
         let umap = HM.fromList
-                [ ("left", \f v -> Left <$> afromJSON f v)
-                , ("right", \f v -> Right <$> afromJSON f v)
+                [ ("left", \f v -> Left <$> aFromJSON f v)
+                , ("right", \f v -> Right <$> aFromJSON f v)
                 ]
         in unionFromJSON f umap o
 
@@ -65,15 +65,15 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
     
     defaultv = (defaultv,defaultv)
     
-    atoJSON f v = toJSONObject f (atype v) (
-        [ ("v1",atoJSON f (fst v))
-        , ("v2",atoJSON f (snd v))
+    aToJSON f v = toJSONObject f (atype v) (
+        [ ("v1",aToJSON f (fst v))
+        , ("v2",aToJSON f (snd v))
         ] )
     
-    afromJSON f (JSON.Object hm) = (,)
+    aFromJSON f (JSON.Object hm) = (,)
         <$> fieldFromJSON f "v1" defaultv hm
         <*> fieldFromJSON f "v2" defaultv hm
-    afromJSON _ _ = Prelude.Nothing
+    aFromJSON _ _ = Prelude.Nothing
 
 type Map k v = Map.Map k v
 
@@ -82,9 +82,9 @@ instance (ADLValue k, Ord k, ADLValue v) => ADLValue (Map.Map k v) where
 
     defaultv = Map.empty
                                   
-    atoJSON f v = atoJSON f (Map.toList v)
+    aToJSON f v = aToJSON f (Map.toList v)
     
-    afromJSON f v = Map.fromList <$> (afromJSON f v)
+    aFromJSON f v = Map.fromList <$> (aFromJSON f v)
 
 type Set v = Set.Set v
 
@@ -93,8 +93,8 @@ instance (Ord v, ADLValue v) => ADLValue (Set.Set v) where
 
     defaultv = Set.empty
                                   
-    atoJSON f v = atoJSON f (Set.toList v)
+    aToJSON f v = aToJSON f (Set.toList v)
     
-    afromJSON f v = Set.fromList <$> (afromJSON f v)
+    aFromJSON f v = Set.fromList <$> (aFromJSON f v)
 
   

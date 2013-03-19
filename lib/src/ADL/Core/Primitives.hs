@@ -14,60 +14,60 @@ instance ADLValue () where
   
   defaultv = ()
 
-  atoJSON _ () = JSON.Null
+  aToJSON _ () = JSON.Null
 
-  afromJSON _ JSON.Null = Just ()
-  afromJSON _ _ = Nothing
+  aFromJSON _ JSON.Null = Just ()
+  aFromJSON _ _ = Nothing
 
 instance ADLValue Bool where
   atype _ = "bool"
 
   defaultv = False
 
-  atoJSON _ v = JSON.Bool v
+  aToJSON _ v = JSON.Bool v
 
-  afromJSON _ (JSON.Bool v) = Just v
-  afromJSON _ _ = Nothing
+  aFromJSON _ (JSON.Bool v) = Just v
+  aFromJSON _ _ = Nothing
 
 instance ADLValue Int where
   atype _ = "int"
 
   defaultv = 0
 
-  atoJSON _ v = JSON.Number (I (fromIntegral v))
+  aToJSON _ v = JSON.Number (I (fromIntegral v))
 
-  afromJSON _ (JSON.Number (I v)) = Just (fromIntegral v)
-  afromJSON _ _ = Nothing
+  aFromJSON _ (JSON.Number (I v)) = Just (fromIntegral v)
+  aFromJSON _ _ = Nothing
 
 instance ADLValue Double where
   atype _ = "double"
 
   defaultv = 0
 
-  atoJSON _ v = JSON.Number (D v)
+  aToJSON _ v = JSON.Number (D v)
 
-  afromJSON _ (JSON.Number (D v)) = Just v
-  afromJSON _ _ = Nothing
+  aFromJSON _ (JSON.Number (D v)) = Just v
+  aFromJSON _ _ = Nothing
 
 instance ADLValue T.Text where
   atype _ = "string"
 
   defaultv = T.empty
 
-  atoJSON _ v = JSON.String v
+  aToJSON _ v = JSON.String v
 
-  afromJSON _ (JSON.String v) = Just v
-  afromJSON _ _ = Nothing
+  aFromJSON _ (JSON.String v) = Just v
+  aFromJSON _ _ = Nothing
 
 instance forall a . (ADLValue a) => ADLValue [a] where
   atype _ = T.concat ["vector<",atype (undefined :: a),">"]
 
   defaultv = []
 
-  atoJSON flags vs = JSON.Array (V.fromList (map (atoJSON flags) vs))
+  aToJSON flags vs = JSON.Array (V.fromList (map (aToJSON flags) vs))
 
-  afromJSON flags (JSON.Array v) = mapM (afromJSON flags) (V.toList v)
-  afromJSON _ _ = Nothing
+  aFromJSON flags (JSON.Array v) = mapM (aFromJSON flags) (V.toList v)
+  aFromJSON _ _ = Nothing
 
 
 

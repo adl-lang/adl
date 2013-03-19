@@ -28,7 +28,7 @@ echoServer rfile = do
   bracket ADL.Core.Comms.init close $ \ctx -> do
     bracket (ZMQ.epOpen ctx (Left 2000)) epClose $ \ep -> do
       ls <- epNewSink ep (Just "echoserver") (processRequest ctx)
-      T.writeFile rfile (sinkToText (lsSink ls))
+      aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote echo server reference to " ++ show rfile)
       threadDelay (1000*sec)
   where
@@ -40,18 +40,15 @@ echoServer rfile = do
 echoClient rfile = do
   bracket ADL.Core.Comms.init close $ \ctx -> do
     bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
-      ms <- fmap sinkFromText (T.readFile rfile)
-      case ms of
-        Nothing -> putStrLn ("Unable to read sink from " ++ rfile)
-        (Just s) -> do
-          bracket (connect ctx s) scClose $ \sc -> do 
-            (sink, getValue) <- oneShotSinkWithTimeout ep (20 * sec)
-            scSend sc (EchoRequest () sink)
-            mv <- getValue
-            case mv of
-              Just (EchoResponse ()) -> putStrLn "Received response"
-              Nothing -> putStrLn "Request timed out"
-            return ()
+      s <- aFromJSONFile' defaultJSONFlags rfile 
+      bracket (connect ctx s) scClose $ \sc -> do 
+        (sink, getValue) <- oneShotSinkWithTimeout ep (20 * sec)
+        scSend sc (EchoRequest () sink)
+        mv <- getValue
+        case mv of
+          Just (EchoResponse ()) -> putStrLn "Received response"
+          Nothing -> putStrLn "Request timed out"
+        return ()
 
 usage = do
   putStrLn "Usage:"
