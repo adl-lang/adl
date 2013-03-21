@@ -15,6 +15,7 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.STM.TVar
+import Data.Time.Clock(UTCTime,getCurrentTime,diffUTCTime)
 import Network.BSD(getHostName,HostName)
 
 import qualified Data.Map as Map
@@ -38,8 +39,13 @@ import ADL.Core.Comms.Types
 -- runtime
 data Context = Context {
   c_zcontext :: ZMQ.Context,
-  c_connections :: TVar (Map.Map (HostName,Int) (Maybe (ZMQ.Socket ZMQ.Push,Int)))
+  c_connections :: TVar (Map.Map (HostName,Int) ConnectionState),
+  c_connCleaner :: ThreadId
   }
+
+data ConnectionState = BeingCreated
+                     | InUse (ZMQ.Socket ZMQ.Push) Int
+                     | Idle (ZMQ.Socket ZMQ.Push)  UTCTime
 
 zmqLogger = "ZMQ"
 
@@ -49,10 +55,37 @@ init = do
   L.debugM zmqLogger "context"
   zctx <- ZMQ.context
   cv <- atomically $ (newTVar Map.empty)
-  return (Context zctx cv)
+  cleaner <- forkIO (connCleaner cv 5 10)
+  return (Context zctx cv cleaner)
+  where
+    connCleaner cv freq idleTime = loop
+      where
+        loop = do
+          toClose <- getSocketsToClose
+          mapM_ zmqClose toClose
+          threadDelay (freq * 1000000)
+          loop
+
+        getSocketsToClose = do
+          now <- getCurrentTime
+          atomically $ do
+            cmap <- readTVar cv
+            let (toClose,cmap') = Map.partition (needsClosing now) cmap
+            writeTVar cv cmap'
+            return [ socket | Idle socket _ <- Map.elems toClose ]
+
+        needsClosing now (Idle sock lastUse) = (now `diffUTCTime` lastUse) > idleTime
+        needsClosing _ _ = False
 
 -- | Close the ZMQ communications runtime.
 close c = do
+  killThread (c_connCleaner c)
+
+-- Close idle sockets
+  cmap <- atomically $ readTVar (c_connections c)
+  mapM_ zmqClose [ socket | Idle socket _ <- Map.elems cmap]
+
+-- And shutdown the runtime
   L.debugM zmqLogger "destroy"
   ZMQ.destroy (c_zcontext c)
 
@@ -205,35 +238,36 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
       zmqSend' socket [] lbs
 
     zmqClose1 key = do
-      ms <- atomically $ do
+      lastUse <- getCurrentTime
+      atomically $ do
         cs <- readTVar cmapv
         case Map.lookup key cs of
-          Just (Just (socket,1)) -> do
-            writeTVar cmapv (Map.delete key cs)
-            return (Just socket)
-          Just (Just (socket,refs)) -> do
-            writeTVar cmapv (Map.insert key (Just (socket,refs-1)) cs)
-            return Nothing
-          _ -> return Nothing
-      case ms of
-        Nothing -> return ()
-        (Just socket) -> zmqClose socket
+          Just (InUse socket 1) -> do
+            writeTVar cmapv (Map.insert key (Idle socket lastUse) cs)
+          Just (InUse socket refs) -> do
+            writeTVar cmapv (Map.insert key (InUse socket (refs-1)) cs)
+          _ -> return ()
     
     getSocket key = do
       ms <- atomically $ do
         cs <- readTVar cmapv
         case Map.lookup key cs of
-          -- We have a connection
-          Just (Just (socket,refs)) -> do
-            writeTVar cmapv (Map.insert key (Just (socket,refs+1)) cs)
+          -- We have an idle connection
+          Just (Idle socket _) -> do
+            writeTVar cmapv (Map.insert key (InUse socket 1) cs)
             return (Just socket)
 
-          -- A connection is currently being created
-          Just Nothing -> retry
+          -- We have an active connection
+          Just (InUse socket refs) -> do
+            writeTVar cmapv (Map.insert key (InUse socket (refs+1)) cs)
+            return (Just socket)
+
+          -- A connection is currently being created, so wait for it
+          Just BeingCreated -> retry
 
           -- We need to create a new connection
           Nothing -> do
-            writeTVar cmapv (Map.insert key Nothing cs)
+            writeTVar cmapv (Map.insert key BeingCreated cs)
             return Nothing
       case ms of
         (Just socket) -> return socket
@@ -241,7 +275,7 @@ connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
           socket <- zmqSocket (c_zcontext ctx) ZMQ.Push
           let (host,port) = key
           zmqConnect socket addr
-          atomically $ modifyTVar cmapv (Map.insert key (Just (socket,1)))
+          atomically $ modifyTVar cmapv (Map.insert key (InUse socket 1))
           return socket
 
 instance Show ZMQ.Push where show _ = "Push"
