@@ -89,5 +89,5 @@ sec = 1000000
 
 main = do
   L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)
-  kvServer "/tmp/server.ref" "/tmp/users.json"
+  kvServer "/tmp/kvauth.ref" "/tmp/users.json"
 

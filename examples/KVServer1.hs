@@ -27,7 +27,7 @@ kvServer rfile = do
     bracket (ZMQ.epOpen ctx (Left 2001)) epClose $ \ep -> do
       mapv <- atomically $ newTVar Map.empty
       ls <- epNewSink ep (Just "kvstore") (processRequest mapv ctx)
-      T.writeFile rfile (sinkToText (lsSink ls))
+      aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote kv server reference to " ++ show rfile)
       threadDelay (1000*sec)
     

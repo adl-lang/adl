@@ -16,7 +16,8 @@ import ADL.Core.Comms
 
 import ADL.Sys.Rpc
 
--- | Make an RPC request from the client side
+-- | Make an RPC request from the client side. If the timeout expires,
+-- return Nothing
 callRPC :: (ADLValue i, ADLValue o, ADLValue a)
     => (Rpc i o -> a) -> SinkConnection a -> EndPoint -> Int-> i -> IO (Maybe o)
 callRPC selectorf sc ep timeout i = do

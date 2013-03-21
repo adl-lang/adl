@@ -20,8 +20,8 @@ import ADL.Examples.Kvstore1
 
 withConnection :: FilePath -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -> IO a
 withConnection rfile f = do
-  (Just s) <- fmap sinkFromText (T.readFile rfile)
---  bracket ADL.Core.Comms.init close $ \ctx -> do
+  s <- aFromJSONFile' defaultJSONFlags rfile 
+
   bracket ADL.Core.Comms.init (const (return ())) $ \ctx -> do
     bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
       bracket (connect ctx s) scClose $ \sc -> do
@@ -29,19 +29,19 @@ withConnection rfile f = do
 
 timeout = 20 * 1000000
 
-put key value sc ep = do
-  callRPC KVRequest_put sc ep timeout (key,value)
-  return ()
+errorOnTimeout :: Maybe a -> IO a
+errorOnTimeout Nothing = ioError $ userError "rpc timeout"
+errorOnTimeout (Just a) = return a
 
-delete key sc ep = do
-  callRPC KVRequest_delete sc ep timeout key
-  return ()
+put key value sc ep = 
+  callRPC KVRequest_put sc ep timeout (key,value) >>= errorOnTimeout
+
+delete key sc ep =
+  callRPC KVRequest_delete sc ep timeout key >>= errorOnTimeout
 
 query pattern sc ep = do
-  mvs <- callRPC KVRequest_query sc ep timeout pattern
-  print mvs
-  return ()
-  
+  vs <- callRPC KVRequest_query sc ep timeout pattern >>= errorOnTimeout
+  print vs
 
 usage = do
   putStrLn "Usage:"
