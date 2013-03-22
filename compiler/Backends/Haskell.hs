@@ -20,6 +20,7 @@ import AST
 import EIO
 import Processing
 import Primitive
+import Utils
 
 newtype HaskellModule = HaskellModule T.Text
 
@@ -319,18 +320,18 @@ generateModule m = do
 -- | Generate he haskell code for a module into a file. The mappings
 -- from adl module names to haskell modules, and from haskell module
 -- name to the written file.
-writeModuleFile :: (ModuleName -> HaskellModule) ->
+writeModuleFile :: Bool ->
+                   (ModuleName -> HaskellModule) ->
                    (HaskellModule -> FilePath) ->
                    Module ResolvedType ->
                    EIO a ()
-writeModuleFile hmf fpf m = do
+writeModuleFile noOverwrite hmf fpf m = do
   let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty []
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
   liftIO $ do
     createDirectoryIfMissing True (takeDirectory fpath)
-    T.writeFile fpath t
-    putStrLn ("writing " ++ fpath ++ "...")
+    writeFileIfRequired noOverwrite fpath t
 
 customTypes = Map.fromList
     [ (ScopedName (ModuleName ["sys","types"]) "maybe",

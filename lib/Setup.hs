@@ -14,7 +14,7 @@ generateHaskellFromADL pkg lbi = do
         , "adl/sys/rpc.adl"
         ]
           
-      cmd = "adlc haskell -I adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
+      cmd = "adlc haskell --no-overwrite -I adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
   putStrLn cmd
   e <- system cmd
   case e of

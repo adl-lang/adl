@@ -15,7 +15,7 @@ generateHaskellFromADL pkg lbi = do
         , "adl/examples/kvstore2.adl"
         ]
           
-      cmd = "adlc haskell -I adl -I ../lib/adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
+      cmd = "adlc haskell --no-overwrite -I adl -I ../lib/adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
   putStrLn cmd
   e <- system cmd
   case e of

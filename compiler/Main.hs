@@ -106,6 +106,11 @@ outputDirOption ufn =
     (ReqArg ufn "DIR")
     "Set the directory where generated code is written"
 
+noOverwriteOption ufn =
+  Option "" ["no-overwrite"]
+    (NoArg ufn)
+    "Don't update files that haven't changed"
+
 verify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> run (mkFlags opts) args
@@ -125,7 +130,8 @@ verify args0 =
 data HaskellFlags = HaskellFlags {
   hf_searchPath :: [FilePath],
   hf_modulePrefix :: String,
-  hf_outputPath :: FilePath
+  hf_outputPath :: FilePath,
+  hf_noOverwrite :: Bool
 }
 
 haskell args0 =
@@ -135,12 +141,13 @@ haskell args0 =
   where
     run hf args = forM_ args $ \modulePath -> do
       rm <- loadAndCheckModule (moduleFinder (hf_searchPath hf)) modulePath
-      H.writeModuleFile (H.moduleMapper (hf_modulePrefix hf))
+      H.writeModuleFile (hf_noOverwrite hf)
+                        (H.moduleMapper (hf_modulePrefix hf))
                         (H.fileMapper (hf_outputPath hf)) rm
  
     header = "Usage: adl haskell [OPTION...] files..."
     
-    mkFlags opts = (foldl (.) id opts) (HaskellFlags [] "ADL.Generated" ".")
+    mkFlags opts = (foldl (.) id opts) (HaskellFlags [] "ADL.Generated" "." False)
 
     optDescs =
       [ searchDirOption (\s hf-> hf{hf_searchPath=s:hf_searchPath hf})
@@ -148,6 +155,7 @@ haskell args0 =
         (ReqArg (\s hf-> hf{hf_modulePrefix=s}) "PREFIX")
         "Set module name prefix for generated code "
       , outputDirOption (\s hf-> hf{hf_outputPath=s})
+      , noOverwriteOption (\hf-> hf{hf_noOverwrite=True})
       ]
 
 usage = T.intercalate "\n"
