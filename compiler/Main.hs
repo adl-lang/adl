@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Debug.Trace
+
 import System.Console.GetOpt
 import System.Exit
 import System.Environment (getArgs)
@@ -22,12 +24,14 @@ import qualified Backends.Haskell as H
 
 type EIOT a = EIO T.Text a
 
+
 loadAndCheckModule :: ModuleFinder -> FilePath -> EIOT RModule
 loadAndCheckModule moduleFinder modulePath = do
     (m,mm) <- loadModule1 
     mapM_ checkModuleForDuplicates (Map.elems mm)
     checkModuleForDuplicates m
-    ns <- resolveN (sortByDeps (Map.elems mm)) emptyNameScope
+    let mmSorted = sortByDeps (Map.elems mm)
+    ns <- resolveN mmSorted emptyNameScope
     (_,rm) <- resolve1 m ns
     return rm
 
@@ -79,7 +83,8 @@ sortByDeps ms = map fst (sort0 (modulesWithDeps ms) Set.empty)
     sort0 :: [(SModule,Set.Set ModuleName)] -> Set.Set ModuleName -> [(SModule,Set.Set ModuleName)]
     sort0 [] _ = []
     sort0 ms sofar = let (ok,todo) = partition (\(m,md)-> Set.null (md `Set.difference` sofar)) ms
-                     in ok ++ sort0 todo (Set.unions (sofar:map snd ok))
+                         sofar' = Set.unions (sofar:map (Set.singleton . m_name . fst) ok)
+                     in ok ++ sort0 todo sofar'
                          
     modulesWithDeps ms = map (\m -> (m,getReferencedModules m)) ms
 
