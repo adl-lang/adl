@@ -1,0 +1,13 @@
+module examples.pubsub1
+{
+
+import examples.pubsub;
+
+// A concrete message service, with strings for messagse and patterns
+
+typedef string Message;
+typedef string Pattern;
+typedef Subscribe<Message,Pattern> MySubscribe;
+typedef ChannelReq<Message,Pattern> MyChannelReq;
+
+};
