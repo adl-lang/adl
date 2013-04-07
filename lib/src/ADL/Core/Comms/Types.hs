@@ -1,29 +1,39 @@
 {-# LANGUAGE Rank2Types #-}
 module ADL.Core.Comms.Types(
+  Resource(..),
+  withResource,
   SinkConnection,
   scCreate,
   scSend,
-  scClose,
   LocalSink,
   lsCreate,
-  lsClose,
   lsSink,
   EndPoint,
   epCreate,
-  epNewSink,
-  epClose
+  epNewSink
   ) where
 
+import Control.Exception(bracket)
 import qualified Data.Text as T
 
 import ADL.Core.Sink
 import ADL.Core.Value
+
+-- | A resource that needs to be freed.
+class Resource a where
+  release :: a -> IO ()
+
+withResource :: (Resource a) => IO a -> (a -> IO b) -> IO b
+withResource ma fmb = bracket ma release fmb
 
 -- | A connection to a sink
 data SinkConnection a = SinkConnection {
   sc_send :: a -> IO (),
   sc_close :: IO ()
   }
+
+instance Resource (SinkConnection a) where
+  release = sc_close
 
 scCreate :: (a -> IO ()) -> IO () -> SinkConnection a
 scCreate = SinkConnection
@@ -32,16 +42,15 @@ scCreate = SinkConnection
 scSend :: (ADLValue a) => SinkConnection a -> a -> IO ()
 scSend sc a = sc_send sc a
 
--- | Close a connection
-scClose :: SinkConnection a -> IO ()
-scClose sc = sc_close sc
-
 -- | A local sink is a sink where the message processing
 -- is performed in this address space
 data LocalSink a = LocalSink {
   ls_sink :: Sink a,
   ls_close :: IO ()
   }
+
+instance Resource (LocalSink a) where
+  release = ls_close
 
 lsCreate :: Sink a -> IO () -> LocalSink a
 lsCreate = LocalSink
@@ -50,10 +59,6 @@ lsCreate = LocalSink
 lsSink :: LocalSink a -> Sink a
 lsSink = ls_sink
 
--- | Close a local sink. No more messages will be processed.
-lsClose :: LocalSink a -> IO ()
-lsClose = ls_close
-
 type MkSink = forall a . (ADLValue a) => Maybe T.Text -> (a -> IO ()) -> IO (LocalSink a)
 
 data EndPoint = EndPoint {
@@ -61,11 +66,11 @@ data EndPoint = EndPoint {
   ep_close :: IO ()
 }  
 
+instance Resource EndPoint where
+  release = ep_close
+
 epCreate :: MkSink -> IO () -> EndPoint
 epCreate = EndPoint
 
 epNewSink :: EndPoint -> MkSink
 epNewSink = ep_newSink
-
-epClose :: EndPoint -> IO ()
-epClose = ep_close

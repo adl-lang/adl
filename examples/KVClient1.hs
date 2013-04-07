@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Control.Exception(bracket)
 import System.Environment (getArgs)
 import Control.Concurrent.STM
 
@@ -23,9 +22,9 @@ withConnection :: FilePath -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -
 withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
 
-  bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
-      bracket (connect ctx s) scClose $ \sc -> do
+  withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Right (2100,2200))) $ \ep -> do
+      withResource (connect ctx s) $ \sc -> do
         f sc ep
 
 timeout = seconds 20

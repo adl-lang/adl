@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module Main where
 
-import Control.Exception(bracket)
 import System.Environment (getArgs)
 import Control.Applicative
 import Control.Concurrent.STM
@@ -33,15 +32,15 @@ data State = State {
 newState :: Context -> IO State
 newState ctx = atomically $ State <$> newTVar 0 <*> newTVar Map.empty
 
-closeState :: State -> IO ()
-closeState state = do
+instance Resource State where
+  release state =  do
   ss <- atomically $ readTVar (subs state)
-  sequence_ [scClose sc | (_,sc) <- Map.elems ss]
+  sequence_ [release sc | (_,sc) <- Map.elems ss]
 
 psServer rfile = do
-    bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Left 2001)) epClose $ \ep -> do
-    bracket (newState ctx) closeState $ \state -> do
+    withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Left 2001)) $ \ep -> do
+    withResource (newState ctx)$ \state -> do
       ls <- epNewSink ep (Just "pubsub") (processRequest ep state ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote ps server reference to " ++ show rfile)

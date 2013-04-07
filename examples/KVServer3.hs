@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module Main where
 
-import Control.Exception(bracket)
 import System.Environment (getArgs)
 import Control.Applicative
 import Control.Concurrent.STM
@@ -46,9 +45,9 @@ matchesUpdate p (KVUpdate_put (k,_)) = matchesKey p k
 matchesUpdate p (KVUpdate_delete k) = matchesKey p k
 
 kvServer rfile = do
-    bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Left 2001)) epClose $ \ep -> do
-    bracket newState closeState $ \state -> do
+    withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Left 2001)) $ \ep -> do
+    withResource newState $ \state -> do
       ls <- epNewSink ep (Just "kvstore") (processRequest state ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote kv server reference to " ++ show rfile)
@@ -57,10 +56,10 @@ kvServer rfile = do
 newState :: IO State
 newState = atomically $ State <$> newTVar Map.empty <*> newTVar 0 <*> newTVar Map.empty <*> newTVar Map.empty
 
-closeState :: State -> IO ()
-closeState state = do
-  scmap <- atomically $ readTVar (subcs state)
-  sequence_ [scClose s | (Just s) <- Map.elems scmap]
+instance Resource State where
+  release state = do
+    scmap <- atomically $ readTVar (subcs state)
+    sequence_ [release s | (Just s) <- Map.elems scmap]
 
 processRequest :: State -> Context -> KVRequest -> IO ()
 processRequest state ctx req = case req of

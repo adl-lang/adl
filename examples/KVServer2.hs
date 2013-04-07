@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module Main where
 
-import Control.Exception(bracket)
 import System.Environment (getArgs)
 import Control.Concurrent.STM
 
@@ -28,8 +27,8 @@ kvServer rfile ufile = do
     userMap <- readUserMap ufile
     mapv <- atomically $ newTVar Map.empty
 
-    bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Left 2001)) epClose $ \ep -> do
+    withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Left 2001)) $ \ep -> do
 
       -- Create an actor for readonly kv requests
       readOnly <- epNewSink ep Nothing (processRequest False mapv ctx)

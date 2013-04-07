@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Control.Exception(bracket)
 import System.Environment (getArgs)
 import Control.Concurrent.STM
 
@@ -24,9 +23,9 @@ withConnection :: FilePath -> ((SinkConnection MyChannelReq) -> EndPoint -> IO a
 withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
 
-  bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
-      bracket (connect ctx s) scClose $ \sc -> do
+  withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Right (2100,2200))) $ \ep -> do
+      withResource (connect ctx s) $ \sc -> do
         f sc ep
 
 publish :: Message -> SinkConnection MyChannelReq -> EndPoint -> IO ()
@@ -34,7 +33,7 @@ publish value sc ep = scSend sc (ChannelReq_publish value)
 
 subscribe :: Pattern -> SinkConnection MyChannelReq -> EndPoint -> IO ()
 subscribe pattern sc ep = do
-  bracket (epNewSink ep Nothing processMessage) lsClose $ \ls -> do
+  withResource (epNewSink ep Nothing processMessage) $ \ls -> do
   sub <- callRPC ChannelReq_subscribe sc ep (seconds 20) (Subscribe pattern (lsSink ls)) >>= errorOnTimeout
   threadWait
   where

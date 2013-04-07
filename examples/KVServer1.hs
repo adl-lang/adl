@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module Main where
 
-import Control.Exception(bracket)
 import System.Environment (getArgs)
 import Control.Concurrent.STM
 
@@ -23,8 +22,8 @@ import Utils
 type MapV = TVar (Map.Map T.Text T.Text)
 
 kvServer rfile = do
-    bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Left 2001)) epClose $ \ep -> do
+    withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Left 2001)) $ \ep -> do
       mapv <- atomically $ newTVar Map.empty
       ls <- epNewSink ep (Just "kvstore") (processRequest mapv ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)

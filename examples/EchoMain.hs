@@ -2,7 +2,6 @@
 module Main where
 
 import Control.Applicative
-import Control.Exception(bracket)
 import System.Environment (getArgs)
 import Control.Concurrent.STM
 
@@ -24,8 +23,8 @@ import ADL.Examples.Echo
 import Utils
 
 echoServer rfile = do
-  bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Left 2000)) epClose $ \ep -> do
+  withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Left 2000)) $ \ep -> do
       ls <- epNewSink ep (Just "echoserver") (processRequest ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote echo server reference to " ++ show rfile)
@@ -33,14 +32,14 @@ echoServer rfile = do
   where
     processRequest :: Context -> EchoRequest () -> IO ()
     processRequest ctx req = do
-      bracket (connect ctx (echoRequest_replyTo req)) scClose $ \sc -> do
+      withResource (connect ctx (echoRequest_replyTo req)) $ \sc -> do
         scSend sc (EchoResponse (echoRequest_body req))
 
 echoClient rfile = do
-  bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
+  withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Right (2100,2200))) $ \ep -> do
       s <- aFromJSONFile' defaultJSONFlags rfile 
-      bracket (connect ctx s) scClose $ \sc -> do 
+      withResource (connect ctx s) $ \sc -> do 
         (sink, getValue) <- oneShotSinkWithTimeout ep (seconds 20)
         scSend sc (EchoRequest () sink)
         mv <- getValue

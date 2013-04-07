@@ -2,7 +2,6 @@ module ADL.Core.Comms(
   Context,
   zmqContext,
   ADL.Core.Comms.init,
-  close,
   module ADL.Core.Comms.Types,
   connect
   ) where
@@ -22,8 +21,8 @@ newtype Context = Context ZMQ.Context
 init :: IO Context
 init = Context <$> ZMQ.init
 
-close :: Context -> IO ()
-close (Context zc) = ZMQ.close zc
+instance Resource Context where
+  release (Context zc) = ZMQ.close zc
 
 -- | Create a new connection to a remote sink
 connect :: (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)

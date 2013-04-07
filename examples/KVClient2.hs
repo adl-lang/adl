@@ -2,7 +2,6 @@
 module Main where
 
 import Control.Monad
-import Control.Exception(bracket)
 import System.Environment (getArgs,getEnv)
 import Control.Concurrent.STM
 
@@ -23,15 +22,15 @@ import Utils
 withConnection :: FilePath -> Credentials -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -> IO a
 withConnection rfile cred f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
-  bracket ADL.Core.Comms.init close $ \ctx -> do
-    bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
+  withResource ADL.Core.Comms.init $ \ctx -> do
+    withResource (ZMQ.epOpen ctx (Right (2100,2200))) $ \ep -> do
 
       -- Connect and to the authenticator and get a reference to the kvservice
-      bracket (connect ctx s) scClose $ \sc -> do
+      withResource (connect ctx s) $ \sc -> do
         kv <- throwOnError =<< throwOnTimeout =<< callRPC id sc ep timeout cred
 
         -- Connect to the kvservice
-        bracket (connect ctx kv) scClose $ \sc -> do
+        withResource (connect ctx kv) $ \sc -> do
 
           -- and run the action
           f sc ep

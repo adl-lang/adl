@@ -29,7 +29,7 @@ callRPC selectorf sc ep timeout i = do
 handleRPC :: (ADLValue o) => Context -> Rpc i o -> (i -> IO o) -> IO ()
 handleRPC ctx rpc f = do
   o <- f (rpc_params rpc)
-  bracket (connect ctx (rpc_replyTo rpc)) scClose $ \sc -> do
+  withResource (connect ctx (rpc_replyTo rpc)) $ \sc -> do
     scSend sc o
 
 -- | Create a new sink to receive a value of type a. Return an IO
@@ -49,7 +49,7 @@ oneShotSinkWithTimeout ep timeout = do
     getResponse rv ls = do
       dv <- registerDelay timeout
       r <- atomically $ (Just <$> takeTMVar rv) `orElse` (tryTimeout dv)
-      lsClose ls
+      release ls
       return r
 
     tryTimeout :: TVar Bool -> STM (Maybe a)
