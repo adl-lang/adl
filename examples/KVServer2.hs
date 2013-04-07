@@ -2,7 +2,6 @@
 module Main where
 
 import Control.Exception(bracket)
-import Control.Concurrent(threadDelay)
 import System.Environment (getArgs)
 import Control.Concurrent.STM
 
@@ -18,6 +17,8 @@ import ADL.Core.Comms.Rpc
 import qualified ADL.Core.Comms.ZMQ as ZMQ
 
 import ADL.Examples.Kvstore2
+
+import Utils
 
 type MapV = TVar (Map.Map T.Text T.Text)
 
@@ -42,13 +43,12 @@ kvServer rfile ufile = do
 
       aToJSONFile defaultJSONFlags rfile (lsSink auth)
       putStrLn ("Wrote authenticator reference to " ++ show rfile)
-      threadDelay (1000*sec)
+      threadWait
 
 readUserMap :: FilePath -> IO UserMap
 readUserMap ufile = do
     us <- aFromJSONFile' defaultJSONFlags ufile
     return (Map.fromList [(credentials_username (user_credentials u),u) | u <- us])
-    
 
 processAuthenticate :: UserMap -> Context -> KVService -> KVService -> AuthenticateReq -> IO ()
 processAuthenticate userMap ctx ro rw rpc = handleRPC ctx rpc auth
@@ -78,14 +78,6 @@ processRequest rw mapv ctx req = case req of
     query :: Pattern -> IO QueryResults
     query p = fmap (filter (T.isPrefixOf p . fst) . Map.toList)
             $ atomically $ readTVar mapv
-
-modifyTVar :: TVar a -> (a->a) -> STM ()
-modifyTVar v f = do
-  a <- readTVar v
-  let a' = f a
-  a' `seq` (writeTVar v a')
-
-sec = 1000000
 
 main = do
   L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)

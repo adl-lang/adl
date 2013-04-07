@@ -2,7 +2,6 @@
 module Main where
 
 import Control.Exception(bracket)
-import Control.Concurrent(threadDelay)
 import System.Environment (getArgs)
 import Control.Concurrent.STM
 
@@ -19,6 +18,7 @@ import qualified ADL.Core.Comms.ZMQ as ZMQ
 
 import ADL.Examples.Kvstore1
 
+import Utils
 
 type MapV = TVar (Map.Map T.Text T.Text)
 
@@ -29,7 +29,7 @@ kvServer rfile = do
       ls <- epNewSink ep (Just "kvstore") (processRequest mapv ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote kv server reference to " ++ show rfile)
-      threadDelay (1000*sec)
+      threadWait
     
 processRequest :: MapV -> Context -> KVRequest -> IO ()
 processRequest mapv ctx req = case req of
@@ -46,14 +46,6 @@ processRequest mapv ctx req = case req of
     query :: Pattern -> IO QueryResults
     query p = fmap (filter (T.isPrefixOf p . fst) . Map.toList)
             $ atomically $ readTVar mapv
-
-modifyTVar :: TVar a -> (a->a) -> STM ()
-modifyTVar v f = do
-  a <- readTVar v
-  let a' = f a
-  a' `seq` (writeTVar v a')
-
-sec = 1000000
 
 main = do
   L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)

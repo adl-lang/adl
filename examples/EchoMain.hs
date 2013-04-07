@@ -3,7 +3,6 @@ module Main where
 
 import Control.Applicative
 import Control.Exception(bracket)
-import Control.Concurrent(threadDelay)
 import System.Environment (getArgs)
 import Control.Concurrent.STM
 
@@ -22,7 +21,7 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Examples.Echo
 
-sec = 1000000
+import Utils
 
 echoServer rfile = do
   bracket ADL.Core.Comms.init close $ \ctx -> do
@@ -30,7 +29,7 @@ echoServer rfile = do
       ls <- epNewSink ep (Just "echoserver") (processRequest ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote echo server reference to " ++ show rfile)
-      threadDelay (1000*sec)
+      threadWait
   where
     processRequest :: Context -> EchoRequest () -> IO ()
     processRequest ctx req = do
@@ -42,7 +41,7 @@ echoClient rfile = do
     bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
       s <- aFromJSONFile' defaultJSONFlags rfile 
       bracket (connect ctx s) scClose $ \sc -> do 
-        (sink, getValue) <- oneShotSinkWithTimeout ep (20 * sec)
+        (sink, getValue) <- oneShotSinkWithTimeout ep (seconds 20)
         scSend sc (EchoRequest () sink)
         mv <- getValue
         case mv of

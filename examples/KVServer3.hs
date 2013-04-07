@@ -2,7 +2,6 @@
 module Main where
 
 import Control.Exception(bracket)
-import Control.Concurrent(threadDelay)
 import System.Environment (getArgs)
 import Control.Applicative
 import Control.Concurrent.STM
@@ -19,6 +18,8 @@ import ADL.Core.Comms.Rpc
 import qualified ADL.Core.Comms.ZMQ as ZMQ
 
 import ADL.Examples.Kvstore3
+
+import Utils
 
 type SubscID = Int
 
@@ -51,7 +52,7 @@ kvServer rfile = do
       ls <- epNewSink ep (Just "kvstore") (processRequest state ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote kv server reference to " ++ show rfile)
-      threadDelay (1000*sec)
+      threadWait
 
 newState :: IO State
 newState = atomically $ State <$> newTVar Map.empty <*> newTVar 0 <*> newTVar Map.empty <*> newTVar Map.empty
@@ -102,14 +103,6 @@ processRequest state ctx req = case req of
         i <- readTVar (nextid state)
         writeTVar (nextid state) (i+1)
         modifyTVar (subs state) (Map.update (i+1) sub)
-
-modifyTVar :: TVar a -> (a->a) -> STM ()
-modifyTVar v f = do
-  a <- readTVar v
-  let a' = f a
-  a' `seq` (writeTVar v a')
-
-sec = 1000000
 
 main = do
   L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)

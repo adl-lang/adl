@@ -1,0 +1,32 @@
+module examples.pubsub
+{
+
+import sys.rpc;
+
+// A Channel<T,P> is a data type where we can published
+// messages of type T, and can subscribe using a pattern
+// of type P
+typedef sink<ChannelReq<T,P>> Channel<T,P>;
+
+union ChannelReq<T,P>
+{
+    T publish;
+    rpc<Subscribe<T,P>,Subscription> subscribe;
+};
+
+// Parameters required when creating a subscription
+struct Subscribe<T,P>
+{
+    P pattern;        
+    sink<T> sendTo;
+};
+
+typedef sink<SubsReq> Subscription;
+
+// Actions available to an existing subscription
+union SubsReq
+{
+    void unsubscribe;
+};
+
+};

@@ -18,11 +18,12 @@ import qualified ADL.Core.Comms.ZMQ as ZMQ
 
 import ADL.Examples.Kvstore2
 
+import Utils
 
 withConnection :: FilePath -> Credentials -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -> IO a
 withConnection rfile cred f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
-  bracket ADL.Core.Comms.init (const (return ())) $ \ctx -> do
+  bracket ADL.Core.Comms.init close $ \ctx -> do
     bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
 
       -- Connect and to the authenticator and get a reference to the kvservice
@@ -35,7 +36,7 @@ withConnection rfile cred f = do
           -- and run the action
           f sc ep
 
-timeout = 20 * 1000000
+timeout = seconds 20
 
 throwOnTimeout :: Maybe a -> IO a
 throwOnTimeout Nothing = ioError $ userError "rpc timeout"

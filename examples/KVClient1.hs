@@ -17,21 +17,19 @@ import qualified ADL.Core.Comms.ZMQ as ZMQ
 
 import ADL.Examples.Kvstore1
 
+import Utils
 
 withConnection :: FilePath -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -> IO a
 withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
 
-  bracket ADL.Core.Comms.init (const (return ())) $ \ctx -> do
+  bracket ADL.Core.Comms.init close $ \ctx -> do
     bracket (ZMQ.epOpen ctx (Right (2100,2200))) epClose $ \ep -> do
       bracket (connect ctx s) scClose $ \sc -> do
         f sc ep
 
-timeout = 20 * 1000000
+timeout = seconds 20
 
-errorOnTimeout :: Maybe a -> IO a
-errorOnTimeout Nothing = ioError $ userError "rpc timeout"
-errorOnTimeout (Just a) = return a
 
 put key value sc ep = 
   callRPC KVRequest_put sc ep timeout (key,value) >>= errorOnTimeout
