@@ -22,7 +22,7 @@ init :: IO Context
 init = Context <$> ZMQ.init
 
 instance Resource Context where
-  release (Context zc) = ZMQ.close zc
+  release (Context zc) = release zc
 
 -- | Create a new connection to a remote sink
 connect :: (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)

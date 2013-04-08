@@ -2,7 +2,6 @@
 module ADL.Core.Comms.ZMQ.Internals(
   Context,
   ADL.Core.Comms.ZMQ.Internals.init,
-  close,
   connect,
   EndPointData,
   epOpen
@@ -77,17 +76,18 @@ init = do
         needsClosing now (Idle sock lastUse) = (now `diffUTCTime` lastUse) > idleTime
         needsClosing _ _ = False
 
--- | Close the ZMQ communications runtime.
-close c = do
-  killThread (c_connCleaner c)
+instance Resource Context where
+  release c = do
+    -- kill the cleaner thread
+    killThread (c_connCleaner c)
 
--- Close idle sockets
-  cmap <- atomically $ readTVar (c_connections c)
-  mapM_ zmqClose [ socket | Idle socket _ <- Map.elems cmap]
+    -- Close idle sockets
+    cmap <- atomically $ readTVar (c_connections c)
+    mapM_ zmqClose [ socket | Idle socket _ <- Map.elems cmap]
 
--- And shutdown the runtime
-  L.debugM zmqLogger "destroy"
-  ZMQ.destroy (c_zcontext c)
+    -- And shutdown the runtime
+    L.debugM zmqLogger "destroy"
+    ZMQ.destroy (c_zcontext c)
 
 -- | To receive messages, a communications endpoint is required.
 data EndPointData = EndPointData {
@@ -312,9 +312,3 @@ zmqSend' s flags lbs = do
   ZMQ.send' s flags lbs
   fd <- ZMQ.fileDescriptor s 
   L.debugM zmqLogger ("send on socket<" ++ show fd ++ ">  message body:" ++ show lbs)
-  
-modifyTVar :: TVar a -> (a->a) -> STM ()
-modifyTVar v f = do
-  a <- readTVar v
-  let a' = f a
-  a' `seq` (writeTVar v a')
