@@ -65,8 +65,6 @@ data EndPointData = EndPointData {
 
 type SinksV = TVar (Map.Map T.Text (JSON.Value -> IO ()))
 
-httpLogger = "HTTP"
-
 epOpen :: Context -> Either Int (Int,Int) -> IO EndPoint
 epOpen ctx eport = do
   hostname <- getHostName
@@ -189,3 +187,6 @@ connect ctx (HTTPSink{hs_hostname=host,hs_port=port,hs_sid=sid}) = do
 
     close :: IO ()
     close = return ()
+
+httpLogger = "HTTP"
+

@@ -14,7 +14,7 @@ import qualified Data.Text.Encoding as T
 import qualified System.Log.Logger as L
 
 import ADL.Core.Comms
-import qualified ADL.Core.Comms.ZMQ as ZMQ
+import qualified ADL.Core.Comms.HTTP as EP
 import ADL.Core.Comms.Rpc(oneShotSinkWithTimeout)
 import ADL.Core.Value
 import ADL.Core.Sink
@@ -24,7 +24,7 @@ import Utils
 
 echoServer rfile = do
   withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Left 2000)) $ \ep -> do
+    withResource (EP.epOpen ctx (Left 2000)) $ \ep -> do
       ls <- epNewSink ep (Just "echoserver") (processRequest ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote echo server reference to " ++ show rfile)
@@ -37,7 +37,7 @@ echoServer rfile = do
 
 echoClient rfile = do
   withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Right (2100,2200))) $ \ep -> do
+    withResource (EP.epOpen ctx (Right (2100,2200))) $ \ep -> do
       s <- aFromJSONFile' defaultJSONFlags rfile 
       withResource (connect ctx s) $ \sc -> do 
         (sink, getValue) <- oneShotSinkWithTimeout ep (seconds 20)
