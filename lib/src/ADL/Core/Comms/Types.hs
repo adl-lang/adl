@@ -1,6 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 module ADL.Core.Comms.Types(
   Resource(..),
+  MkSink,
   withResource,
   SinkConnection,
   scCreate,

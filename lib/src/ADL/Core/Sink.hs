@@ -21,6 +21,9 @@ data Sink a = NullSink
             | ZMQSink { zmqs_hostname :: String,
                         zmqs_port :: Int,
                         zmqs_sid :: T.Text }
+            | HTTPSink { hs_hostname :: String,
+                         hs_port :: Int,
+                         hs_sid :: T.Text }
   deriving (Ord,Eq,Show)
 
 instance forall a . (ADLValue a) => ADLValue (Sink a) where
@@ -42,6 +45,13 @@ sinkToText (zmqs@ZMQSink{}) = T.concat
   , ":", zmqs_sid zmqs
   , ":", atype (defaultv:: a)
   ]  
+sinkToText (hs@HTTPSink{}) = T.concat
+  [ "http"
+  , ":", T.pack (hs_hostname hs)
+  , ":", T.pack (show (hs_port hs))  
+  , ":", hs_sid hs
+  , ":", atype (defaultv:: a)
+  ]  
 
 sinkFromText :: (ADLValue a) => T.Text -> Maybe (Sink a)
 sinkFromText t = case A.parseOnly sinkP t of
@@ -51,6 +61,7 @@ sinkFromText t = case A.parseOnly sinkP t of
 sinkP :: forall a . (ADLValue a) => A.Parser (Sink a)
 sinkP =   A.string "null" *> (pure NullSink)
           <|> A.string "zmq"  *> (ZMQSink <$> (T.unpack <$> cl field) <*> cl A.decimal <*> cl field) <* cl atype1
+          <|> A.string "http"  *> (HTTPSink <$> (T.unpack <$> cl field) <*> cl A.decimal <*> cl field) <* cl atype1
   where
     atype1 = A.string (atype (defaultv::a))
 
