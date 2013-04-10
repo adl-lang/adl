@@ -15,7 +15,7 @@ import Control.Monad.Trans.State.Strict
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-import Format
+import ADL.Utils.Format
 import AST
 import EIO
 import Processing

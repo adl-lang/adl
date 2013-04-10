@@ -1,4 +1,4 @@
-module Format where
+module ADL.Utils.Format where
 
 import qualified Data.Text as T
 

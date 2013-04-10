@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Format
+import ADL.Utils.Format
 
 data JSONValue = JSONValue
   deriving (Show)

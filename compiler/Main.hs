@@ -17,7 +17,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import EIO
-import Format
+import ADL.Utils.Format
 import AST
 import Processing
 import qualified Backends.Haskell as H

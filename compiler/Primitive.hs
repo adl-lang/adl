@@ -9,7 +9,7 @@ module Primitive(
 import qualified Data.Map as Map
 import qualified Data.Text as T
 
-import Format
+import ADL.Utils.Format
 
 data PrimitiveType = P_Void
                    | P_Int

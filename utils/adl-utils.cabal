@@ -1,0 +1,17 @@
+name:                adl-utils
+version:             0.1.0.0
+synopsis:            Assorted helper functions for the adl packages
+-- description:         
+license:             GPL-2
+license-file:        ../LICENSE
+author:              Tim Docker
+maintainer:          tim@dockerz.net
+-- copyright:           
+category:            Network
+build-type:          Simple
+cabal-version:       >=1.8
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     ADL.Utils.Format
+  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*

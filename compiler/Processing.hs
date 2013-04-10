@@ -19,10 +19,11 @@ import qualified Text.Parsec as P
 
 import qualified ParserP as P
 
+import ADL.Utils.Format
+
 import AST
 import Primitive
 import EIO
-import Format
 
 type SModule = Module ScopedName
 type SModuleMap = Map.Map ModuleName SModule

@@ -22,7 +22,10 @@ tests:
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs
 
-all: compiler lib examples
+all: utils compiler lib examples
+
+utils:
+	(cd utils && cabal-dev -s ../cabal-dev install)
 
 compiler:
 	(cd compiler && cabal-dev -s ../cabal-dev install)
@@ -62,5 +65,5 @@ ext/downloads/zeromq-3.2.2.tar.gz:
 	mkdir -p ext/downloads
 	(cd ext/downloads && wget http://download.zeromq.org/zeromq-3.2.2.tar.gz)
 
-.PHONY : examples compiler lib clean
+.PHONY : examples utils compiler lib clean
 
