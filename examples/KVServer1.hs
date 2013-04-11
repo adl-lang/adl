@@ -13,7 +13,7 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
 import ADL.Core.Comms.Rpc
-import qualified ADL.Core.Comms.ZMQ as ZMQ
+import qualified ADL.Core.Comms.HTTP as XPORT
 
 import ADL.Examples.Kvstore1
 
@@ -23,7 +23,7 @@ type MapV = TVar (Map.Map T.Text T.Text)
 
 kvServer rfile = do
     withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Left 2001)) $ \ep -> do
+    withResource (XPORT.epOpen ctx (Left 2001)) $ \ep -> do
       mapv <- atomically $ newTVar Map.empty
       ls <- epNewSink ep (Just "kvstore") (processRequest mapv ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)

@@ -12,7 +12,7 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
 import ADL.Core.Comms.Rpc
-import qualified ADL.Core.Comms.ZMQ as ZMQ
+import qualified ADL.Core.Comms.HTTP as XPORT
 
 import ADL.Examples.Kvstore1
 
@@ -23,7 +23,7 @@ withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
 
   withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Right (2100,2200))) $ \ep -> do
+    withResource (XPORT.epOpen ctx (Right (2100,2200))) $ \ep -> do
       withResource (connect ctx s) $ \sc -> do
         f sc ep
 

@@ -25,7 +25,7 @@ tests:
 all: utils compiler lib examples
 
 utils:
-	(cd utils && cabal-dev -s ../cabal-dev install)
+	(cd utils && cabal-dev -s ../cabal-dev install  --force-reinstalls)
 
 compiler:
 	(cd compiler && cabal-dev -s ../cabal-dev install)

@@ -17,12 +17,15 @@ import Control.Monad.Trans(liftIO)
 
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Data.Text.Lazy.Builder as LT
+import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Encode as JSON
+import qualified Data.Vector as V
 
 
 import Network.Wai
@@ -39,6 +42,7 @@ import qualified Network.HTTP.Conduit as HC
 import qualified System.Log.Logger as L
 import Control.Monad.Trans.Resource
 
+import ADL.Utils.Format
 import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms.Types
@@ -69,6 +73,7 @@ epOpen :: Context -> Either Int (Int,Int) -> IO EndPoint
 epOpen ctx eport = do
   hostname <- getHostName
   (port,socket) <- bindNewSocket eport
+  debugM "New endpoint at http://$1:$2" [T.pack hostname, fshow port]
 
   -- the mapping from sink ids to the sink processing functions
   sinksv <- atomically $ newTVar Map.empty
@@ -80,7 +85,8 @@ epOpen ctx eport = do
   warptid <- forkIO $ runWarp socket sinksv nextactionv
   forkIO (runner nextactionv)
 
-  return (epCreate (newSink hostname port sinksv) (close warptid nextactionv socket))
+  return (epCreate (newSink hostname port sinksv)
+          (closef hostname port warptid nextactionv socket))
   where
     -- Attempt to bind either the given socket, or any in the specified range
     bindNewSocket :: Either Int (Int,Int) -> IO (Int,Socket)
@@ -114,9 +120,10 @@ epOpen ctx eport = do
           sinks <- liftIO $ atomically $ readTVar sinksv
           case Map.lookup sid sinks of
             Nothing -> errResponse notFound404 ("No handler for sink with SID " ++ show sid)
-            (Just actionf) -> case JSON.eitherDecode' body of
+            (Just actionf) -> case parseMessage body of
               (Left emsg) -> errResponse badRequest400 ("Invalid JSON " ++ emsg)
               (Right v) -> do
+                liftIO $ debugM "Receive /$1, message: $2" [sid, formatText body]
                 liftIO $ atomically $ putTMVar nextactionv (Just (actionf v))
                 return (responseLBS ok200 [] "")
 
@@ -133,7 +140,7 @@ epOpen ctx eport = do
           
     actionExceptionHandler :: SomeException -> IO ()
     actionExceptionHandler e = do
-      L.errorM httpLogger ("Failed to execute action:" ++ show e)
+      L.errorM httpLogger ("Failed to complete action due to exception:" ++ show e)
       return ()
 
     errResponse status s = do
@@ -145,6 +152,8 @@ epOpen ctx eport = do
       sid <- case msid of
         (Just sid) -> return sid
         Nothing -> fmap (T.pack . UUID.toString) UUID.nextRandom
+
+      debugM "New sink at http://$1:$2/$3" [T.pack hostname, fshow port,sid]
 
       let at = atype (defaultv :: a)
           sink = HTTPSink hostname port sid
@@ -158,12 +167,16 @@ epOpen ctx eport = do
 
         fjf = JSONFlags True
 
-        closef sid = atomically $ modifyTVar sinksv (Map.delete sid)
+        closef sid = do
+          atomically $ modifyTVar sinksv (Map.delete sid)
+          debugM "Closed sink at $1:$2/$3" [T.pack hostname, fshow port, sid]
 
-    close warptid nextactionv socket = do
+    closef hostname port warptid nextactionv socket = do
       killThread warptid
       atomically $ putTMVar nextactionv Nothing
       sClose socket
+      debugM "Closed endpoint at $1:$2" [T.pack hostname, fshow port]
+
 
 -- | Create a new connection to a remote sink
 connect :: forall a . (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)
@@ -173,8 +186,10 @@ connect ctx (HTTPSink{hs_hostname=host,hs_port=port,hs_sid=sid}) = do
     send :: (ADLValue a) => a -> IO ()
     send a = do
       let tjf = JSONFlags True
-          lbs = JSON.encode (aToJSON tjf a)
+          v = aToJSON tjf a
+          lbs = packMessage v
           req = req0{HC.requestBody=HC.RequestBodyLBS lbs}
+      debugM "POST to http://$1:$2/$3: $4" [T.pack host, fshow port, sid, formatText lbs]
       resp <- runResourceT $ HC.httpLbs req (c_manager ctx)
       return ()
 
@@ -188,5 +203,24 @@ connect ctx (HTTPSink{hs_hostname=host,hs_port=port,hs_sid=sid}) = do
     close :: IO ()
     close = return ()
 
+-- Messages needs to be packed in a single element JSON array
+-- so that we can carrt arbtrary JSON values.
+    
+packMessage :: JSON.Value -> LBS.ByteString
+packMessage j = JSON.encode $ JSON.Array $ V.fromList [j]
+
+parseMessage :: LBS.ByteString -> Either String JSON.Value
+parseMessage lbs = do
+  v <- JSON.eitherDecode' lbs
+  case v of
+    (JSON.Array v) -> case V.toList v of
+      [v] -> Right v
+      _ -> Left emsg
+    _ -> Left emsg
+  where
+    emsg = "Top level JSON object must be a single element vector"
+
 httpLogger = "HTTP"
 
+debugM :: T.Text -> [T.Text] -> IO ()
+debugM t vs = L.debugM httpLogger $ T.unpack $ template t vs
