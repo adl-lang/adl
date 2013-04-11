@@ -86,7 +86,7 @@ epOpen ctx eport = do
   forkIO (runner nextactionv)
 
   return (epCreate (newSink hostname port sinksv)
-          (closef hostname port warptid nextactionv socket))
+          (closef hostname port warptid nextactionv))
   where
     -- Attempt to bind either the given socket, or any in the specified range
     bindNewSocket :: Either Int (Int,Int) -> IO (Int,Socket)
@@ -101,9 +101,13 @@ epOpen ctx eport = do
       where
         tryNextPort :: IOError -> IO (Int,Socket) -- is this the right exception??
         tryNextPort e = bindNewSocket (Right (port+1,maxPort))
-    
-    runWarp :: Socket -> SinksV -> TMVar (Maybe (IO ())) -> IO ()
-    runWarp socket sinksv nextactionv = runSettingsSocket defaultSettings socket waiApplication
+
+    runWarp socket sinksv nextactionv =
+      bracket_ (return ()) (sClose socket)
+               (runWarp1 socket sinksv nextactionv)
+
+    runWarp1 :: Socket -> SinksV -> TMVar (Maybe (IO ())) -> IO ()
+    runWarp1 socket sinksv nextactionv = runSettingsSocket defaultSettings socket waiApplication
       where
         waiApplication :: Request -> ResourceT IO Response
         waiApplication req = do
@@ -171,10 +175,9 @@ epOpen ctx eport = do
           atomically $ modifyTVar sinksv (Map.delete sid)
           debugM "Closed sink at $1:$2/$3" [T.pack hostname, fshow port, sid]
 
-    closef hostname port warptid nextactionv socket = do
+    closef hostname port warptid nextactionv = do
       killThread warptid
       atomically $ putTMVar nextactionv Nothing
-      sClose socket
       debugM "Closed endpoint at $1:$2" [T.pack hostname, fshow port]
 
 
