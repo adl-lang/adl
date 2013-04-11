@@ -8,11 +8,14 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified System.Log.Logger as L
 
+import qualified ADL.Core.Comms as AC
+import qualified ADL.Core.Comms.Rpc as AC
+import qualified ADL.Core.Comms.HTTP as AC
+
 import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
 import ADL.Core.Comms.Rpc
-import qualified ADL.Core.Comms.HTTP as XPORT
 
 import ADL.Examples.Kvstore1
 
@@ -21,10 +24,10 @@ import Utils
 withConnection :: FilePath -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -> IO a
 withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
-
-  withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (XPORT.epOpen ctx (Right (2100,2200))) $ \ep -> do
-      withResource (connect ctx s) $ \sc -> do
+ 
+  AC.withResource AC.newContext $ \ctx -> do
+    AC.withResource (AC.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
+      AC.withResource (AC.connect ctx s) $ \sc -> do
         f sc ep
 
 timeout = seconds 20

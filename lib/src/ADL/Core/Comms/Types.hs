@@ -11,7 +11,7 @@ module ADL.Core.Comms.Types(
   lsSink,
   EndPoint,
   epCreate,
-  epNewSink
+  newLocalSink
   ) where
 
 import Control.Exception(bracket)
@@ -73,5 +73,5 @@ instance Resource EndPoint where
 epCreate :: MkSink -> IO () -> EndPoint
 epCreate = EndPoint
 
-epNewSink :: EndPoint -> MkSink
-epNewSink = ep_newSink
+newLocalSink :: EndPoint -> MkSink
+newLocalSink = ep_newSink

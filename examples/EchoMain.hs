@@ -23,9 +23,9 @@ import ADL.Examples.Echo
 import Utils
 
 echoServer rfile = do
-  withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (EP.epOpen ctx (Left 2000)) $ \ep -> do
-      ls <- epNewSink ep (Just "echoserver") (processRequest ctx)
+  withResource ADL.Core.Comms.newContext $ \ctx -> do
+    withResource (EP.newEndPoint ctx (Left 2000)) $ \ep -> do
+      ls <- newLocalSink ep (Just "echoserver") (processRequest ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote echo server reference to " ++ show rfile)
       threadWait
@@ -36,8 +36,8 @@ echoServer rfile = do
         scSend sc (EchoResponse (echoRequest_body req))
 
 echoClient rfile = do
-  withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (EP.epOpen ctx (Right (2100,2200))) $ \ep -> do
+  withResource ADL.Core.Comms.newContext $ \ctx -> do
+    withResource (EP.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
       s <- aFromJSONFile' defaultJSONFlags rfile 
       withResource (connect ctx s) $ \sc -> do 
         (sink, getValue) <- oneShotSinkWithTimeout ep (seconds 20)

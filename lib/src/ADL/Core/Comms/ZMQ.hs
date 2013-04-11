@@ -1,12 +1,12 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module ADL.Core.Comms.ZMQ(
-  epOpen,
+  newEndPoint,
   ) where
 
 import ADL.Core.Comms
 import qualified ADL.Core.Comms.ZMQ.Internals as I
 
-epOpen :: Context -> Either Int (Int,Int) -> IO EndPoint
-epOpen ctx port = do
+newEndPoint :: Context -> Either Int (Int,Int) -> IO EndPoint
+newEndPoint ctx port = do
   zctx <- zmqContext ctx
-  I.epOpen zctx port
+  I.newEndPoint zctx port

@@ -2,7 +2,7 @@ module ADL.Core.Comms(
   Context,
   zmqContext,
   httpContext,
-  ADL.Core.Comms.init,
+  ADL.Core.Comms.newContext,
   module ADL.Core.Comms.Types,
   connect
   ) where
@@ -23,8 +23,8 @@ import qualified System.Log.Logger as L
 
 data Context = Context (DelayIO ZMQ.Context) (DelayIO HTTP.Context)
 
-init :: IO Context
-init = (Context <$> delayIO ZMQ.init <*> delayIO HTTP.init)
+newContext :: IO Context
+newContext = (Context <$> delayIO ZMQ.newContext <*> delayIO HTTP.newContext)
 
 instance Resource Context where
   release (Context zmq http) = do

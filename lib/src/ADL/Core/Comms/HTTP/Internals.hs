@@ -1,9 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module ADL.Core.Comms.HTTP.Internals(
   Context,
-  ADL.Core.Comms.HTTP.Internals.init,
+  newContext,
   connect,
-  epOpen,
+  newEndPoint,
   ) where
 
 import Prelude hiding (catch)
@@ -51,8 +51,8 @@ data Context = Context {
   c_manager :: HC.Manager
 }  
 
-init :: IO Context
-init = do
+newContext :: IO Context
+newContext = do
   m <- HC.newManager HC.def
   return (Context m)
 
@@ -69,8 +69,8 @@ data EndPointData = EndPointData {
 
 type SinksV = TVar (Map.Map T.Text (JSON.Value -> IO ()))
 
-epOpen :: Context -> Either Int (Int,Int) -> IO EndPoint
-epOpen ctx eport = do
+newEndPoint :: Context -> Either Int (Int,Int) -> IO EndPoint
+newEndPoint ctx eport = do
   hostname <- getHostName
   (port,socket) <- bindNewSocket eport
   debugM "New endpoint at http://$1:$2" [T.pack hostname, fshow port]

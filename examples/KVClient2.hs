@@ -22,8 +22,8 @@ import Utils
 withConnection :: FilePath -> Credentials -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -> IO a
 withConnection rfile cred f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
-  withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Right (2100,2200))) $ \ep -> do
+  withResource ADL.Core.Comms.newContext $ \ctx -> do
+    withResource (ZMQ.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
 
       -- Connect and to the authenticator and get a reference to the kvservice
       withResource (connect ctx s) $ \sc -> do

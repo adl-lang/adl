@@ -45,10 +45,10 @@ matchesUpdate p (KVUpdate_put (k,_)) = matchesKey p k
 matchesUpdate p (KVUpdate_delete k) = matchesKey p k
 
 kvServer rfile = do
-    withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Left 2001)) $ \ep -> do
+    withResource ADL.Core.Comms.newContext $ \ctx -> do
+    withResource (ZMQ.newEndPoint ctx (Left 2001)) $ \ep -> do
     withResource newState $ \state -> do
-      ls <- epNewSink ep (Just "kvstore") (processRequest state ctx)
+      ls <- newLocalSink ep (Just "kvstore") (processRequest state ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote kv server reference to " ++ show rfile)
       threadWait

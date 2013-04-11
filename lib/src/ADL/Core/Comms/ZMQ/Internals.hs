@@ -1,10 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module ADL.Core.Comms.ZMQ.Internals(
   Context,
-  ADL.Core.Comms.ZMQ.Internals.init,
+  newContext,
   connect,
   EndPointData,
-  epOpen
+  newEndPoint
   ) where
 
 import Prelude hiding (catch)
@@ -49,8 +49,8 @@ data ConnectionState = BeingCreated
 zmqLogger = "ZMQ"
 
 -- | Initialise the ZMQ communications runtime.
-init :: IO Context
-init = do
+newContext :: IO Context
+newContext = do
   L.debugM zmqLogger "context"
   zctx <- ZMQ.context
   cv <- atomically $ (newTVar Map.empty)
@@ -103,13 +103,13 @@ data EndPointData = EndPointData {
 -- tcp port, or on an unused port a specified range.
 
 
-epOpen :: Context -> Either Int (Int,Int) -> IO EndPoint
-epOpen ctx port = do
-  ed <- epOpen1 ctx port
-  return (epCreate (epNewSink1 ed) (epClose1 ed))
+newEndPoint :: Context -> Either Int (Int,Int) -> IO EndPoint
+newEndPoint ctx port = do
+  ed <- newEndPoint1 ctx port
+  return (epCreate (newLocalSink1 ed) (epClose1 ed))
 
-epOpen1 :: Context -> Either Int (Int,Int)-> IO EndPointData
-epOpen1 ctx rport = do
+newEndPoint1 :: Context -> Either Int (Int,Int)-> IO EndPointData
+newEndPoint1 ctx rport = do
   hn <- getHostName
   bracketOnError (zmqSocket (c_zcontext ctx) ZMQ.Pull) zmqClose $ \s -> do
     port <- bind s rport
@@ -177,8 +177,8 @@ epOpen1 ctx rport = do
 -- | Create a new local sink from an endpoint and a message processing
 -- function. The processing function will be called in an arbitrary
 -- thread chosen by the ADL communications runtime.
-epNewSink1 :: forall a . (ADLValue a) => EndPointData -> Maybe T.Text -> (a -> IO ()) -> IO (LocalSink a)
-epNewSink1 ep msid handler = do
+newLocalSink1 :: forall a . (ADLValue a) => EndPointData -> Maybe T.Text -> (a -> IO ()) -> IO (LocalSink a)
+newLocalSink1 ep msid handler = do
   -- If the caller supplied an ID use it. Otherwise choose one at random
   sid <- case msid of
     (Just sid) -> return sid

@@ -23,8 +23,8 @@ withConnection :: FilePath -> ((SinkConnection MyChannelReq) -> EndPoint -> IO a
 withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
 
-  withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Right (2100,2200))) $ \ep -> do
+  withResource ADL.Core.Comms.newContext $ \ctx -> do
+    withResource (ZMQ.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
       withResource (connect ctx s) $ \sc -> do
         f sc ep
 
@@ -33,7 +33,7 @@ publish value sc ep = scSend sc (ChannelReq_publish value)
 
 subscribe :: Pattern -> SinkConnection MyChannelReq -> EndPoint -> IO ()
 subscribe pattern sc ep = do
-  withResource (epNewSink ep Nothing processMessage) $ \ls -> do
+  withResource (newLocalSink ep Nothing processMessage) $ \ls -> do
   sub <- callRPC ChannelReq_subscribe sc ep (seconds 20) (Subscribe pattern (lsSink ls)) >>= errorOnTimeout
   threadWait
   where

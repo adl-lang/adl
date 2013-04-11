@@ -27,17 +27,17 @@ kvServer rfile ufile = do
     userMap <- readUserMap ufile
     mapv <- atomically $ newTVar Map.empty
 
-    withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Left 2001)) $ \ep -> do
+    withResource ADL.Core.Comms.newContext $ \ctx -> do
+    withResource (ZMQ.newEndPoint ctx (Left 2001)) $ \ep -> do
 
       -- Create an actor for readonly kv requests
-      readOnly <- epNewSink ep Nothing (processRequest False mapv ctx)
+      readOnly <- newLocalSink ep Nothing (processRequest False mapv ctx)
 
       -- Create an actor for read/write kv requests
-      readWrite <- epNewSink ep Nothing (processRequest True mapv ctx)
+      readWrite <- newLocalSink ep Nothing (processRequest True mapv ctx)
 
       -- And finally an authentication actor to choose which 
-      auth <- epNewSink ep (Just "kvstore-authenticator")
+      auth <- newLocalSink ep (Just "kvstore-authenticator")
               (processAuthenticate userMap ctx (lsSink readOnly) (lsSink readWrite))
 
       aToJSONFile defaultJSONFlags rfile (lsSink auth)

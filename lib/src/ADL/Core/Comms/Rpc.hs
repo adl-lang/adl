@@ -39,7 +39,7 @@ handleRPC ctx rpc f = do
 oneShotSinkWithTimeout :: forall a . (ADLValue a) =>  EndPoint -> Int -> IO (Sink a, IO (Maybe a))
 oneShotSinkWithTimeout ep timeout = do
   rv <- atomically $ newEmptyTMVar 
-  ls <- epNewSink ep Nothing (handleResponse rv)
+  ls <- newLocalSink ep Nothing (handleResponse rv)
   return (lsSink ls,(getResponse rv ls))
   where
     handleResponse :: TMVar a -> a -> IO ()

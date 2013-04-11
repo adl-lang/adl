@@ -38,10 +38,10 @@ instance Resource State where
   sequence_ [release sc | (_,sc) <- Map.elems ss]
 
 psServer rfile = do
-    withResource ADL.Core.Comms.init $ \ctx -> do
-    withResource (ZMQ.epOpen ctx (Left 2001)) $ \ep -> do
+    withResource ADL.Core.Comms.newContext $ \ctx -> do
+    withResource (ZMQ.newEndPoint ctx (Left 2001)) $ \ep -> do
     withResource (newState ctx)$ \state -> do
-      ls <- epNewSink ep (Just "pubsub") (processRequest ep state ctx)
+      ls <- newLocalSink ep (Just "pubsub") (processRequest ep state ctx)
       aToJSONFile defaultJSONFlags rfile (lsSink ls)
       putStrLn ("Wrote ps server reference to " ++ show rfile)
       threadWait
@@ -64,7 +64,7 @@ processRequest ep state ctx req = case req of
         writeTVar(nextid state) (i+1)
         modifyTVar (subs state) (Map.insert i (subscribe_pattern req,sc))
         return i
-      ls <- epNewSink ep Nothing (processSubscriptionRequest state ctx i)
+      ls <- newLocalSink ep Nothing (processSubscriptionRequest state ctx i)
       return (lsSink ls)
 
     match :: Pattern -> Message -> Bool
