@@ -14,7 +14,7 @@ cabal-version:       >=1.8
 library
   hs-source-dirs:      src
   exposed-modules:     ADL.Core, ADL.Core.CustomTypes, ADL.Core.Value, ADL.Core.Sink, ADL.Core.Primitives,
-                       ADL.Core.Comms,
+                       ADL.Core.Comms, ADL.Core.Comms.Internals,
                        ADL.Core.Comms.Types, ADL.Core.Comms.Types.Internals,
                        ADL.Core.Comms.Null,
                        ADL.Core.Comms.ZMQ, ADL.Core.Comms.ZMQ.Internals,

@@ -43,7 +43,7 @@ psServer rfile = do
     withResource (ZMQ.newEndPoint ctx (Left 2001)) $ \ep -> do
     withResource (newState ctx)$ \state -> do
       ls <- newLocalSink ep (Just "pubsub") (processRequest ep state ctx)
-      aToJSONFile defaultJSONFlags rfile (lsSink ls)
+      aToJSONFile defaultJSONFlags rfile (toSink ls)
       putStrLn ("Wrote ps server reference to " ++ show rfile)
       threadWait
 
@@ -55,7 +55,7 @@ processRequest ep state ctx req = case req of
     publish :: Message -> IO ()
     publish m = do
       ss <- atomically $ readTVar (subs state)
-      sequence_ [ scSend sc m | (pattern,sc) <- Map.elems ss, match pattern m]
+      sequence_ [ send sc m | (pattern,sc) <- Map.elems ss, match pattern m]
 
     subscribe :: MySubscribe -> IO Subscription
     subscribe req = do
@@ -66,7 +66,7 @@ processRequest ep state ctx req = case req of
         modifyTVar (subs state) (Map.insert i (subscribe_pattern req,sc))
         return i
       ls <- newLocalSink ep Nothing (processSubscriptionRequest state ctx i)
-      return (lsSink ls)
+      return (toSink ls)
 
     match :: Pattern -> Message -> Bool
     match = T.isPrefixOf

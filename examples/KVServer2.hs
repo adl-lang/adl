@@ -39,9 +39,9 @@ kvServer rfile ufile = do
 
       -- And finally an authentication actor to choose which 
       auth <- newLocalSink ep (Just "kvstore-authenticator")
-              (processAuthenticate userMap ctx (lsSink readOnly) (lsSink readWrite))
+              (processAuthenticate userMap ctx (toSink readOnly) (toSink readWrite))
 
-      aToJSONFile defaultJSONFlags rfile (lsSink auth)
+      aToJSONFile defaultJSONFlags rfile (toSink auth)
       putStrLn ("Wrote authenticator reference to " ++ show rfile)
       threadWait
 

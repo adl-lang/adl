@@ -23,7 +23,7 @@ callRPC :: (ADLValue i, ADLValue o, ADLValue a)
     => (Rpc i o -> a) -> SinkConnection a -> EndPoint -> Int-> i -> IO (Maybe o)
 callRPC selectorf sc ep timeout i = do
   (sink,waitForValue) <- oneShotSinkWithTimeout ep timeout
-  scSend sc (selectorf (Rpc i sink))
+  send sc (selectorf (Rpc i sink))
   waitForValue
 
 -- | Respond to an RPC request on the server side
@@ -31,7 +31,7 @@ handleRPC :: (ADLValue o) => Context -> Rpc i o -> (i -> IO o) -> IO ()
 handleRPC ctx rpc f = do
   o <- f (rpc_params rpc)
   withResource (connect ctx (rpc_replyTo rpc)) $ \sc -> do
-    scSend sc o
+    send sc o
 
 -- | Create a new sink to receive a value of type a. Return an IO
 -- action that will wait for a value to arrive at that sink. The value
@@ -41,7 +41,7 @@ oneShotSinkWithTimeout :: forall a . (ADLValue a) =>  EndPoint -> Int -> IO (Sin
 oneShotSinkWithTimeout ep timeout = do
   rv <- atomically $ newEmptyTMVar 
   ls <- newLocalSink ep Nothing (handleResponse rv)
-  return (lsSink ls,(getResponse rv ls))
+  return (toSink ls,(getResponse rv ls))
   where
     handleResponse :: TMVar a -> a -> IO ()
     handleResponse v a = atomically $ putTMVar v a

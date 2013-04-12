@@ -28,7 +28,7 @@ kvServer rfile = do
     withResource (AC.newEndPoint ctx (Left 2001)) $ \ep -> do
       mapv <- atomically $ newTVar Map.empty
       ls <- AC.newLocalSink ep (Just "kvstore") (processRequest mapv ctx)
-      aToJSONFile defaultJSONFlags rfile (AC.lsSink ls)
+      aToJSONFile defaultJSONFlags rfile (AC.toSink ls)
       putStrLn ("Wrote kv server reference to " ++ show rfile)
       threadWait
     

@@ -30,12 +30,12 @@ withConnection rfile f = do
         f sc ep
 
 publish :: Message -> SinkConnection MyChannelReq -> EndPoint -> IO ()
-publish value sc ep = scSend sc (ChannelReq_publish value)
+publish value sc ep = send sc (ChannelReq_publish value)
 
 subscribe :: Pattern -> SinkConnection MyChannelReq -> EndPoint -> IO ()
 subscribe pattern sc ep = do
   withResource (newLocalSink ep Nothing processMessage) $ \ls -> do
-  sub <- callRPC ChannelReq_subscribe sc ep (seconds 20) (Subscribe pattern (lsSink ls)) >>= errorOnTimeout
+  sub <- callRPC ChannelReq_subscribe sc ep (seconds 20) (Subscribe pattern (toSink ls)) >>= errorOnTimeout
   threadWait
   where
     processMessage :: Message -> IO ()

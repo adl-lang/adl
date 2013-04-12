@@ -50,7 +50,7 @@ kvServer rfile = do
     withResource (ZMQ.newEndPoint ctx (Left 2001)) $ \ep -> do
     withResource newState $ \state -> do
       ls <- newLocalSink ep (Just "kvstore") (processRequest state ctx)
-      aToJSONFile defaultJSONFlags rfile (lsSink ls)
+      aToJSONFile defaultJSONFlags rfile (toSink ls)
       putStrLn ("Wrote kv server reference to " ++ show rfile)
       threadWait
 
@@ -82,7 +82,7 @@ processRequest state ctx req = case req of
          cs <- readTVar (subcs state)
          case Map.lookup sid cs of
            (Just Nothing) -> retry
-           (Just (Just sc)) -> return (scSend sc kvupdate)
+           (Just (Just sc)) -> return (send sc kvupdate)
            Nothing -> do
              writeTVar (subcs state) (Map.insert sid Nothing cs)
              return $ do

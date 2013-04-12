@@ -1,9 +1,9 @@
 {-# LANGUAGE Rank2Types #-}
 module ADL.Core.Comms.Types(
   SinkConnection,
-  scSend,
+  send,
   LocalSink,
-  lsSink,
+  toSink,
   EndPoint,
   newLocalSink
   ) where

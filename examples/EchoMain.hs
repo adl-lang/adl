@@ -27,14 +27,14 @@ echoServer rfile = do
   withResource ADL.Core.Comms.newContext $ \ctx -> do
     withResource (EP.newEndPoint ctx (Left 2000)) $ \ep -> do
       ls <- newLocalSink ep (Just "echoserver") (processRequest ctx)
-      aToJSONFile defaultJSONFlags rfile (lsSink ls)
+      aToJSONFile defaultJSONFlags rfile (toSink ls)
       putStrLn ("Wrote echo server reference to " ++ show rfile)
       threadWait
   where
     processRequest :: Context -> EchoRequest () -> IO ()
     processRequest ctx req = do
       withResource (connect ctx (echoRequest_replyTo req)) $ \sc -> do
-        scSend sc (EchoResponse (echoRequest_body req))
+        send sc (EchoResponse (echoRequest_body req))
 
 echoClient rfile = do
   withResource ADL.Core.Comms.newContext $ \ctx -> do
@@ -42,7 +42,7 @@ echoClient rfile = do
       s <- aFromJSONFile' defaultJSONFlags rfile 
       withResource (connect ctx s) $ \sc -> do 
         (sink, getValue) <- oneShotSinkWithTimeout ep (seconds 20)
-        scSend sc (EchoRequest () sink)
+        send sc (EchoRequest () sink)
         mv <- getValue
         case mv of
           Just (EchoResponse ()) -> putStrLn "Received response"
