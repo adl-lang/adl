@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Main where
+module KVClient1 where
 
 import System.Environment (getArgs)
 import Control.Concurrent.STM
@@ -50,12 +50,12 @@ usage = do
   putStrLn "    kvclient1 delete <key>"
   putStrLn "    kvclient1 query <pattern>"
 
-main = do
-  L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)
-  args <- getArgs
+run args = do
   let run = withConnection "/tmp/server.ref"
   case args of
     ["put",key,value] -> run (put (T.pack key) (T.pack value))
     ["delete",key] -> run (delete (T.pack key))
     ["query",pattern] -> run (query (T.pack pattern))
     _ -> usage
+
+main = getArgs >>= run

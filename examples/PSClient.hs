@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Main where
+module PSClient where
 
 import System.Environment (getArgs)
 import Control.Concurrent.STM
@@ -46,11 +46,12 @@ usage = do
   putStrLn "    psclient publish <value>"
   putStrLn "    psclient subscribe <pattern>"
 
-main = do
-  L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)
-  args <- getArgs
-  let run = withConnection "/tmp/psServer.ref"
+run args = do
+  let run' = withConnection "/tmp/psServer.ref"
   case args of
-    ["publish",value] -> run (publish (T.pack value))
-    ["subscribe",pattern] -> run (subscribe (T.pack pattern))
+    ["publish",value] -> run' (publish (T.pack value))
+    ["subscribe",pattern] -> run' (subscribe (T.pack pattern))
     _ -> usage
+
+main = getArgs >>= run
+    

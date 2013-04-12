@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
-module Main where
+module Echo where
 
 import Control.Applicative
 import System.Environment (getArgs)
@@ -49,6 +49,9 @@ echoClient rfile = do
           Nothing -> putStrLn "Request timed out"
         return ()
 
+runserver args = echoServer "/tmp/server.ref"
+runclient args = echoClient "/tmp/server.ref"
+
 usage = do
   putStrLn "Usage:"
   putStrLn "    echocmd server"
@@ -59,6 +62,6 @@ main = do
   args <- getArgs
   case args of
     [] -> usage
-    ["server"] -> echoServer "/tmp/server.ref"
-    ["client"] -> echoClient "/tmp/server.ref"
+    ("server":args') -> runserver args'
+    ("client":args') -> runclient args'
     

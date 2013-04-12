@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
-module Main where
+module KVServer2 where
 
 import System.Environment (getArgs)
 import Control.Concurrent.STM
@@ -79,7 +79,6 @@ processRequest rw mapv ctx req = case req of
     query p = fmap (filter (T.isPrefixOf p . fst) . Map.toList)
             $ atomically $ readTVar mapv
 
-main = do
-  L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)
-  kvServer "/tmp/kvauth.ref" "/tmp/users.json"
+run args = kvServer "/tmp/kvauth.ref" "/tmp/users.json"
 
+main = getArgs >>= run

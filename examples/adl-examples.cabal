@@ -11,57 +11,22 @@ category:            Network
 build-type:          Custom
 cabal-version:       >=1.8
 
-executable echocmd
-  main-is:             EchoMain.hs
-  ghc-options:         -threaded
-  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                       parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                       aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger
+-- executable psserver
+--    main-is:             PSServer.hs
+--    ghc-options:         -threaded
+--    build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
+--                         parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
+--                         aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger, time
 
-executable kvserver1
-  main-is:             KVServer1.hs
-  ghc-options:         -threaded
-  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                       parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                       aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger
+-- executable psclient
+--    main-is:             PSClient.hs
+--    ghc-options:         -threaded
+--    build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
+--                         parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
+--                         aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger, time
 
-executable kvclient1
-  main-is:             KVClient1.hs
-  ghc-options:         -threaded
-  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                       parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                       aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger
-
-executable kvserver2
-  main-is:             KVServer2.hs
-  ghc-options:         -threaded
-  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                       parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                       aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger
-
-executable kvclient2
-  main-is:             KVClient2.hs
-  ghc-options:         -threaded
-  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                       parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                       aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger
-
--- executable kvserver3
---   main-is:             KVServer3.hs
---   ghc-options:         -threaded
---   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
---                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
---                        aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger
-
-executable psserver
-   main-is:             PSServer.hs
-   ghc-options:         -threaded
-   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                        aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger, time
-
-executable psclient
-   main-is:             PSClient.hs
+executable runexample
+   main-is:             RunExample.hs
    ghc-options:         -threaded
    build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
                         parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,

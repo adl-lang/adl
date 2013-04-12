@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Main where
+module KVClient2 where
 
 import Control.Monad
 import System.Environment (getArgs,getEnv)
@@ -70,9 +70,7 @@ usage = do
   putStrLn ""
   putStrLn "(the environment variable KV_USER and KV_PASSWORD must be set)"
 
-main = do
-  L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)
-  args <- getArgs
+run args = do
   cred <- credentialsFromEnv
   let run = withConnection "/tmp/kvauth.ref" cred
   case args of
@@ -80,3 +78,5 @@ main = do
     ["delete",key] -> run (delete (T.pack key))
     ["query",pattern] -> run (query (T.pack pattern))
     _ -> usage
+
+main = getArgs >>= run

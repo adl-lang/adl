@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
-module Main where
+module PSServer where
 
 import System.Environment (getArgs)
 import Control.Applicative
@@ -77,6 +77,6 @@ processSubscriptionRequest state ctx i req = case req of
   where
     unsubscribe = atomically $ modifyTVar (subs state) (Map.delete i)
 
-main = do
-  L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)
-  psServer "/tmp/psServer.ref"
+run args =  psServer "/tmp/psServer.ref"
+
+main = getArgs >>= run
