@@ -33,6 +33,10 @@ compiler:
 lib:
 	(cd lib && cabal-dev -s ../cabal-dev install)
 
+docs:
+	(cd utils && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
+	(cd lib && cabal-dev -s ../cabal-dev install --enable-documentation)
+
 examples:
 	(cd examples && cabal-dev -s ../cabal-dev install)
 
