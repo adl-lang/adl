@@ -13,6 +13,7 @@ import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
 import qualified System.Log.Logger as L
 
+import ADL.Utils.Resource
 import ADL.Core.Comms
 import qualified ADL.Core.Comms.HTTP as EP
 import ADL.Core.Comms.Rpc(oneShotSinkWithTimeout)

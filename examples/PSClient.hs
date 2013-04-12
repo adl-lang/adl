@@ -8,6 +8,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified System.Log.Logger as L
 
+import ADL.Utils.Resource
 import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms

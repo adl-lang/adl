@@ -42,10 +42,11 @@ import qualified Network.HTTP.Conduit as HC
 import qualified System.Log.Logger as L
 import Control.Monad.Trans.Resource
 
+import ADL.Utils.Resource
 import ADL.Utils.Format
 import ADL.Core.Value
 import ADL.Core.Sink
-import ADL.Core.Comms.Types
+import ADL.Core.Comms.Types.Internals
 
 data Context = Context {
   c_manager :: HC.Manager
@@ -85,7 +86,7 @@ newEndPoint ctx eport = do
   warptid <- forkIO $ runWarp socket sinksv nextactionv
   forkIO (runner nextactionv)
 
-  return (epCreate (newSink hostname port sinksv)
+  return (EndPoint (newSink hostname port sinksv)
           (closef hostname port warptid nextactionv))
   where
     -- Attempt to bind either the given socket, or any in the specified range
@@ -162,7 +163,7 @@ newEndPoint ctx eport = do
       let at = atype (defaultv :: a)
           sink = HTTPSink hostname port sid
       atomically $ modifyTVar sinksv (Map.insert sid (action at))
-      return (lsCreate sink (closef sid))
+      return (LocalSink sink (closef sid))
       where
         action at v = case (aFromJSON fjf v) of
           Nothing -> L.errorM "Sink.action" 
@@ -184,7 +185,7 @@ newEndPoint ctx eport = do
 -- | Create a new connection to a remote sink
 connect :: forall a . (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)
 connect ctx (HTTPSink{hs_hostname=host,hs_port=port,hs_sid=sid}) = do
-  return (scCreate send close)
+  return (SinkConnection send close)
   where
     send :: (ADLValue a) => a -> IO ()
     send a = do

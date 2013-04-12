@@ -15,7 +15,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     ADL.Core, ADL.Core.CustomTypes, ADL.Core.Value, ADL.Core.Sink, ADL.Core.Primitives,
                        ADL.Core.Comms,
-                       ADL.Core.Comms.Types,
+                       ADL.Core.Comms.Types, ADL.Core.Comms.Types.Internals,
                        ADL.Core.Comms.Null,
                        ADL.Core.Comms.ZMQ, ADL.Core.Comms.ZMQ.Internals,
                        ADL.Core.Comms.HTTP, ADL.Core.Comms.HTTP.Internals,

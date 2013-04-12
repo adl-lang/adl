@@ -29,10 +29,11 @@ import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Encode as JSON
 import qualified System.Log.Logger as L
 
+import ADL.Utils.Resource
 import ADL.Core.Value
 import ADL.Core.Sink
 
-import ADL.Core.Comms.Types
+import ADL.Core.Comms.Types.Internals
 
 -- | Value capturing the state of the ADL ZMQ communications
 -- runtime
@@ -106,7 +107,7 @@ data EndPointData = EndPointData {
 newEndPoint :: Context -> Either Int (Int,Int) -> IO EndPoint
 newEndPoint ctx port = do
   ed <- newEndPoint1 ctx port
-  return (epCreate (newLocalSink1 ed) (epClose1 ed))
+  return (EndPoint (newLocalSink1 ed) (epClose1 ed))
 
 newEndPoint1 :: Context -> Either Int (Int,Int)-> IO EndPointData
 newEndPoint1 ctx rport = do
@@ -187,7 +188,7 @@ newLocalSink1 ep msid handler = do
   let at = atype (defaultv :: a)
       sink = ZMQSink (ep_hostname ep) (ep_port ep) sid
   atomically $ modifyTVar (ep_sinks ep) (Map.insert sid (action at))
-  return (lsCreate sink (closef sink))
+  return (LocalSink sink (closef sink))
   where
     action at v = case (aFromJSON fjf v) of
       Nothing -> L.errorM "Sink.action" 
@@ -227,7 +228,7 @@ connect :: (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)
 connect ctx (ZMQSink{zmqs_hostname=host,zmqs_port=port,zmqs_sid=sid}) = do
   let key = (host,port)
   socket <- getSocket key
-  return (scCreate (zmqSend1 socket) (zmqClose1 key) )
+  return (SinkConnection (zmqSend1 socket) (zmqClose1 key) )
   where
     addr = "tcp://" ++ host ++ ":" ++ show port
     cmapv = c_connections ctx

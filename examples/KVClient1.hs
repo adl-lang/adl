@@ -12,6 +12,7 @@ import qualified ADL.Core.Comms as AC
 import qualified ADL.Core.Comms.Rpc as AC
 import qualified ADL.Core.Comms.HTTP as AC
 
+import ADL.Utils.Resource
 import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
@@ -25,9 +26,9 @@ withConnection :: FilePath -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -
 withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
  
-  AC.withResource AC.newContext $ \ctx -> do
-    AC.withResource (AC.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
-      AC.withResource (AC.connect ctx s) $ \sc -> do
+  withResource AC.newContext $ \ctx -> do
+    withResource (AC.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
+      withResource (AC.connect ctx s) $ \sc -> do
         f sc ep
 
 timeout = seconds 20

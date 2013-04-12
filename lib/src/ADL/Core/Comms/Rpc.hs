@@ -10,6 +10,7 @@ import Control.Exception(bracket)
 import Control.Applicative
 import Control.Concurrent.STM
 
+import ADL.Utils.Resource
 import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
