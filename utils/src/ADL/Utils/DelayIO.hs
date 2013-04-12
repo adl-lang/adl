@@ -1,4 +1,4 @@
-module Utils.DelayIO(
+module ADL.Utils.DelayIO(
   DelayIO,
   delayIO,
   dioGet,

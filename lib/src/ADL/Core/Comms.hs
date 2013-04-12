@@ -10,7 +10,7 @@ module ADL.Core.Comms(
 import Control.Applicative
 import Control.Concurrent.STM
 
-import Utils.DelayIO
+import ADL.Utils.DelayIO
 
 import ADL.Core.Value
 import ADL.Core.Sink

@@ -41,6 +41,8 @@ clean:
 
 	(cd compiler && cabal-dev -s ../cabal-dev clean)
 
+	(cd utils && cabal-dev -s ../cabal-dev clean)
+
 	(cd lib && cabal-dev -s ../cabal-dev clean)
 
 	(cd examples && cabal-dev -s ../cabal-dev clean)
