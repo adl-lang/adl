@@ -100,8 +100,15 @@ decl =   (mkStruct <$> struct)
     mkUnion (n,u) = Decl n Map.empty (Decl_Union u)
     mkTypedef (n,t) = Decl n Map.empty (Decl_Typedef t)
 
-importP :: P.Parser ModuleName
-importP = token "import" *> moduleName
+importP :: P.Parser Import
+importP = token "import" *> (P.try importAll <|> import1 )
+  where
+    importAll = (Import_Module . ModuleName) <$> star
+      where
+        star = (:) <$> ident0 <*> star2 
+        star2 = P.char '.' *> ((P.char '*' *> pure []) <|> star)
+
+    import1  = Import_ScopedName <$> scopedName
 
 declMap :: P.Parser (Map.Map Ident (Decl ScopedName))
 declMap = Map.fromList . map (\d -> (d_name d, d)) <$> P.many (decl <* ctoken ';')

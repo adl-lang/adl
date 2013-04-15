@@ -1,7 +1,7 @@
 module examples.pubsub
 {
 
-import sys.rpc;
+import sys.rpc.*;
 
 // A Channel<T,P> is a data type where we can published
 // messages of type T, and can subscribe using a pattern

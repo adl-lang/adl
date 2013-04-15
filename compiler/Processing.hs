@@ -28,18 +28,20 @@ import EIO
 type SModule = Module ScopedName
 type SModuleMap = Map.Map ModuleName SModule
 
-loadModule :: FilePath -> (ModuleName -> [FilePath]) -> SModuleMap -> EIO P.ParseError (SModule,SModuleMap)
-loadModule fpath findm mm = do
-    m0 <- eioFromEither $ P.fromFile P.moduleFile fpath
+loadModule :: FilePath -> (ModuleName -> [FilePath]) -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
+loadModule fpath0 findm mm = do
+    m0 <- parseFile fpath0
     mm' <- addDeps m0 mm
     return (m0,mm')
-
   where
-    addDeps :: SModule -> SModuleMap -> EIO P.ParseError SModuleMap
+    parseFile :: FilePath -> EIO T.Text SModule
+    parseFile fpath = mapError (T.pack .show ) $ eioFromEither $ P.fromFile P.moduleFile fpath
+
+    addDeps :: SModule -> SModuleMap -> EIO T.Text SModuleMap
     addDeps m mm = do
        foldM addDep mm (Set.toList (getReferencedModules m))
 
-    addDep :: SModuleMap -> ModuleName -> EIO P.ParseError SModuleMap
+    addDep :: SModuleMap -> ModuleName -> EIO T.Text SModuleMap
     addDep mm mname = case Map.member mname mm of
         True -> return mm
         False -> do
@@ -47,10 +49,10 @@ loadModule fpath findm mm = do
           let mm' = Map.insert mname m mm
           addDeps m mm'
 
-    findModule :: ModuleName -> [FilePath] -> EIO P.ParseError SModule
-    findModule mname [] = liftIO $ ioError $ userError $ "Unable to find module '" ++ format mname ++ "'"
+    findModule :: ModuleName -> [FilePath] -> EIO T.Text SModule
+    findModule mname [] = eioError (template "\"$1\":\nUnable to find module '$2'" [T.pack fpath0,formatText mname] )
     findModule mname (fpath:fpaths) = do
-        em <-  liftIO $ try (P.fromFile P.moduleFile fpath)
+        em <-  liftIO $ try (unEIO (parseFile fpath))
         case em of
             (Left (ioe::IOError)) -> findModule mname fpaths
             (Right em) -> eioFromEither (return em)
@@ -254,9 +256,10 @@ namescopeForModule :: Module ScopedName -> NameScope -> NameScope
 namescopeForModule m ns = ns
     { ns_locals = Map.fromList [ (sn_name sn,ImportedDecl (sn_moduleName sn) d)
                                | (sn,d)<- Map.toList (ns_globals ns),
-                                 Set.member (sn_moduleName sn) imports  ]
+                                 any (nameInScope sn) (m_imports m) ]
     , ns_currentModule=m_decls m
     }
   where
-    imports = Set.fromList (m_imports m)
+    nameInScope sn (Import_ScopedName sn') = sn == sn'
+    nameInScope sn (Import_Module m) = (sn_moduleName sn) == m
 

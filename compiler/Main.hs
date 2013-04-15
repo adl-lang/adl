@@ -37,7 +37,7 @@ loadAndCheckModule moduleFinder modulePath = do
 
   where
     loadModule1 :: EIOT (SModule, SModuleMap)
-    loadModule1 = mapError (T.pack . show) $ loadModule modulePath moduleFinder Map.empty
+    loadModule1 = loadModule modulePath moduleFinder Map.empty
 
     checkModuleForDuplicates :: SModule -> EIOT ()
     checkModuleForDuplicates m = case dups of

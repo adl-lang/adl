@@ -1,0 +1,30 @@
+* ADL Core/Compiler
+** Decide on reserved words in ADL, and generate errors
+** Add support for overriding defaults in ADL
+** Add support for documentation strings passing through to generated code
+** Consider final list of primitive types
+** Select custom types from command line
+** Protocol versioning
+IDEA: use unions to specify version differences where the
+discriminator is negotiated on connection, and not serialised
+
+** DONE Import syntax
+    - Should we use java style?
+
+
+* Haskell Backend
+** Formalise error handling in comms
+(use a single standard exception type)
+** Fix scoping in generated haskell code
+
+** Empty unions result in a "Prelude.head: empty list" failure
+
+** aFromJSON should provide error messages and context, ie something
+  like:
+
+      data AFJError = AFJError { afje_context :: [T.Text], afje_error ::  T.Text }
+      aFromJSON :: JSONFlags -> JSON.Value -> Either AFJError a
+
+
+
+

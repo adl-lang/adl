@@ -1,8 +1,8 @@
 module examples.kvstore2
 {
 
-import sys.types;
-import sys.rpc;
+import sys.types.*;
+import sys.rpc.*;
 
 typedef string Key;
 typedef string Value;

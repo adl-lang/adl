@@ -1,7 +1,8 @@
 module examples.pubsub1
 {
 
-import examples.pubsub;
+import examples.pubsub.Subscribe;
+import examples.pubsub.ChannelReq;
 
 // A concrete message service, with strings for messagse and patterns
 

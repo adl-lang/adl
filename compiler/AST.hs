@@ -76,9 +76,17 @@ data Decl t = Decl {
   }
   deriving (Show)
 
+data Import = Import_Module ModuleName
+            | Import_ScopedName ScopedName
+  deriving (Show)
+
+iModule :: Import -> ModuleName
+iModule (Import_Module m) = m           
+iModule (Import_ScopedName sn) = sn_moduleName sn
+
 data Module t = Module {
   m_name :: ModuleName,
-  m_imports :: [ModuleName],
+  m_imports :: [Import],
   m_decls :: Map.Map Ident (Decl t)
   }  
   deriving (Show)
@@ -104,7 +112,7 @@ instance Foldable Module where
     foldMap f Module{m_decls=ds} = foldMap (foldMap f) ds
 
 getReferencedModules :: Module ScopedName -> Set.Set ModuleName
-getReferencedModules m = Set.fromList (m_imports m) `Set.union` foldMap ref m
+getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` foldMap ref m
   where
     ref :: ScopedName -> Set.Set ModuleName
     ref ScopedName{sn_moduleName=ModuleName []} = Set.empty
