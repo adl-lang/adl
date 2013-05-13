@@ -12,9 +12,17 @@ import qualified Data.Text as T
 import ADL.Utils.Format
 
 data PrimitiveType = P_Void
-                   | P_Int
-                   | P_Double
                    | P_Bool  
+                   | P_Int8
+                   | P_Int16
+                   | P_Int32
+                   | P_Int64
+                   | P_UInt8
+                   | P_UInt16
+                   | P_UInt32
+                   | P_UInt64
+                   | P_Float
+                   | P_Double
                    | P_ByteVector
                    | P_String
                    | P_Vector
@@ -33,7 +41,15 @@ data PrimitiveDetails = PrimitiveDetails {
 primitiveDetails =
   [ PrimitiveDetails P_Void "void" 0
   , PrimitiveDetails P_Bool "bool" 0
-  , PrimitiveDetails P_Int "int" 0
+  , PrimitiveDetails P_Int8 "int8" 0
+  , PrimitiveDetails P_Int16 "int16" 0
+  , PrimitiveDetails P_Int32 "int32" 0
+  , PrimitiveDetails P_Int64 "int64" 0
+  , PrimitiveDetails P_UInt8 "uint8" 0
+  , PrimitiveDetails P_UInt16 "uint16" 0
+  , PrimitiveDetails P_UInt32 "uint32" 0
+  , PrimitiveDetails P_UInt64 "uint64" 0
+  , PrimitiveDetails P_Float "float" 0
   , PrimitiveDetails P_Double "double" 0
   , PrimitiveDetails P_ByteVector "bytes" 0
   , PrimitiveDetails P_String "string" 0
@@ -42,7 +58,7 @@ primitiveDetails =
   ]
 
 map1 = Map.fromList  [  (pd_type p, p) | p <- primitiveDetails ] 
-map2 = Map.fromList  [  (pd_ident p, p) | p <- primitiveDetails ] 
+map2 = Map.fromList [ (pd_ident p, p) | p <- primitiveDetails ]
     
 
 ptFromText :: T.Text -> Maybe PrimitiveType

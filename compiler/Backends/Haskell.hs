@@ -117,20 +117,27 @@ hFieldName sn fn = T.concat [lower1 sn,"_",fn]
 hDiscName :: Ident -> Ident -> Ident
 hDiscName sn fn = T.concat [upper1 sn,"_",fn]
 
+intType, wordType :: T.Text -> HGen T.Text
+intType s = importQualifiedModule (HaskellModule "Data.Int") >> return s
+wordType s = importQualifiedModule (HaskellModule "Data.Word") >> return s
+
 hPrimitiveType :: PrimitiveType -> HGen T.Text
 hPrimitiveType P_Void = return "()"
 hPrimitiveType P_Bool = return "Prelude.Bool"
-hPrimitiveType P_Int = return "Prelude.Int"
+hPrimitiveType P_Int8 = intType "Data.Int.Int8"
+hPrimitiveType P_Int16 = intType "Data.Int.Int16"
+hPrimitiveType P_Int32 = intType "Data.Int.Int32"
+hPrimitiveType P_Int64 = intType "Data.Int.Int64"
+hPrimitiveType P_UInt8 = wordType "Data.Word.Word8"
+hPrimitiveType P_UInt16 = wordType "Data.Word.Word16"
+hPrimitiveType P_UInt32 = wordType "Data.Word.Word32"
+hPrimitiveType P_UInt64 = wordType "Data.Word.Word64"
+hPrimitiveType P_Float = return "Prelude.Float"
 hPrimitiveType P_Double = return "Prelude.Double"
-hPrimitiveType P_ByteVector = do
-  importByteString
-  return "B.ByteString"
+hPrimitiveType P_ByteVector = importByteString >> return "B.ByteString"
 hPrimitiveType P_Vector = return "[]" -- never called
-hPrimitiveType P_String = do
-  importText
-  return "T.Text"
-hPrimitiveType P_Sink = do
-  return "Sink"
+hPrimitiveType P_String = importText >> return "T.Text"
+hPrimitiveType P_Sink = return "Sink"
 
 hTypeExpr :: TypeExpr ResolvedType -> HGen T.Text
 hTypeExpr (TE_Ref rt) = hTypeExpr1 rt

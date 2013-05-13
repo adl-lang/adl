@@ -1,0 +1,70 @@
+module examples.serialisation
+{
+
+import sys.rpc.rpc;
+
+typedef rpc<T,T> roundtrip<T>;
+
+struct S1
+{
+    int32 f1;
+    double f2;
+};
+
+union U1
+{
+    int32 f1;
+    double f2;
+};
+
+struct S2
+{
+    void f1;
+    int32 f2;
+    vector<string> f3;
+    sink<string> f4;
+    S1 f5;
+    U1 f6;
+};
+
+union U2
+{
+    void f1;
+    int32 f2;
+    vector<string> f3;
+    sink<string> f4;
+    S1 f5;
+    U1 f6;
+};
+
+union Request
+{
+    roundtrip<void> req_void;
+    roundtrip<bool> req_bool;
+
+    roundtrip<int8> req_int8;
+    roundtrip<int16> req_int16;
+    roundtrip<int32> req_int32;
+    roundtrip<int64> req_int64;
+
+    roundtrip<uint8> req_uint8;
+    roundtrip<uint16> req_uint16;
+    roundtrip<uint32> req_uint32;
+    roundtrip<uint64> req_uint64;
+
+    roundtrip<float> req_float;
+    roundtrip<double> req_double;
+
+    roundtrip<bytes> req_bytes;
+    roundtrip<string> req_string;
+
+    roundtrip<vector<string>> req_vector;
+    roundtrip<sink<string>> req_sink;
+
+    roundtrip<U1> req_u1;
+    roundtrip<U2> req_u2;
+    roundtrip<S1> req_s1;
+    roundtrip<S2> req_s2;
+};
+
+};

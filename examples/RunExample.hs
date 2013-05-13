@@ -12,6 +12,7 @@ import qualified KVClient2
 import qualified PSServer
 import qualified PSClient
 import qualified Echo
+import qualified Serialisation
 
 examples  =
   [ ("echoserver", Echo.runserver)
@@ -22,16 +23,23 @@ examples  =
   , ("kvclient2", KVClient2.run)
   , ("psserver", PSServer.run)
   , ("psclient", PSClient.run)
+  , ("serialise-test-server", Serialisation.runserver)
+  , ("serialise-test-client", Serialisation.runclient)
   ]
             
 usage = do
   putStrLn "Usage:"
-  mapM_ (\(name,_) -> putStrLn ("    runexample " ++ name ++ " <args> ...")) examples
+  mapM_ (\(name,_) -> putStrLn ("    runexample [--debug] " ++ name ++ " <args> ...")) examples
   
 main = do
-  L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)
   args <- getArgs
-  case args of
+  args' <- case args of
+    ("--debug":args) -> do
+      L.updateGlobalLogger L.rootLoggerName (L.setLevel L.DEBUG)
+      return args
+    args -> return args
+      
+  case args' of
     [] -> usage
     (name:args') -> case find (\(name1,_) -> name == name1) examples of
       Nothing -> usage
