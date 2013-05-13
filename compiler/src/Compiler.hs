@@ -1,11 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Main where
+module Compiler where
 
-import Debug.Trace
-
-import System.Console.GetOpt
-import System.Exit
-import System.Environment (getArgs)
 import System.FilePath(joinPath)
 import Data.List(intercalate,partition)
 import Control.Monad
@@ -23,7 +18,6 @@ import Processing
 import qualified Backends.Haskell as H
 
 type EIOT a = EIO T.Text a
-
 
 loadAndCheckModule :: ModuleFinder -> FilePath -> EIOT RModule
 loadAndCheckModule moduleFinder modulePath = do
@@ -101,36 +95,9 @@ data VerifyFlags = VerifyFlags {
   vf_searchPath :: [FilePath]
 }
 
-searchDirOption ufn =
-  Option "I" ["searchdir"]
-    (ReqArg ufn "DIR")
-    "Add the specifed directory to the ADL searchpath"
-
-outputDirOption ufn =
-  Option "O" ["outputdir"]
-    (ReqArg ufn "DIR")
-    "Set the directory where generated code is written"
-
-noOverwriteOption ufn =
-  Option "" ["no-overwrite"]
-    (NoArg ufn)
-    "Don't update files that haven't changed"
-
-verify args0 =
-  case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> run (mkFlags opts) args
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
-  where
-    run vf args = forM_ args $ \modulePath -> do
-      loadAndCheckModule (moduleFinder (vf_searchPath vf)) modulePath
-
-    header = "Usage: adl verify [OPTION...] files..."
-    
-    mkFlags opts = (foldl (.) id opts) (VerifyFlags [])
-
-    optDescs =
-      [ searchDirOption (\s vf-> vf{vf_searchPath=s:vf_searchPath vf})
-      ]
+verify :: VerifyFlags -> [FilePath] -> EIO T.Text ()
+verify vf modulePaths = catchIOError $ forM_ modulePaths $ \modulePath -> do
+  loadAndCheckModule (moduleFinder (vf_searchPath vf)) modulePath
 
 data HaskellFlags = HaskellFlags {
   hf_searchPath :: [FilePath],
@@ -139,48 +106,15 @@ data HaskellFlags = HaskellFlags {
   hf_noOverwrite :: Bool
 }
 
-haskell args0 =
-  case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> run (mkFlags opts) args
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
-  where
-    run hf args = forM_ args $ \modulePath -> do
-      rm <- loadAndCheckModule (moduleFinder (hf_searchPath hf)) modulePath
-      H.writeModuleFile (hf_noOverwrite hf)
-                        (H.moduleMapper (hf_modulePrefix hf))
-                        (H.fileMapper (hf_outputPath hf)) rm
- 
-    header = "Usage: adl haskell [OPTION...] files..."
-    
-    mkFlags opts = (foldl (.) id opts) (HaskellFlags [] "ADL.Generated" "." False)
+haskell :: HaskellFlags -> [FilePath] -> EIO T.Text ()
+haskell hf modulePaths = catchIOError $ forM_ modulePaths $ \modulePath -> do
+  rm <- loadAndCheckModule (moduleFinder (hf_searchPath hf)) modulePath
+  H.writeModuleFile (hf_noOverwrite hf)
+                    (H.moduleMapper (hf_modulePrefix hf))
+                    (H.fileMapper (hf_outputPath hf)) rm
 
-    optDescs =
-      [ searchDirOption (\s hf-> hf{hf_searchPath=s:hf_searchPath hf})
-      , Option "" ["moduleprefix"]
-        (ReqArg (\s hf-> hf{hf_modulePrefix=s}) "PREFIX")
-        "Set module name prefix for generated code "
-      , outputDirOption (\s hf-> hf{hf_outputPath=s})
-      , noOverwriteOption (\hf-> hf{hf_noOverwrite=True})
-      ]
-
-usage = T.intercalate "\n"
-  [ "Usage: adl verify [OPTION..] <modulePath>..."
-  , "       adl haskell [OPTION..] <modulePath>..."
-  ]    
-    
-main = do
-  args <- getArgs
-  runEIO $ case args of
-    ("verify":args) -> verify args
-    ("haskell":args) -> haskell args
-    _ -> eioError usage
-  where
-    runEIO eio = do
-      a <- unEIO $ eio
-      case a of
-        (Left perr) ->
-          T.putStrLn perr >> exitWith (ExitFailure 1)
-        (Right _) -> exitWith ExitSuccess
-
-
-      
+catchIOError :: EIO T.Text a -> EIO T.Text a
+catchIOError a = eioHandle handler a
+ where
+   handler :: IOError -> EIO T.Text a
+   handler e = eioError (T.pack (show e))

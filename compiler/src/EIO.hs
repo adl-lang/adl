@@ -1,6 +1,7 @@
 module EIO where
 
 import Data.Either
+import Control.Exception
 import Control.Monad.Trans
 
 newtype EIO e a = EIO { unEIO :: IO (Either e a) }
@@ -29,3 +30,5 @@ eioFromEither mea = do
 mapError :: (a->b) -> EIO a c -> EIO b c
 mapError f (EIO e) = EIO $ fmap (either (Left . f) (Right . id)) e
 
+eioHandle :: Exception x => (x -> EIO e a) -> EIO e a -> EIO e a
+eioHandle h a = EIO (handle (\x -> unEIO (h x)) (unEIO a))
