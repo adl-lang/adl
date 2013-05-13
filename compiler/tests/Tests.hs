@@ -1,7 +1,8 @@
-{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings #-}
+{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings, DeriveDataTypeable #-}
 module Main where
 
 import Prelude hiding (catch)
+import Data.Typeable
 import Control.Exception
 
 import qualified Data.Text as T
@@ -27,7 +28,7 @@ data TestADLCompiler = TestADLCompiler {
   tc_inputPath :: FilePath,
   tc_module :: FilePath,
   tc_expectedOutput :: FilePath
-  }
+  } deriving (Typeable)
 
 instance Show TestResult where
   show Passed = "OK"
