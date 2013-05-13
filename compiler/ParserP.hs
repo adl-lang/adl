@@ -4,12 +4,17 @@ import Data.Char
 
 import Data.Char
 import Data.Maybe
+import Numeric(readHex)
 import Control.Applicative
 
+import qualified Data.Aeson as JSON
+import qualified Data.Attoparsec.Number as JSON
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Vector as V
 import qualified Data.ByteString as BS
+import qualified Data.HashMap.Strict as HM
 
 import qualified Text.Parsec.Text as P
 import qualified Text.Parsec.Char as P
@@ -65,7 +70,8 @@ field :: P.Parser (Field ScopedName)
 field = do
     t <- typeExpression
     n <- name
-    return (Field n t Nothing Map.empty)
+    mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
+    return (Field n t mdefault Map.empty)
 
 struct :: P.Parser (Ident,Struct ScopedName)
 struct = do
@@ -130,6 +136,57 @@ module2 = token "module" *> (
            <*> P.many (importP <* ctoken ';')
            <*> declMap
     ) <* ctoken '}'
+
+----------------------------------------------------------------------
+jsonValue :: P.Parser JSON.Value
+jsonValue =   p_null <|> p_true <|> p_false <|> p_string <|> p_int <|> p_double
+          <|> p_array <|> p_object
+  where
+    p_null = JSON.Null <$ token "null"
+    p_true = JSON.Bool True <$ token "true"
+    p_false = JSON.Bool False <$ token "false"
+    p_string = JSON.String <$> p_string0
+    p_string0 = T.pack <$> (P.char '"' *> P.many p_char <* P.char '"')
+
+    p_char :: P.Parser Char
+    p_char = (P.char '\\' >> p_echar) <|> (P.satisfy (\x -> x /= '"' && x /= '\\'))
+    p_echar =  ('"' <$ P.char '"')
+          <|> ('\\' <$ P.char '\\')
+          <|> ('/'  <$ P.char '/')
+          <|> ('\b' <$ P.char 'b')
+          <|> ('\f' <$ P.char 'f')
+          <|> ('\n' <$ P.char 'n')
+          <|> ('\r' <$ P.char 'r')
+          <|> ('\t' <$ P.char 't')
+          <|> (P.char 'u' *> p_uni)
+          P.<?> "escape character"
+    p_uni = check =<< P.count 4 P.hexDigit
+      where check x | code <= max_char  = pure (toEnum code)
+                    | otherwise         = empty
+              where code      = fst $ head $ readHex x
+                    max_char  = fromEnum (maxBound :: Char)
+
+    p_int = JSON.Number . JSON.I <$> pread reads P.<?> "number"
+    p_double = JSON.Number . JSON.D <$> pread reads P.<?> "number"
+
+    p_array = JSON.Array . V.fromList <$>
+              (ctoken '[' *> P.sepBy jsonValue (ctoken ',') <* ctoken ']')
+
+    p_object = JSON.Object . HM.fromList <$>
+               (ctoken '{' *> P.sepBy p_field (ctoken ',') <* ctoken '}')
+
+    p_field :: P.Parser (T.Text,JSON.Value)
+    p_field = (,) <$> (p_string0 <* ctoken ':') <*> jsonValue
+
+    pread :: ReadS a -> P.Parser a
+    pread reads = do
+      s <- P.getInput
+      case reads (T.unpack s) of
+         [(v,s')] -> (v <$ P.setInput (T.pack s'))
+         _ -> empty
+
+----------------------------------------------------------------------
+
 
 moduleFile :: P.Parser (Module ScopedName)
 moduleFile = whiteSpace *> moduleP <* ctoken ';'

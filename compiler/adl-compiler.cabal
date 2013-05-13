@@ -15,4 +15,4 @@ executable adlc
   main-is:             Main.hs
   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                       filepath, directory, adl-utils
+                       filepath, directory, unordered-containers, vector, attoparsec, aeson, adl-utils

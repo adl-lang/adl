@@ -8,16 +8,11 @@ import Data.Monoid
 import Control.Applicative
 
 import qualified Data.Text as T
-
+import qualified Data.Aeson as JSON
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
 import ADL.Utils.Format
-
-data JSONValue = JSONValue
-  deriving (Show)
-           
-type Literal = JSONValue
 
 type Annotations = Map.Map String String
 
@@ -41,7 +36,7 @@ instance Format ScopedName where
 data Field t = Field {
   f_name :: Ident,
   f_type :: TypeExpr t,
-  f_default :: (Maybe Literal),
+  f_default :: (Maybe JSON.Value),
   f_annotations :: Annotations
   } deriving (Show)
 

@@ -43,13 +43,10 @@ examples:
 clean: 
 	-cabal-dev ghc-pkg unregister adl-lib
 
-	(cd compiler && cabal-dev -s ../cabal-dev clean)
-
-	(cd utils && cabal-dev -s ../cabal-dev clean)
-
-	(cd lib && cabal-dev -s ../cabal-dev clean)
-
-	(cd examples && cabal-dev -s ../cabal-dev clean)
+	(cd compiler && cabal-dev -s ../cabal-dev clean && rm -rf dist)
+	(cd utils && cabal-dev -s ../cabal-dev clean && rm -rf dist)
+	(cd lib && cabal-dev -s ../cabal-dev clean && rm -rf dist)
+	(cd examples && cabal-dev -s ../cabal-dev clean && rm -rf dist)
 
 cleanext:
 	-cabal-dev ghc-pkg unregister zeromq3-haskell
