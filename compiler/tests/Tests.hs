@@ -3,24 +3,26 @@ module Main where
 
 import Prelude hiding (catch)
 import Data.Typeable
+import Control.Monad
 import Control.Exception
 
 import qualified Data.Text as T
+import qualified Data.Set as Set
 
 import Test.Framework
 import Test.Framework.Providers.API
 
 import System.IO.Temp(createTempDirectory)
-import System.Directory(getTemporaryDirectory,removeDirectoryRecursive)
+import System.Directory
+import System.FilePath
 
+import ADL.Utils.FileDiff
 import EIO
 import Compiler(haskell,HaskellFlags(..))
 
 data TestResult = Passed
                 | CompilerFailed T.Text
-                | MissingOutput FilePath
-                | ExtraOutput FilePath
-                | OutputDiff FilePath FilePath
+                | OutputDiff FilePath FilePath [(FilePath,FileDiff)]
 
 data TestCaseRunning = RunningCompiler | CheckingOutput                  
 
@@ -33,9 +35,7 @@ data TestADLCompiler = TestADLCompiler {
 instance Show TestResult where
   show Passed = "OK"
   show (CompilerFailed err) = "adlc failed: " ++ T.unpack err
-  show (MissingOutput fpath) = "adlc failed to create " ++ fpath
-  show (ExtraOutput fpath) = "adlc generated unexpected file " ++ fpath
-  show (OutputDiff efpath afpath) = "expected output " ++ efpath ++ ", adlc generated " ++ afpath
+  show (OutputDiff epath apath diffs) = "expected:" ++ epath ++ ", actual:" ++ apath
 
 instance Show TestCaseRunning where
   show RunningCompiler = "Running Compiler"
@@ -63,14 +63,12 @@ instance Testlike TestCaseRunning TestResult TestADLCompiler where
       (Left emsg) -> return (CompilerFailed emsg)
       (Right ()) -> do
         yieldImprovement CheckingOutput
-        result <- liftIO $ diffTrees (tc_expectedOutput tc) tempDir
+        result <- liftIO $ diffTree (tc_expectedOutput tc) tempDir
         case result of
-          Passed -> liftIO $ removeDirectoryRecursive tempDir
-          _ -> return ()
-        return result
-
-diffTrees :: FilePath -> FilePath -> IO TestResult
-diffTrees expected actual = return Passed
+          [] -> do
+            liftIO $ removeDirectoryRecursive tempDir
+            return Passed
+          diffs -> return (OutputDiff (tc_expectedOutput tc) tempDir diffs)
 
 testADLCompiler :: String -> FilePath -> FilePath -> FilePath -> Test
 testADLCompiler name ipath mpath epath = Test name (TestADLCompiler ipath mpath epath)
@@ -79,6 +77,6 @@ main :: IO ()
 main = defaultMain tests
 
 tests =
-  [
-    testADLCompiler "test1 - simple" "test1/input" "test1/input/test.adl" "test1/output"
+  [ testADLCompiler "1. empty module" "test1/input" "test1/input/test.adl" "test1/output"
+  , testADLCompiler "2. structs" "test2/input" "test2/input/test.adl" "test2/output"
   ]

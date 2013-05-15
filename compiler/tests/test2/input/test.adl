@@ -1,0 +1,16 @@
+module test
+{
+
+struct S1
+{
+    int32 x;
+    string y;
+}; 
+
+struct S2
+{
+    int32 x = 45;
+    string y = "hello";
+}; 
+
+};
