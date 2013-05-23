@@ -1,16 +1,22 @@
 module test
 {
 
+// A simple structure
+
 struct S1
 {
     int32 x;
     string y;
-}; 
+};
 
-struct S2
+// A recursive type
+
+struct Tree<T>
 {
-    int32 x = 45;
-    string y = "hello";
-}; 
+    T value;
+    vector<Tree<T>> children;
+};
+
+typedef Tree<int32> IntTree;
 
 };
