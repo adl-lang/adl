@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Test where
 
 import ADL.Core
@@ -35,7 +35,31 @@ instance ADLValue A where
         <*> fieldFromJSON f "f_bool" defaultv hm
     aFromJSON _ _ = Prelude.Nothing
 
-data S = S
+data B t = B
+    { b_f_t :: t
+    , b_f_string :: T.Text
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance (ADLValue t) => ADLValue (B t) where
+    atype _ = T.concat
+        [ "test.B"
+        , "<", atype (Prelude.undefined ::t)
+        , ">" ]
+    
+    defaultv = B defaultv defaultv
+    
+    aToJSON f v = toJSONObject f (atype v) (
+        [ ("f_t",aToJSON f (b_f_t v))
+        , ("f_string",aToJSON f (b_f_string v))
+        ] )
+    
+    aFromJSON f (JSON.Object hm) = B
+        <$> fieldFromJSON f "f_t" defaultv hm
+        <*> fieldFromJSON f "f_string" defaultv hm
+    aFromJSON _ _ = Prelude.Nothing
+
+data S t = S
     { s_f_void :: ()
     , s_f_bool :: Prelude.Bool
     , s_f_int8 :: Data.Int.Int8
@@ -53,13 +77,19 @@ data S = S
     , s_f_vstring :: [T.Text]
     , s_f_a :: A
     , s_f_u :: U
+    , s_f_t :: t
+    , s_f_bt :: (B t)
+    , s_f_bint16 :: (B Data.Int.Int16)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue S where
-    atype _ = "test.S"
+instance (ADLValue t) => ADLValue (S t) where
+    atype _ = T.concat
+        [ "test.S"
+        , "<", atype (Prelude.undefined ::t)
+        , ">" ]
     
-    defaultv = S defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv
+    defaultv = S defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("f_void",aToJSON f (s_f_void v))
@@ -79,6 +109,9 @@ instance ADLValue S where
         , ("f_vstring",aToJSON f (s_f_vstring v))
         , ("f_a",aToJSON f (s_f_a v))
         , ("f_u",aToJSON f (s_f_u v))
+        , ("f_t",aToJSON f (s_f_t v))
+        , ("f_bt",aToJSON f (s_f_bt v))
+        , ("f_bint16",aToJSON f (s_f_bint16 v))
         ] )
     
     aFromJSON f (JSON.Object hm) = S
@@ -99,6 +132,9 @@ instance ADLValue S where
         <*> fieldFromJSON f "f_vstring" defaultv hm
         <*> fieldFromJSON f "f_a" defaultv hm
         <*> fieldFromJSON f "f_u" defaultv hm
+        <*> fieldFromJSON f "f_t" defaultv hm
+        <*> fieldFromJSON f "f_bt" defaultv hm
+        <*> fieldFromJSON f "f_bint16" defaultv hm
     aFromJSON _ _ = Prelude.Nothing
 
 data U

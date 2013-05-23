@@ -296,13 +296,21 @@ validateLiteralForTypeExpr te v = validateTE te v
         errs = map (validateTE rt) (V.toList v)
     vecLiteral rt _ = Just "expected an array"
 
-    structLiteral s (JSON.Object hm) = Just "literals for struct values not yet supported"
+    structLiteral s (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
+      where
+        checkField :: T.Text -> JSON.Value -> Maybe T.Text -> Maybe T.Text
+        checkField k v e@(Just t)= e
+        checkField k v Nothing = case find ((k==).f_name) (s_fields s) of
+          (Just f) -> validateTE (f_type f) v
+          Nothing ->
+            Just (T.concat ["Field ",k, " in literal doesn't match any in struct definition" ])
     structLiteral s _ = Just "expected an object"
 
     unionLiteral u (JSON.Object hm) = case HM.toList hm of
-      [(s,v)] -> case find ((s==).f_name) (u_fields u) of
+      [(k,v)] -> case find ((k==).f_name) (u_fields u) of
         (Just f) -> validateTE (f_type f) v
-        Nothing -> Just "literal union doesn't match any field name"
+        Nothing ->
+          Just (T.concat ["Field ",k, " in literal doesn't match any in union definition" ])
       _ -> Just "literal union must have a single key/value pair"
     unionLiteral s _ = Just "expected an object"
 

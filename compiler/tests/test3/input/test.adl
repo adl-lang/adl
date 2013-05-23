@@ -8,13 +8,19 @@ struct A
    bool f_bool;
 };
 
+struct B<T>
+{
+   T f_t;
+   string f_string;
+};
+
 union U
 {
    int16 f_int;
    string f_string;
 };
 
-struct S
+struct S<T>
 {
     void f_void = null;
     bool f_bool = true;
@@ -33,9 +39,14 @@ struct S
 
     vector<string> f_vstring = ["xy", "ab" ];
 
-    A f_a; // = { "f_string" : "xyz" };
+    A f_a = { "f_string" : "xyz",
+              "f_bool" : true };
 
     U f_u = { "f_int" : 45 };
+
+    T f_t;
+    B<T> f_bt;
+    B<int16> f_bint16 = { "f_t" : 5, "f_string" : "yikes" };
 }; 
 
 };
