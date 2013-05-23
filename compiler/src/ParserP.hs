@@ -63,8 +63,8 @@ typeExpression = do
     n <- scopedName
     mps <- P.optionMaybe (angleList typeExpression)
     case mps of
-      Nothing -> return (TE_Ref n)
-      (Just ps) -> return (TE_Apply n ps)
+      Nothing -> return (TypeExpr n [])
+      (Just ps) -> return (TypeExpr n ps)
 
 field :: P.Parser (Field ScopedName)
 field = do

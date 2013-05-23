@@ -8,10 +8,18 @@ struct A
    bool f_bool;
 };
 
+struct XY<T>
+{
+   T x;
+   T y;
+};
+
 struct B<T>
 {
    T f_t;
    string f_string;
+   vector<T> f_tvec;
+   XY<T> f_xy;
 };
 
 union U
@@ -45,8 +53,13 @@ struct S<T>
     U f_u = { "f_int" : 45 };
 
     T f_t;
-    B<T> f_bt;
-    B<int16> f_bint16 = { "f_t" : 5, "f_string" : "yikes" };
+
+    B<int16> f_bint16 = {
+        "f_t" : 56,
+        "f_string" : "yikes",
+        "f_tvec" : [1,2,3],
+        "f_xy" : { "x" : 5, "y" : 5 }
+    };
 }; 
 
 };

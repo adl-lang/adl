@@ -140,12 +140,12 @@ hPrimitiveType P_String = importText >> return "T.Text"
 hPrimitiveType P_Sink = return "Sink"
 
 hTypeExpr :: TypeExpr ResolvedType -> HGen T.Text
-hTypeExpr (TE_Ref rt) = hTypeExpr1 rt
-hTypeExpr (TE_Apply (RT_Primitive P_Vector) args) = do
+hTypeExpr (TypeExpr rt []) = hTypeExpr1 rt
+hTypeExpr (TypeExpr (RT_Primitive P_Vector) args) = do
   argt <- hTypeExpr (head args)
   return (template "[$1]" [argt])
   
-hTypeExpr (TE_Apply c args) = do
+hTypeExpr (TypeExpr c args) = do
   ct <- hTypeExpr1 c
   argst <- mapM hTypeExpr args
   return (T.concat $ ["(", ct, " "] ++ L.intersperse " " argst ++ [")"])

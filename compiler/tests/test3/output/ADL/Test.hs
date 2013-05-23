@@ -38,6 +38,8 @@ instance ADLValue A where
 data B t = B
     { b_f_t :: t
     , b_f_string :: T.Text
+    , b_f_tvec :: [t]
+    , b_f_xy :: (XY t)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -47,16 +49,20 @@ instance (ADLValue t) => ADLValue (B t) where
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
     
-    defaultv = B defaultv defaultv
+    defaultv = B defaultv defaultv defaultv defaultv
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("f_t",aToJSON f (b_f_t v))
         , ("f_string",aToJSON f (b_f_string v))
+        , ("f_tvec",aToJSON f (b_f_tvec v))
+        , ("f_xy",aToJSON f (b_f_xy v))
         ] )
     
     aFromJSON f (JSON.Object hm) = B
         <$> fieldFromJSON f "f_t" defaultv hm
         <*> fieldFromJSON f "f_string" defaultv hm
+        <*> fieldFromJSON f "f_tvec" defaultv hm
+        <*> fieldFromJSON f "f_xy" defaultv hm
     aFromJSON _ _ = Prelude.Nothing
 
 data S t = S
@@ -78,7 +84,6 @@ data S t = S
     , s_f_a :: A
     , s_f_u :: U
     , s_f_t :: t
-    , s_f_bt :: (B t)
     , s_f_bint16 :: (B Data.Int.Int16)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
@@ -89,7 +94,7 @@ instance (ADLValue t) => ADLValue (S t) where
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
     
-    defaultv = S defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv
+    defaultv = S defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("f_void",aToJSON f (s_f_void v))
@@ -110,7 +115,6 @@ instance (ADLValue t) => ADLValue (S t) where
         , ("f_a",aToJSON f (s_f_a v))
         , ("f_u",aToJSON f (s_f_u v))
         , ("f_t",aToJSON f (s_f_t v))
-        , ("f_bt",aToJSON f (s_f_bt v))
         , ("f_bint16",aToJSON f (s_f_bint16 v))
         ] )
     
@@ -133,7 +137,6 @@ instance (ADLValue t) => ADLValue (S t) where
         <*> fieldFromJSON f "f_a" defaultv hm
         <*> fieldFromJSON f "f_u" defaultv hm
         <*> fieldFromJSON f "f_t" defaultv hm
-        <*> fieldFromJSON f "f_bt" defaultv hm
         <*> fieldFromJSON f "f_bint16" defaultv hm
     aFromJSON _ _ = Prelude.Nothing
 
@@ -158,3 +161,27 @@ instance ADLValue U where
                 , ("f_string", \f v -> U_f_string <$> aFromJSON f v)
                 ]
         in unionFromJSON f umap o
+
+data XY t = XY
+    { xY_x :: t
+    , xY_y :: t
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance (ADLValue t) => ADLValue (XY t) where
+    atype _ = T.concat
+        [ "test.XY"
+        , "<", atype (Prelude.undefined ::t)
+        , ">" ]
+    
+    defaultv = XY defaultv defaultv
+    
+    aToJSON f v = toJSONObject f (atype v) (
+        [ ("x",aToJSON f (xY_x v))
+        , ("y",aToJSON f (xY_y v))
+        ] )
+    
+    aFromJSON f (JSON.Object hm) = XY
+        <$> fieldFromJSON f "x" defaultv hm
+        <*> fieldFromJSON f "y" defaultv hm
+    aFromJSON _ _ = Prelude.Nothing

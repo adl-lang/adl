@@ -169,8 +169,7 @@ undefinedNames m ns = foldMap checkDecl (m_decls m)
       checkFields ns fs = foldMap (checkTypeExpr ns.f_type) fs
 
       checkTypeExpr :: NameScope -> TypeExpr ScopedName -> [UndefinedName]
-      checkTypeExpr ns (TE_Ref sn) = checkScopedName ns sn
-      checkTypeExpr ns (TE_Apply t args) = checkScopedName ns t `mappend` foldMap (checkTypeExpr ns) args
+      checkTypeExpr ns (TypeExpr t args) = checkScopedName ns t `mappend` foldMap (checkTypeExpr ns) args
 
       checkScopedName :: NameScope -> ScopedName -> [UndefinedName]
       checkScopedName ns sn = case nlookup ns sn of
@@ -202,8 +201,7 @@ resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
     resolveFields ns fields = [f{f_type=resolveTypeExpr ns (f_type f)} | f <- fields]
 
     resolveTypeExpr :: NameScope -> TypeExpr ScopedName -> TypeExpr ResolvedType
-    resolveTypeExpr ns (TE_Ref sn) = TE_Ref (resolveName ns sn)
-    resolveTypeExpr ns (TE_Apply t args) = TE_Apply (resolveName ns t) (map (resolveTypeExpr ns) args)
+    resolveTypeExpr ns (TypeExpr t args) = TypeExpr (resolveName ns t) (map (resolveTypeExpr ns) args)
 
     resolveName :: NameScope -> ScopedName -> ResolvedType
     resolveName ns sn = case nlookup ns sn of
@@ -241,8 +239,7 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
       checkFields fs = foldMap (checkTypeExpr . f_type) fs
 
       checkTypeExpr :: TypeExpr ResolvedType -> [TypeCtorAppError]
-      checkTypeExpr (TE_Apply t exprs) = checkTypeCtorApp t exprs `mappend` foldMap checkTypeExpr exprs
-      checkTypeExpr (TE_Ref t) = checkTypeCtorApp t []
+      checkTypeExpr (TypeExpr t exprs) = checkTypeCtorApp t exprs `mappend` foldMap checkTypeExpr exprs
 
       checkTypeCtorApp :: ResolvedType -> [TypeExpr ResolvedType] -> [TypeCtorAppError]
       checkTypeCtorApp (RT_Param _) _ = mempty -- can't check this
@@ -276,43 +273,53 @@ checkDefaultOverrides m = structErrors
       return (FieldDefaultError n (f_name f) err)
 
 validateLiteralForTypeExpr :: TypeExpr ResolvedType -> JSON.Value -> Maybe T.Text
-validateLiteralForTypeExpr te v = validateTE te v
+validateLiteralForTypeExpr te v = validateTE Map.empty te v
   where
-    validateTE (TE_Ref (RT_Named (sn,decl))) v = case d_type decl of
-      (Decl_Struct s) -> structLiteral s v
-      (Decl_Union u) -> unionLiteral u v 
-      (Decl_Typedef t) -> validateTE (t_typeExpr t) v
-    validateTE (TE_Ref (RT_Param id)) v = Just "literals for parameterised types not yet supported"
-    validateTE (TE_Ref (RT_Primitive pt)) v = ptValidateLiteral pt v
-    validateTE (TE_Apply (RT_Primitive P_Vector) rts) v = case rts of
-      [rt] -> vecLiteral rt v
-      _ -> error "INTERNAL ERROR: found vector with 0 or >2 type parameters post type checking"
-    validateTE (TE_Apply rt rts) v = Just "literals for custom parameterised types not yet supported"
+    validateTE m (TypeExpr (RT_Primitive pt) []) v = ptValidateLiteral pt v
+    validateTE m (TypeExpr (RT_Primitive P_Vector) [te]) v = vecLiteral m te v
+    validateTE m (TypeExpr (RT_Primitive P_Sink) [te]) v = Just "literals not allowed for sinks"
+    validateTE m (TypeExpr (RT_Primitive _) _) v =
+      error "INTERNAL ERROR: found primitive type with incorrect number of type parameters"
+
+    validateTE m (TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
+      (Decl_Struct s) -> structLiteral m s tes v
+      (Decl_Union u) -> unionLiteral m u tes v 
+      (Decl_Typedef t) -> typedefLiteral m t tes v
+    validateTE m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
+         (Just te) -> validateTE Map.empty te v
+         Nothing -> Just "literals not allows for parameterised fields"
     
-    vecLiteral rt (JSON.Array v) = case catMaybes errs of
+    vecLiteral m te (JSON.Array v) = case catMaybes errs of
       [] -> Nothing
       (e:_) -> (Just e)
       where
-        errs = map (validateTE rt) (V.toList v)
-    vecLiteral rt _ = Just "expected an array"
+        errs = map (validateTE m te) (V.toList v)
+    vecLiteral _ _ _ = Just "expected an array"
 
-    structLiteral s (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
+    structLiteral m s rts (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
       where
         checkField :: T.Text -> JSON.Value -> Maybe T.Text -> Maybe T.Text
         checkField k v e@(Just t)= e
         checkField k v Nothing = case find ((k==).f_name) (s_fields s) of
-          (Just f) -> validateTE (f_type f) v
+          (Just f) -> validateTE pm (f_type f) v
           Nothing ->
             Just (T.concat ["Field ",k, " in literal doesn't match any in struct definition" ])
-    structLiteral s _ = Just "expected an object"
+        pm = m `Map.union` Map.fromList (zip (s_typeParams s) rts)
+    structLiteral m s _ _ = Just "expected an object"
 
-    unionLiteral u (JSON.Object hm) = case HM.toList hm of
+    unionLiteral m u rts (JSON.Object hm) = case HM.toList hm of
       [(k,v)] -> case find ((k==).f_name) (u_fields u) of
-        (Just f) -> validateTE (f_type f) v
+        (Just f) -> validateTE pm (f_type f) v
         Nothing ->
           Just (T.concat ["Field ",k, " in literal doesn't match any in union definition" ])
       _ -> Just "literal union must have a single key/value pair"
-    unionLiteral s _ = Just "expected an object"
+      where
+        pm = m `Map.union` Map.fromList (zip (u_typeParams u) rts)
+    unionLiteral m s rts _ = Just "expected an object"
+
+    typedefLiteral m t rts v = validateTE pm (t_typeExpr t) v
+      where
+        pm = m `Map.union` Map.fromList (zip (t_typeParams t) rts)
 
 namescopeForModule :: Module ScopedName -> NameScope -> NameScope
 namescopeForModule m ns = ns

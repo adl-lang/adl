@@ -55,8 +55,7 @@ data Typedef t = Typedef {
   t_typeExpr :: TypeExpr t
 } deriving (Show)
 
-data TypeExpr t = TE_Ref t
-                | TE_Apply t [TypeExpr t]
+data TypeExpr t = TypeExpr t [TypeExpr t]
   deriving (Show)                  
 
 data DeclType t = Decl_Struct (Struct t)
@@ -87,8 +86,7 @@ data Module t = Module {
   deriving (Show)
 
 instance Foldable TypeExpr where
-    foldMap f (TE_Ref t) = f t
-    foldMap f (TE_Apply t ts) = f t `mappend` foldMap (foldMap f) ts
+    foldMap f (TypeExpr t ts) = f t `mappend` foldMap (foldMap f) ts
 instance Foldable Field where
     foldMap f (Field{f_type=t}) = foldMap f t
 instance Foldable Struct where
@@ -113,4 +111,7 @@ getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` fo
     ref ScopedName{sn_moduleName=ModuleName []} = Set.empty
     ref sn = Set.singleton (sn_moduleName sn)
     
-
+getTypeParams :: DeclType t -> [Ident]
+getTypeParams (Decl_Struct s) = s_typeParams s
+getTypeParams (Decl_Union u) = u_typeParams u
+getTypeParams (Decl_Typedef t) = t_typeParams t
