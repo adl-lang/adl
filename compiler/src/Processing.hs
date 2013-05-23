@@ -8,14 +8,18 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Exception
-import Data.List(intercalate)
+import Data.List(intercalate,find)
 import Data.Foldable(foldMap)
 import Data.Monoid
+import Data.Maybe(catMaybes)
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Text.Parsec as P
+import qualified Data.Vector as V
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Aeson as JSON
 
 import qualified ParserP as P
 
@@ -251,6 +255,56 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
       declTypeArgCount (Decl_Struct s) = length (s_typeParams s)
       declTypeArgCount (Decl_Union u) = length (u_typeParams u)
       declTypeArgCount (Decl_Typedef t) = length (t_typeParams t)
+
+
+data FieldDefaultError = FieldDefaultError Ident Ident T.Text
+
+instance Format FieldDefaultError where
+  formatText (FieldDefaultError decl field emsg) =
+    T.concat ["invalid override for default of field ",field," of decl ",decl,": ", emsg]
+
+checkDefaultOverrides :: RModule -> [FieldDefaultError]
+checkDefaultOverrides m = structErrors
+  where
+    structErrors = concat [ structErrors1 n s | Decl{d_name=n,d_type=Decl_Struct s} <- Map.elems (m_decls m) ]
+    structErrors1 n s = catMaybes [ fieldDefaultError n f | f <- s_fields s ]
+
+    fieldDefaultError :: Ident -> Field ResolvedType -> Maybe FieldDefaultError
+    fieldDefaultError n f = do
+      v <- f_default f
+      err <- validateLiteralForTypeExpr (f_type f) v
+      return (FieldDefaultError n (f_name f) err)
+
+validateLiteralForTypeExpr :: TypeExpr ResolvedType -> JSON.Value -> Maybe T.Text
+validateLiteralForTypeExpr te v = validateTE te v
+  where
+    validateTE (TE_Ref (RT_Named (sn,decl))) v = case d_type decl of
+      (Decl_Struct s) -> structLiteral s v
+      (Decl_Union u) -> unionLiteral u v 
+      (Decl_Typedef t) -> validateTE (t_typeExpr t) v
+    validateTE (TE_Ref (RT_Param id)) v = Just "literals for parameterised types not yet supported"
+    validateTE (TE_Ref (RT_Primitive pt)) v = ptValidateLiteral pt v
+    validateTE (TE_Apply (RT_Primitive P_Vector) rts) v = case rts of
+      [rt] -> vecLiteral rt v
+      _ -> error "INTERNAL ERROR: found vector with 0 or >2 type parameters post type checking"
+    validateTE (TE_Apply rt rts) v = Just "literals for custom parameterised types not yet supported"
+    
+    vecLiteral rt (JSON.Array v) = case catMaybes errs of
+      [] -> Nothing
+      (e:_) -> (Just e)
+      where
+        errs = map (validateTE rt) (V.toList v)
+    vecLiteral rt _ = Just "expected an array"
+
+    structLiteral s (JSON.Object hm) = Just "literals for struct values not yet supported"
+    structLiteral s _ = Just "expected an object"
+
+    unionLiteral u (JSON.Object hm) = case HM.toList hm of
+      [(s,v)] -> case find ((s==).f_name) (u_fields u) of
+        (Just f) -> validateTE (f_type f) v
+        Nothing -> Just "literal union doesn't match any field name"
+      _ -> Just "literal union must have a single key/value pair"
+    unionLiteral s _ = Just "expected an object"
 
 namescopeForModule :: Module ScopedName -> NameScope -> NameScope
 namescopeForModule m ns = ns

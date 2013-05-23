@@ -146,7 +146,9 @@ jsonValue =   p_null <|> p_true <|> p_false <|> p_string <|> p_int <|> p_double
     p_true = JSON.Bool True <$ token "true"
     p_false = JSON.Bool False <$ token "false"
     p_string = JSON.String <$> p_string0
-    p_string0 = T.pack <$> (P.char '"' *> P.many p_char <* P.char '"')
+
+    p_string0 :: P.Parser T.Text           
+    p_string0 = T.pack <$> (P.char '"' *> P.many p_char <* P.char '"' <* whiteSpace)
 
     p_char :: P.Parser Char
     p_char = (P.char '\\' >> p_echar) <|> (P.satisfy (\x -> x /= '"' && x /= '\\'))
@@ -166,8 +168,8 @@ jsonValue =   p_null <|> p_true <|> p_false <|> p_string <|> p_int <|> p_double
               where code      = fst $ head $ readHex x
                     max_char  = fromEnum (maxBound :: Char)
 
-    p_int = JSON.Number . JSON.I <$> pread reads P.<?> "number"
-    p_double = JSON.Number . JSON.D <$> pread reads P.<?> "number"
+    p_int = JSON.Number . JSON.I <$> pread reads <* whiteSpace P.<?> "number"
+    p_double = JSON.Number . JSON.D <$> pread reads <* whiteSpace P.<?> "number"
 
     p_array = JSON.Array . V.fromList <$>
               (ctoken '[' *> P.sepBy jsonValue (ctoken ',') <* ctoken ']')

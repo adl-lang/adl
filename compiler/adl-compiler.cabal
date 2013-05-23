@@ -16,7 +16,7 @@ executable adlc
   main-is:             Main.hs
   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                       filepath, directory, unordered-containers, vector,
+                       filepath, directory, unordered-containers, vector, base64-bytestring,
                        attoparsec, aeson, adl-utils
 
 executable adlc-tests
@@ -24,6 +24,6 @@ executable adlc-tests
   main-is:             Tests.hs
   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
-                       filepath, directory, unordered-containers, vector,
+                       filepath, directory, unordered-containers, vector, base64-bytestring,
                        attoparsec, aeson, adl-utils,
                        temporary, test-framework

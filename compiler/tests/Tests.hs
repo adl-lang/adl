@@ -79,4 +79,5 @@ main = defaultMain tests
 tests =
   [ testADLCompiler "1. empty module" "test1/input" "test1/input/test.adl" "test1/output"
   , testADLCompiler "2. structs" "test2/input" "test2/input/test.adl" "test2/output"
+  , testADLCompiler "3. structs - default overrides" "test3/input" "test3/input/test.adl" "test3/output"
   ]

@@ -3,11 +3,19 @@ module Primitive(
   PrimitiveType(..),
   ptFromText,
   ptToText,
-  ptArgCount
+  ptArgCount,
+  ptValidateLiteral
   )where
 
+import Data.Int
+import Data.Word
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+
+import qualified Data.Aeson as JSON
+import Data.Attoparsec.Number as JSON
+import qualified Data.ByteString.Base64 as B64
 
 import ADL.Utils.Format
 
@@ -35,27 +43,54 @@ instance Format PrimitiveType where
 data PrimitiveDetails = PrimitiveDetails {
    pd_type :: PrimitiveType,
    pd_ident :: T.Text,
-   pd_nArgs :: Int
+   pd_nArgs :: Int,
+   pd_validateLiteral :: JSON.Value -> Bool
 }
 
 primitiveDetails =
-  [ PrimitiveDetails P_Void "void" 0
-  , PrimitiveDetails P_Bool "bool" 0
-  , PrimitiveDetails P_Int8 "int8" 0
-  , PrimitiveDetails P_Int16 "int16" 0
-  , PrimitiveDetails P_Int32 "int32" 0
-  , PrimitiveDetails P_Int64 "int64" 0
-  , PrimitiveDetails P_UInt8 "uint8" 0
-  , PrimitiveDetails P_UInt16 "uint16" 0
-  , PrimitiveDetails P_UInt32 "uint32" 0
-  , PrimitiveDetails P_UInt64 "uint64" 0
-  , PrimitiveDetails P_Float "float" 0
-  , PrimitiveDetails P_Double "double" 0
-  , PrimitiveDetails P_ByteVector "bytes" 0
-  , PrimitiveDetails P_String "string" 0
-  , PrimitiveDetails P_Vector "vector" 1
-  , PrimitiveDetails P_Sink "sink" 1
+  [ PrimitiveDetails P_Void "void" 0 isVoid
+  , PrimitiveDetails P_Bool "bool" 0 isBool
+  , PrimitiveDetails P_Int8 "int8" 0 (isInt (minBound::Int8) (maxBound::Int8))
+  , PrimitiveDetails P_Int16 "int16" 0 (isInt (minBound::Int16) (maxBound::Int16))
+  , PrimitiveDetails P_Int32 "int32" 0 (isInt (minBound::Int32) (maxBound::Int32))
+  , PrimitiveDetails P_Int64 "int64" 0 (isInt (minBound::Int64) (maxBound::Int64))
+  , PrimitiveDetails P_UInt8 "uint8" 0 (isUint (maxBound::Word8))
+  , PrimitiveDetails P_UInt16 "uint16" 0 (isUint (maxBound::Word16))
+  , PrimitiveDetails P_UInt32 "uint32" 0 (isUint (maxBound::Word32))
+  , PrimitiveDetails P_UInt64 "uint64" 0 (isUint (maxBound::Word64))
+  , PrimitiveDetails P_Float "float" 0 isFloat
+  , PrimitiveDetails P_Double "double" 0 isFloat
+  , PrimitiveDetails P_ByteVector "bytes" 0 isBytes
+  , PrimitiveDetails P_String "string" 0 isString
+  , PrimitiveDetails P_Vector "vector" 1 (const False)
+  , PrimitiveDetails P_Sink "sink" 1 (const False)
   ]
+
+isVoid JSON.Null = True
+isVoid _ = False
+
+isBool (JSON.Bool _) = True
+isBool _ = False
+
+isInt :: Integral a => a -> a -> JSON.Value -> Bool
+isInt min max (JSON.Number (JSON.I n)) = n >= fromIntegral min && n <= fromIntegral max
+isInt _ _ _  = False
+
+isUint :: Integral a => a -> JSON.Value -> Bool
+isUint max (JSON.Number (JSON.I n)) = n >= 0 && n <= fromIntegral max
+isUint _ _  = False
+
+isFloat (JSON.Number (JSON.I _)) = True
+isFloat (JSON.Number (JSON.D _)) = True
+isFloat _ = False
+
+isString (JSON.String _) = True
+isString _ = False
+
+isBytes (JSON.String s) = case B64.decode (T.encodeUtf8 s) of
+  (Left _) -> False
+  (Right _) -> True
+isBytes _ = False
 
 map1 = Map.fromList  [  (pd_type p, p) | p <- primitiveDetails ] 
 map2 = Map.fromList [ (pd_ident p, p) | p <- primitiveDetails ]
@@ -71,6 +106,14 @@ ptToText p = pd_ident (plookup p)
 
 ptArgCount :: PrimitiveType -> Int
 ptArgCount p = pd_nArgs (plookup p)
+
+ptValidateLiteral :: PrimitiveType -> JSON.Value -> Maybe T.Text
+ptValidateLiteral p v =
+  if pd_validateLiteral pd v
+  then Nothing
+  else (Just (T.concat ["expected ",pd_ident pd]))
+  where
+    pd = plookup p
 
 plookup p = case Map.lookup p map1 of
   (Just pd) -> pd

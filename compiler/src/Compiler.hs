@@ -3,6 +3,7 @@ module Compiler where
 
 import System.FilePath(joinPath)
 import Data.List(intercalate,partition)
+import Control.Exception
 import Control.Monad
 import Control.Monad.Trans
 import qualified Data.Map as Map
@@ -54,6 +55,7 @@ loadAndCheckModule moduleFinder modulePath = do
             mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (m_decls rm)
             ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
         checkTypeCtorApps1 rm
+        checkDefaultOverrides1 rm
         return (ns', rm)
 
     checkUndefined1 :: SModule -> NameScope -> EIOT ()
@@ -63,6 +65,11 @@ loadAndCheckModule moduleFinder modulePath = do
 
     checkTypeCtorApps1 :: RModule -> EIOT ()
     checkTypeCtorApps1 m = case checkTypeCtorApps m of
+        [] -> return ()      
+        errs -> eioError (moduleErrorMessage m (map formatText errs))
+
+    checkDefaultOverrides1 :: RModule -> EIOT ()
+    checkDefaultOverrides1 m = case checkDefaultOverrides m of
         [] -> return ()      
         errs -> eioError (moduleErrorMessage m (map formatText errs))
 
@@ -96,7 +103,7 @@ data VerifyFlags = VerifyFlags {
 }
 
 verify :: VerifyFlags -> [FilePath] -> EIO T.Text ()
-verify vf modulePaths = catchIOError $ forM_ modulePaths $ \modulePath -> do
+verify vf modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
   loadAndCheckModule (moduleFinder (vf_searchPath vf)) modulePath
 
 data HaskellFlags = HaskellFlags {
@@ -107,14 +114,15 @@ data HaskellFlags = HaskellFlags {
 }
 
 haskell :: HaskellFlags -> [FilePath] -> EIO T.Text ()
-haskell hf modulePaths = catchIOError $ forM_ modulePaths $ \modulePath -> do
+haskell hf modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
   rm <- loadAndCheckModule (moduleFinder (hf_searchPath hf)) modulePath
   H.writeModuleFile (hf_noOverwrite hf)
                     (H.moduleMapper (hf_modulePrefix hf))
                     (H.fileMapper (hf_outputPath hf)) rm
 
-catchIOError :: EIO T.Text a -> EIO T.Text a
-catchIOError a = eioHandle handler a
+catchAllExceptions :: EIO T.Text a -> EIO T.Text a
+catchAllExceptions a = eioHandle handler $ a
  where
-   handler :: IOError -> EIO T.Text a
+   handler :: SomeException -> EIO T.Text a
    handler e = eioError (T.pack (show e))
+   

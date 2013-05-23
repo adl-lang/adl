@@ -29,6 +29,10 @@ utils:
 
 compiler:
 	(cd compiler && cabal-dev -s ../cabal-dev install)
+	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
+
+compiler-tests:
+	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 
 lib:
 	(cd lib && cabal-dev -s ../cabal-dev install)
