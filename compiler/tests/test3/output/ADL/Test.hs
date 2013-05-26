@@ -21,7 +21,10 @@ data A = A
 instance ADLValue A where
     atype _ = "test.A"
     
-    defaultv = A defaultv defaultv defaultv
+    defaultv = A
+        defaultv
+        defaultv
+        defaultv
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("f_int",aToJSON f (a_f_int v))
@@ -49,7 +52,11 @@ instance (ADLValue t) => ADLValue (B t) where
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
     
-    defaultv = B defaultv defaultv defaultv defaultv
+    defaultv = B
+        defaultv
+        defaultv
+        defaultv
+        defaultv
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("f_t",aToJSON f (b_f_t v))
@@ -94,7 +101,26 @@ instance (ADLValue t) => ADLValue (S t) where
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
     
-    defaultv = S defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv defaultv
+    defaultv = S
+        ()
+        True
+        (-5)
+        (-10000)
+        56
+        40000
+        32
+        50000
+        124456
+        2344
+        0.5
+        0.45
+        "hello"
+        "abcd"
+        [ "xy", "ab" ]
+        defaultv { a_f_bool = True, a_f_string = "xyz" }
+        (U_f_int 45)
+        defaultv
+        defaultv { b_f_tvec = [ 1, 2, 3 ], b_f_xy = defaultv { xY_y = 5, xY_x = 5 }, b_f_t = 56, b_f_string = "yikes" }
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("f_void",aToJSON f (s_f_void v))
@@ -174,7 +200,9 @@ instance (ADLValue t) => ADLValue (XY t) where
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
     
-    defaultv = XY defaultv defaultv
+    defaultv = XY
+        defaultv
+        defaultv
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("x",aToJSON f (xY_x v))

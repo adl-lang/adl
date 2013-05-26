@@ -20,7 +20,9 @@ data S1 = S1
 instance ADLValue S1 where
     atype _ = "test.S1"
     
-    defaultv = S1 defaultv defaultv
+    defaultv = S1
+        defaultv
+        defaultv
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("x",aToJSON f (s1_x v))
@@ -44,7 +46,9 @@ instance (ADLValue t) => ADLValue (Tree t) where
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
     
-    defaultv = Tree defaultv defaultv
+    defaultv = Tree
+        defaultv
+        defaultv
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("value",aToJSON f (tree_value v))

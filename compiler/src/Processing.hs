@@ -296,7 +296,7 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
         errs = map (validateTE m te) (V.toList v)
     vecLiteral _ _ _ = Just "expected an array"
 
-    structLiteral m s rts (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
+    structLiteral m s tes (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
       where
         checkField :: T.Text -> JSON.Value -> Maybe T.Text -> Maybe T.Text
         checkField k v e@(Just t)= e
@@ -304,22 +304,22 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
           (Just f) -> validateTE pm (f_type f) v
           Nothing ->
             Just (T.concat ["Field ",k, " in literal doesn't match any in struct definition" ])
-        pm = m `Map.union` Map.fromList (zip (s_typeParams s) rts)
+        pm = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
     structLiteral m s _ _ = Just "expected an object"
 
-    unionLiteral m u rts (JSON.Object hm) = case HM.toList hm of
+    unionLiteral m u tes (JSON.Object hm) = case HM.toList hm of
       [(k,v)] -> case find ((k==).f_name) (u_fields u) of
         (Just f) -> validateTE pm (f_type f) v
         Nothing ->
           Just (T.concat ["Field ",k, " in literal doesn't match any in union definition" ])
       _ -> Just "literal union must have a single key/value pair"
       where
-        pm = m `Map.union` Map.fromList (zip (u_typeParams u) rts)
-    unionLiteral m s rts _ = Just "expected an object"
+        pm = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
+    unionLiteral m s tes _ = Just "expected an object"
 
-    typedefLiteral m t rts v = validateTE pm (t_typeExpr t) v
+    typedefLiteral m t tes v = validateTE pm (t_typeExpr t) v
       where
-        pm = m `Map.union` Map.fromList (zip (t_typeParams t) rts)
+        pm = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
 
 namescopeForModule :: Module ScopedName -> NameScope -> NameScope
 namescopeForModule m ns = ns
