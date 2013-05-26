@@ -148,8 +148,8 @@ hPrimitiveType P_Sink = return "Sink"
 
 hPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
 hPrimitiveLiteral P_Void JSON.Null = "()"
-hPrimitiveLiteral P_Bool (JSON.Bool True) = "True"
-hPrimitiveLiteral P_Bool (JSON.Bool False) = "False"
+hPrimitiveLiteral P_Bool (JSON.Bool True) = "Prelude.True"
+hPrimitiveLiteral P_Bool (JSON.Bool False) = "Prelude.False"
 hPrimitiveLiteral P_Int8 (JSON.Number (I n)) = litNumber n
 hPrimitiveLiteral P_Int16 (JSON.Number (I n)) = litNumber n
 hPrimitiveLiteral P_Int32 (JSON.Number (I n)) = litNumber n
@@ -174,19 +174,24 @@ hPrimitiveLiteral P_Sink _ = "defaultv" -- never called
 litNumber :: (Num a, Ord a, Show a) => a -> T.Text
 litNumber x = T.pack (if x < 0 then "(" ++ show x ++ ")" else show x)
 
+type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
+
 hTypeExpr :: TypeExpr ResolvedType -> HGen T.Text
-hTypeExpr (TypeExpr rt []) = hTypeExpr1 rt
-hTypeExpr (TypeExpr (RT_Primitive P_Vector) args) = do
-  argt <- hTypeExpr (head args)
+hTypeExpr = hTypeExprB Map.empty
+
+hTypeExprB :: TypeBindingMap -> TypeExpr ResolvedType -> HGen T.Text
+hTypeExprB m (TypeExpr rt []) = hTypeExprB1 m rt
+hTypeExprB m (TypeExpr (RT_Primitive P_Vector) args) = do
+  argt <- hTypeExprB m (head args)
   return (template "[$1]" [argt])
   
-hTypeExpr (TypeExpr c args) = do
-  ct <- hTypeExpr1 c
-  argst <- mapM hTypeExpr args
+hTypeExprB m (TypeExpr c args) = do
+  ct <- hTypeExprB1 m c
+  argst <- mapM (hTypeExprB m) args
   return (T.concat $ ["(", ct, " "] ++ L.intersperse " " argst ++ [")"])
 
-hTypeExpr1 :: ResolvedType -> HGen T.Text
-hTypeExpr1 (RT_Named (sn,d)) = do
+hTypeExprB1 :: TypeBindingMap -> ResolvedType -> HGen T.Text
+hTypeExprB1 m (RT_Named (sn,d)) = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
@@ -207,8 +212,10 @@ hTypeExpr1 (RT_Named (sn,d)) = do
         hm <- importADLModule (sn_moduleName sn)
         return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
         
-hTypeExpr1 (RT_Param i) = return (hTypeParamName i)
-hTypeExpr1 (RT_Primitive pt) = hPrimitiveType pt
+hTypeExprB1 m (RT_Param i) = case Map.lookup i m of
+    (Just te) -> hTypeExprB m te
+    Nothing -> return (hTypeParamName i)
+hTypeExprB1 m (RT_Primitive pt) = hPrimitiveType pt
 
 hTParams :: [Ident] -> T.Text
 hTParams [] = T.empty
@@ -268,8 +275,9 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
         nl
         wt "defaultv = $1" [lname]
         indent $ do
-          forM_ (s_fields s) $ \f ->
-            wl $ generateDefaultValue (f_type f) (f_default f)
+          forM_ (s_fields s) $ \f -> do
+            defv <- generateDefaultValue (f_type f) (f_default f) 
+            wl $ defv
         nl
         wl "aToJSON f v = toJSONObject f (atype v) ("
         indent $ do
@@ -328,45 +336,60 @@ generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
     ts <- hTypeExpr (t_typeExpr t)
     wt "type $1$2 = $3" [lname,hTParams (t_typeParams t),ts]
 
-generateDefaultValue :: TypeExpr ResolvedType -> (Maybe JSON.Value) -> T.Text
-generateDefaultValue _ Nothing = "defaultv"
+generateDefaultValue :: TypeExpr ResolvedType -> (Maybe JSON.Value) -> HGen T.Text
+generateDefaultValue _ Nothing = return "defaultv"
 generateDefaultValue te (Just v) = generateLiteral te v
 
-generateLiteral :: TypeExpr ResolvedType -> JSON.Value -> T.Text
-generateLiteral te v = generateLV Map.empty te v
+generateLiteral :: TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
+generateLiteral te v =  generateLV Map.empty te v
   where
     -- We only need to match the appropriate JSON cases here, as the JSON value
     -- has already been validated by the compiler
-    generateLV m (TypeExpr (RT_Primitive pt) []) v = hPrimitiveLiteral pt v
+    generateLV :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
+    generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
-    generateLV m (TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
-      (Decl_Struct s) -> generateStruct m decl s tes v
+    generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
+      (Decl_Struct s) -> generateStruct m te0 decl s tes v
       (Decl_Union u) -> generateUnion m decl u tes v 
       (Decl_Typedef t) -> generateTypedef m decl t tes v
     generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
-         (Just te) -> generateLV Map.empty te v
+         (Just te) -> generateLV m te v
 
-    generateVec m te (JSON.Array v) = template "[ $1 ]" [T.intercalate ", " [generateLV m te v | v <- V.toList v]]
+    generateVec m te (JSON.Array v) = do
+      vals <- mapM (generateLV m te) (V.toList v) 
+      return (template "[ $1 ]" [T.intercalate ", " vals])
 
-    generateStruct m d s tes (JSON.Object hm) = template "defaultv { $1 }" [T.intercalate ", " fields]
+    generateStruct m te0 d s tes (JSON.Object hm) = do
+      fields <- forM (HM.toList hm) $ \(fname,v) -> do
+        lit <- generateLV m2 (getTE s fname) v
+        return (template "$1 = $2" [hFieldName (d_name d) fname, lit])
+      let fields1 = T.intercalate ", " fields
+      case tes of
+        [] -> do
+          return (template "defaultv { $1 }" [fields1])
+        _  -> do
+          -- If the type has parameters, then we may need to specify the type
+          -- of defaultv... so do it just in case
+          hte0 <- hTypeExprB m te0
+          return (template "(defaultv :: $1) { $2 }" [hte0,fields1])
       where
-        fields = [template "$1 = $2" [hFieldName (d_name d) fname, generateLV pm (getTE s fname) v]
-                 | (fname,v) <- HM.toList hm]
         getTE s fname = case L.find (\f -> f_name f == fname) (s_fields s) of
           Just f -> f_type f
-        pm = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
+        m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
 
-    generateUnion m d u tes (JSON.Object hm) = template "($1 $2)" [hDiscName (d_name d) fname,generateLV pm te v]
+    generateUnion m d u tes (JSON.Object hm) = do
+      lit <- generateLV m2 te v
+      return (template "($1 $2)" [hDiscName (d_name d) fname,lit])
       where
         (fname,v) = case HM.toList hm of
           [v] -> v
         (name,te) = case L.find (\f -> f_name f == fname) (u_fields u) of
           Just f -> (f_name f,f_type f)
-        pm = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
+        m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
 
-    generateTypedef m d t tes v = generateLV pm (t_typeExpr t) v
+    generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
       where
-        pm = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
+        m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
       
 generateModule :: Module ResolvedType -> HGen T.Text
 generateModule m = do
