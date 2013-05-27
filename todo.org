@@ -1,15 +1,17 @@
 * ADL Core/Compiler
-** Decide on reserved words in ADL, and generate errors
-** Add support for documentation strings passing through to generated code
+** DONE Import syntax
+    - Should we use java style?
 ** DONE Consider final list of primitive types
+** DONE Decide on reserved words in ADL, and generate errors
+** Add support for ADL constants 
 ** Select custom types from command line
 ** Protocol versioning
 IDEA: use unions to specify version differences where the
 discriminator is negotiated on connection, and not serialised
+** Add support for documentation strings passing through to generated code
 
-** DONE Import syntax
-    - Should we use java style?
-
+* Test Suite
+** Add ability to test compiler errors
 
 * Haskell Backend
 ** Formalise error handling in comms

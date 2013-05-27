@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module ParserP where
 
 import Data.Char
@@ -31,8 +32,13 @@ whiteSpace
   <|> pure ()
 
 ident0 :: P.Parser Ident
-ident0 = T.cons <$> P.letter
-                <*> (T.pack <$> P.many (P.alphaNum <|> P.char '_'))
+ident0 = do
+  i <- T.cons <$> P.letter <*> (T.pack <$> P.many (P.alphaNum <|> P.char '_'))
+  case isReserved i of
+    True -> P.unexpected ("reserved word '"++ T.unpack i ++ "'")
+    False -> return i
+  where
+    isReserved i = any (==i) ["struct","union","typedef","module"]
 
 ctoken :: Char -> P.Parser T.Text
 ctoken c = (T.singleton <$> P.char c) <* whiteSpace
