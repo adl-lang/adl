@@ -1,8 +1,7 @@
 * ADL Core/Compiler
 ** Decide on reserved words in ADL, and generate errors
-** Add support for overriding defaults in ADL
 ** Add support for documentation strings passing through to generated code
-** Consider final list of primitive types
+** DONE Consider final list of primitive types
 ** Select custom types from command line
 ** Protocol versioning
 IDEA: use unions to specify version differences where the

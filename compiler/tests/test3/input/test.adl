@@ -36,10 +36,10 @@ struct S<T>
     int16 f_int16 = -10000;
     int32 f_int32 = 56;
     int64 f_int64 = 40000;
-    uint8 f_uint8 = 32;
-    uint16 f_uint16 = 50000;
-    uint32 f_uint32 = 124456;
-    uint64 f_uint64 = 2344;
+    word8 f_word8 = 32;
+    word16 f_word16 = 50000;
+    word32 f_word32 = 124456;
+    word64 f_word64 = 2344;
     float f_float = 0.5;
     double f_double = 0.45;
     bytes f_bytes = "aGVsbG8=";

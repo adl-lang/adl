@@ -67,25 +67,25 @@ instance ADLValue Int64 where
   aFromJSON = iFromJSON
 
 instance ADLValue Word8 where
-  atype _ = "uint8"
+  atype _ = "word8"
   defaultv = 0
   aToJSON = iToJSON
   aFromJSON = iFromJSON
 
 instance ADLValue Word16 where
-  atype _ = "uint16"
+  atype _ = "word16"
   defaultv = 0
   aToJSON = iToJSON
   aFromJSON = iFromJSON
 
 instance ADLValue Word32 where
-  atype _ = "uint32"
+  atype _ = "word32"
   defaultv = 0
   aToJSON = iToJSON
   aFromJSON = iFromJSON
 
 instance ADLValue Word64 where
-  atype _ = "uint64"
+  atype _ = "word64"
   defaultv = 0
   aToJSON = iToJSON
   aFromJSON = iFromJSON

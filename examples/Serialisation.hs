@@ -36,10 +36,10 @@ processRequest ctx (Request_req_int8 rt) = returnToCaller ctx rt
 processRequest ctx (Request_req_int16 rt) = returnToCaller ctx rt
 processRequest ctx (Request_req_int32 rt) = returnToCaller ctx rt
 processRequest ctx (Request_req_int64 rt) = returnToCaller ctx rt
-processRequest ctx (Request_req_uint8 rt) = returnToCaller ctx rt
-processRequest ctx (Request_req_uint16 rt) = returnToCaller ctx rt
-processRequest ctx (Request_req_uint32 rt) = returnToCaller ctx rt
-processRequest ctx (Request_req_uint64 rt) = returnToCaller ctx rt
+processRequest ctx (Request_req_word8 rt) = returnToCaller ctx rt
+processRequest ctx (Request_req_word16 rt) = returnToCaller ctx rt
+processRequest ctx (Request_req_word32 rt) = returnToCaller ctx rt
+processRequest ctx (Request_req_word64 rt) = returnToCaller ctx rt
 processRequest ctx (Request_req_float rt) = returnToCaller ctx rt
 processRequest ctx (Request_req_double rt) = returnToCaller ctx rt
 processRequest ctx (Request_req_bytes rt) = returnToCaller ctx rt
@@ -74,10 +74,10 @@ client rfile = do
         testRoundTrip Request_req_int32 sc ep (-200000)
         testRoundTrip Request_req_int64 sc ep 300000
         testRoundTrip Request_req_int64 sc ep (-200000)
-        testRoundTrip Request_req_uint8 sc ep 3
-        testRoundTrip Request_req_uint16 sc ep 3000
-        testRoundTrip Request_req_uint32 sc ep 300000
-        testRoundTrip Request_req_uint64 sc ep 300000
+        testRoundTrip Request_req_word8 sc ep 3
+        testRoundTrip Request_req_word16 sc ep 3000
+        testRoundTrip Request_req_word32 sc ep 300000
+        testRoundTrip Request_req_word64 sc ep 300000
         testRoundTrip Request_req_float sc ep 34.57
         testRoundTrip Request_req_double sc ep 100.29
         testRoundTrip Request_req_bytes sc ep (BS.pack [0,1..255])

@@ -79,10 +79,10 @@ data S t = S
     , s_f_int16 :: Data.Int.Int16
     , s_f_int32 :: Data.Int.Int32
     , s_f_int64 :: Data.Int.Int64
-    , s_f_uint8 :: Data.Word.Word8
-    , s_f_uint16 :: Data.Word.Word16
-    , s_f_uint32 :: Data.Word.Word32
-    , s_f_uint64 :: Data.Word.Word64
+    , s_f_word8 :: Data.Word.Word8
+    , s_f_word16 :: Data.Word.Word16
+    , s_f_word32 :: Data.Word.Word32
+    , s_f_word64 :: Data.Word.Word64
     , s_f_float :: Prelude.Float
     , s_f_double :: Prelude.Double
     , s_f_bytes :: B.ByteString
@@ -129,10 +129,10 @@ instance (ADLValue t) => ADLValue (S t) where
         , ("f_int16",aToJSON f (s_f_int16 v))
         , ("f_int32",aToJSON f (s_f_int32 v))
         , ("f_int64",aToJSON f (s_f_int64 v))
-        , ("f_uint8",aToJSON f (s_f_uint8 v))
-        , ("f_uint16",aToJSON f (s_f_uint16 v))
-        , ("f_uint32",aToJSON f (s_f_uint32 v))
-        , ("f_uint64",aToJSON f (s_f_uint64 v))
+        , ("f_word8",aToJSON f (s_f_word8 v))
+        , ("f_word16",aToJSON f (s_f_word16 v))
+        , ("f_word32",aToJSON f (s_f_word32 v))
+        , ("f_word64",aToJSON f (s_f_word64 v))
         , ("f_float",aToJSON f (s_f_float v))
         , ("f_double",aToJSON f (s_f_double v))
         , ("f_bytes",aToJSON f (s_f_bytes v))
@@ -151,10 +151,10 @@ instance (ADLValue t) => ADLValue (S t) where
         <*> fieldFromJSON f "f_int16" defaultv hm
         <*> fieldFromJSON f "f_int32" defaultv hm
         <*> fieldFromJSON f "f_int64" defaultv hm
-        <*> fieldFromJSON f "f_uint8" defaultv hm
-        <*> fieldFromJSON f "f_uint16" defaultv hm
-        <*> fieldFromJSON f "f_uint32" defaultv hm
-        <*> fieldFromJSON f "f_uint64" defaultv hm
+        <*> fieldFromJSON f "f_word8" defaultv hm
+        <*> fieldFromJSON f "f_word16" defaultv hm
+        <*> fieldFromJSON f "f_word32" defaultv hm
+        <*> fieldFromJSON f "f_word64" defaultv hm
         <*> fieldFromJSON f "f_float" defaultv hm
         <*> fieldFromJSON f "f_double" defaultv hm
         <*> fieldFromJSON f "f_bytes" defaultv hm

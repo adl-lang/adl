@@ -25,10 +25,10 @@ data PrimitiveType = P_Void
                    | P_Int16
                    | P_Int32
                    | P_Int64
-                   | P_UInt8
-                   | P_UInt16
-                   | P_UInt32
-                   | P_UInt64
+                   | P_Word8
+                   | P_Word16
+                   | P_Word32
+                   | P_Word64
                    | P_Float
                    | P_Double
                    | P_ByteVector
@@ -54,10 +54,10 @@ primitiveDetails =
   , PrimitiveDetails P_Int16 "int16" 0 (isInt (minBound::Int16) (maxBound::Int16))
   , PrimitiveDetails P_Int32 "int32" 0 (isInt (minBound::Int32) (maxBound::Int32))
   , PrimitiveDetails P_Int64 "int64" 0 (isInt (minBound::Int64) (maxBound::Int64))
-  , PrimitiveDetails P_UInt8 "uint8" 0 (isUint (maxBound::Word8))
-  , PrimitiveDetails P_UInt16 "uint16" 0 (isUint (maxBound::Word16))
-  , PrimitiveDetails P_UInt32 "uint32" 0 (isUint (maxBound::Word32))
-  , PrimitiveDetails P_UInt64 "uint64" 0 (isUint (maxBound::Word64))
+  , PrimitiveDetails P_Word8 "word8" 0 (isWord (maxBound::Word8))
+  , PrimitiveDetails P_Word16 "word16" 0 (isWord (maxBound::Word16))
+  , PrimitiveDetails P_Word32 "word32" 0 (isWord (maxBound::Word32))
+  , PrimitiveDetails P_Word64 "word64" 0 (isWord (maxBound::Word64))
   , PrimitiveDetails P_Float "float" 0 isFloat
   , PrimitiveDetails P_Double "double" 0 isFloat
   , PrimitiveDetails P_ByteVector "bytes" 0 isBytes
@@ -76,9 +76,9 @@ isInt :: Integral a => a -> a -> JSON.Value -> Bool
 isInt min max (JSON.Number (JSON.I n)) = n >= fromIntegral min && n <= fromIntegral max
 isInt _ _ _  = False
 
-isUint :: Integral a => a -> JSON.Value -> Bool
-isUint max (JSON.Number (JSON.I n)) = n >= 0 && n <= fromIntegral max
-isUint _ _  = False
+isWord :: Integral a => a -> JSON.Value -> Bool
+isWord max (JSON.Number (JSON.I n)) = n >= 0 && n <= fromIntegral max
+isWord _ _  = False
 
 isFloat (JSON.Number (JSON.I _)) = True
 isFloat (JSON.Number (JSON.D _)) = True

@@ -47,10 +47,10 @@ union Request
     roundtrip<int32> req_int32;
     roundtrip<int64> req_int64;
 
-    roundtrip<uint8> req_uint8;
-    roundtrip<uint16> req_uint16;
-    roundtrip<uint32> req_uint32;
-    roundtrip<uint64> req_uint64;
+    roundtrip<word8> req_word8;
+    roundtrip<word16> req_word16;
+    roundtrip<word32> req_word32;
+    roundtrip<word64> req_word64;
 
     roundtrip<float> req_float;
     roundtrip<double> req_double;
