@@ -1,0 +1,9 @@
+{
+    "customTypes" : [
+        {
+            "adlname" : "examples.pubsub.UTCTime",
+            "haskellname" : "UTCTime",
+            "haskellimports" : [ "UTCTime" ]
+        }
+    ]        
+}

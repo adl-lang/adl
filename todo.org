@@ -4,7 +4,32 @@
 ** DONE Consider final list of primitive types
 ** DONE Decide on reserved words in ADL, and generate errors
 ** Add support for ADL constants 
-** Select custom types from command line
+** DONE Select custom types from command line
+** Work out the best way to put the defaults for custom types in the ADL
+
+  A) Should typedefs allow defaults?
+
+    typedef string UTCTime = "1900-01-01T00:00:00Z";
+
+    - doesn't make sense to provide multiple defaults for the same type
+    - can't use typeclasses to do defaulting in haskell backend
+
+  B) Or should we just use single field structs, ie:
+
+    struct UTCTime { string utcTime = "1900-01-01T00:00:00Z"; }
+
+    - serialisation inefficiency
+    - current implementation throws all values when you defined a custom type
+
+  C) Or should we add a newtype definition:
+
+    newtype string UTCTime = "1900-01-01T00:00:00Z";
+
+    - another toplevel definition to be mapped into each target language
+
+
+Perhaps we need a better typeclass for custom types
+
 ** Protocol versioning
 IDEA: use unions to specify version differences where the
 discriminator is negotiated on connection, and not serialised
