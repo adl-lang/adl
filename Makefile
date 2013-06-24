@@ -28,6 +28,7 @@ utils:
 	(cd utils && cabal-dev -s ../cabal-dev install  --force-reinstalls)
 
 compiler:
+	(cd compiler-lib && cabal-dev -s ../cabal-dev install)
 	(cd compiler && cabal-dev -s ../cabal-dev install)
 	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 
@@ -45,12 +46,15 @@ examples:
 	(cd examples && cabal-dev -s ../cabal-dev install)
 
 clean: 
+	-cabal-dev ghc-pkg unregister adl-compiler-lib
 	-cabal-dev ghc-pkg unregister adl-lib
+	-cabal-dev ghc-pkg unregister adl-utils
 
-	(cd compiler && cabal-dev -s ../cabal-dev clean && rm -rf dist)
-	(cd utils && cabal-dev -s ../cabal-dev clean && rm -rf dist)
-	(cd lib && cabal-dev -s ../cabal-dev clean && rm -rf dist)
-	(cd examples && cabal-dev -s ../cabal-dev clean && rm -rf dist)
+	-(cd examples ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
+	-(cd compiler ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
+	-(cd compiler-lib ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
+	-(cd utils ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
+	-(cd lib ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 
 cleanext:
 	-cabal-dev ghc-pkg unregister zeromq3-haskell

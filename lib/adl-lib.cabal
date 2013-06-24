@@ -1,12 +1,12 @@
 name:                adl-lib
 version:             0.1.0.0
 synopsis:            Runtime library for the Actor Definition Language (ADL)
--- description:         
+description:         
 license:             GPL-2
 license-file:        ../LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
--- copyright:           
+copyright:           
 category:            Network
 build-type:          Custom
 cabal-version:       >=1.8

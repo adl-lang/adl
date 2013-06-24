@@ -10,8 +10,9 @@ import Data.List(intercalate,partition)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-import EIO
-import Compiler
+import ADL.Compiler.EIO
+import ADL.Compiler.Compiler
+import HaskellCustomTypes
 
 searchDirOption ufn =
   Option "I" ["searchdir"]
@@ -43,12 +44,12 @@ runVerify args0 =
 
 runHaskell args0 =
   case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> haskell (mkFlags opts) args
+    (opts,args,[]) -> haskell (mkFlags opts) getCustomTypes args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."
     
-    mkFlags opts = (foldl (.) id opts) (HaskellFlags [] "ADL.Generated" "." False)
+    mkFlags opts = (foldl (.) id opts) (HaskellFlags [] "ADL.Generated" [] "." False)
 
     optDescs =
       [ searchDirOption (\s hf-> hf{hf_searchPath=s:hf_searchPath hf})

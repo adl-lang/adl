@@ -17,8 +17,9 @@ import System.Directory
 import System.FilePath
 
 import ADL.Utils.FileDiff
-import EIO
-import Compiler(haskell,HaskellFlags(..))
+import ADL.Compiler.EIO
+import ADL.Compiler.Compiler(haskell,HaskellFlags(..))
+import HaskellCustomTypes
 
 data TestResult = Passed
                 | CompilerFailed T.Text
@@ -56,9 +57,10 @@ instance Testlike TestCaseRunning TestResult TestADLCompiler where
           hf_searchPath = [tc_inputPath tc],
           hf_modulePrefix = "ADL",
           hf_outputPath = tempDir,
+          hf_customTypeFiles = [],
           hf_noOverwrite = False
           }
-    e <- liftIO $ unEIO (haskell hf [tc_module tc])
+    e <- liftIO $ unEIO (haskell hf getCustomTypes [tc_module tc])
     case e of
       (Left emsg) -> return (CompilerFailed emsg)
       (Right ()) -> do
