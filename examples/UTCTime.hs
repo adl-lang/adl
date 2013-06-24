@@ -13,17 +13,18 @@ import Data.Time.Calendar
 import Data.Time.Format
 import System.Locale
 
+import ADL.Examples.Pubsub(UTCTime_)
+
 instance ADLValue UTCTime where
-  atype _ = atype (defaultv :: T.Text)
-  defaultv = UTCTime (fromGregorian 1900 1 1) (secondsToDiffTime 0)
-  aToJSON jf ut = aToJSON jf (textFromUTCTime ut)
-  aFromJSON jf jv = aFromJSON jf jv >>= utcTimeFromText
+  atype _ = atype (defaultv :: UTCTime_)
+  defaultv = (defaultv :: UTCTime_)
+  aToJSON jf ut = aToJSON jf (fromUTCTime ut)
+  aFromJSON jf jv = aFromJSON jf jv >>= toUTCTime
 
-utcTimeFromText :: T.Text ->  Maybe UTCTime
-utcTimeFromText t =  if T.null t then (Just defaultv)
-                                 else parseTime defaultTimeLocale isoFormat (T.unpack t)
+toUTCTime :: UTCTime_ ->  Maybe UTCTime
+toUTCTime ut_ =  parseTime defaultTimeLocale isoFormat (uTCTime__utctime ut_)
 
-textFromUTCTime :: UTCTime -> T.Text
-textFromUTCTime ut = T.pack (formatTime defaultTimeLocale isoFormat ut)
+fromUTCTime :: UTCTime -> UTCTime_
+fromUTCTime ut = UTCTime_ (formatTime defaultTimeLocale isoFormat ut)
 
 isoFormat = "%FT%XZ" 

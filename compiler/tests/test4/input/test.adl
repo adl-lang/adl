@@ -4,10 +4,16 @@ module test
 typedef string Date;
 typedef string CustomDate;
 
+struct CustomDate2
+{
+    string date = "1900-01-01";
+};
+
 struct S
 {
         Date v1;
         CustomDate v2;
+        CustomDate2 v3;
 };
 
 };

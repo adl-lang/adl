@@ -4,9 +4,17 @@ import sys.types.*;
 
 struct CustomType
 {
+    // The qualifed name of the ADL type
     string adlname;
+
+    // The name in haskell of the type to be used    
     string haskellname;
+
+    // The imports required to use the haskell type
     vector<string> haskellimports;
+
+    // If true the code for the ADL type will be emitted
+    bool generateCode;
 };
 
 struct Config

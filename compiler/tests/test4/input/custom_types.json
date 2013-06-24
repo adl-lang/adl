@@ -3,7 +3,14 @@
         {
             "adlname" : "test.CustomDate",
             "haskellname" : "Day",
-            "haskellimports" : [ "Data.Time.Calendar" ]
+            "haskellimports" : [ "Data.Time.Calendar" ],
+            "generateCode" : false
+        },
+        {
+            "adlname" : "test.CustomDate2",
+            "haskellname" : "Day",
+            "haskellimports" : [ "Data.Time.Calendar" ],
+            "generateCode" : true
         }
     ]        
 }

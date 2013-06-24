@@ -39,10 +39,11 @@ getCustomTypes fps = fmap Map.unions (mapM get0 fps)
         sn <- case P.parse P.scopedName "" adlname of
           (Right sn) -> return sn
           _ -> eioError (template "Unable to parse adl name $1" [adlname])
-        return (sn,CustomType tn imports)
+        return (sn,CustomType tn imports gc)
       where
         adlname = HC.customType_adlname c
         tn = HC.customType_haskellname c
+        gc = HC.customType_generateCode c
         imports = map HaskellModule (HC.customType_haskellimports c)
     
     

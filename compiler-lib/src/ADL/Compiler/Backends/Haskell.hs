@@ -37,7 +37,8 @@ instance Format HaskellModule where
 
 data CustomType = CustomType {
    ct_hTypeName :: Ident,
-   ct_hImports :: [HaskellModule]
+   ct_hImports :: [HaskellModule],
+   ct_generateCode :: Bool
 }
 
 type CustomTypeMap = Map.Map ScopedName CustomType
@@ -405,12 +406,15 @@ generateModule m = do
 
   ms <- get
   let mname = ms_name ms
-      hasCustomDefinition n = Map.member (ScopedName mname n) (ms_customTypes ms)
       genDecl (n,d) = do
           wl ""
-          if hasCustomDefinition n
-            then wt "-- $1 excluded due to custom definition" [n]
-            else generateDecl d
+          case Map.lookup (ScopedName mname n) (ms_customTypes ms) of
+            Nothing -> generateDecl d
+            (Just ct) -> case ct_generateCode ct of
+              False -> wt "-- $1 excluded due to custom definition" [n]
+              True -> do
+                wt "-- $1 overridden by custom definition" [n]
+                generateDecl d{d_name=T.snoc (d_name d) '_'}
 
   mapM_ genDecl (Map.toList (m_decls m))
   ms <- get
