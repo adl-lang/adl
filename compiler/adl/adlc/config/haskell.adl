@@ -1,0 +1,17 @@
+module adlc.config.haskell {
+
+import sys.types.*;
+
+struct CustomType
+{
+    string adlname;
+    string haskellname;
+    vector<string> haskellimports;
+};
+
+struct Config
+{
+    vector<CustomType> customTypes;
+};
+
+};

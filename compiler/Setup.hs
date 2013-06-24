@@ -10,11 +10,10 @@ import Data.List(intercalate)
 generateHaskellFromADL pkg lbi = do
   let odir = autogenModulesDir lbi
       adlFiles =
-        [ "adl/sys/types.adl"
-        , "adl/sys/rpc.adl"
+        [ "adl/adlc/config/haskell.adl"
         ]
           
-      cmd = "adlc-bootstrap haskell --no-overwrite -I adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
+      cmd = "adlc-bootstrap haskell --no-overwrite -I adl -I ../runtime/adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
   putStrLn cmd
   e <- system cmd
   case e of

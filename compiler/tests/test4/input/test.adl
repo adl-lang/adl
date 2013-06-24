@@ -1,0 +1,13 @@
+module test
+{
+
+typedef string Date;
+typedef string CustomDate;
+
+struct S
+{
+        Date v1;
+        CustomDate v2;
+};
+
+};

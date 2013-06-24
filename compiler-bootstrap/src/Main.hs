@@ -2,7 +2,6 @@
 module Main where
 
 import System.Console.GetOpt
-import Control.Monad.Trans
 import System.Exit
 import System.Environment (getArgs)
 import System.FilePath(joinPath)
@@ -14,7 +13,6 @@ import qualified Data.Text.IO as T
 import ADL.Compiler.EIO
 import ADL.Compiler.Compiler
 import HaskellCustomTypes
-import Paths_adl_compiler
 
 searchDirOption ufn =
   Option "I" ["searchdir"]
@@ -25,11 +23,6 @@ outputDirOption ufn =
   Option "O" ["outputdir"]
     (ReqArg ufn "DIR")
     "Set the directory where generated code is written"
-
-customTypesOption ufn =
-  Option "" ["custom-types"]
-    (ReqArg ufn "FILE")
-    "Read custom type mapping from the specified file"
 
 noOverwriteOption ufn =
   Option "" ["no-overwrite"]
@@ -51,23 +44,18 @@ runVerify args0 =
 
 runHaskell args0 =
   case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> do
-        flags <- mkFlags opts
-        haskell flags getCustomTypes args
+    (opts,args,[]) -> haskell (mkFlags opts) getCustomTypes args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."
-
-    mkFlags opts = do
-      stdCustomTypes <- liftIO $ getDataFileName "config/custom_types.json"
-      return $ (foldl (.) id opts) (HaskellFlags [] "ADL.Generated" [stdCustomTypes] "." False)
+    
+    mkFlags opts = (foldl (.) id opts) (HaskellFlags [] "ADL.Generated" [] "." False)
 
     optDescs =
       [ searchDirOption (\s hf-> hf{hf_searchPath=s:hf_searchPath hf})
       , Option "" ["moduleprefix"]
         (ReqArg (\s hf-> hf{hf_modulePrefix=s}) "PREFIX")
         "Set module name prefix for generated code "
-      , customTypesOption (\s hf-> hf{hf_customTypeFiles=s:hf_customTypeFiles hf})
       , outputDirOption (\s hf-> hf{hf_outputPath=s})
       , noOverwriteOption (\hf-> hf{hf_noOverwrite=True})
       ]

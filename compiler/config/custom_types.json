@@ -1,0 +1,39 @@
+{
+    "__comment__" : [
+        "This file contains mappings from the standard ADL types in sys.types to",
+        "their corresponding types in haskell"
+    ],
+
+    "customTypes" : [
+        {
+            "adlname" : "sys.types.maybe",
+            "haskellname" : "Maybe",
+            "haskellimports" : [ "ADL.Core.CustomTypes" ]
+        },
+        {
+            "adlname" : "sys.types.either",
+            "haskellname" : "Either",
+            "haskellimports" : [ "ADL.Core.CustomTypes" ]
+        },
+        {
+            "adlname" : "sys.types.error",
+            "haskellname" : "Error",
+            "haskellimports" : [ "ADL.Core.CustomTypes" ]
+        },
+        {
+            "adlname" : "sys.types.pair",
+            "haskellname" : "Pair",
+            "haskellimports" : [ "ADL.Core.CustomTypes" ]
+        },
+        {
+            "adlname" : "sys.types.map",
+            "haskellname" : "Map",
+            "haskellimports" : [ "ADL.Core.CustomTypes" ]
+        },
+        {
+            "adlname" : "sys.types.set",
+            "haskellname" : "Set",
+            "haskellimports" : [ "ADL.Core.CustomTypes" ]
+        }
+    ]        
+}

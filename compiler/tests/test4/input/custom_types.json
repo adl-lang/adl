@@ -1,0 +1,9 @@
+{
+    "customTypes" : [
+        {
+            "adlname" : "test.CustomDate",
+            "haskellname" : "Day",
+            "haskellimports" : [ "Data.Time.Calendar" ]
+        }
+    ]        
+}

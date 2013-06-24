@@ -8,8 +8,11 @@ author:              Tim Docker
 maintainer:          tim@dockerz.net
 -- copyright:           
 category:            Network
-build-type:          Simple
+build-type:          Custom
 cabal-version:       >=1.8
+
+data-files:          adl/adlc/config/haskell.adl
+                     config/custom_types.json
 
 executable adlc
   hs-source-dirs:      src
@@ -17,7 +20,7 @@ executable adlc
   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
                        filepath, directory, unordered-containers, vector, base64-bytestring,
-                       attoparsec, aeson, adl-utils, adl-compiler-lib
+                       attoparsec, aeson, adl-utils, adl-compiler-lib, adl-runtime
 
 executable adlc-tests
   hs-source-dirs:      tests, src
@@ -25,6 +28,6 @@ executable adlc-tests
   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
                        filepath, directory, unordered-containers, vector, base64-bytestring,
-                       attoparsec, aeson, adl-utils, adl-compiler-lib,
+                       attoparsec, aeson, adl-utils, adl-compiler-lib, adl-runtime,
                        temporary, test-framework
 

@@ -21,13 +21,16 @@ tests:
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs
 
-all: utils compiler runtime examples
+all: utils compiler-bootstrap runtime compiler examples
 
 utils:
 	(cd utils && cabal-dev -s ../cabal-dev install  --force-reinstalls)
 
-compiler:
+compiler-bootstrap:
 	(cd compiler-lib && cabal-dev -s ../cabal-dev install)
+	(cd compiler-bootstrap && cabal-dev -s ../cabal-dev install)
+
+compiler:
 	(cd compiler && cabal-dev -s ../cabal-dev install)
 	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 
@@ -51,6 +54,7 @@ clean:
 
 	-(cd examples ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd compiler ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
+	-(cd compiler-bootstrap ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd compiler-lib ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd utils ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd runtime ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
@@ -75,5 +79,5 @@ ext/downloads/zeromq-3.2.2.tar.gz:
 	mkdir -p ext/downloads
 	(cd ext/downloads && wget http://download.zeromq.org/zeromq-3.2.2.tar.gz)
 
-.PHONY : examples utils compiler compiler-lib runtime clean
+.PHONY : examples utils compiler-bootstrap runtime compiler clean
 

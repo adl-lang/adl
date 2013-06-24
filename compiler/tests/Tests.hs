@@ -30,7 +30,8 @@ data TestCaseRunning = RunningCompiler | CheckingOutput
 data TestADLCompiler = TestADLCompiler {
   tc_inputPath :: FilePath,
   tc_module :: FilePath,
-  tc_expectedOutput :: FilePath
+  tc_expectedOutput :: FilePath,
+  tc_customFlags :: HaskellFlags -> HaskellFlags
   } deriving (Typeable)
 
 instance Show TestResult where
@@ -53,7 +54,7 @@ instance Testlike TestCaseRunning TestResult TestADLCompiler where
       tdir <- getTemporaryDirectory
       createTempDirectory tdir "adl.test." 
     yieldImprovement RunningCompiler
-    let hf = HaskellFlags {
+    let hf = tc_customFlags tc $ HaskellFlags {
           hf_searchPath = [tc_inputPath tc],
           hf_modulePrefix = "ADL",
           hf_outputPath = tempDir,
@@ -73,8 +74,11 @@ instance Testlike TestCaseRunning TestResult TestADLCompiler where
           diffs -> return (OutputDiff (tc_expectedOutput tc) tempDir diffs)
 
 testADLCompiler :: String -> FilePath -> FilePath -> FilePath -> Test
-testADLCompiler name ipath mpath epath = Test name (TestADLCompiler ipath mpath epath)
-  
+testADLCompiler name ipath mpath epath = Test name (TestADLCompiler ipath mpath epath id)
+
+testADLCompiler1 :: String -> FilePath -> FilePath -> FilePath -> (HaskellFlags -> HaskellFlags) -> Test
+testADLCompiler1 name ipath mpath epath hf = Test name (TestADLCompiler ipath mpath epath hf)
+
 main :: IO ()
 main = defaultMain tests
 
@@ -82,4 +86,6 @@ tests =
   [ testADLCompiler "1. empty module" "test1/input" "test1/input/test.adl" "test1/output"
   , testADLCompiler "2. structs" "test2/input" "test2/input/test.adl" "test2/output"
   , testADLCompiler "3. structs - default overrides" "test3/input" "test3/input/test.adl" "test3/output"
+  , testADLCompiler1 "4. custom type mappings" "test4/input" "test4/input/test.adl" "test4/output"
+                     (\hf->hf{hf_customTypeFiles=["test4/input/custom_types.json"]})
   ]
