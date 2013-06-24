@@ -5,7 +5,6 @@ TESTOUTDIR=/tmp/adltest
 MODULEPREFIX=ADL.Compiled
 ADLCFLAGS=-O $(TESTOUTDIR) --moduleprefix=$(MODULEPREFIX)
 ADLC=cabal-dev/bin/adlc
-ADLLIBDIR=lib
 GHC=GHC_PACKAGE_PATH=cabal-dev/packages-7.4.1.conf: ghc
 GHCFLAGS=-i$(TESTOUTDIR)
 
@@ -16,13 +15,13 @@ EXAMPLEADLFILES=\
     examples/adl/examples/test1.adl
 
 tests:
-	$(ADLC) haskell $(ADLCFLAGS) -I lib/adl -I examples/adl $(EXAMPLEADLFILES)
+	$(ADLC) haskell $(ADLCFLAGS) -I runtime/adl -I examples/adl $(EXAMPLEADLFILES)
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Types.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Rpc.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs
 	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs
 
-all: utils compiler lib examples
+all: utils compiler runtime examples
 
 utils:
 	(cd utils && cabal-dev -s ../cabal-dev install  --force-reinstalls)
@@ -35,26 +34,26 @@ compiler:
 compiler-tests:
 	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 
-lib:
-	(cd lib && cabal-dev -s ../cabal-dev install)
+runtime:
+	(cd runtime && cabal-dev -s ../cabal-dev install)
 
 docs:
 	(cd utils && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
-	(cd lib && cabal-dev -s ../cabal-dev install --enable-documentation)
+	(cd runtime && cabal-dev -s ../cabal-dev install --enable-documentation)
 
 examples:
 	(cd examples && cabal-dev -s ../cabal-dev install)
 
 clean: 
 	-cabal-dev ghc-pkg unregister adl-compiler-lib
-	-cabal-dev ghc-pkg unregister adl-lib
+	-cabal-dev ghc-pkg unregister adl-runtime
 	-cabal-dev ghc-pkg unregister adl-utils
 
 	-(cd examples ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd compiler ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd compiler-lib ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd utils ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
-	-(cd lib ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
+	-(cd runtime ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 
 cleanext:
 	-cabal-dev ghc-pkg unregister zeromq3-haskell
@@ -76,5 +75,5 @@ ext/downloads/zeromq-3.2.2.tar.gz:
 	mkdir -p ext/downloads
 	(cd ext/downloads && wget http://download.zeromq.org/zeromq-3.2.2.tar.gz)
 
-.PHONY : examples utils compiler lib clean
+.PHONY : examples utils compiler compiler-lib runtime clean
 

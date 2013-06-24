@@ -1,4 +1,4 @@
-name:                adl-lib
+name:                adl-runtime
 version:             0.1.0.0
 synopsis:            Runtime library for the Actor Definition Language (ADL)
 description:         
