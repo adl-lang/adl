@@ -120,7 +120,7 @@ instance (ADLValue t) => ADLValue (S t) where
         defaultv { a_f_bool = Prelude.True, a_f_string = "xyz" }
         (U_f_int 45)
         defaultv
-        (defaultv :: (B Data.Int.Int16)) { b_f_tvec = [ 1, 2, 3 ], b_f_xy = (defaultv :: (XY Data.Int.Int16)) { xY_y = 5, xY_x = 5 }, b_f_t = 56, b_f_string = "yikes" }
+        (defaultv :: (B Data.Int.Int16)) { b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = (defaultv :: (XY Data.Int.Int16)) { xY_x = 5, xY_y = 5 } }
     
     aToJSON f v = toJSONObject f (atype v) (
         [ ("f_void",aToJSON f (s_f_void v))

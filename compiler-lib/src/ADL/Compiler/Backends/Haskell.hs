@@ -5,6 +5,7 @@ import Debug.Trace
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
+import Data.Ord (comparing)
 
 import System.Directory(createDirectoryIfMissing)
 import System.FilePath(takeDirectory,joinPath,addExtension)
@@ -362,7 +363,7 @@ generateLiteral te v =  generateLV Map.empty te v
       return (template "[ $1 ]" [T.intercalate ", " vals])
 
     generateStruct m te0 d s tes (JSON.Object hm) = do
-      fields <- forM (HM.toList hm) $ \(fname,v) -> do
+      fields <- forM (L.sortBy (comparing fst) $ HM.toList hm) $ \(fname,v) -> do
         lit <- generateLV m2 (getTE s fname) v
         return (template "$1 = $2" [hFieldName (d_name d) fname, lit])
       let fields1 = T.intercalate ", " fields
