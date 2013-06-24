@@ -3,14 +3,27 @@ module examples.pubsub
 
 import sys.rpc.*;
 
+// A UTC timestamp in ISO format (ie YYYY-MM-DDTHH:MM:SSZ )
+//
+// The default value is 1900-01-01T00:00:00Z
+//
+// We'll use a custom type definition so that this get compiled
+// to a useful type in the generated code
+typedef string UTCTime;
+
 // A Channel<T,P> is a data type where we can published
 // messages of type T, and can subscribe using a pattern
 // of type P
 typedef sink<ChannelReq<T,P>> Channel<T,P>;
 
+struct Message<T> {
+    UTCTime timestamp;
+    T payload;
+};
+
 union ChannelReq<T,P>
 {
-    T publish;
+    Message<T> publish;
     rpc<Subscribe<T,P>,Subscription> subscribe;
 };
 
@@ -18,7 +31,7 @@ union ChannelReq<T,P>
 struct Subscribe<T,P>
 {
     P pattern;        
-    sink<T> sendTo;
+    sink<Message<T>> sendTo;
 };
 
 typedef sink<SubsReq> Subscription;

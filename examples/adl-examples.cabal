@@ -29,5 +29,5 @@ executable runexample
    main-is:             RunExample.hs
    ghc-options:         -threaded
    build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
+                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*, old-locale,
                         aeson, unordered-containers, adl-utils, adl-runtime, stm, hslogger, time

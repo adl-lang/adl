@@ -27,7 +27,7 @@ type SubscID = Int
 
 data State = State {
   nextid :: TVar SubscID,
-  subs :: TVar (Map.Map SubscID (Pattern,SinkConnection Message))
+  subs :: TVar (Map.Map SubscID (Pattern,SinkConnection MyMessage))
   }
 
 newState :: Context -> IO State
@@ -52,7 +52,7 @@ processRequest ep state ctx req = case req of
   (ChannelReq_publish t) -> publish t
   (ChannelReq_subscribe rpc) -> handleRPC ctx rpc subscribe
   where
-    publish :: Message -> IO ()
+    publish :: MyMessage -> IO ()
     publish m = do
       ss <- atomically $ readTVar (subs state)
       sequence_ [ send sc m | (pattern,sc) <- Map.elems ss, match pattern m]
@@ -68,8 +68,8 @@ processRequest ep state ctx req = case req of
       ls <- newLocalSink ep Nothing (processSubscriptionRequest state ctx i)
       return (toSink ls)
 
-    match :: Pattern -> Message -> Bool
-    match = T.isPrefixOf
+    match :: Pattern -> MyMessage -> Bool
+    match p m = p `T.isPrefixOf` message_payload m
 
 processSubscriptionRequest :: State -> Context -> Int -> SubsReq -> IO ()
 processSubscriptionRequest state ctx i req = case req of

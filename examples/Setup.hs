@@ -19,7 +19,7 @@ generateHaskellFromADL pkg lbi = do
         , "adl/examples/serialisation.adl"
         ]
           
-      cmd = "adlc haskell --no-overwrite -I adl -I ../runtime/adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
+      cmd = "adlc haskell --custom-types config/custom_types.json --no-overwrite -I adl -I ../runtime/adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
   putStrLn cmd
   e <- system cmd
   case e of

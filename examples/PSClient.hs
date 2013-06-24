@@ -1,7 +1,8 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module PSClient where
 
 import System.Environment (getArgs)
+import Data.Time.Clock(getCurrentTime)
 import Control.Concurrent.STM
 
 import qualified Data.Text as T
@@ -9,6 +10,7 @@ import qualified Data.Text.IO as T
 import qualified System.Log.Logger as L
 
 import ADL.Utils.Resource
+import ADL.Utils.Format
 import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
@@ -29,7 +31,7 @@ withConnection rfile f = do
       withResource (connect ctx s) $ \sc -> do
         f sc ep
 
-publish :: Message -> SinkConnection MyChannelReq -> EndPoint -> IO ()
+publish :: MyMessage -> SinkConnection MyChannelReq -> EndPoint -> IO ()
 publish value sc ep = send sc (ChannelReq_publish value)
 
 subscribe :: Pattern -> SinkConnection MyChannelReq -> EndPoint -> IO ()
@@ -38,8 +40,8 @@ subscribe pattern sc ep = do
   sub <- callRPC ChannelReq_subscribe sc ep (seconds 20) (Subscribe pattern (toSink ls)) >>= errorOnTimeout
   threadWait
   where
-    processMessage :: Message -> IO ()
-    processMessage m = T.putStrLn m
+    processMessage :: MyMessage -> IO ()
+    processMessage m = T.putStrLn (template "$1: $2" [T.pack (show (message_timestamp m)),message_payload m])
 
 usage = do
   putStrLn "Usage:"
@@ -49,7 +51,9 @@ usage = do
 run args = do
   let run' = withConnection "/tmp/psServer.ref"
   case args of
-    ["publish",value] -> run' (publish (T.pack value))
+    ["publish",value] -> do
+      tstamp <- getCurrentTime
+      run' (publish (Message tstamp (T.pack value)))
     ["subscribe",pattern] -> run' (subscribe (T.pack pattern))
     _ -> usage
 
