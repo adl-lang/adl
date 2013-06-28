@@ -36,9 +36,8 @@ dirContents root = scan ""
       dirs <- filterM (\p -> doesDirectoryExist (root </> path </> p)) ps
       files <- filterM (\p -> doesFileExist (root </> path </> p)) ps
       let dirs' = filter (\p -> p /= "." && p /= "..") dirs
-      ds <- sequence [scan (path </> dir) | dir <- dirs']
-      return (Set.map (path</>)
-                      (Set.union (Set.fromList files) (Set.unions ds)))
+      ds <- sequence [ fmap (Set.map (dir</>)) (scan (path </> dir)) | dir <- dirs']
+      return (Set.union (Set.fromList files) (Set.unions ds))
 
 diffTree :: FilePath -> FilePath -> IO [ (FilePath,FileDiff) ]
 diffTree root1 root2 = do
