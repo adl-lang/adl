@@ -1,5 +1,11 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
-module ADL.Test where
+module ADL.Test(
+    A(..),
+    B(..),
+    S(..),
+    U(..),
+    XY(..),
+) where
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>) )

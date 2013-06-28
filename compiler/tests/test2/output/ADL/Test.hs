@@ -1,5 +1,9 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
-module ADL.Test where
+module ADL.Test(
+    IntTree,
+    S1(..),
+    Tree(..),
+) where
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>) )

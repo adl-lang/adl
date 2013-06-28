@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Test where
+module ADL.Test(
+) where
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>) )

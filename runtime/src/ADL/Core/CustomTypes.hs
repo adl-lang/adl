@@ -52,10 +52,6 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
                 ]
         in unionFromJSON f umap o
 
-type Error t = Either T.Text t
-
-type Pair t1 t2 = (t1,t2)
-
 instance (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
     atype _ = T.concat
         [ "sys.types.pair"
@@ -75,8 +71,6 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
         <*> fieldFromJSON f "v2" defaultv hm
     aFromJSON _ _ = Prelude.Nothing
 
-type Map k v = Map.Map k v
-
 instance (ADLValue k, Ord k, ADLValue v) => ADLValue (Map.Map k v) where
     atype _ = atype (undefined :: [(k,v)])
 
@@ -85,8 +79,6 @@ instance (ADLValue k, Ord k, ADLValue v) => ADLValue (Map.Map k v) where
     aToJSON f v = aToJSON f (Map.toList v)
     
     aFromJSON f v = Map.fromList <$> (aFromJSON f v)
-
-type Set v = Set.Set v
 
 instance (Ord v, ADLValue v) => ADLValue (Set.Set v) where
     atype _ = atype (undefined :: [v])

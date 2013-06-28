@@ -1,5 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Test where
+module ADL.Test(
+    Date,
+    DateO(..),
+    S(..),
+) where
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>) )

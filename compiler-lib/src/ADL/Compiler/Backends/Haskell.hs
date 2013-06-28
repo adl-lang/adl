@@ -59,6 +59,7 @@ data MState = MState {
    ms_moduleMapper :: ModuleName -> HaskellModule,
    ms_customTypes :: CustomTypeMap,
    ms_indent :: T.Text,
+   ms_exports :: Set.Set T.Text,
    ms_imports :: Set.Set T.Text,
    ms_languageFeatures :: Set.Set T.Text,
    ms_lines :: [T.Text]
@@ -99,6 +100,10 @@ addLanguageFeature t = updateMState
 addImport :: T.Text -> HGen ()
 addImport t = updateMState
   (\ms -> ms{ ms_imports=Set.insert t (ms_imports ms)} )
+
+addExport :: T.Text -> HGen ()
+addExport t = updateMState
+  (\ms -> ms{ ms_exports=Set.insert t (ms_exports ms)} )
 
 importModule :: HaskellModule -> HGen ()
 importModule (HaskellModule t) =
@@ -264,6 +269,7 @@ derivingStdClasses = wl "deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)"
 generateDecl :: Ident -> Decl ResolvedType -> HGen ()
 
 generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
+    addExport (template "$1(..)" [lname])
     enableScopedTypeVariables (s_typeParams s)
     mn <- fmap ms_name get
     generateStructDataType lname mn d s
@@ -271,6 +277,7 @@ generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
     generateStructADLInstance lname mn d s
 
 generateDecl lname d@(Decl{d_type=(Decl_Union u)}) = do
+    addExport (template "$1(..)" [lname])
     enableScopedTypeVariables (u_typeParams u)
     mn <- fmap ms_name get
     generateUnionDataType lname mn d u
@@ -278,6 +285,7 @@ generateDecl lname d@(Decl{d_type=(Decl_Union u)}) = do
     generateUnionADLInstance lname mn d u
 
 generateDecl lname d@(Decl{d_type=(Decl_Typedef t)}) = do
+    addExport lname
     ts <- hTypeExpr (t_typeExpr t)
     wt "type $1$2 = $3" [lname,hTParams (t_typeParams t),ts]
 
@@ -414,7 +422,8 @@ generateLiteral te v =  generateLV Map.empty te v
 
 generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> HGen ()
 generateCustomType n d ct = do
-  -- Imports
+  -- imports and exports
+  addExport (hTypeName n)
   mapM_ importModule (ct_hImports ct)
 
   -- Insert the user supplied code
@@ -455,11 +464,17 @@ generateModule m = do
   let lang = case Set.toList (ms_languageFeatures ms) of
         [] -> []
         fs ->  [template "{-# LANGUAGE $1 #-}" [T.intercalate ", " fs]]
-      header = [ template "module $1 where" [formatText hm]
-               ]
+
+      header = [ template "module $1(" [formatText hm] ]
+               ++ exports ++
+               [ ") where" ]
+
+      exports = [template "    $1," [e] | e <- Set.toList (ms_exports ms)]
+
       imports = case Set.toList (ms_imports ms) of
         [] -> []
         lines -> "" : lines
+
       body = reverse (ms_lines ms)
 
   return (T.intercalate "\n" (lang ++ header ++ imports ++ body))
@@ -474,7 +489,7 @@ writeModuleFile :: Bool ->
                    Module ResolvedType ->
                    EIO a ()
 writeModuleFile noOverwrite hmf fpf customTypes m = do
-  let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty []
+  let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty Set.empty []
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
   liftIO $ do
