@@ -17,16 +17,16 @@ data-files:          adl/adlc/config/haskell.adl
 executable adlc
   hs-source-dirs:      src
   main-is:             Main.hs
-  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                       parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
+  build-depends:       base, text, containers, bytestring,
+                       parsec, mtl, transformers,
                        filepath, directory, unordered-containers, vector, base64-bytestring,
                        attoparsec, aeson, adl-utils, adl-compiler-lib, adl-runtime
 
 executable adlc-tests
   hs-source-dirs:      tests, src
   main-is:             Tests.hs
-  build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                       parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
+  build-depends:       base, text, containers, bytestring,
+                       parsec, mtl, transformers,
                        filepath, directory, unordered-containers, vector, base64-bytestring,
                        attoparsec, aeson, adl-utils, adl-compiler-lib, adl-runtime,
                        temporary, test-framework

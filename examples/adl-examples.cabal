@@ -11,23 +11,9 @@ category:            Network
 build-type:          Custom
 cabal-version:       >=1.8
 
--- executable psserver
---    main-is:             PSServer.hs
---    ghc-options:         -threaded
---    build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
---                         parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
---                         aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger, time
-
--- executable psclient
---    main-is:             PSClient.hs
---    ghc-options:         -threaded
---    build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
---                         parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*,
---                         aeson, unordered-containers, adl-utils, adl-lib, stm, hslogger, time
-
 executable runexample
    main-is:             RunExample.hs
    ghc-options:         -threaded
-   build-depends:       base ==4.5.*, text ==0.11.*, containers ==0.4.*, bytestring ==0.9.*,
-                        parsec ==3.1.*, mtl ==2.1.*, transformers ==0.3.*, old-locale,
+   build-depends:       base, text, containers, bytestring,
+                        parsec, mtl, transformers, old-locale,
                         aeson, unordered-containers, adl-utils, adl-runtime, stm, hslogger, time
