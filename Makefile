@@ -10,44 +10,49 @@ GHCFLAGS=-i$(TESTOUTDIR)
 
 PATH:=$(MKDIR)cabal-dev/bin:$(PATH)
 
-EXAMPLEADLFILES=\
-    examples/adl/examples/im.adl \
-    examples/adl/examples/test1.adl
-
-tests:
-	$(ADLC) haskell $(ADLCFLAGS) -I runtime/adl -I examples/adl $(EXAMPLEADLFILES)
-	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Types.hs
-	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Sys/Rpc.hs
-	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Im.hs
-	$(GHC) $(GHCFLAGS) $(TESTOUTDIR)/ADL/Compiled/Examples/Test1.hs
+include Makefile.srcs
 
 all: utils compiler-bootstrap runtime compiler examples
+utils : .built-utils
+compiler-lib: .built-compiler-lib
+compiler-bootstrap: .built-compiler-bootstrap
+runtime: .built-runtime
+compiler: .built-compiler
+examples: .built-examples
 
-utils:
+.built-utils: $(UTILS-SRC)
 	(cd utils && cabal-dev -s ../cabal-dev install  --force-reinstalls)
+	touch .built-utils
 
-compiler-bootstrap:
-	(cd compiler-lib && cabal-dev -s ../cabal-dev install)
-	(cd compiler-bootstrap && cabal-dev -s ../cabal-dev install)
+.built-compiler-lib: $(COMPILER-LIB-SRC) .built-utils
+	(cd compiler-lib && cabal-dev -s ../cabal-dev install  --force-reinstalls)
+	touch .built-compiler-lib
 
-compiler:
-	(cd compiler && cabal-dev -s ../cabal-dev install)
-	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
+.built-compiler-bootstrap: $(COMPILER-BOOTSTRAP-SRC) .built-utils .built-compiler-lib
+	(cd compiler-bootstrap && cabal-dev -s ../cabal-dev install  --force-reinstalls)
+	touch .built-compiler-bootstrap
 
-compiler-tests:
-	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
-
-runtime:
+.built-runtime: $(RUNTIME-SRC) .built-utils .built-compiler-bootstrap
 	(cd runtime && cabal-dev -s ../cabal-dev install)
+	touch .built-runtime
+
+.built-compiler: $(COMPILER-SRC) .built-utils .built-runtime
+	(cd compiler && cabal-dev -s ../cabal-dev install)
+	touch .built-compiler
+
+.built-examples: $(EXAMPLES-SRC) .built-utils .built-runtime .built-compiler
+	(cd examples && cabal-dev -s ../cabal-dev install)
+	touch .built-examples
+
+boot:
+	runghc genMake.hs >Makefile.srcs
 
 docs:
 	(cd utils && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
 	(cd runtime && cabal-dev -s ../cabal-dev install --enable-documentation)
 
-examples:
-	(cd examples && cabal-dev -s ../cabal-dev install)
-
 clean: 
+	-rm -f .built-*
 	-cabal-dev ghc-pkg unregister adl-compiler-lib
 	-cabal-dev ghc-pkg unregister adl-runtime
 	-cabal-dev ghc-pkg unregister adl-utils
