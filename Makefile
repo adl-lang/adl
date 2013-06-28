@@ -38,6 +38,7 @@ examples: .built-examples
 
 .built-compiler: $(COMPILER-SRC) .built-utils .built-runtime
 	(cd compiler && cabal-dev -s ../cabal-dev install)
+	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 	touch .built-compiler
 
 .built-examples: $(EXAMPLES-SRC) .built-utils .built-runtime .built-compiler
