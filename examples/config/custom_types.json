@@ -1,10 +1,40 @@
 {
     "customTypes" : [
         {
-            "adlname" : "examples.pubsub.UTCTime",
+            "adlname" : "examples.datetime.Date",
+            "haskellname" : "Day",
+            "haskellimports" : [
+                "Data.Time.Calendar(Day)",
+                "Data.Time.Format(parseTime,formatTime)",
+                "System.Locale(defaultTimeLocale)"
+                ],
+            "generateOrigADLType" : { "just" : "Date0" }
+        },
+        {
+            "adlname" : "examples.datetime.UTCTime",
             "haskellname" : "UTCTime",
-            "haskellimports" : [ "UTCTime" ],
-            "generateCode" : true
+            "haskellimports" : [
+                "qualified Data.Time.Clock as C",
+                "Data.Time.Format(parseTime,formatTime)",
+                "System.Locale(defaultTimeLocale)",
+                "qualified Data.Text as T"
+            ],
+            "insertCode" : [
+                "type UTCTime = C.UTCTime",
+                "",
+                "toUTCTime :: UTCTime0 -> Prelude.Maybe C.UTCTime",
+                "toUTCTime (UTCTime0 s) = parseTime defaultTimeLocale \"%FT%XZ\" (T.unpack s)",
+                "",
+                "fromUTCTime :: C.UTCTime -> UTCTime0",
+                "fromUTCTime d = UTCTime0 (T.pack (formatTime defaultTimeLocale \"%FT%XZ\" d))",
+                "",
+                "instance ADLValue C.UTCTime where",
+                "  atype _ = atype (defaultv :: UTCTime0)",
+                "  defaultv = let (Prelude.Just d) = toUTCTime defaultv in d",
+                "  aToJSON jf d = aToJSON jf (fromUTCTime d)",
+                "  aFromJSON jf jv = (aFromJSON jf jv) Prelude.>>= toUTCTime"
+            ],
+            "generateOrigADLType" : { "just" : "UTCTime0" }
         }
     ]        
 }

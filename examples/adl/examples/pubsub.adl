@@ -2,15 +2,7 @@ module examples.pubsub
 {
 
 import sys.rpc.*;
-
-// A UTC timestamp in ISO format (ie YYYY-MM-DDTHH:MM:SSZ )
-//
-// We expect use a custom type definition so that this get compiled
-// to a useful type in the generated code
-struct UTCTime
-{
-    string utctime = "1900-01-01T00:00:00Z";
-};
+import examples.datetime.UTCTime;
 
 // A Channel<T,P> is a data type where we can published
 // messages of type T, and can subscribe using a pattern

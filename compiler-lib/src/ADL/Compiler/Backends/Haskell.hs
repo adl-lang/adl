@@ -36,9 +36,20 @@ instance Format HaskellModule where
   formatText (HaskellModule hm) = hm
 
 data CustomType = CustomType {
+   -- The name of the custom haskell type to use in lieu of original
+   -- adl type
    ct_hTypeName :: Ident,
+
+   -- Any imports required to support the custom haskell type.
    ct_hImports :: [HaskellModule],
-   ct_generateCode :: Bool
+
+   -- Lines of helper code. This must implement the ADLValue typeclass
+   -- for the custom haskell type
+   ct_insertCode :: [T.Text],
+
+   -- Whether to generate the original ADL Type. If required the name
+   -- to be used is supplied.
+   ct_generateOrigADLType :: Maybe Ident
 }
 
 type CustomTypeMap = Map.Map ScopedName CustomType
@@ -202,20 +213,15 @@ hTypeExprB1 m (RT_Named (sn,d)) = do
         _ -> False
       fullyScopedName = if isLocalName then sn{sn_moduleName=ms_name ms} else sn
 
-  case Map.lookup fullyScopedName (ms_customTypes ms) of
-    (Just ct) -> do
-      -- custom type in an imported module
-      mapM_ importModule (ct_hImports ct)
-      return (ct_hTypeName ct)
-    Nothing -> case isLocalName of
-      True ->
-        -- ADL type defined in this module
-        return (hTypeName (sn_name sn))
-      False -> do
-        -- ADL type defined in an imported module
-        hm <- importADLModule (sn_moduleName sn)
-        return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
-        
+  case isLocalName of
+    True ->
+      -- ADL type defined in this module
+      return (hTypeName (sn_name sn))
+    False -> do
+      -- ADL type defined in an imported module
+      hm <- importADLModule (sn_moduleName sn)
+      return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
+
 hTypeExprB1 m (RT_Param i) = case Map.lookup i m of
     (Just te) -> hTypeExprB m te
     Nothing -> return (hTypeParamName i)
@@ -255,14 +261,31 @@ declareAType gname tvars = do
 
 derivingStdClasses = wl "deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)"
 
-generateDecl :: Decl ResolvedType -> HGen ()
-generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
+generateDecl :: Ident -> Decl ResolvedType -> HGen ()
+
+generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
     enableScopedTypeVariables (s_typeParams s)
-    mn <- fmap ms_name get    
+    mn <- fmap ms_name get
+    generateStructDataType lname mn d s
+    nl
+    generateStructADLInstance lname mn d s
 
-    let lname = hTypeName (d_name d)
-        commas = repeat ","
+generateDecl lname d@(Decl{d_type=(Decl_Union u)}) = do
+    enableScopedTypeVariables (u_typeParams u)
+    mn <- fmap ms_name get
+    generateUnionDataType lname mn d u
+    nl
+    generateUnionADLInstance lname mn d u
 
+generateDecl lname d@(Decl{d_type=(Decl_Typedef t)}) = do
+    ts <- hTypeExpr (t_typeExpr t)
+    wt "type $1$2 = $3" [lname,hTParams (t_typeParams t),ts]
+
+commas :: [T.Text]
+commas = repeat ","
+
+generateStructDataType :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateStructDataType lname mn d s = do
     wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
     indent $ do
         forM_ (zip ("{":commas) (s_fields s)) $ \(fp,f) -> do
@@ -272,7 +295,9 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
                             t ]
         wl "}"
         derivingStdClasses
-    nl
+
+generateStructADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateStructADLInstance lname mn d s = do
     wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (s_typeParams s)
@@ -296,13 +321,9 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
             wt "$1 fieldFromJSON f \"$2\" defaultv hm" [p, (f_name f)]
         wl "aFromJSON _ _ = Prelude.Nothing"
 
-generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
-    enableScopedTypeVariables (u_typeParams u)
-    mn <- fmap ms_name get    
-
-    let lname = hTypeName (d_name d)
-        gname = ScopedName mn (d_name d)
-        prefixes = ["="] ++ repeat "|"
+generateUnionDataType :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
+generateUnionDataType lname mn d u = do
+    let prefixes = ["="] ++ repeat "|"
 
     wt "data $1$2" [lname,hTParams (u_typeParams u)]
     indent $ do
@@ -310,7 +331,9 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
         t <- hTypeExpr (f_type f)
         wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
       derivingStdClasses
-    nl
+
+generateUnionADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
+generateUnionADLInstance lname mn d u = do
     wl $ hInstanceHeader "ADLValue" lname (u_typeParams u)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (u_typeParams u)
@@ -333,12 +356,6 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
                 wt "$1 (\"$2\", \\f v -> $3 <$> aFromJSON f v)" [fp,f_name f,hDiscName (d_name d) (f_name f)]
               wl "]"
           wl "in unionFromJSON f umap o"
-
-generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
-    let lname = hTypeName (d_name d)
-
-    ts <- hTypeExpr (t_typeExpr t)
-    wt "type $1$2 = $3" [lname,hTParams (t_typeParams t),ts]
 
 generateDefaultValue :: TypeExpr ResolvedType -> (Maybe JSON.Value) -> HGen T.Text
 generateDefaultValue _ Nothing = return "defaultv"
@@ -394,7 +411,26 @@ generateLiteral te v =  generateLV Map.empty te v
     generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
       where
         m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
-      
+
+generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> HGen ()
+generateCustomType n d ct = do
+  -- Imports
+  mapM_ importModule (ct_hImports ct)
+
+  -- Insert the user supplied code
+  when (not (null (ct_insertCode ct))) $ do
+    nl
+    mapM_ wl (ct_insertCode ct)
+
+  -- If required, generate the original ADL type under a different
+  -- name.
+  case ct_generateOrigADLType ct of
+    Nothing -> return ()
+    Just i -> do
+      nl
+      generateDecl i d
+
+
 generateModule :: Module ResolvedType -> HGen T.Text
 generateModule m = do
   addLanguageFeature "OverloadedStrings"
@@ -407,14 +443,10 @@ generateModule m = do
   ms <- get
   let mname = ms_name ms
       genDecl (n,d) = do
-          wl ""
+          nl
           case Map.lookup (ScopedName mname n) (ms_customTypes ms) of
-            Nothing -> generateDecl d
-            (Just ct) -> case ct_generateCode ct of
-              False -> wt "-- $1 excluded due to custom definition" [n]
-              True -> do
-                wt "-- $1 overridden by custom definition" [n]
-                generateDecl d{d_name=T.snoc (d_name d) '_'}
+            Nothing -> generateDecl (hTypeName (d_name d)) d
+            (Just ct) -> generateCustomType n d ct
 
   mapM_ genDecl (Map.toList (m_decls m))
   ms <- get

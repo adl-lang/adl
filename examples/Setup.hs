@@ -16,6 +16,7 @@ generateHaskellFromADL pkg lbi = do
 --        , "adl/examples/kvstore3.adl"
         , "adl/examples/pubsub.adl"
         , "adl/examples/pubsub1.adl"
+        , "adl/examples/datetime.adl"
         , "adl/examples/serialisation.adl"
         ]
           

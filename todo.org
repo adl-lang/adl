@@ -28,7 +28,14 @@
     - another toplevel definition to be mapped into each target language
 
 
-Perhaps we need a better typeclass for custom types
+Perhaps:
+
+instance ADLValue UTCTime where
+  atype _ = atype (defaultv :: ADL.UTCTime)
+  defaultv = utcTimeFromADL (defaultv :: ADL.UTCTime)
+  aToJSON jf ut = aToJSON jf (adlFromUtcTime ut)
+  aFromJSON jf jv = fmap utcTimeFromADL (aFromJSON jf jv)
+
 
 ** Protocol versioning
 IDEA: use unions to specify version differences where the

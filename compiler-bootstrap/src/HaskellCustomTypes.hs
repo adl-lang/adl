@@ -11,17 +11,26 @@ import ADL.Compiler.Backends.Haskell
 getCustomTypes :: [FilePath] -> EIO T.Text CustomTypeMap
 getCustomTypes srcdirs = return $ Map.fromList
     [ (ScopedName (ModuleName ["sys","types"]) "maybe",
-       CustomType "Prelude.Maybe" [HaskellModule "ADL.Core.CustomTypes"] False)
+       CustomType "Prelude.Maybe" [HaskellModule "ADL.Core.CustomTypes"]
+       ["type Maybe = Prelude.Maybe" ] Nothing)
     , (ScopedName (ModuleName ["sys","types"]) "either",
-       CustomType "Prelude.Either" [HaskellModule "ADL.Core.CustomTypes"] False)
+       CustomType "Prelude.Either" [HaskellModule "ADL.Core.CustomTypes"]
+       ["type Either = Prelude.Either"] Nothing)
     , (ScopedName (ModuleName ["sys","types"]) "error",
-       CustomType "Error" [HaskellModule "ADL.Core.CustomTypes"] False)
+       CustomType "Error" [HaskellModule "ADL.Core.CustomTypes",
+                           HaskellModule "qualified Data.Text as T"]
+       ["type Error a  = Prelude.Either T.Text a"] Nothing)
     , (ScopedName (ModuleName ["sys","types"]) "pair",
-       CustomType "Pair" [HaskellModule "ADL.Core.CustomTypes"] False)
+       CustomType "Pair" [HaskellModule "ADL.Core.CustomTypes"]
+       ["type Pair a b = (a,b)"] Nothing)
     , (ScopedName (ModuleName ["sys","types"]) "map",
-       CustomType "Map" [HaskellModule "ADL.Core.CustomTypes"] False)
+       CustomType "Map" [HaskellModule "ADL.Core.CustomTypes",
+                         HaskellModule "qualified Data.Map as Map"]
+       ["type Map k v = Map.Map k v" ] Nothing)
     , (ScopedName (ModuleName ["sys","types"]) "set",
-       CustomType "Set" [HaskellModule "ADL.Core.CustomTypes"] False)
+       CustomType "Set" [HaskellModule "ADL.Core.CustomTypes",
+                         HaskellModule "qualified Data.Set as Set"]
+       ["type Set v = Set.Set v"] Nothing)
     ]
     
     
