@@ -6,11 +6,26 @@
             "haskellimports" : [
                 "Data.Time.Calendar(Day)",
                 "Data.Time.Format(parseTime,formatTime)",
-                "System.Locale(defaultTimeLocale)"
+                "System.Locale(defaultTimeLocale)",
+                "Prelude(Maybe(..),(>>=))",
+                "qualified Data.Text as T"
                 ],
             "insertCode" : [
-                "type Date = Day"
-            ]
+                "type Date = Day",
+                "",
+                "toDay :: Date0 -> Maybe Day",
+                "toDay (Date0 s) = parseTime defaultTimeLocale \"%FT%XZ\" (T.unpack s)",
+                "",
+                "fromDay :: Day -> Date0",
+                "fromDay d = Date0 (T.pack (formatTime defaultTimeLocale \"%FT%XZ\" d))",
+                "",
+                "instance ADLValue Day where",
+                "  atype _ = atype (defaultv :: Date0)",
+                "  defaultv = let (Just d) = toDay defaultv in d",
+                "  aToJSON jf d = aToJSON jf (fromDay d)",
+                "  aFromJSON jf jv = (aFromJSON jf jv) >>= toDay"
+            ],
+            "generateOrigADLType" : { "just" : "Date0" }
         },
         {
             "adlname" : "examples.datetime.UTCTime",
