@@ -45,7 +45,7 @@ import ADL.Utils.Format
 import ADL.Core.Value
 import ADL.Core.Sink
 
-import qualified ADL.Core.Comms.Types.Internals as CT
+import qualified ADL.Core.Comms.Types as CT
 import qualified ADL.Core.Comms.Internals as CT
 
 data Transport = Transport {

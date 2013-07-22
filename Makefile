@@ -65,6 +65,7 @@ docs:
 clean: 
 	-rm -f .make/built-*
 	-cabal-dev ghc-pkg unregister adl-compiler-lib
+	-cabal-dev ghc-pkg unregister adl-comms-http
 	-cabal-dev ghc-pkg unregister adl-runtime
 	-cabal-dev ghc-pkg unregister adl-utils
 

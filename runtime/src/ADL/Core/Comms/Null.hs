@@ -8,7 +8,7 @@ import qualified Data.Text as T
 import qualified System.Log.Logger as L
 
 import ADL.Core.Value
-import ADL.Core.Comms.Types.Internals
+import ADL.Core.Comms.Types
 
 transportName :: T.Text
 transportName = "null"

@@ -10,7 +10,7 @@ import qualified Data.Vector as V
 import ADL.Utils.Resource
 import ADL.Core.Value
 import ADL.Core.Sink
-import ADL.Core.Comms.Types.Internals
+import ADL.Core.Comms.Types
 import qualified ADL.Core.Comms.Null as Null
 
 data Context = Context (TVar (Map.Map TransportName Transport))
