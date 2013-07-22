@@ -1,0 +1,22 @@
+module examples.datetime
+{
+
+// For types in this module we will use a custom type definition so
+// that this get compiled to an appropriate type in the generated code
+
+// A date in ISO format (ie YYYY-MM-DD )
+//
+struct Date
+{
+    string date = "1900-01-01";
+};
+
+// A UTC timestamp in ISO format (ie YYYY-MM-DDTHH:MM:SSZ )
+//
+struct UTCTime
+{
+    string utctime = "1900-01-01T00:00:00Z";
+};
+
+
+};
