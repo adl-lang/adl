@@ -1,0 +1,10 @@
+*~
+.make/
+cabal-dev/
+compiler-bootstrap/dist/
+compiler-lib/dist/
+compiler/dist/
+examples/dist/
+ext/
+runtime/dist/
+utils/dist/
