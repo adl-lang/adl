@@ -16,4 +16,5 @@ executable runexample
    ghc-options:         -threaded
    build-depends:       base, text, containers, bytestring,
                         parsec, mtl, transformers, old-locale,
-                        aeson, unordered-containers, adl-utils, adl-runtime, stm, hslogger, time
+                        aeson, unordered-containers, stm, hslogger, time,
+                        adl-utils, adl-runtime, adl-comms-http

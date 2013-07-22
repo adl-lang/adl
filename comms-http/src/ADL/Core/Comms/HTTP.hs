@@ -1,15 +1,14 @@
-{-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
-module ADL.Core.Comms.HTTP.Internals(
-  Context,
-  newContext,
-  connect,
-  newEndPoint,
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
+
+module ADL.Core.Comms.HTTP
+  ( Transport(..)
+  , newTransport
   ) where
 
 import Prelude hiding (catch)
-
 import Network(Socket,sClose)
 import Network.BSD(getHostName,HostName)
+import Control.Applicative
 import Control.Exception
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -25,8 +24,7 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Encode as JSON
-import qualified Data.Vector as V
-
+import Data.Aeson(ToJSON,FromJSON, (.:), (.=) )
 
 import Network.Wai
 import Network.HTTP.Types
@@ -46,32 +44,50 @@ import ADL.Utils.Resource
 import ADL.Utils.Format
 import ADL.Core.Value
 import ADL.Core.Sink
-import ADL.Core.Comms.Types.Internals
 
-data Context = Context {
-  c_manager :: HC.Manager
-}  
+import qualified ADL.Core.Comms.Types.Internals as CT
+import qualified ADL.Core.Comms.Internals as CT
 
-newContext :: IO Context
-newContext = do
-  m <- HC.newManager HC.def
-  return (Context m)
+data Transport = Transport {
+  transport :: CT.Transport,
+  newEndPoint :: Either Int (Int,Int) -> IO CT.EndPoint
+  }
 
-instance Resource Context where
-  release (Context m) = HC.closeManager m
+data Addr = Addr {
+  httpHost :: String,
+  httpPort :: Int,
+  httpPath :: T.Text
+}
 
-data EndPointData = EndPointData {
-  ep_context :: Context,
-  ep_hostname :: HostName,
-  ep_port :: Int,
-  ep_reader :: ThreadId,
-  ep_sinks :: TVar (Map.Map T.Text (JSON.Value -> IO ()))
-}  
+instance ToJSON Addr where
+   toJSON (Addr host port path) = JSON.object ["host" .= host, "port" .= port, "path" .= path]
+
+instance FromJSON Addr where
+   parseJSON (JSON.Object v) = Addr <$> v .: "host" <*> v .: "port" <*> v .: "path"
+
+transportName :: TransportName
+transportName = "http"
+
+newTransport :: CT.Context -> IO Transport
+newTransport c = do
+  manager <- HC.newManager HC.def
+  hc <- return Transport
+    { transport = CT.Transport
+      { CT.t_name = transportName
+      , CT.t_connect = connect1 manager
+      , CT.t_close = HC.closeManager manager
+      }
+    , newEndPoint = newEndPoint1
+    }
+  CT.addTransport c (transport hc)
+  return hc
+
+----------------------------------------------------------------------
 
 type SinksV = TVar (Map.Map T.Text (JSON.Value -> IO ()))
 
-newEndPoint :: Context -> Either Int (Int,Int) -> IO EndPoint
-newEndPoint ctx eport = do
+newEndPoint1 :: Either Int (Int,Int) -> IO CT.EndPoint
+newEndPoint1 eport = do
   hostname <- getHostName
   (port,socket) <- bindNewSocket eport
   debugM "New endpoint at http://$1:$2" [T.pack hostname, fshow port]
@@ -86,7 +102,7 @@ newEndPoint ctx eport = do
   warptid <- forkIO $ runWarp socket sinksv nextactionv
   forkIO (runner nextactionv)
 
-  return (EndPoint (newSink hostname port sinksv)
+  return (CT.EndPoint (newSink hostname port sinksv)
           (closef hostname port warptid nextactionv))
   where
     -- Attempt to bind either the given socket, or any in the specified range
@@ -125,7 +141,7 @@ newEndPoint ctx eport = do
           sinks <- liftIO $ atomically $ readTVar sinksv
           case Map.lookup sid sinks of
             Nothing -> errResponse notFound404 ("No handler for sink with SID " ++ show sid)
-            (Just actionf) -> case parseMessage body of
+            (Just actionf) -> case CT.parseMessage body of
               (Left emsg) -> errResponse badRequest400 ("Invalid JSON " ++ emsg)
               (Right v) -> do
                 liftIO $ debugM "Receive /$1, message: $2" [sid, formatText body]
@@ -152,7 +168,7 @@ newEndPoint ctx eport = do
         liftIO $ L.errorM httpLogger ("Request error: " ++ s)
         return (responseLBS status [] "")
 
-    newSink :: forall a . (ADLValue a) => HostName -> Int -> SinksV -> Maybe T.Text -> (a -> IO ()) -> IO (LocalSink a)
+    newSink :: forall a . (ADLValue a) => HostName -> Int -> SinksV -> Maybe T.Text -> (a -> IO ()) -> IO (CT.LocalSink a)
     newSink hostname port sinksv msid handler = do
       sid <- case msid of
         (Just sid) -> return sid
@@ -161,9 +177,9 @@ newEndPoint ctx eport = do
       debugM "New sink at http://$1:$2/$3" [T.pack hostname, fshow port,sid]
 
       let at = atype (defaultv :: a)
-          sink = HTTPSink hostname port sid
+          sink = Sink transportName (JSON.toJSON (Addr hostname port sid))
       atomically $ modifyTVar sinksv (Map.insert sid (action at))
-      return (LocalSink sink (closef sid))
+      return (CT.LocalSink sink (closef sid))
       where
         action at v = case (aFromJSON fjf v) of
           Nothing -> L.errorM "Sink.action" 
@@ -183,46 +199,32 @@ newEndPoint ctx eport = do
 
 
 -- | Create a new connection to a remote sink
-connect :: forall a . (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)
-connect ctx (HTTPSink{hs_hostname=host,hs_port=port,hs_sid=sid}) = do
-  return (SinkConnection send close)
+connect1 ::  HC.Manager -> TransportAddr -> IO CT.Connection
+connect1 manager addr = do
+  case JSON.fromJSON addr of
+    (JSON.Error e) -> error "Unable to parse HTTP Address" -- FIXME
+    (JSON.Success addr) -> return (CT.Connection (send addr) close)
   where
-    send :: (ADLValue a) => a -> IO ()
-    send a = do
-      let tjf = JSONFlags True
-          v = aToJSON tjf a
-          lbs = packMessage v
-          req = req0{HC.requestBody=HC.RequestBodyLBS lbs}
-      debugM "POST to http://$1:$2/$3: $4" [T.pack host, fshow port, sid, formatText lbs]
-      resp <- runResourceT $ HC.httpLbs req (c_manager ctx)
+    send :: Addr -> LBS.ByteString -> IO ()
+    send addr = \lbs -> do
+      let req = req0{HC.requestBody=HC.RequestBodyLBS lbs}
+      debugM "POST to http://$1:$2/$3: $4" [T.pack host, fshow port, path, formatText lbs]
+      resp <- runResourceT $ HC.httpLbs req manager
       return ()
-
-    req0 = HC.def {
-      HC.host = BSC8.pack host,
-      HC.port = port,
-      HC.path = T.encodeUtf8 sid,
-      HC.method = "POST"
-      }
+      where
+        host = httpHost addr
+        port = httpPort addr
+        path = httpPath addr
+        
+        req0 = HC.def {
+          HC.host = BSC8.pack host,
+          HC.port = port,
+          HC.path = T.encodeUtf8 path,
+          HC.method = "POST"
+          }
 
     close :: IO ()
     close = return ()
-
--- Messages needs to be packed in a single element JSON array
--- so that we can carrt arbtrary JSON values.
-    
-packMessage :: JSON.Value -> LBS.ByteString
-packMessage j = JSON.encode $ JSON.Array $ V.fromList [j]
-
-parseMessage :: LBS.ByteString -> Either String JSON.Value
-parseMessage lbs = do
-  v <- JSON.eitherDecode' lbs
-  case v of
-    (JSON.Array v) -> case V.toList v of
-      [v] -> Right v
-      _ -> Left emsg
-    _ -> Left emsg
-  where
-    emsg = "Top level JSON object must be a single element vector"
 
 httpLogger = "HTTP"
 

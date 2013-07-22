@@ -3,6 +3,7 @@
 cabal-dev/
 compiler-bootstrap/dist/
 compiler-lib/dist/
+comms-http/dist/
 compiler/dist/
 examples/dist/
 ext/

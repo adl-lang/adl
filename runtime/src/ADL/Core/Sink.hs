@@ -1,73 +1,59 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Core.Sink(
   Sink(..),
-  sinkToText,
-  sinkFromText
+  TransportName,
+  TransportAddr
   ) where
 
+import Data.Monoid
 import Control.Applicative
 
 import qualified Data.UUID as UUID
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
 import qualified Data.Attoparsec.Text as A
+import qualified Data.HashMap.Strict as HM
 
 import ADL.Core.Value
+import ADL.Core.Primitives
 
 -- | `Sink a` is a reference to a sink to which messages of type `a`
 -- may be sent. Such a reference is an ADLValue and hence may be
 -- serialised between processes.
-data Sink a = NullSink
-            | ZMQSink { zmqs_hostname :: String,
-                        zmqs_port :: Int,
-                        zmqs_sid :: T.Text }
-            | HTTPSink { hs_hostname :: String,
-                         hs_port :: Int,
-                         hs_sid :: T.Text }
-  deriving (Ord,Eq,Show)
+
+type TransportName = T.Text
+type TransportAddr = JSON.Value
+
+data Sink a = Sink {
+  s_transport :: TransportName,
+  s_addr :: TransportAddr
+  }
+  deriving (Eq,Show)
+
+instance Ord (Sink a) where
+  compare s1 s2 = compare (s_transport s1) (s_transport s2) `mappend`
+                  -- FIXME write an ord instance for JSON.Value
+                  compare (JSON.encode (s_addr s1)) (JSON.encode (s_addr s2))
 
 instance forall a . (ADLValue a) => ADLValue (Sink a) where
   atype _ = T.concat ["sink<",atype (defaultv::a),">"]
 
-  defaultv = NullSink
+  defaultv = Sink "null" ""
 
-  aToJSON flags s = JSON.String (sinkToText s)
+  aToJSON _ s = toJSONObject jf (atype s) (
+    [ ("transport", aToJSON jf (s_transport s)),
+      ("addr", s_addr s),
+      ("type", aToJSON jf (atype s))
+      ] )
+                
+  aFromJSON _ (JSON.Object hm) = do
+    transport <- fieldFromJSON jf "transport" defaultv hm
+    addr <- HM.lookup "addr" hm 
+    at <- fieldFromJSON jf "type" defaultv hm
+    if at == atype (defaultv :: Sink a)
+      then Just (Sink transport addr)
+      else Nothing
 
-  aFromJSON flags (JSON.String s) = sinkFromText s
-  aFromJSON flags _ = Nothing
-
-sinkToText :: forall a . (ADLValue a) => Sink a -> T.Text
-sinkToText NullSink = "null"
-sinkToText (zmqs@ZMQSink{}) = T.concat
-  [ "zmq"
-  , ":", T.pack (zmqs_hostname zmqs)
-  , ":", T.pack (show (zmqs_port zmqs))  
-  , ":", zmqs_sid zmqs
-  , ":", atype (defaultv:: a)
-  ]  
-sinkToText (hs@HTTPSink{}) = T.concat
-  [ "http"
-  , ":", T.pack (hs_hostname hs)
-  , ":", T.pack (show (hs_port hs))  
-  , ":", hs_sid hs
-  , ":", atype (defaultv:: a)
-  ]  
-
-sinkFromText :: (ADLValue a) => T.Text -> Maybe (Sink a)
-sinkFromText t = case A.parseOnly sinkP t of
-  (Left _) -> Nothing
-  (Right s) -> return s
-
-sinkP :: forall a . (ADLValue a) => A.Parser (Sink a)
-sinkP =   A.string "null" *> (pure NullSink)
-          <|> A.string "zmq"  *> (ZMQSink <$> (T.unpack <$> cl field) <*> cl A.decimal <*> cl field) <* cl atype1
-          <|> A.string "http"  *> (HTTPSink <$> (T.unpack <$> cl field) <*> cl A.decimal <*> cl field) <* cl atype1
-  where
-    atype1 = A.string (atype (defaultv::a))
-
-    cl p = A.char ':' *> p
-
-    field :: A.Parser T.Text
-    field = A.takeWhile (/=':')
+jf = JSONFlags False
 
 

@@ -15,7 +15,7 @@ import qualified System.Log.Logger as L
 
 import ADL.Utils.Resource
 import ADL.Core.Comms
-import qualified ADL.Core.Comms.HTTP as EP
+import qualified ADL.Core.Comms.HTTP as HTTP
 import ADL.Core.Comms.Rpc(oneShotSinkWithTimeout)
 import ADL.Core.Value
 import ADL.Core.Sink
@@ -25,7 +25,8 @@ import Utils
 
 echoServer rfile = do
   withResource ADL.Core.Comms.newContext $ \ctx -> do
-    withResource (EP.newEndPoint ctx (Left 2000)) $ \ep -> do
+    http <- HTTP.newTransport ctx
+    withResource (HTTP.newEndPoint http (Left 2000)) $ \ep -> do
       ls <- newLocalSink ep (Just "echoserver") (processRequest ctx)
       aToJSONFile defaultJSONFlags rfile (toSink ls)
       putStrLn ("Wrote echo server reference to " ++ show rfile)
@@ -38,7 +39,8 @@ echoServer rfile = do
 
 echoClient rfile = do
   withResource ADL.Core.Comms.newContext $ \ctx -> do
-    withResource (EP.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
+    http <- HTTP.newTransport ctx
+    withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
       s <- aFromJSONFile' defaultJSONFlags rfile 
       withResource (connect ctx s) $ \sc -> do 
         (sink, getValue) <- oneShotSinkWithTimeout ep (seconds 20)

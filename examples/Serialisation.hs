@@ -9,7 +9,7 @@ import qualified Data.Text as T
 
 import qualified ADL.Core.Comms as AC
 import qualified ADL.Core.Comms.Rpc as AC
-import qualified ADL.Core.Comms.HTTP as AC
+import qualified ADL.Core.Comms.HTTP as HTTP
 
 import ADL.Sys.Rpc
 import ADL.Examples.Serialisation
@@ -18,11 +18,12 @@ import Utils
 
 server rfile = do
     withResource AC.newContext $ \ctx -> do
-    withResource (AC.newEndPoint ctx (Left 2001)) $ \ep -> do
-      ls <- AC.newLocalSink ep (Just "serialisation-test-server") (processRequest ctx)
-      aToJSONFile defaultJSONFlags rfile (AC.toSink ls)
-      putStrLn ("Wrote server reference to " ++ show rfile)
-      threadWait
+      http <- HTTP.newTransport ctx
+      withResource (HTTP.newEndPoint http (Left 2001)) $ \ep -> do
+        ls <- AC.newLocalSink ep (Just "serialisation-test-server") (processRequest ctx)
+        aToJSONFile defaultJSONFlags rfile (AC.toSink ls)
+        putStrLn ("Wrote server reference to " ++ show rfile)
+        threadWait
 
 returnToCaller :: (ADLValue a) => AC.Context -> Roundtrip a -> IO ()
 returnToCaller ctx rt = do
@@ -53,7 +54,8 @@ processRequest ctx (Request_req_s2 rt) = returnToCaller ctx rt
 
 client rfile = do
   withResource AC.newContext $ \ctx -> do
-    withResource (AC.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
+    http <- HTTP.newTransport ctx
+    withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
       s <- aFromJSONFile' defaultJSONFlags rfile 
       withResource (AC.connect ctx s) $ \sc -> do
 

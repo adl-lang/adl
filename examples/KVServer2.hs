@@ -14,7 +14,7 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
 import ADL.Core.Comms.Rpc
-import qualified ADL.Core.Comms.ZMQ as ZMQ
+import qualified ADL.Core.Comms.HTTP as HTTP
 
 import ADL.Examples.Kvstore2
 
@@ -29,7 +29,8 @@ kvServer rfile ufile = do
     mapv <- atomically $ newTVar Map.empty
 
     withResource ADL.Core.Comms.newContext $ \ctx -> do
-    withResource (ZMQ.newEndPoint ctx (Left 2001)) $ \ep -> do
+    http <- HTTP.newTransport ctx
+    withResource (HTTP.newEndPoint http (Left 2001)) $ \ep -> do
 
       -- Create an actor for readonly kv requests
       readOnly <- newLocalSink ep Nothing (processRequest False mapv ctx)

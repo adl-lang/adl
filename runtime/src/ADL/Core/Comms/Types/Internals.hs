@@ -2,6 +2,7 @@
 module ADL.Core.Comms.Types.Internals where
 
 import qualified Data.Text as T
+import qualified Data.ByteString.Lazy as LBS
 
 import ADL.Utils.Resource
 
@@ -11,6 +12,23 @@ import ADL.Core.Value
 ----------------------------------------------------------------------
 
 type MkSink = forall a . (ADLValue a) => Maybe T.Text -> (a -> IO ()) -> IO (LocalSink a)
+
+data Transport = Transport {
+  t_name :: TransportName,
+  t_connect :: TransportAddr -> IO Connection,
+  t_close :: IO ()
+  }
+  
+instance Resource Transport where
+  release = t_close
+
+data Connection = Connection {
+  c_send :: LBS.ByteString -> IO (),
+  c_close :: IO ()
+  }  
+
+instance Resource Connection where
+  release = c_close
 
 -- | A connection to a sink
 data SinkConnection a = SinkConnection {

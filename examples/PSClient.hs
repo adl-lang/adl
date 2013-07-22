@@ -15,7 +15,7 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
 import ADL.Core.Comms.Rpc
-import qualified ADL.Core.Comms.ZMQ as ZMQ
+import qualified ADL.Core.Comms.HTTP as HTTP
 
 import ADL.Examples.Pubsub
 import ADL.Examples.Pubsub1
@@ -27,7 +27,8 @@ withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
 
   withResource ADL.Core.Comms.newContext $ \ctx -> do
-    withResource (ZMQ.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
+    http <- HTTP.newTransport ctx
+    withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
       withResource (connect ctx s) $ \sc -> do
         f sc ep
 

@@ -11,7 +11,7 @@ import qualified System.Log.Logger as L
 
 import qualified ADL.Core.Comms as AC
 import qualified ADL.Core.Comms.Rpc as AC
-import qualified ADL.Core.Comms.HTTP as AC
+import qualified ADL.Core.Comms.HTTP as HTTP
 
 import ADL.Utils.Resource
 import ADL.Core.Value
@@ -25,7 +25,8 @@ type MapV = TVar (Map.Map T.Text T.Text)
 
 kvServer rfile = do
     withResource AC.newContext $ \ctx -> do
-    withResource (AC.newEndPoint ctx (Left 2001)) $ \ep -> do
+    http <- HTTP.newTransport ctx
+    withResource (HTTP.newEndPoint http (Left 2001)) $ \ep -> do
       mapv <- atomically $ newTVar Map.empty
       ls <- AC.newLocalSink ep (Just "kvstore") (processRequest mapv ctx)
       aToJSONFile defaultJSONFlags rfile (AC.toSink ls)

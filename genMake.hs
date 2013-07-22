@@ -34,4 +34,5 @@ main = do
   generate "COMPILER-BOOTSTRAP-SRC" "compiler-bootstrap"
   generate "RUNTIME-SRC" "runtime"
   generate "COMPILER-SRC" "compiler"
+  generate "COMMS-HTTP-SRC" "comms-http"
   generate "EXAMPLE-SRC" "examples"

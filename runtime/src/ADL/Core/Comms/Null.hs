@@ -1,5 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
 module ADL.Core.Comms.Null(
-  connect    
+  transportName,
+  transport
   ) where
 
 import qualified Data.Text as T
@@ -8,10 +10,19 @@ import qualified System.Log.Logger as L
 import ADL.Core.Value
 import ADL.Core.Comms.Types.Internals
 
-connect :: (ADLValue a) => IO (SinkConnection a)
-connect = return (SinkConnection nullSend nullClose)
-  where
-    nullSend a = L.debugM logger ("Dropped message to null sink of type " ++ T.unpack (atype a))
-    nullClose  = return ()
+transportName :: T.Text
+transportName = "null"
 
-    logger = "NullSink"
+transport :: Transport
+transport = Transport
+  { t_name = transportName
+  , t_connect = \addr -> return (connection)
+  , t_close = return ()
+  }
+
+connection = Connection
+  { c_send = \t -> L.debugM logger "Dropped message to null sink"
+  , c_close = return ()             
+  }
+
+logger = "NullSink"             

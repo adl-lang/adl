@@ -19,6 +19,7 @@ utils : .make/built-utils
 compiler-lib: .make/built-compiler-lib
 compiler-bootstrap: .make/built-compiler-bootstrap
 runtime: .make/built-runtime
+comms-http: .make/comms-http
 compiler: .make/built-compiler
 examples: .make/built-examples
 
@@ -38,15 +39,19 @@ examples: .make/built-examples
 	touch .make/built-compiler-bootstrap
 
 .make/built-runtime: $(RUNTIME-SRC) .make/built-utils .make/built-compiler-bootstrap
-	(cd runtime && cabal-dev -s ../cabal-dev install)
+	(cd runtime && cabal-dev -s ../cabal-dev install  --force-reinstalls)
 	touch .make/built-runtime
+
+.make/comms-http: $(COMMS-HTTP-SRC) .make/built-runtime
+	(cd comms-http && cabal-dev -s ../cabal-dev install)
+	touch .make/comms-http
 
 .make/built-compiler: $(COMPILER-SRC) .make/built-utils .make/built-runtime
 	(cd compiler && cabal-dev -s ../cabal-dev install)
 	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 	touch .make/built-compiler
 
-.make/built-examples: $(EXAMPLES-SRC) .make/built-utils .make/built-runtime .make/built-compiler
+.make/built-examples: $(EXAMPLES-SRC) .make/built-utils .make/built-runtime .make/built-compiler .make/comms-http
 	(cd examples && cabal-dev -s ../cabal-dev install)
 	touch .make/built-examples
 

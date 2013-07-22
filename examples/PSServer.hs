@@ -16,7 +16,7 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
 import ADL.Core.Comms.Rpc
-import qualified ADL.Core.Comms.ZMQ as ZMQ
+import qualified ADL.Core.Comms.HTTP as HTTP
 
 import ADL.Examples.Pubsub
 import ADL.Examples.Pubsub1
@@ -40,7 +40,8 @@ instance Resource State where
 
 psServer rfile = do
     withResource ADL.Core.Comms.newContext $ \ctx -> do
-    withResource (ZMQ.newEndPoint ctx (Left 2001)) $ \ep -> do
+    http <- HTTP.newTransport ctx
+    withResource (HTTP.newEndPoint http (Left 2001)) $ \ep -> do
     withResource (newState ctx)$ \state -> do
       ls <- newLocalSink ep (Just "pubsub") (processRequest ep state ctx)
       aToJSONFile defaultJSONFlags rfile (toSink ls)

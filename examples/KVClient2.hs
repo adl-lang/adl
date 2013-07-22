@@ -14,7 +14,7 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms
 import ADL.Core.Comms.Rpc
-import qualified ADL.Core.Comms.ZMQ as ZMQ
+import qualified ADL.Core.Comms.HTTP as HTTP
 
 import ADL.Examples.Kvstore2
 
@@ -24,7 +24,8 @@ withConnection :: FilePath -> Credentials -> ((SinkConnection KVRequest) -> EndP
 withConnection rfile cred f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
   withResource ADL.Core.Comms.newContext $ \ctx -> do
-    withResource (ZMQ.newEndPoint ctx (Right (2100,2200))) $ \ep -> do
+    http <- HTTP.newTransport ctx
+    withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
 
       -- Connect and to the authenticator and get a reference to the kvservice
       withResource (connect ctx s) $ \sc -> do
