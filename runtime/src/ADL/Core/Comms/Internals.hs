@@ -34,7 +34,7 @@ connect :: (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)
 connect (Context mv) s = do
   m <- atomically $ readTVar mv
   case Map.lookup (s_transport s) m of
-    Nothing -> error ("(No transport for " ++ T.unpack (s_transport s))
+    Nothing -> error ("(No transport for " ++ T.unpack (s_transport s)) -- FIXME
     (Just t) -> do
       c <- t_connect t (s_addr s)
       return (mkSinkConnection c)
