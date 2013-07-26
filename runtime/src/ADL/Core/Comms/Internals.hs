@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types, ScopedTypeVariables #-}
 module ADL.Core.Comms.Internals where
 
 import Control.Concurrent.STM
@@ -12,6 +13,8 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms.Types
 import qualified ADL.Core.Comms.Null as Null
+
+import qualified System.Log.Logger as L
 
 data Context = Context (TVar (Map.Map TransportName Transport))
 
@@ -44,6 +47,22 @@ mkSinkConnection c = SinkConnection
   { sc_send = \ a -> c_send c (packMessage (aToJSON defaultJSONFlags a))
   , sc_close = c_close c
   }
+
+newLocalSink :: forall a . (ADLValue a) => EndPoint -> Maybe SinkID -> (a -> IO ()) -> IO (LocalSink a)
+newLocalSink ep msid handler =  do
+     ls0 <- ep_newRawSink ep msid rawHandler
+     let sink0 = ls_sink ls0
+         sink = Sink (s_transport sink0) (s_addr sink0)
+     return (LocalSink sink (ls_close ls0))
+  where
+    rawHandler :: LBS.ByteString -> IO ()
+    rawHandler lbs = case parseMessage lbs of
+      (Left emsg) -> L.errorM logger ("Can't parse Bytestring to JSON: " ++ emsg)
+      (Right v) -> case (aFromJSON defaultJSONFlags v) of
+        Nothing -> L.errorM logger ("Can't parse JSON to type " ++ T.unpack (atype (defaultv::a)))
+        (Just a) -> handler a
+
+logger = "ADL.Core.Comms.Internals"
 
 -- Messages needs to be packed in a single element JSON array
 -- so that we can carrt arbtrary JSON values.

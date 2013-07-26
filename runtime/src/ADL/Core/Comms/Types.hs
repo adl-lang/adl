@@ -1,13 +1,13 @@
-{-# LANGUAGE Rank2Types #-}
 module ADL.Core.Comms.Types(
   Transport(..),
   Connection(..),
+  SinkID,
+  EndPoint(..),
+
   SinkConnection(..),
   send,
   LocalSink(..),
-  toSink,
-  EndPoint(..),
-  newLocalSink
+  toSink
   ) where
 
 import qualified Data.Text as T
@@ -19,8 +19,7 @@ import ADL.Core.Sink
 import ADL.Core.Value
 
 ----------------------------------------------------------------------
-
-type MkSink = forall a . (ADLValue a) => Maybe T.Text -> (a -> IO ()) -> IO (LocalSink a)
+-- Transport related types
 
 data Transport = Transport {
   t_name :: TransportName,
@@ -38,6 +37,18 @@ data Connection = Connection {
 
 instance Resource Connection where
   release = c_close
+
+type SinkID = T.Text
+
+data EndPoint = EndPoint {
+  ep_newRawSink :: Maybe SinkID -> (LBS.ByteString -> IO ()) -> IO (LocalSink ()),
+  ep_close :: IO ()
+}  
+
+instance Resource EndPoint where
+  release = ep_close
+
+----------------------------------------------------------------------
 
 -- | A connection to a sink
 data SinkConnection a = SinkConnection {
@@ -67,13 +78,3 @@ send sc a = sc_send sc a
 toSink :: LocalSink a -> Sink a
 toSink = ls_sink
 
-data EndPoint = EndPoint {
-  ep_newSink :: MkSink,
-  ep_close :: IO ()
-}  
-
-instance Resource EndPoint where
-  release = ep_close
-
-newLocalSink :: EndPoint -> MkSink
-newLocalSink = ep_newSink

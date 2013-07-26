@@ -84,7 +84,7 @@ newTransport c = do
 
 ----------------------------------------------------------------------
 
-type SinksV = TVar (Map.Map T.Text (JSON.Value -> IO ()))
+type SinksV = TVar (Map.Map T.Text (LBS.ByteString -> IO ()))
 
 newEndPoint1 :: Either Int (Int,Int) -> IO CT.EndPoint
 newEndPoint1 eport = do
@@ -141,11 +141,8 @@ newEndPoint1 eport = do
           sinks <- liftIO $ atomically $ readTVar sinksv
           case Map.lookup sid sinks of
             Nothing -> errResponse notFound404 ("No handler for sink with SID " ++ show sid)
-            (Just actionf) -> case CT.parseMessage body of
-              (Left emsg) -> errResponse badRequest400 ("Invalid JSON " ++ emsg)
-              (Right v) -> do
-                liftIO $ debugM "Receive /$1, message: $2" [sid, formatText body]
-                liftIO $ atomically $ putTMVar nextactionv (Just (actionf v))
+            (Just actionf) -> do
+                liftIO $ atomically $ putTMVar nextactionv (Just (actionf body))
                 return (responseLBS ok200 [] "")
 
     runner :: TMVar (Maybe (IO ())) -> IO ()
@@ -168,7 +165,7 @@ newEndPoint1 eport = do
         liftIO $ L.errorM httpLogger ("Request error: " ++ s)
         return (responseLBS status [] "")
 
-    newSink :: forall a . (ADLValue a) => HostName -> Int -> SinksV -> Maybe T.Text -> (a -> IO ()) -> IO (CT.LocalSink a)
+    newSink :: forall a . (ADLValue a) => HostName -> Int -> SinksV -> Maybe T.Text -> (LBS.ByteString -> IO ()) -> IO (CT.LocalSink a)
     newSink hostname port sinksv msid handler = do
       sid <- case msid of
         (Just sid) -> return sid
@@ -178,16 +175,9 @@ newEndPoint1 eport = do
 
       let at = atype (defaultv :: a)
           sink = Sink transportName (JSON.toJSON (Addr hostname port sid))
-      atomically $ modifyTVar sinksv (Map.insert sid (action at))
+      atomically $ modifyTVar sinksv (Map.insert sid handler)
       return (CT.LocalSink sink (closef sid))
       where
-        action at v = case (aFromJSON fjf v) of
-          Nothing -> L.errorM "Sink.action" 
-            ("Request discarded: unable to parse value of type " ++ T.unpack at)
-          (Just a) -> handler a
-
-        fjf = JSONFlags True
-
         closef sid = do
           atomically $ modifyTVar sinksv (Map.delete sid)
           debugM "Closed sink at $1:$2/$3" [T.pack hostname, fshow port, sid]
