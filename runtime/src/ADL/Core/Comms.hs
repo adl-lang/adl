@@ -8,7 +8,9 @@ module ADL.Core.Comms(
   LocalSink,
   toSink,
   EndPoint,
-  newLocalSink
+  newLocalSink,
+  ConnectError, ConnectErrorCode(..),
+  SendError, SendErrorCode(..),
   ) where
 
 import ADL.Core.Comms.Types

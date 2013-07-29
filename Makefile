@@ -51,7 +51,7 @@ examples: .make/built-examples
 	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 	touch .make/built-compiler
 
-.make/built-examples: $(EXAMPLES-SRC) .make/built-utils .make/built-runtime .make/built-compiler .make/comms-http
+.make/built-examples: $(EXAMPLE-SRC) .make/built-utils .make/built-runtime .make/built-compiler .make/comms-http
 	(cd examples && cabal-dev -s ../cabal-dev install)
 	touch .make/built-examples
 

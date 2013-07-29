@@ -19,10 +19,11 @@ data JSONFlags = JSONFlags
   { jf_typeNames :: Bool
   }
 
+defaultJSONFlags :: JSONFlags
 defaultJSONFlags = JSONFlags True
 
 toJSONObject :: JSONFlags -> T.Text -> [ (T.Text,JSON.Value) ] -> JSON.Value
-toJSONObject flags name fields = JSON.Object $ HM.fromList fields
+toJSONObject _ _ fields = JSON.Object $ HM.fromList fields
 
 fieldFromJSON :: (ADLValue a) => JSONFlags -> T.Text -> a -> HM.HashMap T.Text JSON.Value -> Maybe a
 fieldFromJSON f nme defv hm = case HM.lookup nme hm of
@@ -51,7 +52,7 @@ aFromJSONFile :: (ADLValue a) => JSONFlags -> FilePath -> IO (Maybe a)
 aFromJSONFile jf file = do
   lbs <- LBS.readFile file
   case JSON.eitherDecode' lbs of
-    (Left e) -> return Nothing
+    (Left _) -> return Nothing
     (Right jv) -> return (aFromJSON jf (unwrapToplevel (jv)))
 
 -- Read and parse an ADL value from a JSON file, throwing an exception
@@ -73,7 +74,7 @@ wrapToplevel v = JSON.Object $ HM.fromList [("__toplevel",v)]
 unwrapToplevel :: JSON.Value -> JSON.Value
 unwrapToplevel v@(JSON.Object hm) = case HM.lookup "__toplevel" hm of
   Nothing -> v
-  (Just v) -> v
+  (Just v1) -> v1
 unwrapToplevel v = v
   
 

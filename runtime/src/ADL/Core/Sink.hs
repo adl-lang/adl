@@ -6,16 +6,13 @@ module ADL.Core.Sink(
   ) where
 
 import Data.Monoid
-import Control.Applicative
 
-import qualified Data.UUID as UUID
 import qualified Data.Aeson as JSON
 import qualified Data.Text as T
-import qualified Data.Attoparsec.Text as A
 import qualified Data.HashMap.Strict as HM
 
 import ADL.Core.Value
-import ADL.Core.Primitives
+import ADL.Core.Primitives()
 
 -- | `Sink a` is a reference to a sink to which messages of type `a`
 -- may be sent. Such a reference is an ADLValue and hence may be
@@ -48,12 +45,13 @@ instance forall a . (ADLValue a) => ADLValue (Sink a) where
                 
   aFromJSON _ (JSON.Object hm) = do
     transport <- fieldFromJSON jf "transport" defaultv hm
-    addr <- HM.lookup "addr" hm 
+    addr <- HM.lookup "addr" hm
     at <- fieldFromJSON jf "type" defaultv hm
     if at == atype (defaultv :: Sink a)
       then Just (Sink transport addr)
       else Nothing
 
+jf :: JSONFlags
 jf = JSONFlags False
 
 

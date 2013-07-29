@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module PSClient where
 
+import Control.Monad(void)
 import System.Environment (getArgs)
 import Data.Time.Clock(getCurrentTime)
 import Control.Concurrent.STM
@@ -22,23 +23,23 @@ import ADL.Examples.Pubsub1
 
 import Utils
 
-withConnection :: FilePath -> ((SinkConnection MyChannelReq) -> EndPoint -> IO a) -> IO a
+withConnection :: FilePath -> (SinkConnection MyChannelReq -> EndPoint -> IO a) -> IO a
 withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
 
   withResource ADL.Core.Comms.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
-    withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
-      withResource (connect ctx s) $ \sc -> do
+    withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep ->
+      withResource (throwLeft =<< connect ctx s) $ \sc ->
         f sc ep
 
 publish :: MyMessage -> SinkConnection MyChannelReq -> EndPoint -> IO ()
-publish value sc ep = send sc (ChannelReq_publish value)
+publish value sc ep = throwLeft =<< send sc (ChannelReq_publish value)
 
 subscribe :: Pattern -> SinkConnection MyChannelReq -> EndPoint -> IO ()
-subscribe pattern sc ep = do
+subscribe pattern sc ep =
   withResource (newLocalSink ep Nothing processMessage) $ \ls -> do
-  sub <- callRPC ChannelReq_subscribe sc ep (seconds 20) (Subscribe pattern (toSink ls)) >>= errorOnTimeout
+  throwRPCError =<< callRPC' ChannelReq_subscribe sc ep (seconds 20) (Subscribe pattern (toSink ls))
   threadWait
   where
     processMessage :: MyMessage -> IO ()

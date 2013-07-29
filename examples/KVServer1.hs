@@ -35,9 +35,9 @@ kvServer rfile = do
     
 processRequest :: MapV -> AC.Context -> KVRequest -> IO ()
 processRequest mapv ctx req = case req of
-  (KVRequest_put rpc) -> AC.handleRPC ctx rpc put
-  (KVRequest_delete rpc) -> AC.handleRPC ctx rpc delete
-  (KVRequest_query rpc) -> AC.handleRPC ctx rpc query
+  (KVRequest_put rpc) -> throwServerRPCError =<< AC.handleRPC ctx rpc put
+  (KVRequest_delete rpc) -> throwServerRPCError =<< AC.handleRPC ctx rpc delete
+  (KVRequest_query rpc) -> throwServerRPCError =<< AC.handleRPC ctx rpc query
   where
     put :: KVPair -> IO ()
     put (key,value) = atomically $ modifyTVar mapv $ Map.insert key value

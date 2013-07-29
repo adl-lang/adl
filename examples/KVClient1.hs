@@ -29,20 +29,20 @@ withConnection rfile f = do
   withResource AC.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
-      withResource (AC.connect ctx s) $ \sc -> do
+      withResource (throwLeft =<< AC.connect ctx s) $ \sc -> do
         f sc ep
 
 timeout = seconds 20
 
 
 put key value sc ep = 
-  callRPC KVRequest_put sc ep timeout (key,value) >>= errorOnTimeout
+  throwRPCError =<< callRPC' KVRequest_put sc ep timeout (key,value)
 
 delete key sc ep =
-  callRPC KVRequest_delete sc ep timeout key >>= errorOnTimeout
+  throwRPCError =<< callRPC' KVRequest_delete sc ep timeout key
 
 query pattern sc ep = do
-  vs <- callRPC KVRequest_query sc ep timeout pattern >>= errorOnTimeout
+  vs <- throwRPCError =<< callRPC' KVRequest_query sc ep timeout pattern
   print vs
 
 usage = do

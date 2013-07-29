@@ -38,20 +38,20 @@ instance Resource State where
   ss <- atomically $ readTVar (subs state)
   sequence_ [release sc | (_,sc) <- Map.elems ss]
 
-psServer rfile = do
+psServer rfile =
     withResource ADL.Core.Comms.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Left 2001)) $ \ep -> do
     withResource (newState ctx)$ \state -> do
-      ls <- newLocalSink ep (Just "pubsub") (processRequest ep state ctx)
-      aToJSONFile defaultJSONFlags rfile (toSink ls)
-      putStrLn ("Wrote ps server reference to " ++ show rfile)
-      threadWait
+    ls <- newLocalSink ep (Just "pubsub") (processRequest ep state ctx)
+    aToJSONFile defaultJSONFlags rfile (toSink ls)
+    putStrLn ("Wrote ps server reference to " ++ show rfile)
+    threadWait
 
 processRequest :: EndPoint -> State -> Context -> MyChannelReq -> IO ()
 processRequest ep state ctx req = case req of
   (ChannelReq_publish t) -> publish t
-  (ChannelReq_subscribe rpc) -> handleRPC ctx rpc subscribe
+  (ChannelReq_subscribe rpc) -> throwServerRPCError =<< handleRPC ctx rpc subscribe
   where
     publish :: MyMessage -> IO ()
     publish m = do
@@ -60,14 +60,17 @@ processRequest ep state ctx req = case req of
 
     subscribe :: MySubscribe -> IO Subscription
     subscribe req = do
-      sc <- connect ctx (subscribe_sendTo req)
-      i <- atomically $ do
-        i <- readTVar (nextid state)
-        writeTVar(nextid state) (i+1)
-        modifyTVar (subs state) (Map.insert i (subscribe_pattern req,sc))
-        return i
-      ls <- newLocalSink ep Nothing (processSubscriptionRequest state ctx i)
-      return (toSink ls)
+      esc <- connect ctx (subscribe_sendTo req)
+      case esc of
+        (Left e) -> error ("Failed to connect:" ++ show e)
+        (Right sc) -> do
+          i <- atomically $ do
+            i <- readTVar (nextid state)
+            writeTVar(nextid state) (i+1)
+            modifyTVar (subs state) (Map.insert i (subscribe_pattern req,sc))
+            return i
+          ls <- newLocalSink ep Nothing (processSubscriptionRequest state ctx i)
+          return (toSink ls)
 
     match :: Pattern -> MyMessage -> Bool
     match p m = p `T.isPrefixOf` message_payload m

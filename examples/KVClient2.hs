@@ -2,6 +2,7 @@
 module KVClient2 where
 
 import Control.Monad
+import Control.Exception(throwIO)
 import System.Environment (getArgs,getEnv)
 import Control.Concurrent.STM
 
@@ -20,42 +21,36 @@ import ADL.Examples.Kvstore2
 
 import Utils
 
-withConnection :: FilePath -> Credentials -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -> IO a
+withConnection :: FilePath -> Credentials -> (SinkConnection KVRequest -> EndPoint -> IO a) -> IO a
 withConnection rfile cred f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
   withResource ADL.Core.Comms.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
-    withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
+    withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep ->
 
       -- Connect and to the authenticator and get a reference to the kvservice
-      withResource (connect ctx s) $ \sc -> do
-        kv <- throwOnError =<< throwOnTimeout =<< callRPC id sc ep timeout cred
+      withResource (throwLeft =<< connect ctx s) $ \sc -> do
+        kv <- throwRPCError =<< callRPC' id sc ep timeout cred
 
         -- Connect to the kvservice
-        withResource (connect ctx kv) $ \sc -> do
+        withResource (throwLeft =<< connect ctx kv) $ \sc ->
 
           -- and run the action
           f sc ep
 
 timeout = seconds 20
 
-throwOnTimeout :: Maybe a -> IO a
-throwOnTimeout Nothing = ioError $ userError "rpc timeout"
-throwOnTimeout (Just a) = return a
-
 throwOnError :: Either T.Text a -> IO a
 throwOnError (Left e) = ioError $ userError (T.unpack e)
 throwOnError (Right a) = return a
 
-put key value sc ep = 
-  throwOnError =<< throwOnTimeout =<< callRPC KVRequest_put sc ep timeout (key,value)
+put key value sc ep = throwOnError =<< throwRPCError =<< callRPC' KVRequest_put sc ep timeout (key,value)
 
-delete key sc ep =
-  throwOnError =<< throwOnTimeout =<< callRPC KVRequest_delete sc ep timeout key
+delete key sc ep = throwOnError =<< throwRPCError =<< callRPC' KVRequest_delete sc ep timeout key
 
 query pattern sc ep = do
-  vs <- throwOnTimeout  =<< callRPC KVRequest_query sc ep timeout pattern
-  print vs
+    vs <- throwRPCError =<< callRPC' KVRequest_query sc ep timeout pattern
+    print vs
 
 credentialsFromEnv :: IO Credentials
 credentialsFromEnv = do

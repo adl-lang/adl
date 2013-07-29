@@ -38,7 +38,10 @@ instance ADLValue Bool where
   aFromJSON _ _ = Nothing
 
 
+iToJSON :: Integral a => t -> a -> JSON.Value
 iToJSON _ v = JSON.Number (I (fromIntegral v))
+
+iFromJSON :: Num a => t -> JSON.Value -> Maybe a
 iFromJSON _ (JSON.Number (I v)) = Just (fromIntegral v)
 iFromJSON _ _ = Nothing
 
@@ -117,8 +120,8 @@ instance ADLValue B.ByteString where
 
   aToJSON _ v = JSON.String (T.decodeUtf8 (B64.encode v))
   aFromJSON _ (JSON.String v) = case B64.decode (T.encodeUtf8 v) of
-    (Left e) -> Nothing
-    (Right v) -> Just v
+    (Left _) -> Nothing
+    (Right v1) -> Just v1
 
 instance forall a . (ADLValue a) => ADLValue [a] where
   atype _ = T.concat ["vector<",atype (undefined :: a),">"]

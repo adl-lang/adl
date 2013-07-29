@@ -5,10 +5,8 @@ module ADL.Core.Comms.HTTP
   , newTransport
   ) where
 
-import Prelude hiding (catch)
 import Network(Socket,sClose)
 import Network.BSD(getHostName,HostName)
-import Control.Applicative
 import Control.Exception
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -16,23 +14,18 @@ import Control.Monad.Trans(liftIO)
 
 import qualified Data.Map as Map
 import qualified Data.Text as T
-import qualified Data.Text.Lazy.Builder as LT
-import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Encoding as T
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as JSON
-import qualified Data.Aeson.Encode as JSON
-import Data.Aeson(ToJSON,FromJSON, (.:), (.=) )
+import Data.Aeson(ToJSON,FromJSON,)
 
 import Network.Wai
 import Network.HTTP.Types
-import Network.Wai.Handler.Warp(runSettingsSocket,Settings,defaultSettings,settingsPort)
+import Network.Wai.Handler.Warp(runSettingsSocket,defaultSettings)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
 import Data.Conduit(($$))
-import qualified Data.Conduit as DC
 import qualified Data.Conduit.List as DC
 import qualified Data.Conduit.Network as DC
 import qualified Network.HTTP.Conduit as HC
@@ -40,7 +33,6 @@ import qualified Network.HTTP.Conduit as HC
 import qualified System.Log.Logger as L
 import Control.Monad.Trans.Resource
 
-import ADL.Utils.Resource
 import ADL.Utils.Format
 import ADL.Core.Value
 import ADL.Core.Sink
@@ -60,10 +52,11 @@ data Addr = Addr {
 }
 
 instance ToJSON Addr where
-   toJSON (Addr host port path) = JSON.object ["host" .= host, "port" .= port, "path" .= path]
+   toJSON (Addr host port path) = JSON.toJSON (host,port,path)
 
 instance FromJSON Addr where
-   parseJSON (JSON.Object v) = Addr <$> v .: "host" <*> v .: "port" <*> v .: "path"
+   parseJSON v = let mkAddr (host,port,path) = Addr host port path
+                 in fmap mkAddr (JSON.parseJSON v)
 
 transportName :: TransportName
 transportName = "http"
@@ -103,7 +96,7 @@ newEndPoint1 eport = do
   forkIO (runner nextactionv)
 
   return (CT.EndPoint (newSink hostname port sinksv)
-          (closef hostname port warptid nextactionv))
+          (close0 hostname port warptid nextactionv))
   where
     -- Attempt to bind either the given socket, or any in the specified range
     bindNewSocket :: Either Int (Int,Int) -> IO (Int,Socket)
@@ -117,7 +110,7 @@ newEndPoint1 eport = do
       | otherwise = catch (bindNewSocket (Left port)) tryNextPort
       where
         tryNextPort :: IOError -> IO (Int,Socket) -- is this the right exception??
-        tryNextPort e = bindNewSocket (Right (port+1,maxPort))
+        tryNextPort _ = bindNewSocket (Right (port+1,maxPort))
 
     runWarp socket sinksv nextactionv =
       bracket_ (return ()) (sClose socket)
@@ -131,13 +124,14 @@ newEndPoint1 eport = do
           if requestMethod req /= methodPost
             then errResponse badRequest400 "Only POST requests are supported"
             else case pathInfo req of
-                [id] -> do
+                [i] -> do
                   body <- requestBody req $$ (fmap LBS.fromChunks DC.consume)
-                  handleMessage id body
+                  handleMessage i body
                 _ -> errResponse badRequest400 "request must have a single path component"
 
         handleMessage :: T.Text -> LBS.ByteString -> ResourceT IO Response
         handleMessage sid body = do
+          liftIO $ debugM "received at $1: $2" [sid, formatText body]
           sinks <- liftIO $ atomically $ readTVar sinksv
           case Map.lookup sid sinks of
             Nothing -> errResponse notFound404 ("No handler for sink with SID " ++ show sid)
@@ -173,8 +167,7 @@ newEndPoint1 eport = do
 
       debugM "New sink at http://$1:$2/$3" [T.pack hostname, fshow port,sid]
 
-      let at = atype (defaultv :: a)
-          sink = Sink transportName (JSON.toJSON (Addr hostname port sid))
+      let sink = Sink transportName (JSON.toJSON (Addr hostname port sid))
       atomically $ modifyTVar sinksv (Map.insert sid handler)
       return (CT.LocalSink sink (closef sid))
       where
@@ -182,29 +175,28 @@ newEndPoint1 eport = do
           atomically $ modifyTVar sinksv (Map.delete sid)
           debugM "Closed sink at $1:$2/$3" [T.pack hostname, fshow port, sid]
 
-    closef hostname port warptid nextactionv = do
+    close0 hostname port warptid nextactionv = do
       killThread warptid
       atomically $ putTMVar nextactionv Nothing
       debugM "Closed endpoint at $1:$2" [T.pack hostname, fshow port]
 
 
 -- | Create a new connection to a remote sink
-connect1 ::  HC.Manager -> TransportAddr -> IO CT.Connection
+connect1 ::  HC.Manager -> TransportAddr -> IO (Either CT.ConnectError CT.Connection)
 connect1 manager addr = do
   case JSON.fromJSON addr of
-    (JSON.Error e) -> error "Unable to parse HTTP Address" -- FIXME
-    (JSON.Success addr) -> return (CT.Connection (send addr) close)
+    (JSON.Error _) -> return (Left (CT.TransportError CT.ConnectFailed "Unable to parse HTTP Address"))
+    (JSON.Success addr1) -> return (Right (CT.Connection (send addr1) close))
   where
-    send :: Addr -> LBS.ByteString -> IO ()
-    send addr = \lbs -> do
+    send :: Addr -> LBS.ByteString -> IO (Either CT.SendError ())
+    send addr1 = \lbs -> do
       let req = req0{HC.requestBody=HC.RequestBodyLBS lbs}
       debugM "POST to http://$1:$2/$3: $4" [T.pack host, fshow port, path, formatText lbs]
-      resp <- runResourceT $ HC.httpLbs req manager
-      return ()
+      catch (fmap (const (Right ())) $ runResourceT $ HC.httpLbs req manager) ehandle
       where
-        host = httpHost addr
-        port = httpPort addr
-        path = httpPath addr
+        host = httpHost addr1
+        port = httpPort addr1
+        path = httpPath addr1
         
         req0 = HC.def {
           HC.host = BSC8.pack host,
@@ -213,9 +205,13 @@ connect1 manager addr = do
           HC.method = "POST"
           }
 
+        ehandle :: SomeException -> IO (Either CT.SendError ())
+        ehandle e = return (Left (CT.TransportError CT.SendFailed (show e)))
+
     close :: IO ()
     close = return ()
 
+httpLogger :: String
 httpLogger = "HTTP"
 
 debugM :: T.Text -> [T.Text] -> IO ()

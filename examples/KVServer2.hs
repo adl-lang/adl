@@ -3,6 +3,7 @@ module KVServer2 where
 
 import System.Environment (getArgs)
 import Control.Concurrent.STM
+import Control.Monad
 
 import qualified Data.Map as Map
 import qualified Data.Text as T
@@ -52,19 +53,19 @@ readUserMap ufile = do
     return (Map.fromList [(credentials_username (user_credentials u),u) | u <- us])
 
 processAuthenticate :: UserMap -> Context -> KVService -> KVService -> AuthenticateReq -> IO ()
-processAuthenticate userMap ctx ro rw rpc = handleRPC ctx rpc auth
+processAuthenticate userMap ctx ro rw rpc =  throwServerRPCError =<< handleRPC ctx rpc auth
   where
     auth :: Credentials -> IO (Either T.Text KVService)
     auth cred = return $ case Map.lookup (credentials_username cred) userMap of
       Nothing -> Left "Unknown username"
       (Just u) | user_credentials u == cred -> Right (if user_has_write_access u then rw else ro)
                | otherwise -> Left "incorrect password"
-    
+
 processRequest :: Bool -> MapV -> Context -> KVRequest -> IO ()
 processRequest rw mapv ctx req = case req of
-  (KVRequest_put rpc) -> handleRPC ctx rpc put
-  (KVRequest_delete rpc) -> handleRPC ctx rpc delete
-  (KVRequest_query rpc) -> handleRPC ctx rpc query
+  (KVRequest_put rpc) -> throwServerRPCError =<< handleRPC ctx rpc put
+  (KVRequest_delete rpc) -> throwServerRPCError =<< handleRPC ctx rpc delete
+  (KVRequest_query rpc) -> throwServerRPCError =<< handleRPC ctx rpc query
   where
     put :: KVPair -> IO (Either T.Text ())
     put (key,value)

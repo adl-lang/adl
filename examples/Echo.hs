@@ -1,16 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module Echo where
 
-import Control.Applicative
+import Control.Monad(void)
 import System.Environment (getArgs)
-import Control.Concurrent.STM
 
-import qualified Data.Aeson as JSON
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.ByteString as BS
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import qualified Data.Text.Encoding as T
 import qualified System.Log.Logger as L
 
 import ADL.Utils.Resource
@@ -18,12 +11,11 @@ import ADL.Core.Comms
 import qualified ADL.Core.Comms.HTTP as HTTP
 import ADL.Core.Comms.Rpc(oneShotSinkWithTimeout)
 import ADL.Core.Value
-import ADL.Core.Sink
 import ADL.Examples.Echo
 
 import Utils
 
-echoServer rfile = do
+echoServer rfile =
   withResource ADL.Core.Comms.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Left 2000)) $ \ep -> do
@@ -33,18 +25,18 @@ echoServer rfile = do
       threadWait
   where
     processRequest :: Context -> EchoRequest () -> IO ()
-    processRequest ctx req = do
-      withResource (connect ctx (echoRequest_replyTo req)) $ \sc -> do
-        send sc (EchoResponse (echoRequest_body req))
+    processRequest ctx req =
+      withResource (throwLeft =<< connect ctx (echoRequest_replyTo req)) $ \sc ->
+        void $ send sc (EchoResponse (echoRequest_body req))
 
-echoClient rfile = do
+echoClient rfile =
   withResource ADL.Core.Comms.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
       s <- aFromJSONFile' defaultJSONFlags rfile 
-      withResource (connect ctx s) $ \sc -> do 
+      withResource (throwLeft =<< connect ctx s) $ \sc -> do 
         (sink, getValue) <- oneShotSinkWithTimeout ep (seconds 20)
-        send sc (EchoRequest () sink)
+        void $ send sc (EchoRequest () sink)
         mv <- getValue
         case mv of
           Just (EchoResponse ()) -> putStrLn "Received response"

@@ -33,14 +33,14 @@ instance Resource Context where
     mapM_ (release.snd) (Map.toList m)
 
 -- | Create a new connection to a remote sink
-connect :: (ADLValue a) => Context -> Sink a -> IO (SinkConnection a)
+connect :: (ADLValue a) => Context -> Sink a -> IO (Either ConnectError (SinkConnection a))
 connect (Context mv) s = do
   m <- atomically $ readTVar mv
   case Map.lookup (s_transport s) m of
-    Nothing -> error ("(No transport for " ++ T.unpack (s_transport s)) -- FIXME
+    Nothing -> return (Left (TransportError NoTransport ("No transport for " ++ T.unpack (s_transport s))))
     (Just t) -> do
       c <- t_connect t (s_addr s)
-      return (mkSinkConnection c)
+      return (fmap mkSinkConnection c)
 
 mkSinkConnection :: (ADLValue a) => Connection -> SinkConnection a
 mkSinkConnection c = SinkConnection

@@ -1,6 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module Serialisation where
 
+import Control.Monad
+
 import ADL.Utils.Resource
 import ADL.Core.Value
 
@@ -11,12 +13,11 @@ import qualified ADL.Core.Comms as AC
 import qualified ADL.Core.Comms.Rpc as AC
 import qualified ADL.Core.Comms.HTTP as HTTP
 
-import ADL.Sys.Rpc
 import ADL.Examples.Serialisation
 
 import Utils
 
-server rfile = do
+server rfile =
     withResource AC.newContext $ \ctx -> do
       http <- HTTP.newTransport ctx
       withResource (HTTP.newEndPoint http (Left 2001)) $ \ep -> do
@@ -26,9 +27,9 @@ server rfile = do
         threadWait
 
 returnToCaller :: (ADLValue a) => AC.Context -> Roundtrip a -> IO ()
-returnToCaller ctx rt = do
-    withResource (AC.connect ctx (rpc_replyTo rt)) $ \sc -> do
-      AC.send sc (rpc_params rt)
+returnToCaller ctx rt =
+    withResource (throwLeft =<< AC.connect ctx (AC.rpc_replyTo rt)) $ \sc ->
+      void $ AC.send sc (AC.rpc_params rt)
 
 processRequest :: AC.Context -> Request -> IO ()
 processRequest ctx (Request_req_void rt) = returnToCaller ctx rt
@@ -52,15 +53,15 @@ processRequest ctx (Request_req_u2 rt) = returnToCaller ctx rt
 processRequest ctx (Request_req_s1 rt) = returnToCaller ctx rt
 processRequest ctx (Request_req_s2 rt) = returnToCaller ctx rt
 
-client rfile = do
+client rfile =
   withResource AC.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
       s <- aFromJSONFile' defaultJSONFlags rfile 
-      withResource (AC.connect ctx s) $ \sc -> do
+      withResource (throwLeft =<< AC.connect ctx s) $ \sc ->
 
         -- Create some dummy sinks just for serialisation testing
-        withResource (AC.newLocalSink ep Nothing dummyProcessRequest) $ \ls1 -> do
+        withResource (AC.newLocalSink ep Nothing dummyProcessRequest) $ \ls1 ->
         withResource (AC.newLocalSink ep (Just "dummy") dummyProcessRequest) $ \ls2 -> do
         
 
@@ -109,13 +110,13 @@ client rfile = do
     dummyProcessRequest _ = return ()
 
 testRoundTrip :: (ADLValue x, ADLValue a, Eq x, Show x) =>
-                 (Rpc x x -> a) -> AC.SinkConnection a -> AC.EndPoint -> x -> IO ()
+                 (AC.Rpc x x -> a) -> AC.SinkConnection a -> AC.EndPoint -> x -> IO ()
 testRoundTrip selectorf sc ep x = do
-  mx <- AC.callRPC selectorf sc ep 10000000 x
-  case mx of
-    Nothing -> error "test timed out"
-    (Just x') | x' == x -> putStrLn ("test for type " ++ T.unpack (atype x) ++ " passed")
-              | otherwise -> error ("test failed, sent " ++ show x ++ " received " ++ show x')
+  rx <- AC.callRPC' selectorf sc ep 10000000 x
+  case rx of
+    AC.RPC_Timeout -> putStrLn "test timed out"
+    AC.RPC_Result x' | x' == x -> putStrLn ("test for type " ++ T.unpack (atype x) ++ " passed")
+                     | otherwise -> putStrLn ("test failed, sent " ++ show x ++ " received " ++ show x')
       
 runserver args = server "/tmp/serserver.ref"
 
