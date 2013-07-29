@@ -2,7 +2,8 @@
 module ADL.Core.Sink(
   Sink(..),
   TransportName,
-  TransportAddr
+  TransportAddr,
+  SerialisationType(..)
   ) where
 
 import Data.Monoid
@@ -21,9 +22,13 @@ import ADL.Core.Primitives()
 type TransportName = T.Text
 type TransportAddr = JSON.Value
 
+data SerialisationType = S_JSON
+  deriving (Eq,Show)
+
 data Sink a = Sink {
   s_transport :: TransportName,
-  s_addr :: TransportAddr
+  s_addr :: TransportAddr,
+  s_serialisation :: SerialisationType
   }
   deriving (Eq,Show)
 
@@ -35,21 +40,31 @@ instance Ord (Sink a) where
 instance forall a . (ADLValue a) => ADLValue (Sink a) where
   atype _ = T.concat ["sink<",atype (defaultv::a),">"]
 
-  defaultv = Sink "null" ""
+  defaultv = Sink "null" "" S_JSON
 
   aToJSON _ s = toJSONObject jf (atype s) (
     [ ("transport", aToJSON jf (s_transport s)),
       ("addr", s_addr s),
+      ("serialisation", aToJSON jf (s_serialisation s)),
       ("type", aToJSON jf (atype s))
       ] )
                 
   aFromJSON _ (JSON.Object hm) = do
     transport <- fieldFromJSON jf "transport" defaultv hm
     addr <- HM.lookup "addr" hm
+    ser <- fieldFromJSON jf "serialisation" defaultv hm
     at <- fieldFromJSON jf "type" defaultv hm
     if at == atype (defaultv :: Sink a)
-      then Just (Sink transport addr)
+      then Just (Sink transport addr ser)
       else Nothing
+
+instance ADLValue SerialisationType where
+  atype _ = "SerialisationType"
+  defaultv = S_JSON
+  aToJSON _ S_JSON = JSON.String "JSON"
+  aFromJSON _ (JSON.String s) | s == "JSON" = Just S_JSON
+  aFromJSON _ _ = Nothing
+
 
 jf :: JSONFlags
 jf = JSONFlags False

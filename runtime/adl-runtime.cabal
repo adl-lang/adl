@@ -17,7 +17,7 @@ data-files:          adl/sys/types.adl,
 library
   hs-source-dirs:      src
   exposed-modules:     ADL.Core, ADL.Core.CustomTypes, ADL.Core.Value, ADL.Core.Sink, ADL.Core.Primitives,
-                       ADL.Core.Comms, ADL.Core.Comms.Internals,
+                       ADL.Core.Comms, ADL.Core.Comms.Internals, ADL.Core.Comms.Serialisation,
                        ADL.Core.Comms.Types,
                        ADL.Core.Comms.Null,
                        ADL.Core.Comms.Rpc,
