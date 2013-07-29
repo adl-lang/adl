@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, OverloadedStrings #-}
 module ADL.Core.Comms.Serialisation(
   SerialisationType(..),
   serialise,
@@ -10,8 +10,18 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Vector as V
 import qualified Data.Text as T
 
-import ADL.Core.Sink
 import ADL.Core.Value
+
+data SerialisationType = S_JSON
+  deriving (Eq,Show)
+
+instance ADLValue SerialisationType where
+  atype _ = "SerialisationType"
+  defaultv = S_JSON
+  aToJSON _ S_JSON = JSON.String "JSON"
+  aFromJSON _ (JSON.String s) | s == "JSON" = Just S_JSON
+  aFromJSON _ _ = Nothing
+
 
 serialise :: (ADLValue a) => SerialisationType -> a -> LBS.ByteString
 serialise S_JSON = serialiseJSON

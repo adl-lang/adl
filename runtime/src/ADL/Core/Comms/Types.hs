@@ -59,7 +59,7 @@ instance Resource Connection where
 type SinkID = T.Text
 
 data EndPoint = EndPoint {
-  ep_newRawSink :: Maybe SinkID -> (LBS.ByteString -> IO ()) -> IO (LocalSink ()),
+  ep_newRawSink :: Maybe SinkID -> (LBS.ByteString -> IO ()) -> IO (TransportName,TransportAddr, IO()),
   ep_close :: IO ()
 }  
 

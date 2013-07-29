@@ -2,8 +2,7 @@
 module ADL.Core.Sink(
   Sink(..),
   TransportName,
-  TransportAddr,
-  SerialisationType(..)
+  TransportAddr
   ) where
 
 import Data.Monoid
@@ -14,6 +13,7 @@ import qualified Data.HashMap.Strict as HM
 
 import ADL.Core.Value
 import ADL.Core.Primitives()
+import ADL.Core.Comms.Serialisation
 
 -- | `Sink a` is a reference to a sink to which messages of type `a`
 -- may be sent. Such a reference is an ADLValue and hence may be
@@ -21,9 +21,6 @@ import ADL.Core.Primitives()
 
 type TransportName = T.Text
 type TransportAddr = JSON.Value
-
-data SerialisationType = S_JSON
-  deriving (Eq,Show)
 
 data Sink a = Sink {
   s_transport :: TransportName,
@@ -57,14 +54,6 @@ instance forall a . (ADLValue a) => ADLValue (Sink a) where
     if at == atype (defaultv :: Sink a)
       then Just (Sink transport addr ser)
       else Nothing
-
-instance ADLValue SerialisationType where
-  atype _ = "SerialisationType"
-  defaultv = S_JSON
-  aToJSON _ S_JSON = JSON.String "JSON"
-  aFromJSON _ (JSON.String s) | s == "JSON" = Just S_JSON
-  aFromJSON _ _ = Nothing
-
 
 jf :: JSONFlags
 jf = JSONFlags False

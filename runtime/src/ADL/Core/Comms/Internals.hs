@@ -50,10 +50,8 @@ mkSinkConnection serType c = SinkConnection
 
 newLocalSink :: forall a . (ADLValue a) => EndPoint -> Maybe SinkID -> (a -> IO ()) -> IO (LocalSink a)
 newLocalSink ep msid handler =  do
-     ls0 <- ep_newRawSink ep msid rawHandler
-     let sink0 = ls_sink ls0
-         sink = Sink (s_transport sink0) (s_addr sink0) serType
-     return (LocalSink sink (ls_close ls0))
+     (transport,addr,closef) <- ep_newRawSink ep msid rawHandler
+     return (LocalSink (Sink transport addr serType) closef)
   where
     rawHandler :: LBS.ByteString -> IO ()
     rawHandler lbs = case deserialise serType lbs of

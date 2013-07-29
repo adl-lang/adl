@@ -159,7 +159,7 @@ newEndPoint1 eport = do
         liftIO $ L.errorM httpLogger ("Request error: " ++ s)
         return (responseLBS status [] "")
 
-    newSink :: forall a . (ADLValue a) => HostName -> Int -> SinksV -> Maybe T.Text -> (LBS.ByteString -> IO ()) -> IO (CT.LocalSink a)
+    newSink :: HostName -> Int -> SinksV -> Maybe T.Text -> (LBS.ByteString -> IO ()) -> IO (TransportName,TransportAddr,IO ())
     newSink hostname port sinksv msid handler = do
       sid <- case msid of
         (Just sid) -> return sid
@@ -167,9 +167,9 @@ newEndPoint1 eport = do
 
       debugM "New sink at http://$1:$2/$3" [T.pack hostname, fshow port,sid]
 
-      let sink = Sink transportName (JSON.toJSON (Addr hostname port sid))
+      let addr = (JSON.toJSON (Addr hostname port sid))
       atomically $ modifyTVar sinksv (Map.insert sid handler)
-      return (CT.LocalSink sink (closef sid))
+      return (transportName,addr,(closef sid))
       where
         closef sid = do
           atomically $ modifyTVar sinksv (Map.delete sid)
