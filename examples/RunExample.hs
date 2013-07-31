@@ -32,6 +32,8 @@ usage = do
   mapM_ (\(name,_) -> putStrLn ("    runexample [--debug] " ++ name ++ " <args> ...")) examples
   
 main = do
+  L.updateGlobalLogger L.rootLoggerName (L.setLevel L.INFO)
+
   args <- getArgs
   args' <- case args of
     ("--debug":args) -> do

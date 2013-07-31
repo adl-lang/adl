@@ -14,16 +14,23 @@ struct Message<T> {
     T payload;
 };
 
+// The possible requests that we can send to a channel.
 union ChannelReq<T,P>
 {
+    // Publish a message
     Message<T> publish;
+
+    // Register a new subscrition
     rpc<Subscribe<T,P>,Subscription> subscribe;
 };
 
-// Parameters required when creating a subscription
 struct Subscribe<T,P>
 {
+    // This pattern to be used
     P pattern;        
+
+    // Messages with payloads that match the pattern
+    // will be forwarded to this destination.
     sink<Message<T>> sendTo;
 };
 
@@ -32,6 +39,7 @@ typedef sink<SubsReq> Subscription;
 // Actions available to an existing subscription
 union SubsReq
 {
+    // You can only unsubscribe        
     void unsubscribe;
 };
 

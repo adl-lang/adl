@@ -3,6 +3,7 @@ module Utils where
 import Control.Exception(throwIO,Exception)
 import Control.Concurrent(threadDelay)
 
+import ADL.Core.Comms
 import ADL.Core.Comms.Rpc
 
 threadWait :: IO ()
@@ -33,3 +34,12 @@ throwServerRPCError (Right a) = return a
 
 seconds :: Int -> Int
 seconds n = n * 1000000
+
+-- Some variants of the communications functions that
+-- throw exceptions rather than return errors. It's more
+-- probably more robust to handle the errors by case analysis,
+-- but these functions simplify the examples
+
+connectE ctx s = connect ctx s >>= throwLeft
+sendE sc m = send sc m >>= throwLeft
+callRPCE m sc ep to req = callRPC' m sc ep to req >>= throwRPCError

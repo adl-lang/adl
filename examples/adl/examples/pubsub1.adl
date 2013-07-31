@@ -6,8 +6,9 @@ import examples.pubsub.*;
 // A concrete message service, with strings for payloads and patterns
 
 typedef string Payload;
-typedef Message<Payload> MyMessage;
 typedef string Pattern;
+
+typedef Message<Payload> MyMessage;
 typedef Subscribe<Payload,Pattern> MySubscribe;
 typedef ChannelReq<Payload,Pattern> MyChannelReq;
 

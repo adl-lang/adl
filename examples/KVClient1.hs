@@ -8,8 +8,6 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified System.Log.Logger as L
 
-import qualified ADL.Core.Comms as AC
-import qualified ADL.Core.Comms.Rpc as AC
 import qualified ADL.Core.Comms.HTTP as HTTP
 
 import ADL.Utils.Resource
@@ -26,23 +24,20 @@ withConnection :: FilePath -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -
 withConnection rfile f = do
   s <- aFromJSONFile' defaultJSONFlags rfile 
  
-  withResource AC.newContext $ \ctx -> do
+  withResource newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
-      withResource (throwLeft =<< AC.connect ctx s) $ \sc -> do
+      withResource (connectE ctx s) $ \sc -> do
         f sc ep
 
 timeout = seconds 20
 
+put key value sc ep = callRPCE KVRequest_put sc ep timeout (key,value)
 
-put key value sc ep = 
-  throwRPCError =<< callRPC' KVRequest_put sc ep timeout (key,value)
+delete key sc ep = callRPCE KVRequest_delete sc ep timeout key
 
-delete key sc ep =
-  throwRPCError =<< callRPC' KVRequest_delete sc ep timeout key
-
-query pattern sc ep = do
-  vs <- throwRPCError =<< callRPC' KVRequest_query sc ep timeout pattern
+query pattern sc ep =  do
+  vs <- callRPCE KVRequest_query sc ep timeout pattern
   print vs
 
 usage = do
