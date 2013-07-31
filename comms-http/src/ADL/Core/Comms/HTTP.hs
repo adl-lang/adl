@@ -5,6 +5,7 @@ module ADL.Core.Comms.HTTP
   , newTransport
   ) where
 
+import Prelude hiding (catch)
 import Network(Socket,sClose)
 import Network.BSD(getHostName,HostName)
 import Control.Exception
