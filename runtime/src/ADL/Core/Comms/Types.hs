@@ -68,9 +68,8 @@ instance Resource Connection where
 
 type SinkID = T.Text
 
--- | An Endpoint is a factory for `LocalSink`s. Depending on the
--- transport, it may correspond to an actual socket, or equivalent
--- resource.
+-- | An Endpoint is a factory for 'LocalSink's, and manages a
+-- collection of them. Endpoints are constructed by 'Transport's.
 data EndPoint = EndPoint {
   ep_newRawSink :: Maybe SinkID -> (LBS.ByteString -> IO ()) -> IO (TransportName,TransportAddr, IO()),
   ep_close :: IO ()
@@ -92,7 +91,7 @@ instance (Typeable err, Show err) => Exception (TransportError err)
 
 ----------------------------------------------------------------------
 
--- | An active connection to a sink the given type.
+-- | An active connection to a 'Sink' of the given type.
 data SinkConnection a = SinkConnection {
   -- | Send a value to the sink
   sc_send :: a -> IO (Either SendError ()),
@@ -104,8 +103,7 @@ data SinkConnection a = SinkConnection {
 instance Resource (SinkConnection a) where
   release = sc_close
 
--- | A local sink is a sink where the message processing
--- is performed in this address space
+-- | A @LocalSink a@ processes messages of type a, in the current process. To reference a @LocalSink@ from another process, you need to send it the @LocalSink@'s associated 'Sink'.
 data LocalSink a = LocalSink {
   -- | The (serialisable) reference to sink 
   ls_sink :: Sink a,
@@ -117,12 +115,11 @@ data LocalSink a = LocalSink {
 instance Resource (LocalSink a) where
   release = ls_close
 
-
--- | Send a message to a sink
+-- | Send a message to a 'Sink'
 send :: (ADLValue a) => SinkConnection a -> a -> IO (Either SendError ())
 send sc a = sc_send sc a
 
--- | Get the reference to a locally implemented sink.
+-- | Get the 'Sink' (ie reference) corresponding to a 'LocalSink'.
 toSink :: LocalSink a -> Sink a
 toSink = ls_sink
 

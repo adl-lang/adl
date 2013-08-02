@@ -23,7 +23,7 @@ import qualified System.Log.Logger as L
 -- functions to initialise them.
 data Context = Context (TVar (Map.Map TransportName Transport))
 
--- | Construct a new Context. A program will only require
+-- | Construct a new 'Context'. A program will only require
 -- a single context to manage all it's communications.
 newContext :: IO Context
 newContext = do
@@ -39,7 +39,7 @@ instance Resource Context where
     m <- atomically $ readTVar mv
     mapM_ (release.snd) (Map.toList m)
 
--- | Create a new connection to a remote sink. The appropriate
+-- | Create a new connection to a sink. The appropriate
 -- transport for the sink will be used - an error will result if the
 -- sinks transport has not been configured.
 connect :: (ADLValue a) => Context -> Sink a -> IO (Either ConnectError (SinkConnection a))
@@ -78,10 +78,10 @@ mkSinkConnection serType c = do
     }
 
 -- | Create a new sink.
--- `newLocalSink ep msid procf` will create a local sink, and
--- associated it with the endpoint `ep` If `msid` is nothing, then a
+-- @newLocalSink ep msid procf@ will create a local sink, and
+-- associated it with the endpoint @ep@ If @msid@ is nothing, then a
 -- unique id will be created for the association, otherwise the id
--- provided will be used. `procf` is called whenever the sink receives a
+-- provided will be used. @procf@ is called whenever the sink receives a
 -- value.
 newLocalSink :: forall a . (ADLValue a) => EndPoint -> Maybe SinkID -> (a -> IO ()) -> IO (LocalSink a)
 newLocalSink ep msid handler =  do

@@ -15,13 +15,12 @@ import ADL.Core.Value
 import ADL.Core.Primitives()
 import ADL.Core.Comms.Serialisation
 
--- | `Sink a` is a reference to a sink to which messages of type `a`
--- may be sent. Such a reference is an ADLValue and hence may be
--- serialised between processes.
-
 type TransportName = T.Text
 type TransportAddr = JSON.Value
 
+-- | A @Sink@ is a reference to a processor of messages of a specified
+-- type.  A @Sink@ is an instance of 'ADLValue' and hence may be
+-- serialised between processes.
 data Sink a = Sink {
   s_transport :: TransportName,
   s_addr :: TransportAddr,

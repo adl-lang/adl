@@ -60,7 +60,8 @@ boot: .make
 
 docs:
 	(cd utils && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
-	(cd runtime && cabal-dev -s ../cabal-dev install --enable-documentation)
+	(cd runtime && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
+	(cd comms-http && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
 
 clean: 
 	-rm -f .make/built-*

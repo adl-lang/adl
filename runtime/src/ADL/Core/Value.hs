@@ -6,17 +6,28 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
 
+-- | A type that is an instance of @ADLValue@ can be serialised, and has
+-- a defined default value.
+
 class ADLValue a where
+  -- | A text string describing the type. The return string may only depend on
+  -- the type - the parameter must be ignored.
   atype :: a -> T.Text
 
+  -- | A default value of the given type
   defaultv :: a
 
+  -- | Serialise a value to JSON
   aToJSON :: JSONFlags -> a -> JSON.Value
 
+  -- | Deserialise a value from JSON. Returns Nothing if the JSON is invalid.
   aFromJSON :: JSONFlags -> JSON.Value -> Maybe a
 
-data JSONFlags = JSONFlags
-  { jf_typeNames :: Bool
+-- | Flags controlling the JSON Serialisation.
+data JSONFlags = JSONFlags {
+  -- | If true, then fields corresponding to the types of structures and unions
+  -- are included in the serialisation, and checked in the deserialisation.
+  jf_typeNames :: Bool
   }
 
 defaultJSONFlags :: JSONFlags
