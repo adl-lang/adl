@@ -1,7 +1,6 @@
 module ADL.Core.Comms(
   Context,
   newContext,
-  addTransport,
   connect,
   SinkConnection,
   send,

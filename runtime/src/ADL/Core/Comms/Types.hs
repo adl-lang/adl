@@ -33,9 +33,14 @@ data Transport = Transport {
   t_close :: IO ()
   }
 
-data ConnectErrorCode = NoTransport
-                      | NoResources
-                      | ConnectFailed
+-- | Reasons a connect operation may fail
+data ConnectErrorCode
+  -- | An appropriate transport for this sink has not been registered
+  =  NoTransport
+  -- | The connection could not be establised due to resource limitations
+  | NoResources
+  -- | The connect operation failed for some other reason.
+  | ConnectFailed
   deriving (Eq,Show,Typeable)                        
 
 type ConnectError = TransportError ConnectErrorCode
@@ -48,7 +53,12 @@ data Connection = Connection {
   c_close :: IO ()
   }
 
-data SendErrorCode = SendFailed
+-- | Reasons a send operation may fail
+data SendErrorCode
+  -- | The send operation is on a connection that has already been closed
+  = ConnectionClosed
+  -- | The send operation failed due to a transport specific problem
+  | SendFailed
   deriving (Eq,Show,Typeable)
 
 type SendError = TransportError SendErrorCode
@@ -58,6 +68,9 @@ instance Resource Connection where
 
 type SinkID = T.Text
 
+-- | An Endpoint is a factory for `LocalSink`s. Depending on the
+-- transport, it may correspond to an actual socket, or equivalent
+-- resource.
 data EndPoint = EndPoint {
   ep_newRawSink :: Maybe SinkID -> (LBS.ByteString -> IO ()) -> IO (TransportName,TransportAddr, IO()),
   ep_close :: IO ()
@@ -79,9 +92,12 @@ instance (Typeable err, Show err) => Exception (TransportError err)
 
 ----------------------------------------------------------------------
 
--- | A connection to a sink
+-- | An active connection to a sink the given type.
 data SinkConnection a = SinkConnection {
+  -- | Send a value to the sink
   sc_send :: a -> IO (Either SendError ()),
+  -- | Close the sink. No further communications on this
+  -- sink will be possible
   sc_close :: IO ()
   }
 
@@ -91,7 +107,10 @@ instance Resource (SinkConnection a) where
 -- | A local sink is a sink where the message processing
 -- is performed in this address space
 data LocalSink a = LocalSink {
+  -- | The (serialisable) reference to sink 
   ls_sink :: Sink a,
+  -- | Action to close the sink. Once closed, no more messages will 
+  -- be received.
   ls_close :: IO ()
   }
 
