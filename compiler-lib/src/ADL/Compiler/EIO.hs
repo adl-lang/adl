@@ -1,8 +1,8 @@
 module ADL.Compiler.EIO where
 
-import Data.Either
 import Control.Exception
 import Control.Monad.Trans
+import qualified Data.Text as T
 
 newtype EIO e a = EIO { unEIO :: IO (Either e a) }
 
@@ -24,6 +24,8 @@ instance Functor (EIO e) where
 instance MonadIO (EIO e) where
     liftIO a = EIO (fmap Right a)
 
+type EIOT a = EIO T.Text a
+
 eioError :: e -> EIO e a
 eioError e = EIO (return (Left e))
 
@@ -39,3 +41,10 @@ mapError f (EIO e) = EIO $ fmap (either (Left . f) (Right . id)) e
 
 eioHandle :: Exception x => (x -> EIO e a) -> EIO e a -> EIO e a
 eioHandle h a = EIO (handle (\x -> unEIO (h x)) (unEIO a))
+
+catchAllExceptions :: EIO T.Text a -> EIO T.Text a
+catchAllExceptions a = eioHandle handler $ a
+ where
+   handler :: SomeException -> EIO T.Text a
+   handler e = eioError (T.pack (show e))
+

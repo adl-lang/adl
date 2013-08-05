@@ -11,7 +11,8 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
-import ADL.Compiler.Compiler
+import ADL.Compiler.Backends.Haskell as H
+import ADL.Compiler.Backends.Verify as V
 import HaskellCustomTypes
 
 searchDirOption ufn =
@@ -31,12 +32,12 @@ noOverwriteOption ufn =
 
 runVerify args0 =
   case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> verify (mkFlags opts) args
+    (opts,args,[]) -> V.verify (mkFlags opts) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl verify [OPTION...] files..."
     
-    mkFlags opts = (foldl (.) id opts) (VerifyFlags [])
+    mkFlags opts = (foldl (.) id opts) (V.VerifyFlags [])
 
     optDescs =
       [ searchDirOption (\s vf-> vf{vf_searchPath=s:vf_searchPath vf})
@@ -44,12 +45,12 @@ runVerify args0 =
 
 runHaskell args0 =
   case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> haskell (mkFlags opts) getCustomTypes args
+    (opts,args,[]) -> H.generate (mkFlags opts) getCustomTypes args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."
     
-    mkFlags opts = (foldl (.) id opts) (HaskellFlags [] "ADL.Generated" [] "." False)
+    mkFlags opts = (foldl (.) id opts) (H.HaskellFlags [] "ADL.Generated" [] "." False)
 
     optDescs =
       [ searchDirOption (\s hf-> hf{hf_searchPath=s:hf_searchPath hf})

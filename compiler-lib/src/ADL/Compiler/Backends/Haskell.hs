@@ -1,7 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Compiler.Backends.Haskell where
+module ADL.Compiler.Backends.Haskell(
+  HaskellFlags(..),
+  HaskellModule(..),
+  CustomType(..),
+  CustomTypeMap,
+  generate, 
+  )where
 
-import Debug.Trace
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
@@ -19,7 +24,6 @@ import qualified Data.Aeson as JSON
 import Data.Attoparsec.Number
 
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Base64 as B64
 
@@ -507,4 +511,29 @@ fileMapper root (HaskellModule t) = addExtension (joinPath (root:ps)) "hs"
   where
     ps = map T.unpack (T.splitOn "." t)
       
+----------------------------------------------------------------------
 
+data HaskellFlags = HaskellFlags {
+  -- directories where we look for ADL files
+  hf_searchPath :: [FilePath],
+
+  hf_modulePrefix :: String,
+
+  hf_customTypeFiles :: [FilePath],
+
+  -- the directory to which we write output files
+  hf_outputPath :: FilePath,
+
+  -- if true, we only write files when they differ from what's already there
+  hf_noOverwrite :: Bool
+}
+
+generate :: HaskellFlags -> ([FilePath] -> EIOT CustomTypeMap) -> [FilePath] -> EIOT ()
+generate hf getCustomTypes modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
+  rm <- loadAndCheckModule (moduleFinder (hf_searchPath hf)) modulePath
+  hctypes <- getCustomTypes (hf_customTypeFiles hf)
+  writeModuleFile (hf_noOverwrite hf)
+                    (moduleMapper (hf_modulePrefix hf))
+                    (fileMapper (hf_outputPath hf))
+                    hctypes
+                    rm

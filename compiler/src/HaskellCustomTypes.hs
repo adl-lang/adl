@@ -18,8 +18,6 @@ import qualified ADL.Compiler.ParserP as P
 import ADL.Core.Value
 import qualified ADL.Adlc.Config.Haskell as HC
 
-type EIOT = EIO T.Text
-
 getCustomTypes :: [FilePath] -> EIOT CustomTypeMap
 getCustomTypes fps = fmap Map.unions (mapM get0 fps)
   where

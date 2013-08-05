@@ -13,9 +13,11 @@ cabal-version:       >=1.8
 
 library
   hs-source-dirs:    src
-  exposed-modules:   ADL.Compiler.Backends.Haskell, ADL.Compiler.Compiler, ADL.Compiler.AST,
-                     ADL.Compiler.Primitive, ADL.Compiler.ParserP, ADL.Compiler.Utils,
-                     ADL.Compiler.EIO, ADL.Compiler.Processing
+  exposed-modules:   ADL.Compiler.AST, ADL.Compiler.Primitive, ADL.Compiler.ParserP,
+                     ADL.Compiler.Utils, ADL.Compiler.EIO, ADL.Compiler.Processing,
+                     ADL.Compiler.Backends.Verify,
+                     ADL.Compiler.Backends.Haskell, 
+                     ADL.Compiler.Backends.Cpp 
   build-depends:     base, text, containers, bytestring,
                      parsec, mtl, transformers,
                      filepath, directory, unordered-containers, vector, base64-bytestring,
