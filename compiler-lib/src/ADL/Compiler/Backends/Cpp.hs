@@ -221,9 +221,11 @@ generateModule m = do
    let mname = ms_name ms
        hasCustomDefinition n = Map.member (ScopedName mname n) (ms_customTypes ms)
 
-       -- FIXME: the topological sort will fail here with mutually recursive types
-       -- Need to work out how to generate code in this situation
-       sortedDecls = topologicalSort fst (referencedLocalTypes.snd) (Map.toList (m_decls m))
+       sortedDecls = case topologicalSort fst (referencedLocalTypes.snd) (Map.toList (m_decls m)) of
+         -- FIXME: the topological sort will fail here with mutually recursive types
+         -- Need to work out how to generate code in this situation
+         Nothing -> error "Unable to sort decls into order due to mutual recursion"
+         Just decls -> decls
 
        genDecl (n,d) = do
           wl ifile ""

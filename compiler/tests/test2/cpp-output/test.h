@@ -5,7 +5,6 @@
 namespace ADL {
 namespace test {
 
-
 struct S1
 {
     int32_t x;
@@ -18,5 +17,7 @@ struct Tree
     T value;
     std::vector<Tree<T> >  children;
 };
+
+using IntTree = Tree<int32_t> ;
 }
 }

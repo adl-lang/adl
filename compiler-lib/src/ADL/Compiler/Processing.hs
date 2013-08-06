@@ -346,10 +346,12 @@ loadAndCheckModule moduleFinder modulePath = do
     (m,mm) <- loadModule1 
     mapM_ checkModuleForDuplicates (Map.elems mm)
     checkModuleForDuplicates m
-    let mmSorted = sortByDeps (Map.elems mm)
-    ns <- resolveN mmSorted emptyNameScope
-    (_,rm) <- resolve1 m ns
-    return rm
+    case sortByDeps (Map.elems mm) of
+      Nothing -> eioError "Mutually dependent modules are not allowed"
+      (Just mmSorted) -> do  
+        ns <- resolveN mmSorted emptyNameScope
+        (_,rm) <- resolve1 m ns
+        return rm
 
   where
     loadModule1 :: EIOT (SModule, SModuleMap)
@@ -399,19 +401,21 @@ loadAndCheckModule moduleFinder modulePath = do
           
     emptyNameScope = NameScope Map.empty Map.empty Map.empty Set.empty
 
-sortByDeps :: [SModule] -> [SModule]
+sortByDeps :: [SModule] -> Maybe [SModule]
 sortByDeps ms = topologicalSort m_name getReferencedModules ms
 
 -- | Sort a list topologically, given a function idf to label each element, and
--- a function depf to calculate the elements dependencies.
-topologicalSort :: forall a b . (Ord b) => (a->b) -> (a->Set.Set b) -> [a] ->  [a]
-topologicalSort idf depf as = map fst (sort1 (addDeps as) Set.empty)
+-- a function depf to calculate the elements dependencies. If the implied graph is not
+-- acyclic, then a topological sort is not possible and Nothing is returned.
+topologicalSort :: forall a b . (Ord b) => (a->b) -> (a->Set.Set b) -> [a] ->  Maybe [a]
+topologicalSort idf depf as = fmap (map fst) (sort1 (addDeps as) Set.empty)
   where
-    sort1 :: (Ord b) => [(a, Set.Set b)] -> Set.Set b -> [(a, Set.Set b)]
-    sort1 [] _ = []
-    sort1 as sofar = let (ok,todo) = partition (\(a,ad)-> Set.null (ad `Set.difference` sofar)) as
-                         sofar' = Set.unions (sofar:map (Set.singleton . idf . fst) ok)
-                     in if length todo == length as then error "topologicalSort failed"
-                                                    else ok ++ sort1 todo sofar'
-                         
+    sort1 :: (Ord b) => [(a, Set.Set b)] -> Set.Set b -> Maybe [(a, Set.Set b)]
+    sort1 [] _ = Just []
+    sort1 as sofar | length todo == length as = Nothing
+                   | otherwise = sort1 todo sofar' >>= \vs -> Just (ok ++ vs)
+      where                                                              
+        (ok,todo) = partition (\(a,ad)-> Set.null (ad `Set.difference` sofar)) as
+        sofar' = Set.unions (sofar:map (Set.singleton . idf . fst) ok)
+
     addDeps as = map (\a -> (a,depf a)) as
