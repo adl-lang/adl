@@ -4,6 +4,7 @@ module ADL.Compiler.Backends.Cpp(
   CppFlags(..)
   ) where
 
+import Debug.Trace
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
@@ -162,32 +163,68 @@ cFieldName _ n = n
 
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
-   ms <- get
-   let (_,fp2) = ms_fileMapper ms mn
-   include fr (fp2 ++ ".h")
+  ms <- get
+  let (_,fp2) = ms_fileMapper ms mn
+  include fr (fp2 ++ ".h")
 
+mkTemplate :: FileRef -> [Ident] -> Gen ()
+mkTemplate _ [] = return ()
+mkTemplate fr tps = wt fr "template <$1>"
+                    [T.intercalate ", " [T.concat ["class ",cTypeParamName tp] | tp <- tps]]
+                   
 generateDecl :: Decl ResolvedType -> Gen ()
 generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
-    case (s_typeParams s) of
-      [] -> return ()
-      tps -> wt ifile "template <$1>" [T.intercalate ", " [T.concat ["class ",cTypeParamName tp] | tp <- tps]]
-
-    wt ifile "struct $1" [cTypeName (d_name d)]
-    wl ifile "{"
-    indent ifile $ do
-        forM_ (s_fields s) $ \f -> do
-          t <- cTypeExpr (f_type f)
-          wt ifile "$1 $2;" [t, cFieldName (d_name d) (f_name f) ]
-    wl ifile "};"
+  mkTemplate ifile (s_typeParams s)
+  wt ifile "struct $1" [cTypeName (d_name d)]
+  wl ifile "{"
+  indent ifile $ do
+    forM_ (s_fields s) $ \f -> do
+      t <- cTypeExpr (f_type f)
+      wt ifile "$1 $2;" [t, cFieldName (d_name d) (f_name f) ]
+  wl ifile "};"
                      
-generateDecl d@(Decl{d_type=(Decl_Union u)}) = return ()
-generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = return ()
+generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
+  mkTemplate ifile (u_typeParams u)
+  wt ifile "struct $1" [cTypeName (d_name d)]
+  wl ifile "{"
+  wl ifile "   // FIXME UNION IMPL"
+  wl ifile "};"
+
+generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
+  mkTemplate ifile (t_typeParams t)
+  te <- cTypeExpr (t_typeExpr t)
+  wt ifile "using $1 = $2;" [cTypeName (d_name d), te]
+
+localTypes :: TypeExpr ResolvedType -> Set.Set Ident
+localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
+
+localTypes1 :: ResolvedType -> Set.Set Ident
+localTypes1 (RT_Named (sn,_)) = case sn_moduleName sn of
+    ModuleName [] -> Set.singleton (sn_name sn)
+    -- FIXME: need to either check if fully scoped name matches current module here,
+    -- or, alternatively, map fully scoped local references to unscoped ones as a compiler
+    -- phase.
+    _ -> Set.empty 
+localTypes1 (RT_Param _) = Set.empty
+localTypes1 (RT_Primitive _) = Set.empty
+
+referencedLocalTypes :: Decl ResolvedType -> Set.Set Ident
+referencedLocalTypes d = Set.delete (d_name d) (rtypes d)
+  where
+    rtypes (Decl{d_type=(Decl_Struct s)}) = Set.unions [ localTypes (f_type f) | f <- s_fields s]
+    rtypes (Decl{d_type=(Decl_Union u)}) = Set.unions [ localTypes (f_type f) | f <- u_fields u]
+    rtypes (Decl{d_type=(Decl_Typedef t)}) = localTypes (t_typeExpr t)
 
 generateModule :: Module ResolvedType -> Gen ()
 generateModule m = do
    ms <- get
    let mname = ms_name ms
        hasCustomDefinition n = Map.member (ScopedName mname n) (ms_customTypes ms)
+
+       -- FIXME: the topological sort will fail here with mutually recursive types
+       -- Need to work out how to generate code in this situation
+       sortedDecls = topologicalSort fst (referencedLocalTypes.snd) (Map.toList (m_decls m))
+
        genDecl (n,d) = do
           wl ifile ""
           if hasCustomDefinition n
@@ -199,7 +236,7 @@ generateModule m = do
      wt ifile "namespace $1 {" [i]
      wt cppfile "namespace $1 {" [i]
 
-   mapM_ genDecl (Map.toList (m_decls m))
+   mapM_ genDecl sortedDecls
 
    forM_ (unCppNamespace (ms_moduleMapper ms mname)) $ \_ -> do
      wl cppfile "}"

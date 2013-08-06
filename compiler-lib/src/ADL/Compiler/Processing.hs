@@ -400,13 +400,18 @@ loadAndCheckModule moduleFinder modulePath = do
     emptyNameScope = NameScope Map.empty Map.empty Map.empty Set.empty
 
 sortByDeps :: [SModule] -> [SModule]
-sortByDeps ms = map fst (sort0 (modulesWithDeps ms) Set.empty)
-  where
-    sort0 :: [(SModule,Set.Set ModuleName)] -> Set.Set ModuleName -> [(SModule,Set.Set ModuleName)]
-    sort0 [] _ = []
-    sort0 ms sofar = let (ok,todo) = partition (\(m,md)-> Set.null (md `Set.difference` sofar)) ms
-                         sofar' = Set.unions (sofar:map (Set.singleton . m_name . fst) ok)
-                     in ok ++ sort0 todo sofar'
-                         
-    modulesWithDeps ms = map (\m -> (m,getReferencedModules m)) ms
+sortByDeps ms = topologicalSort m_name getReferencedModules ms
 
+-- | Sort a list topologically, given a function idf to label each element, and
+-- a function depf to calculate the elements dependencies.
+topologicalSort :: forall a b . (Ord b) => (a->b) -> (a->Set.Set b) -> [a] ->  [a]
+topologicalSort idf depf as = map fst (sort1 (addDeps as) Set.empty)
+  where
+    sort1 :: (Ord b) => [(a, Set.Set b)] -> Set.Set b -> [(a, Set.Set b)]
+    sort1 [] _ = []
+    sort1 as sofar = let (ok,todo) = partition (\(a,ad)-> Set.null (ad `Set.difference` sofar)) as
+                         sofar' = Set.unions (sofar:map (Set.singleton . idf . fst) ok)
+                     in if length todo == length as then error "topologicalSort failed"
+                                                    else ok ++ sort1 todo sofar'
+                         
+    addDeps as = map (\a -> (a,depf a)) as
