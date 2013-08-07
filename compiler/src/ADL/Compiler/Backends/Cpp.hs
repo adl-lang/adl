@@ -207,7 +207,7 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
   mkTemplate ifile (u_typeParams u)
   wt ifile "struct $1" [cTypeName (d_name d)]
   wl ifile "{"
-  wl ifile "   // FIXME UNION IMPL"
+  wl ifile "   // FIXME: UNION IMPLEMENTATION"
   wl ifile "};"
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
