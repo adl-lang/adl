@@ -171,16 +171,36 @@ mkTemplate :: FileRef -> [Ident] -> Gen ()
 mkTemplate _ [] = return ()
 mkTemplate fr tps = wt fr "template <$1>"
                     [T.intercalate ", " [T.concat ["class ",cTypeParamName tp] | tp <- tps]]
-                   
+
+addMarker :: v -> v -> v -> [a] -> [(v,a)]
+addMarker fv v lv as = case add as of
+    [] -> []
+    ((_,a):as) -> (fv,a):as
+  where
+    add [] = []
+    add [a] = [(lv,a)]
+    add (a:as) = (v,a):add as
+
 generateDecl :: Decl ResolvedType -> Gen ()
 generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
+  fts <- forM (s_fields s) $ \f -> do
+    t <- cTypeExpr (f_type f)
+    return (f,t)
+  let ctname = cTypeName (d_name d)
   mkTemplate ifile (s_typeParams s)
-  wt ifile "struct $1" [cTypeName (d_name d)]
+  wt ifile "struct $1" [ctname]
   wl ifile "{"
   indent ifile $ do
-    forM_ (s_fields s) $ \f -> do
-      t <- cTypeExpr (f_type f)
-      wt ifile "$1 $2;" [t, cFieldName (d_name d) (f_name f) ]
+     wt ifile "$1();" [ctname]
+     wl ifile ""
+     wt ifile "$1(" [ctname]
+     indent ifile $ do
+       forM_ (addMarker "," "," "" fts) $ \(mark,(f,t)) -> do
+          wt ifile "const $1 & $2$3" [t, cFieldName (d_name d) (f_name f),mark]
+       wl ifile ");"
+     wl ifile ""
+     forM_ fts $ \(f,t) -> do
+         wt ifile "$1 $2;" [t, cFieldName (d_name d) (f_name f) ]
   wl ifile "};"
                      
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
