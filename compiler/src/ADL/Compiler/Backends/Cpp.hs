@@ -4,10 +4,10 @@ module ADL.Compiler.Backends.Cpp(
   CppFlags(..)
   ) where
 
-import Debug.Trace
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
+import Data.Ord (comparing)
 
 import System.Directory(createDirectoryIfMissing)
 import System.FilePath(joinPath,takeDirectory)
@@ -15,7 +15,14 @@ import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
 
+import qualified Data.Vector as V
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Aeson as JSON
+import Data.Attoparsec.Number
+
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import qualified Data.ByteString.Base64 as B64
 
 import ADL.Utils.Format
 import ADL.Compiler.AST
@@ -32,8 +39,8 @@ data IncFilePath = IncFilePath FilePath Bool deriving (Eq,Ord)
 instance Format CppNamespace where formatText (CppNamespace ids) = T.intercalate "::" ids
 
 instance Format IncFilePath where
-  format (IncFilePath fp False) = "\"" ++ fp ++ "\""
-  format (IncFilePath fp True) = "<" ++ fp ++ ">"
+  format (IncFilePath fp False) = "<" ++ fp ++ ">"
+  format (IncFilePath fp True) = "\"" ++ fp ++ "\""
 
 instance Format CppFilePath where format (CppFilePath fp) = fp
 
@@ -77,20 +84,26 @@ ifile, cppfile :: FileRef
 ifile fu ms = ms{ms_incFile=fu (ms_incFile ms)}
 cppfile fu ms = ms{ms_cppFile=fu (ms_cppFile ms)}
 
+
+writers :: FileRef -> (T.Text -> Gen (),
+                       T.Text -> [T.Text] -> Gen (),
+                       Gen () -> Gen ())
+writers fr = (wline fr, wtemplate fr, indent fr)           
+                       
 -- Write a line of text to the given file
-wl :: FileRef -> T.Text -> Gen ()
-wl fl t = modify (fl addline)
+wline :: FileRef -> T.Text -> Gen ()
+wline fl t = modify (fl addline)
   where
     addline fs = fs{fs_lines=(fs_indent fs) `T.append` t:fs_lines fs}
 
 -- Write a template to the given file
-wt :: FileRef -> T.Text -> [T.Text] -> Gen ()
-wt fl pattern args = wl fl (template pattern args)
+wtemplate :: FileRef -> T.Text -> [T.Text] -> Gen ()
+wtemplate fl pattern args = wline fl (template pattern args)
 
 -- Reference an include file from the given file
 include, includeStd :: FileRef -> FilePath -> Gen ()
-include fl i = include0 fl (IncFilePath i False)
-includeStd fl i = include0 fl (IncFilePath i True)
+include fr i = include0 fr (IncFilePath i True)
+includeStd fr i = include0 fr (IncFilePath i False)
 
 include0 :: FileRef -> IncFilePath -> Gen ()
 include0 fl i = modify (fl $ \fs -> fs{fs_includes=Set.insert i (fs_includes fs)})
@@ -161,6 +174,10 @@ cTypeParamName n = n
 cFieldName :: Ident -> Ident -> Ident
 cFieldName _ n = n
 
+-- Returns the c++ name corresponding to the ADL discriminator name
+cDiscName :: Ident -> Ident -> Ident
+cDiscName _ n = n
+
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
   ms <- get
@@ -169,7 +186,7 @@ includeModule fr mn = do
 
 mkTemplate :: FileRef -> [Ident] -> Gen ()
 mkTemplate _ [] = return ()
-mkTemplate fr tps = wt fr "template <$1>"
+mkTemplate fr tps = wtemplate fr "template <$1>"
                     [T.intercalate ", " [T.concat ["class ",cTypeParamName tp] | tp <- tps]]
 
 addMarker :: v -> v -> v -> [a] -> [(v,a)]
@@ -185,35 +202,134 @@ generateDecl :: Decl ResolvedType -> Gen ()
 generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
   fts <- forM (s_fields s) $ \f -> do
     t <- cTypeExpr (f_type f)
-    return (f,t)
+    defv <- case f_default f of
+        Nothing -> return Nothing
+        (Just v) -> fmap Just (generateLiteral (f_type f) v)
+    return (cFieldName (d_name d) (f_name f), f, t, defv)
   let ctname = cTypeName (d_name d)
+      ctnameP = case s_typeParams s of
+        [] -> ctname
+        ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
+
+  -- Class Declaration
+  let (wl,wt,indent) = writers ifile
+  wl ""
   mkTemplate ifile (s_typeParams s)
-  wt ifile "struct $1" [ctname]
-  wl ifile "{"
-  indent ifile $ do
-     wt ifile "$1();" [ctname]
-     wl ifile ""
-     wt ifile "$1(" [ctname]
-     indent ifile $ do
-       forM_ (addMarker "," "," "" fts) $ \(mark,(f,t)) -> do
-          wt ifile "const $1 & $2$3" [t, cFieldName (d_name d) (f_name f),mark]
-       wl ifile ");"
-     wl ifile ""
-     forM_ fts $ \(f,t) -> do
-         wt ifile "$1 $2;" [t, cFieldName (d_name d) (f_name f) ]
-  wl ifile "};"
-                     
+  wt "struct $1" [ctname]
+  wl "{"
+  indent  $ do
+     wt "$1();" [ctname]
+     wl ""
+     wt "$1(" [ctname]
+     indent  $ do
+       forM_ (addMarker "," "," "" fts) $ \(mark,(fname,f,t,_)) -> do
+          wt "const $1 & $2$3" [t, fname,mark]
+       wl ");"
+     wl ""
+     forM_ fts $ \(fname,_,t,_) -> do
+         wt "$1 $2;" [t, fname]
+  wl "};"
+  wl ""
+
+  -- Associated functions
+  mkTemplate ifile (s_typeParams s)
+  wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
+  wl ""
+  
+  -- Constructors
+  -- will end up in header file if it's a template class
+  let fr = if null (s_typeParams s) then cppfile else ifile
+  let (wl,wt,indent) = writers fr
+  wl ""
+  mkTemplate fr (s_typeParams s)
+  wt "$1::$2()" [ctnameP, ctname]
+  indent $ do
+    forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,f,t,defv)) -> do
+      case defv of
+        Nothing -> return ()
+        (Just v) -> wt "$1 $2($3)" [mark,fname,v]
+  wl "{"
+  wl "}"
+  wl ""
+  mkTemplate fr (s_typeParams s)
+  wt "$1::$2(" [ctnameP,ctname]
+  indent  $ do
+    forM_ (addMarker "," "," "" fts) $ \(mark,(fname, f,t,_)) -> do
+      wt "const $1 & $2_$3" [t,fname,mark]
+    wl ")"
+    forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_)) -> do
+      wt "$1 $2($2_)" [mark,fname]
+  wl "{"
+  wl "}"
+  wl ""
+
+  -- Non-inline functions
+  -- will still end up in header file if it's a template class
+  mkTemplate fr (s_typeParams s)
+  wl "bool"
+  wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
+  wl "{"
+  indent  $ do
+    forM_ fts $ \(fname, f,t,_) -> do
+      wt "if( a.$1 < b.$1 ) return true;" [fname]
+      wt "if( a.$1 > b.$1 ) return false;" [fname]
+    wl "return false;"
+  wl "}"
+
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
   mkTemplate ifile (u_typeParams u)
-  wt ifile "struct $1" [cTypeName (d_name d)]
-  wl ifile "{"
-  wl ifile "   // FIXME: UNION IMPLEMENTATION"
-  wl ifile "};"
+  let wt = wtemplate ifile
+      wl = wline ifile
+  wl ""
+  wt "struct $1" [cTypeName (d_name d)]
+  wl "{"
+  wl "   // FIXME: UNION IMPLEMENTATION"
+  wl "};"
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
-  mkTemplate ifile (t_typeParams t)
   te <- cTypeExpr (t_typeExpr t)
-  wt ifile "using $1 = $2;" [cTypeName (d_name d), te]
+  mkTemplate ifile (t_typeParams t)
+  wline ifile ""
+  wtemplate ifile "using $1 = $2;" [cTypeName (d_name d), te]
+
+generateLiteral :: TypeExpr ResolvedType -> JSON.Value -> Gen T.Text
+generateLiteral te v =  generateLV Map.empty te v
+  where
+    -- We only need to match the appropriate JSON cases here, as the JSON value
+    -- has already been validated by the compiler
+    generateLV :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> Gen T.Text
+    generateLV m (TypeExpr (RT_Primitive pt) []) v = return (cPrimitiveLiteral pt v)
+    generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
+    generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
+      (Decl_Struct s) -> generateStruct m te0 decl s tes v
+      (Decl_Union u) -> generateUnion m decl u tes v 
+      (Decl_Typedef t) -> generateTypedef m decl t tes v
+    generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
+         (Just te) -> generateLV m te v
+
+    generateVec m te (JSON.Array v) = do
+      vals <- mapM (generateLV m te) (V.toList v) 
+      return (template "mkvec( $1 )" [T.intercalate ", " vals])
+
+    generateStruct m te0 d s tes (JSON.Object hm) = do
+      fields <- forM (L.sortBy (comparing fst) $ HM.toList hm) $ \(fname,v) ->
+        generateLV m2 (getTE s fname) v
+      tparams <- mapM cTypeExpr tes
+      let fields1 = T.intercalate ", " fields
+          ctname = case tparams of
+            [] -> cTypeName (d_name d)
+            ss -> template "$1<$2>" [cTypeName (d_name d),T.intercalate "," ss]
+      return (template "$1( $2 )" [ctname, fields1])
+      where
+        getTE s fname = case L.find (\f -> f_name f == fname) (s_fields s) of
+          Just f -> f_type f
+        m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
+
+    generateUnion m d u tes (JSON.Object hm) = return "XXXXX"
+
+    generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
+      where
+        m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
 
 localTypes :: TypeExpr ResolvedType -> Set.Set Ident
 localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
@@ -248,21 +364,23 @@ generateModule m = do
          Just decls -> decls
 
        genDecl (n,d) = do
-          wl ifile ""
           if hasCustomDefinition n
-            then wt ifile "// $1 excluded due to custom definition" [n]
+            then wtemplate ifile "// $1 excluded due to custom definition" [n]
             else generateDecl d
 
+   include ifile "adl.h"
    includeModule cppfile mname
    forM_ (unCppNamespace (ms_moduleMapper ms mname)) $ \i -> do
-     wt ifile "namespace $1 {" [i]
-     wt cppfile "namespace $1 {" [i]
+     wtemplate ifile "namespace $1 {" [i]
+     wtemplate cppfile "namespace $1 {" [i]
 
    mapM_ genDecl sortedDecls
 
+   wline cppfile ""
+   wline ifile ""
    forM_ (unCppNamespace (ms_moduleMapper ms mname)) $ \_ -> do
-     wl cppfile "}"
-     wl ifile "}"
+     wline cppfile "}"
+     wline ifile "}"
 
 -- | Generate the c++ code for an ADL module into files.
 -- The call @writeModuleFile uo mNamespace mFile module@ will use
@@ -319,10 +437,10 @@ generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath 
 ----------------------------------------------------------------------
 
 intType :: T.Text -> Gen T.Text
-intType s = include ifile "stdint.h" >> return s
+intType s = includeStd ifile "stdint.h" >> return s
 
 cPrimitiveType :: PrimitiveType -> Gen T.Text
-cPrimitiveType P_Void = include ifile "Void.h" >> return "Void"
+cPrimitiveType P_Void = return "Void"
 cPrimitiveType P_Bool = return "bool"
 cPrimitiveType P_Int8 = intType "int8_t"
 cPrimitiveType P_Int16 = intType "int16_t"
@@ -338,7 +456,35 @@ cPrimitiveType P_ByteVector = includeStd ifile "string" >> return "std::string"
 cPrimitiveType P_Vector = includeStd ifile "vector" >> return "std::vector"
 cPrimitiveType P_String = includeStd ifile "string" >> return "std::string"
 cPrimitiveType P_Sink = include ifile "Sink.h" >> return "Sink"
-      
+
+cPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
+cPrimitiveLiteral P_Void JSON.Null = "Void()"
+cPrimitiveLiteral P_Bool (JSON.Bool True) = "true"
+cPrimitiveLiteral P_Bool (JSON.Bool False) = "false"
+cPrimitiveLiteral P_Int8 (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Int16 (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Int32 (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Int64 (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Word8 (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Word16 (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Word32 (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Word64 (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Float (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Float (JSON.Number (D n)) = litNumber n
+cPrimitiveLiteral P_Double (JSON.Number (I n)) = litNumber n
+cPrimitiveLiteral P_Double (JSON.Number (D n)) = litNumber n
+cPrimitiveLiteral P_ByteVector (JSON.String s) = T.pack (show (decode s))
+  where
+    decode s = case B64.decode (T.encodeUtf8 s) of
+      (Left _) -> "???"
+      (Right s) -> s
+cPrimitiveLiteral P_Vector _ = "????" -- never called
+cPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
+cPrimitiveLiteral P_Sink _ = "????" -- never called
+
+litNumber :: (Num a, Ord a, Show a) => a -> T.Text
+litNumber x = T.pack (show x)
+
 customTypes :: Map.Map ScopedName CustomType
 customTypes = Map.empty      
   
