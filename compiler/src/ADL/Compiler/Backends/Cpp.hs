@@ -175,8 +175,16 @@ cFieldName :: Ident -> Ident -> Ident
 cFieldName _ n = n
 
 -- Returns the c++ name corresponding to the ADL discriminator name
-cDiscName :: Ident -> Ident -> Ident
-cDiscName _ n = n
+cUnionAccessorName :: Ident -> Ident -> Ident
+cUnionAccessorName _ n = n
+
+-- Returns the c++ name corresponding to the ADL discriminator name
+cUnionConstructorName :: Ident -> Ident -> Ident
+cUnionConstructorName u n = T.append "mk_" (cUnionAccessorName u n)
+
+-- Returns the c++ name corresponding to the ADL discriminator name
+cUnionDiscName :: Ident -> Ident -> Ident
+cUnionDiscName u n = T.toUpper (cUnionAccessorName u n)
 
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
@@ -277,14 +285,57 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
   wl "}"
 
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
-  mkTemplate ifile (u_typeParams u)
-  let wt = wtemplate ifile
-      wl = wline ifile
+  fts <- forM (u_fields u) $ \f -> do
+    t <- cTypeExpr (f_type f)
+    defv <- case f_default f of
+        Nothing -> return Nothing
+        (Just v) -> fmap Just (generateLiteral (f_type f) v)
+    return (f, t, defv)
+
+  let ctname = cTypeName (d_name d)
+      ctnameP = case u_typeParams u of
+        [] -> ctname
+        ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
+
+  -- The class declaration
+  let (wl,wt,indent) = writers ifile
   wl ""
-  wt "struct $1" [cTypeName (d_name d)]
+  mkTemplate ifile (u_typeParams u)
+  wt "class $1" [ctname]
   wl "{"
-  wl "   // FIXME: UNION IMPLEMENTATION"
+  wl "public:"
+  indent $ do
+    wt "$1();" [ctname]
+    forM_ fts $ \(f,t,_) -> do
+      wt "static $1 $2( const $3 & v );" [
+        ctnameP, cUnionConstructorName (d_name d) (f_name f), t
+        ]
+    wl ""
+    wt "$1( const $2 & );" [ctname,ctnameP]
+    wt "~$1();" [ctname]
+    wt "$1 operator=( const $1 & );" [ctnameP]
+    wl ""
+    wl "enum DiscType"
+    wl "{"
+    indent $ do
+      forM_ (addMarker "," "," "" fts) $ \(mark,(f,t,_)) -> do
+        wt "$1$2" [cUnionDiscName (d_name d) (f_name f), mark]
+    wl "};"
+    wl ""
+    wl "DiscType d() const;"
+    forM_ fts $ \(f,t,_) -> do
+      wt "$1 & $2() const;" [t,cUnionAccessorName (d_name d) (f_name f)]
+    wl ""
+  wl "private:"
+  indent $ do
+    wl "DiscType d_;"
+    wl "void *v_;"
   wl "};"
+
+  -- Associated functions
+  mkTemplate ifile (u_typeParams u)
+  wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
+  wl ""
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr (t_typeExpr t)
@@ -325,7 +376,21 @@ generateLiteral te v =  generateLV Map.empty te v
           Just f -> f_type f
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
 
-    generateUnion m d u tes (JSON.Object hm) = return "XXXXX"
+    generateUnion m d u tes (JSON.Object hm) = do
+      tparams <- mapM cTypeExpr tes
+      let [(fname,jv)] = HM.toList hm
+          ctname = case tparams of
+            [] -> cTypeName (d_name d)
+            ss -> template "$1<$2>" [cTypeName (d_name d),T.intercalate "," ss]
+      field <- generateLV m2 (getTE u fname) jv
+      return (template "$1::$2($3)" [ctname,cUnionConstructorName (d_name d) fname, field])
+      where
+        getTE u fname = case L.find (\f -> f_name f == fname) (u_fields u) of
+          Just f -> f_type f
+        m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
+
+              
+
 
     generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
       where
