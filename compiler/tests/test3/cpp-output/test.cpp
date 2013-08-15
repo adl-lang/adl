@@ -4,6 +4,8 @@ namespace ADL {
 namespace test {
 
 A::A()
+    : f_int(0)
+    , f_bool(false)
 {
 }
 
@@ -28,6 +30,11 @@ operator<( const A &a, const A &b )
     if( a.f_bool < b.f_bool ) return true;
     if( a.f_bool > b.f_bool ) return false;
     return false;
+}
+
+U::U()
+    : d_(F_INT), v_(new int16_t(0))
+{
 }
 
 }

@@ -118,6 +118,10 @@ indent fl g = do
   where
     is = "    "
 
+isVoidType :: TypeExpr ResolvedType -> Bool
+isVoidType (TypeExpr (RT_Primitive P_Void) []) = True
+isVoidType _ = False
+
 type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
 
 -- Returns the c++ typer expression corresponding to the
@@ -206,14 +210,19 @@ addMarker fv v lv as = case add as of
     add [a] = [(lv,a)]
     add (a:as) = (v,a):add as
 
+commaSep :: [v]  -> [(v,T.Text)]
+commaSep [] = []
+commaSep [v] = [(v,"")]
+commaSep (v:vs) = (v,","):commaSep vs
+
 generateDecl :: Decl ResolvedType -> Gen ()
 generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
   fts <- forM (s_fields s) $ \f -> do
     t <- cTypeExpr (f_type f)
-    defv <- case f_default f of
-        Nothing -> generateDefaultLiteral (f_type f)
-        (Just v) -> generateLiteral (f_type f) v
-    return (cFieldName (d_name d) (f_name f), f, t, defv)
+    litv <- case f_default f of
+        (Just v) -> mkLiteral (f_type f) v
+        Nothing -> mkDefaultLiteral (f_type f)
+    return (cFieldName (d_name d) (f_name f), f, t, litv)
   let ctname = cTypeName (d_name d)
       ctnameP = case s_typeParams s of
         [] -> ctname
@@ -230,8 +239,8 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
      wl ""
      wt "$1(" [ctname]
      indent  $ do
-       forM_ (addMarker "," "," "" fts) $ \(mark,(fname,f,t,_)) -> do
-          wt "const $1 & $2$3" [t, fname,mark]
+       forM_ (commaSep fts) $ \((fname,f,t,_),sep) -> do
+          wt "const $1 & $2$3" [t, fname,sep]
        wl ");"
      wl ""
      forM_ fts $ \(fname,_,t,_) -> do
@@ -251,17 +260,18 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
   wl ""
   mkTemplate fr (s_typeParams s)
   wt "$1::$2()" [ctnameP, ctname]
-  indent $ do
-    forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,f,t,defv)) -> do
-        wt "$1 $2($3)" [mark,fname,defv]
+  indent $
+    forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,f,t,litv)) -> do
+       when (not $ literalIsDefault litv) $
+            wt "$1 $2($3)" [mark,fname,literalLValue litv]
   wl "{"
   wl "}"
   wl ""
   mkTemplate fr (s_typeParams s)
   wt "$1::$2(" [ctnameP,ctname]
   indent  $ do
-    forM_ (addMarker "," "," "" fts) $ \(mark,(fname, f,t,_)) -> do
-      wt "const $1 & $2_$3" [t,fname,mark]
+    forM_ (commaSep fts) $ \((fname, f,t,_),sep) -> do
+      wt "const $1 & $2_$3" [t,fname,sep]
     wl ")"
     forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_)) -> do
       wt "$1 $2($2_)" [mark,fname]
@@ -285,10 +295,10 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
   fts <- forM (u_fields u) $ \f -> do
     t <- cTypeExpr (f_type f)
-    defv <- case f_default f of
-        Nothing -> generateDefaultLiteral (f_type f)
-        (Just v) -> generateLiteral (f_type f) v
-    return (f, t, defv)
+    litv <- case f_default f of
+        (Just v) -> mkLiteral (f_type f) v
+        Nothing -> mkDefaultLiteral (f_type f)
+    return (f, t, litv)
 
   let ctname = cTypeName (d_name d)
       ctnameP = case u_typeParams u of
@@ -305,9 +315,11 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
   indent $ do
     wt "$1();" [ctname]
     forM_ fts $ \(f,t,_) -> do
-      wt "static $1 $2( const $3 & v );" [
-        ctnameP, cUnionConstructorName (d_name d) (f_name f), t
-        ]
+      let ctorName = cUnionConstructorName (d_name d) (f_name f)
+      if isVoidType (f_type f)
+        then wt "static $1 $2();" [ctnameP, ctorName ] 
+        else wt "static $1 $2( const $3 & v );" [ ctnameP, ctorName, t ]
+
     wl ""
     wt "$1( const $2 & );" [ctname,ctnameP]
     wt "~$1();" [ctname]
@@ -316,8 +328,8 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
     wl "enum DiscType"
     wl "{"
     indent $ do
-      forM_ (addMarker "," "," "" fts) $ \(mark,(f,t,_)) -> do
-        wt "$1$2" [cUnionDiscName (d_name d) (f_name f), mark]
+      forM_ (commaSep fts) $ \((f,t,_),sep) -> do
+        wt "$1$2" [cUnionDiscName (d_name d) (f_name f), sep]
     wl "};"
     wl ""
     wl "DiscType d() const;"
@@ -340,84 +352,24 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
   let fr = if null (u_typeParams u) then cppfile else ifile
   let (wl,wt,indent) = writers fr
 
+  wl ""
   mkTemplate fr (u_typeParams u)
-  wt "$1:$2()" [ctnameP,ctname]
+  wt "$1::$2()" [ctnameP,ctname]
   -- FIXME :: Confirm that typechecker disallows empty unions, so the
   -- head below is ok.
-  let (f,t,defv) = head fts
-  indent $ case f_type f of
-       TypeExpr (RT_Primitive P_Void) [] -> wt ": d_($1), v_(0)" [cUnionDiscName (d_name d) (f_name f)]
-       _ -> wt ": d_($1), v_(new $2($3))" [cUnionDiscName (d_name d) (f_name f),t,defv]
+  let (f,t,litv) = head fts
+      lv = if isVoidType (f_type f)
+           then "0"
+           else template "new $1" [literalPValue litv]
+  indent $ wt ": d_($1), v_($2)" [cUnionDiscName (d_name d) (f_name f),lv]
   wl "{"
   wl "}"
-
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr (t_typeExpr t)
   mkTemplate ifile (t_typeParams t)
   wline ifile ""
   wtemplate ifile "using $1 = $2;" [cTypeName (d_name d), te]
-
-generateDefaultLiteral :: TypeExpr ResolvedType -> Gen (Maybe T.Text)
-generateDefaultLiteral te = generateLV Map.empty te Nothing
-
-generateLiteral :: TypeExpr ResolvedType -> JSON.Value -> Gen (Maybe T.Text)
-generateLiteral te v =  generateLV Map.empty te (Just v)
-
--- We only need to match the appropriate JSON cases here, as the JSON value
--- has already been validated by the compiler
-generateLV :: TypeBindingMap -> TypeExpr ResolvedType -> Maybe JSON.Value -> Gen (Maybe T.Text)
-
-generateLV _ (TypeExpr (RT_Primitive pt) []) Nothing = return (cPrimitiveDefault pt)
-generateLV _ (TypeExpr (RT_Primitive pt) []) (Just v) = return (Just (cPrimitiveLiteral pt v))
-
-generateLV _ (TypeExpr (RT_Primitive pt) []) Nothing = return Nothing
-
-generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) (Just jv) = generateVecLV m te jv
-generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
-     (Just te) -> generateLV m te v
-     Nothing -> return "XXXXX"
-generateLV m te0@(TypeExpr (RT_Named (_,decl)) tes) v = case d_type decl of
-  (Decl_Struct s) -> generateStructLV m te0 decl s tes v
-  (Decl_Union u) -> generateUnionLV m decl u tes v 
-  (Decl_Typedef t) -> generateTypedefLV m decl t tes v
-
-generateVecLV m te (JSON.Array v) = do
-  vals <- sequence [generateLV m te (Just v) | v <-V.toList v]
-  return (Just (template "mkvec( $1 )" [T.intercalate ", " [ v | Just v <- vals]]))
-
-generateStructLV m te0 d s tes (JSON.Object hm) = do
-  let fields0 = L.sortBy (comparing fst) $ HM.toList hm
-  fields1 <- forM fields0 $ \(fname,v) -> do
-    generateLV m2 (getTE fname) (Just v)
-  tparams <- mapM cTypeExpr tes
-  let fields2 = T.intercalate ", " fields1
-      ctname = case tparams of
-        [] -> cTypeName (d_name d)
-        ss -> template "$1<$2>" [cTypeName (d_name d),T.intercalate "," ss]
-  return (template "$1($2)" [ctname, fields2])
-  where
-    getTE fname = case L.find (\f -> f_name f == fname) (s_fields s) of
-      Just f -> f_type f
-    m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
-
-generateUnionLV m d u tes Nothing = return ""
-generateUnionLV m d u tes (Just (JSON.Object hm)) = do
-  tparams <- mapM cTypeExpr tes
-  let ctname = case tparams of
-        [] -> cTypeName (d_name d)
-        ss -> template "$1<$2>" [cTypeName (d_name d),T.intercalate "," ss]
-      [(fname,jv)] = HM.toList hm
-  v <- generateLV m2 (getTE fname) (Just jv)
-  return (template "$1::$2($3)" [ctname,cUnionConstructorName (d_name d) fname, v])
-  where
-    getTE fname = case L.find (\f -> f_name f == fname) (u_fields u) of
-      Just f -> f_type f
-    m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
-
-generateTypedefLV m d t tes v = generateLV m2 (t_typeExpr t) v
-  where
-    m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
 
 localTypes :: TypeExpr ResolvedType -> Set.Set Ident
 localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
@@ -521,7 +473,92 @@ generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath 
                   namespaceGenerator
                   (fileGenerator (cf_outputPath cf))
                   rm
+----------------------------------------------------------------------
+
+data Literal = LDefault Ident
+             | LCtor Ident [Literal]
+             | LUnion Ident T.Text Literal
+             | LVector Ident [Literal]
+             | LPrimitive Ident T.Text
+
+mkDefaultLiteral :: TypeExpr ResolvedType -> Gen Literal
+mkDefaultLiteral te@(TypeExpr (RT_Primitive pt) []) =
+  case cPrimitiveDefault pt of
+    Nothing -> do
+      t <- cTypeExpr te
+      return (LDefault t)
+    Just l -> do
+      ct <- cPrimitiveType pt
+      return (LPrimitive ct l)
+mkDefaultLiteral te = do
+  t <- cTypeExpr te
+  return (LDefault t)
+    
+
+mkLiteral :: TypeExpr ResolvedType -> JSON.Value -> Gen Literal
+mkLiteral te jv = mk Map.empty te jv
+  where
+    mk :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> Gen Literal
+    mk _ (TypeExpr (RT_Primitive pt) []) v = do
+      ct <- cPrimitiveType pt
+      return (LPrimitive ct (cPrimitiveLiteral pt v))
+    mk  m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
+     (Just te) -> mk m te v
+     Nothing -> error "Failed to find type binding in mkLiteral"
+    mk m (TypeExpr (RT_Primitive P_Vector) [te]) jv = mkVec m te jv
+    mk m te0@(TypeExpr (RT_Named (_,decl)) tes) jv = case d_type decl of
+      (Decl_Struct s) -> mkStruct m te0 decl s tes jv
+      (Decl_Union u) -> mkUnion m te0 decl u tes jv 
+      (Decl_Typedef t) -> mkTypedef m decl t tes jv
+
+    mkVec m te (JSON.Array v) = do
+      t <- cTypeExpr te
+      vals <- mapM (mk m te) (V.toList v)
+      return (LVector t vals)
       
+    mkStruct m te0 d s tes (JSON.Object hm) = do
+      fields1 <- forM (s_fields s) $ \f -> do
+        case HM.lookup (f_name f) hm of
+          Nothing -> mkDefaultLiteral (f_type f) 
+          (Just jv) -> mk m2 (f_type f) jv
+      t <- cTypeExpr te0
+      return (LCtor t fields1)
+      where
+        m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
+      
+    mkUnion  m te0 d u tes (JSON.Object hm) = do
+      t <- cTypeExpr te0
+      let [(fname,jv)] = HM.toList hm
+          te1 = getTE fname
+      lv <- mk m te1 jv
+      return (LUnion t (cUnionConstructorName (d_name d) fname) lv)
+      where
+        getTE fname = case L.find (\f -> f_name f == fname) (u_fields u) of
+          Just f -> f_type f
+        m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
+
+    mkTypedef m d t tes v = mk m2 (t_typeExpr t) v
+      where
+        m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
+
+literalLValue :: Literal -> T.Text
+literalLValue (LDefault t) = template "$1()" [t]
+literalLValue (LCtor t ls) = template "$1($2)" [t, T.intercalate "," (map literalLValue ls)]
+literalLValue (LUnion t ctor l) = template "$1::$2($3)" [t, ctor, literalLValue l ]
+literalLValue (LVector _ ls) = template "mkvec($1)" [T.intercalate "," (map literalLValue ls)]
+literalLValue (LPrimitive _ t) = t
+
+literalPValue :: Literal -> T.Text
+literalPValue l@(LDefault _) = literalLValue l
+literalPValue l@(LCtor _ _) = literalLValue l
+literalPValue l@(LUnion t _ _) = template "$1($2)" [t, literalLValue l]
+literalPValue l@(LVector t _) = template "std::vector<$1>( $2 )" [t, literalLValue l]
+literalPValue (LPrimitive t v) = template "$1($2)" [t, v]
+
+literalIsDefault :: Literal -> Bool
+literalIsDefault (LDefault _) = True
+literalIsDefault _ = False
+
 ----------------------------------------------------------------------
 
 intType :: T.Text -> Gen T.Text

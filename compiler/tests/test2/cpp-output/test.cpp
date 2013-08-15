@@ -4,6 +4,7 @@ namespace ADL {
 namespace test {
 
 S1::S1()
+    : x(0)
 {
 }
 

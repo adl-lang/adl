@@ -1,0 +1,51 @@
+module test
+{
+   // Tests for unions
+
+   union U1
+   {
+       void v;
+   };
+
+   union U2
+   {
+       int16 v;
+   };
+
+   union U3
+   {
+       int16 v = 100;
+   };
+
+   struct S1
+   {
+      int16 f = 100;
+   };
+
+   union U4
+   {
+       S1 v;
+   };
+
+   union U5
+   {
+       S1 v = { "f" : 200 };
+   };
+
+   union U6
+   {
+       U3 v;
+   };
+
+   union U7
+   {
+       U3 v = { "v" : 75 };
+   };
+
+   union U8
+   {
+       S1 v1;
+       int16 v2;
+   };
+
+};

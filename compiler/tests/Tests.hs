@@ -103,4 +103,5 @@ tests =
   , testCppBackend "cpp.1 empty module" "test1/input" "test1/input/test.adl" "test1/cpp-output" id
   , testCppBackend "cpp.2 structs" "test2/input" "test2/input/test.adl" "test2/cpp-output" id
   , testCppBackend "cpp.3 structs - default overrides" "test3/input" "test3/input/test.adl" "test3/cpp-output" id
+  , testCppBackend "cpp.5 unions" "test5/input" "test5/input/test.adl" "test5/cpp-output" id
   ]

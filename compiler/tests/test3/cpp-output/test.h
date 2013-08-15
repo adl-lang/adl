@@ -48,9 +48,9 @@ public:
 private:
     DiscType d_;
     void *v_;
+    void clear();
 };
 bool operator<( const U &a, const U &b );
-
 
 template <class T>
 struct XY
@@ -220,10 +220,10 @@ S<T>::S()
     , f_double(0.45)
     , f_bytes("hello")
     , f_string("abcd")
-    , f_vstring(mkvec( "xy", "ab" ))
-    , f_a(A( true, "xyz" ))
+    , f_vstring(mkvec("xy","ab"))
+    , f_a(A(true,"xyz"))
     , f_u(U::mk_f_int(45))
-    , f_bint16(B<int16_t>( "yikes", 56, mkvec( 1, 2, 3 ), XY<T>( 5, 5 ) ))
+    , f_bint16(B<int16_t> ("yikes",56,mkvec(1,2,3),XY<T> (5,5)))
 {
 }
 
