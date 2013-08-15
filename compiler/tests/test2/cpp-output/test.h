@@ -60,9 +60,9 @@ bool
 operator<( const Tree<T> &a, const Tree<T> &b )
 {
     if( a.value < b.value ) return true;
-    if( a.value > b.value ) return false;
+    if( b.value < a.value ) return false;
     if( a.children < b.children ) return true;
-    if( a.children > b.children ) return false;
+    if( b.children < a.children ) return false;
     return false;
 }
 

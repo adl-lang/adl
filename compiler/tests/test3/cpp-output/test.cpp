@@ -24,11 +24,11 @@ bool
 operator<( const A &a, const A &b )
 {
     if( a.f_int < b.f_int ) return true;
-    if( a.f_int > b.f_int ) return false;
+    if( b.f_int < a.f_int ) return false;
     if( a.f_string < b.f_string ) return true;
-    if( a.f_string > b.f_string ) return false;
+    if( b.f_string < a.f_string ) return false;
     if( a.f_bool < b.f_bool ) return true;
-    if( a.f_bool > b.f_bool ) return false;
+    if( b.f_bool < a.f_bool ) return false;
     return false;
 }
 

@@ -90,9 +90,9 @@ bool
 operator<( const XY<T> &a, const XY<T> &b )
 {
     if( a.x < b.x ) return true;
-    if( a.x > b.x ) return false;
+    if( b.x < a.x ) return false;
     if( a.y < b.y ) return true;
-    if( a.y > b.y ) return false;
+    if( b.y < a.y ) return false;
     return false;
 }
 
@@ -142,13 +142,13 @@ bool
 operator<( const B<T> &a, const B<T> &b )
 {
     if( a.f_t < b.f_t ) return true;
-    if( a.f_t > b.f_t ) return false;
+    if( b.f_t < a.f_t ) return false;
     if( a.f_string < b.f_string ) return true;
-    if( a.f_string > b.f_string ) return false;
+    if( b.f_string < a.f_string ) return false;
     if( a.f_tvec < b.f_tvec ) return true;
-    if( a.f_tvec > b.f_tvec ) return false;
+    if( b.f_tvec < a.f_tvec ) return false;
     if( a.f_xy < b.f_xy ) return true;
-    if( a.f_xy > b.f_xy ) return false;
+    if( b.f_xy < a.f_xy ) return false;
     return false;
 }
 
@@ -220,10 +220,10 @@ S<T>::S()
     , f_double(0.45)
     , f_bytes("hello")
     , f_string("abcd")
-    , f_vstring(mkvec("xy","ab"))
+    , f_vstring(mkvec<std::string>("xy","ab"))
     , f_a(A(0,"xyz",true))
     , f_u(U::mk_f_int(45))
-    , f_bint16(B<int16_t> (56,"yikes",mkvec(1,2,3),XY<int16_t> (5,5)))
+    , f_bint16(B<int16_t> (56,"yikes",mkvec<int16_t>(1,2,3),XY<int16_t> (5,5)))
 {
 }
 
@@ -276,43 +276,43 @@ bool
 operator<( const S<T> &a, const S<T> &b )
 {
     if( a.f_void < b.f_void ) return true;
-    if( a.f_void > b.f_void ) return false;
+    if( b.f_void < a.f_void ) return false;
     if( a.f_bool < b.f_bool ) return true;
-    if( a.f_bool > b.f_bool ) return false;
+    if( b.f_bool < a.f_bool ) return false;
     if( a.f_int8 < b.f_int8 ) return true;
-    if( a.f_int8 > b.f_int8 ) return false;
+    if( b.f_int8 < a.f_int8 ) return false;
     if( a.f_int16 < b.f_int16 ) return true;
-    if( a.f_int16 > b.f_int16 ) return false;
+    if( b.f_int16 < a.f_int16 ) return false;
     if( a.f_int32 < b.f_int32 ) return true;
-    if( a.f_int32 > b.f_int32 ) return false;
+    if( b.f_int32 < a.f_int32 ) return false;
     if( a.f_int64 < b.f_int64 ) return true;
-    if( a.f_int64 > b.f_int64 ) return false;
+    if( b.f_int64 < a.f_int64 ) return false;
     if( a.f_word8 < b.f_word8 ) return true;
-    if( a.f_word8 > b.f_word8 ) return false;
+    if( b.f_word8 < a.f_word8 ) return false;
     if( a.f_word16 < b.f_word16 ) return true;
-    if( a.f_word16 > b.f_word16 ) return false;
+    if( b.f_word16 < a.f_word16 ) return false;
     if( a.f_word32 < b.f_word32 ) return true;
-    if( a.f_word32 > b.f_word32 ) return false;
+    if( b.f_word32 < a.f_word32 ) return false;
     if( a.f_word64 < b.f_word64 ) return true;
-    if( a.f_word64 > b.f_word64 ) return false;
+    if( b.f_word64 < a.f_word64 ) return false;
     if( a.f_float < b.f_float ) return true;
-    if( a.f_float > b.f_float ) return false;
+    if( b.f_float < a.f_float ) return false;
     if( a.f_double < b.f_double ) return true;
-    if( a.f_double > b.f_double ) return false;
+    if( b.f_double < a.f_double ) return false;
     if( a.f_bytes < b.f_bytes ) return true;
-    if( a.f_bytes > b.f_bytes ) return false;
+    if( b.f_bytes < a.f_bytes ) return false;
     if( a.f_string < b.f_string ) return true;
-    if( a.f_string > b.f_string ) return false;
+    if( b.f_string < a.f_string ) return false;
     if( a.f_vstring < b.f_vstring ) return true;
-    if( a.f_vstring > b.f_vstring ) return false;
+    if( b.f_vstring < a.f_vstring ) return false;
     if( a.f_a < b.f_a ) return true;
-    if( a.f_a > b.f_a ) return false;
+    if( b.f_a < a.f_a ) return false;
     if( a.f_u < b.f_u ) return true;
-    if( a.f_u > b.f_u ) return false;
+    if( b.f_u < a.f_u ) return false;
     if( a.f_t < b.f_t ) return true;
-    if( a.f_t > b.f_t ) return false;
+    if( b.f_t < a.f_t ) return false;
     if( a.f_bint16 < b.f_bint16 ) return true;
-    if( a.f_bint16 > b.f_bint16 ) return false;
+    if( b.f_bint16 < a.f_bint16 ) return false;
     return false;
 }
 

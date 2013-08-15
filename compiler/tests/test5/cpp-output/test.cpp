@@ -19,7 +19,7 @@ bool
 operator<( const S1 &a, const S1 &b )
 {
     if( a.f < b.f ) return true;
-    if( a.f > b.f ) return false;
+    if( b.f < a.f ) return false;
     return false;
 }
 

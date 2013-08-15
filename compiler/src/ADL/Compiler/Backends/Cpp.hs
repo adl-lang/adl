@@ -288,7 +288,7 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
   indent  $ do
     forM_ fts $ \(fname, f,t,_) -> do
       wt "if( a.$1 < b.$1 ) return true;" [fname]
-      wt "if( a.$1 > b.$1 ) return false;" [fname]
+      wt "if( b.$1 < a.$1 ) return false;" [fname]
     wl "return false;"
   wl "}"
 
@@ -545,7 +545,7 @@ literalLValue :: Literal -> T.Text
 literalLValue (LDefault t) = template "$1()" [t]
 literalLValue (LCtor t ls) = template "$1($2)" [t, T.intercalate "," (map literalLValue ls)]
 literalLValue (LUnion t ctor l) = template "$1::$2($3)" [t, ctor, literalLValue l ]
-literalLValue (LVector _ ls) = template "mkvec($1)" [T.intercalate "," (map literalLValue ls)]
+literalLValue (LVector t ls) = template "mkvec<$1>($2)" [t, T.intercalate "," (map literalLValue ls)]
 literalLValue (LPrimitive _ t) = t
 
 literalPValue :: Literal -> T.Text

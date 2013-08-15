@@ -21,9 +21,9 @@ bool
 operator<( const S1 &a, const S1 &b )
 {
     if( a.x < b.x ) return true;
-    if( a.x > b.x ) return false;
+    if( b.x < a.x ) return false;
     if( a.y < b.y ) return true;
-    if( a.y > b.y ) return false;
+    if( b.y < a.y ) return false;
     return false;
 }
 
