@@ -5,6 +5,9 @@
 ** DONE Decide on reserved words in ADL, and generate errors
 ** Add support for ADL constants 
 ** DONE Select custom types from command line
+** FIX duplicate definitions
+Currently definitions are stored in a map as they are parsed, so we don't detect duplicates
+
 ** Work out the best way to put the defaults for custom types in the ADL
 
   A) Should typedefs allow defaults?

@@ -512,22 +512,22 @@ mkLiteral te jv = mk Map.empty te jv
       (Decl_Typedef t) -> mkTypedef m decl t tes jv
 
     mkVec m te (JSON.Array v) = do
-      t <- cTypeExpr te
+      t <- cTypeExprB m te
       vals <- mapM (mk m te) (V.toList v)
       return (LVector t vals)
       
     mkStruct m te0 d s tes (JSON.Object hm) = do
+      t <- cTypeExprB m te0
       fields1 <- forM (s_fields s) $ \f -> do
         case HM.lookup (f_name f) hm of
           Nothing -> mkDefaultLiteral (f_type f) 
           (Just jv) -> mk m2 (f_type f) jv
-      t <- cTypeExpr te0
       return (LCtor t fields1)
       where
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
       
     mkUnion  m te0 d u tes (JSON.Object hm) = do
-      t <- cTypeExpr te0
+      t <- cTypeExprB m te0
       let [(fname,jv)] = HM.toList hm
           te1 = getTE fname
       lv <- mk m te1 jv

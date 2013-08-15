@@ -221,9 +221,9 @@ S<T>::S()
     , f_bytes("hello")
     , f_string("abcd")
     , f_vstring(mkvec("xy","ab"))
-    , f_a(A(true,"xyz"))
+    , f_a(A(0,"xyz",true))
     , f_u(U::mk_f_int(45))
-    , f_bint16(B<int16_t> ("yikes",56,mkvec(1,2,3),XY<T> (5,5)))
+    , f_bint16(B<int16_t> (56,"yikes",mkvec(1,2,3),XY<int16_t> (5,5)))
 {
 }
 
