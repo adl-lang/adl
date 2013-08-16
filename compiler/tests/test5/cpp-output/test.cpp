@@ -57,11 +57,6 @@ U1 & U1::operator=( const U1 & o )
     p_ = copy( o.d_, o.p_ );
 }
 
-U1::DiscType U1::d() const
-{
-    return d_;
-}
-
 void U1::set_v()
 {
     if( d_ != V )
@@ -139,20 +134,6 @@ U2 & U2::operator=( const U2 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
-}
-
-U2::DiscType U2::d() const
-{
-    return d_;
-}
-
-int16_t & U2::v() const
-{
-    if( d_ == V )
-    {
-        return *(int16_t *)p_;
-    }
-    throw invalid_union_access();
 }
 
 const int16_t & U2::set_v(const int16_t &v)
@@ -239,20 +220,6 @@ U3 & U3::operator=( const U3 & o )
     p_ = copy( o.d_, o.p_ );
 }
 
-U3::DiscType U3::d() const
-{
-    return d_;
-}
-
-int16_t & U3::v() const
-{
-    if( d_ == V )
-    {
-        return *(int16_t *)p_;
-    }
-    throw invalid_union_access();
-}
-
 const int16_t & U3::set_v(const int16_t &v)
 {
     if( d_ == V )
@@ -335,20 +302,6 @@ U4 & U4::operator=( const U4 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
-}
-
-U4::DiscType U4::d() const
-{
-    return d_;
-}
-
-S1 & U4::v() const
-{
-    if( d_ == V )
-    {
-        return *(S1 *)p_;
-    }
-    throw invalid_union_access();
 }
 
 const S1 & U4::set_v(const S1 &v)
@@ -435,20 +388,6 @@ U5 & U5::operator=( const U5 & o )
     p_ = copy( o.d_, o.p_ );
 }
 
-U5::DiscType U5::d() const
-{
-    return d_;
-}
-
-S1 & U5::v() const
-{
-    if( d_ == V )
-    {
-        return *(S1 *)p_;
-    }
-    throw invalid_union_access();
-}
-
 const S1 & U5::set_v(const S1 &v)
 {
     if( d_ == V )
@@ -533,20 +472,6 @@ U6 & U6::operator=( const U6 & o )
     p_ = copy( o.d_, o.p_ );
 }
 
-U6::DiscType U6::d() const
-{
-    return d_;
-}
-
-U3 & U6::v() const
-{
-    if( d_ == V )
-    {
-        return *(U3 *)p_;
-    }
-    throw invalid_union_access();
-}
-
 const U3 & U6::set_v(const U3 &v)
 {
     if( d_ == V )
@@ -629,20 +554,6 @@ U7 & U7::operator=( const U7 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
-}
-
-U7::DiscType U7::d() const
-{
-    return d_;
-}
-
-U3 & U7::v() const
-{
-    if( d_ == V )
-    {
-        return *(U3 *)p_;
-    }
-    throw invalid_union_access();
 }
 
 const U3 & U7::set_v(const U3 &v)
@@ -732,29 +643,6 @@ U8 & U8::operator=( const U8 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
-}
-
-U8::DiscType U8::d() const
-{
-    return d_;
-}
-
-S1 & U8::v1() const
-{
-    if( d_ == V1 )
-    {
-        return *(S1 *)p_;
-    }
-    throw invalid_union_access();
-}
-
-int16_t & U8::v2() const
-{
-    if( d_ == V2 )
-    {
-        return *(int16_t *)p_;
-    }
-    throw invalid_union_access();
 }
 
 const S1 & U8::set_v1(const S1 &v)

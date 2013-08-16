@@ -50,6 +50,11 @@ private:
 bool operator<( const U1 &a, const U1 &b );
 bool operator==( const U1 &a, const U1 &b );
 
+inline U1::DiscType U1::d() const
+{
+    return d_;
+}
+
 class U2
 {
 public:
@@ -83,6 +88,20 @@ private:
 bool operator<( const U2 &a, const U2 &b );
 bool operator==( const U2 &a, const U2 &b );
 
+inline U2::DiscType U2::d() const
+{
+    return d_;
+}
+
+inline int16_t & U2::v() const
+{
+    if( d_ == V )
+    {
+        return *(int16_t *)p_;
+    }
+    throw invalid_union_access();
+}
+
 class U3
 {
 public:
@@ -115,6 +134,20 @@ private:
 
 bool operator<( const U3 &a, const U3 &b );
 bool operator==( const U3 &a, const U3 &b );
+
+inline U3::DiscType U3::d() const
+{
+    return d_;
+}
+
+inline int16_t & U3::v() const
+{
+    if( d_ == V )
+    {
+        return *(int16_t *)p_;
+    }
+    throw invalid_union_access();
+}
 
 template <class T>
 class U9
@@ -157,6 +190,32 @@ template <class T>
 bool operator==( const U9<T> &a, const U9<T> &b );
 
 template <class T>
+typename U9<T>::DiscType U9<T>::d() const
+{
+    return d_;
+}
+
+template <class T>
+inline T & U9<T>::v1() const
+{
+    if( d_ == V1 )
+    {
+        return *(T *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T>
+inline int16_t & U9<T>::v2() const
+{
+    if( d_ == V2 )
+    {
+        return *(int16_t *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T>
 U9<T>::U9()
     : d_(V1), p_(new T())
 {
@@ -192,32 +251,6 @@ U9<T> & U9<T>::operator=( const U9<T> & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
-}
-
-template <class T>
-typename U9<T>::DiscType U9<T>::d() const
-{
-    return d_;
-}
-
-template <class T>
-T & U9<T>::v1() const
-{
-    if( d_ == V1 )
-    {
-        return *(T *)p_;
-    }
-    throw invalid_union_access();
-}
-
-template <class T>
-int16_t & U9<T>::v2() const
-{
-    if( d_ == V2 )
-    {
-        return *(int16_t *)p_;
-    }
-    throw invalid_union_access();
 }
 
 template <class T>
@@ -336,6 +369,20 @@ private:
 bool operator<( const U4 &a, const U4 &b );
 bool operator==( const U4 &a, const U4 &b );
 
+inline U4::DiscType U4::d() const
+{
+    return d_;
+}
+
+inline S1 & U4::v() const
+{
+    if( d_ == V )
+    {
+        return *(S1 *)p_;
+    }
+    throw invalid_union_access();
+}
+
 class U5
 {
 public:
@@ -368,6 +415,20 @@ private:
 
 bool operator<( const U5 &a, const U5 &b );
 bool operator==( const U5 &a, const U5 &b );
+
+inline U5::DiscType U5::d() const
+{
+    return d_;
+}
+
+inline S1 & U5::v() const
+{
+    if( d_ == V )
+    {
+        return *(S1 *)p_;
+    }
+    throw invalid_union_access();
+}
 
 class U6
 {
@@ -402,6 +463,20 @@ private:
 bool operator<( const U6 &a, const U6 &b );
 bool operator==( const U6 &a, const U6 &b );
 
+inline U6::DiscType U6::d() const
+{
+    return d_;
+}
+
+inline U3 & U6::v() const
+{
+    if( d_ == V )
+    {
+        return *(U3 *)p_;
+    }
+    throw invalid_union_access();
+}
+
 class U7
 {
 public:
@@ -434,6 +509,20 @@ private:
 
 bool operator<( const U7 &a, const U7 &b );
 bool operator==( const U7 &a, const U7 &b );
+
+inline U7::DiscType U7::d() const
+{
+    return d_;
+}
+
+inline U3 & U7::v() const
+{
+    if( d_ == V )
+    {
+        return *(U3 *)p_;
+    }
+    throw invalid_union_access();
+}
 
 class U8
 {
@@ -471,6 +560,29 @@ private:
 
 bool operator<( const U8 &a, const U8 &b );
 bool operator==( const U8 &a, const U8 &b );
+
+inline U8::DiscType U8::d() const
+{
+    return d_;
+}
+
+inline S1 & U8::v1() const
+{
+    if( d_ == V1 )
+    {
+        return *(S1 *)p_;
+    }
+    throw invalid_union_access();
+}
+
+inline int16_t & U8::v2() const
+{
+    if( d_ == V2 )
+    {
+        return *(int16_t *)p_;
+    }
+    throw invalid_union_access();
+}
 
 }
 }

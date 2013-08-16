@@ -73,29 +73,6 @@ U & U::operator=( const U & o )
     p_ = copy( o.d_, o.p_ );
 }
 
-U::DiscType U::d() const
-{
-    return d_;
-}
-
-int16_t & U::f_int() const
-{
-    if( d_ == F_INT )
-    {
-        return *(int16_t *)p_;
-    }
-    throw invalid_union_access();
-}
-
-std::string & U::f_string() const
-{
-    if( d_ == F_STRING )
-    {
-        return *(std::string *)p_;
-    }
-    throw invalid_union_access();
-}
-
 const int16_t & U::set_f_int(const int16_t &v)
 {
     if( d_ == F_INT )

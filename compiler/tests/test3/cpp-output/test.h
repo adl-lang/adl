@@ -61,6 +61,29 @@ private:
 bool operator<( const U &a, const U &b );
 bool operator==( const U &a, const U &b );
 
+inline U::DiscType U::d() const
+{
+    return d_;
+}
+
+inline int16_t & U::f_int() const
+{
+    if( d_ == F_INT )
+    {
+        return *(int16_t *)p_;
+    }
+    throw invalid_union_access();
+}
+
+inline std::string & U::f_string() const
+{
+    if( d_ == F_STRING )
+    {
+        return *(std::string *)p_;
+    }
+    throw invalid_union_access();
+}
+
 template <class T>
 struct XY
 {

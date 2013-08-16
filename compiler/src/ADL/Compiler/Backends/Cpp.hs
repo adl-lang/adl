@@ -330,8 +330,9 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
 
   -- The class declaration
   let (wl,wt,indent) = writers ifile
+      fr = ifile
   wl ""
-  mkTemplate ifile (u_typeParams u)
+  mkTemplate fr (u_typeParams u)
   wt "class $1" [ctname]
   wl "{"
   wl "public:"
@@ -378,10 +379,29 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
 
   -- Associated functions
   wl ""
-  mkTemplate ifile (u_typeParams u)
+  mkTemplate fr (u_typeParams u)
   wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
-  mkTemplate ifile (u_typeParams u)
+  mkTemplate fr (u_typeParams u)
   wt "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
+
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  case u_typeParams u of
+    [] ->  wt "inline $1::DiscType $1::d() const" [ctnameP]
+    _ ->  wt "typename $1::DiscType $1::d() const" [ctnameP]
+  cblock fr $ do
+    wl "return d_;"
+
+  forM_ fts $ \(f,t,_) -> do
+    when (not $ isVoidType (f_type f)) $ do
+      wl ""
+      mkTemplate fr (u_typeParams u)
+      wt "inline $1 & $2::$3() const" [t,ctnameP,cUnionAccessorName d f]
+      cblock fr $ do
+        wt "if( d_ == $1 )" [cUnionDiscName d f]
+        cblock fr $ do
+          wt "return *($1 *)p_;" [t]
+        wl "throw invalid_union_access();"
 
   -- Implementation
   -- will end up in header file if it's a template class
@@ -430,25 +450,6 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
     wl "free(d_,p_);"
     wl "d_ = o.d_;"
     wl "p_ = copy( o.d_, o.p_ );"
-
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  case u_typeParams u of
-    [] ->  wt "$1::DiscType $1::d() const" [ctnameP]
-    _ ->  wt "typename $1::DiscType $1::d() const" [ctnameP]
-  cblock fr $ do
-    wl "return d_;"
-
-  forM_ fts $ \(f,t,_) -> do
-    when (not $ isVoidType (f_type f)) $ do
-      wl ""
-      mkTemplate fr (u_typeParams u)
-      wt "$1 & $2::$3() const" [t,ctnameP,cUnionAccessorName d f]
-      cblock fr $ do
-        wt "if( d_ == $1 )" [cUnionDiscName d f]
-        cblock fr $ do
-          wt "return *($1 *)p_;" [t]
-        wl "throw invalid_union_access();"
 
   forM_ fts $ \(f,t,_) -> do
     wl ""
