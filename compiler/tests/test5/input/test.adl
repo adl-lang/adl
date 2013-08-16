@@ -48,4 +48,10 @@ module test
        int16 v2;
    };
 
+   union U9<T>
+   {
+       T v1;
+       int16 v2;
+   };
+
 };

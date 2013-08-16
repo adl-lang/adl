@@ -33,7 +33,7 @@ public:
     
     U( const U & );
     ~U();
-    U operator=( const U & );
+    U & operator=( const U & );
     
     enum DiscType
     {
@@ -45,10 +45,17 @@ public:
     int16_t & f_int() const;
     std::string & f_string() const;
     
+    const int16_t & set_f_int(const int16_t & );
+    const std::string & set_f_string(const std::string & );
+    
 private:
+    U( DiscType d, void * v);
+    
     DiscType d_;
-    void *v_;
-    void clear();
+    void *p_;
+    
+    static void free( DiscType d, void *v );
+    static void *copy( DiscType d, void *v );
 };
 bool operator<( const U &a, const U &b );
 

@@ -118,6 +118,14 @@ indent fl g = do
   where
     is = "    "
 
+cblock :: FileRef -> Gen a -> Gen a
+cblock fr code = do
+  wline fr "{"
+  a <- indent fr code
+  wline fr "}"
+  return a
+
+
 isVoidType :: TypeExpr ResolvedType -> Bool
 isVoidType (TypeExpr (RT_Primitive P_Void) []) = True
 isVoidType _ = False
@@ -178,17 +186,21 @@ cTypeParamName n = n
 cFieldName :: Ident -> Ident -> Ident
 cFieldName _ n = n
 
--- Returns the c++ name corresponding to the ADL discriminator name
-cUnionAccessorName :: Ident -> Ident -> Ident
-cUnionAccessorName _ n = n
+-- Returns the c++ name for the accessor function for a union field
+cUnionAccessorName :: Decl t -> Field t  -> Ident
+cUnionAccessorName _ f = f_name f
 
--- Returns the c++ name corresponding to the ADL discriminator name
-cUnionConstructorName :: Ident -> Ident -> Ident
-cUnionConstructorName u n = T.append "mk_" (cUnionAccessorName u n)
+-- Returns the c++ name for the constructor function for a union field
+cUnionConstructorName :: Decl t -> Field t -> Ident
+cUnionConstructorName d f = T.append "mk_" (cUnionAccessorName d f)
 
--- Returns the c++ name corresponding to the ADL discriminator name
-cUnionDiscName :: Ident -> Ident -> Ident
-cUnionDiscName u n = T.toUpper (cUnionAccessorName u n)
+-- Returns the c++ name for the setter function for a union field
+cUnionSetterName :: Decl t -> Field t -> Ident
+cUnionSetterName d f = T.append "set_" (cUnionAccessorName d f)
+
+-- Returns the c++ name for the enum value corresponding to the ADL discriminator name
+cUnionDiscName :: Decl t -> Field t -> Ident
+cUnionDiscName t f = T.toUpper (cUnionAccessorName t f)
 
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
@@ -315,7 +327,7 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
   indent $ do
     wt "$1();" [ctname]
     forM_ fts $ \(f,t,_) -> do
-      let ctorName = cUnionConstructorName (d_name d) (f_name f)
+      let ctorName = cUnionConstructorName d f
       if isVoidType (f_type f)
         then wt "static $1 $2();" [ctnameP, ctorName ] 
         else wt "static $1 $2( const $3 & v );" [ ctnameP, ctorName, t ]
@@ -323,24 +335,34 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
     wl ""
     wt "$1( const $2 & );" [ctname,ctnameP]
     wt "~$1();" [ctname]
-    wt "$1 operator=( const $1 & );" [ctnameP]
+    wt "$1 & operator=( const $1 & );" [ctnameP]
     wl ""
     wl "enum DiscType"
     wl "{"
     indent $ do
       forM_ (commaSep fts) $ \((f,t,_),sep) -> do
-        wt "$1$2" [cUnionDiscName (d_name d) (f_name f), sep]
+        wt "$1$2" [cUnionDiscName d f, sep]
     wl "};"
     wl ""
     wl "DiscType d() const;"
     forM_ fts $ \(f,t,_) -> do
-      wt "$1 & $2() const;" [t,cUnionAccessorName (d_name d) (f_name f)]
+      when (not $ isVoidType (f_type f)) $
+        wt "$1 & $2() const;" [t,cUnionAccessorName d f]
+    wl ""
+    forM_ fts $ \(f,t,_) -> do
+      if isVoidType (f_type f)
+        then wt "void $1();" [cUnionSetterName d f]
+        else wt "const $1 & $2(const $1 & );" [t,cUnionSetterName d f]
     wl ""
   wl "private:"
   indent $ do
+    wt "$1( DiscType d, void * v);" [ctname]
+    wl ""
     wl "DiscType d_;"
-    wl "void *v_;"
-    wl "void clear();"
+    wl "void *p_;"
+    wl ""
+    wl "static void free( DiscType d, void *v );"
+    wt "static void *copy( DiscType d, void *v );" [ctnameP]
   wl "};"
 
   -- Associated functions
@@ -361,9 +383,116 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
       lv = if isVoidType (f_type f)
            then "0"
            else template "new $1" [literalPValue litv]
-  indent $ wt ": d_($1), v_($2)" [cUnionDiscName (d_name d) (f_name f),lv]
+  indent $ wt ": d_($1), p_($2)" [cUnionDiscName d f,lv]
   wl "{"
   wl "}"
+  forM_ fts $ \(f,t,_) -> do
+    let ctorName = cUnionConstructorName d f
+    wl ""
+    mkTemplate fr (u_typeParams u)
+    if isVoidType (f_type f)
+      then do
+        wt "$1 $1::$2()" [ctnameP, ctorName ]
+        cblock fr $
+          wt "return $1( $2, 0 );" [ctnameP, cUnionDiscName d f]
+      else do
+        wt "$1 $1::$2( const $3 & v )" [ ctnameP, ctorName, t ]
+        cblock fr $
+          wt "return $1( $2, new $3(v) );" [ctnameP, cUnionDiscName d f,t]
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wt "$1::$2( const $1 & v )" [ctnameP,ctname]
+  indent $ wl ": d_(v.d_), p_(copy(v.d_,v.p_))"
+  cblock fr $ return ()
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wt "$1::~$2()" [ctnameP,ctname]
+  cblock fr $ do
+    wl "free(d_,p_);"
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wt "$1 & $1::operator=( const $1 & o )" [ctnameP]
+  cblock fr $ do
+    wl "free(d_,p_);"
+    wl "d_ = o.d_;"
+    wl "p_ = copy( o.d_, o.p_ );"
+
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  case u_typeParams u of
+    [] ->  wt "$1::DiscType $1::d() const" [ctnameP]
+    _ ->  wt "typename $1::DiscType $1::d() const" [ctnameP]
+  cblock fr $ do
+    wl "return d_;"
+
+  forM_ fts $ \(f,t,_) -> do
+    when (not $ isVoidType (f_type f)) $ do
+      wl ""
+      mkTemplate fr (u_typeParams u)
+      wt "$1 & $2::$3() const" [t,ctnameP,cUnionAccessorName d f]
+      cblock fr $ do
+        wt "if( d_ == $1 )" [cUnionDiscName d f]
+        cblock fr $ do
+          wt "return *($1 *)p_;" [t]
+        wl "throw invalid_union_access();"
+
+  forM_ fts $ \(f,t,_) -> do
+    wl ""
+    mkTemplate fr (u_typeParams u)
+    if isVoidType (f_type f)
+      then do
+        wt "void $1::$2()" [ctnameP,cUnionSetterName d f]
+        cblock fr $ do
+          wt "if( d_ != $1 )" [cUnionDiscName d f]
+          cblock fr $ do
+            wl "free(d_,p_);"
+            wt "d_ = $1;" [cUnionDiscName d f]
+            wt "p_ = 0;" [cUnionDiscName d f]
+          
+      else do
+        wt "const $1 & $2::$3(const $1 &v)" [t,ctnameP,cUnionSetterName d f]
+        cblock fr $ do
+          wt "if( d_ == $1 )" [cUnionDiscName d f]
+          cblock fr $ do
+            wt "*($1 *)p_ = v;" [t]
+          wl "else"
+          cblock fr $ do
+            wl "free(d_,p_);"
+            wt "d_ = $1;" [cUnionDiscName d f]
+            wt "p_ = new $1(v);" [t]
+          wt "return *($1 *)p_;" [t]
+
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wt "$1::$2(DiscType d, void *p)" [ctnameP,ctname]
+  indent $ wl ": d_(d), p_(p)"
+  cblock fr $ return ()
+
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wt "void $1::free(DiscType d, void *p)" [ctnameP]
+  cblock fr $ do
+    wl "switch( d )"
+    cblock fr $ 
+      forM_ fts $ \(f,t,_) -> do
+        if isVoidType (f_type f)
+          then wt "case $1: return;"
+               [cUnionDiscName d f]
+          else wt "case $1: delete ($2 *)p;"
+               [cUnionDiscName d f,t]
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wt "void * $1::copy( DiscType d, void *p )" [ctnameP]
+  cblock fr $ do
+    wl "switch( d )"
+    cblock fr $ 
+      forM_ fts $ \(f,t,_) -> do
+        if isVoidType (f_type f)
+          then wt "case $1: return 0;"
+               [cUnionDiscName d f]
+          else wt "case $1: return new $2(*($2 *)p);"
+               [cUnionDiscName d f,t]
+    
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr (t_typeExpr t)
@@ -529,12 +658,12 @@ mkLiteral te jv = mk Map.empty te jv
     mkUnion  m te0 d u tes (JSON.Object hm) = do
       t <- cTypeExprB m te0
       let [(fname,jv)] = HM.toList hm
-          te1 = getTE fname
-      lv <- mk m te1 jv
-      return (LUnion t (cUnionConstructorName (d_name d) fname) lv)
+          f = getF fname
+      lv <- mk m (f_type f) jv
+      return (LUnion t (cUnionConstructorName d f) lv)
       where
-        getTE fname = case L.find (\f -> f_name f == fname) (u_fields u) of
-          Just f -> f_type f
+        getF fname = case L.find (\f -> f_name f == fname) (u_fields u) of
+          Just f -> f
         m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
 
     mkTypedef m d t tes v = mk m2 (t_typeExpr t) v

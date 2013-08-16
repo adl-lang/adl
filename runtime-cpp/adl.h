@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <exception>
 #include <stdint.h>
 
 namespace ADL {
@@ -22,6 +23,9 @@ struct Void
 bool operator<( const Void &a, const Void &b ) { return false; }
 
 
+class invalid_union_access : public std::exception
+{
+};
 
 template <class T>
 std::vector<T> mkvec() {

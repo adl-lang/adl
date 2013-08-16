@@ -31,7 +31,7 @@ data TestCaseRunning = RunningCompiler | CheckingOutput
 instance Show TestResult where
   show Passed = "OK"
   show (CompilerFailed err) = "adlc failed: " ++ T.unpack err
-  show (OutputDiff epath apath diffs) = "expected:" ++ epath ++ ", actual:" ++ apath
+  show (OutputDiff epath apath diffs) = "expected/actual:" ++ epath ++ " " ++ apath
 
 instance Show TestCaseRunning where
   show RunningCompiler = "Running Compiler"
@@ -49,6 +49,7 @@ data TestBackend = TestBackend {
 instance Testlike TestCaseRunning TestResult TestBackend where
   testTypeName _ = "adlc test"
   runTest topts tb = runImprovingIO $ do
+    cwd <- liftIO $ getCurrentDirectory
     tempDir <- liftIO $ do
       tdir <- getTemporaryDirectory
       createTempDirectory tdir "adl.test." 
@@ -63,7 +64,7 @@ instance Testlike TestCaseRunning TestResult TestBackend where
           [] -> do
             liftIO $ removeDirectoryRecursive tempDir
             return Passed
-          diffs -> return (OutputDiff (tb_expectedOutput tb) tempDir diffs)
+          diffs -> return (OutputDiff (cwd </> (tb_expectedOutput tb)) tempDir diffs)
 
 testHsBackend :: String -> FilePath -> FilePath -> FilePath -> (H.HaskellFlags -> H.HaskellFlags) -> Test
 testHsBackend name ipath mpath epath ff = Test name (TestBackend epath run)
