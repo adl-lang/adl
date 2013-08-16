@@ -27,5 +27,13 @@ operator<( const S1 &a, const S1 &b )
     return false;
 }
 
+bool
+operator==( const S1 &a, const S1 &b )
+{
+    return
+        a.x == b.x &&
+        a.y == b.y ;
+}
+
 }
 }

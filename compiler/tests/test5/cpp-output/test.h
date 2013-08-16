@@ -16,7 +16,7 @@ struct S1
 };
 
 bool operator<( const S1 &a, const S1 &b );
-
+bool operator==( const S1 &a, const S1 &b );
 
 class U1
 {
@@ -46,7 +46,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U1 &a, const U1 &b );
+bool operator==( const U1 &a, const U1 &b );
 
 class U2
 {
@@ -77,7 +79,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U2 &a, const U2 &b );
+bool operator==( const U2 &a, const U2 &b );
 
 class U3
 {
@@ -108,7 +112,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U3 &a, const U3 &b );
+bool operator==( const U3 &a, const U3 &b );
 
 template <class T>
 class U9
@@ -144,8 +150,11 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 template <class T>
 bool operator<( const U9<T> &a, const U9<T> &b );
+template <class T>
+bool operator==( const U9<T> &a, const U9<T> &b );
 
 template <class T>
 U9<T>::U9()
@@ -269,6 +278,31 @@ void * U9<T>::copy( DiscType d, void *p )
     }
 }
 
+template <class T>
+bool
+operator<( const U9<T> &a, const U9<T> &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U9<T>::V1: return a.v1() < b.v1();
+        case U9<T>::V2: return a.v2() < b.v2();
+    }
+}
+
+template <class T>
+bool
+operator==( const U9<T> &a, const U9<T> &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U9<T>::V1: return a.v1() == b.v1();
+        case U9<T>::V2: return a.v2() == b.v2();
+    }
+}
+
 class U4
 {
 public:
@@ -298,7 +332,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U4 &a, const U4 &b );
+bool operator==( const U4 &a, const U4 &b );
 
 class U5
 {
@@ -329,7 +365,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U5 &a, const U5 &b );
+bool operator==( const U5 &a, const U5 &b );
 
 class U6
 {
@@ -360,7 +398,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U6 &a, const U6 &b );
+bool operator==( const U6 &a, const U6 &b );
 
 class U7
 {
@@ -391,7 +431,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U7 &a, const U7 &b );
+bool operator==( const U7 &a, const U7 &b );
 
 class U8
 {
@@ -426,7 +468,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U8 &a, const U8 &b );
+bool operator==( const U8 &a, const U8 &b );
 
 }
 }

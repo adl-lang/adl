@@ -32,6 +32,15 @@ operator<( const A &a, const A &b )
     return false;
 }
 
+bool
+operator==( const A &a, const A &b )
+{
+    return
+        a.f_int == b.f_int &&
+        a.f_string == b.f_string &&
+        a.f_bool == b.f_bool ;
+}
+
 U::U()
     : d_(F_INT), p_(new int16_t(0))
 {
@@ -137,6 +146,29 @@ void * U::copy( DiscType d, void *p )
     {
         case F_INT: return new int16_t(*(int16_t *)p);
         case F_STRING: return new std::string(*(std::string *)p);
+    }
+}
+
+bool
+operator<( const U &a, const U &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U::F_INT: return a.f_int() < b.f_int();
+        case U::F_STRING: return a.f_string() < b.f_string();
+    }
+}
+
+bool
+operator==( const U &a, const U &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U::F_INT: return a.f_int() == b.f_int();
+        case U::F_STRING: return a.f_string() == b.f_string();
     }
 }
 

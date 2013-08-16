@@ -22,7 +22,7 @@ struct A
 };
 
 bool operator<( const A &a, const A &b );
-
+bool operator==( const A &a, const A &b );
 
 class U
 {
@@ -57,7 +57,9 @@ private:
     static void free( DiscType d, void *v );
     static void *copy( DiscType d, void *v );
 };
+
 bool operator<( const U &a, const U &b );
+bool operator==( const U &a, const U &b );
 
 template <class T>
 struct XY
@@ -75,7 +77,8 @@ struct XY
 
 template <class T>
 bool operator<( const XY<T> &a, const XY<T> &b );
-
+template <class T>
+bool operator==( const XY<T> &a, const XY<T> &b );
 
 template <class T>
 XY<T>::XY()
@@ -104,6 +107,15 @@ operator<( const XY<T> &a, const XY<T> &b )
 }
 
 template <class T>
+bool
+operator==( const XY<T> &a, const XY<T> &b )
+{
+    return
+        a.x == b.x &&
+        a.y == b.y ;
+}
+
+template <class T>
 struct B
 {
     B();
@@ -123,7 +135,8 @@ struct B
 
 template <class T>
 bool operator<( const B<T> &a, const B<T> &b );
-
+template <class T>
+bool operator==( const B<T> &a, const B<T> &b );
 
 template <class T>
 B<T>::B()
@@ -157,6 +170,17 @@ operator<( const B<T> &a, const B<T> &b )
     if( a.f_xy < b.f_xy ) return true;
     if( b.f_xy < a.f_xy ) return false;
     return false;
+}
+
+template <class T>
+bool
+operator==( const B<T> &a, const B<T> &b )
+{
+    return
+        a.f_t == b.f_t &&
+        a.f_string == b.f_string &&
+        a.f_tvec == b.f_tvec &&
+        a.f_xy == b.f_xy ;
 }
 
 template <class T>
@@ -209,7 +233,8 @@ struct S
 
 template <class T>
 bool operator<( const S<T> &a, const S<T> &b );
-
+template <class T>
+bool operator==( const S<T> &a, const S<T> &b );
 
 template <class T>
 S<T>::S()
@@ -321,6 +346,32 @@ operator<( const S<T> &a, const S<T> &b )
     if( a.f_bint16 < b.f_bint16 ) return true;
     if( b.f_bint16 < a.f_bint16 ) return false;
     return false;
+}
+
+template <class T>
+bool
+operator==( const S<T> &a, const S<T> &b )
+{
+    return
+        a.f_void == b.f_void &&
+        a.f_bool == b.f_bool &&
+        a.f_int8 == b.f_int8 &&
+        a.f_int16 == b.f_int16 &&
+        a.f_int32 == b.f_int32 &&
+        a.f_int64 == b.f_int64 &&
+        a.f_word8 == b.f_word8 &&
+        a.f_word16 == b.f_word16 &&
+        a.f_word32 == b.f_word32 &&
+        a.f_word64 == b.f_word64 &&
+        a.f_float == b.f_float &&
+        a.f_double == b.f_double &&
+        a.f_bytes == b.f_bytes &&
+        a.f_string == b.f_string &&
+        a.f_vstring == b.f_vstring &&
+        a.f_a == b.f_a &&
+        a.f_u == b.f_u &&
+        a.f_t == b.f_t &&
+        a.f_bint16 == b.f_bint16 ;
 }
 
 }

@@ -23,6 +23,13 @@ operator<( const S1 &a, const S1 &b )
     return false;
 }
 
+bool
+operator==( const S1 &a, const S1 &b )
+{
+    return
+        a.f == b.f ;
+}
+
 U1::U1()
     : d_(V), p_(0)
 {
@@ -83,6 +90,27 @@ void * U1::copy( DiscType d, void *p )
     switch( d )
     {
         case V: return 0;
+    }
+}
+
+bool
+operator<( const U1 &a, const U1 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U1::V: return false;
+    }
+}
+
+bool
+operator==( const U1 &a, const U1 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U1::V: return true;
     }
 }
 
@@ -163,6 +191,27 @@ void * U2::copy( DiscType d, void *p )
     }
 }
 
+bool
+operator<( const U2 &a, const U2 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U2::V: return a.v() < b.v();
+    }
+}
+
+bool
+operator==( const U2 &a, const U2 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U2::V: return a.v() == b.v();
+    }
+}
+
 U3::U3()
     : d_(V), p_(new int16_t(100))
 {
@@ -237,6 +286,27 @@ void * U3::copy( DiscType d, void *p )
     switch( d )
     {
         case V: return new int16_t(*(int16_t *)p);
+    }
+}
+
+bool
+operator<( const U3 &a, const U3 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U3::V: return a.v() < b.v();
+    }
+}
+
+bool
+operator==( const U3 &a, const U3 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U3::V: return a.v() == b.v();
     }
 }
 
@@ -317,6 +387,27 @@ void * U4::copy( DiscType d, void *p )
     }
 }
 
+bool
+operator<( const U4 &a, const U4 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U4::V: return a.v() < b.v();
+    }
+}
+
+bool
+operator==( const U4 &a, const U4 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U4::V: return a.v() == b.v();
+    }
+}
+
 U5::U5()
     : d_(V), p_(new S1(200))
 {
@@ -391,6 +482,27 @@ void * U5::copy( DiscType d, void *p )
     switch( d )
     {
         case V: return new S1(*(S1 *)p);
+    }
+}
+
+bool
+operator<( const U5 &a, const U5 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U5::V: return a.v() < b.v();
+    }
+}
+
+bool
+operator==( const U5 &a, const U5 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U5::V: return a.v() == b.v();
     }
 }
 
@@ -471,6 +583,27 @@ void * U6::copy( DiscType d, void *p )
     }
 }
 
+bool
+operator<( const U6 &a, const U6 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U6::V: return a.v() < b.v();
+    }
+}
+
+bool
+operator==( const U6 &a, const U6 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U6::V: return a.v() == b.v();
+    }
+}
+
 U7::U7()
     : d_(V), p_(new U3(U3::mk_v(75)))
 {
@@ -545,6 +678,27 @@ void * U7::copy( DiscType d, void *p )
     switch( d )
     {
         case V: return new U3(*(U3 *)p);
+    }
+}
+
+bool
+operator<( const U7 &a, const U7 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U7::V: return a.v() < b.v();
+    }
+}
+
+bool
+operator==( const U7 &a, const U7 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U7::V: return a.v() == b.v();
     }
 }
 
@@ -653,6 +807,29 @@ void * U8::copy( DiscType d, void *p )
     {
         case V1: return new S1(*(S1 *)p);
         case V2: return new int16_t(*(int16_t *)p);
+    }
+}
+
+bool
+operator<( const U8 &a, const U8 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U8::V1: return a.v1() < b.v1();
+        case U8::V2: return a.v2() < b.v2();
+    }
+}
+
+bool
+operator==( const U8 &a, const U8 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U8::V1: return a.v1() == b.v1();
+        case U8::V2: return a.v2() == b.v2();
     }
 }
 

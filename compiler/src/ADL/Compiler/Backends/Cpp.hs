@@ -222,10 +222,13 @@ addMarker fv v lv as = case add as of
     add [a] = [(lv,a)]
     add (a:as) = (v,a):add as
 
+sepWithTerm :: T.Text -> T.Text -> [v] -> [(v,T.Text)]
+sepWithTerm _ _ [] = []
+sepWithTerm _ term [v] = [(v,term)]
+sepWithTerm sep term (v:vs) = (v,sep):sepWithTerm sep term vs
+
 commaSep :: [v]  -> [(v,T.Text)]
-commaSep [] = []
-commaSep [v] = [(v,"")]
-commaSep (v:vs) = (v,","):commaSep vs
+commaSep = sepWithTerm "," ""
 
 generateDecl :: Decl ResolvedType -> Gen ()
 generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
@@ -258,12 +261,13 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
      forM_ fts $ \(fname,_,t,_) -> do
          wt "$1 $2;" [t, fname]
   wl "};"
-  wl ""
 
   -- Associated functions
+  wl ""
   mkTemplate ifile (s_typeParams s)
   wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
-  wl ""
+  mkTemplate ifile (s_typeParams s)
+  wt "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
   
   -- Constructors
   -- will end up in header file if it's a template class
@@ -289,20 +293,27 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
       wt "$1 $2($2_)" [mark,fname]
   wl "{"
   wl "}"
-  wl ""
 
   -- Non-inline functions
   -- will still end up in header file if it's a template class
+  wl ""
   mkTemplate fr (s_typeParams s)
   wl "bool"
   wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
-  wl "{"
-  indent  $ do
+  cblock fr $ do
     forM_ fts $ \(fname, f,t,_) -> do
       wt "if( a.$1 < b.$1 ) return true;" [fname]
       wt "if( b.$1 < a.$1 ) return false;" [fname]
     wl "return false;"
-  wl "}"
+
+  wl ""
+  mkTemplate fr (s_typeParams s)
+  wl "bool"
+  wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
+  cblock fr $ do 
+    wl "return"
+    forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_),sep) -> do
+      indent $ wt "a.$1 == b.$1 $2" [fname,sep]
 
 generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
   fts <- forM (u_fields u) $ \f -> do
@@ -366,8 +377,11 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
   wl "};"
 
   -- Associated functions
+  wl ""
   mkTemplate ifile (u_typeParams u)
   wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
+  mkTemplate ifile (u_typeParams u)
+  wt "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
 
   -- Implementation
   -- will end up in header file if it's a template class
@@ -492,6 +506,37 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
                [cUnionDiscName d f]
           else wt "case $1: return new $2(*($2 *)p);"
                [cUnionDiscName d f,t]
+
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wl "bool"
+  wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
+  cblock fr $ do
+    wl "if( a.d() < b.d() ) return true;"
+    wl "if( b.d() < a.d()) return false;"
+    wl "switch( a.d() )"
+    cblock fr $ 
+      forM_ fts $ \(f,t,_) -> do
+        if isVoidType (f_type f)
+          then wt "case $1::$2: return false;"
+               [ctnameP,cUnionDiscName d f]
+          else wt "case $1::$2: return a.$3() < b.$3();"
+               [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wl "bool"
+  wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
+  cblock fr $ do 
+    wl "if( a.d() != b.d() ) return false;"
+    wl "switch( a.d() )"
+    cblock fr $ 
+      forM_ fts $ \(f,t,_) -> do
+        if isVoidType (f_type f)
+          then wt "case $1::$2: return true;"
+               [ctnameP,cUnionDiscName d f]
+          else wt "case $1::$2: return a.$3() == b.$3();"
+               [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
     
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do

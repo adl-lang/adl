@@ -20,7 +20,7 @@ struct S1
 };
 
 bool operator<( const S1 &a, const S1 &b );
-
+bool operator==( const S1 &a, const S1 &b );
 
 template <class T>
 struct Tree
@@ -38,7 +38,8 @@ struct Tree
 
 template <class T>
 bool operator<( const Tree<T> &a, const Tree<T> &b );
-
+template <class T>
+bool operator==( const Tree<T> &a, const Tree<T> &b );
 
 template <class T>
 Tree<T>::Tree()
@@ -64,6 +65,15 @@ operator<( const Tree<T> &a, const Tree<T> &b )
     if( a.children < b.children ) return true;
     if( b.children < a.children ) return false;
     return false;
+}
+
+template <class T>
+bool
+operator==( const Tree<T> &a, const Tree<T> &b )
+{
+    return
+        a.value == b.value &&
+        a.children == b.children ;
 }
 
 using IntTree = Tree<int32_t> ;
