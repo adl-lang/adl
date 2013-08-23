@@ -13,7 +13,7 @@ import ADL.Core.Primitives
 
 instance (ADLValue t) => ADLValue (Maybe t) where
     atype _ = T.concat
-        [ "sys.types.maybe"
+        [ "sys.types.Maybe"
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
     
@@ -33,7 +33,7 @@ instance (ADLValue t) => ADLValue (Maybe t) where
 
 instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
     atype _ = T.concat
-        [ "sys.types.either"
+        [ "sys.types.Either"
         , "<", atype (Prelude.undefined ::t1)
         , ",", atype (Prelude.undefined ::t2)
         , ">" ]
@@ -54,7 +54,7 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
 
 instance (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
     atype _ = T.concat
-        [ "sys.types.pair"
+        [ "sys.types.Pair"
         , "<", atype (Prelude.undefined ::t1)
         , ",", atype (Prelude.undefined ::t2)
         , ">" ]

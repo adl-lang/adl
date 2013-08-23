@@ -7,7 +7,7 @@ import examples.datetime.UTCTime;
 // A Channel<T,P> is a data type where we can published
 // messages of type T, and can subscribe using a pattern
 // of type P
-typedef sink<ChannelReq<T,P>> Channel<T,P>;
+typedef Sink<ChannelReq<T,P>> Channel<T,P>;
 
 struct Message<T> {
     UTCTime timestamp;
@@ -21,7 +21,7 @@ union ChannelReq<T,P>
     Message<T> publish;
 
     // Register a new subscrition
-    rpc<Subscribe<T,P>,Subscription> subscribe;
+    Rpc<Subscribe<T,P>,Subscription> subscribe;
 };
 
 struct Subscribe<T,P>
@@ -31,16 +31,16 @@ struct Subscribe<T,P>
 
     // Messages with payloads that match the pattern
     // will be forwarded to this destination.
-    sink<Message<T>> sendTo;
+    Sink<Message<T>> sendTo;
 };
 
-typedef sink<SubsReq> Subscription;
+typedef Sink<SubsReq> Subscription;
 
 // Actions available to an existing subscription
 union SubsReq
 {
     // You can only unsubscribe        
-    void unsubscribe;
+    Void unsubscribe;
 };
 
 };

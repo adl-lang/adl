@@ -5,26 +5,26 @@ import sys.types.*;
 struct CustomType
 {
     // The qualifed name of the ADL type
-    string adlname;
+    String adlname;
 
     // The name in haskell of the type to be used    
-    string haskellname;
+    String haskellname;
 
     // The imports required to use the haskell type
-    vector<string> haskellimports;
+    Vector<String> haskellimports;
 
     // Text to be inserted to implement the haskell
     // type
-    vector<string> insertCode;
+    Vector<String> insertCode;
 
     // If true the code for the original ADL type will be emitted,
     // but with the supplied name.
-    maybe<string> generateOrigADLType;
+    Maybe<String> generateOrigADLType;
 };
 
 struct Config
 {
-    vector<CustomType> customTypes;
+    Vector<CustomType> customTypes;
 };
 
 };

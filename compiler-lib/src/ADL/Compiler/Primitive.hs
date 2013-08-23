@@ -48,22 +48,22 @@ data PrimitiveDetails = PrimitiveDetails {
 }
 
 primitiveDetails =
-  [ PrimitiveDetails P_Void "void" 0 isVoid
-  , PrimitiveDetails P_Bool "bool" 0 isBool
-  , PrimitiveDetails P_Int8 "int8" 0 (isInt (minBound::Int8) (maxBound::Int8))
-  , PrimitiveDetails P_Int16 "int16" 0 (isInt (minBound::Int16) (maxBound::Int16))
-  , PrimitiveDetails P_Int32 "int32" 0 (isInt (minBound::Int32) (maxBound::Int32))
-  , PrimitiveDetails P_Int64 "int64" 0 (isInt (minBound::Int64) (maxBound::Int64))
-  , PrimitiveDetails P_Word8 "word8" 0 (isWord (maxBound::Word8))
-  , PrimitiveDetails P_Word16 "word16" 0 (isWord (maxBound::Word16))
-  , PrimitiveDetails P_Word32 "word32" 0 (isWord (maxBound::Word32))
-  , PrimitiveDetails P_Word64 "word64" 0 (isWord (maxBound::Word64))
-  , PrimitiveDetails P_Float "float" 0 isFloat
-  , PrimitiveDetails P_Double "double" 0 isFloat
-  , PrimitiveDetails P_ByteVector "bytes" 0 isBytes
-  , PrimitiveDetails P_String "string" 0 isString
-  , PrimitiveDetails P_Vector "vector" 1 (const False)
-  , PrimitiveDetails P_Sink "sink" 1 (const False)
+  [ PrimitiveDetails P_Void "Void" 0 isVoid
+  , PrimitiveDetails P_Bool "Bool" 0 isBool
+  , PrimitiveDetails P_Int8 "Int8" 0 (isInt (minBound::Int8) (maxBound::Int8))
+  , PrimitiveDetails P_Int16 "Int16" 0 (isInt (minBound::Int16) (maxBound::Int16))
+  , PrimitiveDetails P_Int32 "Int32" 0 (isInt (minBound::Int32) (maxBound::Int32))
+  , PrimitiveDetails P_Int64 "Int64" 0 (isInt (minBound::Int64) (maxBound::Int64))
+  , PrimitiveDetails P_Word8 "Word8" 0 (isWord (maxBound::Word8))
+  , PrimitiveDetails P_Word16 "Word16" 0 (isWord (maxBound::Word16))
+  , PrimitiveDetails P_Word32 "Word32" 0 (isWord (maxBound::Word32))
+  , PrimitiveDetails P_Word64 "Word64" 0 (isWord (maxBound::Word64))
+  , PrimitiveDetails P_Float "Float" 0 isFloat
+  , PrimitiveDetails P_Double "Double" 0 isFloat
+  , PrimitiveDetails P_ByteVector "Bytes" 0 isBytes
+  , PrimitiveDetails P_String "String" 0 isString
+  , PrimitiveDetails P_Vector "Vector" 1 (const False)
+  , PrimitiveDetails P_Sink "Sink" 1 (const False)
   ]
 
 isVoid JSON.Null = True

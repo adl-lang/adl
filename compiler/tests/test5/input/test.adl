@@ -4,22 +4,22 @@ module test
 
    union U1
    {
-       void v;
+       Void v;
    };
 
    union U2
    {
-       int16 v;
+       Int16 v;
    };
 
    union U3
    {
-       int16 v = 100;
+       Int16 v = 100;
    };
 
    struct S1
    {
-      int16 f = 100;
+      Int16 f = 100;
    };
 
    union U4
@@ -45,13 +45,13 @@ module test
    union U8
    {
        S1 v1;
-       int16 v2;
+       Int16 v2;
    };
 
    union U9<T>
    {
        T v1;
-       int16 v2;
+       Int16 v2;
    };
 
 };

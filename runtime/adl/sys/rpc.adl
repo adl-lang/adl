@@ -5,12 +5,12 @@ module sys.rpc
 // for a RPC protocol we need to capture in the request both the
 // parameters and the the response target.
 
-struct rpc<I,O>
+struct Rpc<I,O>
 {
     I params;
-    sink<O> replyTo;
+    Sink<O> replyTo;
 };
 
-typedef sink<rpc<I,O>> rpcsvc<I,O>;
+typedef Sink<Rpc<I,O>> RpcSvc<I,O>;
 
 };

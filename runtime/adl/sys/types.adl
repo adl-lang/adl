@@ -2,32 +2,32 @@ module sys.types
 {
 // Some standard types
 
-struct pair<T1,T2>
+struct Pair<T1,T2>
 {
     T1 v1;
     T2 v2;
 };
 
-union either<T1,T2>
+union Either<T1,T2>
 {
     T1 left;
     T2 right;
 };
 
-union maybe<T>
+union Maybe<T>
 {
-    void nothing;
+    Void nothing;
     T just;
 };
 
-union error<T>
+union Error<T>
 {
     T value;
-    string error;
+    String error;
 };
 
-typedef vector<pair<K,V>> map<K,V>;
+typedef Vector<Pair<K,V>> Map<K,V>;
 
-typedef vector<T> set<T>;
+typedef Vector<T> Set<T>;
 
 };

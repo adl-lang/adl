@@ -4,10 +4,10 @@ import sys.types;
 
 struct S1 {
     maybe<double> v1;
-    either<string,int> v2;
-    pair<double,double> v3;
-    map<string,double> v4;
-    set<string> v5;
+    either<String,int> v2;
+    Pair<double,double> v3;
+    map<String,double> v4;
+    set<String> v5;
 };
 
 };

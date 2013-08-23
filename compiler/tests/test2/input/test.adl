@@ -5,8 +5,8 @@ module test
 
 struct S1
 {
-    int32 x;
-    string y;
+    Int32 x;
+    String y;
 };
 
 // A recursive type
@@ -14,9 +14,9 @@ struct S1
 struct Tree<T>
 {
     T value;
-    vector<Tree<T>> children;
+    Vector<Tree<T>> children;
 };
 
-typedef Tree<int32> IntTree;
+typedef Tree<Int32> IntTree;
 
 };

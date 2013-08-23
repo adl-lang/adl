@@ -3,9 +3,9 @@ module test
 
 struct A
 {
-   int16 f_int;
-   string f_string;
-   bool f_bool;
+   Int16 f_int;
+   String f_string;
+   Bool f_bool;
 };
 
 struct XY<T>
@@ -17,35 +17,35 @@ struct XY<T>
 struct B<T>
 {
    T f_t;
-   string f_string;
-   vector<T> f_tvec;
+   String f_string;
+   Vector<T> f_tvec;
    XY<T> f_xy;
 };
 
 union U
 {
-   int16 f_int;
-   string f_string;
+   Int16 f_int;
+   String f_string;
 };
 
 struct S<T>
 {
-    void f_void = null;
-    bool f_bool = true;
-    int8 f_int8 = -5;
-    int16 f_int16 = -10000;
-    int32 f_int32 = 56;
-    int64 f_int64 = 40000;
-    word8 f_word8 = 32;
-    word16 f_word16 = 50000;
-    word32 f_word32 = 124456;
-    word64 f_word64 = 2344;
-    float f_float = 0.5;
-    double f_double = 0.45;
-    bytes f_bytes = "aGVsbG8=";
-    string f_string = "abcd";
+    Void f_void = null;
+    Bool f_bool = true;
+    Int8 f_int8 = -5;
+    Int16 f_int16 = -10000;
+    Int32 f_int32 = 56;
+    Int64 f_int64 = 40000;
+    Word8 f_word8 = 32;
+    Word16 f_word16 = 50000;
+    Word32 f_word32 = 124456;
+    Word64 f_word64 = 2344;
+    Float f_float = 0.5;
+    Double f_double = 0.45;
+    Bytes f_bytes = "aGVsbG8=";
+    String f_string = "abcd";
 
-    vector<string> f_vstring = ["xy", "ab" ];
+    Vector<String> f_vstring = ["xy", "ab" ];
 
     A f_a = { "f_string" : "xyz",
               "f_bool" : true };
@@ -54,7 +54,7 @@ struct S<T>
 
     T f_t;
 
-    B<int16> f_bint16 = {
+    B<Int16> f_bint16 = {
         "f_t" : 56,
         "f_string" : "yikes",
         "f_tvec" : [1,2,3],
