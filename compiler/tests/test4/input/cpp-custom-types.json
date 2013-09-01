@@ -5,7 +5,8 @@
             "cppname" : "Date",
             "cppincludes" : [
                 { "name" : "Date.h", "system" : true }
-             ]
+             ],
+            "generateOrigADLType" : { "just" : "DateO" }
         }
     ]        
 }

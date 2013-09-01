@@ -78,7 +78,8 @@ data MState = MState {
 
 data CustomType = CustomType {
    ct_name :: Ident,
-   ct_includes :: Set.Set IncFilePath
+   ct_includes :: Set.Set IncFilePath,
+   ct_generateOrigADLType :: Maybe Ident
 }
 
 type CustomTypeMap = Map.Map ScopedName CustomType
@@ -238,15 +239,15 @@ sepWithTerm sep term (v:vs) = (v,sep):sepWithTerm sep term vs
 commaSep :: [v]  -> [(v,T.Text)]
 commaSep = sepWithTerm "," ""
 
-generateDecl :: Decl ResolvedType -> Gen ()
-generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
+generateDecl :: Ident -> Decl ResolvedType -> Gen ()
+generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   fts <- forM (s_fields s) $ \f -> do
     t <- cTypeExpr (f_type f)
     litv <- case f_default f of
         (Just v) -> mkLiteral (f_type f) v
         Nothing -> mkDefaultLiteral (f_type f)
-    return (cFieldName (d_name d) (f_name f), f, t, litv)
-  let ctname = cTypeName (d_name d)
+    return (cFieldName dn (f_name f), f, t, litv)
+  let ctname = cTypeName dn
       ctnameP = case s_typeParams s of
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
@@ -323,7 +324,7 @@ generateDecl d@(Decl{d_type=(Decl_Struct s)}) = do
     forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_),sep) -> do
       indent $ wt "a.$1 == b.$1 $2" [fname,sep]
 
-generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
+generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   fts <- forM (u_fields u) $ \f -> do
     t <- cTypeExpr (f_type f)
     litv <- case f_default f of
@@ -331,7 +332,7 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
         Nothing -> mkDefaultLiteral (f_type f)
     return (f, t, litv)
 
-  let ctname = cTypeName (d_name d)
+  let ctname = cTypeName dn
       ctnameP = case u_typeParams u of
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
@@ -548,11 +549,11 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
                [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
     
 
-generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
+generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr (t_typeExpr t)
   wline ifile ""
   mkTemplate ifile (t_typeParams t)
-  wtemplate ifile "using $1 = $2;" [cTypeName (d_name d), te]
+  wtemplate ifile "using $1 = $2;" [cTypeName dn, te]
 
 localTypes :: TypeExpr ResolvedType -> Set.Set Ident
 localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
@@ -573,13 +574,22 @@ referencedLocalTypes d = Set.delete (d_name d) (rtypes d)
     rtypes (Decl{d_type=(Decl_Struct s)}) = Set.unions [ localTypes (f_type f) | f <- s_fields s]
     rtypes (Decl{d_type=(Decl_Union u)}) = Set.unions [ localTypes (f_type f) | f <- u_fields u]
     rtypes (Decl{d_type=(Decl_Typedef t)}) = localTypes (t_typeExpr t)
+    
+generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> Gen ()
+generateCustomType n d ct = do
+  wline ifile ""
+  case ct_generateOrigADLType ct of
+    Nothing -> do
+      wtemplate ifile "// $1 excluded due to custom definition" [n]
+    Just i -> do
+      wtemplate ifile "// $1 generated as $2 due to custom definition" [n,i]
+      wline ifile ""
+      generateDecl i d
 
 generateModule :: Module ResolvedType -> Gen ()
 generateModule m = do
    ms <- get
    let mname = ms_name ms
-       hasCustomDefinition n = Map.member (ScopedName mname n) (ms_customTypes ms)
-
        sortedDecls = case topologicalSort fst (referencedLocalTypes.snd) (Map.toList (m_decls m)) of
          -- FIXME: the topological sort will fail here with mutually recursive types
          -- Need to work out how to generate code in this situation
@@ -587,11 +597,9 @@ generateModule m = do
          Just decls -> decls
 
        genDecl (n,d) = do
-          if hasCustomDefinition n
-            then do
-              wline ifile ""
-              wtemplate ifile "// $1 excluded due to custom definition" [n]
-            else generateDecl d
+          case Map.lookup (ScopedName mname n) (ms_customTypes ms) of
+            Nothing -> generateDecl (d_name d) d
+            (Just ct) -> generateCustomType n d ct
 
    include ifile "adl.h"
    includeModule cppfile mname
@@ -664,7 +672,7 @@ getCustomTypes fps = fmap Map.unions (mapM get0 fps)
         sn <- case P.parse P.scopedName "" adlname of
           (Right sn) -> return sn
           _ -> eioError (template "Unable to parse adl name $1" [adlname])
-        let ct = CustomType (CC.customType_cppname c) includes
+        let ct = CustomType (CC.customType_cppname c) includes (CC.customType_generateOrigADLType c)
         return (sn,ct)
       where
         adlname = CC.customType_adlname c

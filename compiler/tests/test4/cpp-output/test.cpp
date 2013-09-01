@@ -3,6 +3,33 @@
 namespace ADL {
 namespace test {
 
+DateO::DateO()
+    : date("1900-01-01")
+{
+}
+
+DateO::DateO(
+    const std::string & date_
+    )
+    : date(date_)
+{
+}
+
+bool
+operator<( const DateO &a, const DateO &b )
+{
+    if( a.date < b.date ) return true;
+    if( b.date < a.date ) return false;
+    return false;
+}
+
+bool
+operator==( const DateO &a, const DateO &b )
+{
+    return
+        a.date == b.date ;
+}
+
 S::S()
 {
 }
