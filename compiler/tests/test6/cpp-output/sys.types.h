@@ -1,6 +1,5 @@
 #include "adl.h"
 #include <string>
-#include <vector>
 
 namespace ADL {
 namespace sys {
@@ -551,65 +550,11 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
     }
 }
 
-template <class T1, class T2>
-struct Pair
-{
-    Pair();
-    
-    Pair(
-        const T1 & v1,
-        const T2 & v2
-        );
-    
-    T1 v1;
-    T2 v2;
-};
+// Pair excluded due to custom definition
 
-template <class T1, class T2>
-bool operator<( const Pair<T1,T2> &a, const Pair<T1,T2> &b );
-template <class T1, class T2>
-bool operator==( const Pair<T1,T2> &a, const Pair<T1,T2> &b );
+// Set excluded due to custom definition
 
-template <class T1, class T2>
-Pair<T1,T2>::Pair()
-{
-}
-
-template <class T1, class T2>
-Pair<T1,T2>::Pair(
-    const T1 & v1_,
-    const T2 & v2_
-    )
-    : v1(v1_)
-    , v2(v2_)
-{
-}
-
-template <class T1, class T2>
-bool
-operator<( const Pair<T1,T2> &a, const Pair<T1,T2> &b )
-{
-    if( a.v1 < b.v1 ) return true;
-    if( b.v1 < a.v1 ) return false;
-    if( a.v2 < b.v2 ) return true;
-    if( b.v2 < a.v2 ) return false;
-    return false;
-}
-
-template <class T1, class T2>
-bool
-operator==( const Pair<T1,T2> &a, const Pair<T1,T2> &b )
-{
-    return
-        a.v1 == b.v1 &&
-        a.v2 == b.v2 ;
-}
-template <class T>
-
-using Set = std::vector<T> ;
-template <class K, class V>
-
-using Map = std::vector<Pair<K,V> > ;
+// Map excluded due to custom definition
 
 }
 }

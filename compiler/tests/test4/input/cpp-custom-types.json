@@ -1,0 +1,11 @@
+{
+    "customTypes" : [
+        {
+            "adlname" : "test.Date",
+            "cppname" : "Date",
+            "cppincludes" : [
+                { "name" : "Date.h", "system" : true }
+             ]
+        }
+    ]        
+}

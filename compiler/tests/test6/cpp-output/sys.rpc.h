@@ -57,8 +57,8 @@ operator==( const Rpc<I,O> &a, const Rpc<I,O> &b )
         a.params == b.params &&
         a.replyTo == b.replyTo ;
 }
-template <class I, class O>
 
+template <class I, class O>
 using RpcSvc = Sink<Rpc<I,O> > ;
 
 }
