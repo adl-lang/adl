@@ -74,9 +74,30 @@ runHaskell args0 =
       , noOverwriteOption (\hf-> hf{hf_noOverwrite=True})
       ]
 
+runCpp args0 =
+  case getOpt Permute optDescs args0 of
+    (opts,args,[]) -> do
+        flags <- mkFlags opts
+        C.generate flags args
+    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+  where
+    header = "Usage: adl cpp [OPTION...] files..."
+
+    mkFlags opts = do
+      stdCustomTypes <- liftIO $ getDataFileName "config/cpp-custom-types.json"
+      return $ (foldl (.) id opts) (C.CppFlags [] "." [stdCustomTypes] False)
+
+    optDescs =
+      [ searchDirOption (\s cf-> cf{cf_searchPath=s:cf_searchPath cf})
+      , customTypesOption (\s cf-> cf{cf_customTypeFiles=s:cf_customTypeFiles cf})
+      , outputDirOption (\s cf-> cf{cf_outputPath=s})
+      , noOverwriteOption (\cf-> cf{cf_noOverwrite=True})
+      ]
+
 usage = T.intercalate "\n"
   [ "Usage: adl verify [OPTION..] <modulePath>..."
   , "       adl haskell [OPTION..] <modulePath>..."
+  , "       adl cpp [OPTION..] <modulePath>..."
   ]    
     
 main = do
@@ -84,6 +105,7 @@ main = do
   runEIO $ case args of
     ("verify":args) -> runVerify args
     ("haskell":args) -> runHaskell args
+    ("cpp":args) -> runCpp args
     _ -> eioError usage
   where
     runEIO eio = do

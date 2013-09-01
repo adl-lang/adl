@@ -1,0 +1,30 @@
+{
+    "__comment__" : [
+        "This file contains mappings from the standard ADL types in sys.types to",
+        "their corresponding types in c++"
+    ],
+
+    "customTypes" : [
+        {
+            "adlname" : "sys.types.Set",
+            "cppname" : "set",
+            "cppincludes" : [
+                {"name" : "set", "system" : true }
+            ]
+        },
+        {
+            "adlname" : "sys.types.Map",
+            "cppname" : "map",
+            "cppincludes" : [
+                {"name" : "map", "system" : true }
+            ]
+        },
+        {
+            "adlname" : "sys.types.Pair",
+            "cppname" : "pair",
+            "cppincludes" : [
+                {"name" : "pair", "system" : true }
+            ]
+        }
+   ]        
+}

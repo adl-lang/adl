@@ -24,12 +24,18 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Base64 as B64
 
+import qualified Text.Parsec as P
+import qualified ADL.Compiler.ParserP as P
+
 import ADL.Utils.Format
 import ADL.Compiler.AST
 import ADL.Compiler.EIO
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
+import ADL.Core.Value
+
+import qualified ADL.Adlc.Config.Cpp as CC
 
 newtype CppNamespace = CppNamespace { unCppNamespace :: [Ident] }
 newtype CppFilePath = CppFilePath FilePath
@@ -74,6 +80,8 @@ data CustomType = CustomType {
    ct_name :: Ident,
    ct_includes :: Set.Set IncFilePath
 }
+
+type CustomTypeMap = Map.Map ScopedName CustomType
 
 type Gen = State MState
 
@@ -542,8 +550,8 @@ generateDecl d@(Decl{d_type=(Decl_Union u)}) = do
 
 generateDecl d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr (t_typeExpr t)
-  mkTemplate ifile (t_typeParams t)
   wline ifile ""
+  mkTemplate ifile (t_typeParams t)
   wtemplate ifile "using $1 = $2;" [cTypeName (d_name d), te]
 
 localTypes :: TypeExpr ResolvedType -> Set.Set Ident
@@ -580,7 +588,9 @@ generateModule m = do
 
        genDecl (n,d) = do
           if hasCustomDefinition n
-            then wtemplate ifile "// $1 excluded due to custom definition" [n]
+            then do
+              wline ifile ""
+              wtemplate ifile "// $1 excluded due to custom definition" [n]
             else generateDecl d
 
    include ifile "adl.h"
@@ -606,9 +616,10 @@ generateModule m = do
 writeModuleFile :: Bool ->
                    (ModuleName -> CppNamespace) ->
                    (ModuleName -> (FilePath,FilePath)) ->
+                   CustomTypeMap -> 
                    Module ResolvedType ->
                    EIO a ()
-writeModuleFile noOverwrite mNamespace mFile m = do
+writeModuleFile noOverwrite mNamespace mFile customTypes m = do
   let fs = FState Set.empty "" []
       s0 = MState (m_name m) mNamespace mFile customTypes fs fs
       (fp1,fp2) =  mFile (m_name m)
@@ -634,6 +645,32 @@ data CppFlags = CppFlags {
   cf_noOverwrite :: Bool
   }
 
+getCustomTypes :: [FilePath] -> EIOT CustomTypeMap
+getCustomTypes fps = fmap Map.unions (mapM get0 fps)
+  where
+    get0 :: FilePath -> EIOT CustomTypeMap
+    get0 fp = do
+      mv <- liftIO $ aFromJSONFile jsflags fp
+      case mv of
+        Nothing -> eioError (template "Unable to read haskell custom types from  $1" [T.pack fp])
+        Just v -> convert (CC.config_customTypes v)
+    jsflags = JSONFlags True
+
+    convert :: [CC.CustomType] -> EIOT CustomTypeMap
+    convert cs = fmap Map.fromList (mapM convert1 cs)
+
+    convert1 :: CC.CustomType -> EIOT (ScopedName,CustomType)
+    convert1 c = do
+        sn <- case P.parse P.scopedName "" adlname of
+          (Right sn) -> return sn
+          _ -> eioError (template "Unable to parse adl name $1" [adlname])
+        let ct = CustomType (CC.customType_cppname c) includes
+        return (sn,ct)
+      where
+        adlname = CC.customType_adlname c
+        includes = Set.fromList (map mkInc (CC.customType_cppincludes c))
+        mkInc i = IncFilePath (T.unpack (CC.include_name i)) (CC.include_system i)
+
 namespaceGenerator :: ModuleName -> CppNamespace
 namespaceGenerator mn = CppNamespace ("ADL":unModuleName mn)
 
@@ -643,10 +680,11 @@ fileGenerator odir mn = (odir, T.unpack (T.intercalate "." (unModuleName mn)))
 generate :: CppFlags -> [FilePath] -> EIOT ()
 generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
   rm <- loadAndCheckModule (moduleFinder (cf_searchPath cf)) modulePath
---  hctypes <- getCustomTypes (cf_customTypeFiles cf)
+  customTypes <- getCustomTypes (cf_customTypeFiles cf)
   writeModuleFile (cf_noOverwrite cf)
                   namespaceGenerator
                   (fileGenerator (cf_outputPath cf))
+                  customTypes
                   rm
 ----------------------------------------------------------------------
 
@@ -802,7 +840,4 @@ cPrimitiveLiteral P_Sink _ = "????" -- never called
 
 litNumber :: (Num a, Ord a, Show a) => a -> T.Text
 litNumber x = T.pack (show x)
-
-customTypes :: Map.Map ScopedName CustomType
-customTypes = Map.empty      
   

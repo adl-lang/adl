@@ -1,0 +1,28 @@
+module adlc.config.cpp {
+
+import sys.types.*;
+
+struct CustomType
+{
+    // The qualifed name of the ADL type
+    String adlname;
+
+    // The fully scoped c++ name of the type to be used    
+    String cppname;
+
+    // The includes required to use the haskell type
+    Vector<Include> cppincludes;
+};
+
+struct Include
+{
+    String name;
+    Bool system;
+};
+
+struct Config
+{
+    Vector<CustomType> customTypes;
+};
+
+};

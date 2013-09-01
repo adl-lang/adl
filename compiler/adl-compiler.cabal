@@ -12,7 +12,9 @@ build-type:          Custom
 cabal-version:       >=1.8
 
 data-files:          adl/adlc/config/haskell.adl
+                     adl/adlc/config/cpp.adl
                      config/hs-custom-types.json
+                     config/cpp-custom-types.json
 
 executable adlc
   hs-source-dirs:      src

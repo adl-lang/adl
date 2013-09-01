@@ -11,6 +11,7 @@ generateHaskellFromADL pkg lbi = do
   let odir = autogenModulesDir lbi
       adlFiles =
         [ "adl/adlc/config/haskell.adl"
+        , "adl/adlc/config/cpp.adl"
         ]
           
       cmd = "adlc-bootstrap haskell --no-overwrite -I adl -I ../runtime/adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
