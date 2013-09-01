@@ -66,10 +66,10 @@ instance Testlike TestCaseRunning TestResult TestBackend where
             return Passed
           diffs -> return (OutputDiff (cwd </> (tb_expectedOutput tb)) tempDir diffs)
 
-testHsBackend :: String -> FilePath -> FilePath -> FilePath -> (H.HaskellFlags -> H.HaskellFlags) -> Test
-testHsBackend name ipath mpath epath ff = Test name (TestBackend epath run)
+testHsBackend :: String -> FilePath -> [FilePath] -> FilePath -> (H.HaskellFlags -> H.HaskellFlags) -> Test
+testHsBackend name ipath mpaths epath ff = Test name (TestBackend epath run)
   where
-    run tempDir = H.generate (ff $ flags) getCustomTypes [mpath]
+    run tempDir = H.generate (ff $ flags) getCustomTypes mpaths
       where
         flags = H.HaskellFlags {
           H.hf_searchPath = [ipath],
@@ -79,10 +79,10 @@ testHsBackend name ipath mpath epath ff = Test name (TestBackend epath run)
           H.hf_noOverwrite = False
           }
 
-testCppBackend :: String -> FilePath -> FilePath -> FilePath -> (CPP.CppFlags -> CPP.CppFlags) -> Test
-testCppBackend name ipath mpath epath ff = Test name (TestBackend epath run)
+testCppBackend :: String -> FilePath -> [FilePath] -> FilePath -> (CPP.CppFlags -> CPP.CppFlags) -> Test
+testCppBackend name ipath mpaths epath ff = Test name (TestBackend epath run)
   where
-    run tempDir = CPP.generate (ff $ flags) [mpath]
+    run tempDir = CPP.generate (ff $ flags) mpaths
       where
         flags = CPP.CppFlags {
           CPP.cf_searchPath = [ipath],
@@ -95,14 +95,20 @@ main :: IO ()
 main = defaultMain tests
 
 tests =
-  [ testHsBackend "hs.1 empty module" "test1/input" "test1/input/test.adl" "test1/hs-output" id
-  , testHsBackend "hs.2 structs" "test2/input" "test2/input/test.adl" "test2/hs-output" id
-  , testHsBackend "hs.3 structs - default overrides" "test3/input" "test3/input/test.adl" "test3/hs-output" id
-  , testHsBackend "hs.4 custom type mappings" "test4/input" "test4/input/test.adl" "test4/output"
+  [ testHsBackend "hs.1 empty module" "test1/input" ["test1/input/test.adl"] "test1/hs-output" id
+  , testHsBackend "hs.2 structs" "test2/input" ["test2/input/test.adl"] "test2/hs-output" id
+  , testHsBackend "hs.3 structs - default overrides" "test3/input" ["test3/input/test.adl"] "test3/hs-output" id
+  , testHsBackend "hs.4 custom type mappings" "test4/input" ["test4/input/test.adl"] "test4/output"
                       (\hf->hf{H.hf_customTypeFiles=["test4/input/custom_types.json"]})
+  , testHsBackend "hs.6 std library"
+    "../../runtime/adl"
+    ["../../runtime/adl/sys/types.adl", "../../runtime/adl/sys/rpc.adl"] "test6/hs-output"
+    (\hf->hf{H.hf_customTypeFiles=["../../compiler/config/custom_types.json"]})
 
-  , testCppBackend "cpp.1 empty module" "test1/input" "test1/input/test.adl" "test1/cpp-output" id
-  , testCppBackend "cpp.2 structs" "test2/input" "test2/input/test.adl" "test2/cpp-output" id
-  , testCppBackend "cpp.3 structs - default overrides" "test3/input" "test3/input/test.adl" "test3/cpp-output" id
-  , testCppBackend "cpp.5 unions" "test5/input" "test5/input/test.adl" "test5/cpp-output" id
+  , testCppBackend "cpp.1 empty module" "test1/input" ["test1/input/test.adl"] "test1/cpp-output" id
+  , testCppBackend "cpp.2 structs" "test2/input" ["test2/input/test.adl"] "test2/cpp-output" id
+  , testCppBackend "cpp.3 structs - default overrides" "test3/input" ["test3/input/test.adl"] "test3/cpp-output" id
+  , testCppBackend "cpp.5 unions" "test5/input" ["test5/input/test.adl"] "test5/cpp-output" id
+  , testCppBackend "cpp.6 std library" "../../runtime/adl"
+      ["../../runtime/adl/sys/types.adl", "../../runtime/adl/sys/rpc.adl"] "test6/cpp-output" id
   ]

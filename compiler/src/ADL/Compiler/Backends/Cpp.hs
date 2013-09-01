@@ -755,7 +755,7 @@ cPrimitiveType P_Double = return "double"
 cPrimitiveType P_ByteVector = includeStd ifile "string" >> return "std::string"
 cPrimitiveType P_Vector = includeStd ifile "vector" >> return "std::vector"
 cPrimitiveType P_String = includeStd ifile "string" >> return "std::string"
-cPrimitiveType P_Sink = include ifile "Sink.h" >> return "Sink"
+cPrimitiveType P_Sink = return "Sink"
 
 cPrimitiveDefault :: PrimitiveType -> Maybe T.Text
 cPrimitiveDefault P_Void = Nothing

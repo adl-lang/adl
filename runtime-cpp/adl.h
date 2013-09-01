@@ -22,6 +22,11 @@ struct Void
 
 bool operator<( const Void &a, const Void &b ) { return false; }
 
+// Sink type
+
+template <class T>
+struct Sink {
+};
 
 class invalid_union_access : public std::exception
 {

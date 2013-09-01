@@ -6,32 +6,32 @@
 
     "customTypes" : [
         {
-            "adlname" : "sys.types.maybe",
+            "adlname" : "sys.types.Maybe",
             "haskellname" : "Maybe",
             "haskellimports" : [ "ADL.Core.CustomTypes" ]
         },
         {
-            "adlname" : "sys.types.either",
+            "adlname" : "sys.types.Either",
             "haskellname" : "Either",
             "haskellimports" : [ "ADL.Core.CustomTypes" ]
         },
         {
-            "adlname" : "sys.types.error",
+            "adlname" : "sys.types.Error",
             "haskellname" : "Error",
             "haskellimports" : [ "ADL.Core.CustomTypes" ]
         },
         {
-            "adlname" : "sys.types.pair",
+            "adlname" : "sys.types.Pair",
             "haskellname" : "Pair",
             "haskellimports" : [ "ADL.Core.CustomTypes" ]
         },
         {
-            "adlname" : "sys.types.map",
+            "adlname" : "sys.types.Map",
             "haskellname" : "Map",
             "haskellimports" : [ "ADL.Core.CustomTypes" ]
         },
         {
-            "adlname" : "sys.types.set",
+            "adlname" : "sys.types.Set",
             "haskellname" : "Set",
             "haskellimports" : [ "ADL.Core.CustomTypes" ]
         }
