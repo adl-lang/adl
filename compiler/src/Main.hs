@@ -12,8 +12,9 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
-import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.Verify as V
+import ADL.Compiler.Backends.Haskell as H
+import ADL.Compiler.Backends.Cpp as C
 import HaskellCustomTypes
 import Paths_adl_compiler
 
@@ -60,7 +61,7 @@ runHaskell args0 =
     header = "Usage: adl haskell [OPTION...] files..."
 
     mkFlags opts = do
-      stdCustomTypes <- liftIO $ getDataFileName "config/custom_types.json"
+      stdCustomTypes <- liftIO $ getDataFileName "config/hs-custom-types.json"
       return $ (foldl (.) id opts) (H.HaskellFlags [] "ADL.Generated" [stdCustomTypes] "." False)
 
     optDescs =

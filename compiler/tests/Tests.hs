@@ -99,11 +99,11 @@ tests =
   , testHsBackend "hs.2 structs" "test2/input" ["test2/input/test.adl"] "test2/hs-output" id
   , testHsBackend "hs.3 structs - default overrides" "test3/input" ["test3/input/test.adl"] "test3/hs-output" id
   , testHsBackend "hs.4 custom type mappings" "test4/input" ["test4/input/test.adl"] "test4/output"
-                      (\hf->hf{H.hf_customTypeFiles=["test4/input/custom_types.json"]})
+                      (\hf->hf{H.hf_customTypeFiles=["test4/input/hs-custom-types.json"]})
   , testHsBackend "hs.6 std library"
     "../../runtime/adl"
     ["../../runtime/adl/sys/types.adl", "../../runtime/adl/sys/rpc.adl"] "test6/hs-output"
-    (\hf->hf{H.hf_customTypeFiles=["../../compiler/config/custom_types.json"]})
+    (\hf->hf{H.hf_customTypeFiles=["../../compiler/config/hs-custom-types.json"]})
 
   , testCppBackend "cpp.1 empty module" "test1/input" ["test1/input/test.adl"] "test1/cpp-output" id
   , testCppBackend "cpp.2 structs" "test2/input" ["test2/input/test.adl"] "test2/cpp-output" id
