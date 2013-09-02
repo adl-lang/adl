@@ -11,6 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
+import ADL.Compiler.Utils
 import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.Verify as V
 import HaskellCustomTypes
@@ -45,20 +46,35 @@ runVerify args0 =
 
 runHaskell args0 =
   case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> H.generate (mkFlags opts) getCustomTypes args
+    (opts,args,[]) -> do
+      let (flags,out) = mkFlags opts
+          flags1 = flags{hf_fileWriter=writeOutputFile out}
+      H.generate flags1 getCustomTypes args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."
     
-    mkFlags opts = (foldl (.) id opts) (H.HaskellFlags [] "ADL.Generated" [] "." False)
+    mkFlags opts = (foldl (.) id opts) (flags0,out0)
+
+    flags0 = H.HaskellFlags {
+      hf_searchPath=[],
+      hf_modulePrefix="ADL.Generated",
+      hf_customTypeFiles=[],
+      hf_fileWriter= \_ _ -> return ()
+    }
+    out0 = OutputArgs {
+      oa_log = putStrLn,
+      oa_noOverwrite = True,
+      oa_outputPath = "."
+    }
 
     optDescs =
-      [ searchDirOption (\s hf-> hf{hf_searchPath=s:hf_searchPath hf})
+      [ searchDirOption (\s (hf,o)-> (hf{hf_searchPath=s:hf_searchPath hf},o))
       , Option "" ["moduleprefix"]
-        (ReqArg (\s hf-> hf{hf_modulePrefix=s}) "PREFIX")
+        (ReqArg (\s (hf,o)-> (hf{hf_modulePrefix=s},o)) "PREFIX")
         "Set module name prefix for generated code "
-      , outputDirOption (\s hf-> hf{hf_outputPath=s})
-      , noOverwriteOption (\hf-> hf{hf_noOverwrite=True})
+      , outputDirOption (\s (hf,o)-> (hf,o{oa_outputPath=s}))
+      , noOverwriteOption (\(hf,o)-> (hf,o{oa_noOverwrite=True}))
       ]
 
 usage = T.intercalate "\n"

@@ -9,7 +9,6 @@ import qualified Data.Set as Set
 import qualified Data.List as L
 import Data.Ord (comparing)
 
-import System.Directory(createDirectoryIfMissing)
 import System.FilePath(joinPath,takeDirectory)
 import Control.Monad
 import Control.Monad.Trans
@@ -70,7 +69,7 @@ fileText fs = T.intercalate "\n" lines
 data MState = MState {
    ms_name :: ModuleName,
    ms_moduleMapper :: ModuleName -> CppNamespace,
-   ms_fileMapper :: ModuleName -> (FilePath,FilePath),
+   ms_fileMapper :: ModuleName -> FilePath,
    ms_customTypes :: Map.Map ScopedName CustomType,
    ms_incFile :: FState,
    ms_cppFile :: FState
@@ -214,7 +213,7 @@ cUnionDiscName t f = T.toUpper (cUnionAccessorName t f)
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
   ms <- get
-  let (_,fp2) = ms_fileMapper ms mn
+  let fp2 = ms_fileMapper ms mn
   include fr (fp2 ++ ".h")
 
 mkTemplate :: FileRef -> [Ident] -> Gen ()
@@ -621,36 +620,28 @@ generateModule m = do
 -- to map from ADL Modules to actual file system paths. If @uo@ is
 -- true, then the output files will not be written if there are
 -- existing identical files.
-writeModuleFile :: Bool ->
-                   (ModuleName -> CppNamespace) ->
-                   (ModuleName -> (FilePath,FilePath)) ->
+writeModuleFile :: (ModuleName -> CppNamespace) ->
+                   (ModuleName -> FilePath) ->
                    CustomTypeMap -> 
+                   (FilePath -> T.Text -> IO ()) ->
                    Module ResolvedType ->
                    EIO a ()
-writeModuleFile noOverwrite mNamespace mFile customTypes m = do
+writeModuleFile mNamespace mFile customTypes fileWriter m = do
   let fs = FState Set.empty "" []
       s0 = MState (m_name m) mNamespace mFile customTypes fs fs
-      (fp1,fp2) =  mFile (m_name m)
+      fp =  mFile (m_name m)
       s1 = execState (generateModule m) s0
-  saveFile (joinPath [fp1,fp2 ++ ".h"]) (fileText (ms_incFile s1))
-  saveFile (joinPath [fp1,fp2 ++ ".cpp"]) (fileText (ms_cppFile s1))
-  where
-    saveFile fpath t = liftIO $ do
-      createDirectoryIfMissing True (takeDirectory fpath)
-      writeFileIfRequired noOverwrite fpath t
+  liftIO $ fileWriter (fp ++ ".h") (fileText (ms_incFile s1))
+  liftIO $ fileWriter (fp ++ ".cpp") (fileText (ms_cppFile s1))
 
 data CppFlags = CppFlags {
   -- directories where we look for ADL files
   cf_searchPath :: [FilePath],
  
-  -- the directory to which we write output files
-  cf_outputPath :: FilePath,
-  
   -- Files containing custom type definitions
   cf_customTypeFiles :: [FilePath],
 
-  -- if true, we only write files when they differ from what's already there
-  cf_noOverwrite :: Bool
+  cf_fileWriter :: FilePath -> T.Text -> IO ()
   }
 
 getCustomTypes :: [FilePath] -> EIOT CustomTypeMap
@@ -682,17 +673,17 @@ getCustomTypes fps = fmap Map.unions (mapM get0 fps)
 namespaceGenerator :: ModuleName -> CppNamespace
 namespaceGenerator mn = CppNamespace ("ADL":unModuleName mn)
 
-fileGenerator :: FilePath -> ModuleName -> (FilePath,FilePath)
-fileGenerator odir mn = (odir, T.unpack (T.intercalate "." (unModuleName mn)))
+fileGenerator :: ModuleName -> FilePath
+fileGenerator mn = T.unpack (T.intercalate "." (unModuleName mn))
 
 generate :: CppFlags -> [FilePath] -> EIOT ()
 generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
   rm <- loadAndCheckModule (moduleFinder (cf_searchPath cf)) modulePath
   customTypes <- getCustomTypes (cf_customTypeFiles cf)
-  writeModuleFile (cf_noOverwrite cf)
-                  namespaceGenerator
-                  (fileGenerator (cf_outputPath cf))
+  writeModuleFile namespaceGenerator
+                  fileGenerator
                   customTypes
+                  (cf_fileWriter cf)
                   rm
 ----------------------------------------------------------------------
 

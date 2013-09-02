@@ -12,7 +12,6 @@ import qualified Data.Set as Set
 import qualified Data.List as L
 import Data.Ord (comparing)
 
-import System.Directory(createDirectoryIfMissing)
 import System.FilePath(takeDirectory,joinPath,addExtension)
 import Control.Monad
 import Control.Monad.Trans
@@ -486,19 +485,17 @@ generateModule m = do
 -- | Generate he haskell code for a module into a file. The mappings
 -- from adl module names to haskell modules, and from haskell module
 -- name to the written file.
-writeModuleFile :: Bool ->
-                   (ModuleName -> HaskellModule) ->
+writeModuleFile :: (ModuleName -> HaskellModule) ->
                    (HaskellModule -> FilePath) ->
                    CustomTypeMap ->
+                   (FilePath -> T.Text -> IO ()) ->
                    Module ResolvedType ->
                    EIO a ()
-writeModuleFile noOverwrite hmf fpf customTypes m = do
+writeModuleFile hmf fpf customTypes fileWriter m = do
   let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty Set.empty []
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
-  liftIO $ do
-    createDirectoryIfMissing True (takeDirectory fpath)
-    writeFileIfRequired noOverwrite fpath t
+  liftIO $ fileWriter fpath t
 
 moduleMapper :: String -> ModuleName -> HaskellModule
 moduleMapper sprefix mn = HaskellModule (T.intercalate "." (prefix ++path) )
@@ -506,8 +503,8 @@ moduleMapper sprefix mn = HaskellModule (T.intercalate "." (prefix ++path) )
     prefix = T.splitOn "." (T.pack sprefix)
     path = map upper1 (unModuleName mn)
 
-fileMapper :: FilePath -> HaskellModule -> FilePath
-fileMapper root (HaskellModule t) = addExtension (joinPath (root:ps)) "hs"
+fileMapper :: HaskellModule -> FilePath
+fileMapper (HaskellModule t) = addExtension (joinPath ps) "hs"
   where
     ps = map T.unpack (T.splitOn "." t)
       
@@ -521,19 +518,15 @@ data HaskellFlags = HaskellFlags {
 
   hf_customTypeFiles :: [FilePath],
 
-  -- the directory to which we write output files
-  hf_outputPath :: FilePath,
-
-  -- if true, we only write files when they differ from what's already there
-  hf_noOverwrite :: Bool
+  hf_fileWriter :: FilePath -> T.Text -> IO ()
 }
 
 generate :: HaskellFlags -> ([FilePath] -> EIOT CustomTypeMap) -> [FilePath] -> EIOT ()
 generate hf getCustomTypes modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
   rm <- loadAndCheckModule (moduleFinder (hf_searchPath hf)) modulePath
   hctypes <- getCustomTypes (hf_customTypeFiles hf)
-  writeModuleFile (hf_noOverwrite hf)
-                    (moduleMapper (hf_modulePrefix hf))
-                    (fileMapper (hf_outputPath hf))
-                    hctypes
-                    rm
+  writeModuleFile (moduleMapper (hf_modulePrefix hf))
+                  fileMapper
+                  hctypes
+                  (hf_fileWriter hf)
+                  rm

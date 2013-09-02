@@ -12,6 +12,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
+import ADL.Compiler.Utils
 import ADL.Compiler.Backends.Verify as V
 import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.Cpp as C
@@ -62,16 +63,29 @@ runHaskell args0 =
 
     mkFlags opts = do
       stdCustomTypes <- liftIO $ getDataFileName "config/hs-custom-types.json"
-      return $ (foldl (.) id opts) (H.HaskellFlags [] "ADL.Generated" [stdCustomTypes] "." False)
+      let (flags1,out1) = (foldl (.) id opts) (flags0 [stdCustomTypes],out0)
+      return flags1{hf_fileWriter=writeOutputFile out1}
+
+    flags0 ctypes = H.HaskellFlags {
+      hf_searchPath=[],
+      hf_modulePrefix="ADL.Generated",
+      hf_customTypeFiles=ctypes,
+      hf_fileWriter= \_ _ -> return ()
+    }
+    out0 = OutputArgs {
+      oa_log = putStrLn,
+      oa_noOverwrite = True,
+      oa_outputPath = "."
+    }
 
     optDescs =
-      [ searchDirOption (\s hf-> hf{hf_searchPath=s:hf_searchPath hf})
+      [ searchDirOption (\s (hf,o)-> (hf{hf_searchPath=s:hf_searchPath hf},o))
       , Option "" ["moduleprefix"]
-        (ReqArg (\s hf-> hf{hf_modulePrefix=s}) "PREFIX")
+        (ReqArg (\s (hf,o)-> (hf{hf_modulePrefix=s},o)) "PREFIX")
         "Set module name prefix for generated code "
-      , customTypesOption (\s hf-> hf{hf_customTypeFiles=s:hf_customTypeFiles hf})
-      , outputDirOption (\s hf-> hf{hf_outputPath=s})
-      , noOverwriteOption (\hf-> hf{hf_noOverwrite=True})
+      , customTypesOption (\s (hf,o)-> (hf{hf_customTypeFiles=s:hf_customTypeFiles hf},o))
+      , outputDirOption (\s (hf,o)-> (hf,o{oa_outputPath=s}))
+      , noOverwriteOption (\(hf,o)-> (hf,o{oa_noOverwrite=True}))
       ]
 
 runCpp args0 =
@@ -85,13 +99,25 @@ runCpp args0 =
 
     mkFlags opts = do
       stdCustomTypes <- liftIO $ getDataFileName "config/cpp-custom-types.json"
-      return $ (foldl (.) id opts) (C.CppFlags [] "." [stdCustomTypes] False)
+      let (flags1,out) = (foldl (.) id opts) (flags0 [stdCustomTypes],out0)
+      return flags1{cf_fileWriter=writeOutputFile out}
+
+    flags0 ctypes = C.CppFlags {
+      cf_searchPath=[],
+      cf_customTypeFiles=ctypes,
+      cf_fileWriter= \_ _ -> return ()
+    }
+    out0 = OutputArgs {
+      oa_log = putStrLn,
+      oa_noOverwrite = True,
+      oa_outputPath = "."
+    }
 
     optDescs =
-      [ searchDirOption (\s cf-> cf{cf_searchPath=s:cf_searchPath cf})
-      , customTypesOption (\s cf-> cf{cf_customTypeFiles=s:cf_customTypeFiles cf})
-      , outputDirOption (\s cf-> cf{cf_outputPath=s})
-      , noOverwriteOption (\cf-> cf{cf_noOverwrite=True})
+      [ searchDirOption (\s (cf,o)-> (cf{cf_searchPath=s:cf_searchPath cf},o))
+      , customTypesOption (\s (cf,o)-> (cf{cf_customTypeFiles=s:cf_customTypeFiles cf},o))
+      , outputDirOption (\s (cf,o)-> (cf,o{oa_outputPath=s}))
+      , noOverwriteOption (\(cf,o)-> (cf,o{oa_noOverwrite=True}))
       ]
 
 usage = T.intercalate "\n"

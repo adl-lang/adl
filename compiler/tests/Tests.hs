@@ -18,6 +18,7 @@ import System.FilePath
 
 import ADL.Utils.FileDiff
 import ADL.Compiler.EIO
+import ADL.Compiler.Utils
 import qualified ADL.Compiler.Backends.Haskell as H
 import qualified ADL.Compiler.Backends.Cpp as CPP
 import HaskellCustomTypes
@@ -74,9 +75,8 @@ testHsBackend name ipath mpaths epath customTypeFiles = Test name (TestBackend e
         flags = H.HaskellFlags {
           H.hf_searchPath = [ipath],
           H.hf_modulePrefix = "ADL",
-          H.hf_outputPath = tempDir,
           H.hf_customTypeFiles = customTypeFiles,
-          H.hf_noOverwrite = False
+          H.hf_fileWriter = writeOutputFile (OutputArgs (\s-> return ()) False tempDir)
           }
 
 testCppBackend :: String -> FilePath -> [FilePath] -> FilePath -> [FilePath] -> Test
@@ -86,9 +86,8 @@ testCppBackend name ipath mpaths epath customTypeFiles = Test name (TestBackend 
       where
         flags = CPP.CppFlags {
           CPP.cf_searchPath = [ipath],
-          CPP.cf_outputPath = tempDir,
           CPP.cf_customTypeFiles = customTypeFiles,
-          CPP.cf_noOverwrite = False
+          CPP.cf_fileWriter = writeOutputFile (OutputArgs (\s-> return ()) False tempDir)
           }
 
 main :: IO ()

@@ -372,7 +372,6 @@ loadAndCheckModule moduleFinder modulePath = do
     
     resolve1 :: SModule -> NameScope -> EIOT (NameScope,RModule)
     resolve1 m ns = do
-        liftIO $ putStrLn ("processing " ++ format (m_name m) ++ "...")
         checkUndefined1 m ns
         let rm = resolveModule m ns
             mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (m_decls rm)

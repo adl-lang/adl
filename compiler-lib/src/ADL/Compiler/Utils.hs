@@ -1,22 +1,37 @@
-module ADL.Compiler.Utils where
+module ADL.Compiler.Utils(
+  OutputArgs(..),
+  writeOutputFile
+  )where
 
 import Prelude hiding (catch)
 import Control.Monad
 import Control.Exception
+import System.FilePath
+import System.Directory(createDirectoryIfMissing)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-writeFileIfRequired :: Bool -> FilePath -> T.Text -> IO ()
-writeFileIfRequired False fpath t = do
-  putStrLn ("writing " ++ fpath ++ "...")
+data OutputArgs = OutputArgs {
+  oa_log :: String -> IO (),
+  oa_noOverwrite :: Bool,
+  oa_outputPath :: FilePath
+  }                   
+  
+writeOutputFile :: OutputArgs -> FilePath -> T.Text -> IO ()
+writeOutputFile (oa@OutputArgs{oa_noOverwrite=False}) fpath0 t = do
+  let fpath = oa_outputPath oa </> fpath0
+  oa_log oa ("writing " ++ fpath ++ "...")
+  createDirectoryIfMissing True (takeDirectory fpath)
   T.writeFile fpath t
-writeFileIfRequired True fpath t = do
+writeOutputFile (oa@OutputArgs{oa_noOverwrite=True}) fpath0 t = do
+  let fpath = oa_outputPath oa </> fpath0
   t0 <- catch (T.readFile fpath) ((\_ -> return T.empty) :: IOError -> IO T.Text)
   if t /= t0
      then do
-       putStrLn ("writing " ++ fpath ++ ".")
+       oa_log oa ("writing " ++ fpath ++ ".")
+       createDirectoryIfMissing True (takeDirectory fpath)
        T.writeFile fpath t
     else
-       putStrLn ("leaving " ++ fpath ++ " unchanged.")
+       oa_log oa ("leaving " ++ fpath ++ " unchanged.")
         
           
