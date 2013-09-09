@@ -366,7 +366,7 @@ struct S
         const uint64_t & f_word64,
         const float & f_float,
         const double & f_double,
-        const std::string & f_bytes,
+        const ByteVector & f_bytes,
         const std::string & f_string,
         const std::vector<std::string>  & f_vstring,
         const A & f_a,
@@ -387,7 +387,7 @@ struct S
     uint64_t f_word64;
     float f_float;
     double f_double;
-    std::string f_bytes;
+    ByteVector f_bytes;
     std::string f_string;
     std::vector<std::string>  f_vstring;
     A f_a;
@@ -431,7 +431,7 @@ S<T>::S()
     , f_word64(2344)
     , f_float(0.5)
     , f_double(0.45)
-    , f_bytes("hello")
+    , f_bytes(ByteVector::fromLiteral("hello"))
     , f_string("abcd")
     , f_vstring(mkvec<std::string>("xy","ab"))
     , f_a(A(0,"xyz",true))
@@ -454,7 +454,7 @@ S<T>::S(
     const uint64_t & f_word64_,
     const float & f_float_,
     const double & f_double_,
-    const std::string & f_bytes_,
+    const ByteVector & f_bytes_,
     const std::string & f_string_,
     const std::vector<std::string>  & f_vstring_,
     const A & f_a_,
@@ -618,7 +618,7 @@ JsonV<ADL::test::S<T>>::fromJson( ADL::test::S<T> &v, JsonReader &json )
         else if( json.fieldName() == "f_double" )
             JsonV<double>::fromJson( v.f_double, json );
         else if( json.fieldName() == "f_bytes" )
-            JsonV<std::string>::fromJson( v.f_bytes, json );
+            JsonV<ByteVector>::fromJson( v.f_bytes, json );
         else if( json.fieldName() == "f_string" )
             JsonV<std::string>::fromJson( v.f_string, json );
         else if( json.fieldName() == "f_vstring" )

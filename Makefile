@@ -55,6 +55,7 @@ examples: .make/built-examples
 .make/built-runtime-cpp: $(RUNTIME-SRC) $(RUNTIME-CPP-SRC) .make/built-compiler
 	(cd runtime-cpp && make clean)
 	(cd runtime-cpp && make)
+	touch .make/built-runtime-cpp
 
 .make/built-examples: $(EXAMPLE-SRC) .make/built-utils .make/built-runtime .make/built-compiler .make/comms-http
 	(cd examples && cabal-dev -s ../cabal-dev install)

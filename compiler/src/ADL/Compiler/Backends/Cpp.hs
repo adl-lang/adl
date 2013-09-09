@@ -917,7 +917,7 @@ cPrimitiveType P_Word32 = intType "uint32_t"
 cPrimitiveType P_Word64 = intType "uint64_t"
 cPrimitiveType P_Float = return "float"
 cPrimitiveType P_Double = return "double"
-cPrimitiveType P_ByteVector = includeStd ifile "string" >> return "std::string"
+cPrimitiveType P_ByteVector = return "ByteVector"
 cPrimitiveType P_Vector = includeStd ifile "vector" >> return "std::vector"
 cPrimitiveType P_String = includeStd ifile "string" >> return "std::string"
 cPrimitiveType P_Sink = return "Sink"
@@ -956,7 +956,7 @@ cPrimitiveLiteral P_Float (JSON.Number (I n)) = litNumber n
 cPrimitiveLiteral P_Float (JSON.Number (D n)) = litNumber n
 cPrimitiveLiteral P_Double (JSON.Number (I n)) = litNumber n
 cPrimitiveLiteral P_Double (JSON.Number (D n)) = litNumber n
-cPrimitiveLiteral P_ByteVector (JSON.String s) = T.pack (show (decode s))
+cPrimitiveLiteral P_ByteVector (JSON.String s) = template "ByteVector::fromLiteral($1)" [T.pack (show (decode s))]
   where
     decode s = case B64.decode (T.encodeUtf8 s) of
       (Left _) -> "???"
