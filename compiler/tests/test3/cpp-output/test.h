@@ -24,6 +24,22 @@ struct A
 bool operator<( const A &a, const A &b );
 bool operator==( const A &a, const A &b );
 
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::A>
+{
+    static void toJson( JsonWriter &json, const ADL::test::A & v );
+    static void fromJson( ADL::test::A &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 class U
 {
 public:
@@ -60,6 +76,22 @@ private:
 
 bool operator<( const U &a, const U &b );
 bool operator==( const U &a, const U &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U & v );
+    static void fromJson( ADL::test::U &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 inline U::DiscType U::d() const
 {
@@ -103,6 +135,22 @@ bool operator<( const XY<T> &a, const XY<T> &b );
 template <class T>
 bool operator==( const XY<T> &a, const XY<T> &b );
 
+}} // ADL::test
+
+namespace ADL {
+
+template <class T>
+struct JsonV<ADL::test::XY<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::test::XY<T> & v );
+    static void fromJson( ADL::test::XY<T> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 template <class T>
 XY<T>::XY()
 {
@@ -138,6 +186,42 @@ operator==( const XY<T> &a, const XY<T> &b )
         a.y == b.y ;
 }
 
+}} // ADL::test
+
+namespace ADL {
+
+template <class T>
+void
+JsonV<ADL::test::XY<T>>::toJson( JsonWriter &json, const ADL::test::XY<T> & v )
+{
+    json.startObject();
+    writeField( json, "x", v.x );
+    writeField( json, "y", v.y );
+    json.endObject();
+}
+
+template <class T>
+void
+JsonV<ADL::test::XY<T>>::fromJson( ADL::test::XY<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "x" )
+            JsonV<T>::fromJson( v.x, json );
+        else if( json.fieldName() == "y" )
+            JsonV<T>::fromJson( v.y, json );
+        else
+            ignore( json );
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 template <class T>
 struct B
 {
@@ -160,6 +244,22 @@ template <class T>
 bool operator<( const B<T> &a, const B<T> &b );
 template <class T>
 bool operator==( const B<T> &a, const B<T> &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <class T>
+struct JsonV<ADL::test::B<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::test::B<T> & v );
+    static void fromJson( ADL::test::B<T> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 template <class T>
 B<T>::B()
@@ -205,6 +305,48 @@ operator==( const B<T> &a, const B<T> &b )
         a.f_tvec == b.f_tvec &&
         a.f_xy == b.f_xy ;
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+template <class T>
+void
+JsonV<ADL::test::B<T>>::toJson( JsonWriter &json, const ADL::test::B<T> & v )
+{
+    json.startObject();
+    writeField( json, "f_t", v.f_t );
+    writeField( json, "f_string", v.f_string );
+    writeField( json, "f_tvec", v.f_tvec );
+    writeField( json, "f_xy", v.f_xy );
+    json.endObject();
+}
+
+template <class T>
+void
+JsonV<ADL::test::B<T>>::fromJson( ADL::test::B<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "f_t" )
+            JsonV<T>::fromJson( v.f_t, json );
+        else if( json.fieldName() == "f_string" )
+            JsonV<std::string>::fromJson( v.f_string, json );
+        else if( json.fieldName() == "f_tvec" )
+            JsonV<std::vector<T> >::fromJson( v.f_tvec, json );
+        else if( json.fieldName() == "f_xy" )
+            JsonV<ADL::test::XY<T> >::fromJson( v.f_xy, json );
+        else
+            ignore( json );
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 template <class T>
 struct S
@@ -258,6 +400,22 @@ template <class T>
 bool operator<( const S<T> &a, const S<T> &b );
 template <class T>
 bool operator==( const S<T> &a, const S<T> &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <class T>
+struct JsonV<ADL::test::S<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::test::S<T> & v );
+    static void fromJson( ADL::test::S<T> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 template <class T>
 S<T>::S()
@@ -397,5 +555,90 @@ operator==( const S<T> &a, const S<T> &b )
         a.f_bint16 == b.f_bint16 ;
 }
 
+}} // ADL::test
+
+namespace ADL {
+
+template <class T>
+void
+JsonV<ADL::test::S<T>>::toJson( JsonWriter &json, const ADL::test::S<T> & v )
+{
+    json.startObject();
+    writeField( json, "f_void", v.f_void );
+    writeField( json, "f_bool", v.f_bool );
+    writeField( json, "f_int8", v.f_int8 );
+    writeField( json, "f_int16", v.f_int16 );
+    writeField( json, "f_int32", v.f_int32 );
+    writeField( json, "f_int64", v.f_int64 );
+    writeField( json, "f_word8", v.f_word8 );
+    writeField( json, "f_word16", v.f_word16 );
+    writeField( json, "f_word32", v.f_word32 );
+    writeField( json, "f_word64", v.f_word64 );
+    writeField( json, "f_float", v.f_float );
+    writeField( json, "f_double", v.f_double );
+    writeField( json, "f_bytes", v.f_bytes );
+    writeField( json, "f_string", v.f_string );
+    writeField( json, "f_vstring", v.f_vstring );
+    writeField( json, "f_a", v.f_a );
+    writeField( json, "f_u", v.f_u );
+    writeField( json, "f_t", v.f_t );
+    writeField( json, "f_bint16", v.f_bint16 );
+    json.endObject();
 }
+
+template <class T>
+void
+JsonV<ADL::test::S<T>>::fromJson( ADL::test::S<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "f_void" )
+            JsonV<Void>::fromJson( v.f_void, json );
+        else if( json.fieldName() == "f_bool" )
+            JsonV<bool>::fromJson( v.f_bool, json );
+        else if( json.fieldName() == "f_int8" )
+            JsonV<int8_t>::fromJson( v.f_int8, json );
+        else if( json.fieldName() == "f_int16" )
+            JsonV<int16_t>::fromJson( v.f_int16, json );
+        else if( json.fieldName() == "f_int32" )
+            JsonV<int32_t>::fromJson( v.f_int32, json );
+        else if( json.fieldName() == "f_int64" )
+            JsonV<int64_t>::fromJson( v.f_int64, json );
+        else if( json.fieldName() == "f_word8" )
+            JsonV<uint8_t>::fromJson( v.f_word8, json );
+        else if( json.fieldName() == "f_word16" )
+            JsonV<uint16_t>::fromJson( v.f_word16, json );
+        else if( json.fieldName() == "f_word32" )
+            JsonV<uint32_t>::fromJson( v.f_word32, json );
+        else if( json.fieldName() == "f_word64" )
+            JsonV<uint64_t>::fromJson( v.f_word64, json );
+        else if( json.fieldName() == "f_float" )
+            JsonV<float>::fromJson( v.f_float, json );
+        else if( json.fieldName() == "f_double" )
+            JsonV<double>::fromJson( v.f_double, json );
+        else if( json.fieldName() == "f_bytes" )
+            JsonV<std::string>::fromJson( v.f_bytes, json );
+        else if( json.fieldName() == "f_string" )
+            JsonV<std::string>::fromJson( v.f_string, json );
+        else if( json.fieldName() == "f_vstring" )
+            JsonV<std::vector<std::string> >::fromJson( v.f_vstring, json );
+        else if( json.fieldName() == "f_a" )
+            JsonV<ADL::test::A>::fromJson( v.f_a, json );
+        else if( json.fieldName() == "f_u" )
+            JsonV<ADL::test::U>::fromJson( v.f_u, json );
+        else if( json.fieldName() == "f_t" )
+            JsonV<T>::fromJson( v.f_t, json );
+        else if( json.fieldName() == "f_bint16" )
+            JsonV<ADL::test::B<int16_t> >::fromJson( v.f_bint16, json );
+        else
+            ignore( json );
+    }
+    match( json, JsonReader::END_OBJECT );
 }
+
+} // ADL
+
+namespace ADL {
+namespace test {
+}} // ADL::test

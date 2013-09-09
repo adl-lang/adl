@@ -2,6 +2,4 @@
 
 namespace ADL {
 namespace test {
-
-}
-}
+}} // ADL::test

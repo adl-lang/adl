@@ -45,6 +45,23 @@ bool operator<( const Either<T1,T2> &a, const Either<T1,T2> &b );
 template <class T1, class T2>
 bool operator==( const Either<T1,T2> &a, const Either<T1,T2> &b );
 
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class T1, class T2>
+struct JsonV<ADL::sys::types::Either<T1,T2>>
+{
+    static void toJson( JsonWriter &json, const ADL::sys::types::Either<T1,T2> & v );
+    static void fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
+
 template <class T1, class T2>
 typename Either<T1,T2>::DiscType Either<T1,T2>::d() const
 {
@@ -232,6 +249,23 @@ bool operator<( const Error<T> &a, const Error<T> &b );
 template <class T>
 bool operator==( const Error<T> &a, const Error<T> &b );
 
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class T>
+struct JsonV<ADL::sys::types::Error<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::sys::types::Error<T> & v );
+    static void fromJson( ADL::sys::types::Error<T> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
+
 template <class T>
 typename Error<T>::DiscType Error<T>::d() const
 {
@@ -418,6 +452,23 @@ bool operator<( const Maybe<T> &a, const Maybe<T> &b );
 template <class T>
 bool operator==( const Maybe<T> &a, const Maybe<T> &b );
 
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class T>
+struct JsonV<ADL::sys::types::Maybe<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::sys::types::Maybe<T> & v );
+    static void fromJson( ADL::sys::types::Maybe<T> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
+
 template <class T>
 typename Maybe<T>::DiscType Maybe<T>::d() const
 {
@@ -555,7 +606,4 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
 // Set excluded due to custom definition
 
 // Map excluded due to custom definition
-
-}
-}
-}
+}}} // ADL::sys::types

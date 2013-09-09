@@ -5,6 +5,7 @@
 #include <string>
 #include <exception>
 #include <stdint.h>
+#include "json.h"
 
 namespace ADL {
 

@@ -22,6 +22,22 @@ struct S1
 bool operator<( const S1 &a, const S1 &b );
 bool operator==( const S1 &a, const S1 &b );
 
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::S1>
+{
+    static void toJson( JsonWriter &json, const ADL::test::S1 & v );
+    static void fromJson( ADL::test::S1 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 template <class T>
 struct Tree
 {
@@ -40,6 +56,22 @@ template <class T>
 bool operator<( const Tree<T> &a, const Tree<T> &b );
 template <class T>
 bool operator==( const Tree<T> &a, const Tree<T> &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <class T>
+struct JsonV<ADL::test::Tree<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::test::Tree<T> & v );
+    static void fromJson( ADL::test::Tree<T> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 template <class T>
 Tree<T>::Tree()
@@ -76,7 +108,41 @@ operator==( const Tree<T> &a, const Tree<T> &b )
         a.children == b.children ;
 }
 
-using IntTree = Tree<int32_t> ;
+}} // ADL::test
 
+namespace ADL {
+
+template <class T>
+void
+JsonV<ADL::test::Tree<T>>::toJson( JsonWriter &json, const ADL::test::Tree<T> & v )
+{
+    json.startObject();
+    writeField( json, "value", v.value );
+    writeField( json, "children", v.children );
+    json.endObject();
 }
+
+template <class T>
+void
+JsonV<ADL::test::Tree<T>>::fromJson( ADL::test::Tree<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "value" )
+            JsonV<T>::fromJson( v.value, json );
+        else if( json.fieldName() == "children" )
+            JsonV<std::vector<ADL::test::Tree<T> > >::fromJson( v.children, json );
+        else
+            ignore( json );
+    }
+    match( json, JsonReader::END_OBJECT );
 }
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
+using IntTree = Tree<int32_t> ;
+}} // ADL::test

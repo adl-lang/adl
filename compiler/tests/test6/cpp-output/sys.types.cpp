@@ -3,7 +3,4 @@
 namespace ADL {
 namespace sys {
 namespace types {
-
-}
-}
-}
+}}} // ADL::sys::types

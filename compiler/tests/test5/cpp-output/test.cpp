@@ -30,6 +30,37 @@ operator==( const S1 &a, const S1 &b )
         a.f == b.f ;
 }
 
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::S1>::toJson( JsonWriter &json, const ADL::test::S1 & v )
+{
+    json.startObject();
+    writeField( json, "f", v.f );
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::S1>::fromJson( ADL::test::S1 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "f" )
+            JsonV<int16_t>::fromJson( v.f, json );
+        else
+            ignore( json );
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 U1::U1()
     : d_(V), p_(0)
 {
@@ -720,6 +751,4 @@ operator==( const U8 &a, const U8 &b )
         case U8::V2: return a.v2() == b.v2();
     }
 }
-
-}
-}
+}} // ADL::test

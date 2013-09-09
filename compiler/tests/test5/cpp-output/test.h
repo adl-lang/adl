@@ -18,6 +18,22 @@ struct S1
 bool operator<( const S1 &a, const S1 &b );
 bool operator==( const S1 &a, const S1 &b );
 
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::S1>
+{
+    static void toJson( JsonWriter &json, const ADL::test::S1 & v );
+    static void fromJson( ADL::test::S1 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 class U1
 {
 public:
@@ -49,6 +65,22 @@ private:
 
 bool operator<( const U1 &a, const U1 &b );
 bool operator==( const U1 &a, const U1 &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U1>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U1 & v );
+    static void fromJson( ADL::test::U1 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 inline U1::DiscType U1::d() const
 {
@@ -87,6 +119,22 @@ private:
 
 bool operator<( const U2 &a, const U2 &b );
 bool operator==( const U2 &a, const U2 &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U2>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U2 & v );
+    static void fromJson( ADL::test::U2 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 inline U2::DiscType U2::d() const
 {
@@ -134,6 +182,22 @@ private:
 
 bool operator<( const U3 &a, const U3 &b );
 bool operator==( const U3 &a, const U3 &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U3>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U3 & v );
+    static void fromJson( ADL::test::U3 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 inline U3::DiscType U3::d() const
 {
@@ -188,6 +252,22 @@ template <class T>
 bool operator<( const U9<T> &a, const U9<T> &b );
 template <class T>
 bool operator==( const U9<T> &a, const U9<T> &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <class T>
+struct JsonV<ADL::test::U9<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U9<T> & v );
+    static void fromJson( ADL::test::U9<T> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 template <class T>
 typename U9<T>::DiscType U9<T>::d() const
@@ -369,6 +449,22 @@ private:
 bool operator<( const U4 &a, const U4 &b );
 bool operator==( const U4 &a, const U4 &b );
 
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U4>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U4 & v );
+    static void fromJson( ADL::test::U4 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 inline U4::DiscType U4::d() const
 {
     return d_;
@@ -415,6 +511,22 @@ private:
 
 bool operator<( const U5 &a, const U5 &b );
 bool operator==( const U5 &a, const U5 &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U5>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U5 & v );
+    static void fromJson( ADL::test::U5 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 inline U5::DiscType U5::d() const
 {
@@ -463,6 +575,22 @@ private:
 bool operator<( const U6 &a, const U6 &b );
 bool operator==( const U6 &a, const U6 &b );
 
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U6>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U6 & v );
+    static void fromJson( ADL::test::U6 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 inline U6::DiscType U6::d() const
 {
     return d_;
@@ -509,6 +637,22 @@ private:
 
 bool operator<( const U7 &a, const U7 &b );
 bool operator==( const U7 &a, const U7 &b );
+
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U7>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U7 & v );
+    static void fromJson( ADL::test::U7 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 inline U7::DiscType U7::d() const
 {
@@ -561,6 +705,22 @@ private:
 bool operator<( const U8 &a, const U8 &b );
 bool operator==( const U8 &a, const U8 &b );
 
+}} // ADL::test
+
+namespace ADL {
+
+template <>
+struct JsonV<ADL::test::U8>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U8 & v );
+    static void fromJson( ADL::test::U8 &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 inline U8::DiscType U8::d() const
 {
     return d_;
@@ -583,6 +743,4 @@ inline int16_t & U8::v2() const
     }
     throw invalid_union_access();
 }
-
-}
-}
+}} // ADL::test

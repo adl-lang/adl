@@ -35,5 +35,37 @@ operator==( const S1 &a, const S1 &b )
         a.y == b.y ;
 }
 
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::S1>::toJson( JsonWriter &json, const ADL::test::S1 & v )
+{
+    json.startObject();
+    writeField( json, "x", v.x );
+    writeField( json, "y", v.y );
+    json.endObject();
 }
+
+void
+JsonV<ADL::test::S1>::fromJson( ADL::test::S1 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "x" )
+            JsonV<int32_t>::fromJson( v.x, json );
+        else if( json.fieldName() == "y" )
+            JsonV<std::string>::fromJson( v.y, json );
+        else
+            ignore( json );
+    }
+    match( json, JsonReader::END_OBJECT );
 }
+
+} // ADL
+
+namespace ADL {
+namespace test {
+}} // ADL::test

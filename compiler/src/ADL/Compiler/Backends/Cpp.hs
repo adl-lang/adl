@@ -176,18 +176,18 @@ type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
 
 -- Returns the c++ typer expression corresponding to the
 -- given ADL type expression
-cTypeExpr :: TypeExpr ResolvedType -> Gen T.Text
-cTypeExpr = cTypeExprB Map.empty
+cTypeExpr :: Bool -> TypeExpr ResolvedType -> Gen T.Text
+cTypeExpr scopeLocalNames te = cTypeExprB scopeLocalNames Map.empty te
 
-cTypeExprB :: TypeBindingMap -> TypeExpr ResolvedType -> Gen T.Text
-cTypeExprB m (TypeExpr rt []) = cTypeExprB1 m rt
-cTypeExprB m (TypeExpr c args) = do
-  ct <- cTypeExprB1 m c
-  argst <- mapM (cTypeExprB m) args
+cTypeExprB :: Bool -> TypeBindingMap -> TypeExpr ResolvedType -> Gen T.Text
+cTypeExprB scopeLocalNames m (TypeExpr rt []) = cTypeExprB1 scopeLocalNames m rt
+cTypeExprB scopeLocalNames m (TypeExpr c args) = do
+  ct <- cTypeExprB1 scopeLocalNames m c
+  argst <- mapM (cTypeExprB scopeLocalNames m) args
   return (T.concat $ [ct, "<"] ++ L.intersperse "," argst ++ ["> "])
 
-cTypeExprB1 :: TypeBindingMap -> ResolvedType -> Gen T.Text
-cTypeExprB1 _ (RT_Named (sn,_)) = do
+cTypeExprB1 :: Bool -> TypeBindingMap -> ResolvedType -> Gen T.Text
+cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_)) = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
@@ -202,19 +202,23 @@ cTypeExprB1 _ (RT_Named (sn,_)) = do
     Nothing -> case isLocalName of
       True ->
         -- ADL type defined in this module
-        return (cTypeName (sn_name sn))
+        if scopeLocalNames
+          then do
+            let ns = ms_moduleMapper ms (ms_name ms)
+            return (template "$1::$2" [formatText ns, cTypeName (sn_name sn)])
+          else return (cTypeName (sn_name sn))
+        
       False -> do
         -- ADL type defined in an imported module
         let m = sn_moduleName sn
             namespace = ms_moduleMapper ms m
-            includefile = ms_fileMapper ms m
         includeModule ifile m
         return (template "$1::$2" [formatText namespace, cTypeName (sn_name sn)])
         
-cTypeExprB1 m (RT_Param i) = case Map.lookup i m of
-    (Just te) -> cTypeExprB m te
+cTypeExprB1 scopeLocalNames m (RT_Param i) = case Map.lookup i m of
+    (Just te) -> cTypeExprB scopeLocalNames m te
     Nothing -> return (cTypeParamName i)
-cTypeExprB1 _ (RT_Primitive pt) = cPrimitiveType pt
+cTypeExprB1 scopeLocalNames _ (RT_Primitive pt) = cPrimitiveType pt
 
 -- Returns the c++ name corresponding to the ADL type name
 cTypeName :: Ident -> Ident
@@ -279,23 +283,29 @@ declareOperators fr tparams ctnameP = do
   mkTemplate fr tparams
   wtemplate fr "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
 
-declareSerialisation fr ms ctname = do
+serialisationNamespace = CppNamespace ["ADL"]
+
+declareSerialisation fr tparams ms ctnameP = do
+  let ns = ms_moduleMapper ms (ms_name ms)
+      ctnameP1 = template "$1::$2" [formatText ns,ctnameP]
   wline fr ""
-  setnamespace fr (CppNamespace []) 
+  setnamespace fr serialisationNamespace
   wline fr ""
-  wline fr "template <>"
-  wtemplate fr "struct JsonV<$1>" [ctname]
+  case tparams of
+    [] -> wline fr "template <>"
+    _ -> mkTemplate fr tparams
+  wtemplate fr "struct JsonV<$1>" [ctnameP1]
   dblock ifile $ do
-    wtemplate fr "void toJson( JsonWriter &json, const $1 & v );" [ctname]
-    wtemplate fr "void fromJson( $1 &v, JsonReader &json );" [ctname]
+    wtemplate fr "static void toJson( JsonWriter &json, const $1 & v );" [ctnameP1]
+    wtemplate fr "static void fromJson( $1 &v, JsonReader &json );" [ctnameP1]
   wline fr ""
-  setnamespace fr (ms_moduleMapper ms (ms_name ms))
+  setnamespace fr ns
 
 generateDecl :: Ident -> Decl ResolvedType -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
   fts <- forM (s_fields s) $ \f -> do
-    t <- cTypeExpr (f_type f)
+    t <- cTypeExpr False (f_type f)
     litv <- case f_default f of
         (Just v) -> mkLiteral (f_type f) v
         Nothing -> mkDefaultLiteral (f_type f)
@@ -323,7 +333,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
          wt "$1 $2;" [t, fname]
 
   declareOperators ifile (s_typeParams s) ctnameP
-  declareSerialisation ifile ms ctname
+  declareSerialisation ifile (s_typeParams s) ms ctnameP
 
   -- Constructors
   -- will end up in header file if it's a template class
@@ -372,11 +382,12 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       indent $ wt "a.$1 == b.$1 $2" [fname,sep]
 
   wl ""
-  setnamespace fr (CppNamespace []) 
+  setnamespace fr serialisationNamespace
   wl ""
-  wl "template <>"
+  mkTemplate fr (s_typeParams s)
+  let ns = ms_moduleMapper ms (ms_name ms)
   wl "void"
-  wt "JsonV<$1>::toJson( JsonWriter &json, const $1 & v )" [ctname]
+  wt "JsonV<$1::$2>::toJson( JsonWriter &json, const $1::$2 & v )" [formatText ns,ctnameP]
   cblock fr $ do
     wl "json.startObject();"
     forM_ fts $ \(fname, f,_,_) -> do
@@ -384,17 +395,29 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     wl "json.endObject();"
     return ()
   wl ""
-  wl "template <>"
+  mkTemplate fr (s_typeParams s)
   wl "void"
-  wt "JsonV<$1>::fromJson( $1 &v, JsonReader &json )" [ctname]
+  wt "JsonV<$1::$2>::fromJson( $1::$2 &v, JsonReader &json )" [formatText ns,ctnameP]
   cblock fr $ do
-    return ()
-  setnamespace fr (ms_moduleMapper ms (ms_name ms))
+    wl "match( json, JsonReader::START_OBJECT );"
+    wl "while( match0( json, JsonReader::FIELD ) )"
+    cblock fr $ do
+      forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(fname, f,_,_)) -> do
+        wt "$1( json.fieldName() == \"$2\" )" [ifcmd,f_name f]
+        indent $ do
+          t <- cTypeExpr True (f_type f)
+          wt "JsonV<$1>::fromJson( v.$2, json );" [t,fname]
+      wl "else"
+      indent $ wl "ignore( json );"
+    wl "match( json, JsonReader::END_OBJECT );"
+
+  wl ""
+  setnamespace fr ns
 
 generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   ms <- get
   fts <- forM (u_fields u) $ \f -> do
-    t <- cTypeExpr (f_type f)
+    t <- cTypeExpr False (f_type f)
     litv <- case f_default f of
         (Just v) -> mkLiteral (f_type f) v
         Nothing -> mkDefaultLiteral (f_type f)
@@ -455,7 +478,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   wl "};"
 
   declareOperators ifile (u_typeParams u) ctnameP
-  declareSerialisation ifile ms ctname
+  declareSerialisation ifile (u_typeParams u) ms ctnameP
 
   wl ""
   mkTemplate fr (u_typeParams u)
@@ -614,7 +637,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     
 
 generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
-  te <- cTypeExpr (t_typeExpr t)
+  te <- cTypeExpr False (t_typeExpr t)
   wline ifile ""
   mkTemplate ifile (t_typeParams t)
   wtemplate ifile "using $1 = $2;" [cTypeName dn, te]
@@ -758,13 +781,13 @@ mkDefaultLiteral :: TypeExpr ResolvedType -> Gen Literal
 mkDefaultLiteral te@(TypeExpr (RT_Primitive pt) []) =
   case cPrimitiveDefault pt of
     Nothing -> do
-      t <- cTypeExpr te
+      t <- cTypeExpr False te
       return (LDefault t)
     Just l -> do
       ct <- cPrimitiveType pt
       return (LPrimitive ct l)
 mkDefaultLiteral te = do
-  t <- cTypeExpr te
+  t <- cTypeExpr False te
   return (LDefault t)
     
 
@@ -785,12 +808,12 @@ mkLiteral te jv = mk Map.empty te jv
       (Decl_Typedef t) -> mkTypedef m decl t tes jv
 
     mkVec m te (JSON.Array v) = do
-      t <- cTypeExprB m te
+      t <- cTypeExprB False m te
       vals <- mapM (mk m te) (V.toList v)
       return (LVector t vals)
       
     mkStruct m te0 d s tes (JSON.Object hm) = do
-      t <- cTypeExprB m te0
+      t <- cTypeExprB False m te0
       fields1 <- forM (s_fields s) $ \f -> do
         case HM.lookup (f_name f) hm of
           Nothing -> mkDefaultLiteral (f_type f) 
@@ -800,7 +823,7 @@ mkLiteral te jv = mk Map.empty te jv
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
       
     mkUnion  m te0 d u tes (JSON.Object hm) = do
-      t <- cTypeExprB m te0
+      t <- cTypeExprB False m te0
       let [(fname,jv)] = HM.toList hm
           f = getF fname
       lv <- mk m (f_type f) jv

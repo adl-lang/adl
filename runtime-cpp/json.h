@@ -37,31 +37,35 @@ public:
     };
 
     // Get the type of the current item
-    Type type() = 0;
+    virtual Type type() = 0;
 
-    // Step to the next item
-    void step() = 0;
+    // Step to the next stream item
+    virtual void next() = 0;
+
+    // When type() == FIELD, this function is
+    // to access the fieldname
+    virtual const std::string & fieldName() = 0;
 };
 
 template <class T>
 struct JsonV
 {
-    void toJson( JsonWriter &json, const T & v );
-    void fromJson( T &v, JsonReader &json );
+    static void toJson( JsonWriter &json, const T & v );
+    static void fromJson( T &v, JsonReader &json );
 };
 
 template <>
 struct JsonV<int64_t>
 {
-    void toJson( JsonWriter &json, const int64_t & v );
-    void fromJson( int64_t &v, JsonReader &json );
+    static void toJson( JsonWriter &json, const int64_t & v );
+    static void fromJson( int64_t &v, JsonReader &json );
 };
 
 template <>
 struct JsonV<std::string>
 {
-    void toJson( JsonWriter &json, const std::string & v );
-    void fromJson( std::string &v, JsonReader &json );
+    static void toJson( JsonWriter &json, const std::string & v );
+    static void fromJson( std::string &v, JsonReader &json );
 };
 
 template <class T>
@@ -71,6 +75,33 @@ writeField( JsonWriter &json, const std::string &f, const T &v )
     json.field( f );
     JsonV<T>::toJson( json, v );
 };
+
+struct json_parse_failure : public std::exception
+{
+};
+
+inline
+bool match0( JsonReader &json, JsonReader::Type t )
+{
+    if( json.type() == t )
+    {
+        json.next();
+        return true;
+    }
+    return false;
+};
+
+inline
+void match( JsonReader &json, JsonReader::Type t )
+{
+    if( json.type() == t )
+        json.next();
+    else
+        throw json_parse_failure();
+};
+
+// Skip over the complete json object currently pointed at.
+void ignore( JsonReader &json );
 
 };
 

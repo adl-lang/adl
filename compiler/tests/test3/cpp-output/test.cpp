@@ -41,6 +41,43 @@ operator==( const A &a, const A &b )
         a.f_bool == b.f_bool ;
 }
 
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::A>::toJson( JsonWriter &json, const ADL::test::A & v )
+{
+    json.startObject();
+    writeField( json, "f_int", v.f_int );
+    writeField( json, "f_string", v.f_string );
+    writeField( json, "f_bool", v.f_bool );
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::A>::fromJson( ADL::test::A &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "f_int" )
+            JsonV<int16_t>::fromJson( v.f_int, json );
+        else if( json.fieldName() == "f_string" )
+            JsonV<std::string>::fromJson( v.f_string, json );
+        else if( json.fieldName() == "f_bool" )
+            JsonV<bool>::fromJson( v.f_bool, json );
+        else
+            ignore( json );
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 U::U()
     : d_(F_INT), p_(new int16_t(0))
 {
@@ -148,6 +185,4 @@ operator==( const U &a, const U &b )
         case U::F_STRING: return a.f_string() == b.f_string();
     }
 }
-
-}
-}
+}} // ADL::test
