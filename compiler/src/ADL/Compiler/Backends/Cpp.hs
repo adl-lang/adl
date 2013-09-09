@@ -37,6 +37,8 @@ import ADL.Core.Value
 import qualified ADL.Adlc.Config.Cpp as CC
 
 newtype CppNamespace = CppNamespace { unCppNamespace :: [Ident] }
+   deriving (Eq)
+
 newtype CppFilePath = CppFilePath FilePath
 
 data IncFilePath = IncFilePath FilePath Bool deriving (Eq,Ord)
@@ -54,7 +56,8 @@ instance Format CppFilePath where format (CppFilePath fp) = fp
 data FState = FState {
   fs_includes :: Set.Set IncFilePath,
   fs_indent :: T.Text,
-  fs_lines :: [T.Text]
+  fs_lines :: [T.Text],
+  fs_namespace :: CppNamespace
   }
 
 -- Produce the actual text form of the accumulated file state
@@ -97,7 +100,31 @@ writers :: FileRef -> (T.Text -> Gen (),
                        T.Text -> [T.Text] -> Gen (),
                        Gen () -> Gen ())
 writers fr = (wline fr, wtemplate fr, indent fr)           
-                       
+
+-- Set the namespace we are generating code in
+-- Returns the existing namespace
+--
+-- FIXME: It would be better if this returned the current namespace,
+-- so that we could implement a withnamespace function and simplify
+-- the generation code accordingly. This would require FileRef being a
+-- full data-accessor/lens type.
+setnamespace :: FileRef -> CppNamespace -> Gen ()
+setnamespace fl ns = do modify (fl setns)
+  where
+    setns fs = fs{fs_lines = ls ++ fs_lines fs,fs_namespace = ns}
+      where
+        ls | fs_namespace fs == ns = []
+           | length ids0 == 0 = open
+           | length ids1 == 0 = close
+           | otherwise = open ++ [""] ++ close
+        close = [ template "$1 // $2" [
+                  T.replicate (length ids0) "}",
+                  T.intercalate "::" ids0
+                  ] ]
+        open = [ template "namespace $1 {" [i] | i <- reverse ids1 ]
+        ids0 = unCppNamespace (fs_namespace fs)
+        ids1 = unCppNamespace ns
+  
 -- Write a line of text to the given file
 wline :: FileRef -> T.Text -> Gen ()
 wline fl t = modify (fl addline)
@@ -131,6 +158,13 @@ cblock fr code = do
   wline fr "{"
   a <- indent fr code
   wline fr "}"
+  return a
+
+dblock :: FileRef -> Gen a -> Gen a
+dblock fr code = do
+  wline fr "{"
+  a <- indent fr code
+  wline fr "};"
   return a
 
 
@@ -238,8 +272,28 @@ sepWithTerm sep term (v:vs) = (v,sep):sepWithTerm sep term vs
 commaSep :: [v]  -> [(v,T.Text)]
 commaSep = sepWithTerm "," ""
 
+declareOperators fr tparams ctnameP = do
+  wline fr ""
+  mkTemplate fr tparams
+  wtemplate fr "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
+  mkTemplate fr tparams
+  wtemplate fr "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
+
+declareSerialisation fr ms ctname = do
+  wline fr ""
+  setnamespace fr (CppNamespace []) 
+  wline fr ""
+  wline fr "template <>"
+  wtemplate fr "struct JsonV<$1>" [ctname]
+  dblock ifile $ do
+    wtemplate fr "void toJson( JsonWriter &json, const $1 & v );" [ctname]
+    wtemplate fr "void fromJson( $1 &v, JsonReader &json );" [ctname]
+  wline fr ""
+  setnamespace fr (ms_moduleMapper ms (ms_name ms))
+
 generateDecl :: Ident -> Decl ResolvedType -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
+  ms <- get
   fts <- forM (s_fields s) $ \f -> do
     t <- cTypeExpr (f_type f)
     litv <- case f_default f of
@@ -256,8 +310,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   wl ""
   mkTemplate ifile (s_typeParams s)
   wt "struct $1" [ctname]
-  wl "{"
-  indent  $ do
+  dblock ifile $ do
      wt "$1();" [ctname]
      wl ""
      wt "$1(" [ctname]
@@ -268,15 +321,10 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
      wl ""
      forM_ fts $ \(fname,_,t,_) -> do
          wt "$1 $2;" [t, fname]
-  wl "};"
 
-  -- Associated functions
-  wl ""
-  mkTemplate ifile (s_typeParams s)
-  wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
-  mkTemplate ifile (s_typeParams s)
-  wt "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
-  
+  declareOperators ifile (s_typeParams s) ctnameP
+  declareSerialisation ifile ms ctname
+
   -- Constructors
   -- will end up in header file if it's a template class
   let fr = if null (s_typeParams s) then cppfile else ifile
@@ -323,7 +371,28 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_),sep) -> do
       indent $ wt "a.$1 == b.$1 $2" [fname,sep]
 
+  wl ""
+  setnamespace fr (CppNamespace []) 
+  wl ""
+  wl "template <>"
+  wl "void"
+  wt "JsonV<$1>::toJson( JsonWriter &json, const $1 & v )" [ctname]
+  cblock fr $ do
+    wl "json.startObject();"
+    forM_ fts $ \(fname, f,_,_) -> do
+      wt "writeField( json, \"$1\", v.$2 );" [f_name f,fname]
+    wl "json.endObject();"
+    return ()
+  wl ""
+  wl "template <>"
+  wl "void"
+  wt "JsonV<$1>::fromJson( $1 &v, JsonReader &json )" [ctname]
+  cblock fr $ do
+    return ()
+  setnamespace fr (ms_moduleMapper ms (ms_name ms))
+
 generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
+  ms <- get
   fts <- forM (u_fields u) $ \f -> do
     t <- cTypeExpr (f_type f)
     litv <- case f_default f of
@@ -385,12 +454,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wt "static void *copy( DiscType d, void *v );" [ctnameP]
   wl "};"
 
-  -- Associated functions
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
-  mkTemplate fr (u_typeParams u)
-  wt "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
+  declareOperators ifile (u_typeParams u) ctnameP
+  declareSerialisation ifile ms ctname
 
   wl ""
   mkTemplate fr (u_typeParams u)
@@ -602,17 +667,13 @@ generateModule m = do
 
    include ifile "adl.h"
    includeModule cppfile mname
-   forM_ (unCppNamespace (ms_moduleMapper ms mname)) $ \i -> do
-     wtemplate ifile "namespace $1 {" [i]
-     wtemplate cppfile "namespace $1 {" [i]
+   setnamespace ifile (ms_moduleMapper ms mname) 
+   setnamespace cppfile (ms_moduleMapper ms mname) 
 
    mapM_ genDecl sortedDecls
 
-   wline cppfile ""
-   wline ifile ""
-   forM_ (unCppNamespace (ms_moduleMapper ms mname)) $ \_ -> do
-     wline cppfile "}"
-     wline ifile "}"
+   setnamespace ifile (CppNamespace [])
+   setnamespace cppfile (CppNamespace [])
 
 -- | Generate the c++ code for an ADL module into files.
 -- The call @writeModuleFile uo mNamespace mFile module@ will use
@@ -627,7 +688,7 @@ writeModuleFile :: (ModuleName -> CppNamespace) ->
                    Module ResolvedType ->
                    EIO a ()
 writeModuleFile mNamespace mFile customTypes fileWriter m = do
-  let fs = FState Set.empty "" []
+  let fs = FState Set.empty "" [] (CppNamespace [])
       s0 = MState (m_name m) mNamespace mFile customTypes fs fs
       fp =  mFile (m_name m)
       s1 = execState (generateModule m) s0
