@@ -140,6 +140,44 @@ operator==( const U1 &a, const U1 &b )
     }
 }
 
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U1>::toJson( JsonWriter &json, const ADL::test::U1 & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U1::V: writeField( json, "v", Void() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U1>::fromJson( ADL::test::U1 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "v" )
+        {
+            Void fv;
+            JsonV<Void>::fromJson( fv, json );
+            v.set_v();
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
+
 U2::U2()
     : d_(V), p_(new int16_t(0))
 {
@@ -191,7 +229,7 @@ void U2::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case V: delete (int16_t *)p;
+        case V: delete (int16_t *)p; return;
     }
 }
 
@@ -223,6 +261,44 @@ operator==( const U2 &a, const U2 &b )
         case U2::V: return a.v() == b.v();
     }
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U2>::toJson( JsonWriter &json, const ADL::test::U2 & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U2::V: writeField( json, "v", v.v() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U2>::fromJson( ADL::test::U2 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "v" )
+        {
+            int16_t fv;
+            JsonV<int16_t>::fromJson( fv, json );
+            v.set_v(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 U3::U3()
     : d_(V), p_(new int16_t(100))
@@ -275,7 +351,7 @@ void U3::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case V: delete (int16_t *)p;
+        case V: delete (int16_t *)p; return;
     }
 }
 
@@ -307,6 +383,44 @@ operator==( const U3 &a, const U3 &b )
         case U3::V: return a.v() == b.v();
     }
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U3>::toJson( JsonWriter &json, const ADL::test::U3 & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U3::V: writeField( json, "v", v.v() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U3>::fromJson( ADL::test::U3 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "v" )
+        {
+            int16_t fv;
+            JsonV<int16_t>::fromJson( fv, json );
+            v.set_v(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 U4::U4()
     : d_(V), p_(new S1())
@@ -359,7 +473,7 @@ void U4::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case V: delete (S1 *)p;
+        case V: delete (S1 *)p; return;
     }
 }
 
@@ -391,6 +505,44 @@ operator==( const U4 &a, const U4 &b )
         case U4::V: return a.v() == b.v();
     }
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U4>::toJson( JsonWriter &json, const ADL::test::U4 & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U4::V: writeField( json, "v", v.v() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U4>::fromJson( ADL::test::U4 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "v" )
+        {
+            ADL::test::S1 fv;
+            JsonV<ADL::test::S1>::fromJson( fv, json );
+            v.set_v(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 U5::U5()
     : d_(V), p_(new S1(200))
@@ -443,7 +595,7 @@ void U5::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case V: delete (S1 *)p;
+        case V: delete (S1 *)p; return;
     }
 }
 
@@ -475,6 +627,44 @@ operator==( const U5 &a, const U5 &b )
         case U5::V: return a.v() == b.v();
     }
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U5>::toJson( JsonWriter &json, const ADL::test::U5 & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U5::V: writeField( json, "v", v.v() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U5>::fromJson( ADL::test::U5 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "v" )
+        {
+            ADL::test::S1 fv;
+            JsonV<ADL::test::S1>::fromJson( fv, json );
+            v.set_v(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 U6::U6()
     : d_(V), p_(new U3())
@@ -527,7 +717,7 @@ void U6::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case V: delete (U3 *)p;
+        case V: delete (U3 *)p; return;
     }
 }
 
@@ -559,6 +749,44 @@ operator==( const U6 &a, const U6 &b )
         case U6::V: return a.v() == b.v();
     }
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U6>::toJson( JsonWriter &json, const ADL::test::U6 & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U6::V: writeField( json, "v", v.v() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U6>::fromJson( ADL::test::U6 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "v" )
+        {
+            ADL::test::U3 fv;
+            JsonV<ADL::test::U3>::fromJson( fv, json );
+            v.set_v(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 U7::U7()
     : d_(V), p_(new U3(U3::mk_v(75)))
@@ -611,7 +839,7 @@ void U7::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case V: delete (U3 *)p;
+        case V: delete (U3 *)p; return;
     }
 }
 
@@ -643,6 +871,44 @@ operator==( const U7 &a, const U7 &b )
         case U7::V: return a.v() == b.v();
     }
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U7>::toJson( JsonWriter &json, const ADL::test::U7 & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U7::V: writeField( json, "v", v.v() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U7>::fromJson( ADL::test::U7 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "v" )
+        {
+            ADL::test::U3 fv;
+            JsonV<ADL::test::U3>::fromJson( fv, json );
+            v.set_v(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 
 U8::U8()
     : d_(V1), p_(new S1())
@@ -715,8 +981,8 @@ void U8::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case V1: delete (S1 *)p;
-        case V2: delete (int16_t *)p;
+        case V1: delete (S1 *)p; return;
+        case V2: delete (int16_t *)p; return;
     }
 }
 
@@ -751,4 +1017,49 @@ operator==( const U8 &a, const U8 &b )
         case U8::V2: return a.v2() == b.v2();
     }
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U8>::toJson( JsonWriter &json, const ADL::test::U8 & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U8::V1: writeField( json, "v1", v.v1() ); break;
+        case ADL::test::U8::V2: writeField( json, "v2", v.v2() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U8>::fromJson( ADL::test::U8 &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "v1" )
+        {
+            ADL::test::S1 fv;
+            JsonV<ADL::test::S1>::fromJson( fv, json );
+            v.set_v1(fv);
+        }
+        else if( json.fieldName() == "v2" )
+        {
+            int16_t fv;
+            JsonV<int16_t>::fromJson( fv, json );
+            v.set_v2(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 }} // ADL::test

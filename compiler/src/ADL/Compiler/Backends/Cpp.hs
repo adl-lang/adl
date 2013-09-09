@@ -589,7 +589,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
         if isVoidType (f_type f)
           then wt "case $1: return;"
                [cUnionDiscName d f]
-          else wt "case $1: delete ($2 *)p;"
+          else wt "case $1: delete ($2 *)p; return;"
                [cUnionDiscName d f,t]
   wl ""
   mkTemplate fr (u_typeParams u)
@@ -634,6 +634,50 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                [ctnameP,cUnionDiscName d f]
           else wt "case $1::$2: return a.$3() == b.$3();"
                [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+
+  wl ""
+  setnamespace fr serialisationNamespace
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  let ns = ms_moduleMapper ms (ms_name ms)
+      scopedctnameP = template "$1::$2" [formatText ns,ctnameP]
+  wl "void"
+  wt "JsonV<$1>::toJson( JsonWriter &json, const $1 & v )" [scopedctnameP]
+  cblock fr $ do
+    wl "json.startObject();"
+    wl "switch( v.d() )"
+    cblock fr $ do
+      forM_ fts $ \(f,_,_) -> do
+         let v | isVoidType (f_type f) = "Void()"
+               | otherwise = template "v.$1()" [cUnionAccessorName d f]
+
+         wt "case $1::$2: writeField( json, \"$3\", $4 ); break;"
+           [scopedctnameP,cUnionDiscName d f, f_name f,v]
+    wl "json.endObject();"
+    return ()
+  wl ""
+  mkTemplate fr (u_typeParams u)
+  wl "void"
+  wt "JsonV<$1>::fromJson( $1 &v, JsonReader &json )" [scopedctnameP]
+  cblock fr $ do
+    wl "match( json, JsonReader::START_OBJECT );"
+    wl "while( match0( json, JsonReader::FIELD ) )"
+    cblock fr $ do
+      forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,_)) -> do
+        wt "$1( json.fieldName() == \"$2\" )" [ifcmd,f_name f]
+        cblock fr $ do
+          t <- cTypeExpr True (f_type f)
+          wt "$1 fv;" [t]
+          wt "JsonV<$1>::fromJson( fv, json );" [t]
+          if isVoidType (f_type f)
+            then wt "v.$1();" [cUnionSetterName d f]
+            else wt "v.$1(fv);" [cUnionSetterName d f]
+      wl "else"
+      indent $ wl "throw json_parse_failure();"
+    wl "match( json, JsonReader::END_OBJECT );"
+
+  wl ""
+  setnamespace fr ns
     
 
 generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do

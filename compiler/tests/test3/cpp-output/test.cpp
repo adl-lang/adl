@@ -149,8 +149,8 @@ void U::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case F_INT: delete (int16_t *)p;
-        case F_STRING: delete (std::string *)p;
+        case F_INT: delete (int16_t *)p; return;
+        case F_STRING: delete (std::string *)p; return;
     }
 }
 
@@ -185,4 +185,49 @@ operator==( const U &a, const U &b )
         case U::F_STRING: return a.f_string() == b.f_string();
     }
 }
+
+}} // ADL::test
+
+namespace ADL {
+
+void
+JsonV<ADL::test::U>::toJson( JsonWriter &json, const ADL::test::U & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::test::U::F_INT: writeField( json, "f_int", v.f_int() ); break;
+        case ADL::test::U::F_STRING: writeField( json, "f_string", v.f_string() ); break;
+    }
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::U>::fromJson( ADL::test::U &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "f_int" )
+        {
+            int16_t fv;
+            JsonV<int16_t>::fromJson( fv, json );
+            v.set_f_int(fv);
+        }
+        else if( json.fieldName() == "f_string" )
+        {
+            std::string fv;
+            JsonV<std::string>::fromJson( fv, json );
+            v.set_f_string(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace test {
 }} // ADL::test

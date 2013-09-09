@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string> 
+#include <types.h>
 
 namespace ADL {
 
@@ -16,6 +17,7 @@ public:
     virtual void startArray() = 0;
     virtual void endArray() = 0;
 
+    virtual void nullV() = 0;
     virtual void stringV( const std::string &v ) = 0;
     virtual void intV( int64_t v ) = 0;
     virtual void uintV( uint64_t v ) = 0;
@@ -52,6 +54,13 @@ struct JsonV
 {
     static void toJson( JsonWriter &json, const T & v );
     static void fromJson( T &v, JsonReader &json );
+};
+
+template <>
+struct JsonV<Void>
+{
+    static void toJson( JsonWriter &json, const Void & v );
+    static void fromJson( Void &v, JsonReader &json );
 };
 
 template <>

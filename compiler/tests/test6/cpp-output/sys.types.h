@@ -169,8 +169,8 @@ void Either<T1,T2>::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case LEFT: delete (T1 *)p;
-        case RIGHT: delete (T2 *)p;
+        case LEFT: delete (T1 *)p; return;
+        case RIGHT: delete (T2 *)p; return;
     }
 }
 
@@ -208,6 +208,54 @@ operator==( const Either<T1,T2> &a, const Either<T1,T2> &b )
         case Either<T1,T2>::RIGHT: return a.right() == b.right();
     }
 }
+
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class T1, class T2>
+void
+JsonV<ADL::sys::types::Either<T1,T2>>::toJson( JsonWriter &json, const ADL::sys::types::Either<T1,T2> & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, "left", v.left() ); break;
+        case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, "right", v.right() ); break;
+    }
+    json.endObject();
+}
+
+template <class T1, class T2>
+void
+JsonV<ADL::sys::types::Either<T1,T2>>::fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "left" )
+        {
+            T1 fv;
+            JsonV<T1>::fromJson( fv, json );
+            v.set_left(fv);
+        }
+        else if( json.fieldName() == "right" )
+        {
+            T2 fv;
+            JsonV<T2>::fromJson( fv, json );
+            v.set_right(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
 
 template <class T>
 class Error
@@ -373,8 +421,8 @@ void Error<T>::free(DiscType d, void *p)
 {
     switch( d )
     {
-        case VALUE: delete (T *)p;
-        case ERROR: delete (std::string *)p;
+        case VALUE: delete (T *)p; return;
+        case ERROR: delete (std::string *)p; return;
     }
 }
 
@@ -412,6 +460,54 @@ operator==( const Error<T> &a, const Error<T> &b )
         case Error<T>::ERROR: return a.error() == b.error();
     }
 }
+
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class T>
+void
+JsonV<ADL::sys::types::Error<T>>::toJson( JsonWriter &json, const ADL::sys::types::Error<T> & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::sys::types::Error<T>::VALUE: writeField( json, "value", v.value() ); break;
+        case ADL::sys::types::Error<T>::ERROR: writeField( json, "error", v.error() ); break;
+    }
+    json.endObject();
+}
+
+template <class T>
+void
+JsonV<ADL::sys::types::Error<T>>::fromJson( ADL::sys::types::Error<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "value" )
+        {
+            T fv;
+            JsonV<T>::fromJson( fv, json );
+            v.set_value(fv);
+        }
+        else if( json.fieldName() == "error" )
+        {
+            std::string fv;
+            JsonV<std::string>::fromJson( fv, json );
+            v.set_error(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
 
 template <class T>
 class Maybe
@@ -562,7 +658,7 @@ void Maybe<T>::free(DiscType d, void *p)
     switch( d )
     {
         case NOTHING: return;
-        case JUST: delete (T *)p;
+        case JUST: delete (T *)p; return;
     }
 }
 
@@ -600,6 +696,54 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
         case Maybe<T>::JUST: return a.just() == b.just();
     }
 }
+
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class T>
+void
+JsonV<ADL::sys::types::Maybe<T>>::toJson( JsonWriter &json, const ADL::sys::types::Maybe<T> & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::sys::types::Maybe<T>::NOTHING: writeField( json, "nothing", Void() ); break;
+        case ADL::sys::types::Maybe<T>::JUST: writeField( json, "just", v.just() ); break;
+    }
+    json.endObject();
+}
+
+template <class T>
+void
+JsonV<ADL::sys::types::Maybe<T>>::fromJson( ADL::sys::types::Maybe<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( match0( json, JsonReader::FIELD ) )
+    {
+        if( json.fieldName() == "nothing" )
+        {
+            Void fv;
+            JsonV<Void>::fromJson( fv, json );
+            v.set_nothing();
+        }
+        else if( json.fieldName() == "just" )
+        {
+            T fv;
+            JsonV<T>::fromJson( fv, json );
+            v.set_just(fv);
+        }
+        else
+            throw json_parse_failure();
+    }
+    match( json, JsonReader::END_OBJECT );
+}
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
 
 // Pair excluded due to custom definition
 
