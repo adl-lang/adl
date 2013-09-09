@@ -732,7 +732,7 @@ generateModule m = do
             Nothing -> generateDecl (d_name d) d
             (Just ct) -> generateCustomType n d ct
 
-   include ifile "adl.h"
+   includeStd ifile "adl/adl.h"
    includeModule cppfile mname
    setnamespace ifile (ms_moduleMapper ms mname) 
    setnamespace cppfile (ms_moduleMapper ms mname) 

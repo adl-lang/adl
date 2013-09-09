@@ -26,6 +26,7 @@ generate name dir = do
   putStrLn ""
 
 isValidFile f = not ("dist" `isPrefixOf` f) &&
+                not ("build" `isPrefixOf` f) &&
                 not ("~" `isSuffixOf` f)
   
 main = do
@@ -33,6 +34,7 @@ main = do
   generate "COMPILER-LIB-SRC" "compiler-lib"
   generate "COMPILER-BOOTSTRAP-SRC" "compiler-bootstrap"
   generate "RUNTIME-SRC" "runtime"
+  generate "RUNTIME-CPP-SRC" "runtime-cpp"
   generate "COMPILER-SRC" "compiler"
   generate "COMMS-HTTP-SRC" "comms-http"
   generate "EXAMPLE-SRC" "examples"

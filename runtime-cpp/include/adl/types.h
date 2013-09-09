@@ -7,6 +7,7 @@ struct Void
 {
 };
 
+inline
 bool operator<( const Void &a, const Void &b ) { return false; }
 
 // Sink type

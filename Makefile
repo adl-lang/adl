@@ -14,11 +14,12 @@ MD=.make
 
 -include .make/Makefile.srcs
 
-all: utils compiler-bootstrap runtime compiler examples
+all: utils compiler-bootstrap runtime compiler runtime-cpp examples
 utils : .make/built-utils
 compiler-lib: .make/built-compiler-lib
 compiler-bootstrap: .make/built-compiler-bootstrap
 runtime: .make/built-runtime
+runtime-cpp: .make/built-runtime-cpp
 comms-http: .make/comms-http
 compiler: .make/built-compiler
 examples: .make/built-examples
@@ -51,11 +52,15 @@ examples: .make/built-examples
 	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 	touch .make/built-compiler
 
+.make/built-runtime-cpp: $(RUNTIME-SRC) $(RUNTIME-CPP-SRC) .make/built-compiler
+	(cd runtime-cpp && make clean)
+	(cd runtime-cpp && make)
+
 .make/built-examples: $(EXAMPLE-SRC) .make/built-utils .make/built-runtime .make/built-compiler .make/comms-http
 	(cd examples && cabal-dev -s ../cabal-dev install)
 	touch .make/built-examples
 
-boot: .make
+depends: .make
 	runghc genMake.hs >.make/Makefile.srcs
 
 docs:
@@ -76,6 +81,7 @@ clean:
 	-(cd compiler-lib ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd utils ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
 	-(cd runtime ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
+	-(cd runtime-cpp ; make clean)
 
 cleanext:
 	-cabal-dev ghc-pkg unregister zeromq3-haskell
