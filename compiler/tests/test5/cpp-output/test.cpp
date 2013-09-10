@@ -38,7 +38,7 @@ void
 JsonV<ADL::test::S1>::toJson( JsonWriter &json, const ADL::test::S1 & v )
 {
     json.startObject();
-    writeField( json, "f", v.f );
+    writeField<int16_t>( json, "f", v.f );
     json.endObject();
 }
 
@@ -46,14 +46,11 @@ void
 JsonV<ADL::test::S1>::fromJson( ADL::test::S1 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "f" )
-            JsonV<int16_t>::fromJson( v.f, json );
-        else
-            ignore( json );
+        readField<int16_t>( v.f, "f", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -159,9 +156,9 @@ void
 JsonV<ADL::test::U1>::fromJson( ADL::test::U1 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v" )
+        if( matchField0( "v", json ) )
         {
             Void fv;
             JsonV<Void>::fromJson( fv, json );
@@ -170,7 +167,6 @@ JsonV<ADL::test::U1>::fromJson( ADL::test::U1 &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -281,9 +277,9 @@ void
 JsonV<ADL::test::U2>::fromJson( ADL::test::U2 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v" )
+        if( matchField0( "v", json ) )
         {
             int16_t fv;
             JsonV<int16_t>::fromJson( fv, json );
@@ -292,7 +288,6 @@ JsonV<ADL::test::U2>::fromJson( ADL::test::U2 &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -403,9 +398,9 @@ void
 JsonV<ADL::test::U3>::fromJson( ADL::test::U3 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v" )
+        if( matchField0( "v", json ) )
         {
             int16_t fv;
             JsonV<int16_t>::fromJson( fv, json );
@@ -414,7 +409,6 @@ JsonV<ADL::test::U3>::fromJson( ADL::test::U3 &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -525,9 +519,9 @@ void
 JsonV<ADL::test::U4>::fromJson( ADL::test::U4 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v" )
+        if( matchField0( "v", json ) )
         {
             ADL::test::S1 fv;
             JsonV<ADL::test::S1>::fromJson( fv, json );
@@ -536,7 +530,6 @@ JsonV<ADL::test::U4>::fromJson( ADL::test::U4 &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -647,9 +640,9 @@ void
 JsonV<ADL::test::U5>::fromJson( ADL::test::U5 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v" )
+        if( matchField0( "v", json ) )
         {
             ADL::test::S1 fv;
             JsonV<ADL::test::S1>::fromJson( fv, json );
@@ -658,7 +651,6 @@ JsonV<ADL::test::U5>::fromJson( ADL::test::U5 &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -769,9 +761,9 @@ void
 JsonV<ADL::test::U6>::fromJson( ADL::test::U6 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v" )
+        if( matchField0( "v", json ) )
         {
             ADL::test::U3 fv;
             JsonV<ADL::test::U3>::fromJson( fv, json );
@@ -780,7 +772,6 @@ JsonV<ADL::test::U6>::fromJson( ADL::test::U6 &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -891,9 +882,9 @@ void
 JsonV<ADL::test::U7>::fromJson( ADL::test::U7 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v" )
+        if( matchField0( "v", json ) )
         {
             ADL::test::U3 fv;
             JsonV<ADL::test::U3>::fromJson( fv, json );
@@ -902,7 +893,6 @@ JsonV<ADL::test::U7>::fromJson( ADL::test::U7 &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -1038,15 +1028,15 @@ void
 JsonV<ADL::test::U8>::fromJson( ADL::test::U8 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v1" )
+        if( matchField0( "v1", json ) )
         {
             ADL::test::S1 fv;
             JsonV<ADL::test::S1>::fromJson( fv, json );
             v.set_v1(fv);
         }
-        else if( json.fieldName() == "v2" )
+        else if( matchField0( "v2", json ) )
         {
             int16_t fv;
             JsonV<int16_t>::fromJson( fv, json );
@@ -1055,7 +1045,6 @@ JsonV<ADL::test::U8>::fromJson( ADL::test::U8 &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL

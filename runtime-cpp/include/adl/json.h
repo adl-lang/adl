@@ -80,14 +80,6 @@ struct JsonV
     static void fromJson( T &v, JsonReader &json );
 };
 
-template <class T>
-void
-writeField( JsonWriter &json, const std::string &f, const T &v )
-{
-    json.field( f );
-    JsonV<T>::toJson( json, v );
-};
-
 struct json_parse_failure : public std::exception
 {
 };
@@ -114,6 +106,40 @@ void match( JsonReader &json, JsonReader::Type t )
 
 // Skip over the complete json object currently pointed at.
 void ignore( JsonReader &json );
+
+inline bool
+matchField0( const std::string &f, JsonReader &json )
+{
+    if( json.type() != JsonReader::FIELD )
+        throw json_parse_failure();
+    bool match = json.fieldName() == f;
+    if( match )
+        json.next();
+    return match;
+}
+
+template <class T>
+void
+writeField( JsonWriter &json, const std::string &f, const T &v )
+{
+    json.field( f );
+    JsonV<T>::toJson( json, v );
+};
+
+template <class T>
+bool
+readField( T &v, const std::string &f, JsonReader &json )
+{
+    if( json.type() != JsonReader::FIELD )
+        throw json_parse_failure();
+    if( json.fieldName() != f )
+        return false;
+    json.next();
+    JsonV<T>::fromJson( v, json );
+};
+
+bool ignoreField( JsonReader &json );
+
 
 //----------------------------------------------------------------------
 // Serialisation for primitive/builtin types

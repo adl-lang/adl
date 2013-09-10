@@ -49,9 +49,9 @@ void
 JsonV<ADL::test::A>::toJson( JsonWriter &json, const ADL::test::A & v )
 {
     json.startObject();
-    writeField( json, "f_int", v.f_int );
-    writeField( json, "f_string", v.f_string );
-    writeField( json, "f_bool", v.f_bool );
+    writeField<int16_t>( json, "f_int", v.f_int );
+    writeField<std::string>( json, "f_string", v.f_string );
+    writeField<bool>( json, "f_bool", v.f_bool );
     json.endObject();
 }
 
@@ -59,18 +59,13 @@ void
 JsonV<ADL::test::A>::fromJson( ADL::test::A &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "f_int" )
-            JsonV<int16_t>::fromJson( v.f_int, json );
-        else if( json.fieldName() == "f_string" )
-            JsonV<std::string>::fromJson( v.f_string, json );
-        else if( json.fieldName() == "f_bool" )
-            JsonV<bool>::fromJson( v.f_bool, json );
-        else
-            ignore( json );
+        readField<int16_t>( v.f_int, "f_int", json ) ||
+        readField<std::string>( v.f_string, "f_string", json ) ||
+        readField<bool>( v.f_bool, "f_bool", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -206,15 +201,15 @@ void
 JsonV<ADL::test::U>::fromJson( ADL::test::U &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "f_int" )
+        if( matchField0( "f_int", json ) )
         {
             int16_t fv;
             JsonV<int16_t>::fromJson( fv, json );
             v.set_f_int(fv);
         }
-        else if( json.fieldName() == "f_string" )
+        else if( matchField0( "f_string", json ) )
         {
             std::string fv;
             JsonV<std::string>::fromJson( fv, json );
@@ -223,7 +218,6 @@ JsonV<ADL::test::U>::fromJson( ADL::test::U &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL

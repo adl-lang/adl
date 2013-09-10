@@ -2,6 +2,16 @@
 
 namespace ADL {
 
+bool
+ignoreField( JsonReader &json )
+{
+    if( json.type() != JsonReader::FIELD )
+        throw json_parse_failure();
+    json.next();
+    ignore( json );
+    return true;
+}
+
 void
 ignore( JsonReader &json )
 {

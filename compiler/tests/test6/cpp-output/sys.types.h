@@ -234,15 +234,15 @@ void
 JsonV<ADL::sys::types::Either<T1,T2>>::fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "left" )
+        if( matchField0( "left", json ) )
         {
             T1 fv;
             JsonV<T1>::fromJson( fv, json );
             v.set_left(fv);
         }
-        else if( json.fieldName() == "right" )
+        else if( matchField0( "right", json ) )
         {
             T2 fv;
             JsonV<T2>::fromJson( fv, json );
@@ -251,7 +251,6 @@ JsonV<ADL::sys::types::Either<T1,T2>>::fromJson( ADL::sys::types::Either<T1,T2> 
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -486,15 +485,15 @@ void
 JsonV<ADL::sys::types::Error<T>>::fromJson( ADL::sys::types::Error<T> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "value" )
+        if( matchField0( "value", json ) )
         {
             T fv;
             JsonV<T>::fromJson( fv, json );
             v.set_value(fv);
         }
-        else if( json.fieldName() == "error" )
+        else if( matchField0( "error", json ) )
         {
             std::string fv;
             JsonV<std::string>::fromJson( fv, json );
@@ -503,7 +502,6 @@ JsonV<ADL::sys::types::Error<T>>::fromJson( ADL::sys::types::Error<T> &v, JsonRe
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -722,15 +720,15 @@ void
 JsonV<ADL::sys::types::Maybe<T>>::fromJson( ADL::sys::types::Maybe<T> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "nothing" )
+        if( matchField0( "nothing", json ) )
         {
             Void fv;
             JsonV<Void>::fromJson( fv, json );
             v.set_nothing();
         }
-        else if( json.fieldName() == "just" )
+        else if( matchField0( "just", json ) )
         {
             T fv;
             JsonV<T>::fromJson( fv, json );
@@ -739,7 +737,6 @@ JsonV<ADL::sys::types::Maybe<T>>::fromJson( ADL::sys::types::Maybe<T> &v, JsonRe
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL

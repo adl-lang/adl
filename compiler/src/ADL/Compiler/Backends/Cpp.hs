@@ -392,7 +392,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   cblock fr $ do
     wl "json.startObject();"
     forM_ fts $ \(fname, f,_,_) -> do
-      wt "writeField( json, \"$1\", v.$2 );" [f_name f,fname]
+      t <- cTypeExpr True (f_type f)
+      wt "writeField<$1>( json, \"$2\", v.$3 );" [t,f_name f,fname]
     wl "json.endObject();"
     return ()
   wl ""
@@ -401,17 +402,12 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   wt "JsonV<$1::$2>::fromJson( $1::$2 &v, JsonReader &json )" [formatText ns,ctnameP]
   cblock fr $ do
     wl "match( json, JsonReader::START_OBJECT );"
-    wl "while( match0( json, JsonReader::FIELD ) )"
+    wl "while( !match0( json, JsonReader::END_OBJECT ) )"
     cblock fr $ do
-      forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(fname, f,_,_)) -> do
-        wt "$1( json.fieldName() == \"$2\" )" [ifcmd,f_name f]
-        indent $ do
-          t <- cTypeExpr True (f_type f)
-          wt "JsonV<$1>::fromJson( v.$2, json );" [t,fname]
-      wl "else"
-      indent $ wl "ignore( json );"
-    wl "match( json, JsonReader::END_OBJECT );"
-
+      forM_ fts $ \(fname, f,_,_) -> do
+        t <- cTypeExpr True (f_type f)
+        wt "readField<$1>( v.$2, \"$3\", json ) ||" [t,fname,f_name f]
+      wl "ignoreField( json );"
   wl ""
   setnamespace fr ns
 
@@ -662,10 +658,10 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   wt "JsonV<$1>::fromJson( $1 &v, JsonReader &json )" [scopedctnameP]
   cblock fr $ do
     wl "match( json, JsonReader::START_OBJECT );"
-    wl "while( match0( json, JsonReader::FIELD ) )"
+    wl "while( !match0( json, JsonReader::END_OBJECT ) )"
     cblock fr $ do
       forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,_)) -> do
-        wt "$1( json.fieldName() == \"$2\" )" [ifcmd,f_name f]
+        wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name f]
         cblock fr $ do
           t <- cTypeExpr True (f_type f)
           wt "$1 fv;" [t]
@@ -675,7 +671,6 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
             else wt "v.$1(fv);" [cUnionSetterName d f]
       wl "else"
       indent $ wl "throw json_parse_failure();"
-    wl "match( json, JsonReader::END_OBJECT );"
 
   wl ""
   setnamespace fr ns

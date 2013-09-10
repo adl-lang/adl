@@ -117,8 +117,8 @@ void
 JsonV<ADL::test::Tree<T>>::toJson( JsonWriter &json, const ADL::test::Tree<T> & v )
 {
     json.startObject();
-    writeField( json, "value", v.value );
-    writeField( json, "children", v.children );
+    writeField<T>( json, "value", v.value );
+    writeField<std::vector<ADL::test::Tree<T> > >( json, "children", v.children );
     json.endObject();
 }
 
@@ -127,16 +127,12 @@ void
 JsonV<ADL::test::Tree<T>>::fromJson( ADL::test::Tree<T> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "value" )
-            JsonV<T>::fromJson( v.value, json );
-        else if( json.fieldName() == "children" )
-            JsonV<std::vector<ADL::test::Tree<T> > >::fromJson( v.children, json );
-        else
-            ignore( json );
+        readField<T>( v.value, "value", json ) ||
+        readField<std::vector<ADL::test::Tree<T> > >( v.children, "children", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL

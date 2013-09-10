@@ -38,7 +38,7 @@ void
 JsonV<ADL::test::DateO>::toJson( JsonWriter &json, const ADL::test::DateO & v )
 {
     json.startObject();
-    writeField( json, "date", v.date );
+    writeField<std::string>( json, "date", v.date );
     json.endObject();
 }
 
@@ -46,14 +46,11 @@ void
 JsonV<ADL::test::DateO>::fromJson( ADL::test::DateO &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "date" )
-            JsonV<std::string>::fromJson( v.date, json );
-        else
-            ignore( json );
+        readField<std::string>( v.date, "date", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -95,7 +92,7 @@ void
 JsonV<ADL::test::S>::toJson( JsonWriter &json, const ADL::test::S & v )
 {
     json.startObject();
-    writeField( json, "v1", v.v1 );
+    writeField<Date>( json, "v1", v.v1 );
     json.endObject();
 }
 
@@ -103,14 +100,11 @@ void
 JsonV<ADL::test::S>::fromJson( ADL::test::S &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v1" )
-            JsonV<Date>::fromJson( v.v1, json );
-        else
-            ignore( json );
+        readField<Date>( v.v1, "v1", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL

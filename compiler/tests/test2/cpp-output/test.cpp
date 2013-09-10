@@ -43,8 +43,8 @@ void
 JsonV<ADL::test::S1>::toJson( JsonWriter &json, const ADL::test::S1 & v )
 {
     json.startObject();
-    writeField( json, "x", v.x );
-    writeField( json, "y", v.y );
+    writeField<int32_t>( json, "x", v.x );
+    writeField<std::string>( json, "y", v.y );
     json.endObject();
 }
 
@@ -52,16 +52,12 @@ void
 JsonV<ADL::test::S1>::fromJson( ADL::test::S1 &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "x" )
-            JsonV<int32_t>::fromJson( v.x, json );
-        else if( json.fieldName() == "y" )
-            JsonV<std::string>::fromJson( v.y, json );
-        else
-            ignore( json );
+        readField<int32_t>( v.x, "x", json ) ||
+        readField<std::string>( v.y, "y", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL

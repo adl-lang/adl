@@ -195,8 +195,8 @@ void
 JsonV<ADL::test::XY<T>>::toJson( JsonWriter &json, const ADL::test::XY<T> & v )
 {
     json.startObject();
-    writeField( json, "x", v.x );
-    writeField( json, "y", v.y );
+    writeField<T>( json, "x", v.x );
+    writeField<T>( json, "y", v.y );
     json.endObject();
 }
 
@@ -205,16 +205,12 @@ void
 JsonV<ADL::test::XY<T>>::fromJson( ADL::test::XY<T> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "x" )
-            JsonV<T>::fromJson( v.x, json );
-        else if( json.fieldName() == "y" )
-            JsonV<T>::fromJson( v.y, json );
-        else
-            ignore( json );
+        readField<T>( v.x, "x", json ) ||
+        readField<T>( v.y, "y", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -315,10 +311,10 @@ void
 JsonV<ADL::test::B<T>>::toJson( JsonWriter &json, const ADL::test::B<T> & v )
 {
     json.startObject();
-    writeField( json, "f_t", v.f_t );
-    writeField( json, "f_string", v.f_string );
-    writeField( json, "f_tvec", v.f_tvec );
-    writeField( json, "f_xy", v.f_xy );
+    writeField<T>( json, "f_t", v.f_t );
+    writeField<std::string>( json, "f_string", v.f_string );
+    writeField<std::vector<T> >( json, "f_tvec", v.f_tvec );
+    writeField<ADL::test::XY<T> >( json, "f_xy", v.f_xy );
     json.endObject();
 }
 
@@ -327,20 +323,14 @@ void
 JsonV<ADL::test::B<T>>::fromJson( ADL::test::B<T> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "f_t" )
-            JsonV<T>::fromJson( v.f_t, json );
-        else if( json.fieldName() == "f_string" )
-            JsonV<std::string>::fromJson( v.f_string, json );
-        else if( json.fieldName() == "f_tvec" )
-            JsonV<std::vector<T> >::fromJson( v.f_tvec, json );
-        else if( json.fieldName() == "f_xy" )
-            JsonV<ADL::test::XY<T> >::fromJson( v.f_xy, json );
-        else
-            ignore( json );
+        readField<T>( v.f_t, "f_t", json ) ||
+        readField<std::string>( v.f_string, "f_string", json ) ||
+        readField<std::vector<T> >( v.f_tvec, "f_tvec", json ) ||
+        readField<ADL::test::XY<T> >( v.f_xy, "f_xy", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
@@ -564,25 +554,25 @@ void
 JsonV<ADL::test::S<T>>::toJson( JsonWriter &json, const ADL::test::S<T> & v )
 {
     json.startObject();
-    writeField( json, "f_void", v.f_void );
-    writeField( json, "f_bool", v.f_bool );
-    writeField( json, "f_int8", v.f_int8 );
-    writeField( json, "f_int16", v.f_int16 );
-    writeField( json, "f_int32", v.f_int32 );
-    writeField( json, "f_int64", v.f_int64 );
-    writeField( json, "f_word8", v.f_word8 );
-    writeField( json, "f_word16", v.f_word16 );
-    writeField( json, "f_word32", v.f_word32 );
-    writeField( json, "f_word64", v.f_word64 );
-    writeField( json, "f_float", v.f_float );
-    writeField( json, "f_double", v.f_double );
-    writeField( json, "f_bytes", v.f_bytes );
-    writeField( json, "f_string", v.f_string );
-    writeField( json, "f_vstring", v.f_vstring );
-    writeField( json, "f_a", v.f_a );
-    writeField( json, "f_u", v.f_u );
-    writeField( json, "f_t", v.f_t );
-    writeField( json, "f_bint16", v.f_bint16 );
+    writeField<Void>( json, "f_void", v.f_void );
+    writeField<bool>( json, "f_bool", v.f_bool );
+    writeField<int8_t>( json, "f_int8", v.f_int8 );
+    writeField<int16_t>( json, "f_int16", v.f_int16 );
+    writeField<int32_t>( json, "f_int32", v.f_int32 );
+    writeField<int64_t>( json, "f_int64", v.f_int64 );
+    writeField<uint8_t>( json, "f_word8", v.f_word8 );
+    writeField<uint16_t>( json, "f_word16", v.f_word16 );
+    writeField<uint32_t>( json, "f_word32", v.f_word32 );
+    writeField<uint64_t>( json, "f_word64", v.f_word64 );
+    writeField<float>( json, "f_float", v.f_float );
+    writeField<double>( json, "f_double", v.f_double );
+    writeField<ByteVector>( json, "f_bytes", v.f_bytes );
+    writeField<std::string>( json, "f_string", v.f_string );
+    writeField<std::vector<std::string> >( json, "f_vstring", v.f_vstring );
+    writeField<ADL::test::A>( json, "f_a", v.f_a );
+    writeField<ADL::test::U>( json, "f_u", v.f_u );
+    writeField<T>( json, "f_t", v.f_t );
+    writeField<ADL::test::B<int16_t> >( json, "f_bint16", v.f_bint16 );
     json.endObject();
 }
 
@@ -591,50 +581,29 @@ void
 JsonV<ADL::test::S<T>>::fromJson( ADL::test::S<T> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "f_void" )
-            JsonV<Void>::fromJson( v.f_void, json );
-        else if( json.fieldName() == "f_bool" )
-            JsonV<bool>::fromJson( v.f_bool, json );
-        else if( json.fieldName() == "f_int8" )
-            JsonV<int8_t>::fromJson( v.f_int8, json );
-        else if( json.fieldName() == "f_int16" )
-            JsonV<int16_t>::fromJson( v.f_int16, json );
-        else if( json.fieldName() == "f_int32" )
-            JsonV<int32_t>::fromJson( v.f_int32, json );
-        else if( json.fieldName() == "f_int64" )
-            JsonV<int64_t>::fromJson( v.f_int64, json );
-        else if( json.fieldName() == "f_word8" )
-            JsonV<uint8_t>::fromJson( v.f_word8, json );
-        else if( json.fieldName() == "f_word16" )
-            JsonV<uint16_t>::fromJson( v.f_word16, json );
-        else if( json.fieldName() == "f_word32" )
-            JsonV<uint32_t>::fromJson( v.f_word32, json );
-        else if( json.fieldName() == "f_word64" )
-            JsonV<uint64_t>::fromJson( v.f_word64, json );
-        else if( json.fieldName() == "f_float" )
-            JsonV<float>::fromJson( v.f_float, json );
-        else if( json.fieldName() == "f_double" )
-            JsonV<double>::fromJson( v.f_double, json );
-        else if( json.fieldName() == "f_bytes" )
-            JsonV<ByteVector>::fromJson( v.f_bytes, json );
-        else if( json.fieldName() == "f_string" )
-            JsonV<std::string>::fromJson( v.f_string, json );
-        else if( json.fieldName() == "f_vstring" )
-            JsonV<std::vector<std::string> >::fromJson( v.f_vstring, json );
-        else if( json.fieldName() == "f_a" )
-            JsonV<ADL::test::A>::fromJson( v.f_a, json );
-        else if( json.fieldName() == "f_u" )
-            JsonV<ADL::test::U>::fromJson( v.f_u, json );
-        else if( json.fieldName() == "f_t" )
-            JsonV<T>::fromJson( v.f_t, json );
-        else if( json.fieldName() == "f_bint16" )
-            JsonV<ADL::test::B<int16_t> >::fromJson( v.f_bint16, json );
-        else
-            ignore( json );
+        readField<Void>( v.f_void, "f_void", json ) ||
+        readField<bool>( v.f_bool, "f_bool", json ) ||
+        readField<int8_t>( v.f_int8, "f_int8", json ) ||
+        readField<int16_t>( v.f_int16, "f_int16", json ) ||
+        readField<int32_t>( v.f_int32, "f_int32", json ) ||
+        readField<int64_t>( v.f_int64, "f_int64", json ) ||
+        readField<uint8_t>( v.f_word8, "f_word8", json ) ||
+        readField<uint16_t>( v.f_word16, "f_word16", json ) ||
+        readField<uint32_t>( v.f_word32, "f_word32", json ) ||
+        readField<uint64_t>( v.f_word64, "f_word64", json ) ||
+        readField<float>( v.f_float, "f_float", json ) ||
+        readField<double>( v.f_double, "f_double", json ) ||
+        readField<ByteVector>( v.f_bytes, "f_bytes", json ) ||
+        readField<std::string>( v.f_string, "f_string", json ) ||
+        readField<std::vector<std::string> >( v.f_vstring, "f_vstring", json ) ||
+        readField<ADL::test::A>( v.f_a, "f_a", json ) ||
+        readField<ADL::test::U>( v.f_u, "f_u", json ) ||
+        readField<T>( v.f_t, "f_t", json ) ||
+        readField<ADL::test::B<int16_t> >( v.f_bint16, "f_bint16", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL

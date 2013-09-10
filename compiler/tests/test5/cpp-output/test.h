@@ -438,15 +438,15 @@ void
 JsonV<ADL::test::U9<T>>::fromJson( ADL::test::U9<T> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "v1" )
+        if( matchField0( "v1", json ) )
         {
             T fv;
             JsonV<T>::fromJson( fv, json );
             v.set_v1(fv);
         }
-        else if( json.fieldName() == "v2" )
+        else if( matchField0( "v2", json ) )
         {
             int16_t fv;
             JsonV<int16_t>::fromJson( fv, json );
@@ -455,7 +455,6 @@ JsonV<ADL::test::U9<T>>::fromJson( ADL::test::U9<T> &v, JsonReader &json )
         else
             throw json_parse_failure();
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL

@@ -84,8 +84,8 @@ void
 JsonV<ADL::sys::rpc::Rpc<I,O>>::toJson( JsonWriter &json, const ADL::sys::rpc::Rpc<I,O> & v )
 {
     json.startObject();
-    writeField( json, "params", v.params );
-    writeField( json, "replyTo", v.replyTo );
+    writeField<I>( json, "params", v.params );
+    writeField<Sink<O> >( json, "replyTo", v.replyTo );
     json.endObject();
 }
 
@@ -94,16 +94,12 @@ void
 JsonV<ADL::sys::rpc::Rpc<I,O>>::fromJson( ADL::sys::rpc::Rpc<I,O> &v, JsonReader &json )
 {
     match( json, JsonReader::START_OBJECT );
-    while( match0( json, JsonReader::FIELD ) )
+    while( !match0( json, JsonReader::END_OBJECT ) )
     {
-        if( json.fieldName() == "params" )
-            JsonV<I>::fromJson( v.params, json );
-        else if( json.fieldName() == "replyTo" )
-            JsonV<Sink<O> >::fromJson( v.replyTo, json );
-        else
-            ignore( json );
+        readField<I>( v.params, "params", json ) ||
+        readField<Sink<O> >( v.replyTo, "replyTo", json ) ||
+        ignoreField( json );
     }
-    match( json, JsonReader::END_OBJECT );
 }
 
 } // ADL
