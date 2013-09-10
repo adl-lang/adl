@@ -21,9 +21,17 @@
         },
         {
             "adlname" : "sys.types.Pair",
-            "cppname" : "pair",
+            "cppname" : "std::pair",
             "cppincludes" : [
-                {"name" : "pair", "system" : true }
+                {"name" : "utility", "system" : true }
+            ],
+            "serialisationCode" : [
+                "template <class A,class B>",
+                "struct JsonV<std::pair<A,B>>",
+                "{",
+                "    static void toJson( JsonWriter &json, const std::pair<A,B> & v );",
+                "    static void fromJson( std::pair<A,B> &v, JsonReader &json );",
+                "};"
             ]
         }
    ]        

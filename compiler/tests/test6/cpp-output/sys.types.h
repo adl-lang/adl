@@ -1,5 +1,8 @@
 #include <adl/adl.h>
+#include <map>
+#include <set>
 #include <string>
+#include <utility>
 
 namespace ADL {
 namespace sys {
@@ -746,6 +749,23 @@ namespace sys {
 namespace types {
 
 // Pair excluded due to custom definition
+
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class A,class B>
+struct JsonV<std::pair<A,B>>
+{
+    static void toJson( JsonWriter &json, const std::pair<A,B> & v );
+    static void fromJson( std::pair<A,B> &v, JsonReader &json );
+};
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
 
 // Set excluded due to custom definition
 

@@ -81,7 +81,8 @@ data MState = MState {
 data CustomType = CustomType {
    ct_name :: Ident,
    ct_includes :: Set.Set IncFilePath,
-   ct_generateOrigADLType :: Maybe Ident
+   ct_generateOrigADLType :: Maybe Ident,
+   ct_serialisationCode :: [T.Text]
 }
 
 type CustomTypeMap = Map.Map ScopedName CustomType
@@ -708,7 +709,10 @@ referencedLocalTypes d = Set.delete (d_name d) (rtypes d)
     
 generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> Gen ()
 generateCustomType n d ct = do
+  ms <- get
   wline ifile ""
+  mapM_ (include0 ifile) (Set.toList (ct_includes ct))
+  
   case ct_generateOrigADLType ct of
     Nothing -> do
       wtemplate ifile "// $1 excluded due to custom definition" [n]
@@ -716,6 +720,15 @@ generateCustomType n d ct = do
       wtemplate ifile "// $1 generated as $2 due to custom definition" [n,i]
       wline ifile ""
       generateDecl i d
+
+-- Insert the user supplied code
+  when (not (null (ct_serialisationCode ct))) $ do
+    wline ifile ""
+    setnamespace ifile serialisationNamespace
+    wline ifile ""
+    mapM_ (wline ifile) (ct_serialisationCode ct)
+    wline ifile ""
+    setnamespace ifile (ms_moduleMapper ms (ms_name ms)) 
 
 generateModule :: Module ResolvedType -> Gen ()
 generateModule m = do
@@ -791,12 +804,12 @@ getCustomTypes fps = fmap Map.unions (mapM get0 fps)
         sn <- case P.parse P.scopedName "" adlname of
           (Right sn) -> return sn
           _ -> eioError (template "Unable to parse adl name $1" [adlname])
-        let ct = CustomType (CC.customType_cppname c) includes (CC.customType_generateOrigADLType c)
+        let ct = CustomType (CC.customType_cppname c) includes (CC.customType_generateOrigADLType c) (CC.customType_serialisationCode c)
         return (sn,ct)
       where
         adlname = CC.customType_adlname c
         includes = Set.fromList (map mkInc (CC.customType_cppincludes c))
-        mkInc i = IncFilePath (T.unpack (CC.include_name i)) (CC.include_system i)
+        mkInc i = IncFilePath (T.unpack (CC.include_name i)) (not (CC.include_system i))
 
 namespaceGenerator :: ModuleName -> CppNamespace
 namespaceGenerator mn = CppNamespace ("ADL":unModuleName mn)

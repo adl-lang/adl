@@ -10,8 +10,12 @@ struct CustomType
     // The fully scoped c++ name of the type to be used    
     String cppname;
 
-    // The includes required to use the haskell type
+    // The includes required to use the c++ type
     Vector<Include> cppincludes;
+
+    // Text to be inserted to implement the serialisation
+    // of the c++ type.
+    Vector<String> serialisationCode;
 
     // If true the code for the original ADL type will be emitted,
     // but with the supplied name.
