@@ -3,7 +3,7 @@ module examples.im
     import sys.types;
     import sys.rpc;
 
-    typedef String Nickname;
+    type Nickname = String;
 
     struct AuthenticateReq
     {
@@ -15,7 +15,7 @@ module examples.im
     // The AuthenticateActor is the initial connection point for clients.
     // It is a published well known address, that clients use to connect to
     // the service.
-    typedef rpcsvc<AuthenticateReq,Error<ServiceActor>> AuthenticateActor;
+    type AuthenticateActor = rpcsvc<AuthenticateReq,Error<ServiceActor>>;
 
     union Presence
     {
@@ -60,7 +60,7 @@ module examples.im
     //      - change user settings and state
     //      - create new conversations
     //      - query the user db
-    typedef Sink<ServiceReq> ServiceActor;
+    type  ServiceActor = Sink<ServiceReq>;
 
     struct SubscriptionReq
     {
@@ -82,7 +82,7 @@ module examples.im
 
     // Asynchronous events specific to a client are sent
     // to a ClientActor
-    typedef Sink<ClientMessage> ClientActor;
+    type ClientActor = Sink<ClientMessage>;
 
     union ConversationRReq
     {
@@ -90,7 +90,7 @@ module examples.im
          Nickname invite;
     };
 
-    typedef Sink<ConversationRReq> ConversationRefActor;
+    type ConversationRefActor = Sink<ConversationRReq>;
 
     struct Posting
     {
@@ -105,7 +105,7 @@ module examples.im
         Void unsubscribe;
     };
 
-    typedef Sink<ConversationReq> ConversationActor;
+    type ConversationActor = Sink<ConversationReq>;
 
     union ConversationMessage
     {
@@ -114,5 +114,5 @@ module examples.im
         Nickname unsubscribed;
     };
 
-    typedef Sink<ConversationMessage> ConversationClientActor; 
+    type ConversationClientActor = Sink<ConversationMessage>; 
 };

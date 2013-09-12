@@ -2,6 +2,7 @@
 #define ADL_TYPES_H
 
 #include <vector>
+#include <string>
 #include <stdint.h>
 #include <exception>
 

@@ -5,11 +5,11 @@ import examples.pubsub.*;
 
 // A concrete message service, with strings for payloads and patterns
 
-typedef String Payload;
-typedef String Pattern;
+type Payload = String;
+type Pattern = String;
 
-typedef Message<Payload> MyMessage;
-typedef Subscribe<Payload,Pattern> MySubscribe;
-typedef ChannelReq<Payload,Pattern> MyChannelReq;
+type MyMessage = Message<Payload>;
+type MySubscribe = Subscribe<Payload,Pattern>;
+type MyChannelReq = ChannelReq<Payload,Pattern>;
 
 };

@@ -10,5 +10,5 @@ struct EchoResponse<T> {
     T body;       
 };
 
-typedef Sink<EchoRequest<Void>> EchoServer;
+type EchoServer = Sink<EchoRequest<Void>>;
 };

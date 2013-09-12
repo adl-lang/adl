@@ -11,6 +11,6 @@ struct Rpc<I,O>
     Sink<O> replyTo;
 };
 
-typedef Sink<Rpc<I,O>> RpcSvc<I,O>;
+type RpcSvc<I,O> = Sink<Rpc<I,O>>;
 
 };

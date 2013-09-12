@@ -38,7 +38,7 @@ ident0 = do
     True -> P.unexpected ("reserved word '"++ T.unpack i ++ "'")
     False -> return i
   where
-    isReserved i = any (==i) ["module","import","struct","union","typedef"]
+    isReserved i = any (==i) ["module","import","struct","union","type"]
 
 ctoken :: Char -> P.Parser T.Text
 ctoken c = (T.singleton <$> P.char c) <* whiteSpace
@@ -97,10 +97,11 @@ union = do
 
 typedef :: P.Parser (Ident,Typedef ScopedName)
 typedef = do
-    token "typedef"
-    te <- typeExpression
+    token "type"
     n <- name
     tparams <- optTypeParamList
+    token "="
+    te <- typeExpression
     return (n,Typedef tparams te)
 
 decl :: P.Parser (Decl ScopedName)

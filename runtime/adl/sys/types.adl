@@ -26,8 +26,8 @@ union Error<T>
     String error;
 };
 
-typedef Vector<Pair<K,V>> Map<K,V>;
+type Map<K,V> = Vector<Pair<K,V>>;
 
-typedef Vector<T> Set<T>;
+type Set<T> = Vector<T>;
 
 };

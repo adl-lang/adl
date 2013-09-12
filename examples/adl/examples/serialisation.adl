@@ -3,7 +3,7 @@ module examples.serialisation
 
 import sys.rpc.Rpc;
 
-typedef Rpc<T,T> roundtrip<T>;
+type roundtrip<T> = Rpc<T,T>;
 
 struct S1
 {

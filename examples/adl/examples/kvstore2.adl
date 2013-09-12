@@ -4,11 +4,11 @@ module examples.kvstore2
 import sys.types.*;
 import sys.rpc.*;
 
-typedef String Key;
-typedef String Value;
-typedef String Pattern;
-typedef Pair<Key,Value> KVPair;
-typedef Vector<KVPair> QueryResults;
+type Key = String;
+type Value = String;
+type Pattern = String;
+type KVPair = Pair<Key,Value>;
+type QueryResults = Vector<KVPair>;
 
 union KVRequest
 {
@@ -21,7 +21,7 @@ union KVRequest
     Rpc<Pattern,QueryResults> query;
 };
 
-typedef Sink<KVRequest> KVService;
+type KVService = Sink<KVRequest>;
 
 struct Credentials
 {
@@ -32,9 +32,9 @@ struct Credentials
 // For authentication, we provide the credentials, and on
 // success get back a reference to the service, otherwise
 // an error message.
-typedef Rpc<Credentials,Error<KVService>> AuthenticateReq;
+type AuthenticateReq = Rpc<Credentials,Error<KVService>>;
 
-typedef Sink<AuthenticateReq> Authenticator;
+type Authenticator = Sink<AuthenticateReq>;
 
 struct User
 {
@@ -42,6 +42,6 @@ struct User
     Bool has_write_access;
 };
 
-typedef Vector<User> UserDetails;
+type UserDetails = Vector<User>;
 
 };

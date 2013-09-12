@@ -17,6 +17,6 @@ struct Tree<T>
     Vector<Tree<T>> children;
 };
 
-typedef Tree<Int32> IntTree;
+type IntTree = Tree<Int32>;
 
 };
