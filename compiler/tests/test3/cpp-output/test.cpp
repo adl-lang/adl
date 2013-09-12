@@ -204,17 +204,9 @@ JsonV<ADL::test::U>::fromJson( ADL::test::U &v, JsonReader &json )
     while( !match0( json, JsonReader::END_OBJECT ) )
     {
         if( matchField0( "f_int", json ) )
-        {
-            int16_t fv;
-            JsonV<int16_t>::fromJson( fv, json );
-            v.set_f_int(fv);
-        }
+            v.set_f_int(getFromJson<int16_t>( json ));
         else if( matchField0( "f_string", json ) )
-        {
-            std::string fv;
-            JsonV<std::string>::fromJson( fv, json );
-            v.set_f_string(fv);
-        }
+            v.set_f_string(getFromJson<std::string>( json ));
         else
             throw json_parse_failure();
     }

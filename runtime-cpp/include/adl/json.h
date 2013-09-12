@@ -73,19 +73,22 @@ public:
     virtual const std::string & stringV() = 0;
 };
 
+// Basic serialisation operations. These will be specialised
+// per type.
 template <class T>
 struct JsonV
 {
     static void toJson( JsonWriter &json, const T & v );
     static void fromJson( T &v, JsonReader &json );
-
-    static T getFromJson( JsonReader &json )
-    {
-        T v;
-        fromJson( v, json );
-        return v;
-    }
 };
+
+template <class T>
+static T getFromJson( JsonReader &json )
+{
+    T v;
+    JsonV<T>::fromJson( v, json );
+    return v;
+}
 
 struct json_parse_failure : public std::exception
 {

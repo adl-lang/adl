@@ -669,7 +669,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
               wt "v.$1();" [cUnionSetterName d f]
             else do
               t <- cTypeExpr True (f_type f)
-              wt "v.$1(JsonV<$2>::getFromJson( json ));" [cUnionSetterName d f,t]
+              wt "v.$1(getFromJson<$2>( json ));" [cUnionSetterName d f,t]
       wl "else"
       indent $ wl "throw json_parse_failure();"
 

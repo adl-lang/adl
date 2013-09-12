@@ -23,6 +23,8 @@ bool operator<( const Void &a, const Void &b ) { return false; }
 struct ByteVector
 {
     std::vector<uint8_t> bytes;
+
+    static ByteVector fromLiteral( const std::string & v );
 };
 
 //----------------------------------------------------------------------

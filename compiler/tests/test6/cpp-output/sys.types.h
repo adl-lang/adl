@@ -237,17 +237,9 @@ JsonV<ADL::sys::types::Either<T1,T2>>::fromJson( ADL::sys::types::Either<T1,T2> 
     while( !match0( json, JsonReader::END_OBJECT ) )
     {
         if( matchField0( "left", json ) )
-        {
-            T1 fv;
-            JsonV<T1>::fromJson( fv, json );
-            v.set_left(fv);
-        }
+            v.set_left(getFromJson<T1>( json ));
         else if( matchField0( "right", json ) )
-        {
-            T2 fv;
-            JsonV<T2>::fromJson( fv, json );
-            v.set_right(fv);
-        }
+            v.set_right(getFromJson<T2>( json ));
         else
             throw json_parse_failure();
     }
@@ -488,17 +480,9 @@ JsonV<ADL::sys::types::Error<T>>::fromJson( ADL::sys::types::Error<T> &v, JsonRe
     while( !match0( json, JsonReader::END_OBJECT ) )
     {
         if( matchField0( "value", json ) )
-        {
-            T fv;
-            JsonV<T>::fromJson( fv, json );
-            v.set_value(fv);
-        }
+            v.set_value(getFromJson<T>( json ));
         else if( matchField0( "error", json ) )
-        {
-            std::string fv;
-            JsonV<std::string>::fromJson( fv, json );
-            v.set_error(fv);
-        }
+            v.set_error(getFromJson<std::string>( json ));
         else
             throw json_parse_failure();
     }
@@ -723,17 +707,9 @@ JsonV<ADL::sys::types::Maybe<T>>::fromJson( ADL::sys::types::Maybe<T> &v, JsonRe
     while( !match0( json, JsonReader::END_OBJECT ) )
     {
         if( matchField0( "nothing", json ) )
-        {
-            Void fv;
-            JsonV<Void>::fromJson( fv, json );
             v.set_nothing();
-        }
         else if( matchField0( "just", json ) )
-        {
-            T fv;
-            JsonV<T>::fromJson( fv, json );
-            v.set_just(fv);
-        }
+            v.set_just(getFromJson<T>( json ));
         else
             throw json_parse_failure();
     }
@@ -747,6 +723,9 @@ namespace types {
 
 // Pair excluded due to custom definition
 
+template <class A, class B>
+using Pair = std::pair<A,B>;
+
 }}} // ADL::sys::types
 
 namespace ADL {
@@ -754,8 +733,24 @@ namespace ADL {
 template <class A,class B>
 struct JsonV<std::pair<A,B>>
 {
-    static void toJson( JsonWriter &json, const std::pair<A,B> & v );
-    static void fromJson( std::pair<A,B> &v, JsonReader &json );
+    static void toJson( JsonWriter &json, const std::pair<A,B> & v )
+    {
+        json.startObject();
+        writeField<A>( json, "v1", v.first );
+        writeField<B>( json, "v2", v.second );
+        json.endObject();
+    }
+
+    static void fromJson( std::pair<A,B> &v, JsonReader &json )
+    {
+        match( json, JsonReader::START_OBJECT );
+        while( !match0( json, JsonReader::END_OBJECT ) )
+        {
+            readField<A>( v.first, "v1", json ) ||
+            readField<B>( v.second, "v2", json ) ||
+            ignoreField( json );
+        }
+    }
 };
 
 } // ADL
@@ -766,5 +761,74 @@ namespace types {
 
 // Set excluded due to custom definition
 
+template <class A>
+using Set = std::set<A>;
+
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class A>
+struct JsonV<std::set<A>>
+{
+    static void toJson( JsonWriter &json, const std::set<A> & v )
+    {
+        json.startArray();
+        for( typename std::set<A>::const_iterator i = v.begin(); i != v.end(); i++ )
+            JsonV<A>::toJson( json, *i );
+        json.endArray();
+    }
+
+    static void fromJson( std::set<A> &v, JsonReader &json )
+    {
+        match( json, JsonReader::START_ARRAY );
+        while( !match0( json, JsonReader::END_ARRAY ) )
+            v.insert( getFromJson<A>(json) );
+    }
+
+};
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
+
 // Map excluded due to custom definition
+
+template <class K, class V>
+using Map = std::map<K,V>;
+
+}}} // ADL::sys::types
+
+namespace ADL {
+
+template <class K,class V>
+struct JsonV<std::map<K,V>>
+{
+    static void toJson( JsonWriter &json, const std::map<K,V> & v )
+    {
+        json.startArray();
+        for( typename std::map<K,V>::const_iterator i = v.begin(); i != v.end(); i++ )
+            JsonV<std::pair<K,V>>::toJson( json, *i );
+        json.endArray();
+    }
+
+    static void fromJson( std::map<K,V> &v, JsonReader &json )
+    {
+        match( json, JsonReader::START_ARRAY );
+        while( !match0( json, JsonReader::END_ARRAY ) )
+        {
+            std::pair<K,V> pv;
+            JsonV<std::pair<K,V>>::fromJson( pv, json );
+            v[pv.first] = pv.second;
+        }
+    }
+};
+
+} // ADL
+
+namespace ADL {
+namespace sys {
+namespace types {
 }}} // ADL::sys::types
