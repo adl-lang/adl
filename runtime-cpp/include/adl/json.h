@@ -78,6 +78,13 @@ struct JsonV
 {
     static void toJson( JsonWriter &json, const T & v );
     static void fromJson( T &v, JsonReader &json );
+
+    static T getFromJson( JsonReader &json )
+    {
+        T v;
+        fromJson( v, json );
+        return v;
+    }
 };
 
 struct json_parse_failure : public std::exception
@@ -245,32 +252,21 @@ struct JsonV<ByteVector>
 template <class T>
 struct JsonV<std::vector<T>>
 {
-    static void toJson( JsonWriter &json, const std::vector<T> & v );
-    static void fromJson( std::vector<T> &v, JsonReader &json );
-};
-
-template <class T>
-void
-JsonV<std::vector<T>>::toJson( JsonWriter &json, const std::vector<T> & v )
-{
-    json.startArray();
-    for( typename std::vector<T>::const_iterator vi = v.begin(); vi != v.end(); vi++ )
-        JsonV<T>::toJson( json, *vi );
-    json.endArray();
-}
-
-template <class T>
-void
-JsonV<std::vector<T>>::fromJson( std::vector<T> & v, JsonReader &json  )
-{
-    match( json, JsonReader::START_ARRAY );
-    while( !match0( json, JsonReader::END_ARRAY ) )
+    static void toJson( JsonWriter &json, const std::vector<T> & v )
     {
-        T el;
-        JsonV<T>::fromJson( el, json );
-        v.push_back(el);
+        json.startArray();
+        for( typename std::vector<T>::const_iterator vi = v.begin(); vi != v.end(); vi++ )
+            JsonV<T>::toJson( json, *vi );
+        json.endArray();
     }
-}
+
+    static void fromJson( std::vector<T> &v, JsonReader &json )
+    {
+        match( json, JsonReader::START_ARRAY );
+        while( !match0( json, JsonReader::END_ARRAY ) )
+            v.push_back(JsonV<T>::getFromJson( json ));
+    }
+};
 
 };
 

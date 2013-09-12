@@ -82,6 +82,7 @@ data CustomType = CustomType {
    ct_name :: Ident,
    ct_includes :: Set.Set IncFilePath,
    ct_generateOrigADLType :: Maybe Ident,
+   ct_declarationCode :: [T.Text],
    ct_serialisationCode :: [T.Text]
 }
 
@@ -662,13 +663,13 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     cblock fr $ do
       forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,_)) -> do
         wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name f]
-        cblock fr $ do
-          t <- cTypeExpr True (f_type f)
-          wt "$1 fv;" [t]
-          wt "JsonV<$1>::fromJson( fv, json );" [t]
+        indent $ do
           if isVoidType (f_type f)
-            then wt "v.$1();" [cUnionSetterName d f]
-            else wt "v.$1(fv);" [cUnionSetterName d f]
+            then do
+              wt "v.$1();" [cUnionSetterName d f]
+            else do
+              t <- cTypeExpr True (f_type f)
+              wt "v.$1(JsonV<$2>::getFromJson( json ));" [cUnionSetterName d f,t]
       wl "else"
       indent $ wl "throw json_parse_failure();"
 
@@ -716,7 +717,12 @@ generateCustomType n d ct = do
       wline ifile ""
       generateDecl i d
 
--- Insert the user supplied code
+  -- Insert the user declaration code
+  when (not (null (ct_declarationCode ct))) $ do
+    wline ifile ""
+    mapM_ (wline ifile) (ct_declarationCode ct)
+
+  -- Insert the user supplied code
   when (not (null (ct_serialisationCode ct))) $ do
     wline ifile ""
     setnamespace ifile serialisationNamespace
@@ -799,7 +805,7 @@ getCustomTypes fps = fmap Map.unions (mapM get0 fps)
         sn <- case P.parse P.scopedName "" adlname of
           (Right sn) -> return sn
           _ -> eioError (template "Unable to parse adl name $1" [adlname])
-        let ct = CustomType (CC.customType_cppname c) includes (CC.customType_generateOrigADLType c) (CC.customType_serialisationCode c)
+        let ct = CustomType (CC.customType_cppname c) includes (CC.customType_generateOrigADLType c) (CC.customType_declarationCode c) (CC.customType_serialisationCode c)
         return (sn,ct)
       where
         adlname = CC.customType_adlname c

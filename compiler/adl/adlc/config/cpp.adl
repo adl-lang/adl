@@ -13,6 +13,9 @@ struct CustomType
     // The includes required to use the c++ type
     Vector<Include> cppincludes;
 
+    // Text to be inserted to declare the c++ type.
+    Vector<String> declarationCode;
+
     // Text to be inserted to implement the serialisation
     // of the c++ type.
     Vector<String> serialisationCode;

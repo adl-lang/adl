@@ -49,7 +49,7 @@ examples: .make/built-examples
 
 .make/built-compiler: $(COMPILER-SRC) .make/built-utils .make/built-runtime
 	(cd compiler && cabal-dev -s ../cabal-dev install)
-	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
+#	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
 	touch .make/built-compiler
 
 .make/built-runtime-cpp: $(RUNTIME-SRC) $(RUNTIME-CPP-SRC) .make/built-compiler

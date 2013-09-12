@@ -7,16 +7,69 @@
     "customTypes" : [
         {
             "adlname" : "sys.types.Set",
-            "cppname" : "set",
+            "cppname" : "std::set",
             "cppincludes" : [
                 {"name" : "set", "system" : true }
+            ],
+            "declarationCode" : [
+                "template <class A>",
+                "using Set = std::set<A>;"
+             ],
+            "serialisationCode" : [
+                "template <class A>",
+                "struct JsonV<std::set<A>>",
+                "{",
+                "    static void toJson( JsonWriter &json, const std::set<A> & v )",
+                "    {",
+                "        json.startArray();",
+                "        for( typename std::set<A>::const_iterator i = v.begin(); i != v.end(); i++ )",
+                "            JsonV<A>::toJson( json, *i );",
+                "        json.endArray();",
+                "    }",
+                "",
+                "    static void fromJson( std::set<A> &v, JsonReader &json )",
+                "    {",
+                "        match( json, JsonReader::START_ARRAY );",
+                "        while( !match0( json, JsonReader::END_ARRAY ) )",
+                "            v.insert( JsonV<A>::getFromJson(json) );",
+                "    }",
+                "",
+                "};"
             ]
         },
         {
             "adlname" : "sys.types.Map",
-            "cppname" : "map",
+            "cppname" : "std::map",
             "cppincludes" : [
                 {"name" : "map", "system" : true }
+            ],
+            "declarationCode" : [
+                "template <class K, class V>",
+                "using Map = std::map<K,V>;"
+             ],
+            "serialisationCode" : [
+                "template <class K,class V>",
+                "struct JsonV<std::map<K,V>>",
+                "{",
+                "    static void toJson( JsonWriter &json, const std::map<K,V> & v )",
+                "    {",
+                "        json.startArray();",
+                "        for( typename std::map<K,V>::const_iterator i = v.begin(); i != v.end(); i++ )",
+                "            JsonV<std::pair<K,V>>::toJson( json, *i );",
+                "        json.endArray();",
+                "    }",
+                "",
+                "    static void fromJson( std::map<K,V> &v, JsonReader &json )",
+                "    {",
+                "        match( json, JsonReader::START_ARRAY );",
+                "        while( !match0( json, JsonReader::END_ARRAY ) )",
+                "        {",
+                "            std::pair<K,V> pv;",
+                "            JsonV<std::pair<K,V>>::fromJson( pv, json );",
+                "            v[pv.first] = pv.second;",
+                "        }",
+                "    }",
+                "};"
             ]
         },
         {
@@ -25,12 +78,32 @@
             "cppincludes" : [
                 {"name" : "utility", "system" : true }
             ],
+            "declarationCode" : [
+                "template <class A, class B>",
+                "using Pair = std::pair<A,B>;"
+             ],
             "serialisationCode" : [
                 "template <class A,class B>",
                 "struct JsonV<std::pair<A,B>>",
                 "{",
-                "    static void toJson( JsonWriter &json, const std::pair<A,B> & v );",
-                "    static void fromJson( std::pair<A,B> &v, JsonReader &json );",
+                "    static void toJson( JsonWriter &json, const std::pair<A,B> & v )",
+                "    {",
+                "        json.startObject();",
+                "        writeField<A>( json, \"v1\", v.first );",
+                "        writeField<B>( json, \"v2\", v.second );",
+                "        json.endObject();",
+                "    }",
+                "",
+                "    static void fromJson( std::pair<A,B> &v, JsonReader &json )",
+                "    {",
+                "        match( json, JsonReader::START_OBJECT );",
+                "        while( !match0( json, JsonReader::END_OBJECT ) )",
+                "        {",
+                "            readField<A>( v.first, \"v1\", json ) ||",
+                "            readField<B>( v.second, \"v2\", json ) ||",
+                "            ignoreField( json );",
+                "        }",
+                "    }",
                 "};"
             ]
         }
