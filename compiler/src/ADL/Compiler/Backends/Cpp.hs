@@ -86,6 +86,48 @@ data CustomType = CustomType {
    ct_serialisationCode :: [T.Text]
 }
 
+data BState = BState {
+  bs_indent :: T.Text,
+  bs_lines :: [T.Text]
+  }
+
+type CodeWriter a = State BState a
+
+wl :: T.Text -> CodeWriter ()
+wl t = modify (\bs->bs{bs_lines=T.append (bs_indent bs) t:bs_lines bs})
+
+wt :: T.Text -> [T.Text] -> CodeWriter ()
+wt t ps = wl (template t ps)
+
+indent :: CodeWriter a -> CodeWriter a
+indent cw = do
+  i <- gets bs_indent
+  modify (\bs->bs{bs_indent=T.append i "    "})
+  a <- cw
+  modify (\bs->bs{bs_indent=i})
+  return a
+
+cblock :: CodeWriter a -> CodeWriter a
+cblock code = do
+  wl "{"
+  a <- indent code
+  wl "}"
+  return a
+
+dblock :: CodeWriter a -> CodeWriter a
+dblock code = do
+  wl "{"
+  a <- indent code
+  wl "};"
+  return a
+
+write :: FileRef -> CodeWriter a -> Gen a
+write fr cw = do
+    modify (fr (\fs->fs{fs_lines=bs_lines bs++fs_lines fs}))
+    return a
+  where
+    (a,bs) = runState cw (BState "" [])
+
 type CustomTypeMap = Map.Map ScopedName CustomType
 
 type Gen = State MState
@@ -97,11 +139,6 @@ ifile, cppfile :: FileRef
 ifile fu ms = ms{ms_incFile=fu (ms_incFile ms)}
 cppfile fu ms = ms{ms_cppFile=fu (ms_cppFile ms)}
 
-
-writers :: FileRef -> (T.Text -> Gen (),
-                       T.Text -> [T.Text] -> Gen (),
-                       Gen () -> Gen ())
-writers fr = (wline fr, wtemplate fr, indent fr)           
 
 -- Set the namespace we are generating code in
 -- Returns the existing namespace
@@ -126,16 +163,6 @@ setnamespace fl ns = do modify (fl setns)
         open = [ template "namespace $1 {" [i] | i <- reverse ids1 ]
         ids0 = unCppNamespace (fs_namespace fs)
         ids1 = unCppNamespace ns
-  
--- Write a line of text to the given file
-wline :: FileRef -> T.Text -> Gen ()
-wline fl t = modify (fl addline)
-  where
-    addline fs = fs{fs_lines=(fs_indent fs) `T.append` t:fs_lines fs}
-
--- Write a template to the given file
-wtemplate :: FileRef -> T.Text -> [T.Text] -> Gen ()
-wtemplate fl pattern args = wline fl (template pattern args)
 
 -- Reference an include file from the given file
 include, includeStd :: FileRef -> FilePath -> Gen ()
@@ -144,30 +171,6 @@ includeStd fr i = include0 fr (IncFilePath i False)
 
 include0 :: FileRef -> IncFilePath -> Gen ()
 include0 fl i = modify (fl $ \fs -> fs{fs_includes=Set.insert i (fs_includes fs)})
-
--- Generate an indented section within the given file
-indent :: FileRef -> Gen a -> Gen a
-indent fl g = do
-    modify (fl $ \fs -> fs{fs_indent=T.append is (fs_indent fs)})
-    a <- g
-    modify (fl $ \fs -> fs{fs_indent=T.drop (T.length is) (fs_indent fs)})
-    return a
-  where
-    is = "    "
-
-cblock :: FileRef -> Gen a -> Gen a
-cblock fr code = do
-  wline fr "{"
-  a <- indent fr code
-  wline fr "}"
-  return a
-
-dblock :: FileRef -> Gen a -> Gen a
-dblock fr code = do
-  wline fr "{"
-  a <- indent fr code
-  wline fr "};"
-  return a
 
 
 isVoidType :: TypeExpr ResolvedType -> Bool
@@ -256,10 +259,10 @@ includeModule fr mn = do
   let fp2 = ms_fileMapper ms mn
   include fr (fp2 ++ ".h")
 
-mkTemplate :: FileRef -> [Ident] -> Gen ()
-mkTemplate _ [] = return ()
-mkTemplate fr tps = wtemplate fr "template <$1>"
-                    [T.intercalate ", " [T.concat ["class ",cTypeParamName tp] | tp <- tps]]
+mkTemplate2 :: [Ident] -> CodeWriter ()
+mkTemplate2 [] = return ()
+mkTemplate2 tps = wt "template <$1>"
+                  [T.intercalate ", " [T.concat ["class ",cTypeParamName tp] | tp <- tps]]
 
 addMarker :: v -> v -> v -> [a] -> [(v,a)]
 addMarker fv v lv as = case add as of
@@ -279,402 +282,412 @@ commaSep :: [v]  -> [(v,T.Text)]
 commaSep = sepWithTerm "," ""
 
 declareOperators fr tparams ctnameP = do
-  wline fr ""
-  mkTemplate fr tparams
-  wtemplate fr "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
-  mkTemplate fr tparams
-  wtemplate fr "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
+  wl ""
+  mkTemplate2 tparams
+  wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
+  mkTemplate2 tparams
+  wt "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
 
 serialisationNamespace = CppNamespace ["ADL"]
 
-declareSerialisation fr tparams ms ctnameP = do
+declareSerialisation tparams ms ctnameP = do
   let ns = ms_moduleMapper ms (ms_name ms)
       ctnameP1 = template "$1::$2" [formatText ns,ctnameP]
-  wline fr ""
-  setnamespace fr serialisationNamespace
-  wline fr ""
+  wl ""
   case tparams of
-    [] -> wline fr "template <>"
-    _ -> mkTemplate fr tparams
-  wtemplate fr "struct JsonV<$1>" [ctnameP1]
-  dblock ifile $ do
-    wtemplate fr "static void toJson( JsonWriter &json, const $1 & v );" [ctnameP1]
-    wtemplate fr "static void fromJson( $1 &v, JsonReader &json );" [ctnameP1]
-  wline fr ""
-  setnamespace fr ns
+    [] -> wl "template <>"
+    _ -> mkTemplate2 tparams
+  wt "struct JsonV<$1>" [ctnameP1]
+  dblock $ do
+    wt "static void toJson( JsonWriter &json, const $1 & v );" [ctnameP1]
+    wt "static void fromJson( $1 &v, JsonReader &json );" [ctnameP1]
 
 generateDecl :: Ident -> Decl ResolvedType -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
   fts <- forM (s_fields s) $ \f -> do
     t <- cTypeExpr False (f_type f)
+    scopedt <- cTypeExpr True (f_type f)
     litv <- case f_default f of
         (Just v) -> mkLiteral (f_type f) v
         Nothing -> mkDefaultLiteral (f_type f)
-    return (cFieldName dn (f_name f), f, t, litv)
-  let ctname = cTypeName dn
+    return (cFieldName dn (f_name f), f, t, scopedt, litv)
+
+  let ns = ms_moduleMapper ms (ms_name ms)
+      ctname = cTypeName dn
       ctnameP = case s_typeParams s of
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
 
+      -- cppfile2 is where we write definitions: the include file if
+      -- parametrised, otherwise the cpp file
+      cppfile2 = if null (s_typeParams s) then cppfile else ifile
+
   -- Class Declaration
-  let (wl,wt,indent) = writers ifile
-  wl ""
-  mkTemplate ifile (s_typeParams s)
-  wt "struct $1" [ctname]
-  dblock ifile $ do
-     wt "$1();" [ctname]
-     wl ""
-     wt "$1(" [ctname]
-     indent  $ do
-       forM_ (commaSep fts) $ \((fname,f,t,_),sep) -> do
-          wt "const $1 & $2$3" [t, fname,sep]
-       wl ");"
-     wl ""
-     forM_ fts $ \(fname,_,t,_) -> do
-         wt "$1 $2;" [t, fname]
+  write ifile $ do        
+    wl ""
+    mkTemplate2 (s_typeParams s)
+    wt "struct $1" [ctname]
+    dblock $ do
+       wt "$1();" [ctname]
+       wl ""
+       wt "$1(" [ctname]
+       indent $ do
+         forM_ (commaSep fts) $ \((fname,f,t,_,_),sep) -> do
+            wt "const $1 & $2$3" [t, fname,sep]
+         wl ");"
+       wl ""
+       forM_ fts $ \(fname,_,t,_,_) -> do
+           wt "$1 $2;" [t, fname]
 
-  declareOperators ifile (s_typeParams s) ctnameP
-  declareSerialisation ifile (s_typeParams s) ms ctnameP
+    declareOperators ifile (s_typeParams s) ctnameP
 
-  -- Constructors
-  -- will end up in header file if it's a template class
-  let fr = if null (s_typeParams s) then cppfile else ifile
-  let (wl,wt,indent) = writers fr
-  wl ""
-  mkTemplate fr (s_typeParams s)
-  wt "$1::$2()" [ctnameP, ctname]
-  indent $
-    forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,f,t,litv)) -> do
-       when (not $ literalIsDefault litv) $
-            wt "$1 $2($3)" [mark,fname,literalLValue litv]
-  wl "{"
-  wl "}"
-  wl ""
-  mkTemplate fr (s_typeParams s)
-  wt "$1::$2(" [ctnameP,ctname]
-  indent  $ do
-    forM_ (commaSep fts) $ \((fname, f,t,_),sep) -> do
-      wt "const $1 & $2_$3" [t,fname,sep]
-    wl ")"
-    forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_)) -> do
-      wt "$1 $2($2_)" [mark,fname]
-  wl "{"
-  wl "}"
+  write ifile $ wl ""
+  setnamespace ifile serialisationNamespace
+  write ifile $ do        
+    declareSerialisation (s_typeParams s) ms ctnameP
+  write ifile $ wl ""
+  setnamespace ifile ns
 
-  -- Non-inline functions
-  -- will still end up in header file if it's a template class
-  wl ""
-  mkTemplate fr (s_typeParams s)
-  wl "bool"
-  wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
-  cblock fr $ do
-    forM_ fts $ \(fname, f,t,_) -> do
-      wt "if( a.$1 < b.$1 ) return true;" [fname]
-      wt "if( b.$1 < a.$1 ) return false;" [fname]
-    wl "return false;"
+  write cppfile2 $ do
+    -- Constructors
+    wl ""
+    mkTemplate2 (s_typeParams s)
+    wt "$1::$2()" [ctnameP, ctname]
+    indent $
+      forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,f,t,_,litv)) -> do
+         when (not $ literalIsDefault litv) $
+              wt "$1 $2($3)" [mark,fname,literalLValue litv]
+    cblock $ return ()
+    wl ""
+    mkTemplate2 (s_typeParams s)
+    wt "$1::$2(" [ctnameP,ctname]
+    indent $ do
+      forM_ (commaSep fts) $ \((fname, f,t,_,_),sep) -> do
+        wt "const $1 & $2_$3" [t,fname,sep]
+      wl ")"
+      forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_,_)) -> do
+        wt "$1 $2($2_)" [mark,fname]
+    cblock $ return ()
 
-  wl ""
-  mkTemplate fr (s_typeParams s)
-  wl "bool"
-  wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
-  cblock fr $ do 
-    wl "return"
-    forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_),sep) -> do
-      indent $ wt "a.$1 == b.$1 $2" [fname,sep]
+    -- Non-inline functions
+    wl ""
+    mkTemplate2 (s_typeParams s)
+    wl "bool"
+    wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
+    cblock $ do
+      forM_ fts $ \(fname, f,t,_,_) -> do
+        wt "if( a.$1 < b.$1 ) return true;" [fname]
+        wt "if( b.$1 < a.$1 ) return false;" [fname]
+      wl "return false;"
+    wl ""
+    mkTemplate2 (s_typeParams s)
+    wl "bool"
+    wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
+    cblock $ do 
+      wl "return"
+      forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_,_),sep) -> do
+        indent $ wt "a.$1 == b.$1 $2" [fname,sep]
+    wl ""
 
-  wl ""
-  setnamespace fr serialisationNamespace
-  wl ""
-  mkTemplate fr (s_typeParams s)
-  let ns = ms_moduleMapper ms (ms_name ms)
-  wl "void"
-  wt "JsonV<$1::$2>::toJson( JsonWriter &json, const $1::$2 & v )" [formatText ns,ctnameP]
-  cblock fr $ do
-    wl "json.startObject();"
-    forM_ fts $ \(fname, f,_,_) -> do
-      t <- cTypeExpr True (f_type f)
-      wt "writeField<$1>( json, \"$2\", v.$3 );" [t,f_name f,fname]
-    wl "json.endObject();"
-    return ()
-  wl ""
-  mkTemplate fr (s_typeParams s)
-  wl "void"
-  wt "JsonV<$1::$2>::fromJson( $1::$2 &v, JsonReader &json )" [formatText ns,ctnameP]
-  cblock fr $ do
-    wl "match( json, JsonReader::START_OBJECT );"
-    wl "while( !match0( json, JsonReader::END_OBJECT ) )"
-    cblock fr $ do
-      forM_ fts $ \(fname, f,_,_) -> do
-        t <- cTypeExpr True (f_type f)
-        wt "readField<$1>( v.$2, \"$3\", json ) ||" [t,fname,f_name f]
-      wl "ignoreField( json );"
-  wl ""
-  setnamespace fr ns
+  setnamespace cppfile2 serialisationNamespace
+
+  write cppfile2 $ do
+    wl ""
+    mkTemplate2 (s_typeParams s)
+    wl "void"
+    wt "JsonV<$1::$2>::toJson( JsonWriter &json, const $1::$2 & v )" [formatText ns,ctnameP]
+    cblock $ do
+      wl "json.startObject();"
+      forM_ fts $ \(fname, f,_,scopedt,_) -> do
+        wt "writeField<$1>( json, \"$2\", v.$3 );" [scopedt,f_name f,fname]
+      wl "json.endObject();"
+      return ()
+    wl ""
+    mkTemplate2 (s_typeParams s)
+    wl "void"
+    wt "JsonV<$1::$2>::fromJson( $1::$2 &v, JsonReader &json )" [formatText ns,ctnameP]
+    cblock $ do
+      wl "match( json, JsonReader::START_OBJECT );"
+      wl "while( !match0( json, JsonReader::END_OBJECT ) )"
+      cblock $ do
+        forM_ fts $ \(fname, f,_,scopedt,_) -> do
+          wt "readField<$1>( v.$2, \"$3\", json ) ||" [scopedt,fname,f_name f]
+        wl "ignoreField( json );"
+    wl ""
+
+  setnamespace cppfile2 ns
 
 generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   ms <- get
   fts <- forM (u_fields u) $ \f -> do
     t <- cTypeExpr False (f_type f)
+    scopedt <- cTypeExpr True (f_type f)
     litv <- case f_default f of
         (Just v) -> mkLiteral (f_type f) v
         Nothing -> mkDefaultLiteral (f_type f)
-    return (f, t, litv)
+    return (f, t, scopedt, litv)
 
-  let ctname = cTypeName dn
+  let ns = ms_moduleMapper ms (ms_name ms)
+      ctname = cTypeName dn
       ctnameP = case u_typeParams u of
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
 
-  -- The class declaration
-  let (wl,wt,indent) = writers ifile
-      fr = ifile
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "class $1" [ctname]
-  wl "{"
-  wl "public:"
-  indent $ do
-    wt "$1();" [ctname]
-    forM_ fts $ \(f,t,_) -> do
-      let ctorName = cUnionConstructorName d f
-      if isVoidType (f_type f)
-        then wt "static $1 $2();" [ctnameP, ctorName ] 
-        else wt "static $1 $2( const $3 & v );" [ ctnameP, ctorName, t ]
+      -- cppfile2 is where we write definitions: the include file if
+      -- parametrised, otherwise the cpp file
+      cppfile2 = if null (u_typeParams u) then cppfile else ifile
 
+  write ifile $ do
+    -- The class declaration
     wl ""
-    wt "$1( const $2 & );" [ctname,ctnameP]
-    wt "~$1();" [ctname]
-    wt "$1 & operator=( const $1 & );" [ctnameP]
-    wl ""
-    wl "enum DiscType"
+    mkTemplate2 (u_typeParams u)
+    wt "class $1" [ctname]
     wl "{"
+    wl "public:"
     indent $ do
-      forM_ (commaSep fts) $ \((f,t,_),sep) -> do
-        wt "$1$2" [cUnionDiscName d f, sep]
-    wl "};"
-    wl ""
-    wl "DiscType d() const;"
-    forM_ fts $ \(f,t,_) -> do
-      when (not $ isVoidType (f_type f)) $
-        wt "$1 & $2() const;" [t,cUnionAccessorName d f]
-    wl ""
-    forM_ fts $ \(f,t,_) -> do
-      if isVoidType (f_type f)
-        then wt "void $1();" [cUnionSetterName d f]
-        else wt "const $1 & $2(const $1 & );" [t,cUnionSetterName d f]
-    wl ""
-  wl "private:"
-  indent $ do
-    wt "$1( DiscType d, void * v);" [ctname]
-    wl ""
-    wl "DiscType d_;"
-    wl "void *p_;"
-    wl ""
-    wl "static void free( DiscType d, void *v );"
-    wt "static void *copy( DiscType d, void *v );" [ctnameP]
-  wl "};"
+      wt "$1();" [ctname]
+      forM_ fts $ \(f,t,_,_) -> do
+        let ctorName = cUnionConstructorName d f
+        if isVoidType (f_type f)
+          then wt "static $1 $2();" [ctnameP, ctorName ] 
+          else wt "static $1 $2( const $3 & v );" [ ctnameP, ctorName, t ]
 
-  declareOperators ifile (u_typeParams u) ctnameP
-  declareSerialisation ifile (u_typeParams u) ms ctnameP
-
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  case u_typeParams u of
-    [] ->  wt "inline $1::DiscType $1::d() const" [ctnameP]
-    _ ->  wt "typename $1::DiscType $1::d() const" [ctnameP]
-  cblock fr $ do
-    wl "return d_;"
-
-  forM_ fts $ \(f,t,_) -> do
-    when (not $ isVoidType (f_type f)) $ do
       wl ""
-      mkTemplate fr (u_typeParams u)
-      wt "inline $1 & $2::$3() const" [t,ctnameP,cUnionAccessorName d f]
-      cblock fr $ do
-        wt "if( d_ == $1 )" [cUnionDiscName d f]
-        cblock fr $ do
-          wt "return *($1 *)p_;" [t]
-        wl "throw invalid_union_access();"
+      wt "$1( const $2 & );" [ctname,ctnameP]
+      wt "~$1();" [ctname]
+      wt "$1 & operator=( const $1 & );" [ctnameP]
+      wl ""
+      wl "enum DiscType"
+      dblock $ 
+        forM_ (commaSep fts) $ \((f,t,_,_),sep) -> do
+          wt "$1$2" [cUnionDiscName d f, sep]
+      wl ""
+      wl "DiscType d() const;"
+      forM_ fts $ \(f,t,_,_) -> do
+        when (not $ isVoidType (f_type f)) $
+          wt "$1 & $2() const;" [t,cUnionAccessorName d f]
+      wl ""
+      forM_ fts $ \(f,t,_,_) -> do
+        if isVoidType (f_type f)
+          then wt "void $1();" [cUnionSetterName d f]
+          else wt "const $1 & $2(const $1 & );" [t,cUnionSetterName d f]
+      wl ""
+    wl "private:"
+    indent $ do
+      wt "$1( DiscType d, void * v);" [ctname]
+      wl ""
+      wl "DiscType d_;"
+      wl "void *p_;"
+      wl ""
+      wl "static void free( DiscType d, void *v );"
+      wt "static void *copy( DiscType d, void *v );" [ctnameP]
+    wl "};"
 
-  -- Implementation
-  -- will end up in header file if it's a template class
-  let fr = if null (u_typeParams u) then cppfile else ifile
-  let (wl,wt,indent) = writers fr
+    declareOperators ifile (u_typeParams u) ctnameP
 
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "$1::$2()" [ctnameP,ctname]
-  -- FIXME :: Confirm that typechecker disallows empty unions, so the
-  -- head below is ok.
-  let (f,t,litv) = head fts
-      lv = if isVoidType (f_type f)
-           then "0"
-           else template "new $1" [literalPValue litv]
-  indent $ wt ": d_($1), p_($2)" [cUnionDiscName d f,lv]
-  wl "{"
-  wl "}"
-  forM_ fts $ \(f,t,_) -> do
-    let ctorName = cUnionConstructorName d f
+  write ifile $ wl ""
+  setnamespace ifile serialisationNamespace
+  write ifile $ do        
+    declareSerialisation (u_typeParams u) ms ctnameP
+  write ifile $ wl ""
+  setnamespace ifile ns
+
+  write ifile $ do
     wl ""
-    mkTemplate fr (u_typeParams u)
-    if isVoidType (f_type f)
-      then do
-        wt "$1 $1::$2()" [ctnameP, ctorName ]
-        cblock fr $
-          wt "return $1( $2, 0 );" [ctnameP, cUnionDiscName d f]
-      else do
-        wt "$1 $1::$2( const $3 & v )" [ ctnameP, ctorName, t ]
-        cblock fr $
-          wt "return $1( $2, new $3(v) );" [ctnameP, cUnionDiscName d f,t]
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "$1::$2( const $1 & v )" [ctnameP,ctname]
-  indent $ wl ": d_(v.d_), p_(copy(v.d_,v.p_))"
-  cblock fr $ return ()
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "$1::~$2()" [ctnameP,ctname]
-  cblock fr $ do
-    wl "free(d_,p_);"
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "$1 & $1::operator=( const $1 & o )" [ctnameP]
-  cblock fr $ do
-    wl "free(d_,p_);"
-    wl "d_ = o.d_;"
-    wl "p_ = copy( o.d_, o.p_ );"
+    mkTemplate2 (u_typeParams u)
+    case u_typeParams u of
+      [] ->  wt "inline $1::DiscType $1::d() const" [ctnameP]
+      _ ->  wt "typename $1::DiscType $1::d() const" [ctnameP]
+    cblock $ do
+      wl "return d_;"
 
-  forM_ fts $ \(f,t,_) -> do
-    wl ""
-    mkTemplate fr (u_typeParams u)
-    if isVoidType (f_type f)
-      then do
-        wt "void $1::$2()" [ctnameP,cUnionSetterName d f]
-        cblock fr $ do
-          wt "if( d_ != $1 )" [cUnionDiscName d f]
-          cblock fr $ do
-            wl "free(d_,p_);"
-            wt "d_ = $1;" [cUnionDiscName d f]
-            wt "p_ = 0;" [cUnionDiscName d f]
-          
-      else do
-        wt "const $1 & $2::$3(const $1 &v)" [t,ctnameP,cUnionSetterName d f]
-        cblock fr $ do
+    forM_ fts $ \(f,t,_,_) -> do
+      when (not $ isVoidType (f_type f)) $ do
+        wl ""
+        mkTemplate2 (u_typeParams u)
+        wt "inline $1 & $2::$3() const" [t,ctnameP,cUnionAccessorName d f]
+        cblock $ do
           wt "if( d_ == $1 )" [cUnionDiscName d f]
-          cblock fr $ do
-            wt "*($1 *)p_ = v;" [t]
-          wl "else"
-          cblock fr $ do
-            wl "free(d_,p_);"
-            wt "d_ = $1;" [cUnionDiscName d f]
-            wt "p_ = new $1(v);" [t]
-          wt "return *($1 *)p_;" [t]
+          cblock $ do
+            wt "return *($1 *)p_;" [t]
+          wl "throw invalid_union_access();"
 
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "$1::$2(DiscType d, void *p)" [ctnameP,ctname]
-  indent $ wl ": d_(d), p_(p)"
-  cblock fr $ return ()
+  write cppfile2 $ do
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wt "$1::$2()" [ctnameP,ctname]
+    -- FIXME :: Confirm that typechecker disallows empty unions, so the
+    -- head below is ok.
+    let (f,t,_,litv) = head fts
+        lv = if isVoidType (f_type f)
+             then "0"
+             else template "new $1" [literalPValue litv]
+    indent $ wt ": d_($1), p_($2)" [cUnionDiscName d f,lv]
+    wl "{"
+    wl "}"
+    forM_ fts $ \(f,t,_,_) -> do
+      let ctorName = cUnionConstructorName d f
+      wl ""
+      mkTemplate2 (u_typeParams u)
+      if isVoidType (f_type f)
+        then do
+          wt "$1 $1::$2()" [ctnameP, ctorName ]
+          cblock $
+            wt "return $1( $2, 0 );" [ctnameP, cUnionDiscName d f]
+        else do
+          wt "$1 $1::$2( const $3 & v )" [ ctnameP, ctorName, t ]
+          cblock $
+            wt "return $1( $2, new $3(v) );" [ctnameP, cUnionDiscName d f,t]
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wt "$1::$2( const $1 & v )" [ctnameP,ctname]
+    indent $ wl ": d_(v.d_), p_(copy(v.d_,v.p_))"
+    cblock $ return ()
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wt "$1::~$2()" [ctnameP,ctname]
+    cblock $ do
+      wl "free(d_,p_);"
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wt "$1 & $1::operator=( const $1 & o )" [ctnameP]
+    cblock $ do
+      wl "free(d_,p_);"
+      wl "d_ = o.d_;"
+      wl "p_ = copy( o.d_, o.p_ );"
 
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "void $1::free(DiscType d, void *p)" [ctnameP]
-  cblock fr $ do
-    wl "switch( d )"
-    cblock fr $ 
-      forM_ fts $ \(f,t,_) -> do
-        if isVoidType (f_type f)
-          then wt "case $1: return;"
-               [cUnionDiscName d f]
-          else wt "case $1: delete ($2 *)p; return;"
-               [cUnionDiscName d f,t]
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wt "void * $1::copy( DiscType d, void *p )" [ctnameP]
-  cblock fr $ do
-    wl "switch( d )"
-    cblock fr $ 
-      forM_ fts $ \(f,t,_) -> do
-        if isVoidType (f_type f)
-          then wt "case $1: return 0;"
-               [cUnionDiscName d f]
-          else wt "case $1: return new $2(*($2 *)p);"
-               [cUnionDiscName d f,t]
+    forM_ fts $ \(f,t,_,_) -> do
+      wl ""
+      mkTemplate2 (u_typeParams u)
+      if isVoidType (f_type f)
+        then do
+          wt "void $1::$2()" [ctnameP,cUnionSetterName d f]
+          cblock $ do
+            wt "if( d_ != $1 )" [cUnionDiscName d f]
+            cblock $ do
+              wl "free(d_,p_);"
+              wt "d_ = $1;" [cUnionDiscName d f]
+              wt "p_ = 0;" [cUnionDiscName d f]
 
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wl "bool"
-  wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
-  cblock fr $ do
-    wl "if( a.d() < b.d() ) return true;"
-    wl "if( b.d() < a.d()) return false;"
-    wl "switch( a.d() )"
-    cblock fr $ 
-      forM_ fts $ \(f,t,_) -> do
-        if isVoidType (f_type f)
-          then wt "case $1::$2: return false;"
-               [ctnameP,cUnionDiscName d f]
-          else wt "case $1::$2: return a.$3() < b.$3();"
-               [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+        else do
+          wt "const $1 & $2::$3(const $1 &v)" [t,ctnameP,cUnionSetterName d f]
+          cblock $ do
+            wt "if( d_ == $1 )" [cUnionDiscName d f]
+            cblock $ do
+              wt "*($1 *)p_ = v;" [t]
+            wl "else"
+            cblock $ do
+              wl "free(d_,p_);"
+              wt "d_ = $1;" [cUnionDiscName d f]
+              wt "p_ = new $1(v);" [t]
+            wt "return *($1 *)p_;" [t]
 
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wl "bool"
-  wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
-  cblock fr $ do 
-    wl "if( a.d() != b.d() ) return false;"
-    wl "switch( a.d() )"
-    cblock fr $ 
-      forM_ fts $ \(f,t,_) -> do
-        if isVoidType (f_type f)
-          then wt "case $1::$2: return true;"
-               [ctnameP,cUnionDiscName d f]
-          else wt "case $1::$2: return a.$3() == b.$3();"
-               [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wt "$1::$2(DiscType d, void *p)" [ctnameP,ctname]
+    indent $ wl ": d_(d), p_(p)"
+    cblock $ return ()
 
-  wl ""
-  setnamespace fr serialisationNamespace
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  let ns = ms_moduleMapper ms (ms_name ms)
-      scopedctnameP = template "$1::$2" [formatText ns,ctnameP]
-  wl "void"
-  wt "JsonV<$1>::toJson( JsonWriter &json, const $1 & v )" [scopedctnameP]
-  cblock fr $ do
-    wl "json.startObject();"
-    wl "switch( v.d() )"
-    cblock fr $ do
-      forM_ fts $ \(f,_,_) -> do
-         let v | isVoidType (f_type f) = "Void()"
-               | otherwise = template "v.$1()" [cUnionAccessorName d f]
-
-         wt "case $1::$2: writeField( json, \"$3\", $4 ); break;"
-           [scopedctnameP,cUnionDiscName d f, f_name f,v]
-    wl "json.endObject();"
-    return ()
-  wl ""
-  mkTemplate fr (u_typeParams u)
-  wl "void"
-  wt "JsonV<$1>::fromJson( $1 &v, JsonReader &json )" [scopedctnameP]
-  cblock fr $ do
-    wl "match( json, JsonReader::START_OBJECT );"
-    wl "while( !match0( json, JsonReader::END_OBJECT ) )"
-    cblock fr $ do
-      forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,_)) -> do
-        wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name f]
-        indent $ do
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wt "void $1::free(DiscType d, void *p)" [ctnameP]
+    cblock $ do
+      wl "switch( d )"
+      cblock $ 
+        forM_ fts $ \(f,t,_,_) -> do
           if isVoidType (f_type f)
-            then do
-              wt "v.$1();" [cUnionSetterName d f]
-            else do
-              t <- cTypeExpr True (f_type f)
-              wt "v.$1(getFromJson<$2>( json ));" [cUnionSetterName d f,t]
-      wl "else"
-      indent $ wl "throw json_parse_failure();"
+            then wt "case $1: return;"
+                 [cUnionDiscName d f]
+            else wt "case $1: delete ($2 *)p; return;"
+                 [cUnionDiscName d f,t]
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wt "void * $1::copy( DiscType d, void *p )" [ctnameP]
+    cblock $ do
+      wl "switch( d )"
+      cblock $ 
+        forM_ fts $ \(f,t,_,_) -> do
+          if isVoidType (f_type f)
+            then wt "case $1: return 0;"
+                 [cUnionDiscName d f]
+            else wt "case $1: return new $2(*($2 *)p);"
+                 [cUnionDiscName d f,t]
 
-  wl ""
-  setnamespace fr ns
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wl "bool"
+    wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
+    cblock $ do
+      wl "if( a.d() < b.d() ) return true;"
+      wl "if( b.d() < a.d()) return false;"
+      wl "switch( a.d() )"
+      cblock $ 
+        forM_ fts $ \(f,t,_,_) -> do
+          if isVoidType (f_type f)
+            then wt "case $1::$2: return false;"
+                 [ctnameP,cUnionDiscName d f]
+            else wt "case $1::$2: return a.$3() < b.$3();"
+                 [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wl "bool"
+    wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
+    cblock $ do 
+      wl "if( a.d() != b.d() ) return false;"
+      wl "switch( a.d() )"
+      cblock $ 
+        forM_ fts $ \(f,t,_,_) -> do
+          if isVoidType (f_type f)
+            then wt "case $1::$2: return true;"
+                 [ctnameP,cUnionDiscName d f]
+            else wt "case $1::$2: return a.$3() == b.$3();"
+                 [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+    wl ""
+
+  setnamespace cppfile2 serialisationNamespace
+
+  write cppfile2 $ do
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    let ns = ms_moduleMapper ms (ms_name ms)
+        scopedctnameP = template "$1::$2" [formatText ns,ctnameP]
+    wl "void"
+    wt "JsonV<$1>::toJson( JsonWriter &json, const $1 & v )" [scopedctnameP]
+    cblock $ do
+      wl "json.startObject();"
+      wl "switch( v.d() )"
+      cblock $ do
+        forM_ fts $ \(f,_,_,_) -> do
+           let v | isVoidType (f_type f) = "Void()"
+                 | otherwise = template "v.$1()" [cUnionAccessorName d f]
+
+           wt "case $1::$2: writeField( json, \"$3\", $4 ); break;"
+             [scopedctnameP,cUnionDiscName d f, f_name f,v]
+      wl "json.endObject();"
+      return ()
+    wl ""
+    mkTemplate2 (u_typeParams u)
+    wl "void"
+    wt "JsonV<$1>::fromJson( $1 &v, JsonReader &json )" [scopedctnameP]
+    cblock $ do
+      wl "match( json, JsonReader::START_OBJECT );"
+      wl "while( !match0( json, JsonReader::END_OBJECT ) )"
+      cblock $ do
+        forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,scopedt,_)) -> do
+          wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name f]
+          indent $ do
+            if isVoidType (f_type f)
+              then do
+                wt "v.$1();" [cUnionSetterName d f]
+              else do
+                wt "v.$1(getFromJson<$2>( json ));" [cUnionSetterName d f,scopedt]
+        wl "else"
+        indent $ wl "throw json_parse_failure();"
+    wl ""
+
+  setnamespace cppfile2 ns
 
 generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
   ms <- get
@@ -691,51 +704,52 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
       ctnameP1 = template "$1::$2" [formatText ns,ctnameP]      
-      fr = ifile
-      (wl,wt,indent) = writers fr
 
-  wl ""
-  mkTemplate ifile tparams
-  wt "struct $1" [ctname]
-  dblock ifile $ do
-     if literalIsDefault litv
-       then wt "$1() {}" [ctname]
-       else wt "$1() : value($2) {}" [ctname,literalLValue litv]
+  write ifile $ do
+    wl ""
+    mkTemplate2 tparams
+    wt "struct $1" [ctname]
+    dblock $ do
+       if literalIsDefault litv
+         then wt "$1() {}" [ctname]
+         else wt "$1() : value($2) {}" [ctname,literalLValue litv]
 
-     wt "explicit $1(const $2 & v) : value(v) {}" [ctname,t]
-     wl ""
-     wt "$1 value;" [t]
-  wline ifile ""
-  mkTemplate ifile tparams
-  wtemplate ifile "bool operator<( const $1 &a, const $1 &b ) { return a.value < b.value; }" [ctnameP]
-  mkTemplate ifile tparams
-  wtemplate ifile "bool operator==( const $1 &a, const $1 &b ) { return a.value == b.value; }" [ctnameP]
-  wline fr ""
-  setnamespace fr serialisationNamespace
-  wline fr ""
-  case tparams of
-    [] -> wline fr "template <>"
-    _ -> mkTemplate fr tparams
-  wtemplate fr "struct JsonV<$1>" [ctnameP1]
-  dblock ifile $ do
-    wtemplate fr "static void toJson( JsonWriter &json, const $1 & v )" [ctnameP1]
-    cblock fr $ do
-      wtemplate fr "JsonV<$1>::toJson( json, v.value );" [scopedt]
-    wline fr ""
-    wtemplate fr "static void fromJson( $1 &v, JsonReader &json )" [ctnameP1]
-    cblock fr $ do
-      wtemplate fr "JsonV<$1>::fromJson( v.value, json );" [scopedt]
-  wline fr ""
-  setnamespace fr ns
-     
-     
+       wt "explicit $1(const $2 & v) : value(v) {}" [ctname,t]
+       wl ""
+       wt "$1 value;" [t]
+    wl ""
+    mkTemplate2 tparams
+    wt "bool operator<( const $1 &a, const $1 &b ) { return a.value < b.value; }" [ctnameP]
+    mkTemplate2 tparams
+    wt "bool operator==( const $1 &a, const $1 &b ) { return a.value == b.value; }" [ctnameP]
+    wl ""
 
+  setnamespace ifile serialisationNamespace
+
+  write ifile $ do
+    wl ""
+    case tparams of
+      [] -> wl "template <>"
+      _ -> mkTemplate2 tparams
+    wt "struct JsonV<$1>" [ctnameP1]
+    dblock $ do
+      wt "static void toJson( JsonWriter &json, const $1 & v )" [ctnameP1]
+      cblock $ do
+        wt "JsonV<$1>::toJson( json, v.value );" [scopedt]
+      wl ""
+      wt "static void fromJson( $1 &v, JsonReader &json )" [ctnameP1]
+      cblock $ do
+        wt "JsonV<$1>::fromJson( v.value, json );" [scopedt]
+    wl ""
+
+  setnamespace ifile ns
 
 generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr False (t_typeExpr t)
-  wline ifile ""
-  mkTemplate ifile (t_typeParams t)
-  wtemplate ifile "using $1 = $2;" [cTypeName dn, te]
+  write ifile $ do
+    wl ""
+    mkTemplate2 (t_typeParams t)
+    wt "using $1 = $2;" [cTypeName dn, te]
 
 localTypes :: TypeExpr ResolvedType -> Set.Set Ident
 localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
@@ -761,29 +775,31 @@ referencedLocalTypes d = Set.delete (d_name d) (rtypes d)
 generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> Gen ()
 generateCustomType n d ct = do
   ms <- get
-  wline ifile ""
   mapM_ (include0 ifile) (Set.toList (ct_includes ct))
-  
+
+  write ifile $ wl ""
   case ct_generateOrigADLType ct of
     Nothing -> do
-      wtemplate ifile "// $1 excluded due to custom definition" [n]
+      write ifile $ wt "// $1 excluded due to custom definition" [n]
     Just i -> do
-      wtemplate ifile "// $1 generated as $2 due to custom definition" [n,i]
-      wline ifile ""
+      write ifile $ wt "// $1 generated as $2 due to custom definition" [n,i]
+      write ifile $ wl ""
       generateDecl i d
 
   -- Insert the user declaration code
   when (not (null (ct_declarationCode ct))) $ do
-    wline ifile ""
-    mapM_ (wline ifile) (ct_declarationCode ct)
+    write ifile $ do
+      wl ""
+      mapM_ wl (ct_declarationCode ct)
 
   -- Insert the user supplied code
   when (not (null (ct_serialisationCode ct))) $ do
-    wline ifile ""
+    write ifile $ wl ""
     setnamespace ifile serialisationNamespace
-    wline ifile ""
-    mapM_ (wline ifile) (ct_serialisationCode ct)
-    wline ifile ""
+    write ifile $ do
+      wl ""
+      mapM_ wl (ct_serialisationCode ct)
+    write ifile $ wl ""
     setnamespace ifile (ms_moduleMapper ms (ms_name ms)) 
 
 generateModule :: Module ResolvedType -> Gen ()
