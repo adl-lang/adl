@@ -1,0 +1,35 @@
+module test
+{
+
+struct Point<T>
+{
+    T x;
+    T y;
+};
+
+type Int1 = Int64;
+newtype Int2 = Int64;
+newtype Int3 = Int64 = 42;
+
+type Int4<X> = Int64;
+newtype Int5<X> = Int64;
+newtype Int6<X> = Int64 = 43;
+
+type String1 = String;
+newtype String2 = String;
+newtype String3 = String = "hello";
+
+type String4<X> = String;
+newtype String5<X> = String;
+newtype String6<X> = String = "goodbye";
+
+type IntPoint1 = Point<Int64>;
+newtype IntPoint2 = Point<Int64>;
+newtype IntPoint3 = Point<Int64> = { "x" : 5, "y" : 27 };
+
+type Point1<X> = Point<X>;
+newtype Point2<X> = Point<X>;
+
+
+};
+

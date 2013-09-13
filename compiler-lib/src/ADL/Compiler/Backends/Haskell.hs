@@ -292,6 +292,14 @@ generateDecl lname d@(Decl{d_type=(Decl_Typedef t)}) = do
     ts <- hTypeExpr (t_typeExpr t)
     wt "type $1$2 = $3" [lname,hTParams (t_typeParams t),ts]
 
+generateDecl lname d@(Decl{d_type=(Decl_Newtype n)}) = do
+    addExport lname
+    mn <- fmap ms_name get
+    ts <- hTypeExpr (n_typeExpr n)
+    wt "newtype $1$2 = $1 $3" [lname,hTParams (n_typeParams n),ts]
+    nl
+    generateNewtypeADLInstance lname mn d n
+
 commas :: [T.Text]
 commas = repeat ","
 
@@ -367,6 +375,17 @@ generateUnionADLInstance lname mn d u = do
                 wt "$1 (\"$2\", \\f v -> $3 <$> aFromJSON f v)" [fp,f_name f,hDiscName (d_name d) (f_name f)]
               wl "]"
           wl "in unionFromJSON f umap o"
+
+generateNewtypeADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Newtype ResolvedType -> HGen ()
+generateNewtypeADLInstance lname mn d n = do
+    wl $ hInstanceHeader "ADLValue" lname (n_typeParams n)
+    indent $ do
+        declareAType (ScopedName mn (d_name d)) (n_typeParams n)
+        nl
+        defv <- generateDefaultValue (n_typeExpr n) (n_default n) 
+        wt "defaultv = $1 $2" [lname, defv]
+        wt "aToJSON f ($1 v) = aToJSON f v" [lname]
+        wt "aFromJSON f o = Prelude.fmap $1 (aFromJSON f o)" [lname]
 
 generateDefaultValue :: TypeExpr ResolvedType -> (Maybe JSON.Value) -> HGen T.Text
 generateDefaultValue _ Nothing = return "defaultv"

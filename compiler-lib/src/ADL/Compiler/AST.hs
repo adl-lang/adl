@@ -55,12 +55,19 @@ data Typedef t = Typedef {
   t_typeExpr :: TypeExpr t
 } deriving (Show)
 
+data Newtype t = Newtype {
+  n_typeParams :: [Ident],
+  n_typeExpr :: TypeExpr t,
+  n_default :: (Maybe JSON.Value)
+} deriving (Show)
+
 data TypeExpr t = TypeExpr t [TypeExpr t]
   deriving (Show)                  
 
 data DeclType t = Decl_Struct (Struct t)
                 | Decl_Union (Union t)
                 | Decl_Typedef (Typedef t)
+                | Decl_Newtype (Newtype t)
   deriving (Show)
 
 data Decl t = Decl {
@@ -95,10 +102,13 @@ instance Foldable Union where
     foldMap f Union{u_fields=fs} = foldMap (foldMap f) fs
 instance Foldable Typedef where
     foldMap f Typedef{t_typeExpr=t} = foldMap f t
+instance Foldable Newtype where
+    foldMap f Newtype{n_typeExpr=t} = foldMap f t
 instance Foldable DeclType where
     foldMap f (Decl_Struct s) = foldMap f s
     foldMap f (Decl_Union u) = foldMap f u
     foldMap f (Decl_Typedef t) = foldMap f t
+    foldMap f (Decl_Newtype n) = foldMap f n
 instance Foldable Decl where
     foldMap f Decl{d_type=d} = foldMap f d
 instance Foldable Module where
@@ -115,3 +125,4 @@ getTypeParams :: DeclType t -> [Ident]
 getTypeParams (Decl_Struct s) = s_typeParams s
 getTypeParams (Decl_Union u) = u_typeParams u
 getTypeParams (Decl_Typedef t) = t_typeParams t
+getTypeParams (Decl_Newtype n) = n_typeParams n

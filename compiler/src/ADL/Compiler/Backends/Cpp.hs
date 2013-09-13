@@ -675,7 +675,61 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
 
   wl ""
   setnamespace fr ns
-    
+
+generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
+  ms <- get
+  t <- cTypeExpr False (n_typeExpr nt)
+  scopedt <- cTypeExpr True (n_typeExpr nt)
+  litv <- case n_default nt of
+    (Just v) -> mkLiteral (n_typeExpr nt) v
+    Nothing -> mkDefaultLiteral (n_typeExpr nt)
+
+  let ns = ms_moduleMapper ms (ms_name ms)
+      tparams = n_typeParams nt
+      ctname = cTypeName dn
+      ctnameP = case tparams of
+        [] -> ctname
+        ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
+      ctnameP1 = template "$1::$2" [formatText ns,ctnameP]      
+      fr = ifile
+      (wl,wt,indent) = writers fr
+
+  wl ""
+  mkTemplate ifile tparams
+  wt "struct $1" [ctname]
+  dblock ifile $ do
+     if literalIsDefault litv
+       then wt "$1() {}" [ctname]
+       else wt "$1() : value($2) {}" [ctname,literalLValue litv]
+
+     wt "explicit $1(const $2 & v) : value(v) {}" [ctname,t]
+     wl ""
+     wt "$1 value;" [t]
+  wline ifile ""
+  mkTemplate ifile tparams
+  wtemplate ifile "bool operator<( const $1 &a, const $1 &b ) { return a.value < b.value; }" [ctnameP]
+  mkTemplate ifile tparams
+  wtemplate ifile "bool operator==( const $1 &a, const $1 &b ) { return a.value == b.value; }" [ctnameP]
+  wline fr ""
+  setnamespace fr serialisationNamespace
+  wline fr ""
+  case tparams of
+    [] -> wline fr "template <>"
+    _ -> mkTemplate fr tparams
+  wtemplate fr "struct JsonV<$1>" [ctnameP1]
+  dblock ifile $ do
+    wtemplate fr "static void toJson( JsonWriter &json, const $1 & v )" [ctnameP1]
+    cblock fr $ do
+      wtemplate fr "JsonV<$1>::toJson( json, v.value );" [scopedt]
+    wline fr ""
+    wtemplate fr "static void fromJson( $1 &v, JsonReader &json )" [ctnameP1]
+    cblock fr $ do
+      wtemplate fr "JsonV<$1>::fromJson( v.value, json );" [scopedt]
+  wline fr ""
+  setnamespace fr ns
+     
+     
+
 
 generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr False (t_typeExpr t)
@@ -702,6 +756,7 @@ referencedLocalTypes d = Set.delete (d_name d) (rtypes d)
     rtypes (Decl{d_type=(Decl_Struct s)}) = Set.unions [ localTypes (f_type f) | f <- s_fields s]
     rtypes (Decl{d_type=(Decl_Union u)}) = Set.unions [ localTypes (f_type f) | f <- u_fields u]
     rtypes (Decl{d_type=(Decl_Typedef t)}) = localTypes (t_typeExpr t)
+    rtypes (Decl{d_type=(Decl_Newtype n)}) = localTypes (n_typeExpr n)
     
 generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> Gen ()
 generateCustomType n d ct = do

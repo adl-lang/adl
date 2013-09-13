@@ -95,23 +95,35 @@ union = do
     fields <- parenList field
     return (n,Union tparams fields)
 
-typedef :: P.Parser (Ident,Typedef ScopedName)
-typedef = do
+type_ :: P.Parser (Ident,Typedef ScopedName)
+type_ = do
     token "type"
+    n <- name
+    tparams <- optTypeParamList
+    ctoken '='
+    te <- typeExpression
+    return (n,Typedef tparams te)
+
+newtype_ :: P.Parser (Ident,Newtype ScopedName)
+newtype_ = do
+    token "newtype"
     n <- name
     tparams <- optTypeParamList
     token "="
     te <- typeExpression
-    return (n,Typedef tparams te)
+    mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
+    return (n,Newtype tparams te mdefault)
 
 decl :: P.Parser (Decl ScopedName)
 decl =   (mkStruct <$> struct)
      <|> (mkUnion <$> union)
-     <|> (mkTypedef <$> typedef)
+     <|> (mkType <$> type_)
+     <|> (mkNewtype <$> newtype_)
   where
     mkStruct (n,s) = Decl n Map.empty (Decl_Struct s)
     mkUnion (n,u) = Decl n Map.empty (Decl_Union u)
-    mkTypedef (n,t) = Decl n Map.empty (Decl_Typedef t)
+    mkType (n,t) = Decl n Map.empty (Decl_Typedef t)
+    mkNewtype (n,nt) = Decl n Map.empty (Decl_Newtype nt)
 
 importP :: P.Parser Import
 importP = token "import" *> (P.try importAll <|> import1 )

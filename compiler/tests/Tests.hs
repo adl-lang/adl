@@ -103,6 +103,7 @@ tests =
   , testHsBackend "hs.4 custom type mappings" "test4/input" ["test4/input/test.adl"] "test4/hs-output" ["test4/input/hs-custom-types.json"]
   , testHsBackend "hs.5 unions" "test5/input" ["test5/input/test.adl"] "test5/hs-output" []
   , testHsBackend "hs.6 std library" stdsrc stdfiles "test6/hs-output" ["../../compiler/config/hs-custom-types.json"]
+  , testHsBackend "hs.7 type aliases and newtypes" "test7/input" ["test7/input/test.adl"] "test7/hs-output" []
 
   , testCppBackend "cpp.1 empty module" "test1/input" ["test1/input/test.adl"] "test1/cpp-output" []
   , testCppBackend "cpp.2 structs" "test2/input" ["test2/input/test.adl"] "test2/cpp-output" []
@@ -110,4 +111,5 @@ tests =
   , testCppBackend "cpp.4 custom type mappings" "test4/input" ["test4/input/test.adl"] "test4/cpp-output" ["test4/input/cpp-custom-types.json"]
   , testCppBackend "cpp.5 unions" "test5/input" ["test5/input/test.adl"] "test5/cpp-output" []
   , testCppBackend "cpp.6 std library" stdsrc stdfiles "test6/cpp-output" ["../../compiler/config/cpp-custom-types.json"]
+  , testCppBackend "cpp.7 type aliases and newtypes" "test7/input" ["test7/input/test.adl"] "test7/cpp-output" []
   ]

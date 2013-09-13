@@ -6,6 +6,7 @@ module ADL.Compiler.Processing where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.Writer
 import Control.Exception
 import System.FilePath(joinPath)
 import Data.List(find,partition)
@@ -161,6 +162,7 @@ undefinedNames m ns = foldMap checkDecl (m_decls m)
       checkDecl Decl{d_type=Decl_Struct s} = checkFields (withTypeParams (s_typeParams s)) (s_fields s)
       checkDecl Decl{d_type=Decl_Union u} = checkFields  (withTypeParams (u_typeParams u)) (u_fields u)
       checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (withTypeParams (t_typeParams t)) (t_typeExpr t)
+      checkDecl Decl{d_type=Decl_Newtype n} = checkTypeExpr (withTypeParams (n_typeParams n)) (n_typeExpr n)
 
       withTypeParams :: [Ident] -> NameScope
       withTypeParams ids = ns'{ns_typeParams=Set.fromList ids}
@@ -196,6 +198,10 @@ resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
     resolveDecl ns d@Decl{d_type=Decl_Typedef t} = d{d_type=Decl_Typedef (t{t_typeExpr=expr'})}
       where
         expr' = resolveTypeExpr (withTypeParams ns (t_typeParams t)) (t_typeExpr t)
+
+    resolveDecl ns d@Decl{d_type=Decl_Newtype n} = d{d_type=Decl_Newtype (n{n_typeExpr=expr'})}
+      where
+        expr' = resolveTypeExpr (withTypeParams ns (n_typeParams n)) (n_typeExpr n)
 
     resolveFields :: NameScope -> [Field ScopedName] -> [Field ResolvedType]
     resolveFields ns fields = [f{f_type=resolveTypeExpr ns (f_type f)} | f <- fields]
@@ -234,6 +240,7 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
       checkDecl Decl{d_type=Decl_Struct s} = checkFields (s_fields s)
       checkDecl Decl{d_type=Decl_Union u} = checkFields (u_fields u)
       checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (t_typeExpr t)
+      checkDecl Decl{d_type=Decl_Newtype n} = checkTypeExpr (n_typeExpr n)
 
       checkFields :: [Field ResolvedType] -> [TypeCtorAppError]
       checkFields fs = foldMap (checkTypeExpr . f_type) fs
@@ -252,25 +259,39 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
       declTypeArgCount (Decl_Struct s) = length (s_typeParams s)
       declTypeArgCount (Decl_Union u) = length (u_typeParams u)
       declTypeArgCount (Decl_Typedef t) = length (t_typeParams t)
+      declTypeArgCount (Decl_Newtype n) = length (n_typeParams n)
 
 
-data FieldDefaultError = FieldDefaultError Ident Ident T.Text
+newtype DefaultOverrideError = DefaultOverrideError T.Text
 
-instance Format FieldDefaultError where
-  formatText (FieldDefaultError decl field emsg) =
-    T.concat ["invalid override for default of field ",field," of decl ",decl,": ", emsg]
+instance Format DefaultOverrideError where
+  formatText (DefaultOverrideError t) = t
 
-checkDefaultOverrides :: RModule -> [FieldDefaultError]
-checkDefaultOverrides m = structErrors
+-- | Check that:
+--     * there are no default overrides for parameterised types
+--     * the JSON literal for each default override has the appropriate type
+--
+checkDefaultOverrides :: RModule -> [DefaultOverrideError]
+checkDefaultOverrides m = execWriter checkModule
   where
-    structErrors = concat [ structErrors1 n s | Decl{d_name=n,d_type=Decl_Struct s} <- Map.elems (m_decls m) ]
-    structErrors1 n s = catMaybes [ fieldDefaultError n f | f <- s_fields s ]
+    checkModule :: Writer [DefaultOverrideError] ()
+    checkModule = do
+      forM_ (Map.elems (m_decls m)) $ \decl -> do
+        case decl of
+          Decl{d_name=n,d_type=Decl_Struct s} -> checkFields n (s_typeParams s) (s_fields s)
+          Decl{d_name=n,d_type=Decl_Union u} -> checkFields n (u_typeParams u) (u_fields u)
+          Decl{d_name=n,d_type=Decl_Newtype nt} -> checkType n (n_typeParams nt) (n_typeExpr nt) (n_default nt)
+          _ -> return ()
 
-    fieldDefaultError :: Ident -> Field ResolvedType -> Maybe FieldDefaultError
-    fieldDefaultError n f = do
-      v <- f_default f
-      err <- validateLiteralForTypeExpr (f_type f) v
-      return (FieldDefaultError n (f_name f) err)
+    checkFields :: Ident -> [Ident] -> [Field ResolvedType] -> Writer [DefaultOverrideError] ()
+    checkFields n tparams fields = forM_ fields $ \f -> do
+      checkType (template "field $1 of $2" [f_name f,n]) tparams (f_type f) (f_default f)
+
+    checkType :: T.Text -> [Ident] -> TypeExpr ResolvedType -> Maybe JSON.Value -> Writer [DefaultOverrideError] ()
+    checkType _ _ _ Nothing = return ()
+    checkType n tparams te (Just jv) = case validateLiteralForTypeExpr te jv of
+      Nothing -> return ()
+      (Just err) -> tell [DefaultOverrideError (template "Invalid override of $1: $2" [n,err])]
 
 validateLiteralForTypeExpr :: TypeExpr ResolvedType -> JSON.Value -> Maybe T.Text
 validateLiteralForTypeExpr te v = validateTE Map.empty te v
@@ -285,6 +306,7 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
       (Decl_Struct s) -> structLiteral m s tes v
       (Decl_Union u) -> unionLiteral m u tes v 
       (Decl_Typedef t) -> typedefLiteral m t tes v
+      (Decl_Newtype n) -> newtypeLiteral m n tes v
     validateTE m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
          (Just te) -> validateTE Map.empty te v
          Nothing -> Just "literals not allows for parameterised fields"
@@ -320,6 +342,10 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
     typedefLiteral m t tes v = validateTE pm (t_typeExpr t) v
       where
         pm = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
+
+    newtypeLiteral m n tes v = validateTE pm (n_typeExpr n) v
+      where
+        pm = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
 namescopeForModule :: Module ScopedName -> NameScope -> NameScope
 namescopeForModule m ns = ns
