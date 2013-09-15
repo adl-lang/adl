@@ -23,23 +23,6 @@ bool operator<( const Rpc<I,O> &a, const Rpc<I,O> &b );
 template <class I, class O>
 bool operator==( const Rpc<I,O> &a, const Rpc<I,O> &b );
 
-}}} // ADL::sys::rpc
-
-namespace ADL {
-
-template <class I, class O>
-struct JsonV<ADL::sys::rpc::Rpc<I,O>>
-{
-    static void toJson( JsonWriter &json, const ADL::sys::rpc::Rpc<I,O> & v );
-    static void fromJson( ADL::sys::rpc::Rpc<I,O> &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace rpc {
-
 template <class I, class O>
 Rpc<I,O>::Rpc()
 {
@@ -75,9 +58,19 @@ operator==( const Rpc<I,O> &a, const Rpc<I,O> &b )
         a.replyTo == b.replyTo ;
 }
 
-}}} // ADL::sys::rpc
+template <class I, class O>
+using RpcSvc = Sink<Rpc<I,O> > ;
+
+}}}; // ADL::sys::rpc
 
 namespace ADL {
+
+template <class I, class O>
+struct JsonV<ADL::sys::rpc::Rpc<I,O>>
+{
+    static void toJson( JsonWriter &json, const ADL::sys::rpc::Rpc<I,O> & v );
+    static void fromJson( ADL::sys::rpc::Rpc<I,O> &v, JsonReader &json );
+};
 
 template <class I, class O>
 void
@@ -102,12 +95,4 @@ JsonV<ADL::sys::rpc::Rpc<I,O>>::fromJson( ADL::sys::rpc::Rpc<I,O> &v, JsonReader
     }
 }
 
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace rpc {
-
-template <class I, class O>
-using RpcSvc = Sink<Rpc<I,O> > ;
-}}} // ADL::sys::rpc
+}; // ADL

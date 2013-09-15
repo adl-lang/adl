@@ -30,34 +30,6 @@ operator==( const DateO &a, const DateO &b )
         a.date == b.date ;
 }
 
-}} // ADL::test
-
-namespace ADL {
-
-void
-JsonV<ADL::test::DateO>::toJson( JsonWriter &json, const ADL::test::DateO & v )
-{
-    json.startObject();
-    writeField<std::string>( json, "date", v.date );
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::DateO>::fromJson( ADL::test::DateO &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        readField<std::string>( v.date, "date", json ) ||
-        ignoreField( json );
-    }
-}
-
-} // ADL
-
-namespace ADL {
-namespace test {
-
 S::S()
 {
 }
@@ -84,9 +56,28 @@ operator==( const S &a, const S &b )
         a.v1 == b.v1 ;
 }
 
-}} // ADL::test
+}}; // ADL::test
 
 namespace ADL {
+
+void
+JsonV<ADL::test::DateO>::toJson( JsonWriter &json, const ADL::test::DateO & v )
+{
+    json.startObject();
+    writeField<std::string>( json, "date", v.date );
+    json.endObject();
+}
+
+void
+JsonV<ADL::test::DateO>::fromJson( ADL::test::DateO &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( !match0( json, JsonReader::END_OBJECT ) )
+    {
+        readField<std::string>( v.date, "date", json ) ||
+        ignoreField( json );
+    }
+}
 
 void
 JsonV<ADL::test::S>::toJson( JsonWriter &json, const ADL::test::S & v )
@@ -107,8 +98,4 @@ JsonV<ADL::test::S>::fromJson( ADL::test::S &v, JsonReader &json )
     }
 }
 
-} // ADL
-
-namespace ADL {
-namespace test {
-}} // ADL::test
+}; // ADL

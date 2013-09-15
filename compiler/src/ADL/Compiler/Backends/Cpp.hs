@@ -51,22 +51,31 @@ instance Format IncFilePath where
 
 instance Format CppFilePath where format (CppFilePath fp) = fp
 
--- The state of a file for which we are accumulating
+-- The state of a file section for which we are accumulating
 -- content
 data FState = FState {
   fs_includes :: Set.Set IncFilePath,
-  fs_indent :: T.Text,
   fs_lines :: [T.Text],
   fs_namespace :: CppNamespace
   }
 
--- Produce the actual text form of the accumulated file state
-fileText ::FState -> T.Text
-fileText fs = T.intercalate "\n" lines
+-- Produce the actual text form of the accumulated file states
+fileText ::[FState] -> T.Text
+fileText fss = T.intercalate "\n" lines
   where
-    lines = includes ++ [""] ++ body
-    includes = [ template "#include $1" [formatText i] | i <- Set.toList (fs_includes fs) ]
-    body = reverse (fs_lines fs)
+    lines = includesT ++ concat (map bodyT fss)
+    includesT = [ template "#include $1" [formatText i] | i <- Set.toList includes ]
+    includes = Set.unions (map fs_includes fss)
+    bodyT fs = inNamespace (fs_namespace fs) (reverse (fs_lines fs))
+
+    inNamespace :: CppNamespace -> [T.Text] -> [T.Text]
+    inNamespace (CppNamespace ids) [] = []
+    inNamespace (CppNamespace ids) lines
+      =  [""]
+      ++ [template "namespace $1 {" [i] | i <- ids ]
+      ++ lines
+      ++ [""]
+      ++ [template "$1; // $2" [T.replicate (length ids) "}",T.intercalate "::" ids ]]
 
 -- | The state capturing all the output being generated.
 data MState = MState {
@@ -74,8 +83,10 @@ data MState = MState {
    ms_moduleMapper :: ModuleName -> CppNamespace,
    ms_fileMapper :: ModuleName -> FilePath,
    ms_customTypes :: Map.Map ScopedName CustomType,
-   ms_incFile :: FState,
-   ms_cppFile :: FState
+   ms_incFileUserModule :: FState,
+   ms_incFileSerialisation :: FState,
+   ms_cppFileUserModule :: FState,
+   ms_cppFileSerialisation :: FState
 }
 
 data CustomType = CustomType {
@@ -135,34 +146,12 @@ type Gen = State MState
 -- Selector function to control which file is being updated.
 type FileRef = (FState -> FState) -> MState-> MState
 
-ifile, cppfile :: FileRef
-ifile fu ms = ms{ms_incFile=fu (ms_incFile ms)}
-cppfile fu ms = ms{ms_cppFile=fu (ms_cppFile ms)}
+ifile, ifileS, cppfile, cppfileS :: FileRef
+ifile fu ms = ms{ms_incFileUserModule=fu (ms_incFileUserModule ms)}
+ifileS fu ms = ms{ms_incFileSerialisation=fu (ms_incFileSerialisation ms)}
+cppfile fu ms = ms{ms_cppFileUserModule=fu (ms_cppFileUserModule ms)}
+cppfileS fu ms = ms{ms_cppFileSerialisation=fu (ms_cppFileSerialisation ms)}
 
-
--- Set the namespace we are generating code in
--- Returns the existing namespace
---
--- FIXME: It would be better if this returned the current namespace,
--- so that we could implement a withnamespace function and simplify
--- the generation code accordingly. This would require FileRef being a
--- full data-accessor/lens type.
-setnamespace :: FileRef -> CppNamespace -> Gen ()
-setnamespace fl ns = do modify (fl setns)
-  where
-    setns fs = fs{fs_lines = ls ++ fs_lines fs,fs_namespace = ns}
-      where
-        ls | fs_namespace fs == ns = []
-           | length ids0 == 0 = open
-           | length ids1 == 0 = close
-           | otherwise = open ++ [""] ++ close
-        close = [ template "$1 // $2" [
-                  T.replicate (length ids0) "}",
-                  T.intercalate "::" ids0
-                  ] ]
-        open = [ template "namespace $1 {" [i] | i <- reverse ids1 ]
-        ids0 = unCppNamespace (fs_namespace fs)
-        ids1 = unCppNamespace ns
 
 -- Reference an include file from the given file
 include, includeStd :: FileRef -> FilePath -> Gen ()
@@ -259,9 +248,9 @@ includeModule fr mn = do
   let fp2 = ms_fileMapper ms mn
   include fr (fp2 ++ ".h")
 
-mkTemplate2 :: [Ident] -> CodeWriter ()
-mkTemplate2 [] = return ()
-mkTemplate2 tps = wt "template <$1>"
+genTemplate :: [Ident] -> CodeWriter ()
+genTemplate [] = return ()
+genTemplate tps = wt "template <$1>"
                   [T.intercalate ", " [T.concat ["class ",cTypeParamName tp] | tp <- tps]]
 
 addMarker :: v -> v -> v -> [a] -> [(v,a)]
@@ -283,12 +272,10 @@ commaSep = sepWithTerm "," ""
 
 declareOperators fr tparams ctnameP = do
   wl ""
-  mkTemplate2 tparams
+  genTemplate tparams
   wt "bool operator<( const $1 &a, const $1 &b );" [ctnameP]
-  mkTemplate2 tparams
+  genTemplate tparams
   wt "bool operator==( const $1 &a, const $1 &b );" [ctnameP]
-
-serialisationNamespace = CppNamespace ["ADL"]
 
 declareSerialisation tparams ms ctnameP = do
   let ns = ms_moduleMapper ms (ms_name ms)
@@ -296,7 +283,7 @@ declareSerialisation tparams ms ctnameP = do
   wl ""
   case tparams of
     [] -> wl "template <>"
-    _ -> mkTemplate2 tparams
+    _ -> genTemplate tparams
   wt "struct JsonV<$1>" [ctnameP1]
   dblock $ do
     wt "static void toJson( JsonWriter &json, const $1 & v );" [ctnameP1]
@@ -319,14 +306,15 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
 
-      -- cppfile2 is where we write definitions: the include file if
+      -- icfile is where we write definitions: the include file if
       -- parametrised, otherwise the cpp file
-      cppfile2 = if null (s_typeParams s) then cppfile else ifile
+      icfile = if null (s_typeParams s) then cppfile else ifile
+      icfileS = if null (s_typeParams s) then cppfileS else ifileS
 
   -- Class Declaration
   write ifile $ do        
     wl ""
-    mkTemplate2 (s_typeParams s)
+    genTemplate (s_typeParams s)
     wt "struct $1" [ctname]
     dblock $ do
        wt "$1();" [ctname]
@@ -342,17 +330,13 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
 
     declareOperators ifile (s_typeParams s) ctnameP
 
-  write ifile $ wl ""
-  setnamespace ifile serialisationNamespace
-  write ifile $ do        
+  write ifileS $ do
     declareSerialisation (s_typeParams s) ms ctnameP
-  write ifile $ wl ""
-  setnamespace ifile ns
 
-  write cppfile2 $ do
+  write icfile $ do
     -- Constructors
     wl ""
-    mkTemplate2 (s_typeParams s)
+    genTemplate (s_typeParams s)
     wt "$1::$2()" [ctnameP, ctname]
     indent $
       forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,f,t,_,litv)) -> do
@@ -360,7 +344,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
               wt "$1 $2($3)" [mark,fname,literalLValue litv]
     cblock $ return ()
     wl ""
-    mkTemplate2 (s_typeParams s)
+    genTemplate (s_typeParams s)
     wt "$1::$2(" [ctnameP,ctname]
     indent $ do
       forM_ (commaSep fts) $ \((fname, f,t,_,_),sep) -> do
@@ -372,7 +356,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
 
     -- Non-inline functions
     wl ""
-    mkTemplate2 (s_typeParams s)
+    genTemplate (s_typeParams s)
     wl "bool"
     wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do
@@ -381,20 +365,17 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
         wt "if( b.$1 < a.$1 ) return false;" [fname]
       wl "return false;"
     wl ""
-    mkTemplate2 (s_typeParams s)
+    genTemplate (s_typeParams s)
     wl "bool"
     wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do 
       wl "return"
       forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_,_),sep) -> do
         indent $ wt "a.$1 == b.$1 $2" [fname,sep]
-    wl ""
 
-  setnamespace cppfile2 serialisationNamespace
-
-  write cppfile2 $ do
+  write icfileS $ do
     wl ""
-    mkTemplate2 (s_typeParams s)
+    genTemplate (s_typeParams s)
     wl "void"
     wt "JsonV<$1::$2>::toJson( JsonWriter &json, const $1::$2 & v )" [formatText ns,ctnameP]
     cblock $ do
@@ -404,7 +385,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       wl "json.endObject();"
       return ()
     wl ""
-    mkTemplate2 (s_typeParams s)
+    genTemplate (s_typeParams s)
     wl "void"
     wt "JsonV<$1::$2>::fromJson( $1::$2 &v, JsonReader &json )" [formatText ns,ctnameP]
     cblock $ do
@@ -414,9 +395,6 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
         forM_ fts $ \(fname, f,_,scopedt,_) -> do
           wt "readField<$1>( v.$2, \"$3\", json ) ||" [scopedt,fname,f_name f]
         wl "ignoreField( json );"
-    wl ""
-
-  setnamespace cppfile2 ns
 
 generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   ms <- get
@@ -434,14 +412,15 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
 
-      -- cppfile2 is where we write definitions: the include file if
+      -- icfile is where we write definitions: the include file if
       -- parametrised, otherwise the cpp file
-      cppfile2 = if null (u_typeParams u) then cppfile else ifile
+      icfile = if null (u_typeParams u) then cppfile else ifile
+      icfileS = if null (u_typeParams u) then cppfileS else ifileS
 
   write ifile $ do
     -- The class declaration
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wt "class $1" [ctname]
     wl "{"
     wl "public:"
@@ -486,16 +465,12 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
 
     declareOperators ifile (u_typeParams u) ctnameP
 
-  write ifile $ wl ""
-  setnamespace ifile serialisationNamespace
-  write ifile $ do        
+  write ifileS $ do        
     declareSerialisation (u_typeParams u) ms ctnameP
-  write ifile $ wl ""
-  setnamespace ifile ns
 
   write ifile $ do
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     case u_typeParams u of
       [] ->  wt "inline $1::DiscType $1::d() const" [ctnameP]
       _ ->  wt "typename $1::DiscType $1::d() const" [ctnameP]
@@ -505,7 +480,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     forM_ fts $ \(f,t,_,_) -> do
       when (not $ isVoidType (f_type f)) $ do
         wl ""
-        mkTemplate2 (u_typeParams u)
+        genTemplate (u_typeParams u)
         wt "inline $1 & $2::$3() const" [t,ctnameP,cUnionAccessorName d f]
         cblock $ do
           wt "if( d_ == $1 )" [cUnionDiscName d f]
@@ -513,9 +488,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
             wt "return *($1 *)p_;" [t]
           wl "throw invalid_union_access();"
 
-  write cppfile2 $ do
+  write icfile $ do
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wt "$1::$2()" [ctnameP,ctname]
     -- FIXME :: Confirm that typechecker disallows empty unions, so the
     -- head below is ok.
@@ -529,7 +504,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     forM_ fts $ \(f,t,_,_) -> do
       let ctorName = cUnionConstructorName d f
       wl ""
-      mkTemplate2 (u_typeParams u)
+      genTemplate (u_typeParams u)
       if isVoidType (f_type f)
         then do
           wt "$1 $1::$2()" [ctnameP, ctorName ]
@@ -540,17 +515,17 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
           cblock $
             wt "return $1( $2, new $3(v) );" [ctnameP, cUnionDiscName d f,t]
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wt "$1::$2( const $1 & v )" [ctnameP,ctname]
     indent $ wl ": d_(v.d_), p_(copy(v.d_,v.p_))"
     cblock $ return ()
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wt "$1::~$2()" [ctnameP,ctname]
     cblock $ do
       wl "free(d_,p_);"
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wt "$1 & $1::operator=( const $1 & o )" [ctnameP]
     cblock $ do
       wl "free(d_,p_);"
@@ -559,7 +534,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
 
     forM_ fts $ \(f,t,_,_) -> do
       wl ""
-      mkTemplate2 (u_typeParams u)
+      genTemplate (u_typeParams u)
       if isVoidType (f_type f)
         then do
           wt "void $1::$2()" [ctnameP,cUnionSetterName d f]
@@ -584,13 +559,13 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
             wt "return *($1 *)p_;" [t]
 
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wt "$1::$2(DiscType d, void *p)" [ctnameP,ctname]
     indent $ wl ": d_(d), p_(p)"
     cblock $ return ()
 
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wt "void $1::free(DiscType d, void *p)" [ctnameP]
     cblock $ do
       wl "switch( d )"
@@ -602,7 +577,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
             else wt "case $1: delete ($2 *)p; return;"
                  [cUnionDiscName d f,t]
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wt "void * $1::copy( DiscType d, void *p )" [ctnameP]
     cblock $ do
       wl "switch( d )"
@@ -615,7 +590,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                  [cUnionDiscName d f,t]
 
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wl "bool"
     wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do
@@ -631,7 +606,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                  [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
 
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wl "bool"
     wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do 
@@ -644,13 +619,10 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                  [ctnameP,cUnionDiscName d f]
             else wt "case $1::$2: return a.$3() == b.$3();"
                  [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
-    wl ""
 
-  setnamespace cppfile2 serialisationNamespace
-
-  write cppfile2 $ do
+  write icfileS $ do
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     let ns = ms_moduleMapper ms (ms_name ms)
         scopedctnameP = template "$1::$2" [formatText ns,ctnameP]
     wl "void"
@@ -668,7 +640,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl "json.endObject();"
       return ()
     wl ""
-    mkTemplate2 (u_typeParams u)
+    genTemplate (u_typeParams u)
     wl "void"
     wt "JsonV<$1>::fromJson( $1 &v, JsonReader &json )" [scopedctnameP]
     cblock $ do
@@ -685,9 +657,6 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                 wt "v.$1(getFromJson<$2>( json ));" [cUnionSetterName d f,scopedt]
         wl "else"
         indent $ wl "throw json_parse_failure();"
-    wl ""
-
-  setnamespace cppfile2 ns
 
 generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
   ms <- get
@@ -707,7 +676,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
 
   write ifile $ do
     wl ""
-    mkTemplate2 tparams
+    genTemplate tparams
     wt "struct $1" [ctname]
     dblock $ do
        if literalIsDefault litv
@@ -718,19 +687,16 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
        wl ""
        wt "$1 value;" [t]
     wl ""
-    mkTemplate2 tparams
+    genTemplate tparams
     wt "bool operator<( const $1 &a, const $1 &b ) { return a.value < b.value; }" [ctnameP]
-    mkTemplate2 tparams
+    genTemplate tparams
     wt "bool operator==( const $1 &a, const $1 &b ) { return a.value == b.value; }" [ctnameP]
-    wl ""
 
-  setnamespace ifile serialisationNamespace
-
-  write ifile $ do
+  write ifileS $ do
     wl ""
     case tparams of
       [] -> wl "template <>"
-      _ -> mkTemplate2 tparams
+      _ -> genTemplate tparams
     wt "struct JsonV<$1>" [ctnameP1]
     dblock $ do
       wt "static void toJson( JsonWriter &json, const $1 & v )" [ctnameP1]
@@ -740,15 +706,14 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
       wt "static void fromJson( $1 &v, JsonReader &json )" [ctnameP1]
       cblock $ do
         wt "JsonV<$1>::fromJson( v.value, json );" [scopedt]
-    wl ""
 
-  setnamespace ifile ns
+--  setnamespace ifile ns
 
 generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr False (t_typeExpr t)
   write ifile $ do
     wl ""
-    mkTemplate2 (t_typeParams t)
+    genTemplate (t_typeParams t)
     wt "using $1 = $2;" [cTypeName dn, te]
 
 localTypes :: TypeExpr ResolvedType -> Set.Set Ident
@@ -792,15 +757,11 @@ generateCustomType n d ct = do
       wl ""
       mapM_ wl (ct_declarationCode ct)
 
-  -- Insert the user supplied code
+  -- Insert the user supplied serialisation code
   when (not (null (ct_serialisationCode ct))) $ do
-    write ifile $ wl ""
-    setnamespace ifile serialisationNamespace
-    write ifile $ do
+    write ifileS $ do
       wl ""
       mapM_ wl (ct_serialisationCode ct)
-    write ifile $ wl ""
-    setnamespace ifile (ms_moduleMapper ms (ms_name ms)) 
 
 generateModule :: Module ResolvedType -> Gen ()
 generateModule m = do
@@ -819,13 +780,13 @@ generateModule m = do
 
    includeStd ifile "adl/adl.h"
    includeModule cppfile mname
-   setnamespace ifile (ms_moduleMapper ms mname) 
-   setnamespace cppfile (ms_moduleMapper ms mname) 
+--   setnamespace ifile (ms_moduleMapper ms mname) 
+--   setnamespace cppfile (ms_moduleMapper ms mname) 
 
    mapM_ genDecl sortedDecls
 
-   setnamespace ifile (CppNamespace [])
-   setnamespace cppfile (CppNamespace [])
+--   setnamespace ifile (CppNamespace [])
+--   setnamespace cppfile (CppNamespace [])
 
 -- | Generate the c++ code for an ADL module into files.
 -- The call @writeModuleFile uo mNamespace mFile module@ will use
@@ -840,12 +801,16 @@ writeModuleFile :: (ModuleName -> CppNamespace) ->
                    Module ResolvedType ->
                    EIO a ()
 writeModuleFile mNamespace mFile customTypes fileWriter m = do
-  let fs = FState Set.empty "" [] (CppNamespace [])
-      s0 = MState (m_name m) mNamespace mFile customTypes fs fs
+  let fs0 = FState Set.empty  [] (mNamespace (m_name m))
+      fs1 = FState Set.empty  [] (CppNamespace ["ADL"])
+      s0 = MState (m_name m) mNamespace mFile customTypes fs0 fs1 fs0 fs1
       fp =  mFile (m_name m)
       s1 = execState (generateModule m) s0
-  liftIO $ fileWriter (fp ++ ".h") (fileText (ms_incFile s1))
-  liftIO $ fileWriter (fp ++ ".cpp") (fileText (ms_cppFile s1))
+      ifileElements = [ms_incFileUserModule s1,ms_incFileSerialisation s1]
+      cppfileElements = [ms_cppFileUserModule s1,ms_cppFileSerialisation s1]
+      
+  liftIO $ fileWriter (fp ++ ".h") (fileText ifileElements)
+  liftIO $ fileWriter (fp ++ ".cpp") (fileText cppfileElements)
 
 data CppFlags = CppFlags {
   -- directories where we look for ADL files

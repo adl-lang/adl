@@ -24,22 +24,6 @@ struct A
 bool operator<( const A &a, const A &b );
 bool operator==( const A &a, const A &b );
 
-}} // ADL::test
-
-namespace ADL {
-
-template <>
-struct JsonV<ADL::test::A>
-{
-    static void toJson( JsonWriter &json, const ADL::test::A & v );
-    static void fromJson( ADL::test::A &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace test {
-
 class U
 {
 public:
@@ -76,22 +60,6 @@ private:
 
 bool operator<( const U &a, const U &b );
 bool operator==( const U &a, const U &b );
-
-}} // ADL::test
-
-namespace ADL {
-
-template <>
-struct JsonV<ADL::test::U>
-{
-    static void toJson( JsonWriter &json, const ADL::test::U & v );
-    static void fromJson( ADL::test::U &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace test {
 
 inline U::DiscType U::d() const
 {
@@ -135,22 +103,6 @@ bool operator<( const XY<T> &a, const XY<T> &b );
 template <class T>
 bool operator==( const XY<T> &a, const XY<T> &b );
 
-}} // ADL::test
-
-namespace ADL {
-
-template <class T>
-struct JsonV<ADL::test::XY<T>>
-{
-    static void toJson( JsonWriter &json, const ADL::test::XY<T> & v );
-    static void fromJson( ADL::test::XY<T> &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace test {
-
 template <class T>
 XY<T>::XY()
 {
@@ -186,38 +138,6 @@ operator==( const XY<T> &a, const XY<T> &b )
         a.y == b.y ;
 }
 
-}} // ADL::test
-
-namespace ADL {
-
-template <class T>
-void
-JsonV<ADL::test::XY<T>>::toJson( JsonWriter &json, const ADL::test::XY<T> & v )
-{
-    json.startObject();
-    writeField<T>( json, "x", v.x );
-    writeField<T>( json, "y", v.y );
-    json.endObject();
-}
-
-template <class T>
-void
-JsonV<ADL::test::XY<T>>::fromJson( ADL::test::XY<T> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        readField<T>( v.x, "x", json ) ||
-        readField<T>( v.y, "y", json ) ||
-        ignoreField( json );
-    }
-}
-
-} // ADL
-
-namespace ADL {
-namespace test {
-
 template <class T>
 struct B
 {
@@ -240,22 +160,6 @@ template <class T>
 bool operator<( const B<T> &a, const B<T> &b );
 template <class T>
 bool operator==( const B<T> &a, const B<T> &b );
-
-}} // ADL::test
-
-namespace ADL {
-
-template <class T>
-struct JsonV<ADL::test::B<T>>
-{
-    static void toJson( JsonWriter &json, const ADL::test::B<T> & v );
-    static void fromJson( ADL::test::B<T> &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace test {
 
 template <class T>
 B<T>::B()
@@ -301,42 +205,6 @@ operator==( const B<T> &a, const B<T> &b )
         a.f_tvec == b.f_tvec &&
         a.f_xy == b.f_xy ;
 }
-
-}} // ADL::test
-
-namespace ADL {
-
-template <class T>
-void
-JsonV<ADL::test::B<T>>::toJson( JsonWriter &json, const ADL::test::B<T> & v )
-{
-    json.startObject();
-    writeField<T>( json, "f_t", v.f_t );
-    writeField<std::string>( json, "f_string", v.f_string );
-    writeField<std::vector<T> >( json, "f_tvec", v.f_tvec );
-    writeField<ADL::test::XY<T> >( json, "f_xy", v.f_xy );
-    json.endObject();
-}
-
-template <class T>
-void
-JsonV<ADL::test::B<T>>::fromJson( ADL::test::B<T> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        readField<T>( v.f_t, "f_t", json ) ||
-        readField<std::string>( v.f_string, "f_string", json ) ||
-        readField<std::vector<T> >( v.f_tvec, "f_tvec", json ) ||
-        readField<ADL::test::XY<T> >( v.f_xy, "f_xy", json ) ||
-        ignoreField( json );
-    }
-}
-
-} // ADL
-
-namespace ADL {
-namespace test {
 
 template <class T>
 struct S
@@ -390,22 +258,6 @@ template <class T>
 bool operator<( const S<T> &a, const S<T> &b );
 template <class T>
 bool operator==( const S<T> &a, const S<T> &b );
-
-}} // ADL::test
-
-namespace ADL {
-
-template <class T>
-struct JsonV<ADL::test::S<T>>
-{
-    static void toJson( JsonWriter &json, const ADL::test::S<T> & v );
-    static void fromJson( ADL::test::S<T> &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace test {
 
 template <class T>
 S<T>::S()
@@ -545,9 +397,94 @@ operator==( const S<T> &a, const S<T> &b )
         a.f_bint16 == b.f_bint16 ;
 }
 
-}} // ADL::test
+}}; // ADL::test
 
 namespace ADL {
+
+template <>
+struct JsonV<ADL::test::A>
+{
+    static void toJson( JsonWriter &json, const ADL::test::A & v );
+    static void fromJson( ADL::test::A &v, JsonReader &json );
+};
+
+template <>
+struct JsonV<ADL::test::U>
+{
+    static void toJson( JsonWriter &json, const ADL::test::U & v );
+    static void fromJson( ADL::test::U &v, JsonReader &json );
+};
+
+template <class T>
+struct JsonV<ADL::test::XY<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::test::XY<T> & v );
+    static void fromJson( ADL::test::XY<T> &v, JsonReader &json );
+};
+
+template <class T>
+void
+JsonV<ADL::test::XY<T>>::toJson( JsonWriter &json, const ADL::test::XY<T> & v )
+{
+    json.startObject();
+    writeField<T>( json, "x", v.x );
+    writeField<T>( json, "y", v.y );
+    json.endObject();
+}
+
+template <class T>
+void
+JsonV<ADL::test::XY<T>>::fromJson( ADL::test::XY<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( !match0( json, JsonReader::END_OBJECT ) )
+    {
+        readField<T>( v.x, "x", json ) ||
+        readField<T>( v.y, "y", json ) ||
+        ignoreField( json );
+    }
+}
+
+template <class T>
+struct JsonV<ADL::test::B<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::test::B<T> & v );
+    static void fromJson( ADL::test::B<T> &v, JsonReader &json );
+};
+
+template <class T>
+void
+JsonV<ADL::test::B<T>>::toJson( JsonWriter &json, const ADL::test::B<T> & v )
+{
+    json.startObject();
+    writeField<T>( json, "f_t", v.f_t );
+    writeField<std::string>( json, "f_string", v.f_string );
+    writeField<std::vector<T> >( json, "f_tvec", v.f_tvec );
+    writeField<ADL::test::XY<T> >( json, "f_xy", v.f_xy );
+    json.endObject();
+}
+
+template <class T>
+void
+JsonV<ADL::test::B<T>>::fromJson( ADL::test::B<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( !match0( json, JsonReader::END_OBJECT ) )
+    {
+        readField<T>( v.f_t, "f_t", json ) ||
+        readField<std::string>( v.f_string, "f_string", json ) ||
+        readField<std::vector<T> >( v.f_tvec, "f_tvec", json ) ||
+        readField<ADL::test::XY<T> >( v.f_xy, "f_xy", json ) ||
+        ignoreField( json );
+    }
+}
+
+template <class T>
+struct JsonV<ADL::test::S<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::test::S<T> & v );
+    static void fromJson( ADL::test::S<T> &v, JsonReader &json );
+};
 
 template <class T>
 void
@@ -606,8 +543,4 @@ JsonV<ADL::test::S<T>>::fromJson( ADL::test::S<T> &v, JsonReader &json )
     }
 }
 
-} // ADL
-
-namespace ADL {
-namespace test {
-}} // ADL::test
+}; // ADL

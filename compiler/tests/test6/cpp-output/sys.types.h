@@ -48,23 +48,6 @@ bool operator<( const Either<T1,T2> &a, const Either<T1,T2> &b );
 template <class T1, class T2>
 bool operator==( const Either<T1,T2> &a, const Either<T1,T2> &b );
 
-}}} // ADL::sys::types
-
-namespace ADL {
-
-template <class T1, class T2>
-struct JsonV<ADL::sys::types::Either<T1,T2>>
-{
-    static void toJson( JsonWriter &json, const ADL::sys::types::Either<T1,T2> & v );
-    static void fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
-
 template <class T1, class T2>
 typename Either<T1,T2>::DiscType Either<T1,T2>::d() const
 {
@@ -212,45 +195,6 @@ operator==( const Either<T1,T2> &a, const Either<T1,T2> &b )
     }
 }
 
-}}} // ADL::sys::types
-
-namespace ADL {
-
-template <class T1, class T2>
-void
-JsonV<ADL::sys::types::Either<T1,T2>>::toJson( JsonWriter &json, const ADL::sys::types::Either<T1,T2> & v )
-{
-    json.startObject();
-    switch( v.d() )
-    {
-        case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, "left", v.left() ); break;
-        case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, "right", v.right() ); break;
-    }
-    json.endObject();
-}
-
-template <class T1, class T2>
-void
-JsonV<ADL::sys::types::Either<T1,T2>>::fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "left", json ) )
-            v.set_left(getFromJson<T1>( json ));
-        else if( matchField0( "right", json ) )
-            v.set_right(getFromJson<T2>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
-
 template <class T>
 class Error
 {
@@ -290,23 +234,6 @@ template <class T>
 bool operator<( const Error<T> &a, const Error<T> &b );
 template <class T>
 bool operator==( const Error<T> &a, const Error<T> &b );
-
-}}} // ADL::sys::types
-
-namespace ADL {
-
-template <class T>
-struct JsonV<ADL::sys::types::Error<T>>
-{
-    static void toJson( JsonWriter &json, const ADL::sys::types::Error<T> & v );
-    static void fromJson( ADL::sys::types::Error<T> &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
 
 template <class T>
 typename Error<T>::DiscType Error<T>::d() const
@@ -455,45 +382,6 @@ operator==( const Error<T> &a, const Error<T> &b )
     }
 }
 
-}}} // ADL::sys::types
-
-namespace ADL {
-
-template <class T>
-void
-JsonV<ADL::sys::types::Error<T>>::toJson( JsonWriter &json, const ADL::sys::types::Error<T> & v )
-{
-    json.startObject();
-    switch( v.d() )
-    {
-        case ADL::sys::types::Error<T>::VALUE: writeField( json, "value", v.value() ); break;
-        case ADL::sys::types::Error<T>::ERROR: writeField( json, "error", v.error() ); break;
-    }
-    json.endObject();
-}
-
-template <class T>
-void
-JsonV<ADL::sys::types::Error<T>>::fromJson( ADL::sys::types::Error<T> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "value", json ) )
-            v.set_value(getFromJson<T>( json ));
-        else if( matchField0( "error", json ) )
-            v.set_error(getFromJson<std::string>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
-
 template <class T>
 class Maybe
 {
@@ -532,23 +420,6 @@ template <class T>
 bool operator<( const Maybe<T> &a, const Maybe<T> &b );
 template <class T>
 bool operator==( const Maybe<T> &a, const Maybe<T> &b );
-
-}}} // ADL::sys::types
-
-namespace ADL {
-
-template <class T>
-struct JsonV<ADL::sys::types::Maybe<T>>
-{
-    static void toJson( JsonWriter &json, const ADL::sys::types::Maybe<T> & v );
-    static void fromJson( ADL::sys::types::Maybe<T> &v, JsonReader &json );
-};
-
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
 
 template <class T>
 typename Maybe<T>::DiscType Maybe<T>::d() const
@@ -682,9 +553,103 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
     }
 }
 
-}}} // ADL::sys::types
+// Pair excluded due to custom definition
+
+template <class A, class B>
+using Pair = std::pair<A,B>;
+
+// Set excluded due to custom definition
+
+template <class A>
+using Set = std::set<A>;
+
+// Map excluded due to custom definition
+
+template <class K, class V>
+using Map = std::map<K,V>;
+
+}}}; // ADL::sys::types
 
 namespace ADL {
+
+template <class T1, class T2>
+struct JsonV<ADL::sys::types::Either<T1,T2>>
+{
+    static void toJson( JsonWriter &json, const ADL::sys::types::Either<T1,T2> & v );
+    static void fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json );
+};
+
+template <class T1, class T2>
+void
+JsonV<ADL::sys::types::Either<T1,T2>>::toJson( JsonWriter &json, const ADL::sys::types::Either<T1,T2> & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, "left", v.left() ); break;
+        case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, "right", v.right() ); break;
+    }
+    json.endObject();
+}
+
+template <class T1, class T2>
+void
+JsonV<ADL::sys::types::Either<T1,T2>>::fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( !match0( json, JsonReader::END_OBJECT ) )
+    {
+        if( matchField0( "left", json ) )
+            v.set_left(getFromJson<T1>( json ));
+        else if( matchField0( "right", json ) )
+            v.set_right(getFromJson<T2>( json ));
+        else
+            throw json_parse_failure();
+    }
+}
+
+template <class T>
+struct JsonV<ADL::sys::types::Error<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::sys::types::Error<T> & v );
+    static void fromJson( ADL::sys::types::Error<T> &v, JsonReader &json );
+};
+
+template <class T>
+void
+JsonV<ADL::sys::types::Error<T>>::toJson( JsonWriter &json, const ADL::sys::types::Error<T> & v )
+{
+    json.startObject();
+    switch( v.d() )
+    {
+        case ADL::sys::types::Error<T>::VALUE: writeField( json, "value", v.value() ); break;
+        case ADL::sys::types::Error<T>::ERROR: writeField( json, "error", v.error() ); break;
+    }
+    json.endObject();
+}
+
+template <class T>
+void
+JsonV<ADL::sys::types::Error<T>>::fromJson( ADL::sys::types::Error<T> &v, JsonReader &json )
+{
+    match( json, JsonReader::START_OBJECT );
+    while( !match0( json, JsonReader::END_OBJECT ) )
+    {
+        if( matchField0( "value", json ) )
+            v.set_value(getFromJson<T>( json ));
+        else if( matchField0( "error", json ) )
+            v.set_error(getFromJson<std::string>( json ));
+        else
+            throw json_parse_failure();
+    }
+}
+
+template <class T>
+struct JsonV<ADL::sys::types::Maybe<T>>
+{
+    static void toJson( JsonWriter &json, const ADL::sys::types::Maybe<T> & v );
+    static void fromJson( ADL::sys::types::Maybe<T> &v, JsonReader &json );
+};
 
 template <class T>
 void
@@ -715,21 +680,6 @@ JsonV<ADL::sys::types::Maybe<T>>::fromJson( ADL::sys::types::Maybe<T> &v, JsonRe
     }
 }
 
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
-
-// Pair excluded due to custom definition
-
-template <class A, class B>
-using Pair = std::pair<A,B>;
-
-}}} // ADL::sys::types
-
-namespace ADL {
-
 template <class A,class B>
 struct JsonV<std::pair<A,B>>
 {
@@ -753,21 +703,6 @@ struct JsonV<std::pair<A,B>>
     }
 };
 
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
-
-// Set excluded due to custom definition
-
-template <class A>
-using Set = std::set<A>;
-
-}}} // ADL::sys::types
-
-namespace ADL {
-
 template <class A>
 struct JsonV<std::set<A>>
 {
@@ -787,21 +722,6 @@ struct JsonV<std::set<A>>
     }
 
 };
-
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
-
-// Map excluded due to custom definition
-
-template <class K, class V>
-using Map = std::map<K,V>;
-
-}}} // ADL::sys::types
-
-namespace ADL {
 
 template <class K,class V>
 struct JsonV<std::map<K,V>>
@@ -826,9 +746,4 @@ struct JsonV<std::map<K,V>>
     }
 };
 
-} // ADL
-
-namespace ADL {
-namespace sys {
-namespace types {
-}}} // ADL::sys::types
+}; // ADL

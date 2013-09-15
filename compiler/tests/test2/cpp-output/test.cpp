@@ -35,7 +35,7 @@ operator==( const S1 &a, const S1 &b )
         a.y == b.y ;
 }
 
-}} // ADL::test
+}}; // ADL::test
 
 namespace ADL {
 
@@ -60,8 +60,4 @@ JsonV<ADL::test::S1>::fromJson( ADL::test::S1 &v, JsonReader &json )
     }
 }
 
-} // ADL
-
-namespace ADL {
-namespace test {
-}} // ADL::test
+}; // ADL
