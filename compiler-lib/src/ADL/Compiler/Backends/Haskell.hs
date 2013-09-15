@@ -293,7 +293,7 @@ generateDecl lname d@(Decl{d_type=(Decl_Typedef t)}) = do
     wt "type $1$2 = $3" [lname,hTParams (t_typeParams t),ts]
 
 generateDecl lname d@(Decl{d_type=(Decl_Newtype n)}) = do
-    addExport lname
+    addExport (template "$1(..)" [lname])
     mn <- fmap ms_name get
     ts <- hTypeExpr (n_typeExpr n)
     wt "newtype $1$2 = $1 $3" [lname,hTParams (n_typeParams n),ts]

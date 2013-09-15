@@ -10,17 +10,14 @@ namespace test {
 
 struct DateO
 {
-    DateO();
+    DateO() : value("1900-01-01") {}
+    explicit DateO(const std::string & v) : value(v) {}
     
-    DateO(
-        const std::string & date
-        );
-    
-    std::string date;
+    std::string value;
 };
 
-bool operator<( const DateO &a, const DateO &b );
-bool operator==( const DateO &a, const DateO &b );
+bool operator<( const DateO &a, const DateO &b ) { return a.value < b.value; }
+bool operator==( const DateO &a, const DateO &b ) { return a.value == b.value; }
 
 struct S
 {
@@ -43,8 +40,15 @@ namespace ADL {
 template <>
 struct JsonV<ADL::test::DateO>
 {
-    static void toJson( JsonWriter &json, const ADL::test::DateO & v );
-    static void fromJson( ADL::test::DateO &v, JsonReader &json );
+    static void toJson( JsonWriter &json, const ADL::test::DateO & v )
+    {
+        JsonV<std::string>::toJson( json, v.value );
+    }
+    
+    static void fromJson( ADL::test::DateO &v, JsonReader &json )
+    {
+        JsonV<std::string>::fromJson( v.value, json );
+    }
 };
 
 template <>

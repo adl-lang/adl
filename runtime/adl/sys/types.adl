@@ -26,8 +26,8 @@ union Error<T>
     String error;
 };
 
-type Map<K,V> = Vector<Pair<K,V>>;
+newtype Map<K,V> = Vector<Pair<K,V>>;
 
-type Set<T> = Vector<T>;
+newtype Set<T> = Vector<T>;
 
 };

@@ -6,17 +6,10 @@ module examples.datetime
 
 // A date in ISO format (ie YYYY-MM-DD )
 //
-struct Date
-{
-    String date = "1900-01-01";
-};
+newtype Date = String = "1900-01-01";
 
 // A UTC timestamp in ISO format (ie YYYY-MM-DDTHH:MM:SSZ )
 //
-struct UTCTime
-{
-    String utctime = "1900-01-01T00:00:00Z";
-};
-
+newtype UTCTime = String = "1900-01-01T00:00:00Z";
 
 };

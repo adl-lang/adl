@@ -30,24 +30,14 @@ instance ADLValue Day where
   aToJSON jf d = aToJSON jf (fromDate d)
   afromJSON jf jv = (aFromJSON jf jv) >>= toDate
 
-data DateO = DateO
-    { date_date :: T.Text
-    }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+newtype DateO = DateO T.Text
 
 instance ADLValue DateO where
     atype _ = "test.Date"
     
-    defaultv = DateO
-        "1900-01-01"
-    
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("date",aToJSON f (date_date v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = DateO
-        <$> fieldFromJSON f "date" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    defaultv = DateO "1900-01-01"
+    aToJSON f (DateO v) = aToJSON f v
+    aFromJSON f o = Prelude.fmap DateO (aFromJSON f o)
 
 data S = S
     { s_v1 :: Date

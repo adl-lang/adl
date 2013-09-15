@@ -1,11 +1,10 @@
 module test
 {
 
-struct Date
-{
-    // A date in ISO format
-    String date = "1900-01-01";
-};
+// This will be a custom type which serialises as a ISO formatted date
+// stream.
+
+newtype Date = String = "1900-01-01";
 
 struct S
 {
