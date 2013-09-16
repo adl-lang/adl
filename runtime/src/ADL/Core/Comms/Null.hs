@@ -7,10 +7,11 @@ module ADL.Core.Comms.Null(
 import qualified Data.Text as T
 import qualified System.Log.Logger as L
 
+import ADL.Sys.Sinkimpl
 import ADL.Core.Comms.Types
 
-transportName :: T.Text
-transportName = "null"
+transportName :: TransportName
+transportName = TransportName "null"
 
 transport :: Transport
 transport = Transport

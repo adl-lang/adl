@@ -5,7 +5,8 @@ module ADL.Test(
     S(..),
 ) where
 
-import ADL.Core
+import ADL.Core.Primitives
+import ADL.Core.Value
 import Control.Applicative( (<$>), (<*>) )
 import Data.Time.Calendar(Day)
 import Data.Time.Format(parseTime,formatTime)
@@ -30,7 +31,8 @@ instance ADLValue Day where
   aToJSON jf d = aToJSON jf (fromDate d)
   afromJSON jf jv = (aFromJSON jf jv) >>= toDate
 
-newtype DateO = DateO T.Text
+newtype DateO = DateO { unDateO :: T.Text }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance ADLValue DateO where
     atype _ = "test.Date"

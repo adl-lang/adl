@@ -94,7 +94,7 @@ main :: IO ()
 main = defaultMain tests
 
 stdsrc = "../../runtime/adl"
-stdfiles = ["../../runtime/adl/sys/types.adl", "../../runtime/adl/sys/rpc.adl"]
+stdfiles = ["../../runtime/adl/sys/types.adl", "../../runtime/adl/sys/rpc.adl", "../../runtime/adl/sys/sinkimpl.adl"]
 
 tests =
   [ testHsBackend "hs.1 empty module" "test1/input" ["test1/input/test.adl"] "test1/hs-output" []

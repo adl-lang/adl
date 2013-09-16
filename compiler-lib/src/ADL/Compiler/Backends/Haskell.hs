@@ -167,7 +167,9 @@ hPrimitiveType P_Double = return "Prelude.Double"
 hPrimitiveType P_ByteVector = importByteString >> return "B.ByteString"
 hPrimitiveType P_Vector = return "[]" -- never called
 hPrimitiveType P_String = importText >> return "T.Text"
-hPrimitiveType P_Sink = return "Sink"
+hPrimitiveType P_Sink = do
+  importModule (HaskellModule "ADL.Core.Sink")
+  return "Sink"
 
 hPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
 hPrimitiveLiteral P_Void JSON.Null = "()"
@@ -296,7 +298,8 @@ generateDecl lname d@(Decl{d_type=(Decl_Newtype n)}) = do
     addExport (template "$1(..)" [lname])
     mn <- fmap ms_name get
     ts <- hTypeExpr (n_typeExpr n)
-    wt "newtype $1$2 = $1 $3" [lname,hTParams (n_typeParams n),ts]
+    wt "newtype $1$2 = $1 { un$1 :: $3 }" [lname,hTParams (n_typeParams n),ts]
+    indent $ derivingStdClasses
     nl
     generateNewtypeADLInstance lname mn d n
 
@@ -403,6 +406,7 @@ generateLiteral te v =  generateLV Map.empty te v
       (Decl_Struct s) -> generateStruct m te0 decl s tes v
       (Decl_Union u) -> generateUnion m decl u tes v 
       (Decl_Typedef t) -> generateTypedef m decl t tes v
+      (Decl_Newtype n) -> generateNewtype m decl n tes v
     generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
          (Just te) -> generateLV m te v
 
@@ -442,6 +446,12 @@ generateLiteral te v =  generateLV Map.empty te v
       where
         m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
 
+    generateNewtype m d n tes v = do
+      lit <- generateLV m2 (n_typeExpr n) v
+      return (template "($1 $2)" [hTypeName (d_name d),lit])
+      where
+        m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
+
 generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> HGen ()
 generateCustomType n d ct = do
   -- imports and exports
@@ -467,7 +477,8 @@ generateModule m = do
   addLanguageFeature "OverloadedStrings"
   addImport "import qualified Prelude"
   addImport "import Control.Applicative( (<$>), (<*>) )"
-  importModule (HaskellModule "ADL.Core")
+  importModule (HaskellModule "ADL.Core.Value")
+  importModule (HaskellModule "ADL.Core.Primitives")
   importQualifiedModuleAs (HaskellModule "Data.Aeson") "JSON"
   importQualifiedModuleAs (HaskellModule "Data.HashMap.Strict") "HM"
 

@@ -267,7 +267,7 @@ struct JsonV<std::vector<T>>
     {
         match( json, JsonReader::START_ARRAY );
         while( !match0( json, JsonReader::END_ARRAY ) )
-            v.push_back(JsonV<T>::getFromJson( json ));
+            v.push_back(getFromJson<T>( json ));
     }
 };
 

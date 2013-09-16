@@ -21,7 +21,7 @@ library
                        ADL.Core.Comms.Types,
                        ADL.Core.Comms.Null,
                        ADL.Core.Comms.Rpc,
-                       ADL.Sys.Types, ADL.Sys.Rpc
+                       ADL.Sys.Types, ADL.Sys.Rpc, ADL.Sys.Sinkimpl
   build-depends:       base, text, containers, bytestring,
                        parsec, mtl, transformers,
                        adl-utils,

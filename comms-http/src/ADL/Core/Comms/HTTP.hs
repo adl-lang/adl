@@ -38,6 +38,8 @@ import ADL.Utils.Format
 import ADL.Core.Value
 import ADL.Core.Sink
 
+import ADL.Sys.Sinkimpl
+
 import qualified ADL.Core.Comms.Types as CT
 import qualified ADL.Core.Comms.Internals as CT
 
@@ -52,6 +54,21 @@ data Addr = Addr {
   httpPath :: T.Text
 }
 
+encodeAddr :: Addr -> TransportAddr
+encodeAddr addr = TransportAddr_arrayv [
+  TransportAddr_stringv (T.pack (httpHost addr)),
+  TransportAddr_intv (fromIntegral (httpPort addr)),
+  TransportAddr_stringv (httpPath addr)
+  ]
+
+decodeAddr :: TransportAddr -> Maybe Addr
+decodeAddr (TransportAddr_arrayv [
+  TransportAddr_stringv host,
+  TransportAddr_intv port,
+  TransportAddr_stringv path
+  ]) = Just (Addr (T.unpack host) (fromIntegral port) path)
+decodeAddr _ = Nothing
+
 instance ToJSON Addr where
    toJSON (Addr host port path) = JSON.toJSON (host,port,path)
 
@@ -60,7 +77,7 @@ instance FromJSON Addr where
                  in fmap mkAddr (JSON.parseJSON v)
 
 transportName :: TransportName
-transportName = "http"
+transportName = TransportName "http"
 
 newTransport :: CT.Context -> IO Transport
 newTransport c = do
@@ -168,7 +185,7 @@ newEndPoint1 eport = do
 
       debugM "New sink at http://$1:$2/$3" [T.pack hostname, fshow port,sid]
 
-      let addr = (JSON.toJSON (Addr hostname port sid))
+      let addr = encodeAddr (Addr hostname port sid)
       atomically $ modifyTVar sinksv (Map.insert sid handler)
       return (transportName,addr,(closef sid))
       where
@@ -185,9 +202,9 @@ newEndPoint1 eport = do
 -- | Create a new connection to a remote sink
 connect1 ::  HC.Manager -> TransportAddr -> IO (Either CT.ConnectError CT.Connection)
 connect1 manager addr = do
-  case JSON.fromJSON addr of
-    (JSON.Error _) -> return (Left (CT.TransportError CT.ConnectFailed "Unable to parse HTTP Address"))
-    (JSON.Success addr1) -> return (Right (CT.Connection (send addr1) close))
+  case decodeAddr addr of
+    Nothing -> return (Left (CT.TransportError CT.ConnectFailed "Unable to parse HTTP Address"))
+    (Just addr1) -> return (Right (CT.Connection (send addr1) close))
   where
     send :: Addr -> LBS.ByteString -> IO (Either CT.SendError ())
     send addr1 = \lbs -> do

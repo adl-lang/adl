@@ -900,6 +900,7 @@ mkLiteral te jv = mk Map.empty te jv
       (Decl_Struct s) -> mkStruct m te0 decl s tes jv
       (Decl_Union u) -> mkUnion m te0 decl u tes jv 
       (Decl_Typedef t) -> mkTypedef m decl t tes jv
+      (Decl_Newtype n) -> mkNewType m te0 decl n tes jv
 
     mkVec m te (JSON.Array v) = do
       t <- cTypeExprB False m te
@@ -930,6 +931,13 @@ mkLiteral te jv = mk Map.empty te jv
     mkTypedef m d t tes v = mk m2 (t_typeExpr t) v
       where
         m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
+
+    mkNewType m te0 d n tes v = do
+      t <- cTypeExprB False m te0
+      lv <- mk m2 (n_typeExpr n) v
+      return (LCtor t [lv])
+      where
+        m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
 literalLValue :: Literal -> T.Text
 literalLValue (LDefault t) = template "$1()" [t]

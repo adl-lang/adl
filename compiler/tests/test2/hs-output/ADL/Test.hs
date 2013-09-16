@@ -5,7 +5,8 @@ module ADL.Test(
     Tree(..),
 ) where
 
-import ADL.Core
+import ADL.Core.Primitives
+import ADL.Core.Value
 import Control.Applicative( (<$>), (<*>) )
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM

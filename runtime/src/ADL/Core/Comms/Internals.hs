@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings, Rank2Types, ScopedTypeVariables #-}
 module ADL.Core.Comms.Internals where
 
 import Control.Concurrent.STM
@@ -12,6 +12,9 @@ import ADL.Core.Value
 import ADL.Core.Sink
 import ADL.Core.Comms.Types
 import ADL.Core.Comms.Serialisation
+
+import ADL.Sys.Sinkimpl
+
 import qualified ADL.Core.Comms.Null as Null
 
 import qualified System.Log.Logger as L
@@ -43,15 +46,15 @@ instance Resource Context where
 -- transport for the sink will be used - an error will result if the
 -- sinks transport has not been configured.
 connect :: (ADLValue a) => Context -> Sink a -> IO (Either ConnectError (SinkConnection a))
-connect (Context mv) s = do
+connect (Context mv) (Sink sd) = do
   m <- atomically $ readTVar mv
-  case Map.lookup (s_transport s) m of
-    Nothing -> return (Left (TransportError NoTransport ("No transport for " ++ T.unpack (s_transport s))))
+  case Map.lookup (sinkData_transport sd) m of
+    Nothing -> return (Left (TransportError NoTransport ("No transport for " ++ T.unpack (unTransportName (sinkData_transport sd)))))
     (Just t) -> do
-      ec <- t_connect t (s_addr s)
+      ec <- t_connect t (sinkData_address sd)
       case ec of
          Left e -> return (Left e)
-         Right c -> fmap Right (mkSinkConnection (s_serialisation s) c)
+         Right c -> fmap Right (mkSinkConnection (sinkData_serialisation sd) c)
       
 
 -- | Add a boolean state variable to a connection to generate
@@ -86,14 +89,14 @@ mkSinkConnection serType c = do
 newLocalSink :: forall a . (ADLValue a) => EndPoint -> Maybe SinkID -> (a -> IO ()) -> IO (LocalSink a)
 newLocalSink ep msid handler =  do
      (transport,addr,closef) <- ep_newRawSink ep msid rawHandler
-     return (LocalSink (Sink transport addr serType) closef)
+     return (LocalSink (Sink (SinkData transport addr serType)) closef)
   where
     rawHandler :: LBS.ByteString -> IO ()
     rawHandler lbs = case deserialise serType lbs of
       (Left emsg) -> L.errorM logger ("Failed to deserialise message: " ++ emsg)
       (Right a) -> handler a
 
-    serType = S_JSON
+    serType = SerialisationType "json"
 
 logger :: String
 logger = "ADL.Core.Comms.Internals"
