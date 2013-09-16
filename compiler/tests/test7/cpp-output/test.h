@@ -15,7 +15,9 @@ struct Int2
     int64_t value;
 };
 
+inline
 bool operator<( const Int2 &a, const Int2 &b ) { return a.value < b.value; }
+inline
 bool operator==( const Int2 &a, const Int2 &b ) { return a.value == b.value; }
 
 struct Int3
@@ -26,7 +28,9 @@ struct Int3
     int64_t value;
 };
 
+inline
 bool operator<( const Int3 &a, const Int3 &b ) { return a.value < b.value; }
+inline
 bool operator==( const Int3 &a, const Int3 &b ) { return a.value == b.value; }
 
 template <class X>
@@ -124,7 +128,9 @@ struct String2
     std::string value;
 };
 
+inline
 bool operator<( const String2 &a, const String2 &b ) { return a.value < b.value; }
+inline
 bool operator==( const String2 &a, const String2 &b ) { return a.value == b.value; }
 
 struct String3
@@ -135,7 +141,9 @@ struct String3
     std::string value;
 };
 
+inline
 bool operator<( const String3 &a, const String3 &b ) { return a.value < b.value; }
+inline
 bool operator==( const String3 &a, const String3 &b ) { return a.value == b.value; }
 
 template <class X>
@@ -179,7 +187,9 @@ struct IntPoint2
     Point<int64_t>  value;
 };
 
+inline
 bool operator<( const IntPoint2 &a, const IntPoint2 &b ) { return a.value < b.value; }
+inline
 bool operator==( const IntPoint2 &a, const IntPoint2 &b ) { return a.value == b.value; }
 
 struct IntPoint3
@@ -190,7 +200,9 @@ struct IntPoint3
     Point<int64_t>  value;
 };
 
+inline
 bool operator<( const IntPoint3 &a, const IntPoint3 &b ) { return a.value < b.value; }
+inline
 bool operator==( const IntPoint3 &a, const IntPoint3 &b ) { return a.value == b.value; }
 
 template <class X>

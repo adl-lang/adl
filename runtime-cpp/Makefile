@@ -11,6 +11,7 @@ all:
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/adl.o src/adl.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/types.o src/types.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/json.o src/json.cpp
+	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/sink.o src/sink.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/sys.types.o build/sys.types.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/sys.rpc.o build/sys.rpc.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/sinkimpl.o build/sys.sinkimpl.cpp

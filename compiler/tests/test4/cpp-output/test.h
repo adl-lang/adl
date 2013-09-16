@@ -16,7 +16,9 @@ struct DateO
     std::string value;
 };
 
+inline
 bool operator<( const DateO &a, const DateO &b ) { return a.value < b.value; }
+inline
 bool operator==( const DateO &a, const DateO &b ) { return a.value == b.value; }
 
 struct S

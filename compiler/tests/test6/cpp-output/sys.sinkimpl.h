@@ -15,7 +15,9 @@ struct SerialisationType
     std::string value;
 };
 
+inline
 bool operator<( const SerialisationType &a, const SerialisationType &b ) { return a.value < b.value; }
+inline
 bool operator==( const SerialisationType &a, const SerialisationType &b ) { return a.value == b.value; }
 
 class TransportAddr
@@ -99,7 +101,9 @@ struct TransportName
     std::string value;
 };
 
+inline
 bool operator<( const TransportName &a, const TransportName &b ) { return a.value < b.value; }
+inline
 bool operator==( const TransportName &a, const TransportName &b ) { return a.value == b.value; }
 
 struct SinkData

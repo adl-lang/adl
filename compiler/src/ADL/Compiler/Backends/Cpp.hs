@@ -253,6 +253,10 @@ genTemplate [] = return ()
 genTemplate tps = wt "template <$1>"
                   [T.intercalate ", " [T.concat ["class ",cTypeParamName tp] | tp <- tps]]
 
+genTemplateI :: [Ident] -> CodeWriter ()
+genTemplateI [] = wl "inline"
+genTemplateI tps = genTemplate tps
+
 addMarker :: v -> v -> v -> [a] -> [(v,a)]
 addMarker fv v lv as = case add as of
     [] -> []
@@ -687,9 +691,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
        wl ""
        wt "$1 value;" [t]
     wl ""
-    genTemplate tparams
+    genTemplateI tparams
     wt "bool operator<( const $1 &a, const $1 &b ) { return a.value < b.value; }" [ctnameP]
-    genTemplate tparams
+    genTemplateI tparams
     wt "bool operator==( const $1 &a, const $1 &b ) { return a.value == b.value; }" [ctnameP]
 
   write ifileS $ do
@@ -978,7 +982,7 @@ cPrimitiveType P_Double = return "double"
 cPrimitiveType P_ByteVector = return "ByteVector"
 cPrimitiveType P_Vector = includeStd ifile "vector" >> return "std::vector"
 cPrimitiveType P_String = includeStd ifile "string" >> return "std::string"
-cPrimitiveType P_Sink = return "Sink"
+cPrimitiveType P_Sink = includeStd ifile "adl/sink.h" >> return "Sink"
 
 cPrimitiveDefault :: PrimitiveType -> Maybe T.Text
 cPrimitiveDefault P_Void = Nothing

@@ -5,6 +5,7 @@
 #include <string>
 #include <stdint.h>
 #include <exception>
+#include <memory>
 
 namespace ADL {
 
@@ -26,13 +27,6 @@ struct ByteVector
     std::vector<uint8_t> bytes;
 
     static ByteVector fromLiteral( const std::string & v );
-};
-
-//----------------------------------------------------------------------
-// Sink type
-
-template <class T>
-struct Sink {
 };
 
 //----------------------------------------------------------------------

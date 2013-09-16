@@ -1,4 +1,5 @@
 #include <adl/adl.h>
+#include <adl/sink.h>
 
 namespace ADL {
 namespace sys {
