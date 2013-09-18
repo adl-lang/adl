@@ -1,3 +1,5 @@
+#ifndef TEST_H
+#define TEST_H
 #include <adl/adl.h>
 #include <stdint.h>
 
@@ -688,3 +690,4 @@ struct JsonV<ADL::test::U8>
 };
 
 }; // ADL
+#endif // TEST_H

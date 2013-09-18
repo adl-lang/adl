@@ -1,3 +1,5 @@
+#ifndef TEST_H
+#define TEST_H
 #include <adl/adl.h>
 #include <stdint.h>
 #include <string>
@@ -544,3 +546,4 @@ JsonV<ADL::test::S<T>>::fromJson( ADL::test::S<T> &v, JsonReader &json )
 }
 
 }; // ADL
+#endif // TEST_H

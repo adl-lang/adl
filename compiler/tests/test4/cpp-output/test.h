@@ -1,3 +1,5 @@
+#ifndef TEST_H
+#define TEST_H
 #include "Date.h"
 #include <adl/adl.h>
 #include <string>
@@ -61,3 +63,4 @@ struct JsonV<ADL::test::S>
 };
 
 }; // ADL
+#endif // TEST_H

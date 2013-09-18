@@ -1,3 +1,5 @@
+#ifndef TEST_H
+#define TEST_H
 #include <adl/adl.h>
 #include <stdint.h>
 #include <string>
@@ -120,3 +122,4 @@ JsonV<ADL::test::Tree<T>>::fromJson( ADL::test::Tree<T> &v, JsonReader &json )
 }
 
 }; // ADL
+#endif // TEST_H

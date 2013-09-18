@@ -60,10 +60,9 @@ data FState = FState {
   }
 
 -- Produce the actual text form of the accumulated file states
-fileText ::[FState] -> T.Text
-fileText fss = T.intercalate "\n" lines
+fileLines ::[FState] -> [T.Text]
+fileLines fss = includesT ++ concat (map bodyT fss)
   where
-    lines = includesT ++ concat (map bodyT fss)
     includesT = [ template "#include $1" [formatText i] | i <- Set.toList includes ]
     includes = Set.unions (map fs_includes fss)
     bodyT fs = inNamespace (fs_namespace fs) (reverse (fs_lines fs))
@@ -810,11 +809,20 @@ writeModuleFile mNamespace mFile customTypes fileWriter m = do
       s0 = MState (m_name m) mNamespace mFile customTypes fs0 fs1 fs0 fs1
       fp =  mFile (m_name m)
       s1 = execState (generateModule m) s0
+      guard_name = (T.append (T.intercalate "_" (map T.toUpper (unModuleName (m_name m)))) "_H" )
+
       ifileElements = [ms_incFileUserModule s1,ms_incFileSerialisation s1]
+      ifileLines = [ template "#ifndef $1" [guard_name]
+                   , template "#define $1" [guard_name]
+                   ] ++ fileLines ifileElements ++
+                   [ template "#endif // $1" [guard_name]
+                   ]
+
       cppfileElements = [ms_cppFileUserModule s1,ms_cppFileSerialisation s1]
+      cppfileLines = fileLines cppfileElements
       
-  liftIO $ fileWriter (fp ++ ".h") (fileText ifileElements)
-  liftIO $ fileWriter (fp ++ ".cpp") (fileText cppfileElements)
+  liftIO $ fileWriter (fp ++ ".h") (T.intercalate "\n" ifileLines )
+  liftIO $ fileWriter (fp ++ ".cpp") (T.intercalate "\n" cppfileLines)
 
 data CppFlags = CppFlags {
   -- directories where we look for ADL files

@@ -1,3 +1,5 @@
+#ifndef SYS_TYPES_H
+#define SYS_TYPES_H
 #include <adl/adl.h>
 #include <map>
 #include <set>
@@ -747,3 +749,4 @@ struct JsonV<std::map<K,V>>
 };
 
 }; // ADL
+#endif // SYS_TYPES_H

@@ -1,3 +1,5 @@
+#ifndef TEST_H
+#define TEST_H
 #include <adl/adl.h>
 #include <stdint.h>
 #include <string>
@@ -411,3 +413,4 @@ struct JsonV<ADL::test::Point2<X>>
 };
 
 }; // ADL
+#endif // TEST_H

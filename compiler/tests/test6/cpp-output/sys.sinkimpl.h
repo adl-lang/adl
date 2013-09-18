@@ -1,3 +1,5 @@
+#ifndef SYS_SINKIMPL_H
+#define SYS_SINKIMPL_H
 #include <adl/adl.h>
 #include <stdint.h>
 #include <string>
@@ -171,3 +173,4 @@ struct JsonV<ADL::sys::sinkimpl::SinkData>
 };
 
 }; // ADL
+#endif // SYS_SINKIMPL_H

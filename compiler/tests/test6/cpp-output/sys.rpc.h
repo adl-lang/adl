@@ -1,3 +1,5 @@
+#ifndef SYS_RPC_H
+#define SYS_RPC_H
 #include <adl/adl.h>
 #include <adl/sink.h>
 
@@ -97,3 +99,4 @@ JsonV<ADL::sys::rpc::Rpc<I,O>>::fromJson( ADL::sys::rpc::Rpc<I,O> &v, JsonReader
 }
 
 }; // ADL
+#endif // SYS_RPC_H
