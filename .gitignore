@@ -1,6 +1,7 @@
 *~
 .make/
-cabal-dev/
+.cabal-sandbox/
+cabal.sandbox.config
 compiler-bootstrap/dist/
 compiler-lib/dist/
 comms-http/dist/

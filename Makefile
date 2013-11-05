@@ -1,16 +1,14 @@
-MKFILE = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
-MKDIR = $(dir $(MKFILE))
+MKFILE:=$(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+MKDIR:=$(dir $(MKFILE))
+SANDBOX=.cabal-sandbox
+SANDBOXBIN=$(MKDIR)$(SANDBOX)/bin
 
 TESTOUTDIR=/tmp/adltest
 MODULEPREFIX=ADL.Compiled
 ADLCFLAGS=-O $(TESTOUTDIR) --moduleprefix=$(MODULEPREFIX)
-ADLC=cabal-dev/bin/adlc
-GHC=GHC_PACKAGE_PATH=cabal-dev/packages-7.4.1.conf: ghc
-GHCFLAGS=-i$(TESTOUTDIR)
+ADLC=$(SANDBOXBIN)/adlc
 
-PATH:=$(MKDIR)cabal-dev/bin:$(PATH)
-
-MD=.make
+PATH:=$(SANDBOXBIN):$(PATH)
 
 -include .make/Makefile.srcs
 
@@ -25,31 +23,37 @@ compiler: .make/built-compiler
 examples: .make/built-examples
 
 .make:
-	mkdir .make
+	mkdir -p .make
+
+$(SANDBOX):
+	cabal sandbox init
+
+depends: $(SANDBOX) .make
+	runghc genMake.hs >.make/Makefile.srcs
 
 .make/built-utils: $(UTILS-SRC)
-	(cd utils && cabal-dev -s ../cabal-dev install  --force-reinstalls)
+	cabal install --force-reinstalls utils/
 	touch .make/built-utils
 
 .make/built-compiler-lib: $(COMPILER-LIB-SRC) .make/built-utils
-	(cd compiler-lib && cabal-dev -s ../cabal-dev install  --force-reinstalls)
+	cabal install --force-reinstalls compiler-lib/
 	touch .make/built-compiler-lib
 
 .make/built-compiler-bootstrap: $(COMPILER-BOOTSTRAP-SRC) .make/built-utils .make/built-compiler-lib
-	(cd compiler-bootstrap && cabal-dev -s ../cabal-dev install  --force-reinstalls)
+	cabal install --force-reinstalls compiler-bootstrap/
 	touch .make/built-compiler-bootstrap
 
 .make/built-runtime: $(RUNTIME-SRC) .make/built-utils .make/built-compiler-bootstrap
-	(cd runtime && cabal-dev -s ../cabal-dev install  --force-reinstalls)
+	cabal install --force-reinstalls runtime/
 	touch .make/built-runtime
 
 .make/comms-http: $(COMMS-HTTP-SRC) .make/built-runtime
-	(cd comms-http && cabal-dev -s ../cabal-dev install)
+	cabal install --force-reinstalls comms-http/
 	touch .make/comms-http
 
 .make/built-compiler: $(COMPILER-SRC) .make/built-utils .make/built-runtime
-	(cd compiler && cabal-dev -s ../cabal-dev install)
-	(cd compiler/tests && ../../cabal-dev/bin/adlc-tests)
+	cabal install --force-reinstalls compiler/
+	(cd compiler/tests && $(SANDBOXBIN)/adlc-tests)
 	touch .make/built-compiler
 
 .make/built-runtime-cpp: $(RUNTIME-SRC) $(RUNTIME-CPP-SRC) .make/built-compiler
@@ -58,40 +62,37 @@ examples: .make/built-examples
 	touch .make/built-runtime-cpp
 
 .make/built-examples: $(EXAMPLE-SRC) .make/built-utils .make/built-runtime .make/built-compiler .make/comms-http
-	(cd examples && cabal-dev -s ../cabal-dev install)
+	cabal install --force-reinstalls examples/
 	touch .make/built-examples
 
-depends: .make
-	runghc genMake.hs >.make/Makefile.srcs
-
 docs:
-	(cd utils && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
-	(cd runtime && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
-	(cd comms-http && cabal-dev -s ../cabal-dev install --force-reinstalls --enable-documentation)
+	cabal install utils/ --force-reinstalls --enable-documentation
+	cabal install runtime/ --force-reinstalls --enable-documentation
+	cabal install comms-http/ --force-reinstalls --enable-documentation
 
 clean: 
 	-rm -f .make/built-*
-	-cabal-dev ghc-pkg unregister adl-compiler-lib
-	-cabal-dev ghc-pkg unregister adl-comms-http
-	-cabal-dev ghc-pkg unregister adl-runtime
-	-cabal-dev ghc-pkg unregister adl-utils
+	-cabal sandbox hc-pkg unregister adl-compiler-lib
+	-cabal sandbox hc-pkg unregister adl-comms-http
+	-cabal sandbox hc-pkg unregister adl-runtime
+	-cabal sandbox hc-pkg unregister adl-utils
 
-	-(cd examples ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
-	-(cd compiler ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
-	-(cd compiler-bootstrap ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
-	-(cd compiler-lib ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
-	-(cd utils ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
-	-(cd runtime ; cabal-dev -s ../cabal-dev clean ; rm -rf dist)
+	-(cd examples; cabal clean ; rm -rf dist)
+	-(cd compiler; cabal clean ; rm -rf dist)
+	-(cd compiler-bootstrap; cabal clean ; rm -rf dist)
+	-(cd compiler-lib ; cabal clean ; rm -rf dist)
+	-(cd utils ; cabal clean ; rm -rf dist)
+	-(cd runtime ; cabal clean ; rm -rf dist)
 	-(cd runtime-cpp ; make clean)
 
 cleanext:
-	-cabal-dev ghc-pkg unregister zeromq3-haskell
+	-cabal sandbox hc-pkg unregister zeromq3-haskell
 	(cd ext && rm -rf include lib share)
 
 ext: zeromq3-haskell
 
 zeromq3-haskell: ext/lib/libzmq.so.3.0.0
-	 cabal-dev install zeromq3-haskell --extra-include-dirs=$(MKDIR)ext/include --extra-lib-dirs=$(MKDIR)/ext/lib --enable-documentation
+	 cabal install zeromq3-haskell --extra-include-dirs=$(MKDIR)ext/include --extra-lib-dirs=$(MKDIR)/ext/lib --enable-documentation
 
 ext/lib/libzmq.so.3.0.0: ext/downloads/zeromq-3.2.2.tar.gz
 	(cd ext && tar -xzf downloads/zeromq-3.2.2.tar.gz)

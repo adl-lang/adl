@@ -1,4 +1,4 @@
-ADLC=../cabal-dev/bin/adlc
+ADLC=../.cabal-sandbox/bin/adlc
 ADLDIR=../runtime/adl/sys
 CPPFLAGS=-Ibuild -Iinclude
 CXXFLAGS=-std=c++11 -fpic
