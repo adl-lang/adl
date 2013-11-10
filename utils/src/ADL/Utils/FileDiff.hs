@@ -11,7 +11,7 @@ data FileDiff = Match
                    | Diff
                    | Missing1
                    | Missing2
-    deriving(Eq) 
+    deriving(Eq,Show)
              
 compareFiles :: FilePath -> FilePath -> IO FileDiff
 compareFiles fp1 fp2 = do

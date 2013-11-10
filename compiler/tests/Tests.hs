@@ -1,115 +1,130 @@
-{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings, DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
+import Test.Hspec
 
-import Prelude hiding (catch)
-import Data.Typeable
-import Control.Monad
-import Control.Exception
-
-import qualified Data.Text as T
-import qualified Data.Set as Set
-
-import Test.Framework
-import Test.Framework.Providers.API
-
+import System.FilePath(takeDirectory,(</>))
+import System.Directory(getTemporaryDirectory,removeDirectoryRecursive,getCurrentDirectory)
 import System.IO.Temp(createTempDirectory)
-import System.Directory
-import System.FilePath
 
 import ADL.Utils.FileDiff
-import ADL.Compiler.EIO
-import ADL.Compiler.Utils
-import qualified ADL.Compiler.Backends.Haskell as H
-import qualified ADL.Compiler.Backends.Cpp as CPP
+import qualified Data.Text as T
+
 import HaskellCustomTypes
 
-data TestResult = Passed
-                | CompilerFailed T.Text
-                | OutputDiff FilePath FilePath [(FilePath,FileDiff)]
+import ADL.Compiler.EIO
+import ADL.Compiler.Utils
 
-data TestCaseRunning = RunningCompiler | CheckingOutput                  
+import qualified ADL.Compiler.Backends.Haskell as H
+import qualified ADL.Compiler.Backends.Cpp as CPP
 
-instance Show TestResult where
-  show Passed = "OK"
-  show (CompilerFailed err) = "adlc failed: " ++ T.unpack err
-  show (OutputDiff epath apath diffs) = "expected/actual:" ++ epath ++ " " ++ apath
+data CodeGenResult = MatchOutput
+                   | CompilerFailed T.Text
+                   | OutputDiff FilePath FilePath [(FilePath,FileDiff)]
+   deriving (Eq,Show)                     
 
-instance Show TestCaseRunning where
-  show RunningCompiler = "Running Compiler"
-  show CheckingOutput = "Checking Compiler Output"
+processCompilerOutput :: FilePath -> FilePath -> Either T.Text () -> IO CodeGenResult
+processCompilerOutput _ tempDir (Left err) = do
+  removeDirectoryRecursive tempDir
+  return (CompilerFailed err)
+processCompilerOutput epath tempDir (Right ()) = do
+  diffs <- diffTree epath tempDir
+  case diffs of
+    [] -> do
+      removeDirectoryRecursive tempDir
+      return MatchOutput
+    _ -> do
+      cwd <- getCurrentDirectory
+      return (OutputDiff (cwd </> epath) tempDir diffs)
 
-instance TestResultlike TestCaseRunning TestResult where
-  testSucceeded Passed = True
-  testSucceeded _ = False
+runHaskellBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
+runHaskellBackend ipath mpaths epath customTypeFiles = do
+  tdir <- getTemporaryDirectory
+  tempDir <- createTempDirectory tdir "adl.test."
+  let flags =  H.HaskellFlags {
+    H.hf_searchPath = [ipath],
+    H.hf_modulePrefix = "ADL",
+    H.hf_customTypeFiles = customTypeFiles,
+    H.hf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+    }
+  er <- unEIO $ H.generate flags getCustomTypes mpaths
+  processCompilerOutput epath tempDir er
 
-data TestBackend = TestBackend {
-  tb_expectedOutput :: FilePath,
-  tb_run :: FilePath -> EIOT ()
-  } deriving (Typeable)
-
-instance Testlike TestCaseRunning TestResult TestBackend where
-  testTypeName _ = "adlc test"
-  runTest topts tb = runImprovingIO $ do
-    cwd <- liftIO $ getCurrentDirectory
-    tempDir <- liftIO $ do
-      tdir <- getTemporaryDirectory
-      createTempDirectory tdir "adl.test." 
-    yieldImprovement RunningCompiler
-    e <- liftIO $ unEIO (tb_run tb tempDir)
-    case e of
-      (Left emsg) -> return (CompilerFailed emsg)
-      (Right ()) -> do
-        yieldImprovement CheckingOutput
-        result <- liftIO $ diffTree (tb_expectedOutput tb) tempDir
-        case result of
-          [] -> do
-            liftIO $ removeDirectoryRecursive tempDir
-            return Passed
-          diffs -> return (OutputDiff (cwd </> (tb_expectedOutput tb)) tempDir diffs)
-
-testHsBackend :: String -> FilePath -> [FilePath] -> FilePath -> [FilePath] -> Test
-testHsBackend name ipath mpaths epath customTypeFiles = Test name (TestBackend epath run)
+runHaskellBackend1 :: FilePath-> IO CodeGenResult
+runHaskellBackend1 mpath = runHaskellBackend ipath [mpath] epath []
   where
-    run tempDir = H.generate flags getCustomTypes mpaths
-      where
-        flags = H.HaskellFlags {
-          H.hf_searchPath = [ipath],
-          H.hf_modulePrefix = "ADL",
-          H.hf_customTypeFiles = customTypeFiles,
-          H.hf_fileWriter = writeOutputFile (OutputArgs (\s-> return ()) False tempDir)
-          }
+    ipath = takeDirectory mpath
+    epath = (takeDirectory ipath) </> "hs-output"
 
-testCppBackend :: String -> FilePath -> [FilePath] -> FilePath -> [FilePath] -> Test
-testCppBackend name ipath mpaths epath customTypeFiles = Test name (TestBackend epath run)
+runCppBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
+runCppBackend ipath mpaths epath customTypeFiles = do
+  tdir <- getTemporaryDirectory
+  tempDir <- createTempDirectory tdir "adl.test."
+  let flags = CPP.CppFlags {
+    CPP.cf_searchPath = [ipath],
+    CPP.cf_customTypeFiles = customTypeFiles,
+    CPP.cf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+    }
+  er <- unEIO $ CPP.generate flags mpaths
+  processCompilerOutput epath tempDir er
+
+runCppBackend1 :: FilePath-> IO CodeGenResult
+runCppBackend1 mpath = runCppBackend ipath [mpath] epath []
   where
-    run tempDir = CPP.generate flags mpaths
-      where
-        flags = CPP.CppFlags {
-          CPP.cf_searchPath = [ipath],
-          CPP.cf_customTypeFiles = customTypeFiles,
-          CPP.cf_fileWriter = writeOutputFile (OutputArgs (\s-> return ()) False tempDir)
-          }
+    ipath = takeDirectory mpath
+    epath = (takeDirectory ipath) </> "cpp-output"
+
+stdsrc :: FilePath
+stdsrc = "../../runtime/adl"
+
+stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
+stdfiles = ["../../runtime/adl/sys/types.adl", "../../runtime/adl/sys/rpc.adl", "../../runtime/adl/sys/sinkimpl.adl"]
+stdHsCustomTypes = ["../../compiler/config/hs-custom-types.json"]
+stdCppCustomTypes = ["../../compiler/config/cpp-custom-types.json"]
 
 main :: IO ()
-main = defaultMain tests
+main = hspec $ do
+  describe "adlc haskell backend" $ do
+    it "generates expected code for an empty module" $ do
+      runHaskellBackend1 "test1/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates expected code for various structures" $ do
+      runHaskellBackend1 "test2/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates expected code for structures with default overrides" $ do
+      runHaskellBackend1 "test3/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates expected code for custom type mappings" $ do
+      runHaskellBackend "test4/input" ["test4/input/test.adl"] "test4/hs-output" ["test4/input/hs-custom-types.json"]
+          `shouldReturn` MatchOutput
+    it "generates expected code for various unions" $ do
+      runHaskellBackend1 "test5/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates expected code for the standard library" $ do
+      runHaskellBackend stdsrc stdfiles "test6/hs-output" stdHsCustomTypes
+          `shouldReturn` MatchOutput
+    it "generates expected code type aliases and newtypes" $ do
+      runHaskellBackend1 "test7/input/test.adl"
+        `shouldReturn` MatchOutput
 
-stdsrc = "../../runtime/adl"
-stdfiles = ["../../runtime/adl/sys/types.adl", "../../runtime/adl/sys/rpc.adl", "../../runtime/adl/sys/sinkimpl.adl"]
-
-tests =
-  [ testHsBackend "hs.1 empty module" "test1/input" ["test1/input/test.adl"] "test1/hs-output" []
-  , testHsBackend "hs.2 structs" "test2/input" ["test2/input/test.adl"] "test2/hs-output" []
-  , testHsBackend "hs.3 structs - default overrides" "test3/input" ["test3/input/test.adl"] "test3/hs-output" []
-  , testHsBackend "hs.4 custom type mappings" "test4/input" ["test4/input/test.adl"] "test4/hs-output" ["test4/input/hs-custom-types.json"]
-  , testHsBackend "hs.5 unions" "test5/input" ["test5/input/test.adl"] "test5/hs-output" []
-  , testHsBackend "hs.6 std library" stdsrc stdfiles "test6/hs-output" ["../../compiler/config/hs-custom-types.json"]
-  , testHsBackend "hs.7 type aliases and newtypes" "test7/input" ["test7/input/test.adl"] "test7/hs-output" []
-
-  , testCppBackend "cpp.1 empty module" "test1/input" ["test1/input/test.adl"] "test1/cpp-output" []
-  , testCppBackend "cpp.2 structs" "test2/input" ["test2/input/test.adl"] "test2/cpp-output" []
-  , testCppBackend "cpp.3 structs - default overrides" "test3/input" ["test3/input/test.adl"] "test3/cpp-output" []
-  , testCppBackend "cpp.4 custom type mappings" "test4/input" ["test4/input/test.adl"] "test4/cpp-output" ["test4/input/cpp-custom-types.json"]
-  , testCppBackend "cpp.5 unions" "test5/input" ["test5/input/test.adl"] "test5/cpp-output" []
-  , testCppBackend "cpp.6 std library" stdsrc stdfiles "test6/cpp-output" ["../../compiler/config/cpp-custom-types.json"]
-  , testCppBackend "cpp.7 type aliases and newtypes" "test7/input" ["test7/input/test.adl"] "test7/cpp-output" []
-  ]
+  describe "adlc cpp backend" $ do
+    it "generates expected code for an empty module" $ do
+      runCppBackend1 "test1/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates expected code for various structures" $ do
+      runCppBackend1 "test2/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates expected code for structures with default overrides" $ do
+      runCppBackend1 "test3/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates expected code for custom type mappings" $ do
+      runCppBackend "test4/input" ["test4/input/test.adl"] "test4/cpp-output" ["test4/input/cpp-custom-types.json"]
+          `shouldReturn` MatchOutput
+    it "generates expected code for various unions" $ do
+      runCppBackend1 "test5/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates expected code for the standard library" $ do
+      runCppBackend stdsrc stdfiles "test6/cpp-output" stdCppCustomTypes
+          `shouldReturn` MatchOutput
+    it "generates expected code type aliases and newtypes" $ do
+      runCppBackend1 "test7/input/test.adl"
+        `shouldReturn` MatchOutput
