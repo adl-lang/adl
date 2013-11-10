@@ -105,5 +105,16 @@ ext/downloads/zeromq-3.2.2.tar.gz:
 	mkdir -p ext/downloads
 	(cd ext/downloads && wget http://download.zeromq.org/zeromq-3.2.2.tar.gz)
 
+# ghc-mod want's to find the cabal.sandbox.config file in the 
+# same directory as the cabal file. We only have one config for 
+# the whole tree. Create some symlinks to sort this out.
+sandbox-links:
+	(cd utils && ln -fs ../cabal.sandbox.config)
+	(cd compiler-lib && ln -fs ../cabal.sandbox.config)
+	(cd compiler-bootstrap && ln -fs ../cabal.sandbox.config)
+	(cd runtime && ln -fs ../cabal.sandbox.config)
+	(cd comms-http && ln -fs ../cabal.sandbox.config)
+	(cd examples && ln -fs ../cabal.sandbox.config)
+
 .PHONY : examples utils compiler-bootstrap runtime compiler clean
 
