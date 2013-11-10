@@ -3,9 +3,7 @@
 module ADL.Compiler.AST where
 
 import Data.Foldable
-import Data.Traversable
 import Data.Monoid
-import Control.Applicative
 
 import qualified Data.Text as T
 import qualified Data.Aeson as JSON
@@ -70,8 +68,12 @@ data DeclType t = Decl_Struct (Struct t)
                 | Decl_Newtype (Newtype t)
   deriving (Show)
 
+type Version = Int
+type MVersion = Maybe Version
+
 data Decl t = Decl {
   d_name :: Ident,
+  d_version :: MVersion,
   d_annotations :: Annotations,
   d_type :: DeclType t
   }
@@ -85,6 +87,16 @@ iModule :: Import -> ModuleName
 iModule (Import_Module m) = m           
 iModule (Import_ScopedName sn) = sn_moduleName sn
 
+-- Module after we've parsed it.
+data Module0 t = Module0 {
+  m0_name :: ModuleName,
+  m0_imports :: [Import],
+  m0_decls :: [Decl t]
+  }  
+  deriving (Show)
+
+-- Module after we've checked for duplicate definitions
+-- and for versioning consistency
 data Module t = Module {
   m_name :: ModuleName,
   m_imports :: [Import],
@@ -112,7 +124,7 @@ instance Foldable DeclType where
 instance Foldable Decl where
     foldMap f Decl{d_type=d} = foldMap f d
 instance Foldable Module where
-    foldMap f Module{m_decls=ds} = foldMap (foldMap f) ds
+    foldMap f Module{m_decls=ds} = (foldMap.foldMap) f ds
 
 getReferencedModules :: Module ScopedName -> Set.Set ModuleName
 getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` foldMap ref m

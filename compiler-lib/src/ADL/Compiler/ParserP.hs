@@ -79,40 +79,47 @@ field = do
     mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
     return (Field n t mdefault Map.empty)
 
-struct :: P.Parser (Ident,Struct ScopedName)
+mversion :: P.Parser MVersion
+mversion = pure Nothing
+
+struct :: P.Parser (Ident,MVersion,Struct ScopedName)
 struct = do
     token "struct"
     n <- name
+    mv <- mversion
     tparams <- optTypeParamList
     fields <- parenList field
-    return (n,Struct tparams fields)
+    return (n,mv,Struct tparams fields)
 
-union :: P.Parser (Ident,Union ScopedName)
+union :: P.Parser (Ident,MVersion,Union ScopedName)
 union = do
     token "union"
     n <- name
+    mv <- mversion
     tparams <- optTypeParamList
     fields <- parenList field
-    return (n,Union tparams fields)
+    return (n,mv,Union tparams fields)
 
-type_ :: P.Parser (Ident,Typedef ScopedName)
+type_ :: P.Parser (Ident,MVersion,Typedef ScopedName)
 type_ = do
     token "type"
     n <- name
+    mv <- mversion
     tparams <- optTypeParamList
     ctoken '='
     te <- typeExpression
-    return (n,Typedef tparams te)
+    return (n,mv,Typedef tparams te)
 
-newtype_ :: P.Parser (Ident,Newtype ScopedName)
+newtype_ :: P.Parser (Ident,MVersion,Newtype ScopedName)
 newtype_ = do
     token "newtype"
     n <- name
+    mv <- mversion
     tparams <- optTypeParamList
     token "="
     te <- typeExpression
     mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
-    return (n,Newtype tparams te mdefault)
+    return (n,mv,Newtype tparams te mdefault)
 
 decl :: P.Parser (Decl ScopedName)
 decl =   (mkStruct <$> struct)
@@ -120,10 +127,10 @@ decl =   (mkStruct <$> struct)
      <|> (mkType <$> type_)
      <|> (mkNewtype <$> newtype_)
   where
-    mkStruct (n,s) = Decl n Map.empty (Decl_Struct s)
-    mkUnion (n,u) = Decl n Map.empty (Decl_Union u)
-    mkType (n,t) = Decl n Map.empty (Decl_Typedef t)
-    mkNewtype (n,nt) = Decl n Map.empty (Decl_Newtype nt)
+    mkStruct (n,mv,s) = Decl n mv Map.empty (Decl_Struct s)
+    mkUnion (n,mv,u) = Decl n mv Map.empty (Decl_Union u)
+    mkType (n,mv,t) = Decl n mv Map.empty (Decl_Typedef t)
+    mkNewtype (n,mv,nt) = Decl n mv Map.empty (Decl_Newtype nt)
 
 importP :: P.Parser Import
 importP = token "import" *> (P.try importAll <|> import1 )
@@ -135,25 +142,11 @@ importP = token "import" *> (P.try importAll <|> import1 )
 
     import1  = Import_ScopedName <$> scopedName
 
-declMap :: P.Parser (Map.Map Ident (Decl ScopedName))
-declMap = Map.fromList . map (\d -> (d_name d, d)) <$> P.many (decl <* ctoken ';')
-
-moduleP :: P.Parser (Module ScopedName)
-moduleP = do
-    token "module"
-    name <- moduleName
-    ctoken '{'
-    imports <- P.many (importP <* ctoken ';')
-    decls <- declMap
-    ctoken '}'
-    return (Module name imports decls)
-
-
-module2 :: P.Parser (Module ScopedName)
-module2 = token "module" *> (
-    Module <$> ( moduleName <* ctoken '{' )
-           <*> P.many (importP <* ctoken ';')
-           <*> declMap
+moduleP :: P.Parser (Module0 ScopedName)
+moduleP = token "module" *> (
+    Module0 <$> ( moduleName <* ctoken '{' )
+            <*> P.many (importP <* ctoken ';')
+            <*> P.many (decl <* ctoken ';')
     ) <* ctoken '}'
 
 ----------------------------------------------------------------------
@@ -209,7 +202,7 @@ jsonValue =   p_null <|> p_true <|> p_false <|> p_string <|> p_int <|> p_double
 ----------------------------------------------------------------------
 
 
-moduleFile :: P.Parser (Module ScopedName)
+moduleFile :: P.Parser (Module0 ScopedName)
 moduleFile = whiteSpace *> moduleP <* ctoken ';'
     
 

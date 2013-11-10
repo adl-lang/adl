@@ -2,14 +2,17 @@
 
 module ADL.Compiler.Processing where
 
+import Prelude
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Writer
 import Control.Exception
+import qualified Data.Traversable as T
 import System.FilePath(joinPath)
-import Data.List(find,partition)
+import Data.Ord(comparing)
+import Data.List(find,partition,sortBy)
 import Data.Foldable(foldMap)
 import Data.Monoid
 import Data.Maybe(catMaybes)
@@ -35,12 +38,37 @@ type SModuleMap = Map.Map ModuleName SModule
 
 loadModule :: FilePath -> (ModuleName -> [FilePath]) -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
 loadModule fpath0 findm mm = do
-    m0 <- parseFile fpath0
+    m0 <- parseAndCheckFile fpath0
     mm' <- addDeps m0 mm
     return (m0,mm')
   where
-    parseFile :: FilePath -> EIO T.Text SModule
+    parseFile :: FilePath -> EIO T.Text (Module0 ScopedName)
     parseFile fpath = mapError (T.pack .show ) $ eioFromEither $ P.fromFile P.moduleFile fpath
+
+    checkDeclarations :: Module0 ScopedName -> EIO T.Text SModule
+    checkDeclarations (Module0 n i decls0) = do
+      let declMap = foldr (\d -> Map.insertWith (++)  (d_name d) [d]) Map.empty decls0
+      declMap' <- T.mapM checkDeclList declMap
+      return (Module  n i declMap')
+
+    -- Ensure that for all the decls associated with a name, either
+    --    * we have one unversioned decl
+    --    * we have have a consistently versioned set
+    checkDeclList :: [Decl ScopedName] -> EIO T.Text (Decl ScopedName)
+    checkDeclList ds = case filter (not.hasVersion) ds of
+        [] -> do
+          let ds' = sortBy (comparing fst) [ (i,d) | (d@Decl{d_version=Just i}) <- filter hasVersion ds ]
+          if and (zipWith (==) (map fst ds') [1,2..])
+            then return (snd (last ds'))
+            else eioError (T.intercalate " " ["inconsistent version numbers for ",d_name (snd (last ds'))])
+        [d] -> return d
+        (d:_) -> eioError (T.intercalate " " ["multiple definitions for ",d_name d])
+      where
+        hasVersion Decl{d_version=Nothing} = False
+        hasVersion _ = True
+
+    parseAndCheckFile :: FilePath -> EIO T.Text (Module ScopedName)
+    parseAndCheckFile f = parseFile f >>= checkDeclarations                        
 
     addDeps :: SModule -> SModuleMap -> EIO T.Text SModuleMap
     addDeps m mm = do
@@ -57,7 +85,7 @@ loadModule fpath0 findm mm = do
     findModule :: ModuleName -> [FilePath] -> EIO T.Text SModule
     findModule mname [] = eioError (template "\"$1\":\nUnable to find module '$2'" [T.pack fpath0,formatText mname] )
     findModule mname (fpath:fpaths) = do
-        em <-  liftIO $ try (unEIO (parseFile fpath))
+        em <-  liftIO $ try (unEIO (parseAndCheckFile fpath))
         case em of
             (Left (ioe::IOError)) -> findModule mname fpaths
             (Right em) -> eioFromEither (return em)
