@@ -12,7 +12,7 @@ getCustomTypes :: [FilePath] -> EIO T.Text CustomTypeMap
 getCustomTypes srcdirs = return $ Map.fromList
     [ (ScopedName (ModuleName ["sys","types"]) "Maybe",
        CustomType "Prelude.Maybe" [HaskellModule "ADL.Core.CustomTypes"]
-       ["type Maybe = Prelude.Maybe" ] Nothing)
+       ["type Maybe = Prelude.Maybe" ] Nothing )
     , (ScopedName (ModuleName ["sys","types"]) "Either",
        CustomType "Prelude.Either" [HaskellModule "ADL.Core.CustomTypes"]
        ["type Either = Prelude.Either"] Nothing)
