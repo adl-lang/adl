@@ -47,8 +47,8 @@ runVerifyBackend ipath mpaths = do
    (Left err) -> return (CompilerFailed err)
    (Right ()) -> return MatchOutput
 
-runVerifyBackend0 :: FilePath -> IO CodeGenResult
-runVerifyBackend0 mpath = runVerifyBackend (takeDirectory mpath) [mpath]
+runVerifyBackend1 :: FilePath -> IO CodeGenResult
+runVerifyBackend1 mpath = runVerifyBackend (takeDirectory mpath) [mpath]
 
 runHaskellBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
 runHaskellBackend ipath mpaths epath customTypeFiles = do
@@ -99,17 +99,23 @@ main :: IO ()
 main = hspec $ do
   describe "adlc verify backend" $ do
     it "aborts with error for duplicate definitions of a name" $ do
-      runVerifyBackend0 "test8/input/test.adl"
+      runVerifyBackend1 "test8/input/test.adl"
         `shouldReturn` (CompilerFailed "multiple definitions for X")
     it "aborts with error for inconsistent versioned/unversioned definitions of a name" $ do
-      runVerifyBackend0 "test9/input/test.adl"
+      runVerifyBackend1 "test9/input/test.adl"
         `shouldReturn` (CompilerFailed "inconsistent version/unversioned definitions for X")
     it "succeeds for correctly numbered versions of a name" $ do
-      runVerifyBackend0 "test10/input/test.adl"
+      runVerifyBackend1 "test10/input/test.adl"
         `shouldReturn` MatchOutput
     it "aborts with error for inconsistently numbered versions of a name" $ do
-      runVerifyBackend0 "test11/input/test.adl"
+      runVerifyBackend1 "test11/input/test.adl"
         `shouldReturn` (CompilerFailed "inconsistent version numbers for X")
+    it "aborts with error for duplicate field names in structs and unions" $ do
+      runVerifyBackend1 "test12/input/test.adl"
+        `shouldReturn` (CompilerFailed "In module Test :\nduplicate definition of field v in struct X\n  duplicate definition of field v in union Y")
+    it "aborts with error for duplicate type parameter names in all decl types" $ do
+      runVerifyBackend1 "test13/input/test.adl"
+        `shouldReturn` (CompilerFailed "In module Test :\nduplicate definition of type parameter a in struct X\n  duplicate definition of type parameter b in union Y\n  duplicate definition of type parameter t in type alias A\n  duplicate definition of type parameter t in newtype B")
     
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do

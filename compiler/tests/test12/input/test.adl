@@ -1,0 +1,14 @@
+module Test
+{
+    struct X
+    {
+        Double v;
+        String v;
+    };
+
+    union Y
+    {
+        Double v;
+        String v;
+    };
+};

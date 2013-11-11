@@ -91,38 +91,36 @@ loadModule fpath0 findm mm = do
             (Left (ioe::IOError)) -> findModule mname fpaths
             (Right em) -> eioFromEither (return em)
 
-data Duplicate = D_StructField Ident Ident
-               | D_StructParam Ident Ident
-               | D_UnionField Ident Ident
-               | D_UnionParam Ident Ident
-               | D_Decl Ident
+data Duplicate = D_Field T.Text Ident Ident
+               | D_Param T.Text Ident Ident
 
 instance Format Duplicate where
   format d = case d of
-    (D_Decl n) -> ds ++ T.unpack n
-    (D_StructField s f) -> ds ++ "field " ++ T.unpack f ++ " in struct " ++ T.unpack s
-    (D_StructParam s p) -> ds ++ "type parameter " ++ T.unpack p ++ " in struct " ++ T.unpack s
-    (D_UnionField u f) -> ds ++ "field " ++ T.unpack f ++ " in union " ++ T.unpack u
-    (D_UnionParam u p) -> ds ++ "type parameter " ++ T.unpack p ++ " in union " ++ T.unpack u
+    (D_Field k s f) -> ds ++ "field " ++ T.unpack f ++ " in " ++ T.unpack k ++ " " ++ T.unpack s
+    (D_Param k s p) -> ds ++ "type parameter " ++ T.unpack p ++ " in " ++ T.unpack k ++ " " ++ T.unpack s
     where
       ds = "duplicate definition of "
 
 checkDuplicates :: Module t -> [Duplicate]
-checkDuplicates m = declErrors ++ structErrors ++ unionErrors
+checkDuplicates m = structErrors ++ unionErrors ++ typedefErrors ++ newtypeErrors
   where
-    declErrors = map D_Decl $ findDuplicates [ d_name d | d <- Map.elems (m_decls m) ]
     structErrors = concat [ structErrors1 n s | Decl{d_name=n,d_type=Decl_Struct s} <- Map.elems (m_decls m) ]
     unionErrors = concat [ unionErrors1 n u | Decl{d_name=n,d_type=Decl_Union u} <- Map.elems (m_decls m) ]
+    typedefErrors = concat [ typedefErrors1 n t | Decl{d_name=n,d_type=Decl_Typedef t} <- Map.elems (m_decls m) ]
+    newtypeErrors = concat [ newtypeErrors1 n t | Decl{d_name=n,d_type=Decl_Newtype t} <- Map.elems (m_decls m) ]
 
-    structErrors1 n s = (map (D_StructField n) . findDuplicates ) [ f_name f | f <- s_fields s ] ++
-                        (map (D_StructParam n) . findDuplicates ) [ t | t <- s_typeParams s ]
+    structErrors1 n s = (map (D_Field "struct" n) . findDuplicates ) [ f_name f | f <- s_fields s ] ++
+                        (map (D_Param "struct" n) . findDuplicates ) (s_typeParams s)
 
-    unionErrors1 n u = (map (D_UnionField n) . findDuplicates ) [ f_name f | f <- u_fields u ] ++
-                       (map (D_UnionParam n) . findDuplicates ) [t | t <- u_typeParams u ]
+    unionErrors1 n u = (map (D_Field "union" n) . findDuplicates ) [ f_name f | f <- u_fields u ] ++
+                       (map (D_Param "union" n) . findDuplicates ) (u_typeParams u)
+
+    typedefErrors1 n t = (map (D_Param "type alias" n) . findDuplicates) (t_typeParams t)
+    newtypeErrors1 n t = (map (D_Param "newtype" n) . findDuplicates) (n_typeParams t)
 
     findDuplicates :: [Ident] -> [Ident]
     findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) (T.toCaseFold a) 1) Map.empty as),
-                          n > 1 ]
+                          n > (1::Int) ]
 
 data ResolvedType = RT_Named (ScopedName,Decl ResolvedType)
                   | RT_Param Ident
