@@ -14,6 +14,7 @@ import HaskellCustomTypes
 import ADL.Compiler.EIO
 import ADL.Compiler.Utils
 
+import qualified ADL.Compiler.Backends.Verify as V
 import qualified ADL.Compiler.Backends.Haskell as H
 import qualified ADL.Compiler.Backends.Cpp as CPP
 
@@ -35,6 +36,19 @@ processCompilerOutput epath tempDir (Right ()) = do
     _ -> do
       cwd <- getCurrentDirectory
       return (OutputDiff (cwd </> epath) tempDir diffs)
+
+runVerifyBackend :: FilePath -> [FilePath] -> IO CodeGenResult
+runVerifyBackend ipath mpaths = do
+  let flags =  V.VerifyFlags {
+    V.vf_searchPath = [ipath]
+    }
+  er <- unEIO $ V.verify flags mpaths
+  case er of
+   (Left err) -> return (CompilerFailed err)
+   (Right ()) -> return MatchOutput
+
+runVerifyBackend0 :: FilePath -> IO CodeGenResult
+runVerifyBackend0 mpath = runVerifyBackend (takeDirectory mpath) [mpath]
 
 runHaskellBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
 runHaskellBackend ipath mpaths epath customTypeFiles = do
@@ -83,6 +97,20 @@ stdCppCustomTypes = ["../../compiler/config/cpp-custom-types.json"]
 
 main :: IO ()
 main = hspec $ do
+  describe "adlc verify backend" $ do
+    it "aborts with error for duplicate definitions of a name" $ do
+      runVerifyBackend0 "test8/input/test.adl"
+        `shouldReturn` (CompilerFailed "multiple definitions for X")
+    it "aborts with error for inconsistent versioned/unversioned definitions of a name" $ do
+      runVerifyBackend0 "test9/input/test.adl"
+        `shouldReturn` (CompilerFailed "inconsistent version/unversioned definitions for X")
+    it "succeeds for correctly numbered versions of a name" $ do
+      runVerifyBackend0 "test10/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "aborts with error for inconsistently numbered versions of a name" $ do
+      runVerifyBackend0 "test11/input/test.adl"
+        `shouldReturn` (CompilerFailed "inconsistent version numbers for X")
+    
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do
       runHaskellBackend1 "test1/input/test.adl"

@@ -80,7 +80,8 @@ field = do
     return (Field n t mdefault Map.empty)
 
 mversion :: P.Parser MVersion
-mversion = pure Nothing
+mversion =   (Just . fromIntegral) <$> (ctoken '#' *> parseInt)
+         <|> return Nothing
 
 struct :: P.Parser (Ident,MVersion,Struct ScopedName)
 struct = do
@@ -180,7 +181,8 @@ jsonValue =   p_null <|> p_true <|> p_false <|> p_string <|> p_int <|> p_double
               where code      = fst $ head $ readHex x
                     max_char  = fromEnum (maxBound :: Char)
 
-    p_int = JSON.Number . JSON.I <$> pread reads <* whiteSpace P.<?> "number"
+    p_int = JSON.Number . JSON.I <$> parseInt
+
     p_double = JSON.Number . JSON.D <$> pread reads <* whiteSpace P.<?> "number"
 
     p_array = JSON.Array . V.fromList <$>
@@ -192,12 +194,14 @@ jsonValue =   p_null <|> p_true <|> p_false <|> p_string <|> p_int <|> p_double
     p_field :: P.Parser (T.Text,JSON.Value)
     p_field = (,) <$> (p_string0 <* ctoken ':') <*> jsonValue
 
-    pread :: ReadS a -> P.Parser a
-    pread reads = do
-      s <- P.getInput
-      case reads (T.unpack s) of
-         [(v,s')] -> (v <$ P.setInput (T.pack s'))
-         _ -> empty
+pread :: ReadS a -> P.Parser a
+pread reads = do
+  s <- P.getInput
+  case reads (T.unpack s) of
+     [(v,s')] -> (v <$ P.setInput (T.pack s'))
+     _ -> empty
+
+parseInt = pread reads <* whiteSpace P.<?> "number"
 
 ----------------------------------------------------------------------
 

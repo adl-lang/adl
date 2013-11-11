@@ -55,14 +55,15 @@ loadModule fpath0 findm mm = do
     --    * we have one unversioned decl
     --    * we have have a consistently versioned set
     checkDeclList :: [Decl ScopedName] -> EIO T.Text (Decl ScopedName)
-    checkDeclList ds = case filter (not.hasVersion) ds of
-        [] -> do
+    checkDeclList ds = case partition hasVersion ds of
+        (ds,[]) -> do
           let ds' = sortBy (comparing fst) [ (i,d) | (d@Decl{d_version=Just i}) <- filter hasVersion ds ]
           if and (zipWith (==) (map fst ds') [1,2..])
             then return (snd (last ds'))
-            else eioError (T.intercalate " " ["inconsistent version numbers for ",d_name (snd (last ds'))])
-        [d] -> return d
-        (d:_) -> eioError (T.intercalate " " ["multiple definitions for ",d_name d])
+            else eioError (T.intercalate " " ["inconsistent version numbers for",d_name (snd (last ds'))])
+        ([],[d]) -> return d
+        ([],d:_) -> eioError (T.intercalate " " ["multiple definitions for",d_name d])
+        (_,d:_) -> eioError (T.intercalate " " ["inconsistent version/unversioned definitions for",d_name d])
       where
         hasVersion Decl{d_version=Nothing} = False
         hasVersion _ = True
