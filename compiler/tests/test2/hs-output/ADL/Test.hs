@@ -29,15 +29,20 @@ instance ADLValue S1 where
         defaultv
         defaultv
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("x",aToJSON f (s1_x v))
-        , ("y",aToJSON f (s1_y v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = S1
-        <$> fieldFromJSON f "x" defaultv hm
-        <*> fieldFromJSON f "y" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            x_js = jsonSerialiser jf
+            y_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("x",aToJSON x_js (s1_x v))
+                , ("y",aToJSON y_js (s1_y v))
+                ] )
+            
+            from (JSON.Object hm) = S1 
+                <$> fieldFromJSON x_js "x" defaultv hm
+                <*> fieldFromJSON y_js "y" defaultv hm
+            from _ = Prelude.Nothing
 
 data Tree t = Tree
     { tree_value :: t
@@ -55,12 +60,17 @@ instance (ADLValue t) => ADLValue (Tree t) where
         defaultv
         defaultv
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("value",aToJSON f (tree_value v))
-        , ("children",aToJSON f (tree_children v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = Tree
-        <$> fieldFromJSON f "value" defaultv hm
-        <*> fieldFromJSON f "children" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            value_js = jsonSerialiser jf
+            children_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("value",aToJSON value_js (tree_value v))
+                , ("children",aToJSON children_js (tree_children v))
+                ] )
+            
+            from (JSON.Object hm) = Tree 
+                <$> fieldFromJSON value_js "value" defaultv hm
+                <*> fieldFromJSON children_js "children" defaultv hm
+            from _ = Prelude.Nothing

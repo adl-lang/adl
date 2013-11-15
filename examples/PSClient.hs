@@ -29,7 +29,7 @@ rfile = "/tmp/psServer.ref"
 
 withConnection :: FilePath -> (Context -> SinkConnection MyChannelReq -> HTTP.Transport -> IO a) -> IO a
 withConnection rfile f = do
-  s <- aFromJSONFile' defaultJSONFlags rfile 
+  s <- aFromJSONFile' (jsonSerialiser defaultJSONFlags) rfile 
   withResource ADL.Core.Comms.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (connectE ctx s) $ \sc ->

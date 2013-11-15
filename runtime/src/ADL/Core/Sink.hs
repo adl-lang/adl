@@ -27,8 +27,12 @@ instance forall a . (ADLValue a) => ADLValue (Sink a) where
   atype _ = T.concat ["sink<",atype (defaultv::a),">"]
 
   defaultv = Sink defaultv
-  aToJSON _ (Sink d) = aToJSON jf d
-  aFromJSON _ j = fmap Sink (aFromJSON jf j)
+
+  jsonSerialiser jf = JSONSerialiser to from
+    where
+      js = jsonSerialiser jf
+      to (Sink d) = aToJSON js d
+      from o = fmap Sink (aFromJSON js o)
 
 jf :: JSONFlags
 jf = JSONFlags False

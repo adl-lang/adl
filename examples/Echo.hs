@@ -20,7 +20,7 @@ echoServer rfile =
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Left 2000)) $ \ep -> do
       ls <- newLocalSink ep (Just "echoserver") (processRequest ctx)
-      aToJSONFile defaultJSONFlags rfile (toSink ls)
+      aToJSONFile (jsonSerialiser defaultJSONFlags) rfile (toSink ls)
       putStrLn ("Wrote echo server reference to " ++ show rfile)
       threadWait
   where
@@ -33,7 +33,7 @@ echoClient rfile =
   withResource ADL.Core.Comms.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
-      s <- aFromJSONFile' defaultJSONFlags rfile 
+      s <- aFromJSONFile' (jsonSerialiser defaultJSONFlags) rfile 
       withResource (throwLeft =<< connect ctx s) $ \sc -> do 
         (sink, getValue) <- oneShotSinkWithTimeout ep (seconds 20)
         void $ send sc (EchoRequest () sink)

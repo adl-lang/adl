@@ -30,14 +30,19 @@ instance (ADLValue i, ADLValue o) => ADLValue (Rpc i o) where
         defaultv
         defaultv
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("params",aToJSON f (rpc_params v))
-        , ("replyTo",aToJSON f (rpc_replyTo v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = Rpc
-        <$> fieldFromJSON f "params" defaultv hm
-        <*> fieldFromJSON f "replyTo" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            params_js = jsonSerialiser jf
+            replyTo_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("params",aToJSON params_js (rpc_params v))
+                , ("replyTo",aToJSON replyTo_js (rpc_replyTo v))
+                ] )
+            
+            from (JSON.Object hm) = Rpc 
+                <$> fieldFromJSON params_js "params" defaultv hm
+                <*> fieldFromJSON replyTo_js "replyTo" defaultv hm
+            from _ = Prelude.Nothing
 
 type RpcSvc i o = (Sink (Rpc i o))

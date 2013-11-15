@@ -14,9 +14,6 @@ data JSONSerialiser a = JSONSerialiser {
   aFromJSON :: JSON.Value -> Maybe a
 }
 
-class JSONSerialisable a where
-   jsonSerialiser :: JSONFlags -> JSONSerialiser a
-
 -- | Flags controlling the JSON Serialisation.
 data JSONFlags = JSONFlags {
   -- | If true, then fields corresponding to the types of structures and unions
@@ -24,13 +21,16 @@ data JSONFlags = JSONFlags {
   jf_typeNames :: Bool
   }
   
-class (JSONSerialisable a) => ADLValue a where
+class ADLValue a where
   -- | A text string describing the type. The return string may only depend on
   -- the type - the parameter must be ignored.
   atype :: a -> T.Text
 
   -- | A default value of the given type
   defaultv :: a
+
+  -- | Construct a serialiser for a json value of this type
+  jsonSerialiser :: JSONFlags -> JSONSerialiser a
 
 defaultJSONFlags :: JSONFlags
 defaultJSONFlags = JSONFlags True
@@ -42,7 +42,6 @@ fieldFromJSON :: (ADLValue a) => JSONSerialiser a -> T.Text -> a -> HM.HashMap T
 fieldFromJSON js nme defv hm = case HM.lookup nme hm of
   (Just v) -> aFromJSON js v
   Nothing -> (Just defv)
-
 
 unionFromJSON :: HM.HashMap T.Text (JSONSerialiser a) -> JSON.Value -> Maybe a
 unionFromJSON umap (JSON.Object hm) = decodeField (HM.toList hm)

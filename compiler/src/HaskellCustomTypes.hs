@@ -23,7 +23,7 @@ getCustomTypes fps = fmap Map.unions (mapM get0 fps)
   where
     get0 :: FilePath -> EIOT CustomTypeMap
     get0 fp = do
-      mv <- liftIO $ aFromJSONFile jsflags fp
+      mv <- liftIO $ aFromJSONFile (jsonSerialiser jsflags) fp
       case mv of
         Nothing -> eioError (template "Unable to read haskell custom types from  $1" [T.pack fp])
         Just v -> convert (HC.config_customTypes v)

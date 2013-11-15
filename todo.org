@@ -5,10 +5,10 @@
 ** DONE Decide on reserved words in ADL, and generate errors
 ** Add support for ADL constants 
 ** DONE Select custom types from command line
-** FIX duplicate definitions
+** DONE duplicate definitions
 Currently definitions are stored in a map as they are parsed, so we don't detect duplicates
 
-** Work out the best way to put the defaults for custom types in the ADL
+** DONE Work out the best way to put the defaults for custom types in the ADL
 
   A) Should typedefs allow defaults?
 
@@ -49,6 +49,9 @@ discriminator is negotiated on connection, and not serialised
 ** Add ability to test compiler errors
 
 * Haskell Backend
+** standard custom types (ie Maybe) should be implemented in terms  ADL defined types
+This would remove the need for the custom serialiser in ADL.Core.CustomTypes
+
 ** Formalise error handling in comms
 (use a single standard exception type)
 ** Fix scoping in generated haskell code

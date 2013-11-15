@@ -43,13 +43,13 @@ kvServer rfile ufile = do
       auth <- newLocalSink ep (Just "kvstore-authenticator")
               (processAuthenticate userMap ctx (toSink readOnly) (toSink readWrite))
 
-      aToJSONFile defaultJSONFlags rfile (toSink auth)
+      aToJSONFile (jsonSerialiser defaultJSONFlags) rfile (toSink auth)
       putStrLn ("Wrote authenticator reference to " ++ show rfile)
       threadWait
 
 readUserMap :: FilePath -> IO UserMap
 readUserMap ufile = do
-    us <- aFromJSONFile' defaultJSONFlags ufile
+    us <- aFromJSONFile' (jsonSerialiser defaultJSONFlags) ufile
     return (Map.fromList [(credentials_username (user_credentials u),u) | u <- us])
 
 processAuthenticate :: UserMap -> Context -> KVService -> KVService -> AuthenticateReq -> IO ()

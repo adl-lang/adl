@@ -53,7 +53,7 @@ psServer rfile =
     withResource (HTTP.newEndPoint http (Left 2001)) $ \ep -> do
     withResource (newState ctx)$ \state -> do
     ls <- newLocalSink ep (Just "pubsub") (processRequest ep state ctx)
-    aToJSONFile defaultJSONFlags rfile (toSink ls)
+    aToJSONFile (jsonSerialiser defaultJSONFlags) rfile (toSink ls)
     infoM "Wrote ps server reference to $1" [T.pack rfile]
     threadWait
 

@@ -329,19 +329,24 @@ generateStructADLInstance lname mn d s = do
           forM_ (s_fields s) $ \f -> do
             defv <- generateDefaultValue (f_type f) (f_default f) 
             wl $ defv
-        nl
-        wl "aToJSON f v = toJSONObject f (atype v) ("
+        nl    
+        wl "jsonSerialiser jf = JSONSerialiser to from"
         indent $ do
-          forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do
-            wt "$1 (\"$2\",aToJSON f ($3 v))"
-               [fp,(f_name f),hFieldName (d_name d) (f_name f)]
-          wl "] )"
-        nl
-        wt "aFromJSON f (JSON.Object hm) = $1" [lname]
-        indent $ do
-          forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
-            wt "$1 fieldFromJSON f \"$2\" defaultv hm" [p, (f_name f)]
-        wl "aFromJSON _ _ = Prelude.Nothing"
+          wl "where"
+          indent $ do
+            forM_ (s_fields s) $ \f -> do
+              wt "$1_js = jsonSerialiser jf" [f_name f]
+            nl
+            wl "to v = JSON.Object ( HM.fromList"
+            indent $ do
+              forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do                wt "$1 (\"$2\",aToJSON $2_js ($3 v))" [fp,(f_name f),hFieldName (d_name d) (f_name f)]
+              wl "] )"
+            nl
+            wt "from (JSON.Object hm) = $1 " [lname]
+            indent $ do
+              forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
+                wt "$1 fieldFromJSON $2_js \"$2\" defaultv hm" [p, (f_name f)]
+            wl "from _ = Prelude.Nothing"
 
 generateUnionDataType :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
 generateUnionDataType lname mn d u = do
@@ -356,6 +361,7 @@ generateUnionDataType lname mn d u = do
 
 generateUnionADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
 generateUnionADLInstance lname mn d u = do
+
     wl $ hInstanceHeader "ADLValue" lname (u_typeParams u)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (u_typeParams u)
@@ -363,32 +369,42 @@ generateUnionADLInstance lname mn d u = do
         wt "defaultv = $1 defaultv"
            [hDiscName (d_name d) (f_name (head (u_fields u)))]
         nl
-        wl "aToJSON f v = toJSONObject f (atype v) [case v of"
+        wl "jsonSerialiser jf = JSONSerialiser to from"
         indent $ do
-          forM_ (u_fields u) $ \f -> do
-            wt "($1 v) -> (\"$2\",aToJSON f v)"
-               [hDiscName (d_name d) (f_name f),(f_name f)]
-          wl "]"
-        nl
-        wl "aFromJSON f o = "
-        indent $ do
-          wl "let umap = HM.fromList"
-          indent $ indent $ do
-              forM_ (zip ("[":repeat ",") (u_fields u)) $ \(fp,f) -> do
-                wt "$1 (\"$2\", \\f v -> $3 <$> aFromJSON f v)" [fp,f_name f,hDiscName (d_name d) (f_name f)]
-              wl "]"
-          wl "in unionFromJSON f umap o"
+          wl "where"
+          indent $ do
+            forM_ (u_fields u) $ \f -> do
+              wt "$1_js = jsonSerialiser jf" [f_name f]
+            nl
+            forM_ (u_fields u) $ \f -> do
+              wt "to ($1 v) = JSON.Object (HM.singleton \"$2\" (aToJSON $2_js v))"
+                 [ hDiscName (d_name d) (f_name f), f_name f ]
+            nl
+            wl "from o = do"
+            indent $ do
+              wl "(key, v) <- splitUnion o"
+              wl "case key of"
+              indent $ do
+                forM_ (u_fields u) $ \f -> do
+                  wt "\"$1\" -> Prelude.fmap $2 (aFromJSON $1_js v)" [f_name f, hDiscName (d_name d) (f_name f) ]
 
 generateNewtypeADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Newtype ResolvedType -> HGen ()
 generateNewtypeADLInstance lname mn d n = do
+
     wl $ hInstanceHeader "ADLValue" lname (n_typeParams n)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (n_typeParams n)
         nl
         defv <- generateDefaultValue (n_typeExpr n) (n_default n) 
         wt "defaultv = $1 $2" [lname, defv]
-        wt "aToJSON f ($1 v) = aToJSON f v" [lname]
-        wt "aFromJSON f o = Prelude.fmap $1 (aFromJSON f o)" [lname]
+        nl
+        wl "jsonSerialiser jf = JSONSerialiser to from"
+        indent $ do
+          wl "where"
+          indent $ do
+            wl "js = jsonSerialiser jf"
+            wt "to ($1 v) = aToJSON js v" [lname]
+            wt "from o = Prelude.fmap $1 (aFromJSON js o)" [lname]
 
 generateDefaultValue :: TypeExpr ResolvedType -> (Maybe JSON.Value) -> HGen T.Text
 generateDefaultValue _ Nothing = return "defaultv"

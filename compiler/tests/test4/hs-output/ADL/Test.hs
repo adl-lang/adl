@@ -38,8 +38,12 @@ instance ADLValue DateO where
     atype _ = "test.Date"
     
     defaultv = DateO "1900-01-01"
-    aToJSON f (DateO v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap DateO (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (DateO v) = aToJSON js v
+            from o = Prelude.fmap DateO (aFromJSON js o)
 
 data S = S
     { s_v1 :: Date
@@ -52,10 +56,14 @@ instance ADLValue S where
     defaultv = S
         defaultv
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("v1",aToJSON f (s_v1 v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = S
-        <$> fieldFromJSON f "v1" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v1_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("v1",aToJSON v1_js (s_v1 v))
+                ] )
+            
+            from (JSON.Object hm) = S 
+                <$> fieldFromJSON v1_js "v1" defaultv hm
+            from _ = Prelude.Nothing

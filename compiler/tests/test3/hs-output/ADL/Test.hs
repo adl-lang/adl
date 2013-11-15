@@ -33,17 +33,23 @@ instance ADLValue A where
         defaultv
         defaultv
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("f_int",aToJSON f (a_f_int v))
-        , ("f_string",aToJSON f (a_f_string v))
-        , ("f_bool",aToJSON f (a_f_bool v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = A
-        <$> fieldFromJSON f "f_int" defaultv hm
-        <*> fieldFromJSON f "f_string" defaultv hm
-        <*> fieldFromJSON f "f_bool" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f_int_js = jsonSerialiser jf
+            f_string_js = jsonSerialiser jf
+            f_bool_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("f_int",aToJSON f_int_js (a_f_int v))
+                , ("f_string",aToJSON f_string_js (a_f_string v))
+                , ("f_bool",aToJSON f_bool_js (a_f_bool v))
+                ] )
+            
+            from (JSON.Object hm) = A 
+                <$> fieldFromJSON f_int_js "f_int" defaultv hm
+                <*> fieldFromJSON f_string_js "f_string" defaultv hm
+                <*> fieldFromJSON f_bool_js "f_bool" defaultv hm
+            from _ = Prelude.Nothing
 
 data B t = B
     { b_f_t :: t
@@ -65,19 +71,26 @@ instance (ADLValue t) => ADLValue (B t) where
         defaultv
         defaultv
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("f_t",aToJSON f (b_f_t v))
-        , ("f_string",aToJSON f (b_f_string v))
-        , ("f_tvec",aToJSON f (b_f_tvec v))
-        , ("f_xy",aToJSON f (b_f_xy v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = B
-        <$> fieldFromJSON f "f_t" defaultv hm
-        <*> fieldFromJSON f "f_string" defaultv hm
-        <*> fieldFromJSON f "f_tvec" defaultv hm
-        <*> fieldFromJSON f "f_xy" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f_t_js = jsonSerialiser jf
+            f_string_js = jsonSerialiser jf
+            f_tvec_js = jsonSerialiser jf
+            f_xy_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("f_t",aToJSON f_t_js (b_f_t v))
+                , ("f_string",aToJSON f_string_js (b_f_string v))
+                , ("f_tvec",aToJSON f_tvec_js (b_f_tvec v))
+                , ("f_xy",aToJSON f_xy_js (b_f_xy v))
+                ] )
+            
+            from (JSON.Object hm) = B 
+                <$> fieldFromJSON f_t_js "f_t" defaultv hm
+                <*> fieldFromJSON f_string_js "f_string" defaultv hm
+                <*> fieldFromJSON f_tvec_js "f_tvec" defaultv hm
+                <*> fieldFromJSON f_xy_js "f_xy" defaultv hm
+            from _ = Prelude.Nothing
 
 data S t = S
     { s_f_void :: ()
@@ -129,49 +142,71 @@ instance (ADLValue t) => ADLValue (S t) where
         defaultv
         (defaultv :: (B Data.Int.Int16)) { b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = (defaultv :: (XY Data.Int.Int16)) { xY_x = 5, xY_y = 5 } }
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("f_void",aToJSON f (s_f_void v))
-        , ("f_bool",aToJSON f (s_f_bool v))
-        , ("f_int8",aToJSON f (s_f_int8 v))
-        , ("f_int16",aToJSON f (s_f_int16 v))
-        , ("f_int32",aToJSON f (s_f_int32 v))
-        , ("f_int64",aToJSON f (s_f_int64 v))
-        , ("f_word8",aToJSON f (s_f_word8 v))
-        , ("f_word16",aToJSON f (s_f_word16 v))
-        , ("f_word32",aToJSON f (s_f_word32 v))
-        , ("f_word64",aToJSON f (s_f_word64 v))
-        , ("f_float",aToJSON f (s_f_float v))
-        , ("f_double",aToJSON f (s_f_double v))
-        , ("f_bytes",aToJSON f (s_f_bytes v))
-        , ("f_string",aToJSON f (s_f_string v))
-        , ("f_vstring",aToJSON f (s_f_vstring v))
-        , ("f_a",aToJSON f (s_f_a v))
-        , ("f_u",aToJSON f (s_f_u v))
-        , ("f_t",aToJSON f (s_f_t v))
-        , ("f_bint16",aToJSON f (s_f_bint16 v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = S
-        <$> fieldFromJSON f "f_void" defaultv hm
-        <*> fieldFromJSON f "f_bool" defaultv hm
-        <*> fieldFromJSON f "f_int8" defaultv hm
-        <*> fieldFromJSON f "f_int16" defaultv hm
-        <*> fieldFromJSON f "f_int32" defaultv hm
-        <*> fieldFromJSON f "f_int64" defaultv hm
-        <*> fieldFromJSON f "f_word8" defaultv hm
-        <*> fieldFromJSON f "f_word16" defaultv hm
-        <*> fieldFromJSON f "f_word32" defaultv hm
-        <*> fieldFromJSON f "f_word64" defaultv hm
-        <*> fieldFromJSON f "f_float" defaultv hm
-        <*> fieldFromJSON f "f_double" defaultv hm
-        <*> fieldFromJSON f "f_bytes" defaultv hm
-        <*> fieldFromJSON f "f_string" defaultv hm
-        <*> fieldFromJSON f "f_vstring" defaultv hm
-        <*> fieldFromJSON f "f_a" defaultv hm
-        <*> fieldFromJSON f "f_u" defaultv hm
-        <*> fieldFromJSON f "f_t" defaultv hm
-        <*> fieldFromJSON f "f_bint16" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f_void_js = jsonSerialiser jf
+            f_bool_js = jsonSerialiser jf
+            f_int8_js = jsonSerialiser jf
+            f_int16_js = jsonSerialiser jf
+            f_int32_js = jsonSerialiser jf
+            f_int64_js = jsonSerialiser jf
+            f_word8_js = jsonSerialiser jf
+            f_word16_js = jsonSerialiser jf
+            f_word32_js = jsonSerialiser jf
+            f_word64_js = jsonSerialiser jf
+            f_float_js = jsonSerialiser jf
+            f_double_js = jsonSerialiser jf
+            f_bytes_js = jsonSerialiser jf
+            f_string_js = jsonSerialiser jf
+            f_vstring_js = jsonSerialiser jf
+            f_a_js = jsonSerialiser jf
+            f_u_js = jsonSerialiser jf
+            f_t_js = jsonSerialiser jf
+            f_bint16_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("f_void",aToJSON f_void_js (s_f_void v))
+                , ("f_bool",aToJSON f_bool_js (s_f_bool v))
+                , ("f_int8",aToJSON f_int8_js (s_f_int8 v))
+                , ("f_int16",aToJSON f_int16_js (s_f_int16 v))
+                , ("f_int32",aToJSON f_int32_js (s_f_int32 v))
+                , ("f_int64",aToJSON f_int64_js (s_f_int64 v))
+                , ("f_word8",aToJSON f_word8_js (s_f_word8 v))
+                , ("f_word16",aToJSON f_word16_js (s_f_word16 v))
+                , ("f_word32",aToJSON f_word32_js (s_f_word32 v))
+                , ("f_word64",aToJSON f_word64_js (s_f_word64 v))
+                , ("f_float",aToJSON f_float_js (s_f_float v))
+                , ("f_double",aToJSON f_double_js (s_f_double v))
+                , ("f_bytes",aToJSON f_bytes_js (s_f_bytes v))
+                , ("f_string",aToJSON f_string_js (s_f_string v))
+                , ("f_vstring",aToJSON f_vstring_js (s_f_vstring v))
+                , ("f_a",aToJSON f_a_js (s_f_a v))
+                , ("f_u",aToJSON f_u_js (s_f_u v))
+                , ("f_t",aToJSON f_t_js (s_f_t v))
+                , ("f_bint16",aToJSON f_bint16_js (s_f_bint16 v))
+                ] )
+            
+            from (JSON.Object hm) = S 
+                <$> fieldFromJSON f_void_js "f_void" defaultv hm
+                <*> fieldFromJSON f_bool_js "f_bool" defaultv hm
+                <*> fieldFromJSON f_int8_js "f_int8" defaultv hm
+                <*> fieldFromJSON f_int16_js "f_int16" defaultv hm
+                <*> fieldFromJSON f_int32_js "f_int32" defaultv hm
+                <*> fieldFromJSON f_int64_js "f_int64" defaultv hm
+                <*> fieldFromJSON f_word8_js "f_word8" defaultv hm
+                <*> fieldFromJSON f_word16_js "f_word16" defaultv hm
+                <*> fieldFromJSON f_word32_js "f_word32" defaultv hm
+                <*> fieldFromJSON f_word64_js "f_word64" defaultv hm
+                <*> fieldFromJSON f_float_js "f_float" defaultv hm
+                <*> fieldFromJSON f_double_js "f_double" defaultv hm
+                <*> fieldFromJSON f_bytes_js "f_bytes" defaultv hm
+                <*> fieldFromJSON f_string_js "f_string" defaultv hm
+                <*> fieldFromJSON f_vstring_js "f_vstring" defaultv hm
+                <*> fieldFromJSON f_a_js "f_a" defaultv hm
+                <*> fieldFromJSON f_u_js "f_u" defaultv hm
+                <*> fieldFromJSON f_t_js "f_t" defaultv hm
+                <*> fieldFromJSON f_bint16_js "f_bint16" defaultv hm
+            from _ = Prelude.Nothing
 
 data U
     = U_f_int Data.Int.Int16
@@ -183,17 +218,19 @@ instance ADLValue U where
     
     defaultv = U_f_int defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U_f_int v) -> ("f_int",aToJSON f v)
-        (U_f_string v) -> ("f_string",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("f_int", \f v -> U_f_int <$> aFromJSON f v)
-                , ("f_string", \f v -> U_f_string <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f_int_js = jsonSerialiser jf
+            f_string_js = jsonSerialiser jf
+            
+            to (U_f_int v) = JSON.Object (HM.singleton "f_int" (aToJSON f_int_js v))
+            to (U_f_string v) = JSON.Object (HM.singleton "f_string" (aToJSON f_string_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "f_int" -> Prelude.fmap U_f_int (aFromJSON f_int_js v)
+                    "f_string" -> Prelude.fmap U_f_string (aFromJSON f_string_js v)
 
 data XY t = XY
     { xY_x :: t
@@ -211,12 +248,17 @@ instance (ADLValue t) => ADLValue (XY t) where
         defaultv
         defaultv
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("x",aToJSON f (xY_x v))
-        , ("y",aToJSON f (xY_y v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = XY
-        <$> fieldFromJSON f "x" defaultv hm
-        <*> fieldFromJSON f "y" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            x_js = jsonSerialiser jf
+            y_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("x",aToJSON x_js (xY_x v))
+                , ("y",aToJSON y_js (xY_y v))
+                ] )
+            
+            from (JSON.Object hm) = XY 
+                <$> fieldFromJSON x_js "x" defaultv hm
+                <*> fieldFromJSON y_js "y" defaultv hm
+            from _ = Prelude.Nothing

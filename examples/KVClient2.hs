@@ -23,7 +23,7 @@ import Utils
 
 withConnection :: FilePath -> Credentials -> (SinkConnection KVRequest -> EndPoint -> IO a) -> IO a
 withConnection rfile cred f = do
-  s <- aFromJSONFile' defaultJSONFlags rfile 
+  s <- aFromJSONFile' (jsonSerialiser defaultJSONFlags) rfile 
   withResource ADL.Core.Comms.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep ->

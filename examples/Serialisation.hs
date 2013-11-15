@@ -22,7 +22,7 @@ server rfile =
       http <- HTTP.newTransport ctx
       withResource (HTTP.newEndPoint http (Left 2001)) $ \ep -> do
         ls <- AC.newLocalSink ep (Just "serialisation-test-server") (processRequest ctx)
-        aToJSONFile defaultJSONFlags rfile (AC.toSink ls)
+        aToJSONFile (jsonSerialiser defaultJSONFlags) rfile (AC.toSink ls)
         putStrLn ("Wrote server reference to " ++ show rfile)
         threadWait
 
@@ -57,7 +57,7 @@ client rfile =
   withResource AC.newContext $ \ctx -> do
     http <- HTTP.newTransport ctx
     withResource (HTTP.newEndPoint http (Right (2100,2200))) $ \ep -> do
-      s <- aFromJSONFile' defaultJSONFlags rfile 
+      s <- aFromJSONFile' (jsonSerialiser defaultJSONFlags) rfile 
       withResource (throwLeft =<< AC.connect ctx s) $ \sc ->
 
         -- Create some dummy sinks just for serialisation testing

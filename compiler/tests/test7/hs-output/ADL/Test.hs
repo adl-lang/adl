@@ -38,8 +38,12 @@ instance ADLValue Int2 where
     atype _ = "test.Int2"
     
     defaultv = Int2 defaultv
-    aToJSON f (Int2 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap Int2 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (Int2 v) = aToJSON js v
+            from o = Prelude.fmap Int2 (aFromJSON js o)
 
 newtype Int3 = Int3 { unInt3 :: Data.Int.Int64 }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
@@ -48,8 +52,12 @@ instance ADLValue Int3 where
     atype _ = "test.Int3"
     
     defaultv = Int3 42
-    aToJSON f (Int3 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap Int3 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (Int3 v) = aToJSON js v
+            from o = Prelude.fmap Int3 (aFromJSON js o)
 
 type Int4 x = Data.Int.Int64
 
@@ -63,8 +71,12 @@ instance (ADLValue x) => ADLValue (Int5 x) where
         , ">" ]
     
     defaultv = Int5 defaultv
-    aToJSON f (Int5 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap Int5 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (Int5 v) = aToJSON js v
+            from o = Prelude.fmap Int5 (aFromJSON js o)
 
 newtype Int6 x = Int6 { unInt6 :: Data.Int.Int64 }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
@@ -76,8 +88,12 @@ instance (ADLValue x) => ADLValue (Int6 x) where
         , ">" ]
     
     defaultv = Int6 43
-    aToJSON f (Int6 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap Int6 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (Int6 v) = aToJSON js v
+            from o = Prelude.fmap Int6 (aFromJSON js o)
 
 type IntPoint1 = (Point Data.Int.Int64)
 
@@ -88,8 +104,12 @@ instance ADLValue IntPoint2 where
     atype _ = "test.IntPoint2"
     
     defaultv = IntPoint2 defaultv
-    aToJSON f (IntPoint2 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap IntPoint2 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (IntPoint2 v) = aToJSON js v
+            from o = Prelude.fmap IntPoint2 (aFromJSON js o)
 
 newtype IntPoint3 = IntPoint3 { unIntPoint3 :: (Point Data.Int.Int64) }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
@@ -98,8 +118,12 @@ instance ADLValue IntPoint3 where
     atype _ = "test.IntPoint3"
     
     defaultv = IntPoint3 (defaultv :: (Point Data.Int.Int64)) { point_x = 5, point_y = 27 }
-    aToJSON f (IntPoint3 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap IntPoint3 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (IntPoint3 v) = aToJSON js v
+            from o = Prelude.fmap IntPoint3 (aFromJSON js o)
 
 data Point t = Point
     { point_x :: t
@@ -117,15 +141,20 @@ instance (ADLValue t) => ADLValue (Point t) where
         defaultv
         defaultv
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("x",aToJSON f (point_x v))
-        , ("y",aToJSON f (point_y v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = Point
-        <$> fieldFromJSON f "x" defaultv hm
-        <*> fieldFromJSON f "y" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            x_js = jsonSerialiser jf
+            y_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("x",aToJSON x_js (point_x v))
+                , ("y",aToJSON y_js (point_y v))
+                ] )
+            
+            from (JSON.Object hm) = Point 
+                <$> fieldFromJSON x_js "x" defaultv hm
+                <*> fieldFromJSON y_js "y" defaultv hm
+            from _ = Prelude.Nothing
 
 type Point1 x = (Point x)
 
@@ -139,8 +168,12 @@ instance (ADLValue x) => ADLValue (Point2 x) where
         , ">" ]
     
     defaultv = Point2 defaultv
-    aToJSON f (Point2 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap Point2 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (Point2 v) = aToJSON js v
+            from o = Prelude.fmap Point2 (aFromJSON js o)
 
 type String1 = T.Text
 
@@ -151,8 +184,12 @@ instance ADLValue String2 where
     atype _ = "test.String2"
     
     defaultv = String2 defaultv
-    aToJSON f (String2 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap String2 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (String2 v) = aToJSON js v
+            from o = Prelude.fmap String2 (aFromJSON js o)
 
 newtype String3 = String3 { unString3 :: T.Text }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
@@ -161,8 +198,12 @@ instance ADLValue String3 where
     atype _ = "test.String3"
     
     defaultv = String3 "hello"
-    aToJSON f (String3 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap String3 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (String3 v) = aToJSON js v
+            from o = Prelude.fmap String3 (aFromJSON js o)
 
 type String4 x = T.Text
 
@@ -176,8 +217,12 @@ instance (ADLValue x) => ADLValue (String5 x) where
         , ">" ]
     
     defaultv = String5 defaultv
-    aToJSON f (String5 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap String5 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (String5 v) = aToJSON js v
+            from o = Prelude.fmap String5 (aFromJSON js o)
 
 newtype String6 x = String6 { unString6 :: T.Text }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
@@ -189,5 +234,9 @@ instance (ADLValue x) => ADLValue (String6 x) where
         , ">" ]
     
     defaultv = String6 "goodbye"
-    aToJSON f (String6 v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap String6 (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (String6 v) = aToJSON js v
+            from o = Prelude.fmap String6 (aFromJSON js o)

@@ -22,8 +22,11 @@
                 "instance ADLValue Day where",
                 "  atype _ = atype (defaultv :: Date0)",
                 "  defaultv = let (Just d) = toDay defaultv in d",
-                "  aToJSON jf d = aToJSON jf (fromDay d)",
-                "  aFromJSON jf jv = (aFromJSON jf jv) >>= toDay"
+                "  jsonSerialiser jf = JSONSerialiser to from",
+                "     where",
+                "       js = jsonSerialiser jf",
+                "       to d = aToJSON js (fromDay d) ",
+                "       from o = aFromJSON js o >>= toDay"
             ],
             "generateOrigADLType" : { "just" : "Date0" }
         },
@@ -47,8 +50,11 @@
                 "instance ADLValue UTCTime where",
                 "  atype _ = atype (defaultv :: UTCTime0)",
                 "  defaultv = let (Just d) = toUTCTime defaultv in d",
-                "  aToJSON jf d = aToJSON jf (fromUTCTime d)",
-                "  aFromJSON jf jv = (aFromJSON jf jv) >>= toUTCTime"
+                "  jsonSerialiser jf = JSONSerialiser to from",
+                "     where",
+                "       js = jsonSerialiser jf",
+                "       to d = aToJSON js (fromUTCTime d) ",
+                "       from o = aFromJSON js o >>= toUTCTime"
             ],
             "generateOrigADLType" : { "just" : "UTCTime0" }
         }

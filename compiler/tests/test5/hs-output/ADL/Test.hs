@@ -32,13 +32,17 @@ instance ADLValue S1 where
     defaultv = S1
         100
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("f",aToJSON f (s1_f v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = S1
-        <$> fieldFromJSON f "f" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("f",aToJSON f_js (s1_f v))
+                ] )
+            
+            from (JSON.Object hm) = S1 
+                <$> fieldFromJSON f_js "f" defaultv hm
+            from _ = Prelude.Nothing
 
 data U1
     = U1_v ()
@@ -49,15 +53,16 @@ instance ADLValue U1 where
     
     defaultv = U1_v defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U1_v v) -> ("v",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v", \f v -> U1_v <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v_js = jsonSerialiser jf
+            
+            to (U1_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v" -> Prelude.fmap U1_v (aFromJSON v_js v)
 
 data U2
     = U2_v Data.Int.Int16
@@ -68,15 +73,16 @@ instance ADLValue U2 where
     
     defaultv = U2_v defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U2_v v) -> ("v",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v", \f v -> U2_v <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v_js = jsonSerialiser jf
+            
+            to (U2_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v" -> Prelude.fmap U2_v (aFromJSON v_js v)
 
 data U3
     = U3_v Data.Int.Int16
@@ -87,15 +93,16 @@ instance ADLValue U3 where
     
     defaultv = U3_v defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U3_v v) -> ("v",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v", \f v -> U3_v <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v_js = jsonSerialiser jf
+            
+            to (U3_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v" -> Prelude.fmap U3_v (aFromJSON v_js v)
 
 data U4
     = U4_v S1
@@ -106,15 +113,16 @@ instance ADLValue U4 where
     
     defaultv = U4_v defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U4_v v) -> ("v",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v", \f v -> U4_v <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v_js = jsonSerialiser jf
+            
+            to (U4_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v" -> Prelude.fmap U4_v (aFromJSON v_js v)
 
 data U5
     = U5_v S1
@@ -125,15 +133,16 @@ instance ADLValue U5 where
     
     defaultv = U5_v defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U5_v v) -> ("v",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v", \f v -> U5_v <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v_js = jsonSerialiser jf
+            
+            to (U5_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v" -> Prelude.fmap U5_v (aFromJSON v_js v)
 
 data U6
     = U6_v U3
@@ -144,15 +153,16 @@ instance ADLValue U6 where
     
     defaultv = U6_v defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U6_v v) -> ("v",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v", \f v -> U6_v <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v_js = jsonSerialiser jf
+            
+            to (U6_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v" -> Prelude.fmap U6_v (aFromJSON v_js v)
 
 data U7
     = U7_v U3
@@ -163,15 +173,16 @@ instance ADLValue U7 where
     
     defaultv = U7_v defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U7_v v) -> ("v",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v", \f v -> U7_v <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v_js = jsonSerialiser jf
+            
+            to (U7_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v" -> Prelude.fmap U7_v (aFromJSON v_js v)
 
 data U8
     = U8_v1 S1
@@ -183,17 +194,19 @@ instance ADLValue U8 where
     
     defaultv = U8_v1 defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U8_v1 v) -> ("v1",aToJSON f v)
-        (U8_v2 v) -> ("v2",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v1", \f v -> U8_v1 <$> aFromJSON f v)
-                , ("v2", \f v -> U8_v2 <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v1_js = jsonSerialiser jf
+            v2_js = jsonSerialiser jf
+            
+            to (U8_v1 v) = JSON.Object (HM.singleton "v1" (aToJSON v1_js v))
+            to (U8_v2 v) = JSON.Object (HM.singleton "v2" (aToJSON v2_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v1" -> Prelude.fmap U8_v1 (aFromJSON v1_js v)
+                    "v2" -> Prelude.fmap U8_v2 (aFromJSON v2_js v)
 
 data U9 t
     = U9_v1 t
@@ -208,14 +221,16 @@ instance (ADLValue t) => ADLValue (U9 t) where
     
     defaultv = U9_v1 defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (U9_v1 v) -> ("v1",aToJSON f v)
-        (U9_v2 v) -> ("v2",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("v1", \f v -> U9_v1 <$> aFromJSON f v)
-                , ("v2", \f v -> U9_v2 <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            v1_js = jsonSerialiser jf
+            v2_js = jsonSerialiser jf
+            
+            to (U9_v1 v) = JSON.Object (HM.singleton "v1" (aToJSON v1_js v))
+            to (U9_v2 v) = JSON.Object (HM.singleton "v2" (aToJSON v2_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "v1" -> Prelude.fmap U9_v1 (aFromJSON v1_js v)
+                    "v2" -> Prelude.fmap U9_v2 (aFromJSON v2_js v)

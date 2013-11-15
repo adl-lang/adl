@@ -22,7 +22,7 @@ import Utils
 
 withConnection :: FilePath -> ((SinkConnection KVRequest) -> EndPoint -> IO a) -> IO a
 withConnection rfile f = do
-  s <- aFromJSONFile' defaultJSONFlags rfile 
+  s <- aFromJSONFile' (jsonSerialiser defaultJSONFlags) rfile 
  
   withResource newContext $ \ctx -> do
     http <- HTTP.newTransport ctx

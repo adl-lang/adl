@@ -22,8 +22,12 @@ instance ADLValue SerialisationType where
     atype _ = "sys.sinkimpl.SerialisationType"
     
     defaultv = SerialisationType defaultv
-    aToJSON f (SerialisationType v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap SerialisationType (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (SerialisationType v) = aToJSON js v
+            from o = Prelude.fmap SerialisationType (aFromJSON js o)
 
 data SinkData = SinkData
     { sinkData_transport :: TransportName
@@ -40,17 +44,23 @@ instance ADLValue SinkData where
         (TransportAddr_stringv "")
         (SerialisationType "json")
     
-    aToJSON f v = toJSONObject f (atype v) (
-        [ ("transport",aToJSON f (sinkData_transport v))
-        , ("address",aToJSON f (sinkData_address v))
-        , ("serialisation",aToJSON f (sinkData_serialisation v))
-        ] )
-    
-    aFromJSON f (JSON.Object hm) = SinkData
-        <$> fieldFromJSON f "transport" defaultv hm
-        <*> fieldFromJSON f "address" defaultv hm
-        <*> fieldFromJSON f "serialisation" defaultv hm
-    aFromJSON _ _ = Prelude.Nothing
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            transport_js = jsonSerialiser jf
+            address_js = jsonSerialiser jf
+            serialisation_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("transport",aToJSON transport_js (sinkData_transport v))
+                , ("address",aToJSON address_js (sinkData_address v))
+                , ("serialisation",aToJSON serialisation_js (sinkData_serialisation v))
+                ] )
+            
+            from (JSON.Object hm) = SinkData 
+                <$> fieldFromJSON transport_js "transport" defaultv hm
+                <*> fieldFromJSON address_js "address" defaultv hm
+                <*> fieldFromJSON serialisation_js "serialisation" defaultv hm
+            from _ = Prelude.Nothing
 
 data TransportAddr
     = TransportAddr_stringv T.Text
@@ -63,19 +73,22 @@ instance ADLValue TransportAddr where
     
     defaultv = TransportAddr_stringv defaultv
     
-    aToJSON f v = toJSONObject f (atype v) [case v of
-        (TransportAddr_stringv v) -> ("stringv",aToJSON f v)
-        (TransportAddr_intv v) -> ("intv",aToJSON f v)
-        (TransportAddr_arrayv v) -> ("arrayv",aToJSON f v)
-        ]
-    
-    aFromJSON f o = 
-        let umap = HM.fromList
-                [ ("stringv", \f v -> TransportAddr_stringv <$> aFromJSON f v)
-                , ("intv", \f v -> TransportAddr_intv <$> aFromJSON f v)
-                , ("arrayv", \f v -> TransportAddr_arrayv <$> aFromJSON f v)
-                ]
-        in unionFromJSON f umap o
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            stringv_js = jsonSerialiser jf
+            intv_js = jsonSerialiser jf
+            arrayv_js = jsonSerialiser jf
+            
+            to (TransportAddr_stringv v) = JSON.Object (HM.singleton "stringv" (aToJSON stringv_js v))
+            to (TransportAddr_intv v) = JSON.Object (HM.singleton "intv" (aToJSON intv_js v))
+            to (TransportAddr_arrayv v) = JSON.Object (HM.singleton "arrayv" (aToJSON arrayv_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "stringv" -> Prelude.fmap TransportAddr_stringv (aFromJSON stringv_js v)
+                    "intv" -> Prelude.fmap TransportAddr_intv (aFromJSON intv_js v)
+                    "arrayv" -> Prelude.fmap TransportAddr_arrayv (aFromJSON arrayv_js v)
 
 newtype TransportName = TransportName { unTransportName :: T.Text }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
@@ -84,5 +97,9 @@ instance ADLValue TransportName where
     atype _ = "sys.sinkimpl.TransportName"
     
     defaultv = TransportName defaultv
-    aToJSON f (TransportName v) = aToJSON f v
-    aFromJSON f o = Prelude.fmap TransportName (aFromJSON f o)
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            js = jsonSerialiser jf
+            to (TransportName v) = aToJSON js v
+            from o = Prelude.fmap TransportName (aFromJSON js o)
