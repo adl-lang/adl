@@ -1,9 +1,11 @@
 * ADL Core/Compiler
+** Add support for ADL constants
+** Implement a backend to produce JSON
+ - schema should be in DDL
 ** DONE Import syntax
     - Should we use java style?
 ** DONE Consider final list of primitive types
 ** DONE Decide on reserved words in ADL, and generate errors
-** Add support for ADL constants 
 ** DONE Select custom types from command line
 ** DONE duplicate definitions
 Currently definitions are stored in a map as they are parsed, so we don't detect duplicates
@@ -46,9 +48,16 @@ discriminator is negotiated on connection, and not serialised
 ** Add support for documentation strings passing through to generated code
 
 * Test Suite
-** Add ability to test compiler errors
-
+** DONE Add ability to test compiler errors
 * Haskell Backend
+** Consider an option extra method on transport to support RPCs
+
+data Connection = Connection {
+  c_send :: LBS.ByteString -> IO (Either SendError ()),
+  c_bisend :: Maybe (LBS.ByteString -> IO (Either SendError LBS.ByteString),
+  c_close :: IO ()
+  }
+
 ** standard custom types (ie Maybe) should be implemented in terms  ADL defined types
 This would remove the need for the custom serialiser in ADL.Core.CustomTypes
 
@@ -63,7 +72,7 @@ This would remove the need for the custom serialiser in ADL.Core.CustomTypes
 
       data AFJError = AFJError { afje_context :: [T.Text], afje_error ::  T.Text }
       aFromJSON :: JSONFlags -> JSON.Value -> Either AFJError a
-
-
+* C++ Backend
+** Implement newtypes in terms of templates
 
 
