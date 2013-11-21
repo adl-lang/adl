@@ -47,233 +47,363 @@ ignore( JsonReader &json )
     }
 }
 
-void
-JsonV<Void>::toJson( JsonWriter &json, const Void & v )
+Serialiser<Void>::Ptr
+Serialisable<Void>::serialiser( const SerialiserFlags &  )
 {
-    json.nullV();
-}
-
-void
-JsonV<Void>::fromJson( Void &v, JsonReader &json )
-{
-    match( json, JsonReader::NULLV );
-}
-
-void
-JsonV<bool>::toJson( JsonWriter &json, const bool & v )
-{
-    json.boolV(v);
-}
-
-void
-JsonV<bool>::fromJson( bool &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::BOOLEAN )
+    struct S : public Serialiser<Void>
     {
-        v = json.boolV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const Void & v ) const
+        {
+            json.nullV();
+        }
+
+        void fromJson( Void &v, JsonReader &json )const
+        {
+            match( json, JsonReader::NULLV );
+        }
+    };
+
+    static Serialiser<Void>::Ptr s;
+    if( !s )
+        s = Serialiser<Void>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<int8_t>::toJson( JsonWriter &json, const int8_t & v )
+Serialiser<bool>::Ptr
+Serialisable<bool>::serialiser( const SerialiserFlags &  )
 {
-    json.intV(v);
-}
-
-void
-JsonV<int8_t>::fromJson( int8_t &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<bool>
     {
-        v = json.intV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const bool & v ) const
+        {
+            json.boolV(v);
+        }
+
+        void fromJson( bool &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::BOOLEAN )
+            {
+                v = json.boolV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<bool>::Ptr s;
+    if( !s )
+        s = Serialiser<bool>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<int16_t>::toJson( JsonWriter &json, const int16_t & v )
-{
-    json.intV(v);
-}
 
-void
-JsonV<int16_t>::fromJson( int16_t &v, JsonReader &json )
+Serialiser<int8_t>::Ptr
+Serialisable<int8_t>::serialiser( const SerialiserFlags &  )
 {
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<int8_t>
     {
-        v = json.intV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const int8_t & v ) const
+        {
+            json.intV(v);
+        }
+
+        void fromJson( int8_t &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.intV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<int8_t>::Ptr s;
+    if( !s )
+        s = Serialiser<int8_t>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<int32_t>::toJson( JsonWriter &json, const int32_t & v )
+Serialiser<int16_t>::Ptr
+Serialisable<int16_t>::serialiser( const SerialiserFlags &  )
 {
-    json.intV(v);
-}
-
-void
-JsonV<int32_t>::fromJson( int32_t &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<int16_t>
     {
-        v = json.intV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const int16_t & v ) const
+        {
+            json.intV(v);
+        }
+
+        void fromJson( int16_t &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.intV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<int16_t>::Ptr s;
+    if( !s )
+        s = Serialiser<int16_t>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<int64_t>::toJson( JsonWriter &json, const int64_t & v )
+Serialiser<int32_t>::Ptr
+Serialisable<int32_t>::serialiser( const SerialiserFlags &  )
 {
-    json.intV(v);
-}
-
-void
-JsonV<int64_t>::fromJson( int64_t &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<int32_t>
     {
-        v = json.intV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const int32_t & v ) const
+        {
+            json.intV(v);
+        }
+
+        void fromJson( int32_t &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.intV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<int32_t>::Ptr s;
+    if( !s )
+        s = Serialiser<int32_t>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<uint8_t>::toJson( JsonWriter &json, const uint8_t & v )
+Serialiser<int64_t>::Ptr
+Serialisable<int64_t>::serialiser( const SerialiserFlags &  )
 {
-    json.uintV(v);
-}
-
-void
-JsonV<uint8_t>::fromJson( uint8_t &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<int64_t>
     {
-        v = json.uintV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const int64_t & v ) const
+        {
+            json.intV(v);
+        }
+
+        void fromJson( int64_t &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.intV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<int64_t>::Ptr s;
+    if( !s )
+        s = Serialiser<int64_t>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<uint16_t>::toJson( JsonWriter &json, const uint16_t & v )
+Serialiser<uint8_t>::Ptr
+Serialisable<uint8_t>::serialiser( const SerialiserFlags &  )
 {
-    json.uintV(v);
-}
-
-void
-JsonV<uint16_t>::fromJson( uint16_t &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<uint8_t>
     {
-        v = json.uintV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const uint8_t & v ) const
+        {
+            json.uintV(v);
+        }
+
+        void fromJson( uint8_t &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.uintV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<uint8_t>::Ptr s;
+    if( !s )
+        s = Serialiser<uint8_t>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<uint32_t>::toJson( JsonWriter &json, const uint32_t & v )
+Serialiser<uint16_t>::Ptr
+Serialisable<uint16_t>::serialiser( const SerialiserFlags &  )
 {
-    json.uintV(v);
-}
-
-void
-JsonV<uint32_t>::fromJson( uint32_t &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<uint16_t>
     {
-        v = json.uintV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const uint16_t & v ) const
+        {
+            json.uintV(v);
+        }
+
+        void fromJson( uint16_t &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.uintV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<uint16_t>::Ptr s;
+    if( !s )
+        s = Serialiser<uint16_t>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<uint64_t>::toJson( JsonWriter &json, const uint64_t & v )
+Serialiser<uint32_t>::Ptr
+Serialisable<uint32_t>::serialiser( const SerialiserFlags &  )
 {
-    json.uintV(v);
-}
-
-void
-JsonV<uint64_t>::fromJson( uint64_t &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<uint32_t>
     {
-        v = json.uintV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const uint32_t & v ) const
+        {
+            json.uintV(v);
+        }
+
+        void fromJson( uint32_t &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.uintV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<uint32_t>::Ptr s;
+    if( !s )
+        s = Serialiser<uint32_t>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<float>::toJson( JsonWriter &json, const float & v )
+Serialiser<uint64_t>::Ptr
+Serialisable<uint64_t>::serialiser( const SerialiserFlags &  )
 {
-    json.doubleV(v);
-}
-
-void
-JsonV<float>::fromJson( float &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<uint64_t>
     {
-        v = json.doubleV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const uint64_t & v ) const
+        {
+            json.uintV(v);
+        }
+
+        void fromJson( uint64_t &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.uintV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<uint64_t>::Ptr s;
+    if( !s )
+        s = Serialiser<uint64_t>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<double>::toJson( JsonWriter &json, const double & v )
+Serialiser<float>::Ptr
+Serialisable<float>::serialiser( const SerialiserFlags &  )
 {
-    json.doubleV(v);
-}
-
-void
-JsonV<double>::fromJson( double &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::NUMBER )
+    struct S : public Serialiser<float>
     {
-        v = json.doubleV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const float & v ) const
+        {
+            json.doubleV(v);
+        }
+
+        void fromJson( float &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.doubleV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<float>::Ptr s;
+    if( !s )
+        s = Serialiser<float>::Ptr( new S() );
+    return s;
 }
 
-void
-JsonV<std::string>::toJson( JsonWriter &json, const std::string & v )
+Serialiser<double>::Ptr
+Serialisable<double>::serialiser( const SerialiserFlags &  )
 {
-    json.stringV(v);
-}
-
-void
-JsonV<std::string>::fromJson( std::string &v, JsonReader &json )
-{
-    if( json.type() == JsonReader::STRING )
+    struct S : public Serialiser<double>
     {
-        v = json.stringV();
-        json.next();
-    }
-    else
-        throw json_parse_failure();
+        void toJson( JsonWriter &json, const double & v ) const
+        {
+            json.doubleV(v);
+        }
+
+        void fromJson( double &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::NUMBER )
+            {
+                v = json.doubleV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<double>::Ptr s;
+    if( !s )
+        s = Serialiser<double>::Ptr( new S() );
+    return s;
 }
 
+Serialiser<std::string>::Ptr
+Serialisable<std::string>::serialiser( const SerialiserFlags &  )
+{
+    struct S : public Serialiser<std::string>
+    {
+        void toJson( JsonWriter &json, const std::string & v ) const
+        {
+            json.stringV(v);
+        }
+
+        void fromJson( std::string &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::STRING )
+            {
+                v = json.stringV();
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<std::string>::Ptr s;
+    if( !s )
+        s = Serialiser<std::string>::Ptr( new S() );
+    return s;
+}
 
 };

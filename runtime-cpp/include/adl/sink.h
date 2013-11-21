@@ -15,20 +15,34 @@ struct Sink {
 };
 
 template <class T>
-struct JsonV<Sink<T>>
+struct Serialisable<Sink<T>>
 {
-    static void toJson( JsonWriter &json, const Sink<T> & v )
+    struct S : public Serialiser<Sink<T>>
     {
-        JsonV<ADL::sys::sinkimpl::SinkData>::toJson( json, v.data );
-    }
+        S( const SerialiserFlags &sf )
+            : s( Serialisable<ADL::sys::sinkimpl::SinkData>::serialiser(sf) )
+        {}
 
-    static void fromJson( std::vector<T> &v, JsonReader &json )
+        void toJson( JsonWriter &json, const Sink<T> & v )
+        {
+            s->toJson( json, v.data );
+        }
+
+        void fromJson( std::vector<T> &v, JsonReader &json )
+        {
+            s->fromJson( v.data, json );
+        }
+
+        Serialiser<ADL::sys::sinkimpl::SinkData>::Ptr s;
+    };
+
+    static typename Serialiser<Sink<T>>::Ptr serialiser( const SerialiserFlags & sf )
     {
-        JsonV<ADL::sys::sinkimpl::SinkData>::fromJson( v.data, json );
+        return Serialiser<Sink<T>>::Ptr( new S(sf) );
     }
 };
 
-};
+}
 
 #endif
 

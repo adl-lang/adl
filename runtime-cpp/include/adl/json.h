@@ -73,22 +73,33 @@ public:
     virtual const std::string & stringV() = 0;
 };
 
-// Basic serialisation operations. These will be specialised
-// per type.
 template <class T>
-struct JsonV
+class Serialiser
 {
-    static void toJson( JsonWriter &json, const T & v );
-    static void fromJson( T &v, JsonReader &json );
+public:
+
+    // Basic serialisation operations.
+
+    virtual void toJson( JsonWriter &json, const T & v ) const = 0;
+    virtual void fromJson( T &v, JsonReader &json ) const = 0;
+
+    typedef std::shared_ptr< Serialiser<T> > Ptr;
 };
 
-template <class T>
-static T getFromJson( JsonReader &json )
+// This is to contain flags to control the serialisation
+// process (eg for versioning) 
+struct SerialiserFlags
 {
-    T v;
-    JsonV<T>::fromJson( v, json );
-    return v;
-}
+};
+
+// A type is serialisable if we can construct a serialiser for
+// it
+template <class T>
+struct Serialisable
+{
+    static typename Serialiser<T>::Ptr serialiser(const SerialiserFlags &);
+};
+
 
 struct json_parse_failure : public std::exception
 {
@@ -130,22 +141,22 @@ matchField0( const std::string &f, JsonReader &json )
 
 template <class T>
 void
-writeField( JsonWriter &json, const std::string &f, const T &v )
+writeField( JsonWriter &json, typename Serialiser<T>::Ptr js, const std::string &f, const T &v )
 {
     json.field( f );
-    JsonV<T>::toJson( json, v );
+    js->toJson( json, v );
 };
 
 template <class T>
 bool
-readField( T &v, const std::string &f, JsonReader &json )
+readField( typename Serialiser<T>::Ptr js, T &v, const std::string &f, JsonReader &json )
 {
     if( json.type() != JsonReader::FIELD )
         throw json_parse_failure();
     if( json.fieldName() != f )
         return false;
     json.next();
-    JsonV<T>::fromJson( v, json );
+    js->fromJson( v, json );
 };
 
 bool ignoreField( JsonReader &json );
@@ -154,120 +165,127 @@ bool ignoreField( JsonReader &json );
 //----------------------------------------------------------------------
 // Serialisation for primitive/builtin types
 
-template <>
-struct JsonV<Void>
+
+template <> 
+struct Serialisable<Void>
 {
-    static void toJson( JsonWriter &json, const Void & v );
-    static void fromJson( Void &v, JsonReader &json );
+    static Serialiser<Void>::Ptr serialiser( const SerialiserFlags &  );
+};
+
+template <> 
+struct Serialisable<bool>
+{
+    static Serialiser<bool>::Ptr serialiser( const SerialiserFlags & );
+};
+
+template <> 
+struct Serialisable<int8_t>
+{
+    static Serialiser<int8_t>::Ptr serialiser( const SerialiserFlags & );
+};
+
+template <> 
+struct Serialisable<int16_t>
+{
+    static Serialiser<int16_t>::Ptr serialiser( const SerialiserFlags & );
+};
+
+template <> 
+struct Serialisable<int32_t>
+{
+    static Serialiser<int32_t>::Ptr serialiser( const SerialiserFlags & );
+};
+
+template <> 
+struct Serialisable<int64_t>
+{
+    static Serialiser<int64_t>::Ptr serialiser( const SerialiserFlags & );
+};
+
+template <> 
+struct Serialisable<uint8_t>
+{
+    static Serialiser<uint8_t>::Ptr serialiser( const SerialiserFlags & );
+};
+
+template <> 
+struct Serialisable<uint16_t>
+{
+    static Serialiser<uint16_t>::Ptr serialiser( const SerialiserFlags & );
+};
+
+template <> 
+struct Serialisable<uint32_t>
+{
+    static Serialiser<uint32_t>::Ptr serialiser( const SerialiserFlags & );
+};
+
+template <> 
+struct Serialisable<uint64_t>
+{
+    static Serialiser<uint64_t>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<bool>
+struct Serialisable<float>
 {
-    static void toJson( JsonWriter &json, const bool & v );
-    static void fromJson( bool &v, JsonReader &json );
+    static Serialiser<float>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<int8_t>
+struct Serialisable<double>
 {
-    static void toJson( JsonWriter &json, const int8_t & v );
-    static void fromJson( int8_t &v, JsonReader &json );
+    static Serialiser<double>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<int16_t>
+struct Serialisable<std::string>
 {
-    static void toJson( JsonWriter &json, const int16_t & v );
-    static void fromJson( int16_t &v, JsonReader &json );
+    static Serialiser<std::string>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<int32_t>
+struct Serialisable<ByteVector>
 {
-    static void toJson( JsonWriter &json, const int32_t & v );
-    static void fromJson( int32_t &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<int64_t>
-{
-    static void toJson( JsonWriter &json, const int64_t & v );
-    static void fromJson( int64_t &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<uint8_t>
-{
-    static void toJson( JsonWriter &json, const uint8_t & v );
-    static void fromJson( uint8_t &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<uint16_t>
-{
-    static void toJson( JsonWriter &json, const uint16_t & v );
-    static void fromJson( uint16_t &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<uint32_t>
-{
-    static void toJson( JsonWriter &json, const uint32_t & v );
-    static void fromJson( uint32_t &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<uint64_t>
-{
-    static void toJson( JsonWriter &json, const uint64_t & v );
-    static void fromJson( uint64_t &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<float>
-{
-    static void toJson( JsonWriter &json, const float & v );
-    static void fromJson( float &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<double>
-{
-    static void toJson( JsonWriter &json, const double & v );
-    static void fromJson( double &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<std::string>
-{
-    static void toJson( JsonWriter &json, const std::string & v );
-    static void fromJson( std::string &v, JsonReader &json );
-};
-
-template <>
-struct JsonV<ByteVector>
-{
-    static void toJson( JsonWriter &json, const ByteVector & v );
-    static void fromJson( ByteVector &v, JsonReader &json );
+    static Serialiser<ByteVector>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-struct JsonV<std::vector<T>>
+struct Serialisable<std::vector<T>>
 {
-    static void toJson( JsonWriter &json, const std::vector<T> & v )
+    class S : public Serialiser<T>
     {
-        json.startArray();
-        for( typename std::vector<T>::const_iterator vi = v.begin(); vi != v.end(); vi++ )
-            JsonV<T>::toJson( json, *vi );
-        json.endArray();
-    }
+    public:
+        S( const SerialiserFlags & sf ) 
+            : js_( Serialisable<T>::serialiser(sf) )
+        {}
 
-    static void fromJson( std::vector<T> &v, JsonReader &json )
+        void toJson( JsonWriter &json, const std::vector<T> & v ) const
+        {
+            json.startArray();
+            for( typename std::vector<T>::const_iterator vi = v.begin(); vi != v.end(); vi++ )
+                js_->toJson( json, *vi );
+            json.endArray();
+        }
+
+        void fromJson( std::vector<T> &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_ARRAY );
+            while( !match0( json, JsonReader::END_ARRAY ) )
+            {
+                T v1;
+                js_->fromJson( v1, json );
+                v.push_back(v1);
+            }
+        }
+
+    private:
+        typename Serialiser<T>::Ptr js_;
+    };
+
+    static typename Serialiser<std::vector<T>>::Ptr serialiser(const SerialiserFlags & sf)
     {
-        match( json, JsonReader::START_ARRAY );
-        while( !match0( json, JsonReader::END_ARRAY ) )
-            v.push_back(getFromJson<T>( json ));
+        return new S(sf);
     }
 };
 

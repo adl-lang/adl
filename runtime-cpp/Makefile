@@ -8,9 +8,9 @@ all:
 	$(ADLC) cpp -O build $(ADLDIR)/types.adl
 	$(ADLC) cpp -O build $(ADLDIR)/rpc.adl
 	$(ADLC) cpp -O build $(ADLDIR)/sinkimpl.adl
+	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/json.o src/json.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/adl.o src/adl.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/types.o src/types.cpp
-	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/json.o src/json.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/sink.o src/sink.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/comms.o src/comms.cpp
 	g++ -c $(CPPFLAGS) $(CXXFLAGS) -o build/comms_http.o src/comms_http.cpp

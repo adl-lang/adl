@@ -140,25 +140,25 @@ main = hspec $ do
       runHaskellBackend1 "test7/input/test.adl"
         `shouldReturn` MatchOutput
 
-  describe "adlc cpp backend" $ do
-    it "generates expected code for an empty module" $ do
-      runCppBackend1 "test1/input/test.adl"
-        `shouldReturn` MatchOutput
-    it "generates expected code for various structures" $ do
-      runCppBackend1 "test2/input/test.adl"
-        `shouldReturn` MatchOutput
-    it "generates expected code for structures with default overrides" $ do
-      runCppBackend1 "test3/input/test.adl"
-        `shouldReturn` MatchOutput
-    it "generates expected code for custom type mappings" $ do
-      runCppBackend "test4/input" ["test4/input/test.adl"] "test4/cpp-output" ["test4/input/cpp-custom-types.json"]
-          `shouldReturn` MatchOutput
-    it "generates expected code for various unions" $ do
-      runCppBackend1 "test5/input/test.adl"
-        `shouldReturn` MatchOutput
-    it "generates expected code for the standard library" $ do
-      runCppBackend stdsrc stdfiles "test6/cpp-output" stdCppCustomTypes
-          `shouldReturn` MatchOutput
-    it "generates expected code type aliases and newtypes" $ do
-      runCppBackend1 "test7/input/test.adl"
-        `shouldReturn` MatchOutput
+  -- describe "adlc cpp backend" $ do
+  --   it "generates expected code for an empty module" $ do
+  --     runCppBackend1 "test1/input/test.adl"
+  --       `shouldReturn` MatchOutput
+  --   it "generates expected code for various structures" $ do
+  --     runCppBackend1 "test2/input/test.adl"
+  --       `shouldReturn` MatchOutput
+  --   it "generates expected code for structures with default overrides" $ do
+  --     runCppBackend1 "test3/input/test.adl"
+  --       `shouldReturn` MatchOutput
+  --   it "generates expected code for custom type mappings" $ do
+  --     runCppBackend "test4/input" ["test4/input/test.adl"] "test4/cpp-output" ["test4/input/cpp-custom-types.json"]
+  --         `shouldReturn` MatchOutput
+  --   it "generates expected code for various unions" $ do
+  --     runCppBackend1 "test5/input/test.adl"
+  --       `shouldReturn` MatchOutput
+  --   it "generates expected code for the standard library" $ do
+  --     runCppBackend stdsrc stdfiles "test6/cpp-output" stdCppCustomTypes
+  --         `shouldReturn` MatchOutput
+  --   it "generates expected code type aliases and newtypes" $ do
+  --     runCppBackend1 "test7/input/test.adl"
+  --       `shouldReturn` MatchOutput

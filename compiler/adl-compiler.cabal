@@ -24,12 +24,12 @@ executable adlc
                        filepath, directory, unordered-containers, vector, base64-bytestring,
                        attoparsec, aeson, adl-utils, adl-compiler-lib, adl-runtime
 
-executable adlc-tests
-  hs-source-dirs:      tests, src
-  main-is:             Tests.hs
-  build-depends:       base, text, containers, bytestring,
-                       parsec, mtl, transformers,
-                       filepath, directory, unordered-containers, vector, base64-bytestring,
-                       attoparsec, aeson, adl-utils, adl-compiler-lib, adl-runtime,
-                       temporary, hspec
+-- executable adlc-tests
+--   hs-source-dirs:      tests, src
+--   main-is:             Tests.hs
+--   build-depends:       base, text, containers, bytestring,
+--                        parsec, mtl, transformers,
+--                        filepath, directory, unordered-containers, vector, base64-bytestring,
+--                        attoparsec, aeson, adl-utils, adl-compiler-lib, adl-runtime,
+--                        temporary, hspec
 
