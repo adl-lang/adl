@@ -285,11 +285,14 @@ declareSerialisation tparams ms ctnameP = do
       ctnameP1 = template "$1::$2" [formatText ns,ctnameP]
   wl ""
   case tparams of
-    [] -> wl "template <>"
-    _ -> genTemplate tparams
-  wt "struct Serialisable<$1>" [ctnameP1]
-  dblock $ do
-    wt "static Serialiser<$1>::Ptr serialiser(const SerialiserFlags &);" [ctnameP1]
+    [] -> do
+      wl "template <>"
+      wt "struct Serialisable<$1>" [ctnameP1]
+      dblock $ wt "static Serialiser<$1>::Ptr serialiser(const SerialiserFlags &);" [ctnameP1]
+    _ -> do
+      genTemplate tparams
+      wt "struct Serialisable<$1>" [ctnameP1]
+      dblock $ wt "static typename Serialiser<$1>::Ptr serialiser(const SerialiserFlags &);" [ctnameP1]
 
 generateDecl :: Ident -> Decl ResolvedType -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
@@ -332,9 +335,6 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
 
     declareOperators ifile (s_typeParams s) ctnameP
 
-  write ifileS $ do
-    declareSerialisation (s_typeParams s) ms ctnameP
-
   write icfile $ do
     -- Constructors
     wl ""
@@ -375,29 +375,47 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_,_),sep) -> do
         indent $ wt "a.$1 == b.$1 $2" [fname,sep]
 
+  write ifileS $ do
+    declareSerialisation (s_typeParams s) ms ctnameP
+
   write icfileS $ do
     wl ""
     genTemplate (s_typeParams s)
-    wt "struct Serialisable<$1::$2>" [formatText ns,ctnameP]
+    wt "typename Serialiser<$1::$2>::Ptr" [formatText ns,ctnameP]
+    wt "Serialisable<$1::$2>::serialiser( const SerialiserFlags &sf )" [formatText ns,ctnameP]
     dblock $ do
-        wt "struct S : public Serialiser<$1::$2>" [formatText ns,ctnameP]
+        wt "typedef $1::$2 _T;" [formatText ns,ctnameP]
+        wl ""
+        wl "struct _S : public Serialiser<_T>"
         dblock $ do
-            wt "void toJson( JsonWriter &json, const $1::$2 & v )" [formatText ns,ctnameP]
+            wl "_S( const SerialiserFlags & sf )"
+            indent $ do
+              forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,_,_,scopedt,_)) -> do
+                wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,fname,scopedt]
+              wl "{}"
+            wl ""
+            wl ""
+            forM_ fts $ \(fname,_,_,scopedt,_) -> do
+              wt "typename Serialiser<$1>::Ptr $2_s;" [scopedt,fname]
+            wl ""
+            wl "void toJson( JsonWriter &json, const _T & v ) const"
             cblock $ do
               wl "json.startObject();"
               forM_ fts $ \(fname, f,_,scopedt,_) -> do
-                wt "writeField<$1>( json, \"$2\", v.$3 );" [scopedt,f_name f,fname]
+                wt "writeField<$1>( json, $3_s, \"$2\", v.$3 );" [scopedt,f_name f,fname]
               wl "json.endObject();"
               return ()
             wl ""
-            wt "void fromJson( $1::$2 &v, JsonReader &json )" [formatText ns,ctnameP]
+            wl "void fromJson( _T &v, JsonReader &json ) const"
             cblock $ do
               wl "match( json, JsonReader::START_OBJECT );"
               wl "while( !match0( json, JsonReader::END_OBJECT ) )"
               cblock $ do
-                forM_ fts $ \(fname, f,_,scopedt,_) -> do
-                  wt "readField<$1>( v.$2, \"$3\", json ) ||" [scopedt,fname,f_name f]
+                forM_ fts $ \(fname, f,_,_,_) -> do
+                  wt "readField( $1_s, v.$1, \"$2\", json ) ||" [fname,f_name f]
                 wl "ignoreField( json );"
+        wl ""
+        wl "return typename Serialiser<_T>::Ptr( new _S(sf) );"
 
 generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   ms <- get
@@ -467,9 +485,6 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wl "};"
 
     declareOperators ifile (u_typeParams u) ctnameP
-
-  write ifileS $ do        
-    declareSerialisation (u_typeParams u) ms ctnameP
 
   write ifile $ do
     wl ""
@@ -623,17 +638,31 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
             else wt "case $1::$2: return a.$3() == b.$3();"
                  [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
 
+  write ifileS $ do        
+    declareSerialisation (u_typeParams u) ms ctnameP
+
   write icfileS $ do
-    wl ""
-    genTemplate (u_typeParams u)
     let ns = ms_moduleMapper ms (ms_name ms)
         scopedctnameP = template "$1::$2" [formatText ns,ctnameP]
-
-    wt "struct Serialisable<$1::$2>" [formatText ns,ctnameP]
-    dblock $ do
-        wt "struct S : public Serialiser<$1::$2>" [formatText ns,ctnameP]
+    wl ""
+    genTemplate (u_typeParams u)
+    wt "typename Serialiser<$1>::Ptr" [scopedctnameP]
+    wt "Serialisable<$1>::serialiser( const SerialiserFlags &sf )" [scopedctnameP]
+    cblock $ do
+        wt "typedef $1 _T;" [scopedctnameP]
+        wl ""
+        wl "struct _S : public Serialiser<_T>"
         dblock $ do
-            wt "void toJson( JsonWriter &json, const $1 & v )" [scopedctnameP]
+            wl "_S( const SerialiserFlags & sf )"
+            indent $ do
+              forM_ (addMarker ":" "," "," fts) $ \(mark,(f,_,scopedt,_)) -> do
+                wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,f_name f,scopedt]
+              wl "{}"
+            wl ""
+            forM_ fts $ \(f,_,scopedt,_) -> do
+              wt "typename Serialiser<$1>::Ptr $2_s;" [scopedt,f_name f]
+            wl ""
+            wl "void toJson( JsonWriter &json, const _T & v ) const"
             cblock $ do
               wl "json.startObject();"
               wl "switch( v.d() )"
@@ -642,27 +671,28 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                    let v | isVoidType (f_type f) = "Void()"
                          | otherwise = template "v.$1()" [cUnionAccessorName d f]
 
-                   wt "case $1::$2: writeField( json, \"$3\", $4 ); break;"
+                   wt "case $1::$2: writeField( json, $3_s, \"$3\", $4 ); break;"
                      [scopedctnameP,cUnionDiscName d f, f_name f,v]
               wl "json.endObject();"
               return ()
             wl ""
-            genTemplate (u_typeParams u)
-            wt "void fromJson( $1 &v, JsonReader &json )" [scopedctnameP]
+            wl "void fromJson( _T &v, JsonReader &json ) const"
             cblock $ do
               wl "match( json, JsonReader::START_OBJECT );"
               wl "while( !match0( json, JsonReader::END_OBJECT ) )"
               cblock $ do
-                forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,scopedt,_)) -> do
+                forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,_,_)) -> do
                   wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name f]
                   indent $ do
                     if isVoidType (f_type f)
                       then do
                         wt "v.$1();" [cUnionSetterName d f]
                       else do
-                        wt "v.$1(getFromJson<$2>( json ));" [cUnionSetterName d f,scopedt]
+                        wt "v.$1($2_s->fromJson( json ));" [cUnionSetterName d f,f_name f]
                 wl "else"
                 indent $ wl "throw json_parse_failure();"
+        wl ""
+        wl "return typename Serialiser<_T>::Ptr( new _S(sf) );"
 
 generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
   ms <- get
@@ -707,7 +737,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
     dblock $ do
       wt "struct S : public Serialiser<$1>" [ctnameP1]
       dblock $ do 
-          wt "S( Serialiser<$1>::Ptr s_ ) : s(s_) {}" [scopedt]
+          wt "S( typename Serialiser<$1>::Ptr s_ ) : s(s_) {}" [scopedt]
           wl ""
           wt "void toJson( JsonWriter &json, const $1 & v ) const" [ctnameP1]
           cblock $ do
@@ -717,11 +747,11 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
           cblock $ do
             wl "s->fromJson( v.value, json );"
           wl ""
-          wt "Serialiser<$1>::Ptr s;" [scopedt]
+          wt "typename Serialiser<$1>::Ptr s;" [scopedt]
       wl ""
-      wt "static Serialiser<$1>::Ptr serialiser(const SerialiserFlags &sf)" [ctnameP1]
+      wt "static typename Serialiser<$1>::Ptr serialiser(const SerialiserFlags &sf)" [ctnameP1]
       cblock $ do
-        wt "return Serialiser<$1>::Ptr(new S(Serialisable<$2>::serialiser(sf)));" [ctnameP1,scopedt]
+        wt "return typename Serialiser<$1>::Ptr(new S(Serialisable<$2>::serialiser(sf)));" [ctnameP1,scopedt]
 
 generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr False (t_typeExpr t)

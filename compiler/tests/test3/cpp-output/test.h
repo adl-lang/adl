@@ -404,146 +404,230 @@ operator==( const S<T> &a, const S<T> &b )
 namespace ADL {
 
 template <>
-struct JsonV<ADL::test::A>
+struct Serialisable<ADL::test::A>
 {
-    static void toJson( JsonWriter &json, const ADL::test::A & v );
-    static void fromJson( ADL::test::A &v, JsonReader &json );
+    static Serialiser<ADL::test::A>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::test::U>
+struct Serialisable<ADL::test::U>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U & v );
-    static void fromJson( ADL::test::U &v, JsonReader &json );
+    static Serialiser<ADL::test::U>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-struct JsonV<ADL::test::XY<T>>
+struct Serialisable<ADL::test::XY<T>>
 {
-    static void toJson( JsonWriter &json, const ADL::test::XY<T> & v );
-    static void fromJson( ADL::test::XY<T> &v, JsonReader &json );
+    static typename Serialiser<ADL::test::XY<T>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-void
-JsonV<ADL::test::XY<T>>::toJson( JsonWriter &json, const ADL::test::XY<T> & v )
+typename Serialiser<ADL::test::XY<T>>::Ptr
+Serialisable<ADL::test::XY<T>>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    writeField<T>( json, "x", v.x );
-    writeField<T>( json, "y", v.y );
-    json.endObject();
-}
-
-template <class T>
-void
-JsonV<ADL::test::XY<T>>::fromJson( ADL::test::XY<T> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::XY<T> _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        readField<T>( v.x, "x", json ) ||
-        readField<T>( v.y, "y", json ) ||
-        ignoreField( json );
-    }
-}
-
-template <class T>
-struct JsonV<ADL::test::B<T>>
-{
-    static void toJson( JsonWriter &json, const ADL::test::B<T> & v );
-    static void fromJson( ADL::test::B<T> &v, JsonReader &json );
+        _S( const SerialiserFlags & sf )
+            : x_s( Serialisable<T>::serialiser(sf) )
+            , y_s( Serialisable<T>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<T>::Ptr x_s;
+        typename Serialiser<T>::Ptr y_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<T>( json, x_s, "x", v.x );
+            writeField<T>( json, y_s, "y", v.y );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( x_s, v.x, "x", json ) ||
+                readField( y_s, v.y, "y", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 };
 
 template <class T>
-void
-JsonV<ADL::test::B<T>>::toJson( JsonWriter &json, const ADL::test::B<T> & v )
+struct Serialisable<ADL::test::B<T>>
 {
-    json.startObject();
-    writeField<T>( json, "f_t", v.f_t );
-    writeField<std::string>( json, "f_string", v.f_string );
-    writeField<std::vector<T> >( json, "f_tvec", v.f_tvec );
-    writeField<ADL::test::XY<T> >( json, "f_xy", v.f_xy );
-    json.endObject();
-}
-
-template <class T>
-void
-JsonV<ADL::test::B<T>>::fromJson( ADL::test::B<T> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        readField<T>( v.f_t, "f_t", json ) ||
-        readField<std::string>( v.f_string, "f_string", json ) ||
-        readField<std::vector<T> >( v.f_tvec, "f_tvec", json ) ||
-        readField<ADL::test::XY<T> >( v.f_xy, "f_xy", json ) ||
-        ignoreField( json );
-    }
-}
-
-template <class T>
-struct JsonV<ADL::test::S<T>>
-{
-    static void toJson( JsonWriter &json, const ADL::test::S<T> & v );
-    static void fromJson( ADL::test::S<T> &v, JsonReader &json );
+    static typename Serialiser<ADL::test::B<T>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-void
-JsonV<ADL::test::S<T>>::toJson( JsonWriter &json, const ADL::test::S<T> & v )
+typename Serialiser<ADL::test::B<T>>::Ptr
+Serialisable<ADL::test::B<T>>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    writeField<Void>( json, "f_void", v.f_void );
-    writeField<bool>( json, "f_bool", v.f_bool );
-    writeField<int8_t>( json, "f_int8", v.f_int8 );
-    writeField<int16_t>( json, "f_int16", v.f_int16 );
-    writeField<int32_t>( json, "f_int32", v.f_int32 );
-    writeField<int64_t>( json, "f_int64", v.f_int64 );
-    writeField<uint8_t>( json, "f_word8", v.f_word8 );
-    writeField<uint16_t>( json, "f_word16", v.f_word16 );
-    writeField<uint32_t>( json, "f_word32", v.f_word32 );
-    writeField<uint64_t>( json, "f_word64", v.f_word64 );
-    writeField<float>( json, "f_float", v.f_float );
-    writeField<double>( json, "f_double", v.f_double );
-    writeField<ByteVector>( json, "f_bytes", v.f_bytes );
-    writeField<std::string>( json, "f_string", v.f_string );
-    writeField<std::vector<std::string> >( json, "f_vstring", v.f_vstring );
-    writeField<ADL::test::A>( json, "f_a", v.f_a );
-    writeField<ADL::test::U>( json, "f_u", v.f_u );
-    writeField<T>( json, "f_t", v.f_t );
-    writeField<ADL::test::B<int16_t> >( json, "f_bint16", v.f_bint16 );
-    json.endObject();
-}
+    typedef ADL::test::B<T> _T;
+    
+    struct _S : public Serialiser<_T>
+    {
+        _S( const SerialiserFlags & sf )
+            : f_t_s( Serialisable<T>::serialiser(sf) )
+            , f_string_s( Serialisable<std::string>::serialiser(sf) )
+            , f_tvec_s( Serialisable<std::vector<T> >::serialiser(sf) )
+            , f_xy_s( Serialisable<ADL::test::XY<T> >::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<T>::Ptr f_t_s;
+        typename Serialiser<std::string>::Ptr f_string_s;
+        typename Serialiser<std::vector<T> >::Ptr f_tvec_s;
+        typename Serialiser<ADL::test::XY<T> >::Ptr f_xy_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<T>( json, f_t_s, "f_t", v.f_t );
+            writeField<std::string>( json, f_string_s, "f_string", v.f_string );
+            writeField<std::vector<T> >( json, f_tvec_s, "f_tvec", v.f_tvec );
+            writeField<ADL::test::XY<T> >( json, f_xy_s, "f_xy", v.f_xy );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( f_t_s, v.f_t, "f_t", json ) ||
+                readField( f_string_s, v.f_string, "f_string", json ) ||
+                readField( f_tvec_s, v.f_tvec, "f_tvec", json ) ||
+                readField( f_xy_s, v.f_xy, "f_xy", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
 
 template <class T>
-void
-JsonV<ADL::test::S<T>>::fromJson( ADL::test::S<T> &v, JsonReader &json )
+struct Serialisable<ADL::test::S<T>>
 {
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    static typename Serialiser<ADL::test::S<T>>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <class T>
+typename Serialiser<ADL::test::S<T>>::Ptr
+Serialisable<ADL::test::S<T>>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test::S<T> _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        readField<Void>( v.f_void, "f_void", json ) ||
-        readField<bool>( v.f_bool, "f_bool", json ) ||
-        readField<int8_t>( v.f_int8, "f_int8", json ) ||
-        readField<int16_t>( v.f_int16, "f_int16", json ) ||
-        readField<int32_t>( v.f_int32, "f_int32", json ) ||
-        readField<int64_t>( v.f_int64, "f_int64", json ) ||
-        readField<uint8_t>( v.f_word8, "f_word8", json ) ||
-        readField<uint16_t>( v.f_word16, "f_word16", json ) ||
-        readField<uint32_t>( v.f_word32, "f_word32", json ) ||
-        readField<uint64_t>( v.f_word64, "f_word64", json ) ||
-        readField<float>( v.f_float, "f_float", json ) ||
-        readField<double>( v.f_double, "f_double", json ) ||
-        readField<ByteVector>( v.f_bytes, "f_bytes", json ) ||
-        readField<std::string>( v.f_string, "f_string", json ) ||
-        readField<std::vector<std::string> >( v.f_vstring, "f_vstring", json ) ||
-        readField<ADL::test::A>( v.f_a, "f_a", json ) ||
-        readField<ADL::test::U>( v.f_u, "f_u", json ) ||
-        readField<T>( v.f_t, "f_t", json ) ||
-        readField<ADL::test::B<int16_t> >( v.f_bint16, "f_bint16", json ) ||
-        ignoreField( json );
-    }
-}
+        _S( const SerialiserFlags & sf )
+            : f_void_s( Serialisable<Void>::serialiser(sf) )
+            , f_bool_s( Serialisable<bool>::serialiser(sf) )
+            , f_int8_s( Serialisable<int8_t>::serialiser(sf) )
+            , f_int16_s( Serialisable<int16_t>::serialiser(sf) )
+            , f_int32_s( Serialisable<int32_t>::serialiser(sf) )
+            , f_int64_s( Serialisable<int64_t>::serialiser(sf) )
+            , f_word8_s( Serialisable<uint8_t>::serialiser(sf) )
+            , f_word16_s( Serialisable<uint16_t>::serialiser(sf) )
+            , f_word32_s( Serialisable<uint32_t>::serialiser(sf) )
+            , f_word64_s( Serialisable<uint64_t>::serialiser(sf) )
+            , f_float_s( Serialisable<float>::serialiser(sf) )
+            , f_double_s( Serialisable<double>::serialiser(sf) )
+            , f_bytes_s( Serialisable<ByteVector>::serialiser(sf) )
+            , f_string_s( Serialisable<std::string>::serialiser(sf) )
+            , f_vstring_s( Serialisable<std::vector<std::string> >::serialiser(sf) )
+            , f_a_s( Serialisable<ADL::test::A>::serialiser(sf) )
+            , f_u_s( Serialisable<ADL::test::U>::serialiser(sf) )
+            , f_t_s( Serialisable<T>::serialiser(sf) )
+            , f_bint16_s( Serialisable<ADL::test::B<int16_t> >::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<Void>::Ptr f_void_s;
+        typename Serialiser<bool>::Ptr f_bool_s;
+        typename Serialiser<int8_t>::Ptr f_int8_s;
+        typename Serialiser<int16_t>::Ptr f_int16_s;
+        typename Serialiser<int32_t>::Ptr f_int32_s;
+        typename Serialiser<int64_t>::Ptr f_int64_s;
+        typename Serialiser<uint8_t>::Ptr f_word8_s;
+        typename Serialiser<uint16_t>::Ptr f_word16_s;
+        typename Serialiser<uint32_t>::Ptr f_word32_s;
+        typename Serialiser<uint64_t>::Ptr f_word64_s;
+        typename Serialiser<float>::Ptr f_float_s;
+        typename Serialiser<double>::Ptr f_double_s;
+        typename Serialiser<ByteVector>::Ptr f_bytes_s;
+        typename Serialiser<std::string>::Ptr f_string_s;
+        typename Serialiser<std::vector<std::string> >::Ptr f_vstring_s;
+        typename Serialiser<ADL::test::A>::Ptr f_a_s;
+        typename Serialiser<ADL::test::U>::Ptr f_u_s;
+        typename Serialiser<T>::Ptr f_t_s;
+        typename Serialiser<ADL::test::B<int16_t> >::Ptr f_bint16_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<Void>( json, f_void_s, "f_void", v.f_void );
+            writeField<bool>( json, f_bool_s, "f_bool", v.f_bool );
+            writeField<int8_t>( json, f_int8_s, "f_int8", v.f_int8 );
+            writeField<int16_t>( json, f_int16_s, "f_int16", v.f_int16 );
+            writeField<int32_t>( json, f_int32_s, "f_int32", v.f_int32 );
+            writeField<int64_t>( json, f_int64_s, "f_int64", v.f_int64 );
+            writeField<uint8_t>( json, f_word8_s, "f_word8", v.f_word8 );
+            writeField<uint16_t>( json, f_word16_s, "f_word16", v.f_word16 );
+            writeField<uint32_t>( json, f_word32_s, "f_word32", v.f_word32 );
+            writeField<uint64_t>( json, f_word64_s, "f_word64", v.f_word64 );
+            writeField<float>( json, f_float_s, "f_float", v.f_float );
+            writeField<double>( json, f_double_s, "f_double", v.f_double );
+            writeField<ByteVector>( json, f_bytes_s, "f_bytes", v.f_bytes );
+            writeField<std::string>( json, f_string_s, "f_string", v.f_string );
+            writeField<std::vector<std::string> >( json, f_vstring_s, "f_vstring", v.f_vstring );
+            writeField<ADL::test::A>( json, f_a_s, "f_a", v.f_a );
+            writeField<ADL::test::U>( json, f_u_s, "f_u", v.f_u );
+            writeField<T>( json, f_t_s, "f_t", v.f_t );
+            writeField<ADL::test::B<int16_t> >( json, f_bint16_s, "f_bint16", v.f_bint16 );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( f_void_s, v.f_void, "f_void", json ) ||
+                readField( f_bool_s, v.f_bool, "f_bool", json ) ||
+                readField( f_int8_s, v.f_int8, "f_int8", json ) ||
+                readField( f_int16_s, v.f_int16, "f_int16", json ) ||
+                readField( f_int32_s, v.f_int32, "f_int32", json ) ||
+                readField( f_int64_s, v.f_int64, "f_int64", json ) ||
+                readField( f_word8_s, v.f_word8, "f_word8", json ) ||
+                readField( f_word16_s, v.f_word16, "f_word16", json ) ||
+                readField( f_word32_s, v.f_word32, "f_word32", json ) ||
+                readField( f_word64_s, v.f_word64, "f_word64", json ) ||
+                readField( f_float_s, v.f_float, "f_float", json ) ||
+                readField( f_double_s, v.f_double, "f_double", json ) ||
+                readField( f_bytes_s, v.f_bytes, "f_bytes", json ) ||
+                readField( f_string_s, v.f_string, "f_string", json ) ||
+                readField( f_vstring_s, v.f_vstring, "f_vstring", json ) ||
+                readField( f_a_s, v.f_a, "f_a", json ) ||
+                readField( f_u_s, v.f_u, "f_u", json ) ||
+                readField( f_t_s, v.f_t, "f_t", json ) ||
+                readField( f_bint16_s, v.f_bint16, "f_bint16", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
 
 }; // ADL
 #endif // TEST_H

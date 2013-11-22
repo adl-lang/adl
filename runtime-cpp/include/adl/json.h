@@ -83,6 +83,12 @@ public:
     virtual void toJson( JsonWriter &json, const T & v ) const = 0;
     virtual void fromJson( T &v, JsonReader &json ) const = 0;
 
+    T fromJson( JsonReader &json ) const {
+        T v;
+        fromJson( v, json );
+        return v;
+    }
+
     typedef std::shared_ptr< Serialiser<T> > Ptr;
 };
 
@@ -253,22 +259,24 @@ struct Serialisable<ByteVector>
 template <class T>
 struct Serialisable<std::vector<T>>
 {
-    class S : public Serialiser<T>
+    typedef std::vector<T> _V;
+
+    class _S : public Serialiser<_V>
     {
     public:
-        S( const SerialiserFlags & sf ) 
+        _S( const SerialiserFlags & sf ) 
             : js_( Serialisable<T>::serialiser(sf) )
         {}
 
-        void toJson( JsonWriter &json, const std::vector<T> & v ) const
+        void toJson( JsonWriter &json, const _V & v ) const
         {
             json.startArray();
-            for( typename std::vector<T>::const_iterator vi = v.begin(); vi != v.end(); vi++ )
+            for( typename _V::const_iterator vi = v.begin(); vi != v.end(); vi++ )
                 js_->toJson( json, *vi );
             json.endArray();
         }
 
-        void fromJson( std::vector<T> &v, JsonReader &json ) const
+        void fromJson( _V &v, JsonReader &json ) const
         {
             match( json, JsonReader::START_ARRAY );
             while( !match0( json, JsonReader::END_ARRAY ) )
@@ -283,9 +291,9 @@ struct Serialisable<std::vector<T>>
         typename Serialiser<T>::Ptr js_;
     };
 
-    static typename Serialiser<std::vector<T>>::Ptr serialiser(const SerialiserFlags & sf)
+    static typename Serialiser<_V>::Ptr serialiser(const SerialiserFlags & sf)
     {
-        return new S(sf);
+        return typename Serialiser<_V>::Ptr( new _S(sf) );
     }
 };
 

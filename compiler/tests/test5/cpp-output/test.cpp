@@ -725,218 +725,356 @@ operator==( const U8 &a, const U8 &b )
 
 namespace ADL {
 
-void
-JsonV<ADL::test::S1>::toJson( JsonWriter &json, const ADL::test::S1 & v )
+typename Serialiser<ADL::test::S1>::Ptr
+Serialisable<ADL::test::S1>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    writeField<int16_t>( json, "f", v.f );
-    json.endObject();
+    typedef ADL::test::S1 _T;
+    
+    struct _S : public Serialiser<_T>
+    {
+        _S( const SerialiserFlags & sf )
+            : f_s( Serialisable<int16_t>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<int16_t>::Ptr f_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<int16_t>( json, f_s, "f", v.f );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( f_s, v.f, "f", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
+
+typename Serialiser<ADL::test::U1>::Ptr
+Serialisable<ADL::test::U1>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test::U1 _T;
+    
+    struct _S : public Serialiser<_T>
+    {
+        _S( const SerialiserFlags & sf )
+            : v_s( Serialisable<Void>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<Void>::Ptr v_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U1::V: writeField( json, v_s, "v", Void() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v", json ) )
+                    v.set_v();
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-void
-JsonV<ADL::test::S1>::fromJson( ADL::test::S1 &v, JsonReader &json )
+typename Serialiser<ADL::test::U2>::Ptr
+Serialisable<ADL::test::U2>::serialiser( const SerialiserFlags &sf )
 {
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::U2 _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        readField<int16_t>( v.f, "f", json ) ||
-        ignoreField( json );
-    }
+        _S( const SerialiserFlags & sf )
+            : v_s( Serialisable<int16_t>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<int16_t>::Ptr v_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U2::V: writeField( json, v_s, "v", v.v() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v", json ) )
+                    v.set_v(v_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-void
-JsonV<ADL::test::U1>::toJson( JsonWriter &json, const ADL::test::U1 & v )
+typename Serialiser<ADL::test::U3>::Ptr
+Serialisable<ADL::test::U3>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::test::U3 _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::test::U1::V: writeField( json, "v", Void() ); break;
-    }
-    json.endObject();
+        _S( const SerialiserFlags & sf )
+            : v_s( Serialisable<int16_t>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<int16_t>::Ptr v_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U3::V: writeField( json, v_s, "v", v.v() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v", json ) )
+                    v.set_v(v_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-void
-JsonV<ADL::test::U1>::fromJson( ADL::test::U1 &v, JsonReader &json )
+typename Serialiser<ADL::test::U4>::Ptr
+Serialisable<ADL::test::U4>::serialiser( const SerialiserFlags &sf )
 {
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::U4 _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        if( matchField0( "v", json ) )
-            v.set_v();
-        else
-            throw json_parse_failure();
-    }
+        _S( const SerialiserFlags & sf )
+            : v_s( Serialisable<ADL::test::S1>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<ADL::test::S1>::Ptr v_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U4::V: writeField( json, v_s, "v", v.v() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v", json ) )
+                    v.set_v(v_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-void
-JsonV<ADL::test::U2>::toJson( JsonWriter &json, const ADL::test::U2 & v )
+typename Serialiser<ADL::test::U5>::Ptr
+Serialisable<ADL::test::U5>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::test::U5 _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::test::U2::V: writeField( json, "v", v.v() ); break;
-    }
-    json.endObject();
+        _S( const SerialiserFlags & sf )
+            : v_s( Serialisable<ADL::test::S1>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<ADL::test::S1>::Ptr v_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U5::V: writeField( json, v_s, "v", v.v() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v", json ) )
+                    v.set_v(v_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-void
-JsonV<ADL::test::U2>::fromJson( ADL::test::U2 &v, JsonReader &json )
+typename Serialiser<ADL::test::U6>::Ptr
+Serialisable<ADL::test::U6>::serialiser( const SerialiserFlags &sf )
 {
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::U6 _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        if( matchField0( "v", json ) )
-            v.set_v(getFromJson<int16_t>( json ));
-        else
-            throw json_parse_failure();
-    }
+        _S( const SerialiserFlags & sf )
+            : v_s( Serialisable<ADL::test::U3>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<ADL::test::U3>::Ptr v_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U6::V: writeField( json, v_s, "v", v.v() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v", json ) )
+                    v.set_v(v_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-void
-JsonV<ADL::test::U3>::toJson( JsonWriter &json, const ADL::test::U3 & v )
+typename Serialiser<ADL::test::U7>::Ptr
+Serialisable<ADL::test::U7>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::test::U7 _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::test::U3::V: writeField( json, "v", v.v() ); break;
-    }
-    json.endObject();
+        _S( const SerialiserFlags & sf )
+            : v_s( Serialisable<ADL::test::U3>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<ADL::test::U3>::Ptr v_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U7::V: writeField( json, v_s, "v", v.v() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v", json ) )
+                    v.set_v(v_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-void
-JsonV<ADL::test::U3>::fromJson( ADL::test::U3 &v, JsonReader &json )
+typename Serialiser<ADL::test::U8>::Ptr
+Serialisable<ADL::test::U8>::serialiser( const SerialiserFlags &sf )
 {
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::U8 _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        if( matchField0( "v", json ) )
-            v.set_v(getFromJson<int16_t>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-void
-JsonV<ADL::test::U4>::toJson( JsonWriter &json, const ADL::test::U4 & v )
-{
-    json.startObject();
-    switch( v.d() )
-    {
-        case ADL::test::U4::V: writeField( json, "v", v.v() ); break;
-    }
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::U4>::fromJson( ADL::test::U4 &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "v", json ) )
-            v.set_v(getFromJson<ADL::test::S1>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-void
-JsonV<ADL::test::U5>::toJson( JsonWriter &json, const ADL::test::U5 & v )
-{
-    json.startObject();
-    switch( v.d() )
-    {
-        case ADL::test::U5::V: writeField( json, "v", v.v() ); break;
-    }
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::U5>::fromJson( ADL::test::U5 &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "v", json ) )
-            v.set_v(getFromJson<ADL::test::S1>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-void
-JsonV<ADL::test::U6>::toJson( JsonWriter &json, const ADL::test::U6 & v )
-{
-    json.startObject();
-    switch( v.d() )
-    {
-        case ADL::test::U6::V: writeField( json, "v", v.v() ); break;
-    }
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::U6>::fromJson( ADL::test::U6 &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "v", json ) )
-            v.set_v(getFromJson<ADL::test::U3>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-void
-JsonV<ADL::test::U7>::toJson( JsonWriter &json, const ADL::test::U7 & v )
-{
-    json.startObject();
-    switch( v.d() )
-    {
-        case ADL::test::U7::V: writeField( json, "v", v.v() ); break;
-    }
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::U7>::fromJson( ADL::test::U7 &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "v", json ) )
-            v.set_v(getFromJson<ADL::test::U3>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-void
-JsonV<ADL::test::U8>::toJson( JsonWriter &json, const ADL::test::U8 & v )
-{
-    json.startObject();
-    switch( v.d() )
-    {
-        case ADL::test::U8::V1: writeField( json, "v1", v.v1() ); break;
-        case ADL::test::U8::V2: writeField( json, "v2", v.v2() ); break;
-    }
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::U8>::fromJson( ADL::test::U8 &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "v1", json ) )
-            v.set_v1(getFromJson<ADL::test::S1>( json ));
-        else if( matchField0( "v2", json ) )
-            v.set_v2(getFromJson<int16_t>( json ));
-        else
-            throw json_parse_failure();
-    }
+        _S( const SerialiserFlags & sf )
+            : v1_s( Serialisable<ADL::test::S1>::serialiser(sf) )
+            , v2_s( Serialisable<int16_t>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<ADL::test::S1>::Ptr v1_s;
+        typename Serialiser<int16_t>::Ptr v2_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U8::V1: writeField( json, v1_s, "v1", v.v1() ); break;
+                case ADL::test::U8::V2: writeField( json, v2_s, "v2", v.v2() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v1", json ) )
+                    v.set_v1(v1_s->fromJson( json ));
+                else if( matchField0( "v2", json ) )
+                    v.set_v2(v2_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
 }; // ADL

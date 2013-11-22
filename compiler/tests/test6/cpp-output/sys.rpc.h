@@ -69,34 +69,50 @@ using RpcSvc = Sink<Rpc<I,O> > ;
 namespace ADL {
 
 template <class I, class O>
-struct JsonV<ADL::sys::rpc::Rpc<I,O>>
+struct Serialisable<ADL::sys::rpc::Rpc<I,O>>
 {
-    static void toJson( JsonWriter &json, const ADL::sys::rpc::Rpc<I,O> & v );
-    static void fromJson( ADL::sys::rpc::Rpc<I,O> &v, JsonReader &json );
+    static typename Serialiser<ADL::sys::rpc::Rpc<I,O>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class I, class O>
-void
-JsonV<ADL::sys::rpc::Rpc<I,O>>::toJson( JsonWriter &json, const ADL::sys::rpc::Rpc<I,O> & v )
+typename Serialiser<ADL::sys::rpc::Rpc<I,O>>::Ptr
+Serialisable<ADL::sys::rpc::Rpc<I,O>>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    writeField<I>( json, "params", v.params );
-    writeField<Sink<O> >( json, "replyTo", v.replyTo );
-    json.endObject();
-}
-
-template <class I, class O>
-void
-JsonV<ADL::sys::rpc::Rpc<I,O>>::fromJson( ADL::sys::rpc::Rpc<I,O> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::sys::rpc::Rpc<I,O> _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        readField<I>( v.params, "params", json ) ||
-        readField<Sink<O> >( v.replyTo, "replyTo", json ) ||
-        ignoreField( json );
-    }
-}
+        _S( const SerialiserFlags & sf )
+            : params_s( Serialisable<I>::serialiser(sf) )
+            , replyTo_s( Serialisable<Sink<O> >::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<I>::Ptr params_s;
+        typename Serialiser<Sink<O> >::Ptr replyTo_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<I>( json, params_s, "params", v.params );
+            writeField<Sink<O> >( json, replyTo_s, "replyTo", v.replyTo );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( params_s, v.params, "params", json ) ||
+                readField( replyTo_s, v.replyTo, "replyTo", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
 
 }; // ADL
 #endif // SYS_RPC_H

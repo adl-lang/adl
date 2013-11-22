@@ -39,25 +39,43 @@ operator==( const S1 &a, const S1 &b )
 
 namespace ADL {
 
-void
-JsonV<ADL::test::S1>::toJson( JsonWriter &json, const ADL::test::S1 & v )
+typename Serialiser<ADL::test::S1>::Ptr
+Serialisable<ADL::test::S1>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    writeField<int32_t>( json, "x", v.x );
-    writeField<std::string>( json, "y", v.y );
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::S1>::fromJson( ADL::test::S1 &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::S1 _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        readField<int32_t>( v.x, "x", json ) ||
-        readField<std::string>( v.y, "y", json ) ||
-        ignoreField( json );
-    }
-}
+        _S( const SerialiserFlags & sf )
+            : x_s( Serialisable<int32_t>::serialiser(sf) )
+            , y_s( Serialisable<std::string>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<int32_t>::Ptr x_s;
+        typename Serialiser<std::string>::Ptr y_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<int32_t>( json, x_s, "x", v.x );
+            writeField<std::string>( json, y_s, "y", v.y );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( x_s, v.x, "x", json ) ||
+                readField( y_s, v.y, "y", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
 
 }; // ADL

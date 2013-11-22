@@ -575,176 +575,266 @@ using Map = std::map<K,V>;
 namespace ADL {
 
 template <class T1, class T2>
-struct JsonV<ADL::sys::types::Either<T1,T2>>
+struct Serialisable<ADL::sys::types::Either<T1,T2>>
 {
-    static void toJson( JsonWriter &json, const ADL::sys::types::Either<T1,T2> & v );
-    static void fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json );
+    static typename Serialiser<ADL::sys::types::Either<T1,T2>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T1, class T2>
-void
-JsonV<ADL::sys::types::Either<T1,T2>>::toJson( JsonWriter &json, const ADL::sys::types::Either<T1,T2> & v )
+typename Serialiser<ADL::sys::types::Either<T1,T2>>::Ptr
+Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::sys::types::Either<T1,T2> _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, "left", v.left() ); break;
-        case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, "right", v.right() ); break;
-    }
-    json.endObject();
-}
-
-template <class T1, class T2>
-void
-JsonV<ADL::sys::types::Either<T1,T2>>::fromJson( ADL::sys::types::Either<T1,T2> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "left", json ) )
-            v.set_left(getFromJson<T1>( json ));
-        else if( matchField0( "right", json ) )
-            v.set_right(getFromJson<T2>( json ));
-        else
-            throw json_parse_failure();
-    }
+        _S( const SerialiserFlags & sf )
+            : left_s( Serialisable<T1>::serialiser(sf) )
+            , right_s( Serialisable<T2>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<T1>::Ptr left_s;
+        typename Serialiser<T2>::Ptr right_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, left_s, "left", v.left() ); break;
+                case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, right_s, "right", v.right() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "left", json ) )
+                    v.set_left(left_s->fromJson( json ));
+                else if( matchField0( "right", json ) )
+                    v.set_right(right_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
 template <class T>
-struct JsonV<ADL::sys::types::Error<T>>
+struct Serialisable<ADL::sys::types::Error<T>>
 {
-    static void toJson( JsonWriter &json, const ADL::sys::types::Error<T> & v );
-    static void fromJson( ADL::sys::types::Error<T> &v, JsonReader &json );
+    static typename Serialiser<ADL::sys::types::Error<T>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-void
-JsonV<ADL::sys::types::Error<T>>::toJson( JsonWriter &json, const ADL::sys::types::Error<T> & v )
+typename Serialiser<ADL::sys::types::Error<T>>::Ptr
+Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::sys::types::Error<T> _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::sys::types::Error<T>::VALUE: writeField( json, "value", v.value() ); break;
-        case ADL::sys::types::Error<T>::ERROR: writeField( json, "error", v.error() ); break;
-    }
-    json.endObject();
+        _S( const SerialiserFlags & sf )
+            : value_s( Serialisable<T>::serialiser(sf) )
+            , error_s( Serialisable<std::string>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<T>::Ptr value_s;
+        typename Serialiser<std::string>::Ptr error_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::sys::types::Error<T>::VALUE: writeField( json, value_s, "value", v.value() ); break;
+                case ADL::sys::types::Error<T>::ERROR: writeField( json, error_s, "error", v.error() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "value", json ) )
+                    v.set_value(value_s->fromJson( json ));
+                else if( matchField0( "error", json ) )
+                    v.set_error(error_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
 template <class T>
-void
-JsonV<ADL::sys::types::Error<T>>::fromJson( ADL::sys::types::Error<T> &v, JsonReader &json )
+struct Serialisable<ADL::sys::types::Maybe<T>>
 {
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "value", json ) )
-            v.set_value(getFromJson<T>( json ));
-        else if( matchField0( "error", json ) )
-            v.set_error(getFromJson<std::string>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-template <class T>
-struct JsonV<ADL::sys::types::Maybe<T>>
-{
-    static void toJson( JsonWriter &json, const ADL::sys::types::Maybe<T> & v );
-    static void fromJson( ADL::sys::types::Maybe<T> &v, JsonReader &json );
+    static typename Serialiser<ADL::sys::types::Maybe<T>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-void
-JsonV<ADL::sys::types::Maybe<T>>::toJson( JsonWriter &json, const ADL::sys::types::Maybe<T> & v )
+typename Serialiser<ADL::sys::types::Maybe<T>>::Ptr
+Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::sys::types::Maybe<T> _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::sys::types::Maybe<T>::NOTHING: writeField( json, "nothing", Void() ); break;
-        case ADL::sys::types::Maybe<T>::JUST: writeField( json, "just", v.just() ); break;
-    }
-    json.endObject();
-}
-
-template <class T>
-void
-JsonV<ADL::sys::types::Maybe<T>>::fromJson( ADL::sys::types::Maybe<T> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "nothing", json ) )
-            v.set_nothing();
-        else if( matchField0( "just", json ) )
-            v.set_just(getFromJson<T>( json ));
-        else
-            throw json_parse_failure();
-    }
+        _S( const SerialiserFlags & sf )
+            : nothing_s( Serialisable<Void>::serialiser(sf) )
+            , just_s( Serialisable<T>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<Void>::Ptr nothing_s;
+        typename Serialiser<T>::Ptr just_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::sys::types::Maybe<T>::NOTHING: writeField( json, nothing_s, "nothing", Void() ); break;
+                case ADL::sys::types::Maybe<T>::JUST: writeField( json, just_s, "just", v.just() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "nothing", json ) )
+                    v.set_nothing();
+                else if( matchField0( "just", json ) )
+                    v.set_just(just_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
 template <class A,class B>
-struct JsonV<std::pair<A,B>>
+struct Serialisable<std::pair<A,B>>
 {
-    static void toJson( JsonWriter &json, const std::pair<A,B> & v )
-    {
-        json.startObject();
-        writeField<A>( json, "v1", v.first );
-        writeField<B>( json, "v2", v.second );
-        json.endObject();
-    }
+    typedef std::pair<A,B> P;
 
-    static void fromJson( std::pair<A,B> &v, JsonReader &json )
+    static typename Serialiser<P>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        match( json, JsonReader::START_OBJECT );
-        while( !match0( json, JsonReader::END_OBJECT ) )
+        struct S : public Serialiser<P>
         {
-            readField<A>( v.first, "v1", json ) ||
-            readField<B>( v.second, "v2", json ) ||
-            ignoreField( json );
-        }
+            S( const SerialiserFlags &sf )
+                : v1_s( Serialisable<A>::serialiser(sf) )
+                , v2_s( Serialisable<B>::serialiser(sf) )
+                {}
+
+            typename Serialiser<A>::Ptr v1_s;
+            typename Serialiser<B>::Ptr v2_s;
+
+            void toJson( JsonWriter &json, const P & v ) const
+            {
+                json.startObject();
+                writeField<A>( json, "v1", v.first );
+                writeField<B>( json, "v2", v.second );
+                json.endObject();
+            }
+
+            void fromJson( P &v, JsonReader &json ) const
+            {
+                match( json, JsonReader::START_OBJECT );
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    readField<A>( v.first, "v1", json ) ||
+                        readField<B>( v.second, "v2", json ) ||
+                        ignoreField( json );
+                }
+            }
+        };
+
+        return new S(sf);
     }
 };
 
 template <class A>
-struct JsonV<std::set<A>>
+struct Serialisable<std::set<A>>
 {
-    static void toJson( JsonWriter &json, const std::set<A> & v )
-    {
-        json.startArray();
-        for( typename std::set<A>::const_iterator i = v.begin(); i != v.end(); i++ )
-            JsonV<A>::toJson( json, *i );
-        json.endArray();
-    }
+    typedef std::set<A> S;
 
-    static void fromJson( std::set<A> &v, JsonReader &json )
+    static typename Serialiser<S>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        match( json, JsonReader::START_ARRAY );
-        while( !match0( json, JsonReader::END_ARRAY ) )
-            v.insert( getFromJson<A>(json) );
-    }
+        struct S : public Serialiser<S>
+        {
+            S( const SerialiserFlags &sf )
+                : s( Serialisable<A>::serialiser(sf) )
+                {}
 
+            typename Serialiser<A>::Ptr s;
+
+            void toJson( JsonWriter &json, const S & v ) const
+            {
+                json.startArray();
+                for( typename std::set<A>::const_iterator i = v.begin(); i != v.end(); i++ )
+                    s->toJson( json, *i );
+                json.endArray();
+            }
+
+            void fromJson( S &v, JsonReader &json ) const
+            {
+                match( json, JsonReader::START_ARRAY );
+                while( !match0( json, JsonReader::END_ARRAY ) )
+                    v.insert( s->fromJson(json) );
+            }
+        };
+
+        return new S(sf);
+    }
 };
 
 template <class K,class V>
-struct JsonV<std::map<K,V>>
+struct Serialisable<std::map<K,V>>
 {
-    static void toJson( JsonWriter &json, const std::map<K,V> & v )
-    {
-        json.startArray();
-        for( typename std::map<K,V>::const_iterator i = v.begin(); i != v.end(); i++ )
-            JsonV<std::pair<K,V>>::toJson( json, *i );
-        json.endArray();
-    }
+    typedef std::map<K,V> M;
 
-    static void fromJson( std::map<K,V> &v, JsonReader &json )
+    static typename Serialiser<M>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        match( json, JsonReader::START_ARRAY );
-        while( !match0( json, JsonReader::END_ARRAY ) )
+        struct S : public Serialiser<M>
         {
-            std::pair<K,V> pv;
-            JsonV<std::pair<K,V>>::fromJson( pv, json );
-            v[pv.first] = pv.second;
-        }
+            S( const SerialiserFlags &sf )
+                : s( Serialisable<std::pair<K,V>>::serialiser(sf) )
+                {}
+
+            typename Serialiser<std::pair<K,V>>::Ptr s;
+
+            void toJson( JsonWriter &json, const M & v ) const
+            {
+                json.startArray();
+                for( typename std::map<K,V>::const_iterator i = v.begin(); i != v.end(); i++ )
+                    s->toJson( json, *i );
+                json.endArray();
+            }
+
+            void fromJson( M &v, JsonReader &json ) const
+            {
+                std::pair<K,V> pv;
+                s->fromJson( pv, json );
+                v[pv.first] = pv.second;
+            }
+        };
+
+        return new S(sf);
     }
 };
 

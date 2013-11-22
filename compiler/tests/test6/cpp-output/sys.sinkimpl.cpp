@@ -179,57 +179,96 @@ operator==( const SinkData &a, const SinkData &b )
 
 namespace ADL {
 
-void
-JsonV<ADL::sys::sinkimpl::TransportAddr>::toJson( JsonWriter &json, const ADL::sys::sinkimpl::TransportAddr & v )
+typename Serialiser<ADL::sys::sinkimpl::TransportAddr>::Ptr
+Serialisable<ADL::sys::sinkimpl::TransportAddr>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::sys::sinkimpl::TransportAddr _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::sys::sinkimpl::TransportAddr::STRINGV: writeField( json, "stringv", v.stringv() ); break;
-        case ADL::sys::sinkimpl::TransportAddr::INTV: writeField( json, "intv", v.intv() ); break;
-        case ADL::sys::sinkimpl::TransportAddr::ARRAYV: writeField( json, "arrayv", v.arrayv() ); break;
-    }
-    json.endObject();
+        _S( const SerialiserFlags & sf )
+            : stringv_s( Serialisable<std::string>::serialiser(sf) )
+            , intv_s( Serialisable<uint64_t>::serialiser(sf) )
+            , arrayv_s( Serialisable<std::vector<ADL::sys::sinkimpl::TransportAddr> >::serialiser(sf) )
+            {}
+        
+        typename Serialiser<std::string>::Ptr stringv_s;
+        typename Serialiser<uint64_t>::Ptr intv_s;
+        typename Serialiser<std::vector<ADL::sys::sinkimpl::TransportAddr> >::Ptr arrayv_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::sys::sinkimpl::TransportAddr::STRINGV: writeField( json, stringv_s, "stringv", v.stringv() ); break;
+                case ADL::sys::sinkimpl::TransportAddr::INTV: writeField( json, intv_s, "intv", v.intv() ); break;
+                case ADL::sys::sinkimpl::TransportAddr::ARRAYV: writeField( json, arrayv_s, "arrayv", v.arrayv() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "stringv", json ) )
+                    v.set_stringv(stringv_s->fromJson( json ));
+                else if( matchField0( "intv", json ) )
+                    v.set_intv(intv_s->fromJson( json ));
+                else if( matchField0( "arrayv", json ) )
+                    v.set_arrayv(arrayv_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-void
-JsonV<ADL::sys::sinkimpl::TransportAddr>::fromJson( ADL::sys::sinkimpl::TransportAddr &v, JsonReader &json )
+typename Serialiser<ADL::sys::sinkimpl::SinkData>::Ptr
+Serialisable<ADL::sys::sinkimpl::SinkData>::serialiser( const SerialiserFlags &sf )
 {
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::sys::sinkimpl::SinkData _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        if( matchField0( "stringv", json ) )
-            v.set_stringv(getFromJson<std::string>( json ));
-        else if( matchField0( "intv", json ) )
-            v.set_intv(getFromJson<uint64_t>( json ));
-        else if( matchField0( "arrayv", json ) )
-            v.set_arrayv(getFromJson<std::vector<ADL::sys::sinkimpl::TransportAddr> >( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
-void
-JsonV<ADL::sys::sinkimpl::SinkData>::toJson( JsonWriter &json, const ADL::sys::sinkimpl::SinkData & v )
-{
-    json.startObject();
-    writeField<ADL::sys::sinkimpl::TransportName>( json, "transport", v.transport );
-    writeField<ADL::sys::sinkimpl::TransportAddr>( json, "address", v.address );
-    writeField<ADL::sys::sinkimpl::SerialisationType>( json, "serialisation", v.serialisation );
-    json.endObject();
-}
-
-void
-JsonV<ADL::sys::sinkimpl::SinkData>::fromJson( ADL::sys::sinkimpl::SinkData &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        readField<ADL::sys::sinkimpl::TransportName>( v.transport, "transport", json ) ||
-        readField<ADL::sys::sinkimpl::TransportAddr>( v.address, "address", json ) ||
-        readField<ADL::sys::sinkimpl::SerialisationType>( v.serialisation, "serialisation", json ) ||
-        ignoreField( json );
-    }
-}
+        _S( const SerialiserFlags & sf )
+            : transport_s( Serialisable<ADL::sys::sinkimpl::TransportName>::serialiser(sf) )
+            , address_s( Serialisable<ADL::sys::sinkimpl::TransportAddr>::serialiser(sf) )
+            , serialisation_s( Serialisable<ADL::sys::sinkimpl::SerialisationType>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<ADL::sys::sinkimpl::TransportName>::Ptr transport_s;
+        typename Serialiser<ADL::sys::sinkimpl::TransportAddr>::Ptr address_s;
+        typename Serialiser<ADL::sys::sinkimpl::SerialisationType>::Ptr serialisation_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<ADL::sys::sinkimpl::TransportName>( json, transport_s, "transport", v.transport );
+            writeField<ADL::sys::sinkimpl::TransportAddr>( json, address_s, "address", v.address );
+            writeField<ADL::sys::sinkimpl::SerialisationType>( json, serialisation_s, "serialisation", v.serialisation );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( transport_s, v.transport, "transport", json ) ||
+                readField( address_s, v.address, "address", json ) ||
+                readField( serialisation_s, v.serialisation, "serialisation", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
 
 }; // ADL

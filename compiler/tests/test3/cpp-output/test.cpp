@@ -153,54 +153,91 @@ operator==( const U &a, const U &b )
 
 namespace ADL {
 
-void
-JsonV<ADL::test::A>::toJson( JsonWriter &json, const ADL::test::A & v )
+typename Serialiser<ADL::test::A>::Ptr
+Serialisable<ADL::test::A>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    writeField<int16_t>( json, "f_int", v.f_int );
-    writeField<std::string>( json, "f_string", v.f_string );
-    writeField<bool>( json, "f_bool", v.f_bool );
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::A>::fromJson( ADL::test::A &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::A _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        readField<int16_t>( v.f_int, "f_int", json ) ||
-        readField<std::string>( v.f_string, "f_string", json ) ||
-        readField<bool>( v.f_bool, "f_bool", json ) ||
-        ignoreField( json );
-    }
-}
+        _S( const SerialiserFlags & sf )
+            : f_int_s( Serialisable<int16_t>::serialiser(sf) )
+            , f_string_s( Serialisable<std::string>::serialiser(sf) )
+            , f_bool_s( Serialisable<bool>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<int16_t>::Ptr f_int_s;
+        typename Serialiser<std::string>::Ptr f_string_s;
+        typename Serialiser<bool>::Ptr f_bool_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<int16_t>( json, f_int_s, "f_int", v.f_int );
+            writeField<std::string>( json, f_string_s, "f_string", v.f_string );
+            writeField<bool>( json, f_bool_s, "f_bool", v.f_bool );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( f_int_s, v.f_int, "f_int", json ) ||
+                readField( f_string_s, v.f_string, "f_string", json ) ||
+                readField( f_bool_s, v.f_bool, "f_bool", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
 
-void
-JsonV<ADL::test::U>::toJson( JsonWriter &json, const ADL::test::U & v )
+typename Serialiser<ADL::test::U>::Ptr
+Serialisable<ADL::test::U>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::test::U _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::test::U::F_INT: writeField( json, "f_int", v.f_int() ); break;
-        case ADL::test::U::F_STRING: writeField( json, "f_string", v.f_string() ); break;
-    }
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::U>::fromJson( ADL::test::U &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "f_int", json ) )
-            v.set_f_int(getFromJson<int16_t>( json ));
-        else if( matchField0( "f_string", json ) )
-            v.set_f_string(getFromJson<std::string>( json ));
-        else
-            throw json_parse_failure();
-    }
+        _S( const SerialiserFlags & sf )
+            : f_int_s( Serialisable<int16_t>::serialiser(sf) )
+            , f_string_s( Serialisable<std::string>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<int16_t>::Ptr f_int_s;
+        typename Serialiser<std::string>::Ptr f_string_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U::F_INT: writeField( json, f_int_s, "f_int", v.f_int() ); break;
+                case ADL::test::U::F_STRING: writeField( json, f_string_s, "f_string", v.f_string() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "f_int", json ) )
+                    v.set_f_int(f_int_s->fromJson( json ));
+                else if( matchField0( "f_string", json ) )
+                    v.set_f_string(f_string_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
 }; // ADL

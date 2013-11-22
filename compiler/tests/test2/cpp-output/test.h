@@ -85,41 +85,56 @@ using IntTree = Tree<int32_t> ;
 namespace ADL {
 
 template <>
-struct JsonV<ADL::test::S1>
+struct Serialisable<ADL::test::S1>
 {
-    static void toJson( JsonWriter &json, const ADL::test::S1 & v );
-    static void fromJson( ADL::test::S1 &v, JsonReader &json );
+    static Serialiser<ADL::test::S1>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-struct JsonV<ADL::test::Tree<T>>
+struct Serialisable<ADL::test::Tree<T>>
 {
-    static void toJson( JsonWriter &json, const ADL::test::Tree<T> & v );
-    static void fromJson( ADL::test::Tree<T> &v, JsonReader &json );
+    static typename Serialiser<ADL::test::Tree<T>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-void
-JsonV<ADL::test::Tree<T>>::toJson( JsonWriter &json, const ADL::test::Tree<T> & v )
+typename Serialiser<ADL::test::Tree<T>>::Ptr
+Serialisable<ADL::test::Tree<T>>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    writeField<T>( json, "value", v.value );
-    writeField<std::vector<ADL::test::Tree<T> > >( json, "children", v.children );
-    json.endObject();
-}
-
-template <class T>
-void
-JsonV<ADL::test::Tree<T>>::fromJson( ADL::test::Tree<T> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::Tree<T> _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        readField<T>( v.value, "value", json ) ||
-        readField<std::vector<ADL::test::Tree<T> > >( v.children, "children", json ) ||
-        ignoreField( json );
-    }
-}
+        _S( const SerialiserFlags & sf )
+            : value_s( Serialisable<T>::serialiser(sf) )
+            , children_s( Serialisable<std::vector<ADL::test::Tree<T> > >::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<T>::Ptr value_s;
+        typename Serialiser<std::vector<ADL::test::Tree<T> > >::Ptr children_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<T>( json, value_s, "value", v.value );
+            writeField<std::vector<ADL::test::Tree<T> > >( json, children_s, "children", v.children );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( value_s, v.value, "value", json ) ||
+                readField( children_s, v.children, "children", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
 
 }; // ADL
 #endif // TEST_H

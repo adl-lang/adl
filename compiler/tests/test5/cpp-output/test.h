@@ -591,102 +591,108 @@ inline int16_t & U8::v2() const
 namespace ADL {
 
 template <>
-struct JsonV<ADL::test::S1>
+struct Serialisable<ADL::test::S1>
 {
-    static void toJson( JsonWriter &json, const ADL::test::S1 & v );
-    static void fromJson( ADL::test::S1 &v, JsonReader &json );
+    static Serialiser<ADL::test::S1>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::test::U1>
+struct Serialisable<ADL::test::U1>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U1 & v );
-    static void fromJson( ADL::test::U1 &v, JsonReader &json );
+    static Serialiser<ADL::test::U1>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::test::U2>
+struct Serialisable<ADL::test::U2>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U2 & v );
-    static void fromJson( ADL::test::U2 &v, JsonReader &json );
+    static Serialiser<ADL::test::U2>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::test::U3>
+struct Serialisable<ADL::test::U3>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U3 & v );
-    static void fromJson( ADL::test::U3 &v, JsonReader &json );
+    static Serialiser<ADL::test::U3>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-struct JsonV<ADL::test::U9<T>>
+struct Serialisable<ADL::test::U9<T>>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U9<T> & v );
-    static void fromJson( ADL::test::U9<T> &v, JsonReader &json );
+    static typename Serialiser<ADL::test::U9<T>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-void
-JsonV<ADL::test::U9<T>>::toJson( JsonWriter &json, const ADL::test::U9<T> & v )
+typename Serialiser<ADL::test::U9<T>>::Ptr
+Serialisable<ADL::test::U9<T>>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    switch( v.d() )
+    typedef ADL::test::U9<T> _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        case ADL::test::U9<T>::V1: writeField( json, "v1", v.v1() ); break;
-        case ADL::test::U9<T>::V2: writeField( json, "v2", v.v2() ); break;
-    }
-    json.endObject();
+        _S( const SerialiserFlags & sf )
+            : v1_s( Serialisable<T>::serialiser(sf) )
+            , v2_s( Serialisable<int16_t>::serialiser(sf) )
+            {}
+        
+        typename Serialiser<T>::Ptr v1_s;
+        typename Serialiser<int16_t>::Ptr v2_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test::U9<T>::V1: writeField( json, v1_s, "v1", v.v1() ); break;
+                case ADL::test::U9<T>::V2: writeField( json, v2_s, "v2", v.v2() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "v1", json ) )
+                    v.set_v1(v1_s->fromJson( json ));
+                else if( matchField0( "v2", json ) )
+                    v.set_v2(v2_s->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
 }
 
-template <class T>
-void
-JsonV<ADL::test::U9<T>>::fromJson( ADL::test::U9<T> &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
-    {
-        if( matchField0( "v1", json ) )
-            v.set_v1(getFromJson<T>( json ));
-        else if( matchField0( "v2", json ) )
-            v.set_v2(getFromJson<int16_t>( json ));
-        else
-            throw json_parse_failure();
-    }
-}
-
 template <>
-struct JsonV<ADL::test::U4>
+struct Serialisable<ADL::test::U4>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U4 & v );
-    static void fromJson( ADL::test::U4 &v, JsonReader &json );
+    static Serialiser<ADL::test::U4>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::test::U5>
+struct Serialisable<ADL::test::U5>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U5 & v );
-    static void fromJson( ADL::test::U5 &v, JsonReader &json );
+    static Serialiser<ADL::test::U5>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::test::U6>
+struct Serialisable<ADL::test::U6>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U6 & v );
-    static void fromJson( ADL::test::U6 &v, JsonReader &json );
+    static Serialiser<ADL::test::U6>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::test::U7>
+struct Serialisable<ADL::test::U7>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U7 & v );
-    static void fromJson( ADL::test::U7 &v, JsonReader &json );
+    static Serialiser<ADL::test::U7>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::test::U8>
+struct Serialisable<ADL::test::U8>
 {
-    static void toJson( JsonWriter &json, const ADL::test::U8 & v );
-    static void fromJson( ADL::test::U8 &v, JsonReader &json );
+    static Serialiser<ADL::test::U8>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL

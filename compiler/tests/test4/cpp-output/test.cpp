@@ -33,23 +33,39 @@ operator==( const S &a, const S &b )
 
 namespace ADL {
 
-void
-JsonV<ADL::test::S>::toJson( JsonWriter &json, const ADL::test::S & v )
+typename Serialiser<ADL::test::S>::Ptr
+Serialisable<ADL::test::S>::serialiser( const SerialiserFlags &sf )
 {
-    json.startObject();
-    writeField<Date>( json, "v1", v.v1 );
-    json.endObject();
-}
-
-void
-JsonV<ADL::test::S>::fromJson( ADL::test::S &v, JsonReader &json )
-{
-    match( json, JsonReader::START_OBJECT );
-    while( !match0( json, JsonReader::END_OBJECT ) )
+    typedef ADL::test::S _T;
+    
+    struct _S : public Serialiser<_T>
     {
-        readField<Date>( v.v1, "v1", json ) ||
-        ignoreField( json );
-    }
-}
+        _S( const SerialiserFlags & sf )
+            : v1_s( Serialisable<Date>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<Date>::Ptr v1_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<Date>( json, v1_s, "v1", v.v1 );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( v1_s, v.v1, "v1", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new _S(sf) );
+};
 
 }; // ADL

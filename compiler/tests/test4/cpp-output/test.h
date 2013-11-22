@@ -42,24 +42,35 @@ bool operator==( const S &a, const S &b );
 namespace ADL {
 
 template <>
-struct JsonV<ADL::test::DateO>
+struct Serialisable<ADL::test::DateO>
 {
-    static void toJson( JsonWriter &json, const ADL::test::DateO & v )
+    struct S : public Serialiser<ADL::test::DateO>
     {
-        JsonV<std::string>::toJson( json, v.value );
-    }
+        S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
+        
+        void toJson( JsonWriter &json, const ADL::test::DateO & v ) const
+        {
+            s->toJson( json, v.value );
+        }
+        
+        void fromJson( ADL::test::DateO &v, JsonReader &json ) const
+        {
+            s->fromJson( v.value, json );
+        }
+        
+        typename Serialiser<std::string>::Ptr s;
+    };
     
-    static void fromJson( ADL::test::DateO &v, JsonReader &json )
+    static typename Serialiser<ADL::test::DateO>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        JsonV<std::string>::fromJson( v.value, json );
+        return typename Serialiser<ADL::test::DateO>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
 };
 
 template <>
-struct JsonV<ADL::test::S>
+struct Serialisable<ADL::test::S>
 {
-    static void toJson( JsonWriter &json, const ADL::test::S & v );
-    static void fromJson( ADL::test::S &v, JsonReader &json );
+    static Serialiser<ADL::test::S>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL

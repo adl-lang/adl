@@ -131,45 +131,67 @@ bool operator==( const SinkData &a, const SinkData &b );
 namespace ADL {
 
 template <>
-struct JsonV<ADL::sys::sinkimpl::SerialisationType>
+struct Serialisable<ADL::sys::sinkimpl::SerialisationType>
 {
-    static void toJson( JsonWriter &json, const ADL::sys::sinkimpl::SerialisationType & v )
+    struct S : public Serialiser<ADL::sys::sinkimpl::SerialisationType>
     {
-        JsonV<std::string>::toJson( json, v.value );
-    }
+        S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
+        
+        void toJson( JsonWriter &json, const ADL::sys::sinkimpl::SerialisationType & v ) const
+        {
+            s->toJson( json, v.value );
+        }
+        
+        void fromJson( ADL::sys::sinkimpl::SerialisationType &v, JsonReader &json ) const
+        {
+            s->fromJson( v.value, json );
+        }
+        
+        typename Serialiser<std::string>::Ptr s;
+    };
     
-    static void fromJson( ADL::sys::sinkimpl::SerialisationType &v, JsonReader &json )
+    static typename Serialiser<ADL::sys::sinkimpl::SerialisationType>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        JsonV<std::string>::fromJson( v.value, json );
+        return typename Serialiser<ADL::sys::sinkimpl::SerialisationType>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
 };
 
 template <>
-struct JsonV<ADL::sys::sinkimpl::TransportAddr>
+struct Serialisable<ADL::sys::sinkimpl::TransportAddr>
 {
-    static void toJson( JsonWriter &json, const ADL::sys::sinkimpl::TransportAddr & v );
-    static void fromJson( ADL::sys::sinkimpl::TransportAddr &v, JsonReader &json );
+    static Serialiser<ADL::sys::sinkimpl::TransportAddr>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct JsonV<ADL::sys::sinkimpl::TransportName>
+struct Serialisable<ADL::sys::sinkimpl::TransportName>
 {
-    static void toJson( JsonWriter &json, const ADL::sys::sinkimpl::TransportName & v )
+    struct S : public Serialiser<ADL::sys::sinkimpl::TransportName>
     {
-        JsonV<std::string>::toJson( json, v.value );
-    }
+        S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
+        
+        void toJson( JsonWriter &json, const ADL::sys::sinkimpl::TransportName & v ) const
+        {
+            s->toJson( json, v.value );
+        }
+        
+        void fromJson( ADL::sys::sinkimpl::TransportName &v, JsonReader &json ) const
+        {
+            s->fromJson( v.value, json );
+        }
+        
+        typename Serialiser<std::string>::Ptr s;
+    };
     
-    static void fromJson( ADL::sys::sinkimpl::TransportName &v, JsonReader &json )
+    static typename Serialiser<ADL::sys::sinkimpl::TransportName>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        JsonV<std::string>::fromJson( v.value, json );
+        return typename Serialiser<ADL::sys::sinkimpl::TransportName>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
 };
 
 template <>
-struct JsonV<ADL::sys::sinkimpl::SinkData>
+struct Serialisable<ADL::sys::sinkimpl::SinkData>
 {
-    static void toJson( JsonWriter &json, const ADL::sys::sinkimpl::SinkData & v );
-    static void fromJson( ADL::sys::sinkimpl::SinkData &v, JsonReader &json );
+    static Serialiser<ADL::sys::sinkimpl::SinkData>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL
