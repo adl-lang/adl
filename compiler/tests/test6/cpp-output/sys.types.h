@@ -747,8 +747,8 @@ struct Serialisable<std::pair<A,B>>
             void toJson( JsonWriter &json, const P & v ) const
             {
                 json.startObject();
-                writeField<A>( json, "v1", v.first );
-                writeField<B>( json, "v2", v.second );
+                writeField<A>( json, v1_s, "v1", v.first );
+                writeField<B>( json, v2_s, "v2", v.second );
                 json.endObject();
             }
 
@@ -757,14 +757,14 @@ struct Serialisable<std::pair<A,B>>
                 match( json, JsonReader::START_OBJECT );
                 while( !match0( json, JsonReader::END_OBJECT ) )
                 {
-                    readField<A>( v.first, "v1", json ) ||
-                        readField<B>( v.second, "v2", json ) ||
+                    readField<A>( v1_s, v.first, "v1", json ) ||
+                        readField<B>( v2_s, v.second, "v2", json ) ||
                         ignoreField( json );
                 }
             }
         };
 
-        return new S(sf);
+        return typename Serialiser<P>::Ptr( new S(sf) );
     }
 };
 
@@ -799,7 +799,7 @@ struct Serialisable<std::set<A>>
             }
         };
 
-        return new S(sf);
+        return typename Serialiser<S>::Ptr( new S(sf) );
     }
 };
 
@@ -834,7 +834,7 @@ struct Serialisable<std::map<K,V>>
             }
         };
 
-        return new S(sf);
+        return typename Serialiser<M>::Ptr (new S(sf));
     }
 };
 
