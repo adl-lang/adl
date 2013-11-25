@@ -13,6 +13,7 @@ generateHaskellFromADL pkg lbi = do
         [ "adl/sys/types.adl"
         , "adl/sys/rpc.adl"
         , "adl/sys/sinkimpl.adl"
+        , "adl/sys/adlast.adl"
         ]
           
       cmd = "adlc-bootstrap haskell --no-overwrite -I adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles

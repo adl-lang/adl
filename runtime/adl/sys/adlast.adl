@@ -1,0 +1,108 @@
+module sys.adlast
+{
+// Types to represent an ADL syntax tree
+
+import sys.types.*;
+
+type ModuleName = String;
+type Ident = String;
+
+struct ScopedName
+{
+    ModuleName moduleName;
+    Ident name;
+};
+
+union Literal
+{
+    Void null;
+    Int64 integer;
+    Double double;
+    String string;
+    Bool boolean;
+    Vector<Literal> array;
+    Map<String,Literal> object;
+};
+
+union TypeRef
+{
+    Ident primitive;
+    Ident typeParam;
+    ScopedName reference;
+};
+
+struct TypeExpr
+{
+    ScopedName typeRef;
+    Vector<TypeExpr> parameters;
+};
+
+struct Field
+{
+    Ident name;
+    TypeExpr typeExpr;
+    Maybe<Literal> default;            
+};
+
+struct Struct
+{
+    Vector<Ident> typeParams;
+    Vector<Field> fields;
+};
+
+struct Union
+{
+    Vector<Ident> typeParams;
+    Vector<Field> fields;
+};
+
+struct TypeDef
+{
+    Vector<Ident> typeParams;
+    TypeExpr typeExpr;
+};
+
+struct NewType
+{
+    Vector<Ident> typeParams;
+    TypeExpr typeExpr;
+    Maybe<Literal> default;
+};
+
+union DeclType
+{
+    Struct struct_;        
+    Union union_;        
+    TypeDef type_;        
+    NewType newtype_;        
+};
+
+struct Decl
+{
+    Ident name;
+    Maybe<Word32> version;
+    DeclType type_;
+};
+
+type DeclVersions = Vector<Decl>;
+
+union Import
+{
+    ModuleName moduleName; 
+    ScopedName scopedName;
+};
+
+struct Module
+{
+    ModuleName name;
+    Vector<Import> imports;
+    Map<Ident,DeclVersions> decls;
+};
+
+struct CompilationUnit
+{
+    Map<ModuleName,Module> references;
+    Module result;        
+};
+
+};
