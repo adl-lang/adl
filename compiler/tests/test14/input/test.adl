@@ -1,0 +1,15 @@
+module test
+{
+    struct switch
+    {
+         Double double;
+         Int32    int;
+         String string;
+         Bool for;
+    };
+
+    union unsigned
+    {
+         Void null;
+    };
+};

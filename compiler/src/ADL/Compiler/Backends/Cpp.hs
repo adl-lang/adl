@@ -213,21 +213,113 @@ cTypeExprB1 scopeLocalNames m (RT_Param i) = case Map.lookup i m of
     Nothing -> return (cTypeParamName i)
 cTypeExprB1 scopeLocalNames _ (RT_Primitive pt) = cPrimitiveType pt
 
+reservedWords = Set.fromList
+  [ "null"
+  , "alignas"
+  , "alignof"
+  , "and"
+  , "and_eq"
+  , "asm"
+  , "auto"
+  , "bitand"
+  , "bitor"
+  , "bool"
+  , "break"
+  , "case"
+  , "catch"
+  , "char"
+  , "char16_t"
+  , "char32_t"
+  , "class"
+  , "compl"
+  , "const"
+  , "constexpr"
+  , "const_cast"
+  , "continue"
+  , "decltype"
+  , "default"
+  , "delete"
+  , "do"
+  , "double"
+  , "dynamic_cast"
+  , "else"
+  , "enum"
+  , "explicit"
+  , "export"
+  , "extern"
+  , "false"
+  , "float"
+  , "for"
+  , "friend"
+  , "goto"
+  , "if"
+  , "inline"
+  , "int"
+  , "long"
+  , "mutable"
+  , "namespace"
+  , "new"
+  , "noexcept"
+  , "not"
+  , "not_eq"
+  , "nullptr"
+  , "operator"
+  , "or"
+  , "or_eq"
+  , "private"
+  , "protected"
+  , "public"
+  , "register"
+  , "reinterpret_cast"
+  , "return"
+  , "short"
+  , "signed"
+  , "sizeof"
+  , "static"
+  , "static_assert"
+  , "static_cast"
+  , "struct"
+  , "switch"
+  , "template"
+  , "this"
+  , "thread_local"
+  , "throw"
+  , "true"
+  , "try"
+  , "typedef"
+  , "typeid"
+  , "typename"
+  , "union"
+  , "unsigned"
+  , "using"
+  , "virtual"
+  , "void"
+  , "volatile"
+  , "wchar_t"
+  , "while"
+  , "xor"
+  , "xor_eq                           "
+  ]
+
+unreserveWord :: Ident -> Ident
+unreserveWord n | Set.member (T.toLower n) reservedWords = T.append n "_"
+                | otherwise = n
+                  
 -- Returns the c++ name corresponding to the ADL type name
 cTypeName :: Ident -> Ident
-cTypeName n = n
+cTypeName = unreserveWord
 
 -- Returns the c++ name corresponding to the ADL type parameter
 cTypeParamName :: Ident -> Ident
-cTypeParamName n = n
+cTypeParamName = unreserveWord
 
 -- Returns the c++ name corresponding to the ADL field name
 cFieldName :: Ident -> Ident -> Ident
-cFieldName _ n = n
+cFieldName _ = unreserveWord
 
 -- Returns the c++ name for the accessor function for a union field
 cUnionAccessorName :: Decl t -> Field t  -> Ident
-cUnionAccessorName _ f = f_name f
+cUnionAccessorName _ f = unreserveWord (f_name f)
 
 -- Returns the c++ name for the constructor function for a union field
 cUnionConstructorName :: Decl t -> Field t -> Ident

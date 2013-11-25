@@ -152,13 +152,16 @@ main = hspec $ do
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
       runCppBackend "test4/input" ["test4/input/test.adl"] "test4/cpp-output" ["test4/input/cpp-custom-types.json"]
-          `shouldReturn` MatchOutput
+        `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       runCppBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
       runCppBackend stdsrc stdfiles "test6/cpp-output" stdCppCustomTypes
-          `shouldReturn` MatchOutput
+        `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       runCppBackend1 "test7/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates valid names when ADL contains C++ reserved words" $ do
+      runCppBackend1 "test14/input/test.adl"
         `shouldReturn` MatchOutput
