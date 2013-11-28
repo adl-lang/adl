@@ -15,6 +15,7 @@ import ADL.Compiler.EIO
 import ADL.Compiler.Utils
 import ADL.Compiler.Backends.Verify as V
 import ADL.Compiler.Backends.Haskell as H
+import ADL.Compiler.Backends.AST as A
 import ADL.Compiler.Backends.Cpp as C
 import HaskellCustomTypes
 import Paths_adl_compiler
@@ -50,6 +51,25 @@ runVerify args0 =
 
     optDescs =
       [ searchDirOption (\s vf-> vf{vf_searchPath=s:vf_searchPath vf})
+      ]
+
+runAst args0 =
+  case getOpt Permute optDescs args0 of
+    (opts,args,[]) -> A.generate (mkFlags opts) args
+    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+  where
+    header = "Usage: adl ast [OPTION...] files..."
+    
+    mkFlags opts = (foldl (.) id opts) (A.Flags [] (writeOutputFile out0))
+                                        
+    out0 = OutputArgs {
+      oa_log = putStrLn,
+      oa_noOverwrite = True,
+      oa_outputPath = "."
+    }
+
+    optDescs =
+      [ searchDirOption (\s f-> f{af_searchPath=s:af_searchPath f})
       ]
 
 runHaskell args0 =
@@ -122,6 +142,7 @@ runCpp args0 =
 
 usage = T.intercalate "\n"
   [ "Usage: adl verify [OPTION..] <modulePath>..."
+  , "       adl ast [OPTION..] <modulePath>..."
   , "       adl haskell [OPTION..] <modulePath>..."
   , "       adl cpp [OPTION..] <modulePath>..."
   ]    
@@ -131,6 +152,7 @@ main = do
   runEIO $ case args of
     ("verify":args) -> runVerify args
     ("haskell":args) -> runHaskell args
+    ("ast":args) -> runAst args
     ("cpp":args) -> runCpp args
     _ -> eioError usage
   where

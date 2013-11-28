@@ -33,7 +33,7 @@ union TypeRef
 
 struct TypeExpr
 {
-    ScopedName typeRef;
+    TypeRef typeRef;
     Vector<TypeExpr> parameters;
 };
 
@@ -96,13 +96,7 @@ struct Module
 {
     ModuleName name;
     Vector<Import> imports;
-    Map<Ident,DeclVersions> decls;
-};
-
-struct CompilationUnit
-{
-    Map<ModuleName,Module> references;
-    Module result;        
+    Map<Ident,Decl> decls;
 };
 
 };

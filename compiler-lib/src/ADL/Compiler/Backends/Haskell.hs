@@ -25,6 +25,7 @@ import Data.Attoparsec.Number
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Lazy as LBS
 
 import ADL.Utils.Format
 import ADL.Compiler.AST
@@ -534,14 +535,14 @@ generateModule m = do
 writeModuleFile :: (ModuleName -> HaskellModule) ->
                    (HaskellModule -> FilePath) ->
                    CustomTypeMap ->
-                   (FilePath -> T.Text -> IO ()) ->
+                   (FilePath -> LBS.ByteString -> IO ()) ->
                    Module ResolvedType ->
                    EIO a ()
 writeModuleFile hmf fpf customTypes fileWriter m = do
   let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty Set.empty []
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
-  liftIO $ fileWriter fpath t
+  liftIO $ fileWriter fpath (LBS.fromStrict (T.encodeUtf8 t))
 
 moduleMapper :: String -> ModuleName -> HaskellModule
 moduleMapper sprefix mn = HaskellModule (T.intercalate "." (prefix ++path) )
@@ -564,7 +565,7 @@ data HaskellFlags = HaskellFlags {
 
   hf_customTypeFiles :: [FilePath],
 
-  hf_fileWriter :: FilePath -> T.Text -> IO ()
+  hf_fileWriter :: FilePath -> LBS.ByteString -> IO ()
 }
 
 generate :: HaskellFlags -> ([FilePath] -> EIOT CustomTypeMap) -> [FilePath] -> EIOT ()

@@ -17,6 +17,7 @@ import ADL.Compiler.Utils
 import qualified ADL.Compiler.Backends.Verify as V
 import qualified ADL.Compiler.Backends.Haskell as H
 import qualified ADL.Compiler.Backends.Cpp as CPP
+import qualified ADL.Compiler.Backends.AST as AST
 
 data CodeGenResult = MatchOutput
                    | CompilerFailed T.Text
@@ -87,6 +88,23 @@ runCppBackend1 mpath = runCppBackend ipath [mpath] epath []
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "cpp-output"
 
+runAstBackend :: FilePath -> [FilePath] -> FilePath -> IO CodeGenResult
+runAstBackend ipath mpaths epath = do
+  tdir <- getTemporaryDirectory
+  tempDir <- createTempDirectory tdir "adl.test."
+  let flags = AST.Flags {
+    AST.af_searchPath = [ipath],
+    AST.af_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+    }
+  er <- unEIO $ AST.generate flags mpaths
+  processCompilerOutput epath tempDir er
+
+runAstBackend1 :: FilePath-> IO CodeGenResult
+runAstBackend1 mpath = runAstBackend ipath [mpath] epath
+  where
+    ipath = takeDirectory mpath
+    epath = (takeDirectory ipath) </> "ast-output"
+
 stdsrc :: FilePath
 stdsrc = "../../runtime/adl"
 
@@ -140,6 +158,11 @@ main = hspec $ do
       runHaskellBackend1 "test7/input/test.adl"
         `shouldReturn` MatchOutput
 
+  describe "adlc ast backend" $ do
+    it "generates expected json serialisation for each type of decl" $ do
+      runAstBackend1 "test15/input/test.adl"
+        `shouldReturn` MatchOutput
+    
   describe "adlc cpp backend" $ do
     it "generates expected code for an empty module" $ do
       runCppBackend1 "test1/input/test.adl"

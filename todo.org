@@ -50,6 +50,7 @@ discriminator is negotiated on connection, and not serialised
 * Test Suite
 ** DONE Add ability to test compiler errors
 * Haskell Backend
+** Void branches on unions don't need to take a () parameter
 ** Consider an option extra method on transport to support RPCs
 
 data Connection = Connection {

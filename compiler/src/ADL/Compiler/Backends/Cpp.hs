@@ -22,6 +22,7 @@ import Data.Attoparsec.Number
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Lazy as LBS
 
 import qualified Text.Parsec as P
 import qualified ADL.Compiler.ParserP as P
@@ -933,7 +934,7 @@ generateModule m = do
 writeModuleFile :: (ModuleName -> CppNamespace) ->
                    (ModuleName -> FilePath) ->
                    CustomTypeMap -> 
-                   (FilePath -> T.Text -> IO ()) ->
+                   (FilePath -> LBS.ByteString -> IO ()) ->
                    Module ResolvedType ->
                    EIO a ()
 writeModuleFile mNamespace mFile customTypes fileWriter m = do
@@ -954,8 +955,8 @@ writeModuleFile mNamespace mFile customTypes fileWriter m = do
       cppfileElements = [ms_cppFileUserModule s1,ms_cppFileSerialisation s1]
       cppfileLines = fileLines cppfileElements
       
-  liftIO $ fileWriter (fp ++ ".h") (T.intercalate "\n" ifileLines )
-  liftIO $ fileWriter (fp ++ ".cpp") (T.intercalate "\n" cppfileLines)
+  liftIO $ fileWriter (fp ++ ".h") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" ifileLines )))
+  liftIO $ fileWriter (fp ++ ".cpp") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" cppfileLines)))
 
 data CppFlags = CppFlags {
   -- directories where we look for ADL files
@@ -964,7 +965,7 @@ data CppFlags = CppFlags {
   -- Files containing custom type definitions
   cf_customTypeFiles :: [FilePath],
 
-  cf_fileWriter :: FilePath -> T.Text -> IO ()
+  cf_fileWriter :: FilePath -> LBS.ByteString -> IO ()
   }
 
 getCustomTypes :: [FilePath] -> EIOT CustomTypeMap
