@@ -26,7 +26,7 @@ searchDirOption ufn =
     "Add the specifed directory to the ADL searchpath"
 
 includePrefixOption ufn =
-  Option "I" ["includePrefix"]
+  Option "" ["include-prefix"]
     (ReqArg ufn "DIR")
     "The prefix to be used to generate/reference include files"
 
