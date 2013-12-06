@@ -1,10 +1,10 @@
 #ifndef SYS_ADLAST_H
 #define SYS_ADLAST_H
 #include <adl/adl.h>
+#include "adl/sys.types.h"
 #include <map>
 #include <stdint.h>
 #include <string>
-#include "sys.types.h"
 #include <vector>
 
 namespace ADL {

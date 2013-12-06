@@ -2,7 +2,7 @@
 #define ADL_SINK_H
 
 #include <adl/json.h>
-#include <sys.sinkimpl.h>
+#include <adl/sys.sinkimpl.h>
 
 namespace ADL {
 

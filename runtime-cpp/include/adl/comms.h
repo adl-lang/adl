@@ -4,7 +4,7 @@
 #include <memory>
 #include <adl/types.h>
 #include <adl/sink.h>
-#include <sys.sinkimpl.h>
+#include <adl/sys.sinkimpl.h>
 
 namespace ADL {
 

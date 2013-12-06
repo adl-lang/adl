@@ -57,8 +57,8 @@ depends: $(SANDBOX) .make
 	touch .make/built-compiler
 
 .make/built-runtime-cpp: $(RUNTIME-SRC) $(RUNTIME-CPP-SRC) .make/built-compiler
-	(cd runtime-cpp && make clean)
-	(cd runtime-cpp && make)
+	(cd runtime-cpp && ./autogen.sh)
+	(cd runtime-cpp && mkdir -p build && cd build && ../configure && make)
 	touch .make/built-runtime-cpp
 
 .make/built-examples: $(EXAMPLE-SRC) .make/built-utils .make/built-runtime .make/built-compiler .make/comms-http
@@ -83,7 +83,7 @@ clean:
 	-(cd compiler-lib ; cabal clean ; rm -rf dist)
 	-(cd utils ; cabal clean ; rm -rf dist)
 	-(cd runtime ; cabal clean ; rm -rf dist)
-	-(cd runtime-cpp ; make clean)
+	-(cd runtime-cpp ; rm -rf build)
 
 cleanext:
 	-cabal sandbox hc-pkg unregister zeromq3-haskell
