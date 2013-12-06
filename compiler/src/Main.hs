@@ -25,6 +25,11 @@ searchDirOption ufn =
     (ReqArg ufn "DIR")
     "Add the specifed directory to the ADL searchpath"
 
+includePrefixOption ufn =
+  Option "I" ["includePrefix"]
+    (ReqArg ufn "DIR")
+    "The prefix to be used to generate/reference include files"
+
 outputDirOption ufn =
   Option "O" ["outputdir"]
     (ReqArg ufn "DIR")
@@ -124,6 +129,7 @@ runCpp args0 =
 
     flags0 ctypes = C.CppFlags {
       cf_searchPath=[],
+      cf_incFilePrefix="",
       cf_customTypeFiles=ctypes,
       cf_fileWriter= \_ _ -> return ()
     }
@@ -136,6 +142,7 @@ runCpp args0 =
     optDescs =
       [ searchDirOption (\s (cf,o)-> (cf{cf_searchPath=s:cf_searchPath cf},o))
       , customTypesOption (\s (cf,o)-> (cf{cf_customTypeFiles=s:cf_customTypeFiles cf},o))
+      , includePrefixOption (\s (cf,o)-> (cf{cf_incFilePrefix=s},o))
       , outputDirOption (\s (cf,o)-> (cf,o{oa_outputPath=s}))
       , noOverwriteOption (\(cf,o)-> (cf,o{oa_noOverwrite=True}))
       ]

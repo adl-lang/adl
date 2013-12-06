@@ -9,7 +9,7 @@ import qualified Data.Set as Set
 import qualified Data.List as L
 import Data.Ord (comparing)
 
-import System.FilePath(joinPath,takeDirectory)
+import System.FilePath(joinPath,takeDirectory,(</>))
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
@@ -81,7 +81,7 @@ fileLines fss = includesT ++ concat (map bodyT fss)
 data MState = MState {
    ms_name :: ModuleName,
    ms_moduleMapper :: ModuleName -> CppNamespace,
-   ms_fileMapper :: ModuleName -> FilePath,
+   ms_incFileMapper :: ModuleName -> FilePath,
    ms_customTypes :: Map.Map ScopedName CustomType,
    ms_incFileUserModule :: FState,
    ms_incFileSerialisation :: FState,
@@ -337,7 +337,7 @@ cUnionDiscName t f = T.toUpper (cUnionAccessorName t f)
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
   ms <- get
-  let fp2 = ms_fileMapper ms mn
+  let fp2 = ms_incFileMapper ms mn
   include fr (fp2 ++ ".h")
 
 genTemplate :: [Ident] -> CodeWriter ()
@@ -933,15 +933,15 @@ generateModule m = do
 -- existing identical files.
 writeModuleFile :: (ModuleName -> CppNamespace) ->
                    (ModuleName -> FilePath) ->
+                   (ModuleName -> FilePath) ->
                    CustomTypeMap -> 
                    (FilePath -> LBS.ByteString -> IO ()) ->
                    Module ResolvedType ->
                    EIO a ()
-writeModuleFile mNamespace mFile customTypes fileWriter m = do
+writeModuleFile mNamespace mIncFile mFile customTypes fileWriter m = do
   let fs0 = FState Set.empty  [] (mNamespace (m_name m))
       fs1 = FState Set.empty  [] (CppNamespace ["ADL"])
-      s0 = MState (m_name m) mNamespace mFile customTypes fs0 fs1 fs0 fs1
-      fp =  mFile (m_name m)
+      s0 = MState (m_name m) mNamespace mIncFile customTypes fs0 fs1 fs0 fs1
       s1 = execState (generateModule m) s0
       guard_name = (T.append (T.intercalate "_" (map T.toUpper (unModuleName (m_name m)))) "_H" )
 
@@ -955,13 +955,17 @@ writeModuleFile mNamespace mFile customTypes fileWriter m = do
       cppfileElements = [ms_cppFileUserModule s1,ms_cppFileSerialisation s1]
       cppfileLines = fileLines cppfileElements
       
-  liftIO $ fileWriter (fp ++ ".h") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" ifileLines )))
-  liftIO $ fileWriter (fp ++ ".cpp") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" cppfileLines)))
+  liftIO $ fileWriter (mIncFile (m_name m) ++ ".h") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" ifileLines )))
+  liftIO $ fileWriter (mFile (m_name m) ++ ".cpp") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" cppfileLines)))
 
 data CppFlags = CppFlags {
   -- directories where we look for ADL files
   cf_searchPath :: [FilePath],
- 
+
+  -- all include files will be generated and referenced
+  -- with this path prefix
+  cf_incFilePrefix :: FilePath,
+
   -- Files containing custom type definitions
   cf_customTypeFiles :: [FilePath],
 
@@ -997,6 +1001,9 @@ getCustomTypes fps = fmap Map.unions (mapM get0 fps)
 namespaceGenerator :: ModuleName -> CppNamespace
 namespaceGenerator mn = CppNamespace ("ADL":unModuleName mn)
 
+incFileGenerator :: FilePath -> ModuleName -> FilePath
+incFileGenerator prefix mn = prefix </> T.unpack (T.intercalate "." (unModuleName mn))
+
 fileGenerator :: ModuleName -> FilePath
 fileGenerator mn = T.unpack (T.intercalate "." (unModuleName mn))
 
@@ -1005,6 +1012,7 @@ generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath 
   rm <- loadAndCheckModule (moduleFinder (cf_searchPath cf)) modulePath
   customTypes <- getCustomTypes (cf_customTypeFiles cf)
   writeModuleFile namespaceGenerator
+                  (incFileGenerator (cf_incFilePrefix cf))
                   fileGenerator
                   customTypes
                   (cf_fileWriter cf)

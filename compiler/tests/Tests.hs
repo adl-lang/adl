@@ -70,20 +70,21 @@ runHaskellBackend1 mpath = runHaskellBackend ipath [mpath] epath []
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "hs-output"
 
-runCppBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
-runCppBackend ipath mpaths epath customTypeFiles = do
+runCppBackend :: FilePath -> [FilePath] -> FilePath -> FilePath -> [FilePath] -> IO CodeGenResult
+runCppBackend ipath mpaths epath iprefix customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags = CPP.CppFlags {
     CPP.cf_searchPath = [ipath],
     CPP.cf_customTypeFiles = customTypeFiles,
+    CPP.cf_incFilePrefix = iprefix,
     CPP.cf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
     }
   er <- unEIO $ CPP.generate flags mpaths
   processCompilerOutput epath tempDir er
 
 runCppBackend1 :: FilePath-> IO CodeGenResult
-runCppBackend1 mpath = runCppBackend ipath [mpath] epath []
+runCppBackend1 mpath = runCppBackend ipath [mpath] epath "" []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "cpp-output"
@@ -174,17 +175,20 @@ main = hspec $ do
       runCppBackend1 "test3/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runCppBackend "test4/input" ["test4/input/test.adl"] "test4/cpp-output" ["test4/input/cpp-custom-types.json"]
+      runCppBackend "test4/input" ["test4/input/test.adl"] "test4/cpp-output" "" ["test4/input/cpp-custom-types.json"]
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       runCppBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      runCppBackend stdsrc stdfiles "test6/cpp-output" stdCppCustomTypes
+      runCppBackend stdsrc stdfiles "test6/cpp-output" "" stdCppCustomTypes
         `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       runCppBackend1 "test7/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains C++ reserved words" $ do
       runCppBackend1 "test14/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates/references include files with a custom prefix" $ do
+      runCppBackend "test16/input" ["test16/input/test.adl"] "test16/cpp-output" "adl" []
         `shouldReturn` MatchOutput

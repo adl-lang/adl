@@ -1,0 +1,7 @@
+module test2
+{
+    struct A
+    {
+        Int32 a;
+    };
+};
