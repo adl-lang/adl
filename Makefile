@@ -58,7 +58,9 @@ depends: $(SANDBOX) .make
 
 .make/built-runtime-cpp: $(RUNTIME-SRC) $(RUNTIME-CPP-SRC) .make/built-compiler
 	(cd runtime-cpp && ./autogen.sh)
-	(cd runtime-cpp && mkdir -p build && cd build && ../configure && make)
+	(cd runtime-cpp && mkdir -p build && cd build && ../configure)
+	(cd runtime-cpp/build && make)
+	(cd runtime-cpp/build && make check)
 	touch .make/built-runtime-cpp
 
 .make/built-examples: $(EXAMPLE-SRC) .make/built-utils .make/built-runtime .make/built-compiler .make/comms-http

@@ -27,6 +27,13 @@ adlcpp_include_HEADERS = \
     src-generated/adl/sys.sinkimpl.h \
     src-generated/adl/sys.types.h
 
+TESTS = unit-tests
+
+check_PROGRAMS = unit-tests
+
+unit_tests_SOURCES = tests/unit-tests.cpp
+unit_tests_LDFLAGS=-ladlcpp
+
 nodist_adlcpp_libinclude_HEADERS = adlcppconfig.h
 
 pkgconfigdir = $(libdir)/pkgconfig

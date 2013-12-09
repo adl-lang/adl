@@ -32,8 +32,8 @@ void
 StreamJsonWriter::endObject()
 {
     state_.pop_back();
-    ostream_ << '}';
     calculateIndent();
+    ostream_ << newline_ << '}';
 }
 
 void
@@ -49,8 +49,8 @@ void
 StreamJsonWriter::endArray()
 {
     state_.pop_back( );
-    ostream_ << ']';
     calculateIndent();
+    ostream_ << newline_ << ']';
 }
 
 void
@@ -141,7 +141,7 @@ StreamJsonWriter::calculateIndent()
     if( pretty_ )
     {
         newline_ = "\n";
-        for( size_t i = 0; i < state_.size(); i++ )
+        for( size_t i = 0; i < state_.size() -1; i++ )
             newline_ += "\t";
     }
 }
