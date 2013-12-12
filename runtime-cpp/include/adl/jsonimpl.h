@@ -48,6 +48,53 @@ private:
     void calculateIndent();
 };
 
+class StringJsonReader : public JsonReader
+{
+public:
+    StringJsonReader( const std::string &s );
+    Type type();
+    void next();
+    const std::string & fieldName();
+    bool boolV();
+    int64_t intV();
+    uint64_t uintV();
+    double doubleV();
+    const std::string & stringV();
+
+private:
+    void next0();
+
+    enum State {
+        START,
+        ARRAY1,
+        ARRAY2,
+        OBJECT1,
+        OBJECT2,
+        OBJECT3,
+        DONE,
+    };
+
+    void skipWhitespace();
+
+    bool match( const char *s );
+    std::string parseString();
+    std::string parseNumber();
+
+    std::string s_;
+    std::string::iterator c_;
+    std::vector<State> state_;
+    Type type_;
+    std::string sval_;
+    bool bval_;
+};
+
+inline void
+StringJsonReader::skipWhitespace()
+{
+    while( c_ != s_.end() && (*c_ == ' ' || *c_ == '\n' || *c_ == '\t' ))
+        c_++;
+}
+
 };
 
 #endif

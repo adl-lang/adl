@@ -406,4 +406,32 @@ Serialisable<std::string>::serialiser( const SerialiserFlags &  )
     return s;
 }
 
+Serialiser<ByteVector>::Ptr
+Serialisable<ByteVector>::serialiser( const SerialiserFlags &  )
+{
+    struct S : public Serialiser<ByteVector>
+    {
+        void toJson( JsonWriter &json, const ByteVector & v ) const
+        {
+            json.stringV(ByteVector::toLiteral(v));
+        }
+
+        void fromJson( ByteVector &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::STRING )
+            {
+                v = ByteVector::fromLiteral( json.stringV() );
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<ByteVector>::Ptr s;
+    if( !s )
+        s = Serialiser<ByteVector>::Ptr( new S() );
+    return s;
+}
+
 };

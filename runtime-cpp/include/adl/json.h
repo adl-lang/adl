@@ -107,8 +107,18 @@ struct Serialisable
 };
 
 
-struct json_parse_failure : public std::exception
+class json_parse_failure : public std::exception
 {
+public:
+    json_parse_failure() {}
+    json_parse_failure( const std::string & message ) : message_(message) {}
+
+    virtual const char *what() const throw () {
+        return message_.c_str();
+    }
+
+private:
+    std::string message_;
 };
 
 inline
@@ -128,7 +138,7 @@ void match( JsonReader &json, JsonReader::Type t )
     if( json.type() == t )
         json.next();
     else
-        throw json_parse_failure();
+        throw json_parse_failure("Match failed");
 };
 
 // Skip over the complete json object currently pointed at.
@@ -138,7 +148,7 @@ inline bool
 matchField0( const std::string &f, JsonReader &json )
 {
     if( json.type() != JsonReader::FIELD )
-        throw json_parse_failure();
+        throw json_parse_failure("Field match failed");
     bool match = json.fieldName() == f;
     if( match )
         json.next();
@@ -158,7 +168,7 @@ bool
 readField( typename Serialiser<T>::Ptr js, T &v, const std::string &f, JsonReader &json )
 {
     if( json.type() != JsonReader::FIELD )
-        throw json_parse_failure();
+        throw json_parse_failure("readField failed");
     if( json.fieldName() != f )
         return false;
     json.next();

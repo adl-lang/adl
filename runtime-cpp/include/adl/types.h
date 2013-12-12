@@ -16,8 +16,8 @@ struct Void
 {
 };
 
-inline
-bool operator<( const Void &a, const Void &b ) { return false; }
+inline bool operator==( const Void &a, const Void &b ) { return true; }
+inline bool operator<( const Void &a, const Void &b ) { return false; }
 
 //----------------------------------------------------------------------
 // ByteVector
@@ -26,8 +26,12 @@ struct ByteVector
 {
     std::vector<uint8_t> bytes;
 
+    static std::string toLiteral( const ByteVector & v );
     static ByteVector fromLiteral( const std::string & v );
 };
+
+inline bool operator==( const ByteVector &a, const ByteVector &b ) { return a.bytes == b.bytes; }
+inline bool operator<( const ByteVector &a, const ByteVector &b ) { return a.bytes < b.bytes; }
 
 //----------------------------------------------------------------------
 // Helpers for unions
