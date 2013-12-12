@@ -147,15 +147,16 @@ StreamJsonWriter::calculateIndent()
     }
 }
 
-StringJsonReader::StringJsonReader( const std::string & s )
-    : s_(s), c_(s_.begin()), type_(NULLV)
+StreamJsonReader::StreamJsonReader( std::istream & s )
+    : s_(s), done_(false), type_(NULLV)
 {
+    snext();
     state_.push_back( START );
     next();
 }
 
 JsonReader::Type
-StringJsonReader::type()
+StreamJsonReader::type()
 {
     return type_;
 }
@@ -210,13 +211,7 @@ def parseJSON(s):                             START
 */
 
 void
-StringJsonReader::next()
-{
-    next0();
-}
-
-void
-StringJsonReader::next0()
+StreamJsonReader::next()
 {
     for(;;)
     {
@@ -263,7 +258,7 @@ StringJsonReader::next0()
                 state_.back() = DONE;
                 return;
             }
-            else if( *c_ == '-' || (*c_ >= '0' && *c_ <= '9')  )
+            else if( speek() == '-' || (speek() >= '0' && speek() <= '9')  )
             {
                 type_ = NUMBER;
                 sval_ = parseNumber();
@@ -374,17 +369,20 @@ StringJsonReader::next0()
 }
 
 bool
-StringJsonReader::match( const char* cstr )
+StreamJsonReader::match( const char* cstr )
 {
-    std::string::iterator c = c_;
+    // Leave the stream iterator unmodified if the first
+    // character doesn't match
+    if( sdone() || (*cstr && speek() != *cstr) )
+        return false;
+
     while( *cstr )
     {
-        if( c == s_.end() || *c != *cstr )
+        if( sdone() || speek() != *cstr )
             return false;
-        c++;
+        snext();
         cstr++;
     }
-    c_ = c;
     return true;
 }
 
@@ -400,7 +398,7 @@ hexToUTF8( std::string hexDigits )
 }
 
 std::string
-StringJsonReader::parseString()
+StreamJsonReader::parseString()
 {
     std::string b;
     std::string u;
@@ -416,10 +414,11 @@ StringJsonReader::parseString()
 
     for(;;)
     {
-        if( c_ == s_.end() )
+        if( sdone() )
             throw json_parse_failure("End of input in string literal");
 
-        char c = *c_++;
+        char c = speek();
+        snext();
         switch( state )
         {
         case NORMAL:
@@ -478,18 +477,20 @@ StringJsonReader::parseString()
 }
 
 std::string
-StringJsonReader::parseNumber()
+StreamJsonReader::parseNumber()
 {
     std::string b;
     bool ok = false;
 
-    // FIXME: this implementation is lazy
+    // FIXME: this implementation is lazy. It lets things
+    // through that are not actually numbers
     for(;;)
     {
-        if( c_ == s_.end() )
+        if( sdone() )
             throw json_parse_failure("end of input in parseNumber");
 
-        char c = *c_++;
+        char c = speek();
+        snext();
         if( isdigit(c) )
         {
             b.push_back( c );
@@ -510,25 +511,25 @@ StringJsonReader::parseNumber()
 }
 
 const std::string &
-StringJsonReader::fieldName()
+StreamJsonReader::fieldName()
 {
     return sval_;
 }
 
 bool
-StringJsonReader::boolV()
+StreamJsonReader::boolV()
 {
     return bval_;
 }
 
 const std::string &
-StringJsonReader::stringV()
+StreamJsonReader::stringV()
 {
     return sval_;
 }
 
 int64_t
-StringJsonReader::intV()
+StreamJsonReader::intV()
 {
     int64_t v;
     std::istringstream( sval_) >> v;
@@ -536,7 +537,7 @@ StringJsonReader::intV()
 }
 
 uint64_t
-StringJsonReader::uintV()
+StreamJsonReader::uintV()
 {
     uint64_t v;
     std::istringstream( sval_) >> v;
@@ -544,7 +545,7 @@ StringJsonReader::uintV()
 }
 
 double
-StringJsonReader::doubleV()
+StreamJsonReader::doubleV()
 {
     double v;
     std::istringstream( sval_) >> v;

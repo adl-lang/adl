@@ -22,11 +22,12 @@ std::string toJsonString( const T & t, bool pretty )
 template <class T>
 T fromJsonString( const std::string &str  )
 {
-    SerialiserFlags flags;
+    std::istringstream is(str);
 
+    SerialiserFlags flags;
     typename Serialiser<T>::Ptr s = Serialisable<T>::serialiser( flags );
     T t;
-    StringJsonReader jr(str);
+    StreamJsonReader jr(is);
     s->fromJson( t, jr );
     return t;
 }
@@ -40,7 +41,8 @@ T jsonRoundTrip( const T & t, bool pretty )
 TEST_CASE( "basic json reader operation" "[serialisation]" )
 {
     {
-        StringJsonReader jr("[]");
+        std::istringstream is("[]");
+        StreamJsonReader jr(is);
         REQUIRE( jr.type() == JsonReader::START_ARRAY );
         jr.next();
         REQUIRE( jr.type() == JsonReader::END_ARRAY );
@@ -49,7 +51,8 @@ TEST_CASE( "basic json reader operation" "[serialisation]" )
     }
 
     {
-        StringJsonReader jr("[null]");
+        std::istringstream is("[null]");
+        StreamJsonReader jr(is);
         REQUIRE( jr.type() == JsonReader::START_ARRAY );
         jr.next();
         REQUIRE( jr.type() == JsonReader::NULLV );
@@ -60,7 +63,8 @@ TEST_CASE( "basic json reader operation" "[serialisation]" )
     }
 
     {
-        StringJsonReader jr("[null,true]");
+        std::istringstream is("[null,true]");
+        StreamJsonReader jr(is);
         REQUIRE( jr.type() == JsonReader::START_ARRAY );
         jr.next();
         REQUIRE( jr.type() == JsonReader::NULLV );
@@ -73,7 +77,8 @@ TEST_CASE( "basic json reader operation" "[serialisation]" )
     }
 
     {
-        StringJsonReader jr("[null,[true,false]]");
+        std::istringstream is("[null,[true,false]]");
+        StreamJsonReader jr(is);
         REQUIRE( jr.type() == JsonReader::START_ARRAY );
         jr.next();
         REQUIRE( jr.type() == JsonReader::NULLV );
@@ -92,7 +97,8 @@ TEST_CASE( "basic json reader operation" "[serialisation]" )
     }
 
     {
-        StringJsonReader jr("{}");
+        std::istringstream is("{}");
+        StreamJsonReader jr(is);
         REQUIRE( jr.type() == JsonReader::START_OBJECT );
         jr.next();
         REQUIRE( jr.type() == JsonReader::END_OBJECT );
@@ -101,7 +107,8 @@ TEST_CASE( "basic json reader operation" "[serialisation]" )
     }
 
     {
-        StringJsonReader jr("{\"hello\":true}");
+        std::istringstream is("{\"hello\":true}");
+        StreamJsonReader jr(is);
         REQUIRE( jr.type() == JsonReader::START_OBJECT );
         jr.next();
         REQUIRE( jr.type() == JsonReader::FIELD );
@@ -114,7 +121,8 @@ TEST_CASE( "basic json reader operation" "[serialisation]" )
     }
 
     {
-        StringJsonReader jr("{\"hello\" : true, \"goodbye\" : null}");
+        std::istringstream is("{\"hello\" : true, \"goodbye\" : null}");
+        StreamJsonReader jr(is);
         REQUIRE( jr.type() == JsonReader::START_OBJECT );
         jr.next();
         REQUIRE( jr.type() == JsonReader::FIELD );
@@ -202,7 +210,7 @@ TEST_CASE( "Roundtrip primitives", "[serialisation]" )
     }
 
     {
-        Maybe<uint64_t> v = Maybe<uint64_t>::mk_just( -40 );
+        Maybe<uint64_t> v = Maybe<uint64_t>::mk_just( 17856890 );
         CHECK( v == jsonRoundTrip(v,true) );
     }
 

@@ -48,10 +48,10 @@ private:
     void calculateIndent();
 };
 
-class StringJsonReader : public JsonReader
+class StreamJsonReader : public JsonReader
 {
 public:
-    StringJsonReader( const std::string &s );
+    StreamJsonReader( std::istream &s );
     Type type();
     void next();
     const std::string & fieldName();
@@ -62,7 +62,9 @@ public:
     const std::string & stringV();
 
 private:
-    void next0();
+    char speek();
+    char snext();
+    bool sdone();
 
     enum State {
         START,
@@ -80,19 +82,42 @@ private:
     std::string parseString();
     std::string parseNumber();
 
-    std::string s_;
-    std::string::iterator c_;
+    std::istream &s_;
+    char c_;
+    bool done_;
+
     std::vector<State> state_;
     Type type_;
     std::string sval_;
     bool bval_;
 };
 
-inline void
-StringJsonReader::skipWhitespace()
+inline char
+StreamJsonReader::speek()
 {
-    while( c_ != s_.end() && (*c_ == ' ' || *c_ == '\n' || *c_ == '\t' ))
-        c_++;
+    return c_;
+}
+
+inline char
+StreamJsonReader::snext()
+{
+    if( s_.eof() )
+        done_ = true;
+    else
+        s_ >> c_;
+}
+
+inline bool
+StreamJsonReader::sdone()
+{
+    return done_;
+}
+
+inline void
+StreamJsonReader::skipWhitespace()
+{
+    while( !sdone() && (speek() == ' ' || speek() == '\n' || speek() == '\t' ))
+        snext();
 }
 
 };
