@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Examples for the Actor Definition Language (ADL)
 -- description:         
 license:             GPL-2
-license-file:        ../LICENSE
+license-file:        ../../LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
 -- copyright:           

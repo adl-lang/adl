@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Assorted helper functions for the adl packages
 -- description:         
 license:             GPL-2
-license-file:        ../LICENSE
+license-file:        ../../LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
 -- copyright:           
