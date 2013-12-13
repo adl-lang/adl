@@ -11,9 +11,6 @@ category:            Network
 build-type:          Custom
 cabal-version:       >=1.8
 
-data-files:          adl/sys/types.adl,
-                     adl/sys/rpc.adl
-
 library
   hs-source-dirs:      src
   exposed-modules:     ADL.Core, ADL.Core.CustomTypes, ADL.Core.Value, ADL.Core.Sink, ADL.Core.Primitives,

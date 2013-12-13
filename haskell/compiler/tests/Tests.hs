@@ -2,7 +2,7 @@
 module Main where
 import Test.Hspec
 
-import System.FilePath(takeDirectory,(</>))
+import System.FilePath(takeDirectory,(</>),combine)
 import System.Directory(getTemporaryDirectory,removeDirectoryRecursive,getCurrentDirectory)
 import System.IO.Temp(createTempDirectory)
 
@@ -107,10 +107,10 @@ runAstBackend1 mpath = runAstBackend ipath [mpath] epath
     epath = (takeDirectory ipath) </> "ast-output"
 
 stdsrc :: FilePath
-stdsrc = "../../runtime/adl"
+stdsrc = "../../../adl/stdlib"
 
 stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
-stdfiles = ["../../runtime/adl/sys/types.adl", "../../runtime/adl/sys/rpc.adl", "../../runtime/adl/sys/sinkimpl.adl"]
+stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/rpc.adl", "sys/sinkimpl.adl"]
 stdHsCustomTypes = ["../../compiler/config/hs-custom-types.json"]
 stdCppCustomTypes = ["../../compiler/config/cpp-custom-types.json"]
 

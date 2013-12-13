@@ -1,22 +1,23 @@
 import Distribution.Simple(defaultMainWithHooks, UserHooks(..), simpleUserHooks )
 import Distribution.Simple.Utils(rewriteFile)
 import Distribution.Simple.BuildPaths(autogenModulesDir)
-import System.FilePath((</>))
+import System.FilePath(combine)
 import Data.Version(showVersion)
 import System.Process(system)
 import System.Exit
 import Data.List(intercalate)
 
 generateHaskellFromADL pkg lbi = do
-  let odir = autogenModulesDir lbi
-      adlFiles =
-        [ "adl/sys/types.adl"
-        , "adl/sys/rpc.adl"
-        , "adl/sys/sinkimpl.adl"
-        , "adl/sys/adlast.adl"
+  let adlstdlibdir = " ../../adl/stdlib"
+      odir = autogenModulesDir lbi
+      adlFiles = map (combine adlstdlibdir)
+        [ "sys/types.adl"
+        , "sys/rpc.adl"
+        , "sys/sinkimpl.adl"
+        , "sys/adlast.adl"
         ]
           
-      cmd = "adlc-bootstrap haskell --no-overwrite -I adl -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
+      cmd = "adlc-bootstrap haskell --no-overwrite -I" ++ adlstdlibdir ++ " -O " ++ odir ++ " --moduleprefix=ADL " ++ intercalate " " adlFiles
   putStrLn cmd
   e <- system cmd
   case e of

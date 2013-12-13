@@ -43,7 +43,7 @@ depends: $(SANDBOX) .make
 	cd haskell && cabal install --force-reinstalls compiler-bootstrap/
 	touch .make/built-compiler-bootstrap
 
-.make/built-runtime: $(RUNTIME-SRC) .make/built-utils .make/built-compiler-bootstrap
+.make/built-runtime: $(RUNTIME-SRC) $(ADL-STDLIB-SRC) .make/built-utils .make/built-compiler-bootstrap
 	cd haskell && cabal install --force-reinstalls runtime/
 	touch .make/built-runtime
 

@@ -38,4 +38,6 @@ main = do
   generate "COMMS-HTTP-SRC" "haskell/comms-http"
   generate "EXAMPLE-SRC" "haskell/examples"
 
+  generate "ADL-STDLIB-SRC" "adl/stdlib"
+
   generate "RUNTIME-CPP-SRC" "cpp/runtime"
