@@ -589,20 +589,34 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
-            : left_s( Serialisable<T1>::serialiser(sf) )
-            , right_s( Serialisable<T2>::serialiser(sf) )
+            : sf_(sf)
             {}
         
-        typename Serialiser<T1>::Ptr left_s;
-        typename Serialiser<T2>::Ptr right_s;
+        SerialiserFlags sf_;
+        mutable typename Serialiser<T1>::Ptr left_;
+        mutable typename Serialiser<T2>::Ptr right_;
+        
+        typename Serialiser<T1>::Ptr left_s() const
+        {
+            if( !left_ )
+                left_ = Serialisable<T1>::serialiser(sf_);
+            return left_;
+        }
+        
+        typename Serialiser<T2>::Ptr right_s() const
+        {
+            if( !right_ )
+                right_ = Serialisable<T2>::serialiser(sf_);
+            return right_;
+        }
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, left_s, "left", v.left() ); break;
-                case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, right_s, "right", v.right() ); break;
+                case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, left_s(), "left", v.left() ); break;
+                case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, right_s(), "right", v.right() ); break;
             }
             json.endObject();
         }
@@ -613,9 +627,9 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
                 if( matchField0( "left", json ) )
-                    v.set_left(left_s->fromJson( json ));
+                    v.set_left(left_s()->fromJson( json ));
                 else if( matchField0( "right", json ) )
-                    v.set_right(right_s->fromJson( json ));
+                    v.set_right(right_s()->fromJson( json ));
                 else
                     throw json_parse_failure();
             }
@@ -640,20 +654,34 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
-            : value_s( Serialisable<T>::serialiser(sf) )
-            , error_s( Serialisable<std::string>::serialiser(sf) )
+            : sf_(sf)
             {}
         
-        typename Serialiser<T>::Ptr value_s;
-        typename Serialiser<std::string>::Ptr error_s;
+        SerialiserFlags sf_;
+        mutable typename Serialiser<T>::Ptr value_;
+        mutable typename Serialiser<std::string>::Ptr error_;
+        
+        typename Serialiser<T>::Ptr value_s() const
+        {
+            if( !value_ )
+                value_ = Serialisable<T>::serialiser(sf_);
+            return value_;
+        }
+        
+        typename Serialiser<std::string>::Ptr error_s() const
+        {
+            if( !error_ )
+                error_ = Serialisable<std::string>::serialiser(sf_);
+            return error_;
+        }
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::types::Error<T>::VALUE: writeField( json, value_s, "value", v.value() ); break;
-                case ADL::sys::types::Error<T>::ERROR: writeField( json, error_s, "error", v.error() ); break;
+                case ADL::sys::types::Error<T>::VALUE: writeField( json, value_s(), "value", v.value() ); break;
+                case ADL::sys::types::Error<T>::ERROR: writeField( json, error_s(), "error", v.error() ); break;
             }
             json.endObject();
         }
@@ -664,9 +692,9 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
                 if( matchField0( "value", json ) )
-                    v.set_value(value_s->fromJson( json ));
+                    v.set_value(value_s()->fromJson( json ));
                 else if( matchField0( "error", json ) )
-                    v.set_error(error_s->fromJson( json ));
+                    v.set_error(error_s()->fromJson( json ));
                 else
                     throw json_parse_failure();
             }
@@ -691,20 +719,34 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
-            : nothing_s( Serialisable<Void>::serialiser(sf) )
-            , just_s( Serialisable<T>::serialiser(sf) )
+            : sf_(sf)
             {}
         
-        typename Serialiser<Void>::Ptr nothing_s;
-        typename Serialiser<T>::Ptr just_s;
+        SerialiserFlags sf_;
+        mutable typename Serialiser<Void>::Ptr nothing_;
+        mutable typename Serialiser<T>::Ptr just_;
+        
+        typename Serialiser<Void>::Ptr nothing_s() const
+        {
+            if( !nothing_ )
+                nothing_ = Serialisable<Void>::serialiser(sf_);
+            return nothing_;
+        }
+        
+        typename Serialiser<T>::Ptr just_s() const
+        {
+            if( !just_ )
+                just_ = Serialisable<T>::serialiser(sf_);
+            return just_;
+        }
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::types::Maybe<T>::NOTHING: writeField( json, nothing_s, "nothing", Void() ); break;
-                case ADL::sys::types::Maybe<T>::JUST: writeField( json, just_s, "just", v.just() ); break;
+                case ADL::sys::types::Maybe<T>::NOTHING: writeField( json, nothing_s(), "nothing", Void() ); break;
+                case ADL::sys::types::Maybe<T>::JUST: writeField( json, just_s(), "just", v.just() ); break;
             }
             json.endObject();
         }
@@ -715,9 +757,12 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
                 if( matchField0( "nothing", json ) )
+                {
+                    nothing_s()->fromJson( json );
                     v.set_nothing();
+                }
                 else if( matchField0( "just", json ) )
-                    v.set_just(just_s->fromJson( json ));
+                    v.set_just(just_s()->fromJson( json ));
                 else
                     throw json_parse_failure();
             }

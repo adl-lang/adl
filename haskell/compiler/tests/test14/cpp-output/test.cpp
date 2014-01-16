@@ -185,17 +185,25 @@ Serialisable<ADL::test::unsigned_>::serialiser( const SerialiserFlags &sf )
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
-            : null_s( Serialisable<Void>::serialiser(sf) )
+            : sf_(sf)
             {}
         
-        typename Serialiser<Void>::Ptr null_s;
+        SerialiserFlags sf_;
+        mutable typename Serialiser<Void>::Ptr null_;
+        
+        typename Serialiser<Void>::Ptr null_s() const
+        {
+            if( !null_ )
+                null_ = Serialisable<Void>::serialiser(sf_);
+            return null_;
+        }
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             switch( v.d() )
             {
-                case ADL::test::unsigned_::NULL_: writeField( json, null_s, "null", Void() ); break;
+                case ADL::test::unsigned_::NULL_: writeField( json, null_s(), "null", Void() ); break;
             }
             json.endObject();
         }
@@ -206,7 +214,10 @@ Serialisable<ADL::test::unsigned_>::serialiser( const SerialiserFlags &sf )
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
                 if( matchField0( "null", json ) )
+                {
+                    null_s()->fromJson( json );
                     v.set_null_();
+                }
                 else
                     throw json_parse_failure();
             }

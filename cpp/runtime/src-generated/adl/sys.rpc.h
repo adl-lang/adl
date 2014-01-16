@@ -80,9 +80,9 @@ Serialisable<ADL::sys::rpc::Rpc<I,O>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::rpc::Rpc<I,O> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : params_s( Serialisable<I>::serialiser(sf) )
             , replyTo_s( Serialisable<Sink<O> >::serialiser(sf) )
             {}
@@ -111,7 +111,7 @@ Serialisable<ADL::sys::rpc::Rpc<I,O>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 }; // ADL

@@ -748,13 +748,20 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
         dblock $ do
             wl "S_( const SerialiserFlags & sf )"
             indent $ do
-              forM_ (addMarker ":" "," "," fts) $ \(mark,(f,_,scopedt,_)) -> do
-                wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,f_name f,scopedt]
+              wl ": sf_(sf)"
               wl "{}"
             wl ""
+            wl "SerialiserFlags sf_;";
             forM_ fts $ \(f,_,scopedt,_) -> do
-              wt "typename Serialiser<$1>::Ptr $2_s;" [scopedt,f_name f]
+              wt "mutable typename Serialiser<$1>::Ptr $2_;" [scopedt,f_name f]
             wl ""
+            forM_ fts $ \(f,_,scopedt,_) -> do
+              wt "typename Serialiser<$1>::Ptr $2_s() const" [scopedt,f_name f]
+              cblock $ do
+                wt "if( !$1_ )" [f_name f]
+                indent $ wt "$1_ = Serialisable<$2>::serialiser(sf_);" [f_name f,scopedt]
+                wt "return $1_;" [f_name f]
+              wl ""
             wl "void toJson( JsonWriter &json, const _T & v ) const"
             cblock $ do
               wl "json.startObject();"
@@ -764,7 +771,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                    let v | isVoidType (f_type f) = "Void()"
                          | otherwise = template "v.$1()" [cUnionAccessorName d f]
 
-                   wt "case $1::$2: writeField( json, $3_s, \"$3\", $4 ); break;"
+                   wt "case $1::$2: writeField( json, $3_s(), \"$3\", $4 ); break;"
                      [scopedctnameP,cUnionDiscName d f, f_name f,v]
               wl "json.endObject();"
               return ()
@@ -776,12 +783,12 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
               cblock $ do
                 forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,_,_)) -> do
                   wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name f]
-                  indent $ do
-                    if isVoidType (f_type f)
-                      then do
-                        wt "v.$1();" [cUnionSetterName d f]
-                      else do
-                        wt "v.$1($2_s->fromJson( json ));" [cUnionSetterName d f,f_name f]
+                  if isVoidType (f_type f)
+                    then cblock $ do
+                      wt "$1_s()->fromJson( json );" [f_name f]
+                      wt "v.$1();" [cUnionSetterName d f]
+                    else indent $ do
+                      wt "v.$1($2_s()->fromJson( json ));" [cUnionSetterName d f,f_name f]
                 wl "else"
                 indent $ wl "throw json_parse_failure();"
         wl ""

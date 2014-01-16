@@ -271,18 +271,24 @@ struct Serialisable<std::vector<T>>
 {
     typedef std::vector<T> _V;
 
-    class _S : public Serialiser<_V>
+    class S : public Serialiser<_V>
     {
     public:
-        _S( const SerialiserFlags & sf ) 
-            : js_( Serialisable<T>::serialiser(sf) )
+        S( const SerialiserFlags & sf )
+            : sf_( sf )
         {}
+
+        typename Serialiser<T>::Ptr js() const {
+            if( !js_ )
+                js_ = Serialisable<T>::serialiser(sf_);
+            return js_;
+        }
 
         void toJson( JsonWriter &json, const _V & v ) const
         {
             json.startArray();
             for( typename _V::const_iterator vi = v.begin(); vi != v.end(); vi++ )
-                js_->toJson( json, *vi );
+                js()->toJson( json, *vi );
             json.endArray();
         }
 
@@ -292,18 +298,19 @@ struct Serialisable<std::vector<T>>
             while( !match0( json, JsonReader::END_ARRAY ) )
             {
                 T v1;
-                js_->fromJson( v1, json );
+                js()->fromJson( v1, json );
                 v.push_back(v1);
             }
         }
 
     private:
-        typename Serialiser<T>::Ptr js_;
+        SerialiserFlags sf_;
+        mutable typename Serialiser<T>::Ptr js_;
     };
 
     static typename Serialiser<_V>::Ptr serialiser(const SerialiserFlags & sf)
     {
-        return typename Serialiser<_V>::Ptr( new _S(sf) );
+        return typename Serialiser<_V>::Ptr( new S(sf) );
     }
 };
 

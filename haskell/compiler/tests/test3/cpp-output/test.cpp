@@ -204,20 +204,34 @@ Serialisable<ADL::test::U>::serialiser( const SerialiserFlags &sf )
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
-            : f_int_s( Serialisable<int16_t>::serialiser(sf) )
-            , f_string_s( Serialisable<std::string>::serialiser(sf) )
+            : sf_(sf)
             {}
         
-        typename Serialiser<int16_t>::Ptr f_int_s;
-        typename Serialiser<std::string>::Ptr f_string_s;
+        SerialiserFlags sf_;
+        mutable typename Serialiser<int16_t>::Ptr f_int_;
+        mutable typename Serialiser<std::string>::Ptr f_string_;
+        
+        typename Serialiser<int16_t>::Ptr f_int_s() const
+        {
+            if( !f_int_ )
+                f_int_ = Serialisable<int16_t>::serialiser(sf_);
+            return f_int_;
+        }
+        
+        typename Serialiser<std::string>::Ptr f_string_s() const
+        {
+            if( !f_string_ )
+                f_string_ = Serialisable<std::string>::serialiser(sf_);
+            return f_string_;
+        }
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             switch( v.d() )
             {
-                case ADL::test::U::F_INT: writeField( json, f_int_s, "f_int", v.f_int() ); break;
-                case ADL::test::U::F_STRING: writeField( json, f_string_s, "f_string", v.f_string() ); break;
+                case ADL::test::U::F_INT: writeField( json, f_int_s(), "f_int", v.f_int() ); break;
+                case ADL::test::U::F_STRING: writeField( json, f_string_s(), "f_string", v.f_string() ); break;
             }
             json.endObject();
         }
@@ -228,9 +242,9 @@ Serialisable<ADL::test::U>::serialiser( const SerialiserFlags &sf )
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
                 if( matchField0( "f_int", json ) )
-                    v.set_f_int(f_int_s->fromJson( json ));
+                    v.set_f_int(f_int_s()->fromJson( json ));
                 else if( matchField0( "f_string", json ) )
-                    v.set_f_string(f_string_s->fromJson( json ));
+                    v.set_f_string(f_string_s()->fromJson( json ));
                 else
                     throw json_parse_failure();
             }

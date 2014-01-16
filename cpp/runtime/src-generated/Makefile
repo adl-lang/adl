@@ -11,3 +11,4 @@ all:
 	$(ADLC) cpp $(ADLFLAGS) $(ADLDIR)/sys/rpc.adl
 	$(ADLC) cpp $(ADLFLAGS) $(ADLDIR)/sys/sinkimpl.adl
 	$(ADLC) cpp $(ADLFLAGS) $(ADLDIR)/sys/adlast.adl
+	$(ADLC) cpp $(ADLFLAGS) unittests.adl

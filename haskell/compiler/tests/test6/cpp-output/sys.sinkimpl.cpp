@@ -187,23 +187,43 @@ Serialisable<ADL::sys::sinkimpl::TransportAddr>::serialiser( const SerialiserFla
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
-            : stringv_s( Serialisable<std::string>::serialiser(sf) )
-            , intv_s( Serialisable<uint64_t>::serialiser(sf) )
-            , arrayv_s( Serialisable<std::vector<ADL::sys::sinkimpl::TransportAddr> >::serialiser(sf) )
+            : sf_(sf)
             {}
         
-        typename Serialiser<std::string>::Ptr stringv_s;
-        typename Serialiser<uint64_t>::Ptr intv_s;
-        typename Serialiser<std::vector<ADL::sys::sinkimpl::TransportAddr> >::Ptr arrayv_s;
+        SerialiserFlags sf_;
+        mutable typename Serialiser<std::string>::Ptr stringv_;
+        mutable typename Serialiser<uint64_t>::Ptr intv_;
+        mutable typename Serialiser<std::vector<ADL::sys::sinkimpl::TransportAddr> >::Ptr arrayv_;
+        
+        typename Serialiser<std::string>::Ptr stringv_s() const
+        {
+            if( !stringv_ )
+                stringv_ = Serialisable<std::string>::serialiser(sf_);
+            return stringv_;
+        }
+        
+        typename Serialiser<uint64_t>::Ptr intv_s() const
+        {
+            if( !intv_ )
+                intv_ = Serialisable<uint64_t>::serialiser(sf_);
+            return intv_;
+        }
+        
+        typename Serialiser<std::vector<ADL::sys::sinkimpl::TransportAddr> >::Ptr arrayv_s() const
+        {
+            if( !arrayv_ )
+                arrayv_ = Serialisable<std::vector<ADL::sys::sinkimpl::TransportAddr> >::serialiser(sf_);
+            return arrayv_;
+        }
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::sinkimpl::TransportAddr::STRINGV: writeField( json, stringv_s, "stringv", v.stringv() ); break;
-                case ADL::sys::sinkimpl::TransportAddr::INTV: writeField( json, intv_s, "intv", v.intv() ); break;
-                case ADL::sys::sinkimpl::TransportAddr::ARRAYV: writeField( json, arrayv_s, "arrayv", v.arrayv() ); break;
+                case ADL::sys::sinkimpl::TransportAddr::STRINGV: writeField( json, stringv_s(), "stringv", v.stringv() ); break;
+                case ADL::sys::sinkimpl::TransportAddr::INTV: writeField( json, intv_s(), "intv", v.intv() ); break;
+                case ADL::sys::sinkimpl::TransportAddr::ARRAYV: writeField( json, arrayv_s(), "arrayv", v.arrayv() ); break;
             }
             json.endObject();
         }
@@ -214,11 +234,11 @@ Serialisable<ADL::sys::sinkimpl::TransportAddr>::serialiser( const SerialiserFla
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
                 if( matchField0( "stringv", json ) )
-                    v.set_stringv(stringv_s->fromJson( json ));
+                    v.set_stringv(stringv_s()->fromJson( json ));
                 else if( matchField0( "intv", json ) )
-                    v.set_intv(intv_s->fromJson( json ));
+                    v.set_intv(intv_s()->fromJson( json ));
                 else if( matchField0( "arrayv", json ) )
-                    v.set_arrayv(arrayv_s->fromJson( json ));
+                    v.set_arrayv(arrayv_s()->fromJson( json ));
                 else
                     throw json_parse_failure();
             }

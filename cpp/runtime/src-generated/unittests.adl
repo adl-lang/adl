@@ -1,0 +1,20 @@
+module unittests
+{
+     struct T1
+     {
+         Double value;
+         Vector<T1> children;
+     };
+
+     struct Pair<A,B>
+     {
+         A first;
+         B second;
+     };
+
+     union L1
+     {
+         Void null;
+         Pair<Double,L1> value;
+     };
+};

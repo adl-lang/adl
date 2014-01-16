@@ -4,6 +4,7 @@
 #include <sstream>
 #include <adl/jsonimpl.h>
 #include <adl/sys.adlast.h>
+#include <adl/unittests.h>
 
 using namespace ADL;
 
@@ -137,6 +138,26 @@ TEST_CASE( "basic json reader operation" "[serialisation]" )
         jr.next();
         REQUIRE( jr.type() == JsonReader::END_OF_STREAM );
     }
+
+    {
+        std::istringstream is("{\"value\":54321,\"children\":[]}");
+        StreamJsonReader jr(is);
+        REQUIRE( jr.type() == JsonReader::START_OBJECT );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::FIELD );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::NUMBER );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::FIELD );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::START_ARRAY );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::END_ARRAY );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::END_OBJECT );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::END_OF_STREAM );
+    }
 }
 
 TEST_CASE( "Serialisation of structs", "[serialisation]" )
@@ -249,7 +270,6 @@ TEST_CASE( "Roundtrip primitives", "[serialisation]" )
 
 }
 
-
 TEST_CASE( "Serialisation of unions", "[serialisation]" )
 {
     using namespace sys::adlast;
@@ -266,3 +286,34 @@ TEST_CASE( "Serialisation of unions", "[serialisation]" )
     }
 }
 
+TEST_CASE( "Roundtrip unions", "[serialisation]" )
+{
+    using namespace sys::adlast;
+    {
+        TypeRef t = TypeRef::mk_primitive( "a" );
+        CHECK( t == jsonRoundTrip(t,false) );
+        CHECK( t == jsonRoundTrip(t,true) );
+    }
+
+    {
+        TypeRef t = TypeRef::mk_reference( ScopedName( "test", "x" ) );
+        CHECK( t == jsonRoundTrip(t,false) );
+        CHECK( t == jsonRoundTrip(t,true) );
+    }
+}
+
+TEST_CASE( "Serialisation of a type recursive via a vector", "[serialisation]" )
+{
+    using namespace unittests;
+    T1 t1( 0, std::vector<T1>() );
+    CHECK( toJsonString(t1,false) == "{\"value\":0,\"children\":[]}" );
+    CHECK( t1 == jsonRoundTrip( t1, false ) );
+}
+
+TEST_CASE( "Serialisation of a type recursive via a union", "[serialisation]" )
+{
+    using namespace unittests;
+    L1 l1 = L1::mk_value( Pair<double,L1>( 5, L1::mk_null_() ) );
+    CHECK( toJsonString(l1,false) == "{\"value\":{\"first\":5,\"second\":{\"null\":null}}}" );
+    CHECK( l1 == jsonRoundTrip( l1, false ) );
+}

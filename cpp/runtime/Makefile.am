@@ -32,7 +32,8 @@ TESTS = unit-tests
 
 check_PROGRAMS = unit-tests
 
-unit_tests_SOURCES = tests/unit-tests.cpp
+unit_tests_SOURCES = src-generated/unittests.cpp \
+                     tests/unit-tests.cpp 
 unit_tests_LDFLAGS=-ladlcpp
 
 nodist_adlcpp_libinclude_HEADERS = adlcppconfig.h

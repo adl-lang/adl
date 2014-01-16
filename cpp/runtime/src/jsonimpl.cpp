@@ -490,14 +490,15 @@ StreamJsonReader::parseNumber()
             throw json_parse_failure("end of input in parseNumber");
 
         char c = speek();
-        snext();
         if( isdigit(c) )
         {
+            snext();
             b.push_back( c );
             ok = true;
         }
         else if( c == '-' || c == '.' || c == 'e' || c == 'E' )
         {
+            snext();
             b.push_back( c );
         }
         else 
