@@ -427,9 +427,9 @@ Serialisable<ADL::test::XY<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::XY<T> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : x_s( Serialisable<T>::serialiser(sf) )
             , y_s( Serialisable<T>::serialiser(sf) )
             {}
@@ -458,7 +458,7 @@ Serialisable<ADL::test::XY<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 template <class T>
@@ -473,9 +473,9 @@ Serialisable<ADL::test::B<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::B<T> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : f_t_s( Serialisable<T>::serialiser(sf) )
             , f_string_s( Serialisable<std::string>::serialiser(sf) )
             , f_tvec_s( Serialisable<std::vector<T> >::serialiser(sf) )
@@ -512,7 +512,7 @@ Serialisable<ADL::test::B<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 template <class T>
@@ -527,9 +527,9 @@ Serialisable<ADL::test::S<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::S<T> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : f_void_s( Serialisable<Void>::serialiser(sf) )
             , f_bool_s( Serialisable<bool>::serialiser(sf) )
             , f_int8_s( Serialisable<int8_t>::serialiser(sf) )
@@ -626,7 +626,7 @@ Serialisable<ADL::test::S<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 }; // ADL

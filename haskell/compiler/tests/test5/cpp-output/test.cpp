@@ -730,9 +730,9 @@ Serialisable<ADL::test::S1>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::S1 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : f_s( Serialisable<int16_t>::serialiser(sf) )
             {}
         
@@ -757,7 +757,7 @@ Serialisable<ADL::test::S1>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 typename Serialiser<ADL::test::U1>::Ptr
@@ -765,9 +765,9 @@ Serialisable<ADL::test::U1>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U1 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v_s( Serialisable<Void>::serialiser(sf) )
             {}
         
@@ -796,7 +796,7 @@ Serialisable<ADL::test::U1>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 typename Serialiser<ADL::test::U2>::Ptr
@@ -804,9 +804,9 @@ Serialisable<ADL::test::U2>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U2 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v_s( Serialisable<int16_t>::serialiser(sf) )
             {}
         
@@ -835,7 +835,7 @@ Serialisable<ADL::test::U2>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 typename Serialiser<ADL::test::U3>::Ptr
@@ -843,9 +843,9 @@ Serialisable<ADL::test::U3>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U3 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v_s( Serialisable<int16_t>::serialiser(sf) )
             {}
         
@@ -874,7 +874,7 @@ Serialisable<ADL::test::U3>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 typename Serialiser<ADL::test::U4>::Ptr
@@ -882,9 +882,9 @@ Serialisable<ADL::test::U4>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U4 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v_s( Serialisable<ADL::test::S1>::serialiser(sf) )
             {}
         
@@ -913,7 +913,7 @@ Serialisable<ADL::test::U4>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 typename Serialiser<ADL::test::U5>::Ptr
@@ -921,9 +921,9 @@ Serialisable<ADL::test::U5>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U5 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v_s( Serialisable<ADL::test::S1>::serialiser(sf) )
             {}
         
@@ -952,7 +952,7 @@ Serialisable<ADL::test::U5>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 typename Serialiser<ADL::test::U6>::Ptr
@@ -960,9 +960,9 @@ Serialisable<ADL::test::U6>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U6 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v_s( Serialisable<ADL::test::U3>::serialiser(sf) )
             {}
         
@@ -991,7 +991,7 @@ Serialisable<ADL::test::U6>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 typename Serialiser<ADL::test::U7>::Ptr
@@ -999,9 +999,9 @@ Serialisable<ADL::test::U7>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U7 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v_s( Serialisable<ADL::test::U3>::serialiser(sf) )
             {}
         
@@ -1030,7 +1030,7 @@ Serialisable<ADL::test::U7>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 typename Serialiser<ADL::test::U8>::Ptr
@@ -1038,9 +1038,9 @@ Serialisable<ADL::test::U8>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U8 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v1_s( Serialisable<ADL::test::S1>::serialiser(sf) )
             , v2_s( Serialisable<int16_t>::serialiser(sf) )
             {}
@@ -1074,7 +1074,7 @@ Serialisable<ADL::test::U8>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 }; // ADL

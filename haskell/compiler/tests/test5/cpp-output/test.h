@@ -626,9 +626,9 @@ Serialisable<ADL::test::U9<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U9<T> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : v1_s( Serialisable<T>::serialiser(sf) )
             , v2_s( Serialisable<int16_t>::serialiser(sf) )
             {}
@@ -662,7 +662,7 @@ Serialisable<ADL::test::U9<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 template <>

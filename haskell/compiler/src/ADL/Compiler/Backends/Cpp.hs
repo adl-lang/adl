@@ -479,9 +479,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     dblock $ do
         wt "typedef $1::$2 _T;" [formatText ns,ctnameP]
         wl ""
-        wl "struct _S : public Serialiser<_T>"
+        wl "struct S_ : public Serialiser<_T>"
         dblock $ do
-            wl "_S( const SerialiserFlags & sf )"
+            wl "S_( const SerialiserFlags & sf )"
             indent $ do
               forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,_,_,scopedt,_)) -> do
                 wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,fname,scopedt]
@@ -508,7 +508,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
                   wt "readField( $1_s, v.$1, \"$2\", json ) ||" [fname,f_name f]
                 wl "ignoreField( json );"
         wl ""
-        wl "return typename Serialiser<_T>::Ptr( new _S(sf) );"
+        wl "return typename Serialiser<_T>::Ptr( new S_(sf) );"
 
 generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   ms <- get
@@ -744,9 +744,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     cblock $ do
         wt "typedef $1 _T;" [scopedctnameP]
         wl ""
-        wl "struct _S : public Serialiser<_T>"
+        wl "struct S_ : public Serialiser<_T>"
         dblock $ do
-            wl "_S( const SerialiserFlags & sf )"
+            wl "S_( const SerialiserFlags & sf )"
             indent $ do
               forM_ (addMarker ":" "," "," fts) $ \(mark,(f,_,scopedt,_)) -> do
                 wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,f_name f,scopedt]
@@ -785,7 +785,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                 wl "else"
                 indent $ wl "throw json_parse_failure();"
         wl ""
-        wl "return typename Serialiser<_T>::Ptr( new _S(sf) );"
+        wl "return typename Serialiser<_T>::Ptr( new S_(sf) );"
 
 generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
   ms <- get

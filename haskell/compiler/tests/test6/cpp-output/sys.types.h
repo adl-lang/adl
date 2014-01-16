@@ -586,9 +586,9 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
 {
     typedef ADL::sys::types::Either<T1,T2> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : left_s( Serialisable<T1>::serialiser(sf) )
             , right_s( Serialisable<T2>::serialiser(sf) )
             {}
@@ -622,7 +622,7 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 template <class T>
@@ -637,9 +637,9 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::types::Error<T> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : value_s( Serialisable<T>::serialiser(sf) )
             , error_s( Serialisable<std::string>::serialiser(sf) )
             {}
@@ -673,7 +673,7 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 template <class T>
@@ -688,9 +688,9 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::types::Maybe<T> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : nothing_s( Serialisable<Void>::serialiser(sf) )
             , just_s( Serialisable<T>::serialiser(sf) )
             {}
@@ -724,7 +724,7 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 template <class A,class B>

@@ -44,9 +44,9 @@ Serialisable<ADL::test::S1>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::S1 _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : x_s( Serialisable<int32_t>::serialiser(sf) )
             , y_s( Serialisable<std::string>::serialiser(sf) )
             {}
@@ -75,7 +75,7 @@ Serialisable<ADL::test::S1>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 }; // ADL

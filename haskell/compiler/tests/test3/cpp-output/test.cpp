@@ -158,9 +158,9 @@ Serialisable<ADL::test::A>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::A _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : f_int_s( Serialisable<int16_t>::serialiser(sf) )
             , f_string_s( Serialisable<std::string>::serialiser(sf) )
             , f_bool_s( Serialisable<bool>::serialiser(sf) )
@@ -193,7 +193,7 @@ Serialisable<ADL::test::A>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 typename Serialiser<ADL::test::U>::Ptr
@@ -201,9 +201,9 @@ Serialisable<ADL::test::U>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::U _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : f_int_s( Serialisable<int16_t>::serialiser(sf) )
             , f_string_s( Serialisable<std::string>::serialiser(sf) )
             {}
@@ -237,7 +237,7 @@ Serialisable<ADL::test::U>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 }; // ADL

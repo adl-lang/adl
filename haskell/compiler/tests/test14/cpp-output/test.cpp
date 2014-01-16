@@ -135,9 +135,9 @@ Serialisable<ADL::test::switch_>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::switch_ _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : double__s( Serialisable<double>::serialiser(sf) )
             , int__s( Serialisable<int32_t>::serialiser(sf) )
             , string_s( Serialisable<std::string>::serialiser(sf) )
@@ -174,7 +174,7 @@ Serialisable<ADL::test::switch_>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 typename Serialiser<ADL::test::unsigned_>::Ptr
@@ -182,9 +182,9 @@ Serialisable<ADL::test::unsigned_>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::unsigned_ _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : null_s( Serialisable<Void>::serialiser(sf) )
             {}
         
@@ -213,7 +213,7 @@ Serialisable<ADL::test::unsigned_>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 }; // ADL

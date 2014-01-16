@@ -184,9 +184,9 @@ Serialisable<ADL::sys::sinkimpl::TransportAddr>::serialiser( const SerialiserFla
 {
     typedef ADL::sys::sinkimpl::TransportAddr _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : stringv_s( Serialisable<std::string>::serialiser(sf) )
             , intv_s( Serialisable<uint64_t>::serialiser(sf) )
             , arrayv_s( Serialisable<std::vector<ADL::sys::sinkimpl::TransportAddr> >::serialiser(sf) )
@@ -225,7 +225,7 @@ Serialisable<ADL::sys::sinkimpl::TransportAddr>::serialiser( const SerialiserFla
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
 typename Serialiser<ADL::sys::sinkimpl::SinkData>::Ptr
@@ -233,9 +233,9 @@ Serialisable<ADL::sys::sinkimpl::SinkData>::serialiser( const SerialiserFlags &s
 {
     typedef ADL::sys::sinkimpl::SinkData _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : transport_s( Serialisable<ADL::sys::sinkimpl::TransportName>::serialiser(sf) )
             , address_s( Serialisable<ADL::sys::sinkimpl::TransportAddr>::serialiser(sf) )
             , serialisation_s( Serialisable<ADL::sys::sinkimpl::SerialisationType>::serialiser(sf) )
@@ -268,7 +268,7 @@ Serialisable<ADL::sys::sinkimpl::SinkData>::serialiser( const SerialiserFlags &s
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 }; // ADL

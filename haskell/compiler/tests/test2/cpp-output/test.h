@@ -102,9 +102,9 @@ Serialisable<ADL::test::Tree<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test::Tree<T> _T;
     
-    struct _S : public Serialiser<_T>
+    struct S_ : public Serialiser<_T>
     {
-        _S( const SerialiserFlags & sf )
+        S_( const SerialiserFlags & sf )
             : value_s( Serialisable<T>::serialiser(sf) )
             , children_s( Serialisable<std::vector<ADL::test::Tree<T> > >::serialiser(sf) )
             {}
@@ -133,7 +133,7 @@ Serialisable<ADL::test::Tree<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new _S(sf) );
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
 }; // ADL
