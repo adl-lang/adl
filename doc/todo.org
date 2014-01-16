@@ -1,6 +1,36 @@
 * ADL Core/Compiler
 ** Add support for ADL constants
-** Implement a backend to produce JSON
+** Throw compiler errors for types representing infinite values
+
+Infinite values can be represented in haskell but not idiomatically in other languages. Hence
+we should try and generate errors for them.
+
+eg
+
+module unittests
+{
+     struct Pair<A,B>
+     {
+         A first;
+         B second;
+     };
+
+     struct X
+     {
+         X x;
+     };
+
+     union L1
+     {
+         Pair<Double,L1> value;
+         Void null;
+     };
+};
+
+values of type X will always be infinite. Values of type L1 may be constructed to
+be finite, but the default value will be - this is also problematic.
+
+** DONE Implement a backend to produce JSON
  - schema should be in DDL
 ** DONE Import syntax
     - Should we use java style?
@@ -73,7 +103,18 @@ This would remove the need for the custom serialiser in ADL.Core.CustomTypes
 
       data AFJError = AFJError { afje_context :: [T.Text], afje_error ::  T.Text }
       aFromJSON :: JSONFlags -> JSON.Value -> Either AFJError a
+
+** Serialisers are lazy values that grow
+... to size proportional to the size of the largest value. It would be
+nice to fix this so that serialisers have constant size
+
 * C++ Backend
 ** Implement newtypes in terms of templates
+
+** Work out how to generate code for mutually recursive types
+
+** Serialisers are lazy values that grow
+... to size proportional to the size of the largest value. It would be
+nice to fix this so that serialisers have constant size
 
 
