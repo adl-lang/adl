@@ -1,12 +1,18 @@
 module test
 {
 
-// A simple structure
+// Simple structures
 
 struct S1
 {
     Int32 x;
     String y;
+};
+
+struct S2
+{
+    String f1;
+    Double f2;
 };
 
 // A recursive type

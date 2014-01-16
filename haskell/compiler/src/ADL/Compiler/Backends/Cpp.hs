@@ -433,10 +433,10 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     wl ""
     genTemplate (s_typeParams s)
     wt "$1::$2()" [ctnameP, ctname]
-    indent $
-      forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,f,t,_,litv)) -> do
-         when (not $ literalIsDefault litv) $
-              wt "$1 $2($3)" [mark,fname,literalLValue litv]
+    indent $ do
+      let ifts = [ v | v@(_,_,_,_,litv) <- fts, not (literalIsDefault litv) ]
+      forM_ (addMarker ":" "," "," ifts) $ \(mark,(fname,f,t,_,litv)) -> do
+          wt "$1 $2($3)" [mark,fname,literalLValue litv]
     cblock $ return ()
     wl ""
     genTemplate (s_typeParams s)

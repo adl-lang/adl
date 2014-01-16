@@ -24,6 +24,22 @@ struct S1
 bool operator<( const S1 &a, const S1 &b );
 bool operator==( const S1 &a, const S1 &b );
 
+struct S2
+{
+    S2();
+    
+    S2(
+        const std::string & f1,
+        const double & f2
+        );
+    
+    std::string f1;
+    double f2;
+};
+
+bool operator<( const S2 &a, const S2 &b );
+bool operator==( const S2 &a, const S2 &b );
+
 template <class T>
 struct Tree
 {
@@ -88,6 +104,12 @@ template <>
 struct Serialisable<ADL::test::S1>
 {
     static Serialiser<ADL::test::S1>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test::S2>
+{
+    static Serialiser<ADL::test::S2>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>

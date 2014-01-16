@@ -2,6 +2,7 @@
 module ADL.Test(
     IntTree,
     S1(..),
+    S2(..),
     Tree(..),
 ) where
 
@@ -42,6 +43,34 @@ instance ADLValue S1 where
             from (JSON.Object hm) = S1 
                 <$> fieldFromJSON x_js "x" defaultv hm
                 <*> fieldFromJSON y_js "y" defaultv hm
+            from _ = Prelude.Nothing
+
+data S2 = S2
+    { s2_f1 :: T.Text
+    , s2_f2 :: Prelude.Double
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance ADLValue S2 where
+    atype _ = "test.S2"
+    
+    defaultv = S2
+        defaultv
+        defaultv
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f1_js = jsonSerialiser jf
+            f2_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("f1",aToJSON f1_js (s2_f1 v))
+                , ("f2",aToJSON f2_js (s2_f2 v))
+                ] )
+            
+            from (JSON.Object hm) = S2 
+                <$> fieldFromJSON f1_js "f1" defaultv hm
+                <*> fieldFromJSON f2_js "f2" defaultv hm
             from _ = Prelude.Nothing
 
 data Tree t = Tree
