@@ -1,0 +1,157 @@
+* Overview
+ADL (Actor Description Language) is a software toolkit for language
+interoperability. It provides a domain specific language for
+describing data types and application level communication protocols,
+along with a compiler and code generators for target programming
+languages.
+
+The ADL system:
+
+   * uses a data model based upon algebraic data types[http://en.wikipedia.org/wiki/Algebraic_data_types]
+
+   * supports parameterised data types
+
+   * implements communications based upon the concurrent actor model[http://en.wikipedia.org/wiki/Actor_model]
+
+Together these features facilitate the interoperation between a
+variety of object oriented and functional programming languages.  The
+syntax of ADL is straightforward, and will be familiar to java and c++
+developers.
+
+* Example
+
+Here is a tiny ADL example:
+
+    module demos.ping
+    {
+        struct PingRequest
+        {
+           String body;
+           Sink<PingResponse> replyTo;
+        };
+
+        struct PingResponse
+        {
+           String body;
+        };
+
+        type PingServer = Sink<PingRequest>;
+    };
+
+This specifies a simple service which accepts messages of type
+PingRequest. Such a message has a body, along with a target to which
+the server is to send the response. 
+
+* Modules
+
+The ADL namespace is managed through modules - all definitions exist
+with a module. Modules are hierachical, and tied to the directory
+structure in the manner of java and haskell. Hence the ADL for module
+"demos.ping" must be stored in a file "demos/ping.adl".
+
+A module consists of a module header, an optional list of import
+declarations, and then a list of type definitions:
+
+    module demo.sample
+    {
+        import sys.rpc.Rpc;
+        import sys.types.*;
+
+        ... type definitions ...        
+    };
+
+Import declations bring type definitions from other modules into the
+scope of the current module. An import statement may being a single
+definition into scope, or the entire contents of another module using
+'*'.
+
+Types defined in other modules may also be referenced though the use
+of fully scoped names.
+
+Recursive definitions and mutually recursive definitions are allowed
+with a single module, but may not span across modules.
+
+* Primitive Types
+
+ADL supports the following primitive types:
+
+| Type                       | Description                                            |
+|----------------------------+--------------------------------------------------------|
+| Int8,Int16,Int32,Int64     | Signed integers                                        |
+| Word8,Word16,Word32,Word64 | Unsigned integers                                      |
+| Bool                       | boolean values                                         |
+| Void                       | The unary or "null" type                               |
+| Float,Double               | floating point values                                  |
+| String                     | A unicode text string                                  |
+| Vector<T>                  | A vector/array of type T                               |
+| Sink<T>                    | A communications endpoint accepting messages of type T |
+
+* Type Definitions
+
+There are 4 varieties of type definitions: structs, unions, typedefs and newtypes.
+
+** struct
+
+A struct definition specifies a record in the conventional way, ie as
+a list of fields with associated types:
+
+    struct Person
+    {
+        String firstName;
+        String lastName;
+        Int16 age;
+        Gender gender;
+    };
+
+In terms of algebraic data types, a struct definition creates new "product types".
+
+A struct definition may take type parameters. A simple example from the standard library:
+
+    struct Pair<T1,T2>
+    {
+        T1 v1;
+        T2 v2;
+    };
+
+
+** union
+
+A union definition specifies a tagged union (ie an algebraic sum
+type). Other than a different keyword, it has identical syntax to a
+struct definition:
+
+    union StringOrDouble
+    {
+        String stringV;
+        Double doubleV;
+    };
+
+Using the Void primitive, unions are used to define enumerations:
+
+    union Gender
+    {
+         Void male;
+         Void female;
+    };
+
+A union definition may take type parameters. A simple example from the standard library:
+
+    union Either<T1,T2>
+    {
+        T1 left;
+        T2 right;
+    };
+
+** typedef
+
+Typedefs are used to define type synonyms, and may take type parameters:
+
+   type UserVec = Vector<Person>;
+   type AuthRequest = std.rpc.Rpc<Credentials,Status>;
+
+** newtype
+
+* Default Values
+* Standard Library
+* Naming Conventions
+
