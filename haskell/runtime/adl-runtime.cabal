@@ -6,7 +6,7 @@ license:             GPL-2
 license-file:        ../../LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
-copyright:           
+copyright:           (c) 2013, 2014 Tim Docker
 category:            Network
 build-type:          Custom
 cabal-version:       >=1.8
