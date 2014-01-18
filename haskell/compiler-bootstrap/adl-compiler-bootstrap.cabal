@@ -14,7 +14,9 @@ cabal-version:       >=1.8
 executable adlc-bootstrap
   hs-source-dirs:      src
   main-is:             Main.hs
-  build-depends:       base, text, containers, bytestring,
-                       parsec, mtl, transformers,
-                       filepath, directory, unordered-containers, vector, base64-bytestring,
-                       attoparsec, aeson, adl-utils, adl-compiler-lib
+  build-depends:       base == 4.6.*, text == 0.11.*, containers == 0.5.*, bytestring == 0.10.*,
+                       parsec == 3.1.*, mtl == 2.1.*, transformers == 0.3.*,
+                       filepath == 1.3.*, directory == 1.2.*, unordered-containers == 0.2.*, vector == 0.10.*,
+                       base64-bytestring == 1.0.*,
+                       attoparsec == 0.10.*, aeson == 0.6.*,
+                       adl-utils, adl-compiler-lib
