@@ -38,7 +38,7 @@ ident0 = do
     True -> P.unexpected ("reserved word '"++ T.unpack i ++ "'")
     False -> return i
   where
-    isReserved i = any (==i) ["module","import","struct","union","type"]
+    isReserved i = any (==i) ["module","import","struct","union","type","newtype"]
 
 ctoken :: Char -> P.Parser T.Text
 ctoken c = (T.singleton <$> P.char c) <* whiteSpace
