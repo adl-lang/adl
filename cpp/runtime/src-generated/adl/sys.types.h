@@ -885,9 +885,14 @@ struct Serialisable<std::map<K,V>>
 
             void fromJson( M &v, JsonReader &json ) const
             {
-                std::pair<K,V> pv;
-                s->fromJson( pv, json );
-                v[pv.first] = pv.second;
+                v.clear();
+                match( json, JsonReader::START_ARRAY );
+                while( !match0( json, JsonReader::END_ARRAY ) )
+                {
+                    typename std::pair<K,V> pv;
+                    s->fromJson( pv, json );
+                    v.insert( pv );
+                }
             }
         };
 
