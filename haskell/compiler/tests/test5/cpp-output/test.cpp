@@ -55,6 +55,7 @@ U1 & U1::operator=( const U1 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 void U1::set_v()
@@ -86,6 +87,7 @@ void * U1::copy( DiscType d, void *p )
     {
         case V: return 0;
     }
+    return 0;
 }
 
 bool
@@ -97,6 +99,7 @@ operator<( const U1 &a, const U1 &b )
     {
         case U1::V: return false;
     }
+    return false;
 }
 
 bool
@@ -107,6 +110,7 @@ operator==( const U1 &a, const U1 &b )
     {
         case U1::V: return true;
     }
+    return false;
 }
 
 U2::U2()
@@ -134,6 +138,7 @@ U2 & U2::operator=( const U2 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const int16_t & U2::set_v(const int16_t &v)
@@ -170,6 +175,7 @@ void * U2::copy( DiscType d, void *p )
     {
         case V: return new int16_t(*(int16_t *)p);
     }
+    return 0;
 }
 
 bool
@@ -181,6 +187,7 @@ operator<( const U2 &a, const U2 &b )
     {
         case U2::V: return a.v() < b.v();
     }
+    return false;
 }
 
 bool
@@ -191,6 +198,7 @@ operator==( const U2 &a, const U2 &b )
     {
         case U2::V: return a.v() == b.v();
     }
+    return false;
 }
 
 U3::U3()
@@ -218,6 +226,7 @@ U3 & U3::operator=( const U3 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const int16_t & U3::set_v(const int16_t &v)
@@ -254,6 +263,7 @@ void * U3::copy( DiscType d, void *p )
     {
         case V: return new int16_t(*(int16_t *)p);
     }
+    return 0;
 }
 
 bool
@@ -265,6 +275,7 @@ operator<( const U3 &a, const U3 &b )
     {
         case U3::V: return a.v() < b.v();
     }
+    return false;
 }
 
 bool
@@ -275,6 +286,7 @@ operator==( const U3 &a, const U3 &b )
     {
         case U3::V: return a.v() == b.v();
     }
+    return false;
 }
 
 U4::U4()
@@ -302,6 +314,7 @@ U4 & U4::operator=( const U4 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const S1 & U4::set_v(const S1 &v)
@@ -338,6 +351,7 @@ void * U4::copy( DiscType d, void *p )
     {
         case V: return new S1(*(S1 *)p);
     }
+    return 0;
 }
 
 bool
@@ -349,6 +363,7 @@ operator<( const U4 &a, const U4 &b )
     {
         case U4::V: return a.v() < b.v();
     }
+    return false;
 }
 
 bool
@@ -359,6 +374,7 @@ operator==( const U4 &a, const U4 &b )
     {
         case U4::V: return a.v() == b.v();
     }
+    return false;
 }
 
 U5::U5()
@@ -386,6 +402,7 @@ U5 & U5::operator=( const U5 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const S1 & U5::set_v(const S1 &v)
@@ -422,6 +439,7 @@ void * U5::copy( DiscType d, void *p )
     {
         case V: return new S1(*(S1 *)p);
     }
+    return 0;
 }
 
 bool
@@ -433,6 +451,7 @@ operator<( const U5 &a, const U5 &b )
     {
         case U5::V: return a.v() < b.v();
     }
+    return false;
 }
 
 bool
@@ -443,6 +462,7 @@ operator==( const U5 &a, const U5 &b )
     {
         case U5::V: return a.v() == b.v();
     }
+    return false;
 }
 
 U6::U6()
@@ -470,6 +490,7 @@ U6 & U6::operator=( const U6 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const U3 & U6::set_v(const U3 &v)
@@ -506,6 +527,7 @@ void * U6::copy( DiscType d, void *p )
     {
         case V: return new U3(*(U3 *)p);
     }
+    return 0;
 }
 
 bool
@@ -517,6 +539,7 @@ operator<( const U6 &a, const U6 &b )
     {
         case U6::V: return a.v() < b.v();
     }
+    return false;
 }
 
 bool
@@ -527,6 +550,7 @@ operator==( const U6 &a, const U6 &b )
     {
         case U6::V: return a.v() == b.v();
     }
+    return false;
 }
 
 U7::U7()
@@ -554,6 +578,7 @@ U7 & U7::operator=( const U7 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const U3 & U7::set_v(const U3 &v)
@@ -590,6 +615,7 @@ void * U7::copy( DiscType d, void *p )
     {
         case V: return new U3(*(U3 *)p);
     }
+    return 0;
 }
 
 bool
@@ -601,6 +627,7 @@ operator<( const U7 &a, const U7 &b )
     {
         case U7::V: return a.v() < b.v();
     }
+    return false;
 }
 
 bool
@@ -611,6 +638,7 @@ operator==( const U7 &a, const U7 &b )
     {
         case U7::V: return a.v() == b.v();
     }
+    return false;
 }
 
 U8::U8()
@@ -643,6 +671,7 @@ U8 & U8::operator=( const U8 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const S1 & U8::set_v1(const S1 &v)
@@ -696,6 +725,7 @@ void * U8::copy( DiscType d, void *p )
         case V1: return new S1(*(S1 *)p);
         case V2: return new int16_t(*(int16_t *)p);
     }
+    return 0;
 }
 
 bool
@@ -708,6 +738,7 @@ operator<( const U8 &a, const U8 &b )
         case U8::V1: return a.v1() < b.v1();
         case U8::V2: return a.v2() < b.v2();
     }
+    return false;
 }
 
 bool
@@ -719,6 +750,7 @@ operator==( const U8 &a, const U8 &b )
         case U8::V1: return a.v1() == b.v1();
         case U8::V2: return a.v2() == b.v2();
     }
+    return false;
 }
 
 }}; // ADL::test

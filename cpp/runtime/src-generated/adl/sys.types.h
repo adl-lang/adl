@@ -112,6 +112,7 @@ Either<T1,T2> & Either<T1,T2>::operator=( const Either<T1,T2> & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 template <class T1, class T2>
@@ -170,6 +171,7 @@ void * Either<T1,T2>::copy( DiscType d, void *p )
         case LEFT: return new T1(*(T1 *)p);
         case RIGHT: return new T2(*(T2 *)p);
     }
+    return 0;
 }
 
 template <class T1, class T2>
@@ -183,6 +185,7 @@ operator<( const Either<T1,T2> &a, const Either<T1,T2> &b )
         case Either<T1,T2>::LEFT: return a.left() < b.left();
         case Either<T1,T2>::RIGHT: return a.right() < b.right();
     }
+    return false;
 }
 
 template <class T1, class T2>
@@ -195,6 +198,7 @@ operator==( const Either<T1,T2> &a, const Either<T1,T2> &b )
         case Either<T1,T2>::LEFT: return a.left() == b.left();
         case Either<T1,T2>::RIGHT: return a.right() == b.right();
     }
+    return false;
 }
 
 template <class T>
@@ -299,6 +303,7 @@ Error<T> & Error<T>::operator=( const Error<T> & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 template <class T>
@@ -357,6 +362,7 @@ void * Error<T>::copy( DiscType d, void *p )
         case VALUE: return new T(*(T *)p);
         case ERROR: return new std::string(*(std::string *)p);
     }
+    return 0;
 }
 
 template <class T>
@@ -370,6 +376,7 @@ operator<( const Error<T> &a, const Error<T> &b )
         case Error<T>::VALUE: return a.value() < b.value();
         case Error<T>::ERROR: return a.error() < b.error();
     }
+    return false;
 }
 
 template <class T>
@@ -382,6 +389,7 @@ operator==( const Error<T> &a, const Error<T> &b )
         case Error<T>::VALUE: return a.value() == b.value();
         case Error<T>::ERROR: return a.error() == b.error();
     }
+    return false;
 }
 
 template <class T>
@@ -475,6 +483,7 @@ Maybe<T> & Maybe<T>::operator=( const Maybe<T> & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 template <class T>
@@ -528,6 +537,7 @@ void * Maybe<T>::copy( DiscType d, void *p )
         case NOTHING: return 0;
         case JUST: return new T(*(T *)p);
     }
+    return 0;
 }
 
 template <class T>
@@ -541,6 +551,7 @@ operator<( const Maybe<T> &a, const Maybe<T> &b )
         case Maybe<T>::NOTHING: return false;
         case Maybe<T>::JUST: return a.just() < b.just();
     }
+    return false;
 }
 
 template <class T>
@@ -553,6 +564,7 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
         case Maybe<T>::NOTHING: return true;
         case Maybe<T>::JUST: return a.just() == b.just();
     }
+    return false;
 }
 
 // Pair excluded due to custom definition

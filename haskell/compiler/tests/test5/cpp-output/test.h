@@ -253,6 +253,7 @@ U9<T> & U9<T>::operator=( const U9<T> & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 template <class T>
@@ -311,6 +312,7 @@ void * U9<T>::copy( DiscType d, void *p )
         case V1: return new T(*(T *)p);
         case V2: return new int16_t(*(int16_t *)p);
     }
+    return 0;
 }
 
 template <class T>
@@ -324,6 +326,7 @@ operator<( const U9<T> &a, const U9<T> &b )
         case U9<T>::V1: return a.v1() < b.v1();
         case U9<T>::V2: return a.v2() < b.v2();
     }
+    return false;
 }
 
 template <class T>
@@ -336,6 +339,7 @@ operator==( const U9<T> &a, const U9<T> &b )
         case U9<T>::V1: return a.v1() == b.v1();
         case U9<T>::V2: return a.v2() == b.v2();
     }
+    return false;
 }
 
 class U4

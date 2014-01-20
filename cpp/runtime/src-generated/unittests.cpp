@@ -65,6 +65,7 @@ L1 & L1::operator=( const L1 & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 void L1::set_null_()
@@ -113,6 +114,7 @@ void * L1::copy( DiscType d, void *p )
         case NULL_: return 0;
         case VALUE: return new Pair<double,L1> (*(Pair<double,L1>  *)p);
     }
+    return 0;
 }
 
 bool
@@ -125,6 +127,7 @@ operator<( const L1 &a, const L1 &b )
         case L1::NULL_: return false;
         case L1::VALUE: return a.value() < b.value();
     }
+    return false;
 }
 
 bool
@@ -136,6 +139,7 @@ operator==( const L1 &a, const L1 &b )
         case L1::NULL_: return true;
         case L1::VALUE: return a.value() == b.value();
     }
+    return false;
 }
 
 }}; // ADL::unittests

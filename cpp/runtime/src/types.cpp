@@ -21,8 +21,8 @@ ByteVector::toLiteral( const ByteVector & v )
 
     const int N = 4096;
     char* code = new char[2*N];
-    size_t plainlength;
-    size_t codelength;
+    int plainlength;
+    int codelength;
 
     std::vector<uint8_t>::const_iterator bi = v.bytes.begin();
 
@@ -54,8 +54,8 @@ ByteVector::fromLiteral( const std::string & v )
     //
     const int N = 4096;
     char* plaintext = new char[N];
-    size_t codelength;
-    size_t plainlength;
+    int codelength;
+    int plainlength;
 
     std::string::const_iterator ci = v.begin();
 

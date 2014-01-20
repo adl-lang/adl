@@ -173,6 +173,7 @@ readField( typename Serialiser<T>::Ptr js, T &v, const std::string &f, JsonReade
         return false;
     json.next();
     js->fromJson( v, json );
+    return true;
 };
 
 bool ignoreField( JsonReader &json );

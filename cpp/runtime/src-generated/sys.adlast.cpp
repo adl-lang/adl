@@ -59,6 +59,7 @@ Literal & Literal::operator=( const Literal & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 void Literal::set_null_()
@@ -192,6 +193,7 @@ void * Literal::copy( DiscType d, void *p )
         case ARRAY: return new std::vector<Literal> (*(std::vector<Literal>  *)p);
         case OBJECT: return new std::map<std::string,Literal> (*(std::map<std::string,Literal>  *)p);
     }
+    return 0;
 }
 
 bool
@@ -209,6 +211,7 @@ operator<( const Literal &a, const Literal &b )
         case Literal::ARRAY: return a.array() < b.array();
         case Literal::OBJECT: return a.object() < b.object();
     }
+    return false;
 }
 
 bool
@@ -225,6 +228,7 @@ operator==( const Literal &a, const Literal &b )
         case Literal::ARRAY: return a.array() == b.array();
         case Literal::OBJECT: return a.object() == b.object();
     }
+    return false;
 }
 
 ScopedName::ScopedName()
@@ -288,6 +292,7 @@ Import & Import::operator=( const Import & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const ModuleName & Import::set_moduleName(const ModuleName &v)
@@ -341,6 +346,7 @@ void * Import::copy( DiscType d, void *p )
         case MODULENAME: return new ModuleName(*(ModuleName *)p);
         case SCOPEDNAME: return new ScopedName(*(ScopedName *)p);
     }
+    return 0;
 }
 
 bool
@@ -353,6 +359,7 @@ operator<( const Import &a, const Import &b )
         case Import::MODULENAME: return a.moduleName() < b.moduleName();
         case Import::SCOPEDNAME: return a.scopedName() < b.scopedName();
     }
+    return false;
 }
 
 bool
@@ -364,6 +371,7 @@ operator==( const Import &a, const Import &b )
         case Import::MODULENAME: return a.moduleName() == b.moduleName();
         case Import::SCOPEDNAME: return a.scopedName() == b.scopedName();
     }
+    return false;
 }
 
 TypeRef::TypeRef()
@@ -401,6 +409,7 @@ TypeRef & TypeRef::operator=( const TypeRef & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const Ident & TypeRef::set_primitive(const Ident &v)
@@ -471,6 +480,7 @@ void * TypeRef::copy( DiscType d, void *p )
         case TYPEPARAM: return new Ident(*(Ident *)p);
         case REFERENCE: return new ScopedName(*(ScopedName *)p);
     }
+    return 0;
 }
 
 bool
@@ -484,6 +494,7 @@ operator<( const TypeRef &a, const TypeRef &b )
         case TypeRef::TYPEPARAM: return a.typeParam() < b.typeParam();
         case TypeRef::REFERENCE: return a.reference() < b.reference();
     }
+    return false;
 }
 
 bool
@@ -496,6 +507,7 @@ operator==( const TypeRef &a, const TypeRef &b )
         case TypeRef::TYPEPARAM: return a.typeParam() == b.typeParam();
         case TypeRef::REFERENCE: return a.reference() == b.reference();
     }
+    return false;
 }
 
 TypeExpr::TypeExpr()
@@ -734,6 +746,7 @@ DeclType_ & DeclType_::operator=( const DeclType_ & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const Struct_ & DeclType_::set_struct_(const Struct_ &v)
@@ -821,6 +834,7 @@ void * DeclType_::copy( DiscType d, void *p )
         case TYPE_: return new TypeDef_(*(TypeDef_ *)p);
         case NEWTYPE_: return new NewType(*(NewType *)p);
     }
+    return 0;
 }
 
 bool
@@ -835,6 +849,7 @@ operator<( const DeclType_ &a, const DeclType_ &b )
         case DeclType_::TYPE_: return a.type_() < b.type_();
         case DeclType_::NEWTYPE_: return a.newtype_() < b.newtype_();
     }
+    return false;
 }
 
 bool
@@ -848,6 +863,7 @@ operator==( const DeclType_ &a, const DeclType_ &b )
         case DeclType_::TYPE_: return a.type_() == b.type_();
         case DeclType_::NEWTYPE_: return a.newtype_() == b.newtype_();
     }
+    return false;
 }
 
 Decl::Decl()

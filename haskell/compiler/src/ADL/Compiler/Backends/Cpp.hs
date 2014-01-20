@@ -642,6 +642,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl "free(d_,p_);"
       wl "d_ = o.d_;"
       wl "p_ = copy( o.d_, o.p_ );"
+      wl "return *this;"
 
     forM_ fts $ \(f,t,_,_) -> do
       wl ""
@@ -699,7 +700,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                  [cUnionDiscName d f]
             else wt "case $1: return new $2(*($2 *)p);"
                  [cUnionDiscName d f,t]
-
+      wl "return 0;"
     wl ""
     genTemplate (u_typeParams u)
     wl "bool"
@@ -715,6 +716,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                  [ctnameP,cUnionDiscName d f]
             else wt "case $1::$2: return a.$3() < b.$3();"
                  [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+      wl "return false;"
 
     wl ""
     genTemplate (u_typeParams u)
@@ -730,6 +732,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                  [ctnameP,cUnionDiscName d f]
             else wt "case $1::$2: return a.$3() == b.$3();"
                  [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+      wl "return false;"
 
   write ifileS $ do        
     declareSerialisation (u_typeParams u) ms ctnameP

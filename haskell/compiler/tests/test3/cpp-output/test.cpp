@@ -71,6 +71,7 @@ U & U::operator=( const U & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const int16_t & U::set_f_int(const int16_t &v)
@@ -124,6 +125,7 @@ void * U::copy( DiscType d, void *p )
         case F_INT: return new int16_t(*(int16_t *)p);
         case F_STRING: return new std::string(*(std::string *)p);
     }
+    return 0;
 }
 
 bool
@@ -136,6 +138,7 @@ operator<( const U &a, const U &b )
         case U::F_INT: return a.f_int() < b.f_int();
         case U::F_STRING: return a.f_string() < b.f_string();
     }
+    return false;
 }
 
 bool
@@ -147,6 +150,7 @@ operator==( const U &a, const U &b )
         case U::F_INT: return a.f_int() == b.f_int();
         case U::F_STRING: return a.f_string() == b.f_string();
     }
+    return false;
 }
 
 }}; // ADL::test

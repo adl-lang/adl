@@ -72,6 +72,7 @@ unsigned_ & unsigned_::operator=( const unsigned_ & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 void unsigned_::set_null_()
@@ -103,6 +104,7 @@ void * unsigned_::copy( DiscType d, void *p )
     {
         case NULL_: return 0;
     }
+    return 0;
 }
 
 bool
@@ -114,6 +116,7 @@ operator<( const unsigned_ &a, const unsigned_ &b )
     {
         case unsigned_::NULL_: return false;
     }
+    return false;
 }
 
 bool
@@ -124,6 +127,7 @@ operator==( const unsigned_ &a, const unsigned_ &b )
     {
         case unsigned_::NULL_: return true;
     }
+    return false;
 }
 
 }}; // ADL::test

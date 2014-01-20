@@ -105,6 +105,7 @@ StreamJsonReader::snext()
         done_ = true;
     else
         s_ >> c_;
+    return c_;
 }
 
 inline bool

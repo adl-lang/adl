@@ -2,7 +2,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
 AM_CPPFLAGS=-I$(top_srcdir)/include -I$(top_srcdir)/src-generated -I$(top_srcdir)/3rd-party/libb64-1.2/include
-AM_CXXFLAGS=-std=c++11
+AM_CXXFLAGS=-std=c++11 -Wall
 
 lib_LTLIBRARIES = libadlcpp.la
 

@@ -39,6 +39,7 @@ TransportAddr & TransportAddr::operator=( const TransportAddr & o )
     free(d_,p_);
     d_ = o.d_;
     p_ = copy( o.d_, o.p_ );
+    return *this;
 }
 
 const std::string & TransportAddr::set_stringv(const std::string &v)
@@ -109,6 +110,7 @@ void * TransportAddr::copy( DiscType d, void *p )
         case INTV: return new uint64_t(*(uint64_t *)p);
         case ARRAYV: return new std::vector<TransportAddr> (*(std::vector<TransportAddr>  *)p);
     }
+    return 0;
 }
 
 bool
@@ -122,6 +124,7 @@ operator<( const TransportAddr &a, const TransportAddr &b )
         case TransportAddr::INTV: return a.intv() < b.intv();
         case TransportAddr::ARRAYV: return a.arrayv() < b.arrayv();
     }
+    return false;
 }
 
 bool
@@ -134,6 +137,7 @@ operator==( const TransportAddr &a, const TransportAddr &b )
         case TransportAddr::INTV: return a.intv() == b.intv();
         case TransportAddr::ARRAYV: return a.arrayv() == b.arrayv();
     }
+    return false;
 }
 
 SinkData::SinkData()
