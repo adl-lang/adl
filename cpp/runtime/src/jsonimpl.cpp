@@ -430,26 +430,30 @@ StreamJsonReader::parseString()
                 b.push_back( c );
             break;
         case ESCAPE:
-            if( c == '"' )
-                b.push_back( '"' );
-            else if( c == '\\' )
-                b.push_back( '\\' );
-            else if( c == '/' )
-                b.push_back( '/' );
-            else if( c == 'b' )
-                b.push_back( '\b' );
-            else if( c == 'f' )
-                b.push_back( '\f' );
-            else if( c == 'n' )
-                b.push_back( '\n' );
-            else if( c == 'r' )
-                b.push_back( '\r' );
-            else if( c == 't' )
-                b.push_back( '\t' );
-            else if( c == 'u' )
+            if( c == 'u' )
                 state = U1;
             else
-                b.push_back( c );
+            {
+                if( c == '"' )
+                    b.push_back( '"' );
+                else if( c == '\\' )
+                    b.push_back( '\\' );
+                else if( c == '/' )
+                    b.push_back( '/' );
+                else if( c == 'b' )
+                    b.push_back( '\b' );
+                else if( c == 'f' )
+                    b.push_back( '\f' );
+                else if( c == 'n' )
+                    b.push_back( '\n' );
+                else if( c == 'r' )
+                    b.push_back( '\r' );
+                else if( c == 't' )
+                    b.push_back( '\t' );
+                else
+                    b.push_back( c );
+                state = NORMAL;
+            }
             break;
         case U1:
             if( !ishex(c) ) throw json_parse_failure("U1");

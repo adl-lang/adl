@@ -108,6 +108,24 @@ TEST_CASE( "basic json reader operation" "[serialisation]" )
     }
 
     {
+        std::istringstream is("\"text\"");
+        StreamJsonReader jr(is);
+        REQUIRE( jr.type() == JsonReader::STRING );
+        REQUIRE( jr.stringV() == "text" );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::END_OF_STREAM );
+    }
+
+    {
+        std::istringstream is("\"\\\"text\\\"\"");
+        StreamJsonReader jr(is);
+        REQUIRE( jr.type() == JsonReader::STRING );
+        REQUIRE( jr.stringV() == "\"text\"" );
+        jr.next();
+        REQUIRE( jr.type() == JsonReader::END_OF_STREAM );
+    }
+
+    {
         std::istringstream is("{\"hello\":true}");
         StreamJsonReader jr(is);
         REQUIRE( jr.type() == JsonReader::START_OBJECT );
