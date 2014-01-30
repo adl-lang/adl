@@ -1,0 +1,34 @@
+module test
+{
+   // Test some mutually recursive data structures
+   // These are problematic in c++
+
+   // Mutual recursion via unions
+
+   union X1
+   {
+      Double f1;
+      Y1 f2;
+   };
+
+   union Y1
+   {
+      String f1;
+      X1 f2;
+   };
+
+   // // Mutual recursion via vectors
+
+   struct X2
+   {
+      Double f1;
+      Vector<Y2> f2;
+   };
+
+   struct Y2
+   {
+      String f1;
+      Vector<X2> f2;
+   };
+    
+};

@@ -387,6 +387,19 @@ declareSerialisation tparams ms ctnameP = do
       wt "struct Serialisable<$1>" [ctnameP1]
       dblock $ wt "static typename Serialiser<$1>::Ptr serialiser(const SerialiserFlags &);" [ctnameP1]
 
+generateFwdDecl1 :: Ident -> [Ident] -> Gen ()
+generateFwdDecl1 dn tparams = do
+  write ifile $ do        
+    wl ""
+    genTemplate tparams
+    wt "struct $1;" [cTypeName dn]
+  
+generateFwdDecl :: Ident -> Decl ResolvedType -> Gen ()
+generateFwdDecl dn (Decl{d_type=(Decl_Struct s)}) = generateFwdDecl1 dn (s_typeParams s)
+generateFwdDecl dn (Decl{d_type=(Decl_Union u)}) = generateFwdDecl1 dn (u_typeParams u)
+generateFwdDecl dn (Decl{d_type=(Decl_Newtype n)}) = generateFwdDecl1 dn (n_typeParams n)
+generateFwdDecl _ (Decl{d_type=(Decl_Typedef _)}) = error "BUG: Unexpected fwd declaration of typedef"
+
 generateDecl :: Ident -> Decl ResolvedType -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
@@ -863,12 +876,23 @@ generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
     genTemplate (t_typeParams t)
     wt "using $1 = $2;" [cTypeName dn, te]
 
-localTypes :: TypeExpr ResolvedType -> Set.Set Ident
+data TypeRefType a = NameOnly a | FullDecl a
+   deriving (Eq,Ord,Show)                
+
+nameOnly :: TypeRefType a -> TypeRefType a
+nameOnly (FullDecl a) = (NameOnly a)
+nameOnly t = t
+
+ignoreNameOnly :: Ord a => Set.Set (TypeRefType a) -> Set.Set a
+ignoreNameOnly ts = Set.fromList [ a | (FullDecl a) <- Set.toList ts]
+
+localTypes :: TypeExpr ResolvedType -> Set.Set (TypeRefType Ident)
+localTypes (TypeExpr (RT_Primitive P_Vector) [te]) = Set.map nameOnly (localTypes te)
 localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
 
-localTypes1 :: ResolvedType -> Set.Set Ident
+localTypes1 :: ResolvedType -> Set.Set (TypeRefType Ident)
 localTypes1 (RT_Named (sn,_)) = case sn_moduleName sn of
-    ModuleName [] -> Set.singleton (sn_name sn)
+    ModuleName [] -> Set.singleton (FullDecl (sn_name sn))
     -- FIXME: need to either check if fully scoped name matches current module here,
     -- or, alternatively, map fully scoped local references to unscoped ones as a compiler
     -- phase.
@@ -876,11 +900,12 @@ localTypes1 (RT_Named (sn,_)) = case sn_moduleName sn of
 localTypes1 (RT_Param _) = Set.empty
 localTypes1 (RT_Primitive _) = Set.empty
 
-referencedLocalTypes :: Decl ResolvedType -> Set.Set Ident
-referencedLocalTypes d = Set.delete (d_name d) (rtypes d)
+referencedLocalTypes :: Decl ResolvedType -> Set.Set (TypeRefType Ident)
+referencedLocalTypes d = Set.difference (rtypes d) selfrefs
   where
+    selfrefs = Set.fromList [NameOnly (d_name d), FullDecl (d_name d)]
     rtypes (Decl{d_type=(Decl_Struct s)}) = Set.unions [ localTypes (f_type f) | f <- s_fields s]
-    rtypes (Decl{d_type=(Decl_Union u)}) = Set.unions [ localTypes (f_type f) | f <- u_fields u]
+    rtypes (Decl{d_type=(Decl_Union u)}) = Set.map nameOnly (Set.unions [ localTypes (f_type f) | f <- u_fields u])
     rtypes (Decl{d_type=(Decl_Typedef t)}) = localTypes (t_typeExpr t)
     rtypes (Decl{d_type=(Decl_Newtype n)}) = localTypes (n_typeExpr n)
     
@@ -910,30 +935,75 @@ generateCustomType n d ct = do
       wl ""
       mapM_ wl (ct_serialisationCode ct)
 
+-- |  Expand typedefs present in the definitions of unions and vectors.
+--      
+-- unions and vectors only need forward references, and we make use of this
+-- to determine code generation order for mutually recursive types. But we
+-- can usefully generate a forward reference to a typedef.
+expandUVTypedefs :: Module ResolvedType -> Module ResolvedType
+expandUVTypedefs m = m{m_decls=decls}
+  where
+    decls = Map.map (\d->d{d_type=expand1 (d_type d)}) (m_decls m)
+    expand1 :: DeclType ResolvedType -> DeclType ResolvedType
+    expand1 (Decl_Struct s) = Decl_Struct s{s_fields=map expandSField (s_fields s)}
+    expand1 (Decl_Union u) = Decl_Union u{u_fields=map expandUField (u_fields u)}
+    expand1 (Decl_Typedef t) = Decl_Typedef t{t_typeExpr=expandVectors (t_typeExpr t)}
+    expand1 (Decl_Newtype n) = Decl_Newtype n{n_typeExpr=expandVectors (n_typeExpr n)}
+
+    expandSField :: Field ResolvedType -> Field ResolvedType
+    expandSField f = f{f_type=expandVectors (f_type f)}
+
+    expandUField :: Field ResolvedType -> Field ResolvedType
+    expandUField f = f{f_type=expandAll (f_type f)}
+
+    -- expand all typedefs present in the given expression
+    expandAll :: TypeExpr ResolvedType -> TypeExpr ResolvedType
+    expandAll = expandTypedefs
+
+    -- expand only typedefs within Vector<> applications
+    expandVectors :: TypeExpr ResolvedType -> TypeExpr ResolvedType
+    expandVectors te@(TypeExpr (RT_Primitive P_Vector) _) = expandAll te
+    expandVectors (TypeExpr rt tes) = TypeExpr rt (map expandVectors tes)
+
 generateModule :: Module ResolvedType -> Gen ()
-generateModule m = do
+generateModule m0 = do
    ms <- get
    let mname = ms_name ms
-       sortedDecls = case topologicalSort fst (referencedLocalTypes.snd) (Map.toList (m_decls m)) of
-         -- FIXME: the topological sort will fail here with mutually recursive types
-         -- Need to work out how to generate code in this situation
-         Nothing -> error "Unable to sort decls into order due to mutual recursion"
+
+       m = expandUVTypedefs m0
+
+       getCustomType n = Map.lookup (ScopedName mname n) (ms_customTypes ms)
+
+       makeCustomTypeFullRef :: TypeRefType Ident -> TypeRefType Ident
+       makeCustomTypeFullRef r@(NameOnly n) = case getCustomType n of
+         Nothing -> r
+         (Just _) -> (FullDecl n)
+       makeCustomTypeFullRef r = r
+
+       referencedLocalTypes' = Set.map makeCustomTypeFullRef . referencedLocalTypes
+
+       -- generate the types for which we want forward references
+       allRefs = (Set.unions . map referencedLocalTypes' . Map.elems . m_decls) m
+       fwdRefs = [ n | (NameOnly n) <- (Set.toList . Set.unions . map referencedLocalTypes' . Map.elems . m_decls)  m]
+
+       genFwdDecl n = case Map.lookup n (m_decls m) of
+           (Just d) -> generateFwdDecl (d_name d) d
+           Nothing -> error "BUG: forward decl needed for unknown type"
+
+       -- Now do a topological sort on all the decls, ignoring the forward references
+       sortedDecls = case topologicalSort fst (ignoreNameOnly . referencedLocalTypes' . snd) (Map.toList (m_decls m)) of
+         Nothing -> error "BUG: Unable to sort decls into compilable order (possible infinite type??)"
          Just decls -> decls
 
-       genDecl (n,d) = do
-          case Map.lookup (ScopedName mname n) (ms_customTypes ms) of
-            Nothing -> generateDecl (d_name d) d
-            (Just ct) -> generateCustomType n d ct
+       genDecl (n,d) = case getCustomType n of
+         (Just ct) -> generateCustomType n d ct
+         Nothing -> generateDecl (d_name d) d
 
    includeStd ifile "adl/adl.h"
    includeModule cppfile mname
---   setnamespace ifile (ms_moduleMapper ms mname) 
---   setnamespace cppfile (ms_moduleMapper ms mname) 
 
+   mapM_ genFwdDecl fwdRefs
    mapM_ genDecl sortedDecls
-
---   setnamespace ifile (CppNamespace [])
---   setnamespace cppfile (CppNamespace [])
 
 -- | Generate the c++ code for an ADL module into files.
 -- The call @writeModuleFile uo mNamespace mFile module@ will use
@@ -1058,7 +1128,7 @@ mkLiteral te jv = mk Map.empty te jv
       return (LPrimitive ct (cPrimitiveLiteral pt v))
     mk  m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
      (Just te) -> mk m te v
-     Nothing -> error "Failed to find type binding in mkLiteral"
+     Nothing -> error "BUG: Failed to find type binding in mkLiteral"
     mk m (TypeExpr (RT_Primitive P_Vector) [te]) jv = mkVec m te jv
     mk m te0@(TypeExpr (RT_Named (_,decl)) tes) jv = case d_type decl of
       (Decl_Struct s) -> mkStruct m te0 decl s tes jv

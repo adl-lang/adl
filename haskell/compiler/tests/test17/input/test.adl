@@ -1,0 +1,44 @@
+module test
+{
+
+struct Pair<A,B>
+{
+    A v1;
+    B v2;
+};
+
+type T1 = Int32;
+type T2<A> = Pair<A,Int32>;
+type T3<A,B> = Pair<A,B>;
+
+// typedefs referenced in the types of struct fields shouldn't get
+// expanded in C++ code generation unless they lie within a vector
+
+struct X1
+{
+     Int32 f1;
+     T1 f2;
+     T2<String> f3;        
+     T3<String,String> f4;
+
+     Vector<T1> f5;
+     Vector<T2<String>> f6;        
+     Vector<T3<String,String>> f7;
+};
+
+// typedefs referenced in the types of union fields should be
+// completly expanded.
+
+union X2
+{
+     Int32 f1;
+     T1 f2;
+     T2<String> f3;        
+     T3<String,String> f4;
+
+     Vector<T1> f5;
+     Vector<T2<String>> f6;        
+     Vector<T3<String,String>> f7;
+};
+
+};

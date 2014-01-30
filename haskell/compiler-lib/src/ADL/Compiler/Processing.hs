@@ -471,3 +471,22 @@ topologicalSort idf depf as = fmap (map fst) (sort1 (addDeps as) Set.empty)
         sofar' = Set.unions (sofar:map (Set.singleton . idf . fst) ok)
 
     addDeps as = map (\a -> (a,depf a)) as
+
+-- | eliminate the typedefs from an expression through substitution
+expandTypedefs :: TypeExpr ResolvedType -> TypeExpr ResolvedType
+expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
+  where
+    typeExpr :: ResolvedType -> [TypeExpr ResolvedType] -> TypeExpr ResolvedType
+    typeExpr (RT_Named (_,Decl{d_type=Decl_Typedef t})) ts =
+      substTypeParams (Map.fromList (zip (t_typeParams t) ts))
+                      (t_typeExpr t)
+    typeExpr t ts = TypeExpr t ts
+
+substTypeParams :: Map.Map Ident (TypeExpr ResolvedType) -> TypeExpr ResolvedType -> TypeExpr ResolvedType
+substTypeParams m  (TypeExpr (RT_Param n) ts) =
+  case Map.lookup n m of
+    Nothing -> (TypeExpr (RT_Param n) (map (substTypeParams m) ts))
+    Just e -> case ts of
+        [] -> e
+        _ -> error "BUG: Type param not a concrete type"
+substTypeParams m  (TypeExpr t ts) = TypeExpr t (map (substTypeParams m) ts)

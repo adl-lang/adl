@@ -6,6 +6,10 @@
 namespace ADL {
 namespace test {
 
+struct S1;
+
+struct U3;
+
 struct S1
 {
     S1();
@@ -149,197 +153,6 @@ inline int16_t & U3::v() const
         return *(int16_t *)p_;
     }
     throw invalid_union_access();
-}
-
-template <class T>
-class U9
-{
-public:
-    U9();
-    static U9<T> mk_v1( const T & v );
-    static U9<T> mk_v2( const int16_t & v );
-    
-    U9( const U9<T> & );
-    ~U9();
-    U9<T> & operator=( const U9<T> & );
-    
-    enum DiscType
-    {
-        V1,
-        V2
-    };
-    
-    DiscType d() const;
-    T & v1() const;
-    int16_t & v2() const;
-    
-    const T & set_v1(const T & );
-    const int16_t & set_v2(const int16_t & );
-    
-private:
-    U9( DiscType d, void * v);
-    
-    DiscType d_;
-    void *p_;
-    
-    static void free( DiscType d, void *v );
-    static void *copy( DiscType d, void *v );
-};
-
-template <class T>
-bool operator<( const U9<T> &a, const U9<T> &b );
-template <class T>
-bool operator==( const U9<T> &a, const U9<T> &b );
-
-template <class T>
-typename U9<T>::DiscType U9<T>::d() const
-{
-    return d_;
-}
-
-template <class T>
-inline T & U9<T>::v1() const
-{
-    if( d_ == V1 )
-    {
-        return *(T *)p_;
-    }
-    throw invalid_union_access();
-}
-
-template <class T>
-inline int16_t & U9<T>::v2() const
-{
-    if( d_ == V2 )
-    {
-        return *(int16_t *)p_;
-    }
-    throw invalid_union_access();
-}
-
-template <class T>
-U9<T>::U9()
-    : d_(V1), p_(new T())
-{
-}
-
-template <class T>
-U9<T> U9<T>::mk_v1( const T & v )
-{
-    return U9<T>( V1, new T(v) );
-}
-
-template <class T>
-U9<T> U9<T>::mk_v2( const int16_t & v )
-{
-    return U9<T>( V2, new int16_t(v) );
-}
-
-template <class T>
-U9<T>::U9( const U9<T> & v )
-    : d_(v.d_), p_(copy(v.d_,v.p_))
-{
-}
-
-template <class T>
-U9<T>::~U9()
-{
-    free(d_,p_);
-}
-
-template <class T>
-U9<T> & U9<T>::operator=( const U9<T> & o )
-{
-    free(d_,p_);
-    d_ = o.d_;
-    p_ = copy( o.d_, o.p_ );
-    return *this;
-}
-
-template <class T>
-const T & U9<T>::set_v1(const T &v)
-{
-    if( d_ == V1 )
-    {
-        *(T *)p_ = v;
-    }
-    else
-    {
-        free(d_,p_);
-        d_ = V1;
-        p_ = new T(v);
-    }
-    return *(T *)p_;
-}
-
-template <class T>
-const int16_t & U9<T>::set_v2(const int16_t &v)
-{
-    if( d_ == V2 )
-    {
-        *(int16_t *)p_ = v;
-    }
-    else
-    {
-        free(d_,p_);
-        d_ = V2;
-        p_ = new int16_t(v);
-    }
-    return *(int16_t *)p_;
-}
-
-template <class T>
-U9<T>::U9(DiscType d, void *p)
-    : d_(d), p_(p)
-{
-}
-
-template <class T>
-void U9<T>::free(DiscType d, void *p)
-{
-    switch( d )
-    {
-        case V1: delete (T *)p; return;
-        case V2: delete (int16_t *)p; return;
-    }
-}
-
-template <class T>
-void * U9<T>::copy( DiscType d, void *p )
-{
-    switch( d )
-    {
-        case V1: return new T(*(T *)p);
-        case V2: return new int16_t(*(int16_t *)p);
-    }
-    return 0;
-}
-
-template <class T>
-bool
-operator<( const U9<T> &a, const U9<T> &b )
-{
-    if( a.d() < b.d() ) return true;
-    if( b.d() < a.d()) return false;
-    switch( a.d() )
-    {
-        case U9<T>::V1: return a.v1() < b.v1();
-        case U9<T>::V2: return a.v2() < b.v2();
-    }
-    return false;
-}
-
-template <class T>
-bool
-operator==( const U9<T> &a, const U9<T> &b )
-{
-    if( a.d() != b.d() ) return false;
-    switch( a.d() )
-    {
-        case U9<T>::V1: return a.v1() == b.v1();
-        case U9<T>::V2: return a.v2() == b.v2();
-    }
-    return false;
 }
 
 class U4
@@ -590,6 +403,197 @@ inline int16_t & U8::v2() const
     throw invalid_union_access();
 }
 
+template <class T>
+class U9
+{
+public:
+    U9();
+    static U9<T> mk_v1( const T & v );
+    static U9<T> mk_v2( const int16_t & v );
+    
+    U9( const U9<T> & );
+    ~U9();
+    U9<T> & operator=( const U9<T> & );
+    
+    enum DiscType
+    {
+        V1,
+        V2
+    };
+    
+    DiscType d() const;
+    T & v1() const;
+    int16_t & v2() const;
+    
+    const T & set_v1(const T & );
+    const int16_t & set_v2(const int16_t & );
+    
+private:
+    U9( DiscType d, void * v);
+    
+    DiscType d_;
+    void *p_;
+    
+    static void free( DiscType d, void *v );
+    static void *copy( DiscType d, void *v );
+};
+
+template <class T>
+bool operator<( const U9<T> &a, const U9<T> &b );
+template <class T>
+bool operator==( const U9<T> &a, const U9<T> &b );
+
+template <class T>
+typename U9<T>::DiscType U9<T>::d() const
+{
+    return d_;
+}
+
+template <class T>
+inline T & U9<T>::v1() const
+{
+    if( d_ == V1 )
+    {
+        return *(T *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T>
+inline int16_t & U9<T>::v2() const
+{
+    if( d_ == V2 )
+    {
+        return *(int16_t *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T>
+U9<T>::U9()
+    : d_(V1), p_(new T())
+{
+}
+
+template <class T>
+U9<T> U9<T>::mk_v1( const T & v )
+{
+    return U9<T>( V1, new T(v) );
+}
+
+template <class T>
+U9<T> U9<T>::mk_v2( const int16_t & v )
+{
+    return U9<T>( V2, new int16_t(v) );
+}
+
+template <class T>
+U9<T>::U9( const U9<T> & v )
+    : d_(v.d_), p_(copy(v.d_,v.p_))
+{
+}
+
+template <class T>
+U9<T>::~U9()
+{
+    free(d_,p_);
+}
+
+template <class T>
+U9<T> & U9<T>::operator=( const U9<T> & o )
+{
+    free(d_,p_);
+    d_ = o.d_;
+    p_ = copy( o.d_, o.p_ );
+    return *this;
+}
+
+template <class T>
+const T & U9<T>::set_v1(const T &v)
+{
+    if( d_ == V1 )
+    {
+        *(T *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = V1;
+        p_ = new T(v);
+    }
+    return *(T *)p_;
+}
+
+template <class T>
+const int16_t & U9<T>::set_v2(const int16_t &v)
+{
+    if( d_ == V2 )
+    {
+        *(int16_t *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = V2;
+        p_ = new int16_t(v);
+    }
+    return *(int16_t *)p_;
+}
+
+template <class T>
+U9<T>::U9(DiscType d, void *p)
+    : d_(d), p_(p)
+{
+}
+
+template <class T>
+void U9<T>::free(DiscType d, void *p)
+{
+    switch( d )
+    {
+        case V1: delete (T *)p; return;
+        case V2: delete (int16_t *)p; return;
+    }
+}
+
+template <class T>
+void * U9<T>::copy( DiscType d, void *p )
+{
+    switch( d )
+    {
+        case V1: return new T(*(T *)p);
+        case V2: return new int16_t(*(int16_t *)p);
+    }
+    return 0;
+}
+
+template <class T>
+bool
+operator<( const U9<T> &a, const U9<T> &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U9<T>::V1: return a.v1() < b.v1();
+        case U9<T>::V2: return a.v2() < b.v2();
+    }
+    return false;
+}
+
+template <class T>
+bool
+operator==( const U9<T> &a, const U9<T> &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U9<T>::V1: return a.v1() == b.v1();
+        case U9<T>::V2: return a.v2() == b.v2();
+    }
+    return false;
+}
+
 }}; // ADL::test
 
 namespace ADL {
@@ -616,6 +620,36 @@ template <>
 struct Serialisable<ADL::test::U3>
 {
     static Serialiser<ADL::test::U3>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test::U4>
+{
+    static Serialiser<ADL::test::U4>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test::U5>
+{
+    static Serialiser<ADL::test::U5>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test::U6>
+{
+    static Serialiser<ADL::test::U6>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test::U7>
+{
+    static Serialiser<ADL::test::U7>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test::U8>
+{
+    static Serialiser<ADL::test::U8>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
@@ -682,36 +716,6 @@ Serialisable<ADL::test::U9<T>>::serialiser( const SerialiserFlags &sf )
     
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
-
-template <>
-struct Serialisable<ADL::test::U4>
-{
-    static Serialiser<ADL::test::U4>::Ptr serialiser(const SerialiserFlags &);
-};
-
-template <>
-struct Serialisable<ADL::test::U5>
-{
-    static Serialiser<ADL::test::U5>::Ptr serialiser(const SerialiserFlags &);
-};
-
-template <>
-struct Serialisable<ADL::test::U6>
-{
-    static Serialiser<ADL::test::U6>::Ptr serialiser(const SerialiserFlags &);
-};
-
-template <>
-struct Serialisable<ADL::test::U7>
-{
-    static Serialiser<ADL::test::U7>::Ptr serialiser(const SerialiserFlags &);
-};
-
-template <>
-struct Serialisable<ADL::test::U8>
-{
-    static Serialiser<ADL::test::U8>::Ptr serialiser(const SerialiserFlags &);
-};
 
 }; // ADL
 #endif // TEST_H

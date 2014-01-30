@@ -158,6 +158,9 @@ main = hspec $ do
     it "generates expected code type aliases and newtypes" $ do
       runHaskellBackend1 "test7/input/test.adl"
         `shouldReturn` MatchOutput
+    it "Generates code correctly for mutually recursive types" $ do
+      runHaskellBackend1 "test18/input/test.adl"
+        `shouldReturn` MatchOutput
 
   describe "adlc ast backend" $ do
     it "generates expected json serialisation for each type of decl" $ do
@@ -191,4 +194,10 @@ main = hspec $ do
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
       runCppBackend "test16/input" ["test16/input/test.adl"] "test16/cpp-output" "adl" []
+        `shouldReturn` MatchOutput
+    it "Expands typedefs in code generation when necessary" $ do
+      runCppBackend1 "test17/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "Generates code correctly for mutually recursive types" $ do
+      runCppBackend1 "test18/input/test.adl"
         `shouldReturn` MatchOutput
