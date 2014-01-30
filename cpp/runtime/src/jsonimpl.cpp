@@ -319,7 +319,7 @@ StreamJsonReader::next()
                 return;
             }
             else
-                json_parse_failure("OBJECT1/2");
+                throw json_parse_failure("OBJECT1/2");
             break;
 
         case OBJECT2:
