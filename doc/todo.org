@@ -1,5 +1,16 @@
 * ADL Core/Compiler
 ** Add support for ADL constants
+** Throw compiler errors for type parameters applied to arguments
+
+This should be illegal:
+
+module test
+{
+type I<X> = X<Int32>;
+};
+
+ie all type parameters must have kind *.
+
 ** Throw compiler errors for types representing infinite values
 
 Infinite values can be represented in haskell but not idiomatically in other languages. Hence
@@ -109,6 +120,11 @@ This would remove the need for the custom serialiser in ADL.Core.CustomTypes
 nice to fix this so that serialisers have constant size
 
 * C++ Backend
+** Bug fixes
+    - Missing throw in StreamJsonReader::next()
+    - Number parser can't handle end of of string 123<EOS>
+    - snext logic issue: EOF won't be reached until you try to read off the end (was reading 5 to 55)
+
 ** Implement newtypes in terms of templates
 
 ** Work out how to generate code for mutually recursive types
