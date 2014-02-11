@@ -135,6 +135,9 @@ main = hspec $ do
     it "aborts with error for duplicate type parameter names in all decl types" $ do
       runVerifyBackend1 "test13/input/test.adl"
         `shouldReturn` (CompilerFailed "In module Test :\nduplicate definition of type parameter a in struct X\n  duplicate definition of type parameter b in union Y\n  duplicate definition of type parameter t in type alias A\n  duplicate definition of type parameter t in newtype B")
+    it "aborts with error for type constructors applied to incorrect numbers of arguments" $ do
+      runVerifyBackend1 "test19/input/test.adl"
+        `shouldReturn` (CompilerFailed "In module test :\ntype X doesn't take arguments\n  type constructor Pair expected 2 arguments, but was passed 1")
     
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do

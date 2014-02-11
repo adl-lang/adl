@@ -1,16 +1,5 @@
 * ADL Core/Compiler
 ** Add support for ADL constants
-** Throw compiler errors for type parameters applied to arguments
-
-This should be illegal:
-
-module test
-{
-type I<X> = X<Int32>;
-};
-
-ie all type parameters must have kind *.
-
 ** Throw compiler errors for types representing infinite values
 
 Infinite values can be represented in haskell but not idiomatically in other languages. Hence
@@ -40,6 +29,17 @@ module unittests
 
 values of type X will always be infinite. Values of type L1 may be constructed to
 be finite, but the default value will be - this is also problematic.
+
+** DONE Throw compiler errors for type parameters applied to arguments
+
+This should be illegal:
+
+module test
+{
+type I<X> = X<Int32>;
+};
+
+ie all type parameters must have kind *.
 
 ** DONE Implement a backend to produce JSON
  - schema should be in DDL

@@ -276,7 +276,8 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
       checkTypeExpr (TypeExpr t exprs) = checkTypeCtorApp t exprs `mappend` foldMap checkTypeExpr exprs
 
       checkTypeCtorApp :: ResolvedType -> [TypeExpr ResolvedType] -> [TypeCtorAppError]
-      checkTypeCtorApp (RT_Param _) _ = mempty -- can't check this
+      checkTypeCtorApp (RT_Param _) [] = mempty
+      checkTypeCtorApp rt@(RT_Param _) expr = [TypeCtorAppError (rt,0,length expr)]
       checkTypeCtorApp rt@(RT_Primitive pt) expr = check0 rt (ptArgCount pt) (length expr)
       checkTypeCtorApp rt@(RT_Named (_,decl)) expr = check0 rt (declTypeArgCount (d_type decl)) (length expr)
 
@@ -396,9 +397,8 @@ moduleFinder rootpaths (ModuleName mname) =
 
 loadAndCheckModule :: ModuleFinder -> FilePath -> EIOT RModule
 loadAndCheckModule moduleFinder modulePath = do
-    (m,mm) <- loadModule1 
-    mapM_ checkModuleForDuplicates (Map.elems mm)
-    checkModuleForDuplicates m
+    (m,mm) <- loadModule1
+    mapM_ checkModuleForDuplicates (m:Map.elems mm)
     case sortByDeps (Map.elems mm) of
       Nothing -> eioError "Mutually dependent modules are not allowed"
       (Just mmSorted) -> do  
@@ -416,6 +416,9 @@ loadAndCheckModule moduleFinder modulePath = do
         _ -> eioError (moduleErrorMessage m (map formatText dups))
       where
         dups = checkDuplicates m
+
+    checkModuleForTypeParamApp :: SModule -> EIOT ()
+    checkModuleForTypeParamApp m = return ()
 
     resolveN :: [SModule] -> NameScope -> EIOT NameScope
     resolveN [] ns = return ns
