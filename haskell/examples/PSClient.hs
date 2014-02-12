@@ -49,7 +49,7 @@ subscribe pattern =
         s <- callRPCE ChannelReq_subscribe sc ep (seconds 20) (Subscribe pattern (toSink ls))
         waitForSigINT
         withResource (connectE ctx s) $ \sc1 ->
-          sendE sc1 (SubsReq_unsubscribe ())
+          sendE sc1 SubsReq_unsubscribe
   where
     processMessage :: MyMessage -> IO ()
     processMessage m = T.putStrLn (template "$1: $2" [T.pack (show (message_timestamp m)),message_payload m])

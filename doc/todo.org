@@ -91,7 +91,6 @@ discriminator is negotiated on connection, and not serialised
 * Test Suite
 ** DONE Add ability to test compiler errors
 * Haskell Backend
-** Void branches on unions don't need to take a () parameter
 ** Consider an option extra method on transport to support RPCs
 
 data Connection = Connection {
@@ -118,6 +117,8 @@ This would remove the need for the custom serialiser in ADL.Core.CustomTypes
 ** Serialisers are lazy values that grow
 ... to size proportional to the size of the largest value. It would be
 nice to fix this so that serialisers have constant size
+** DONE Void branches on unions don't need to take a () parameter
+
 
 * C++ Backend
 ** Bug fixes

@@ -101,7 +101,7 @@ client rfile =
         -- unions
         testRoundTrip Request_req_u1 sc ep (U1_f1 (-1001))
         testRoundTrip Request_req_u1 sc ep (U1_f2 12.5)
-        testRoundTrip Request_req_u2 sc ep (U2_f1 ())
+        testRoundTrip Request_req_u2 sc ep (U2_f1 )
         testRoundTrip Request_req_u2 sc ep (U2_f3 ["","some","text"])
         testRoundTrip Request_req_u2 sc ep (U2_f6 (U1_f2 42))
 

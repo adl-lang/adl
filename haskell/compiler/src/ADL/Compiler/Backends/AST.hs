@@ -70,7 +70,7 @@ typeRefToA2 (RT_Param i) = A2.TypeRef_typeParam i
 typeRefToA2 (RT_Primitive p) = A2.TypeRef_primitive (ptToText p)
 
 literalToA2 :: JSON.Value -> A2.Literal
-literalToA2 JSON.Null = A2.Literal_null ()
+literalToA2 JSON.Null = A2.Literal_null
 literalToA2 (JSON.Number (N.I i)) = A2.Literal_integer (fromIntegral i)
 literalToA2 (JSON.Number (N.D d)) = A2.Literal_double d
 literalToA2 (JSON.String s) = A2.Literal_string s

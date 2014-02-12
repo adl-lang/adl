@@ -137,6 +137,10 @@ type RModuleMap = Map.Map ModuleName RModule
 
 type TMap = Map.Map ScopedName ResolvedType
 
+isVoidType :: TypeExpr ResolvedType -> Bool
+isVoidType (TypeExpr (RT_Primitive P_Void) []) = True
+isVoidType _ = False
+
 -- Naming Scope
     -- Decls in referenced modules (imported and explicitly referenced)
     -- Decls in current modules

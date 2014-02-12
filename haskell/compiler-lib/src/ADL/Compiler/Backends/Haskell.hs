@@ -356,8 +356,11 @@ generateUnionDataType lname mn d u = do
     wt "data $1$2" [lname,hTParams (u_typeParams u)]
     indent $ do
       forM_ (zip prefixes (u_fields u)) $ \(fp,f) -> do
-        t <- hTypeExpr (f_type f)
-        wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
+        if isVoidType (f_type f)
+          then wt "$1 $2" [fp,hDiscName (d_name d) (f_name f)]
+          else do
+            t <- hTypeExpr (f_type f)
+            wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
       derivingStdClasses
 
 generateUnionADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
@@ -367,19 +370,24 @@ generateUnionADLInstance lname mn d u = do
     indent $ do
         declareAType (ScopedName mn (d_name d)) (u_typeParams u)
         nl
-        wt "defaultv = $1 defaultv"
-           [hDiscName (d_name d) (f_name (head (u_fields u)))]
+        let f0 = head (u_fields u)
+            dn0 = hDiscName (d_name d) (f_name f0)
+        if isVoidType (f_type f0)
+          then wt "defaultv = $1" [dn0]
+          else wt "defaultv = $1 defaultv" [dn0]
         nl
         wl "jsonSerialiser jf = JSONSerialiser to from"
         indent $ do
           wl "where"
           indent $ do
             forM_ (u_fields u) $ \f -> do
-              wt "$1_js = jsonSerialiser jf" [f_name f]
+              when (not (isVoidType (f_type f))) $ wt "$1_js = jsonSerialiser jf" [f_name f]
             nl
             forM_ (u_fields u) $ \f -> do
-              wt "to ($1 v) = JSON.Object (HM.singleton \"$2\" (aToJSON $2_js v))"
-                 [ hDiscName (d_name d) (f_name f), f_name f ]
+              let dn = hDiscName (d_name d) (f_name f)
+              if isVoidType (f_type f)
+                then wt "to $1 = JSON.Object (HM.singleton \"$2\" JSON.Null)" [ dn, f_name f ]
+                else wt "to ($1 v) = JSON.Object (HM.singleton \"$2\" (aToJSON $2_js v))" [ dn, f_name f ]
             nl
             wl "from o = do"
             indent $ do
@@ -387,7 +395,11 @@ generateUnionADLInstance lname mn d u = do
               wl "case key of"
               indent $ do
                 forM_ (u_fields u) $ \f -> do
-                  wt "\"$1\" -> Prelude.fmap $2 (aFromJSON $1_js v)" [f_name f, hDiscName (d_name d) (f_name f) ]
+                  let dn = hDiscName (d_name d) (f_name f)
+                  if isVoidType (f_type f)
+                    then wt "\"$1\" -> Prelude.Just $2" [f_name f, dn ]
+                    else wt "\"$1\" -> Prelude.fmap $2 (aFromJSON $1_js v)" [f_name f,dn]
+
 
 generateNewtypeADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Newtype ResolvedType -> HGen ()
 generateNewtypeADLInstance lname mn d n = do

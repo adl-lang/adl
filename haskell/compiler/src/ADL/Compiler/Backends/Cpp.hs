@@ -161,11 +161,6 @@ includeStd fr i = include0 fr (IncFilePath i False)
 include0 :: FileRef -> IncFilePath -> Gen ()
 include0 fl i = modify (fl $ \fs -> fs{fs_includes=Set.insert i (fs_includes fs)})
 
-
-isVoidType :: TypeExpr ResolvedType -> Bool
-isVoidType (TypeExpr (RT_Primitive P_Void) []) = True
-isVoidType _ = False
-
 type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
 
 -- Returns the c++ typer expression corresponding to the

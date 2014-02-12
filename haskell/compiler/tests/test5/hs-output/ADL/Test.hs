@@ -45,24 +45,23 @@ instance ADLValue S1 where
             from _ = Prelude.Nothing
 
 data U1
-    = U1_v ()
+    = U1_v
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance ADLValue U1 where
     atype _ = "test.U1"
     
-    defaultv = U1_v defaultv
+    defaultv = U1_v
     
     jsonSerialiser jf = JSONSerialiser to from
         where
-            v_js = jsonSerialiser jf
             
-            to (U1_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
+            to U1_v = JSON.Object (HM.singleton "v" JSON.Null)
             
             from o = do
                 (key, v) <- splitUnion o
                 case key of
-                    "v" -> Prelude.fmap U1_v (aFromJSON v_js v)
+                    "v" -> Prelude.Just U1_v
 
 data U2
     = U2_v Data.Int.Int16

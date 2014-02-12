@@ -99,7 +99,7 @@ processRequest ep state ctx req = case req of
 
 processSubscriptionRequest :: State -> Context -> Int -> SubsReq -> IO ()
 processSubscriptionRequest state ctx i req = case req of
-  (SubsReq_unsubscribe ()) -> unsubscribe
+  SubsReq_unsubscribe -> unsubscribe
   where
     unsubscribe = do
         infoM "Removed subscriber #$1" [fshow i]
