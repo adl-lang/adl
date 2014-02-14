@@ -1,4 +1,4 @@
-* Overview
+# Overview
 ADL (Actor Description Language) is a software toolkit for language
 interoperability. It provides a domain specific language for
 describing data types and application level communication protocols,
@@ -7,18 +7,18 @@ languages.
 
 The ADL system:
 
-   * uses a data model based upon algebraic data types[http://en.wikipedia.org/wiki/Algebraic_data_types]
+   * uses a data model based upon [algebraic data types](http://en.wikipedia.org/wiki/Algebraic_data_types)
 
    * supports parameterised data types
 
-   * implements communications based upon the concurrent actor model[http://en.wikipedia.org/wiki/Actor_model]
+   * implements communications based upon the [concurrent actor model](http://en.wikipedia.org/wiki/Actor_model)
 
 Together these features facilitate the interoperation between a
 variety of object oriented and functional programming languages.  The
 syntax of ADL is straightforward, and will be familiar to java and c++
 developers.
 
-* Example
+# Example
 
 Here is a tiny ADL example:
 
@@ -42,10 +42,10 @@ This specifies a simple service which accepts messages of type
 PingRequest. Such a message has a body, along with a target to which
 the server is to send the response. 
 
-* Modules
+# Modules
 
 The ADL namespace is managed through modules - all definitions exist
-with a module. Modules are hierachical, and tied to the directory
+with a module. Modules are hierarchical, and tied to the directory
 structure in the manner of java and haskell. Hence the ADL for module
 "demos.ping" must be stored in a file "demos/ping.adl".
 
@@ -71,12 +71,12 @@ of fully scoped names.
 Recursive definitions and mutually recursive definitions are allowed
 with a single module, but may not span across modules.
 
-* Primitive Types
+# Primitive Types
 
 ADL supports the following primitive types:
 
 | Type                       | Description                                            | Default   |
-|----------------------------+--------------------------------------------------------+-----------|
+|----------------------------|--------------------------------------------------------|-----------|
 | Int8,Int16,Int32,Int64     | Signed integers                                        | 0         |
 | Word8,Word16,Word32,Word64 | Unsigned integers                                      | 0         |
 | Bool                       | boolean values                                         | false     |
@@ -88,11 +88,11 @@ ADL supports the following primitive types:
 
 The null sink drops all messages that are sent to it.
 
-* Type Definitions
+# Type Definitions
 
 There are 4 varieties of type definitions: structs, unions, typedefs and newtypes.
 
-** struct
+## struct
 
 A struct definition specifies a record in the conventional way, ie as
 a list of fields with associated types:
@@ -116,7 +116,7 @@ A struct definition may take type parameters. A simple example from the standard
     };
 
 
-** union
+## union
 
 A union definition specifies a tagged union (ie an algebraic sum
 type). Other than a different keyword, it has identical syntax to a
@@ -144,14 +144,14 @@ A union definition may take type parameters. A simple example from the standard 
         T2 right;
     };
 
-** typedef
+## typedef
 
 Typedefs are used to define type synonyms, and may take type parameters:
 
    type UserVec = Vector<Person>;
    type RpcSvc<I,O> = Sink<Rpc<I,O>>;
 
-** newtype
+## newtype
 
 Newtypes define a new type that is structurally equivalent to an
 existing type, but has a distinct type in the generated code. newtype
@@ -160,13 +160,13 @@ definitions may also take type parameters:
    newtype UserId = String;
    newtype Map<K,V> = Vector<Pair<K,V>>
 
-* Standard Library
+# Standard Library
 
 In addition to the builtin language primitives the ADL standard library
 defines the following:
 
 | Module    | Type        | Description                                                                    |
-|-----------+-------------+--------------------------------------------------------------------------------|
+|-----------|-------------|--------------------------------------------------------------------------------|
 | sys.types | Pair<A,B>   | A value containing both an A value and a B value                               |
 | sys.types | Either<A,B> | A value containing either an A value or a B value                              |
 | sys.types | Maybe<A>    | An optional value of type A                                                    |
@@ -178,7 +178,7 @@ defines the following:
 Where there is natural support for these types in a target language or
 it's standard library, appropriate custom mappings are used.
 
-* Default Values
+# Default Values
 
 All ADL defined types have a default value:
 
@@ -192,7 +192,7 @@ In addition, it is possible to override the default values for some
 type definitions, by providing literal values in appropriate places in
 the ADL definitions. A literal value is specified in JSON form.
 
-** struct default overrides
+## struct default overrides
 
 A struct definition may override the default values of any or all of
 it's fields:
@@ -204,7 +204,7 @@ it's fields:
          Pair<Double,Double> z = { "v1" : 1.0, "v2" : 2.0 };
     };
 
-** union default overrides
+## union default overrides
 
 A union definition may override the default value of a single discriminator. This
 discriminator then becomes selected for the default:
@@ -217,14 +217,14 @@ it's fields:
          Pair<Double,Double> z; 
     };
 
-** newtype default overrides
+## newtype default overrides
 
 A newtype definition may override the default value through a
 (slightly awkward) "double equals" syntax:
 
     newtype Date = String = "2000-01-01";
 
-* Naming Conventions
+# Naming Conventions
 
 Identifiers are used for module names, type names, and field
 names. Identifiers in ADL are case sensitive, and must match the
@@ -245,10 +245,10 @@ Whilst user defined names can follow any case convention, the
 following conventions are used for primitive types and the ADL
 standard library, and are recommended:
 
-    1) Module names consist solely of lower case letters and numbers,
-       dot separated to indicate the hierarchy.
-    2) Type names start with an upper case letter, and follow
-       CamelCase conventions.
-    3) Field names start with a lower case letter, and follow
-       camelCase conventions.
+  1. Module names consist solely of lower case letters and numbers,
+     dot separated to indicate the hierarchy.
+  2. Type names start with an upper case letter, and follow
+     CamelCase conventions.
+  3. Field names start with a lower case letter, and follow
+     camelCase conventions.
 

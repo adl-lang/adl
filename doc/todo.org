@@ -1,5 +1,6 @@
 * ADL Core/Compiler
 ** Add support for ADL constants
+** Compiler should find standard library without needing -I argument
 ** Throw compiler errors for types representing infinite values
 
 Infinite values can be represented in haskell but not idiomatically in other languages. Hence
