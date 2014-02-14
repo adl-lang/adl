@@ -1,9 +1,19 @@
 module examples.im
 {
-    import sys.types;
-    import sys.rpc;
+    import sys.types.*;
+    import sys.rpc.*;
 
-    type Nickname = String;
+    // The AuthenticateActor is the initial connection point for clients.
+    // It is a published well known address, that clients use to connect to
+    // the service. Unsucessfull authentication will result in an error. 
+    // Successful  authentication will reuturn a ServiceActor to the client,
+    // which can be used for subsequent communications.
+
+    type AuthenticateActor = RpcSvc<AuthenticateReq,Error<ServiceActor>>;
+
+    // An AuthenticateReq requires the credentials of the user, and the
+    // actor that will be notified (asynchronously) of events of interest
+    // to that user.
 
     struct AuthenticateReq
     {
@@ -12,28 +22,13 @@ module examples.im
          ClientActor client;
     };
 
-    // The AuthenticateActor is the initial connection point for clients.
-    // It is a published well known address, that clients use to connect to
-    // the service.
-    type AuthenticateActor = rpcsvc<AuthenticateReq,Error<ServiceActor>>;
+    // The ServiceActor allows clients to make service requests, to:
+    //
+    //      - change user settings and state
+    //      - create new conversations
+    //      - query the user db
 
-    union Presence
-    {
-         Void active;
-         Void idle;
-         Void absent;
-    };
-
-    struct QueryUsersReq
-    {
-        String queryString;
-    };
-
-    struct QueryUsersResp
-    {
-        int nlMatches;
-        Vector<Nickname> users;
-    };
+    type  ServiceActor = Sink<ServiceReq>;
 
     union ServiceReq
     {
@@ -56,11 +51,29 @@ module examples.im
          Vector<Nickname> unfollow;
     };
 
-    // The ServiceActor allows clients to create :
-    //      - change user settings and state
-    //      - create new conversations
-    //      - query the user db
-    type  ServiceActor = Sink<ServiceReq>;
+    // A Nickname is just an alias for a String
+
+    type Nickname = String;
+
+    // An "enum" representing presence status.
+
+    union Presence
+    {
+         Void active;
+         Void idle;
+         Void absent;
+    };
+
+    struct QueryUsersReq
+    {
+        String queryString;
+    };
+
+    struct QueryUsersResp
+    {
+        Int32 nlMatches;
+        Vector<Nickname> users;
+    };
 
     struct SubscriptionReq
     {
@@ -71,7 +84,7 @@ module examples.im
     struct PresenceNotification
     {
         Nickname nickname;
-        Presence presences;
+        Presence presence;
     };
 
     union ClientMessage
@@ -94,7 +107,7 @@ module examples.im
 
     struct Posting
     {
-        datetime datetime;
+        DateTime datetime;
         Nickname nickname;
         String message;                 
     };
@@ -115,4 +128,10 @@ module examples.im
     };
 
     type ConversationClientActor = Sink<ConversationMessage>; 
+
+    // A DateTime is serialised as a String, but is a distinct type.
+    // It is likely that in code generation a user will map it to
+    // an appropriate native type using a custom type mapping.
+
+    newtype DateTime = String = "2000-01-01T00:00Z";
 };
