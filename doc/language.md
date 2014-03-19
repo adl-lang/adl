@@ -1,17 +1,16 @@
 # Overview
-ADL (Actor Description Language) is a software toolkit for language
-interoperability. It provides a domain specific language for
-describing data types and application level communication protocols,
-along with a compiler and code generators for target programming
-languages.
 
-The ADL system:
+ADL (Actor Description Language) is the domain specific language at
+the core of the ADL framework. It is used to describe application
+level data types and communication protocols.
+
+The language:
 
    * uses a data model based upon [algebraic data types](http://en.wikipedia.org/wiki/Algebraic_data_types)
 
    * supports parameterised data types
 
-   * implements communications based upon the [concurrent actor model](http://en.wikipedia.org/wiki/Actor_model)
+   * can describe communications based upon the [concurrent actor model](http://en.wikipedia.org/wiki/Actor_model)
 
 Together these features facilitate the interoperation between a
 variety of object oriented and functional programming languages.  The
@@ -75,16 +74,16 @@ with a single module, but may not span across modules.
 
 ADL supports the following primitive types:
 
-| Type                       | Description                                            | Default   |
-|----------------------------|--------------------------------------------------------|-----------|
-| Int8,Int16,Int32,Int64     | Signed integers                                        | 0         |
-| Word8,Word16,Word32,Word64 | Unsigned integers                                      | 0         |
-| Bool                       | boolean values                                         | false     |
-| Void                       | The unary or "null" type                               | null      |
-| Float,Double               | floating point values                                  | 0         |
-| String                     | A unicode text string                                  | ""        |
-| Vector<T>                  | A vector/array of type T                               | []        |
-| Sink<T>                    | A communications endpoint accepting messages of type T | null sink |
+| Type                         | Description                                            | Default   |
+|------------------------------|--------------------------------------------------------|-----------|
+| Int8,Int16,Int32,Int64       | Signed integers                                        | 0         |
+| Word8,Word16,Word32,Word64   | Unsigned integers                                      | 0         |
+| Bool                         | boolean values                                         | false     |
+| Void                         | The unary or "null" type                               | null      |
+| Float,Double                 | floating point values                                  | 0         |
+| String                       | A unicode text string                                  | ""        |
+| `Vector<T>`                  | A vector/array of type T                               | []        |
+| `Sink<T>`                    | A communications endpoint accepting messages of type T | null sink |
 
 The null sink drops all messages that are sent to it.
 
@@ -148,8 +147,8 @@ A union definition may take type parameters. A simple example from the standard 
 
 Typedefs are used to define type synonyms, and may take type parameters:
 
-   type UserVec = Vector<Person>;
-   type RpcSvc<I,O> = Sink<Rpc<I,O>>;
+    type UserVec = Vector<Person>;
+    type RpcSvc<I,O> = Sink<Rpc<I,O>>;
 
 ## newtype
 
@@ -157,8 +156,8 @@ Newtypes define a new type that is structurally equivalent to an
 existing type, but has a distinct type in the generated code. newtype
 definitions may also take type parameters:
 
-   newtype UserId = String;
-   newtype Map<K,V> = Vector<Pair<K,V>>
+    newtype UserId = String;
+    newtype Map<K,V> = Vector<Pair<K,V>>;
 
 # Standard Library
 
