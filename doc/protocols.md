@@ -93,21 +93,69 @@ concrete type of course, eg for string keys and values:
 
     type MyKVService = KVService<String,String>;
 
+# Streaming Results
+
+An RPC requires that a single message is sent for the request, and a
+single message sent back for the response. This may not be appropriate
+when the results are of unknown size and potentially large. In these
+circumstances it can be useful to stream the results back as
+successive messages:
+
+    union StreamItem<V>
+    {
+        V value;
+        Void endStream;       
+    };
+
+    struct StreamReq0<I,O>
+    {
+        I params;
+        Sink<StreamItem<O>> resultsTo;
+    };
+
+    type Signal = Sink<Void>;
+
+    type StreamReq<I,O> = Rpc<StreamReq0<I,O>,Error<Signal>>;
+
+A `StreamItem<V>` is either a value of type V, or a marker to indicate
+the end of data associated with a stream.
+
+A `Signal` is a contentless message used to indicate that some event
+has occurred, perhaps to trigger some state change.
+
+A StreamReq is an RPC which attempts to start a streaming request. If
+successful, a `Signal` is returned immediately to the caller, and the
+results begin to be sent to the `resultsTo` sink provided. When all
+results have been sent, an `endStream` value is sent. The caller can
+use the Signal to cancel the request early.
+
+The KVService described previously could use a stream request to
+better handle the potentially large results vector from `getKeys`:
+
+    union KVRequest<K,V>
+    {
+        Pair<K,V>           put;
+        K                   delete;
+        Rpc<K,Maybe<V>>     get;
+        StreamReq<Void,K>   getkeys; 
+    };
+
 # Continuous Queries
 
-A continuous query can be considered a special purpose variation of an
-RPC - given some request parameters it produces an initial result, and
-then continues to stream updates to that result until cancelled. For
-this example we assume that the query parameters are of type Q, and
-the results are a map with keys of type K, and values of type
-V. Consider the following ADL defintions:
+A continuous query can be considered an extention of a streaming
+request: given some request parameters it produces an initial result,
+and then continues to stream updates to that result until
+cancelled. For this example we assume that the query parameters are of
+type Q, and the results are a map with keys of type K, and values of
+type V. Consider the following ADL defintions:
 
-    union CtsQueryItem<K,V>
+    union MapUpdate<K,V>
     {
         Pair<K,V> update;
-        Void endMarker;
         K delete;
     };
+
+    type CtsQueryItem<K,V> = StreamItem<MapUpdate<K,V>>;
 
     struct CtsQueryReq<Q,K,V>
     {
@@ -115,26 +163,23 @@ V. Consider the following ADL defintions:
         Sink<CtsQueryItem<K,V>> resultsTo;
     };
 
-    type Signal = Sink<Void>;
-
     type CtsQuery<Q,K,V> = Rpc<CtsQueryReq<Q,K,V>,Error<Signal>>;
-    
 
 `CtsQueryItem<K,V>` defines the stream of results that will be
 received be the client. The client will receive:
 
   1. multiple updates, one for every value initially matching the query
-  2. a single endMarker value, indicating that the initial set is complete
+  2. a single endStream value, indicating that the initial set is complete
   3. subsequent update and delete values reflecting real-time changes
      to the matching values
 
 `CtsQueryReq<Q,K,V>` defines the data that a client must provide to a
 service for a continuous query. Specifically, it must include the
 query parameters themselves, and the sink to which the stream of
-results are to be send.
+results are to be sent.
 
-A `Signal` is a sink expecting a contentless message that is expect to
-trigger some action. In this case we use it to cancel a continuous query.
+As for a streaming query, the `Signal` is used to cancel a continuous
+query.
 
 Hence to execute a continuous query, a client must:
 
