@@ -3,7 +3,13 @@ AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10 -Wall no-define foreign])
 AC_CONFIG_HEADERS([config.h adlcppconfig.h])
 AC_PROG_CXX
-LT_INIT
+          
+# Turn off shared libraries for now, since they
+# make the build process longer and more complex
+#
+# Also, on OSX missing symbols show up as runtime errors
+# rather than linker errors. Why????
+LT_INIT([disable-shared])
 
 AC_SUBST([ADLCPP_SO_VERSION], [1:2:0])
 

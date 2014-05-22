@@ -25,7 +25,7 @@ class Closeable
 {
 public:
     Closeable();
-    virtual ~Closeable();
+    virtual ~Closeable() = 0;
     void close();
 
     typedef std::shared_ptr<Closeable> Ptr;
@@ -85,7 +85,7 @@ public:
     };
 
     virtual RawSinkDetails newUniqueRawSink( Callback<RawBuffer::Ptr> ) = 0;
-    virtual RawSinkDetails newRawSink( std::string name, Callback<RawBuffer::Ptr> ) = 0;
+    virtual RawSinkDetails newRawSink( const std::string &name, Callback<RawBuffer::Ptr> ) = 0;
 
     typedef std::shared_ptr<EndPoint> Ptr;
 };
@@ -95,6 +95,7 @@ class SinkConnection : public Closeable
 {
 public:
     SinkConnection( Connection::Ptr c, typename BSerialiser<T>::Ptr s );
+    ~SinkConnection();
 
     void close0();
     void send( const T & );
@@ -118,6 +119,7 @@ public:
 class CommsContext : public Closeable
 {
 public:
+    ~CommsContext();
     void close0();
     void registerTransport( Transport::Ptr transport );
 
@@ -144,9 +146,22 @@ private:
 };
 
 template <class T>
+SinkConnection<T>::~SinkConnection()
+{
+    close();
+}
+
+template <class T>
 SinkConnection<T>::SinkConnection( Connection::Ptr c, typename BSerialiser<T>::Ptr s )
     : connection_(c), serialiser_(s)
 {
+}
+
+template <class T>
+void
+SinkConnection<T>::close0()
+{
+    connection_->close();
 }
 
 template <class T>

@@ -19,6 +19,7 @@ cpp/runtime/config.guess
 cpp/runtime/config.h.in
 cpp/runtime/config.sub
 cpp/runtime/configure
+cpp/runtime/compile
 cpp/runtime/depcomp
 cpp/runtime/install-sh
 cpp/runtime/ltmain.sh

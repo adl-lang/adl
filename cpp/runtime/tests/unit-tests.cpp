@@ -12,13 +12,13 @@ using namespace ADL;
 template <class T>
 std::string toJsonString( const T & t, bool pretty )
 {
-    return toJsonString( t, pretty, SerialiserFlags() );
+    return toJsonString<T>( t, pretty, SerialiserFlags() );
 }
 
 template <class T>
 T fromJsonString( const std::string &str  )
 {
-    return fromJsonString( str, SerialiserFlags() );
+    return fromJsonString<T>( str, SerialiserFlags() );
 }
 
 template <class T>

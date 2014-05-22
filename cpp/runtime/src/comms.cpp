@@ -6,17 +6,21 @@ Closeable::Closeable() : closed_(false)
 {
 }
 
+Closeable::~Closeable()
+{
+}
+
 void
 Closeable::close()
 {
     if( !closed_) 
     {
-        close();
+        close0();
         closed_ = true;
     }
 }
 
-Closeable::~Closeable()
+CommsContext::~CommsContext()
 {
     close();
 }
