@@ -10,7 +10,10 @@ namespace ADL {
 // Sink type
 
 template <class T>
-struct Sink {
+struct Sink
+{
+    Sink() : data( std::make_shared<ADL::sys::sinkimpl::SinkData>() ) {}
+
     std::shared_ptr<ADL::sys::sinkimpl::SinkData> data;
 };
 
@@ -23,14 +26,14 @@ struct Serialisable<Sink<T>>
             : s( Serialisable<ADL::sys::sinkimpl::SinkData>::serialiser(sf) )
         {}
 
-        void toJson( JsonWriter &json, const Sink<T> & v )
+        void toJson( JsonWriter &json, const Sink<T> & v ) const
         {
-            s->toJson( json, v.data );
+            s->toJson( json, *v.data );
         }
 
-        void fromJson( std::vector<T> &v, JsonReader &json )
+        void fromJson( Sink<T> &v, JsonReader &json ) const
         {
-            s->fromJson( v.data, json );
+            s->fromJson( *v.data, json );
         }
 
         Serialiser<ADL::sys::sinkimpl::SinkData>::Ptr s;
@@ -38,7 +41,7 @@ struct Serialisable<Sink<T>>
 
     static typename Serialiser<Sink<T>>::Ptr serialiser( const SerialiserFlags & sf )
     {
-        return Serialiser<Sink<T>>::Ptr( new S(sf) );
+        return typename Serialiser<Sink<T>>::Ptr( new S(sf) );
     }
 };
 

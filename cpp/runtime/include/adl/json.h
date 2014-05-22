@@ -106,7 +106,6 @@ struct Serialisable
     static typename Serialiser<T>::Ptr serialiser(const SerialiserFlags &);
 };
 
-
 class json_parse_failure : public std::exception
 {
 public:

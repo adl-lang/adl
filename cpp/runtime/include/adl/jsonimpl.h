@@ -121,6 +121,27 @@ StreamJsonReader::skipWhitespace()
         snext();
 }
 
+template <class T>
+std::string toJsonString( const T & t, bool pretty, const SerialiserFlags &flags  )
+{
+    typename Serialiser<T>::Ptr s = Serialisable<T>::serialiser( flags );
+    std::stringstream str;
+    StreamJsonWriter jw(str,pretty);
+    s->toJson( jw, t );
+    return str.str();
+}
+
+template <class T>
+T fromJsonString( const std::string &str, const SerialiserFlags &flags  )
+{
+    std::istringstream is(str);
+    typename Serialiser<T>::Ptr s = Serialisable<T>::serialiser( flags );
+    T t;
+    StreamJsonReader jr(is);
+    s->fromJson( t, jr );
+    return t;
+}
+
 };
 
 #endif

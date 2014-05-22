@@ -122,17 +122,14 @@ nice to fix this so that serialisers have constant size
 
 
 * C++ Backend
-** Bug fixes
-    - Missing throw in StreamJsonReader::next()
-    - Number parser can't handle end of of string 123<EOS>
-    - snext logic issue: EOF won't be reached until you try to read off the end (was reading 5 to 55)
-
 ** Implement newtypes in terms of templates
-
-** Work out how to generate code for mutually recursive types
 
 ** Serialisers are lazy values that grow
 ... to size proportional to the size of the largest value. It would be
 nice to fix this so that serialisers have constant size
-
+** DONE Work out how to generate code for mutually recursive types
+** DONE Bug fixes
+    - Missing throw in StreamJsonReader::next()
+    - Number parser can't handle end of of string 123<EOS>
+    - snext logic issue: EOF won't be reached until you try to read off the end (was reading 5 to 55)
 

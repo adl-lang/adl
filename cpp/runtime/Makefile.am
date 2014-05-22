@@ -8,7 +8,9 @@ lib_LTLIBRARIES = libadlcpp.la
 
 libadlcpp_la_SOURCES = \
     src/adl.cpp src/types.cpp src/sink.cpp src/json.cpp src/jsonimpl.cpp \
-    src/comms.cpp src/comms_http.cpp src-generated/sys.types.cpp src-generated/sys.rpc.cpp \
+    src/comms.cpp src/comms_http.cpp \
+    src/example.cpp \
+    src-generated/sys.types.cpp src-generated/sys.rpc.cpp \
     src-generated/sys.sinkimpl.cpp src-generated/sys.adlast.cpp \
     3rd-party/libb64-1.2/src/cencode.c 3rd-party/libb64-1.2/src/cdecode.c
 

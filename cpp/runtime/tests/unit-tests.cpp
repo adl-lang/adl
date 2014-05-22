@@ -5,32 +5,20 @@
 #include <adl/jsonimpl.h>
 #include <adl/sys.adlast.h>
 #include <adl/unittests.h>
+#include <adl/comms.h>
 
 using namespace ADL;
 
 template <class T>
 std::string toJsonString( const T & t, bool pretty )
 {
-    SerialiserFlags flags;
-
-    typename Serialiser<T>::Ptr s = Serialisable<T>::serialiser( flags );
-    std::stringstream str;
-    StreamJsonWriter jw(str,pretty);
-    s->toJson( jw, t );
-    return str.str();
+    return toJsonString( t, pretty, SerialiserFlags() );
 }
 
 template <class T>
 T fromJsonString( const std::string &str  )
 {
-    std::istringstream is(str);
-
-    SerialiserFlags flags;
-    typename Serialiser<T>::Ptr s = Serialisable<T>::serialiser( flags );
-    T t;
-    StreamJsonReader jr(is);
-    s->fromJson( t, jr );
-    return t;
+    return fromJsonString( str, SerialiserFlags() );
 }
 
 template <class T>
@@ -335,3 +323,10 @@ TEST_CASE( "Serialisation of a type recursive via a union", "[serialisation]" )
     CHECK( toJsonString(l1,false) == "{\"value\":{\"first\":5,\"second\":{\"null\":null}}}" );
     CHECK( l1 == jsonRoundTrip( l1, false ) );
 }
+
+TEST_CASE( "Instantiate a client connection" )
+{
+    using namespace unittests;
+
+    CommsContext::Ptr ctx( new CommsContext() );
+};
