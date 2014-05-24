@@ -1,6 +1,7 @@
 #include <adl/comms.h>
 
 namespace ADL {
+namespace comms {
 
 Closeable::Closeable() : closed_(false)
 {
@@ -20,38 +21,38 @@ Closeable::close()
     }
 }
 
-CommsContext::~CommsContext()
+ConnectionFactory::~ConnectionFactory()
 {
     close();
 }
 
 void
-CommsContext::close0()
+ConnectionFactory::close0()
 {
 }
 
 
 void
-CommsContext::registerTransport( Transport::Ptr transport )
+ConnectionFactory::registerTransport( const TransportName &tname, RawConnectionFactory::Ptr rc )
 {
-    if( transportRegister_.find(transport->name()) != transportRegister_.end() )
+    if( transportFactories_.find(tname) != transportFactories_.end() )
         assert( false ); // Illegal re-registration of transport
 
-    transportRegister_[transport->name()] = transport;
+    transportFactories_[tname] = rc;
 }
 
-Connection::Ptr
-CommsContext::connect0( std::shared_ptr<ADL::sys::sinkimpl::SinkData> sdata )
+Connection<RawBufferPtr>::Ptr
+ConnectionFactory::connect0( std::shared_ptr<ADL::sys::sinkimpl::SinkData> sdata )
 {
     // Locate the transport
-    auto mi = transportRegister_.find( sdata->transport );
-    if( mi == transportRegister_.end() )
+    auto mi = transportFactories_.find( sdata->transport );
+    if( mi == transportFactories_.end() )
         assert( false );  // No registered transport found
-    Transport::Ptr t = mi->second;
+    RawConnectionFactory::Ptr t = mi->second;
 
     // Make a connection
     return t->connect( sdata->address );
 }
 
-
+};
 };

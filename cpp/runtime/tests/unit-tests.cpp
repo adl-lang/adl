@@ -327,6 +327,7 @@ TEST_CASE( "Serialisation of a type recursive via a union", "[serialisation]" )
 TEST_CASE( "Instantiate a client connection" )
 {
     using namespace unittests;
+    using namespace ADL::comms;
 
-    CommsContext::Ptr ctx( new CommsContext() );
+    ConnectionFactory::Ptr ctx = std::make_shared<ConnectionFactory>();
 };

@@ -4,27 +4,40 @@
 #include <adl/comms.h>
 
 namespace ADL {
+namespace comms {
+namespace http {
 
-class HttpTransport : public Transport
+// Get the identifier for the http transport
+
+TransportName transportName();
+
+// Get a raw connector for http connections
+
+RawConnectionFactory::Ptr connector();
+
+
+// An HttpEndPoint is a regular endpoint extended
+// with a run() method to execute the main server
+// loop
+
+class HttpEndPoint : public EndPoint
 {
 public:
-    // Configure an http transport, with port chosen
-    // between minPort and maxPort
-    HttpTransport( int minPort, int maxPort );
+    // Start the processing loop 
+    virtual void run() = 0;
 
-    // 
-    EndPoint::Ptr getEndpoint();
-
-    virtual void close0();
-    virtual TransportName name();
-    virtual Connection::Ptr connect( const TransportAddr & addr );
-
-
-    void mainloop();
-
-    typedef std::shared_ptr<HttpTransport> Ptr;
+    typedef std::shared_ptr<HttpEndPoint> Ptr;
 };
 
+
+// Construct an HttpEndPoint. The server listends on a free port
+// between minPort and maxPort. The port will be fixed in minPort ==
+// maxPort.
+
+HttpEndPoint::Ptr createEndPoint( const std::string & host, int minPort, int maxPort );
+
+};
+};
 };
 
 
