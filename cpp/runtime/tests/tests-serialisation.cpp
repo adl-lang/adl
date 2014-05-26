@@ -1,4 +1,3 @@
-#define CATCH_CONFIG_MAIN
 #include "catch/catch.hpp"
 
 #include <sstream>
@@ -323,11 +322,3 @@ TEST_CASE( "Serialisation of a type recursive via a union", "[serialisation]" )
     CHECK( toJsonString(l1,false) == "{\"value\":{\"first\":5,\"second\":{\"null\":null}}}" );
     CHECK( l1 == jsonRoundTrip( l1, false ) );
 }
-
-TEST_CASE( "Instantiate a client connection" )
-{
-    using namespace unittests;
-    using namespace ADL::comms;
-
-    ConnectionFactory::Ptr ctx = std::make_shared<ConnectionFactory>();
-};

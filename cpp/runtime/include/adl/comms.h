@@ -57,9 +57,9 @@ class LocalSink
 public:
     LocalSink( const Sink<T> &sink, const CloseFn & closef );
 
-    virtual Sink<T> sink() ;
+    Sink<T> sink();
 
-    virtual ~LocalSink() {}
+    ~LocalSink();
     typedef std::shared_ptr<LocalSink> Ptr;
 
 private:
@@ -90,9 +90,7 @@ public:
     typedef std::shared_ptr<EndPoint> Ptr;
 
 protected:
-
-    sys::sinkimpl::SerialisationType serialisationType_;
-
+    virtual sys::sinkimpl::SerialisationType serialisationType() = 0;
     virtual RawSinkDetails newUniqueRawSink( Callback<RawBufferPtr> ) = 0;
     virtual RawSinkDetails newRawSink( const std::string &name, Callback<RawBufferPtr> ) = 0;
 };

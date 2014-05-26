@@ -117,18 +117,38 @@ rawCallbackImpl( typename BSerialiser<T>::Ptr bs, EndPoint::Callback<T> callback
 }
 
 template <class T>
+LocalSink<T>::LocalSink( const Sink<T> &sink, const CloseFn & closef ) : sink_(sink), closef_(closef)
+{
+}
+
+template <class T>
+Sink<T>
+LocalSink<T>::sink()
+{
+    return sink_;
+}
+
+template <class T>
+LocalSink<T>::~LocalSink()
+{
+    closef_();
+}
+
+template <class T>
 typename LocalSink<T>::Ptr
 EndPoint::newUniqueLocalSink( Callback<T> callback )
 {
+    sys::sinkimpl::SerialisationType stype = serialisationType();
+
     // Get the serialiser for T
-    typename BSerialiser<T>::Ptr bs = getSerialiser<T>( serialisationType_.value );
+    typename BSerialiser<T>::Ptr bs = getSerialiser<T>( stype.value );
 
     // Build and connect a callback expecting RawBufferPtrs
     RawSinkDetails rsd = newUniqueRawSink( std::bind( rawCallbackImpl<T>, bs, callback, std::placeholders::_1 ) );
     Sink<T> sink;
     sink.data->transport = rsd.transport;
     sink.data->address = rsd.address;
-    sink.data->serialisation = serialisationType_;
+    sink.data->serialisation = stype;
     return std::make_shared<LocalSink<T>>( sink, rsd.closef );
 }
 
@@ -136,15 +156,17 @@ template <class T>
 typename LocalSink<T>::Ptr
     EndPoint::newLocalSink( const std::string &name, Callback<T> callback )
 {
+    sys::sinkimpl::SerialisationType stype = serialisationType();
+
     // Get the serialiser for T
-    typename BSerialiser<T>::Ptr bs = getSerialiser<T>( serialisationType_.value );
+    typename BSerialiser<T>::Ptr bs = getSerialiser<T>( stype.value );
 
     // Build and connect a callback expecting RawBufferPtrs
     RawSinkDetails rsd = newRawSink( name,  std::bind( rawCallbackImpl<T>, bs, callback, std::placeholders::_1 ));
     Sink<T> sink;
     sink.data->transport = rsd.transport;
     sink.data->address = rsd.address;
-    sink.data->serialisation = serialisationType_;
+    sink.data->serialisation = stype;
     return std::make_shared<LocalSink<T>>( sink, rsd.closef );
 }
 

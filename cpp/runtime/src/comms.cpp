@@ -25,5 +25,7 @@ ConnectionFactory::connect0( std::shared_ptr<ADL::sys::sinkimpl::SinkData> sdata
     return t->connect( sdata->address );
 }
 
+const ADL::SerialiserFlags commsSerialiserFlags = ADL::SerialiserFlags();
+
 };
 };

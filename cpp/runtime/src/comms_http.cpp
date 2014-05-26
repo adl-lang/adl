@@ -153,6 +153,11 @@ public:
 	init(host,maxPort);
     }
 
+    
+    sys::sinkimpl::SerialisationType serialisationType() {
+	return sys::sinkimpl::SerialisationType( "json" );
+    }
+
     RawSinkDetails newUniqueRawSink( Callback<RawBufferPtr> cb ) {
 	return handler_->newUniqueRawSink( cb );
     }

@@ -35,8 +35,10 @@ TESTS = unit-tests
 check_PROGRAMS = unit-tests
 
 unit_tests_SOURCES = src-generated/unittests.cpp \
-                     tests/unit-tests.cpp 
-unit_tests_LDFLAGS=-ladlcpp
+                     tests/tests-serialisation.cpp \
+                     tests/tests-comms.cpp \
+                     tests/main.cpp
+unit_tests_LDFLAGS=-ladlcpp -lcppnetlib-uri -lcppnetlib-client-connections -lboost_program_options-mt -lboost_thread-mt -lboost_date_time-mt -lboost_regex-mt -lboost_system-mt -lboost_filesystem-mt -lboost_chrono-mt  -lssl -lcrypto
 
 nodist_adlcpp_libinclude_HEADERS = adlcppconfig.h
 
