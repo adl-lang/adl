@@ -3,35 +3,6 @@
 namespace ADL {
 namespace comms {
 
-Closeable::Closeable() : closed_(false)
-{
-}
-
-Closeable::~Closeable()
-{
-}
-
-void
-Closeable::close()
-{
-    if( !closed_) 
-    {
-        close0();
-        closed_ = true;
-    }
-}
-
-ConnectionFactory::~ConnectionFactory()
-{
-    close();
-}
-
-void
-ConnectionFactory::close0()
-{
-}
-
-
 void
 ConnectionFactory::registerTransport( const TransportName &tname, RawConnectionFactory::Ptr rc )
 {

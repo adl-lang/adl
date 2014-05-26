@@ -7,13 +7,13 @@ namespace comms {
 class RawSinkDetails
 {
 public:
-    RawSinkDetails( const TransportName &t, const TransportAddr &a, Closeable::Ptr c) 
+    RawSinkDetails( const TransportName &t, const TransportAddr &a, const CloseFn &c ) 
 	: transport(t), address(a), closef(c)
     {}
 
     TransportName transport;
     TransportAddr address;
-    Closeable::Ptr closef;
+    CloseFn closef;
 };
 
 template <class T>
@@ -23,6 +23,7 @@ public:
     virtual RawBufferPtr serialise( const T& ) = 0;
     virtual void deserialise( T&, RawBufferPtr b ) = 0;
 
+    virtual ~BSerialiser() {}
     typedef std::shared_ptr<BSerialiser> Ptr;
 };
 
@@ -31,9 +32,7 @@ class SinkConnection : public Connection<T>
 {
 public:
     SinkConnection( Connection<RawBufferPtr>::Ptr c, typename BSerialiser<T>::Ptr s );
-    ~SinkConnection();
 
-    void close0();
     void send( const T & );
 
     typedef std::shared_ptr<SinkConnection> Ptr;
@@ -44,22 +43,9 @@ private:
 };
 
 template <class T>
-SinkConnection<T>::~SinkConnection()
-{
-    Closeable::close();
-}
-
-template <class T>
 SinkConnection<T>::SinkConnection( Connection<RawBufferPtr>::Ptr c, typename BSerialiser<T>::Ptr s )
     : connection_(c), serialiser_(s)
 {
-}
-
-template <class T>
-void
-SinkConnection<T>::close0()
-{
-    connection_->close();
 }
 
 template <class T>

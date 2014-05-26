@@ -20,47 +20,31 @@ using SerialisationType = ADL::sys::sinkimpl::SerialisationType;
 
 typedef std::shared_ptr<std::string> RawBufferPtr;
 
-// Closeable is a base class for any type that needs to be closed()
-// Derived class must implement close0(), and should call close() from
-// their destructor. This class ensures that close0() will be called
-// exactly once.
-
-class Closeable
-{
-public:
-    Closeable();
-    virtual ~Closeable() = 0;
-    void close();
-
-    typedef std::shared_ptr<Closeable> Ptr;
-
-protected:
-    virtual void close0() = 0;
-    bool closed_;
-};
-
-
 // A Connection sends messages of type T to a remote sink
 
 template <class T>
-class Connection : public Closeable
+class Connection
 {
 public:
     virtual void send( const T &v ) = 0;
 
+    virtual ~Connection() {}
     typedef std::shared_ptr<Connection> Ptr;
 };
 
 // Each transport must provide a RawConnectionFactory, which
 // is used to establish connections based upon addresses
 
-class RawConnectionFactory : public Closeable
+class RawConnectionFactory
 {
 public:
     virtual typename Connection<RawBufferPtr>::Ptr connect( const TransportAddr & addr ) = 0;
 
+    virtual ~RawConnectionFactory() {}
     typedef std::shared_ptr<RawConnectionFactory> Ptr;
 };
+
+using CloseFn = std::function<void()>;
 
 // A LocalSink is an object with an implementation in the current
 // process that handles messages of type T. The sink() methods returns
@@ -68,19 +52,19 @@ public:
 // and transmitted to remote processes.
 
 template<class T>
-class LocalSink : public Closeable
+class LocalSink
 {
 public:
-    LocalSink( const Sink<T> &sink, Closeable::Ptr closef );
+    LocalSink( const Sink<T> &sink, const CloseFn & closef );
 
     virtual Sink<T> sink() ;
-    virtual void close0();
 
+    virtual ~LocalSink() {}
     typedef std::shared_ptr<LocalSink> Ptr;
 
 private:
     Sink<T> sink_;
-    Closeable::Ptr closef_;
+    CloseFn closef_;
 };
 
 class RawSinkDetails;
@@ -88,7 +72,7 @@ class RawSinkDetails;
 // An Endpoint is used to construct LocalSinks and make them visible
 // to the network.
 
-class EndPoint : public Closeable
+class EndPoint
 {
 public:
     template <class T>
@@ -102,6 +86,7 @@ public:
     typename LocalSink<T>::Ptr
     newLocalSink( const std::string & name, Callback<T> callback );
 
+    virtual ~EndPoint() {}
     typedef std::shared_ptr<EndPoint> Ptr;
 
 protected:
@@ -116,11 +101,9 @@ protected:
 // A ConnectionFactory is a concrete class used to establish
 // connections with remote Sinks.
 
-class ConnectionFactory : public Closeable
+class ConnectionFactory
 {
 public:
-    ~ConnectionFactory();
-    void close0();
     void registerTransport( const TransportName &, RawConnectionFactory::Ptr );
 
     template <class T>

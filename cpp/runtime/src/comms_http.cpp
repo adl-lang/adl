@@ -34,9 +34,6 @@ public:
     HttpConnection( const uri::uri &uri ) : uri_(uri)
     {}
 
-    void close0()
-    {}
-
     virtual void send( const RawBufferPtr &b )
     {
 	using namespace boost::network;
@@ -57,8 +54,6 @@ public:
     {
 	return std::make_shared<HttpConnection>( uriFromAddr(addr) );
     }
-
-    virtual void close0() {}
 };
 
 
@@ -120,25 +115,14 @@ private:
 	return TransportAddr::mk_arrayv( vs );
     }
 
-    Closeable::Ptr closefn( const std::string & name )
+    static void closeRawSink( MapPtr callbacks, std::string name )
     {
-	struct C : public Closeable
-	{
-	    C( MapPtr callbacks, const std::string & name ) 
-	        : callbacks_(callbacks), name_(name)
-	    {}
-	    
-	    ~C() { close(); }
+	callbacks->erase(name);
+    }
 
-	    void close0() {
-		callbacks_->erase(name_);
-	    }
-
-	    MapPtr callbacks_;
-	    const std::string name_;
-	};
-
-	return std::make_shared<C>( callbacks_, name );
+    CloseFn closefn( const std::string & name )
+    {
+	return std::bind( closeRawSink, callbacks_, name );
     }
 
     const std::string host_;
