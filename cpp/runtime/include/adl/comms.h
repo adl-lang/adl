@@ -122,6 +122,6 @@ const extern ADL::SerialiserFlags commsSerialiserFlags;
 }; // namespace comms
 }; // namespace ADL
 
-#include <adl/commsimpl.h>
+#include <adl/comms.impl.h>
 
 #endif
