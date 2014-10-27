@@ -131,5 +131,21 @@ nice to fix this so that serialisers have constant size
 ** DONE Bug fixes
     - Missing throw in StreamJsonReader::next()
     - Number parser can't handle end of of string 123<EOS>
-    - snext logic issue: EOF won't be reached until you try to read off the end (was reading 5 to 55)
+    - snext logic issue: EOF won't be reached until you try to read
+      off the end (was reading 5 to 55)
+** Complete implementation of transport
+
+*** cpp-netlib ??
+
+Build in ~/repos-3rd-party/cppnetlib from clone of master repo, at at cpp-netlib-0.11.0-final
+
+Test program (a copy of their simple_wget) only works with c++ 11, ie
+
+/usr/bin/clang++ -std=c++11 test.cpp  -o test  -lboost_program_options-mt -lboost_thread-mt -lboost_date_time-mt -lboost_regex-mt -lboost_system-mt -lboost_filesystem-mt -lboost_chrono-mt -lcppnetlib-uri -lcppnetlib-client-connections -lssl -lcrypto
+
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+cmake -j4
+cmake test     # 1 unit test fails
+cmake install 
+
 
