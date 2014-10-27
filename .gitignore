@@ -10,6 +10,8 @@ haskell/examples/dist/
 haskell/runtime/dist/
 haskell/utils/dist/
 
+!haskell/cabal.config
+
 ext/
 
 cpp/runtime/Makefile.in
