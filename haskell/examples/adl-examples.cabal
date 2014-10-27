@@ -14,8 +14,8 @@ cabal-version:       >=1.8
 executable runexample
    main-is:             RunExample.hs
    ghc-options:         -threaded
-   build-depends:       base == 4.6.*, text == 0.11.*, containers == 0.5.*, bytestring == 0.10.*,
-                        parsec == 3.1.*, mtl == 2.1.*, transformers == 0.3.*,
-                        old-locale == 1.0.*,
-                        aeson == 0.6.*, unordered-containers == 0.2.*, stm == 2.4.*, hslogger == 1.2.*, time == 1.4.*, unix == 2.6.*,
+   build-depends:       base, text, containers, bytestring,
+                        parsec, mtl, transformers,
+                        old-locale,
+                        aeson, unordered-containers, stm, hslogger, time, unix,
                         adl-utils, adl-runtime, adl-comms-http

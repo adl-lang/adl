@@ -22,16 +22,16 @@ executable adlc
   build-depends:       base, text, containers, bytestring,
                        parsec, mtl, transformers,
                        filepath, directory, unordered-containers, vector, base64-bytestring,
-                       attoparsec, aeson, adl-utils, adl-compiler-lib, adl-runtime, aeson-pretty
+                       attoparsec, aeson, scientific, adl-utils, adl-compiler-lib, adl-runtime, aeson-pretty
 
 executable adlc-tests
   hs-source-dirs:      tests, src
   main-is:             Tests.hs
-  build-depends:       base == 4.6.*, text == 0.11.*, containers == 0.5.*, bytestring == 0.10.*,
-                       parsec == 3.1.*, mtl == 2.1.*, transformers == 0.3.*,
-                       filepath == 1.3.*, directory == 1.2.*, unordered-containers == 0.2.*, vector == 0.10.*,
-                       base64-bytestring == 1.0.*,
-                       attoparsec == 0.10.*, aeson == 0.6.*,
-                       aeson-pretty == 0.7.*, temporary == 1.1.*, hspec == 1.7.*,
+  build-depends:       base, text, containers, bytestring,
+                       parsec, mtl, transformers,
+                       filepath, directory, unordered-containers, vector,
+                       base64-bytestring,
+                       attoparsec, aeson, scientific,
+                       aeson-pretty, temporary, hspec,
                        adl-utils, adl-compiler-lib, adl-runtime
 

@@ -14,10 +14,10 @@ cabal-version:       >=1.8
 library
   hs-source-dirs:      src
   exposed-modules:     ADL.Core.Comms.HTTP
-  build-depends:       base == 4.6.*, text == 0.11.*, containers == 0.5.*, bytestring == 0.10.*,
-                       mtl == 2.1.*, transformers == 0.3.*,
-                       time == 1.4.*, network == 2.4.*, unordered-containers == 0.2.*, aeson == 0.6.*, attoparsec == 0.10.*,
-                       vector == 0.10.*, stm == 2.4.*, uuid == 1.3.*, hslogger == 1.2.*,
-                       wai == 1.4.*, warp == 1.3.*, http-types == 0.8.*, resourcet == 0.4.*, conduit == 1.0.*,
-                       network-conduit == 1.0.*, http-conduit == 1.9.*,
+  build-depends:       base, text, containers, bytestring,
+                       mtl, transformers,
+                       time, network, unordered-containers, aeson, attoparsec,
+                       vector, stm, uuid, hslogger, data-default,
+                       wai, warp, http-types, resourcet, conduit,
+                       streaming-commons, http-conduit,
                        adl-utils, adl-runtime
