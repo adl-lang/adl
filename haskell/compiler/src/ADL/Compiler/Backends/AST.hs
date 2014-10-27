@@ -9,9 +9,9 @@ import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Encode.Pretty as JSON
-import qualified Data.Attoparsec.Number as N
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
+import qualified Data.Scientific as S
 import Data.Text.Lazy.Builder
 
 import Control.Monad
@@ -71,8 +71,9 @@ typeRefToA2 (RT_Primitive p) = A2.TypeRef_primitive (ptToText p)
 
 literalToA2 :: JSON.Value -> A2.Literal
 literalToA2 JSON.Null = A2.Literal_null
-literalToA2 (JSON.Number (N.I i)) = A2.Literal_integer (fromIntegral i)
-literalToA2 (JSON.Number (N.D d)) = A2.Literal_double d
+literalToA2 (JSON.Number n) = case S.floatingOrInteger n of
+     Left d -> A2.Literal_double d
+     Right i -> A2.Literal_integer i
 literalToA2 (JSON.String s) = A2.Literal_string s
 literalToA2 (JSON.Bool b) = A2.Literal_boolean b
 literalToA2 (JSON.Array vs) = A2.Literal_array (fmap literalToA2 (V.toList vs))
@@ -86,7 +87,12 @@ writeModuleFile fileWriter m = do
       js = jsonSerialiser defaultJSONFlags
       v = aToJSON js adlast
       fpath =  T.unpack (T.intercalate "." (unModuleName (m_name m) )) ++ ".json"
-  liftIO $ fileWriter fpath (JSON.encodePretty v)
+      
+      -- JSON output in sorted keyname order, as we use the 
+      -- output in the unit tests
+      encodeDef = JSON.defConfig{JSON.confCompare=compare}
+  
+  liftIO $ fileWriter fpath (JSON.encodePretty' encodeDef v)
   
 generate :: Flags -> [FilePath] -> EIOT ()
 generate af modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do

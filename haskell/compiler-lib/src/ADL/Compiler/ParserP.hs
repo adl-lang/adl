@@ -9,6 +9,7 @@ import Numeric(readHex)
 import Control.Applicative
 
 import qualified Data.Aeson as JSON
+import qualified Data.Scientific as S
 import qualified Data.Attoparsec.Number as JSON
 import qualified Data.Map as Map
 import qualified Data.Text as T
@@ -152,8 +153,8 @@ moduleP = token "module" *> (
 
 ----------------------------------------------------------------------
 jsonValue :: P.Parser JSON.Value
-jsonValue =   p_null <|> p_true <|> p_false <|> p_string <|> p_int <|> p_double
-          <|> p_array <|> p_object
+jsonValue =  p_null <|> p_true <|> p_false <|> p_string <|> p_number <|> p_array <|> p_object
+          
   where
     p_null = JSON.Null <$ token "null"
     p_true = JSON.Bool True <$ token "true"
@@ -181,10 +182,9 @@ jsonValue =   p_null <|> p_true <|> p_false <|> p_string <|> p_int <|> p_double
               where code      = fst $ head $ readHex x
                     max_char  = fromEnum (maxBound :: Char)
 
-    p_int = JSON.Number . JSON.I <$> parseInt
-
-    p_double = JSON.Number . JSON.D <$> pread reads <* whiteSpace P.<?> "number"
-
+    p_number = (P.try (JSON.Number . S.fromFloatDigits <$> parseDouble) <|>
+                P.try (JSON.Number . fromIntegral <$> parseInt)
+               )
     p_array = JSON.Array . V.fromList <$>
               (ctoken '[' *> P.sepBy jsonValue (ctoken ',') <* ctoken ']')
 
@@ -201,7 +201,11 @@ pread reads = do
      [(v,s')] -> (v <$ P.setInput (T.pack s'))
      _ -> empty
 
+parseInt :: P.Parser Integer
 parseInt = pread reads <* whiteSpace P.<?> "number"
+
+parseDouble :: P.Parser Double
+parseDouble = pread reads <* whiteSpace P.<?> "number"
 
 ----------------------------------------------------------------------
 

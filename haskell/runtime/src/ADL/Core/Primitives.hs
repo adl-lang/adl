@@ -13,7 +13,7 @@ import Data.Int
 import Data.Word
 import GHC.Float
 
-import Data.Attoparsec.Number
+import Data.Scientific as S
 
 import ADL.Core.Value
 
@@ -38,12 +38,13 @@ instance ADLValue Bool where
       from _ = Nothing
 
 iToJSON :: Integral a => a -> JSON.Value
-iToJSON v = JSON.Number (I (fromIntegral v))
+iToJSON v = JSON.Number (fromIntegral v)
 
-iFromJSON :: Num a => JSON.Value -> Maybe a
-iFromJSON (JSON.Number (I v)) = Just (fromIntegral v)
+iFromJSON :: (Integral a,Bounded a) => JSON.Value -> Maybe a
+iFromJSON (JSON.Number n) = case S.toBoundedInteger n of
+  (Just i) -> (Just i)
+  Nothing -> Nothing
 iFromJSON _ = Nothing
-
   
 instance ADLValue Int8 where
   atype _ = "int8"
@@ -90,8 +91,8 @@ instance ADLValue Double where
   defaultv = 0
   jsonSerialiser jf = JSONSerialiser to from
     where
-      to v = JSON.Number (D v)
-      from (JSON.Number (D v)) = Just v
+      to v = JSON.Number (S.fromFloatDigits v)
+      from (JSON.Number v) = Just (S.toRealFloat v)
       from  _ = Nothing
 
 instance ADLValue Float where
@@ -99,8 +100,8 @@ instance ADLValue Float where
   defaultv = 0
   jsonSerialiser jf = JSONSerialiser to from
     where
-      to v = JSON.Number (D (float2Double v))
-      from (JSON.Number (D v)) = Just (double2Float v)
+      to v = JSON.Number (S.fromFloatDigits v)
+      from (JSON.Number v) = Just (S.toRealFloat v)
       from  _ = Nothing
 
 instance ADLValue T.Text where

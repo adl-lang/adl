@@ -20,6 +20,7 @@ import Control.Monad.Trans.State.Strict
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson as JSON
+import qualified Data.Scientific as S
 import Data.Attoparsec.Number
 
 import qualified Data.Text as T
@@ -176,18 +177,16 @@ hPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
 hPrimitiveLiteral P_Void JSON.Null = "()"
 hPrimitiveLiteral P_Bool (JSON.Bool True) = "Prelude.True"
 hPrimitiveLiteral P_Bool (JSON.Bool False) = "Prelude.False"
-hPrimitiveLiteral P_Int8 (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Int16 (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Int32 (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Int64 (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Word8 (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Word16 (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Word32 (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Word64 (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Float (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Float (JSON.Number (D n)) = litNumber n
-hPrimitiveLiteral P_Double (JSON.Number (I n)) = litNumber n
-hPrimitiveLiteral P_Double (JSON.Number (D n)) = litNumber n
+hPrimitiveLiteral P_Int8 (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Int16 (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Int32 (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Int64 (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Word8 (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Word16 (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Word32 (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Word64 (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Float (JSON.Number n) = litNumber n
+hPrimitiveLiteral P_Double (JSON.Number n) = litNumber n
 hPrimitiveLiteral P_ByteVector (JSON.String s) = T.pack (show (decode s))
   where
     decode s = case B64.decode (T.encodeUtf8 s) of
@@ -197,8 +196,12 @@ hPrimitiveLiteral P_Vector _ = "defaultv" -- never called
 hPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
 hPrimitiveLiteral P_Sink _ = "defaultv" -- never called
 
-litNumber :: (Num a, Ord a, Show a) => a -> T.Text
-litNumber x = T.pack (if x < 0 then "(" ++ show x ++ ")" else show x)
+litNumber :: S.Scientific -> T.Text
+litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)
+  where
+    s = case S.floatingOrInteger n of
+      (Left r) -> show n
+      (Right i) -> show (i::Integer)
 
 type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
 

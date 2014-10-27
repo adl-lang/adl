@@ -14,7 +14,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
 import qualified Data.Aeson as JSON
-import Data.Attoparsec.Number as JSON
+import Data.Scientific as S
 import qualified Data.ByteString.Base64 as B64
 
 import ADL.Utils.Format
@@ -73,15 +73,14 @@ isBool (JSON.Bool _) = True
 isBool _ = False
 
 isInt :: Integral a => a -> a -> JSON.Value -> Bool
-isInt min max (JSON.Number (JSON.I n)) = n >= fromIntegral min && n <= fromIntegral max
+isInt min max (JSON.Number n) = S.isInteger n && n >= fromIntegral min && n <= fromIntegral max
 isInt _ _ _  = False
 
 isWord :: Integral a => a -> JSON.Value -> Bool
-isWord max (JSON.Number (JSON.I n)) = n >= 0 && n <= fromIntegral max
+isWord max (JSON.Number n) = S.isInteger n && n >= 0 && n <= fromIntegral max
 isWord _ _  = False
 
-isFloat (JSON.Number (JSON.I _)) = True
-isFloat (JSON.Number (JSON.D _)) = True
+isFloat (JSON.Number _) = True
 isFloat _ = False
 
 isString (JSON.String _) = True

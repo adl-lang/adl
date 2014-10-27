@@ -17,7 +17,7 @@ import Control.Monad.Trans.State.Strict
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson as JSON
-import Data.Attoparsec.Number
+import qualified Data.Scientific as S
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -1231,18 +1231,16 @@ cPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
 cPrimitiveLiteral P_Void JSON.Null = "Void()"
 cPrimitiveLiteral P_Bool (JSON.Bool True) = "true"
 cPrimitiveLiteral P_Bool (JSON.Bool False) = "false"
-cPrimitiveLiteral P_Int8 (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Int16 (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Int32 (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Int64 (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Word8 (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Word16 (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Word32 (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Word64 (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Float (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Float (JSON.Number (D n)) = litNumber n
-cPrimitiveLiteral P_Double (JSON.Number (I n)) = litNumber n
-cPrimitiveLiteral P_Double (JSON.Number (D n)) = litNumber n
+cPrimitiveLiteral P_Int8 (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Int16 (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Int32 (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Int64 (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Word8 (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Word16 (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Word32 (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Word64 (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Float (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Double (JSON.Number n) = litNumber n
 cPrimitiveLiteral P_ByteVector (JSON.String s) = template "ByteVector::fromLiteral($1)" [T.pack (show (decode s))]
   where
     decode s = case B64.decode (T.encodeUtf8 s) of
@@ -1252,6 +1250,11 @@ cPrimitiveLiteral P_Vector _ = "????" -- never called
 cPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
 cPrimitiveLiteral P_Sink _ = "????" -- never called
 
-litNumber :: (Num a, Ord a, Show a) => a -> T.Text
-litNumber x = T.pack (show x)
+litNumber :: S.Scientific -> T.Text
+litNumber n = T.pack s
+  where
+    s = case S.floatingOrInteger n of
+      (Left r) -> show n
+      (Right i) -> show (i::Integer)
+
   

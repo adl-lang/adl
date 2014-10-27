@@ -1,158 +1,158 @@
 {
-    "imports": [],
-    "name": "test",
     "decls": [
         {
             "v1": "A",
             "v2": {
-                "version": {
-                    "nothing": null
-                },
+                "name": "A",
                 "type_": {
                     "struct_": {
-                        "typeParams": [],
                         "fields": [
                             {
-                                "typeExpr": {
-                                    "typeRef": {
-                                        "primitive": "Int32"
-                                    },
-                                    "parameters": []
-                                },
-                                "name": "x",
                                 "default": {
                                     "nothing": null
+                                },
+                                "name": "x",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "Int32"
+                                    }
                                 }
                             },
                             {
-                                "typeExpr": {
-                                    "typeRef": {
-                                        "primitive": "String"
-                                    },
-                                    "parameters": []
-                                },
-                                "name": "v",
                                 "default": {
                                     "nothing": null
+                                },
+                                "name": "v",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "String"
+                                    }
                                 }
                             }
-                        ]
+                        ],
+                        "typeParams": []
                     }
                 },
-                "name": "A"
+                "version": {
+                    "nothing": null
+                }
             }
         },
         {
             "v1": "B",
             "v2": {
-                "version": {
-                    "nothing": null
-                },
+                "name": "B",
                 "type_": {
                     "union_": {
-                        "typeParams": [
-                            "T"
-                        ],
                         "fields": [
                             {
-                                "typeExpr": {
-                                    "typeRef": {
-                                        "typeParam": "T"
-                                    },
-                                    "parameters": []
-                                },
-                                "name": "x",
                                 "default": {
                                     "nothing": null
+                                },
+                                "name": "x",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "typeParam": "T"
+                                    }
                                 }
                             },
                             {
-                                "typeExpr": {
-                                    "typeRef": {
-                                        "primitive": "String"
-                                    },
-                                    "parameters": []
-                                },
-                                "name": "v",
                                 "default": {
                                     "nothing": null
+                                },
+                                "name": "v",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "String"
+                                    }
                                 }
                             }
+                        ],
+                        "typeParams": [
+                            "T"
                         ]
                     }
                 },
-                "name": "B"
+                "version": {
+                    "nothing": null
+                }
             }
         },
         {
             "v1": "X",
             "v2": {
-                "version": {
-                    "nothing": null
-                },
+                "name": "X",
                 "type_": {
                     "type_": {
-                        "typeParams": [],
                         "typeExpr": {
-                            "typeRef": {
-                                "reference": {
-                                    "name": "B",
-                                    "moduleName": ""
-                                }
-                            },
                             "parameters": [
                                 {
-                                    "typeRef": {
-                                        "primitive": "Vector"
-                                    },
                                     "parameters": [
                                         {
+                                            "parameters": [],
                                             "typeRef": {
                                                 "primitive": "String"
-                                            },
-                                            "parameters": []
+                                            }
                                         }
-                                    ]
+                                    ],
+                                    "typeRef": {
+                                        "primitive": "Vector"
+                                    }
                                 }
-                            ]
-                        }
+                            ],
+                            "typeRef": {
+                                "reference": {
+                                    "moduleName": "",
+                                    "name": "B"
+                                }
+                            }
+                        },
+                        "typeParams": []
                     }
                 },
-                "name": "X"
+                "version": {
+                    "nothing": null
+                }
             }
         },
         {
             "v1": "Y",
             "v2": {
-                "version": {
-                    "nothing": null
-                },
+                "name": "Y",
                 "type_": {
                     "newtype_": {
-                        "typeParams": [],
-                        "typeExpr": {
-                            "typeRef": {
-                                "reference": {
-                                    "name": "B",
-                                    "moduleName": ""
-                                }
-                            },
-                            "parameters": [
-                                {
-                                    "typeRef": {
-                                        "primitive": "Float"
-                                    },
-                                    "parameters": []
-                                }
-                            ]
-                        },
                         "default": {
                             "nothing": null
-                        }
+                        },
+                        "typeExpr": {
+                            "parameters": [
+                                {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "Float"
+                                    }
+                                }
+                            ],
+                            "typeRef": {
+                                "reference": {
+                                    "moduleName": "",
+                                    "name": "B"
+                                }
+                            }
+                        },
+                        "typeParams": []
                     }
                 },
-                "name": "Y"
+                "version": {
+                    "nothing": null
+                }
             }
         }
-    ]
+    ],
+    "imports": [],
+    "name": "test"
 }
