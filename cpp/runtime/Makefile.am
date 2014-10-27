@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
-AM_CPPFLAGS=-I$(top_srcdir)/include -I$(top_srcdir)/src-generated -I$(top_srcdir)/3rd-party/libb64-1.2/include
+AM_CPPFLAGS=-I$(top_srcdir)/include -I$(top_srcdir)/src-generated $(DEPENDENCIES_CFLAGS)
 AM_CXXFLAGS=-std=c++11 -Wall
 
 lib_LTLIBRARIES = libadlcpp.la
@@ -11,8 +11,7 @@ libadlcpp_la_SOURCES = \
     src/comms.cpp src/comms_http.cpp \
     src/example.cpp \
     src-generated/sys.types.cpp src-generated/sys.rpc.cpp \
-    src-generated/sys.sinkimpl.cpp src-generated/sys.adlast.cpp \
-    3rd-party/libb64-1.2/src/cencode.c 3rd-party/libb64-1.2/src/cdecode.c
+    src-generated/sys.sinkimpl.cpp src-generated/sys.adlast.cpp
 
 adlcpp_includedir = $(includedir)/adl
 adlcpp_libincludedir = $(libdir)/adlcpp/include
@@ -38,7 +37,7 @@ unit_tests_SOURCES = src-generated/unittests.cpp \
                      tests/tests-serialisation.cpp \
                      tests/tests-comms.cpp \
                      tests/main.cpp
-unit_tests_LDFLAGS=-ladlcpp -lcppnetlib-uri -lcppnetlib-client-connections -lboost_system -lboost_thread -lssl -lcrypto -lpthread
+unit_tests_LDFLAGS=-ladlcpp $(DEPENDENCIES_LIBS)
 
 nodist_adlcpp_libinclude_HEADERS = adlcppconfig.h
 

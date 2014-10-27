@@ -3,6 +3,7 @@ AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10 -Wall no-define foreign])
 AC_CONFIG_HEADERS([config.h adlcppconfig.h])
 AC_PROG_CXX
+PKG_CHECK_MODULES( [DEPENDENCIES], [cpp-netlib,libb64] )
           
 # Turn off shared libraries for now, since they
 # make the build process longer and more complex
