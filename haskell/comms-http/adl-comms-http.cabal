@@ -21,3 +21,14 @@ library
                        wai, warp, http-types, resourcet, conduit,
                        streaming-commons, network-conduit, http-conduit,
                        adl-utils, adl-runtime
+
+executable comms-http-tests
+  hs-source-dirs:      tests, src
+  main-is:             Tests.hs
+  build-depends:       base, text, containers, bytestring,
+                       mtl, transformers,
+                       time, network, unordered-containers, aeson, attoparsec,
+                       vector, stm, uuid, hslogger, data-default,
+                       wai, warp, http-types, resourcet, conduit,
+                       streaming-commons, network-conduit, http-conduit,
+                       adl-utils, adl-runtime, hspec

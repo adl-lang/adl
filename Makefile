@@ -12,7 +12,7 @@ PATH:=$(SANDBOXBIN):$(PATH)
 
 -include .make/Makefile.srcs
 
-all: utils compiler-bootstrap runtime compiler runtime-cpp examples
+all: utils compiler-bootstrap runtime compiler examples runtime-cpp
 utils : .make/built-utils
 compiler-lib: .make/built-compiler-lib
 compiler-bootstrap: .make/built-compiler-bootstrap
@@ -49,6 +49,7 @@ depends: $(SANDBOX) .make
 
 .make/comms-http: $(COMMS-HTTP-SRC) .make/built-runtime
 	cd haskell && cabal install --force-reinstalls comms-http/
+	cd haskell && $(SANDBOXBIN)/comms-http-tests
 	touch .make/comms-http
 
 .make/built-compiler: $(COMPILER-SRC) .make/built-utils .make/built-runtime
