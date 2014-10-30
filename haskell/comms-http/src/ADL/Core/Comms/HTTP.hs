@@ -12,6 +12,7 @@ import Control.Exception
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad.Trans(liftIO)
+import Data.Default.Class
 
 import qualified Data.Map as Map
 import qualified Data.Text as T
@@ -26,13 +27,13 @@ import Network.HTTP.Types
 import Network.Wai.Handler.Warp(runSettingsSocket,defaultSettings)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
-import Data.Conduit(($$))
+import Data.Streaming.Network(bindPortTCP)
+import Network.HTTP.Client(defaultManagerSettings)
 import qualified Data.Conduit.List as DC
-import qualified Data.Conduit.Network as DC
 import qualified Network.HTTP.Conduit as HC
 
 import qualified System.Log.Logger as L
-import Control.Monad.Trans.Resource
+import Control.Monad.Trans.Resource(runResourceT)
 
 import ADL.Utils.Format
 import ADL.Core.Value
@@ -81,7 +82,7 @@ transportName = TransportName "http"
 
 newTransport :: CT.Context -> IO Transport
 newTransport c = do
-  manager <- HC.newManager HC.def
+  manager <- HC.newManager defaultManagerSettings
   hc <- return Transport
     { transport = CT.Transport
       { CT.t_name = transportName
@@ -120,7 +121,7 @@ newEndPoint1 eport = do
     bindNewSocket :: Either Int (Int,Int) -> IO (Int,Socket)
 
     bindNewSocket (Left port) = do
-      socket <- DC.bindPort port DC.HostAny
+      socket <- bindPortTCP port "*"
       return (port,socket)
 
     bindNewSocket (Right (port,maxPort))
@@ -137,25 +138,29 @@ newEndPoint1 eport = do
     runWarp1 :: Socket -> SinksV -> TMVar (Maybe (IO ())) -> IO ()
     runWarp1 socket sinksv nextactionv = runSettingsSocket defaultSettings socket waiApplication
       where
-        waiApplication :: Request -> ResourceT IO Response
-        waiApplication req = do
+        waiApplication :: Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+        waiApplication req respond = do
           if requestMethod req /= methodPost
-            then errResponse badRequest400 "Only POST requests are supported"
+            then respondErr badRequest400 "Only POST requests are supported"
             else case pathInfo req of
-                [i] -> do
-                  body <- requestBody req $$ (fmap LBS.fromChunks DC.consume)
-                  handleMessage i body
-                _ -> errResponse badRequest400 "request must have a single path component"
+              [i] -> do
+                bs <- requestBody req
+                handleMessage i (LBS.fromChunks [bs])
+              _ -> respondErr badRequest400 "request must have a single path component"
+          where
+            respondErr status s = do
+              L.errorM httpLogger ("Request error: " ++ s)
+              respond (responseLBS status [] "")
 
-        handleMessage :: T.Text -> LBS.ByteString -> ResourceT IO Response
-        handleMessage sid body = do
-          liftIO $ debugM "received at $1: $2" [sid, formatText body]
-          sinks <- liftIO $ atomically $ readTVar sinksv
-          case Map.lookup sid sinks of
-            Nothing -> errResponse notFound404 ("No handler for sink with SID " ++ show sid)
-            (Just actionf) -> do
-                liftIO $ atomically $ putTMVar nextactionv (Just (actionf body))
-                return (responseLBS ok200 [] "")
+            handleMessage :: T.Text -> LBS.ByteString -> IO ResponseReceived
+            handleMessage sid body = do
+              liftIO $ debugM "received at $1: $2" [sid, formatText body]
+              sinks <- liftIO $ atomically $ readTVar sinksv
+              case Map.lookup sid sinks of
+                Nothing -> respondErr notFound404 ("No handler for sink with SID " ++ show sid)
+                (Just actionf) -> do
+                  liftIO $ atomically $ putTMVar nextactionv (Just (actionf body))
+                  respond (responseLBS ok200 [] "")
 
     runner :: TMVar (Maybe (IO ())) -> IO ()
     runner nextactionv = loop
@@ -172,10 +177,6 @@ newEndPoint1 eport = do
     actionExceptionHandler e = do
       L.errorM httpLogger ("Failed to complete action due to exception:" ++ show e)
       return ()
-
-    errResponse status s = do
-        liftIO $ L.errorM httpLogger ("Request error: " ++ s)
-        return (responseLBS status [] "")
 
     newSink :: HostName -> Int -> SinksV -> Maybe T.Text -> (LBS.ByteString -> IO ()) -> IO (TransportName,TransportAddr,IO ())
     newSink hostname port sinksv msid handler = do
@@ -216,7 +217,7 @@ connect1 manager addr = do
         port = httpPort addr1
         path = httpPath addr1
         
-        req0 = HC.def {
+        req0 = def {
           HC.host = BSC8.pack host,
           HC.port = port,
           HC.path = T.encodeUtf8 path,

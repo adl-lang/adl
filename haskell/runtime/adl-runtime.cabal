@@ -21,9 +21,8 @@ library
                        ADL.Sys.Types, ADL.Sys.Rpc, ADL.Sys.Sinkimpl, ADL.Sys.Adlast
   build-depends:       base, text, containers, bytestring,
                        parsec, mtl, transformers,
-                       time, network, unordered-containers, vector,
+                       time, unordered-containers, vector,
                        stm, uuid, hslogger,
                        base64-bytestring,
                        attoparsec, aeson, scientific,
-                       network-transport,
                        adl-utils

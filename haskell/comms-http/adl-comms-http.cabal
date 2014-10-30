@@ -14,21 +14,18 @@ cabal-version:       >=1.8
 library
   hs-source-dirs:      src
   exposed-modules:     ADL.Core.Comms.HTTP
-  build-depends:       base, text, containers, bytestring,
-                       mtl, transformers,
-                       time, network, unordered-containers, aeson, attoparsec,
-                       vector, stm, uuid, hslogger, data-default,
+  build-depends:       base, text, containers, bytestring, mtl,
+                       network, aeson, stm, uuid, hslogger, data-default-class,
                        wai, warp, http-types, resourcet, conduit,
-                       streaming-commons, network-conduit, http-conduit,
+                       streaming-commons, http-client, http-conduit,
                        adl-utils, adl-runtime
 
 executable comms-http-tests
   hs-source-dirs:      tests, src
   main-is:             Tests.hs
-  build-depends:       base, text, containers, bytestring,
-                       mtl, transformers,
-                       time, network, unordered-containers, aeson, attoparsec,
-                       vector, stm, uuid, hslogger, data-default,
+  build-depends:       base, text, containers, bytestring, mtl,
+                       network, aeson, stm, uuid, hslogger, data-default-class,
                        wai, warp, http-types, resourcet, conduit,
-                       streaming-commons, network-conduit, http-conduit,
-                       adl-utils, adl-runtime, hspec
+                       streaming-commons, http-client, http-conduit,
+                       adl-utils, adl-runtime,
+                       hspec
