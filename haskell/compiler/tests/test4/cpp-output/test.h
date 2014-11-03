@@ -2,6 +2,8 @@
 #define TEST_H
 #include "Date.h"
 #include <adl/adl.h>
+#include <map>
+#include <set>
 #include <stdint.h>
 #include <string>
 #include "sys.types.h"
@@ -35,7 +37,9 @@ struct S2
         const ADL::sys::types::Maybe<int32_t>  & f2,
         const ADL::sys::types::Either<int32_t,std::string>  & f3,
         const ADL::sys::types::Either<int32_t,std::string>  & f4,
-        const std::pair<int32_t,double>  & f5
+        const std::pair<int32_t,double>  & f5,
+        const std::set<std::string>  & f6,
+        const std::map<std::string,int32_t>  & f7
         );
     
     ADL::sys::types::Maybe<int32_t>  f1;
@@ -43,6 +47,8 @@ struct S2
     ADL::sys::types::Either<int32_t,std::string>  f3;
     ADL::sys::types::Either<int32_t,std::string>  f4;
     std::pair<int32_t,double>  f5;
+    std::set<std::string>  f6;
+    std::map<std::string,int32_t>  f7;
 };
 
 bool operator<( const S2 &a, const S2 &b );

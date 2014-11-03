@@ -22,7 +22,8 @@ struct S2
         Either<Int32,String> f3 = { "left" : 7 };
         Either<Int32,String> f4 = { "right" : "go" };
         Pair<Int32,Double> f5 = { "v1" : 5, "v2" : 7.8 };
-//        Map<String,Int32> f6 = [ { "v1" : "key1", "v2" : 7 },  { "v1" : "key2", "v2" : 32 } ];
+        Set<String> f6 = [ "a", "xzf", "hum" ];
+        Map<String,Int32> f7 = [ { "v1" : "key1", "v2" : 7 },  { "v1" : "key2", "v2" : 32 } ];
 };
 
 };

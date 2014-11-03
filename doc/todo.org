@@ -31,7 +31,7 @@ module unittests
 values of type X will always be infinite. Values of type L1 may be constructed to
 be finite, but the default value will be - this is also problematic.
 
-** Fix incorrect error generated for literal maps:
+** DONE Fix incorrect error generated for literal maps:
 
 from  haskell/compiler/tests/test4/input/test.adl:
 

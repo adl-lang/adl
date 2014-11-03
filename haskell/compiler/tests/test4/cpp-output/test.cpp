@@ -9,6 +9,8 @@ S2::S2()
     , f3(ADL::sys::types::Either<int32_t,std::string> ::mk_left(7))
     , f4(ADL::sys::types::Either<int32_t,std::string> ::mk_right("go"))
     , f5(std::pair<int32_t,double> (5,7.8))
+    , f6(std::set<std::string> (mkvec<std::string>("a","xzf","hum")))
+    , f7(std::map<std::string,int32_t> (mkvec<Pair<std::string,int32_t> >(Pair<std::string,int32_t> ("key1",7),Pair<std::string,int32_t> ("key2",32))))
 {
 }
 
@@ -17,13 +19,17 @@ S2::S2(
     const ADL::sys::types::Maybe<int32_t>  & f2_,
     const ADL::sys::types::Either<int32_t,std::string>  & f3_,
     const ADL::sys::types::Either<int32_t,std::string>  & f4_,
-    const std::pair<int32_t,double>  & f5_
+    const std::pair<int32_t,double>  & f5_,
+    const std::set<std::string>  & f6_,
+    const std::map<std::string,int32_t>  & f7_
     )
     : f1(f1_)
     , f2(f2_)
     , f3(f3_)
     , f4(f4_)
     , f5(f5_)
+    , f6(f6_)
+    , f7(f7_)
 {
 }
 
@@ -40,6 +46,10 @@ operator<( const S2 &a, const S2 &b )
     if( b.f4 < a.f4 ) return false;
     if( a.f5 < b.f5 ) return true;
     if( b.f5 < a.f5 ) return false;
+    if( a.f6 < b.f6 ) return true;
+    if( b.f6 < a.f6 ) return false;
+    if( a.f7 < b.f7 ) return true;
+    if( b.f7 < a.f7 ) return false;
     return false;
 }
 
@@ -51,7 +61,9 @@ operator==( const S2 &a, const S2 &b )
         a.f2 == b.f2 &&
         a.f3 == b.f3 &&
         a.f4 == b.f4 &&
-        a.f5 == b.f5 ;
+        a.f5 == b.f5 &&
+        a.f6 == b.f6 &&
+        a.f7 == b.f7 ;
 }
 
 S::S()
@@ -97,6 +109,8 @@ Serialisable<ADL::test::S2>::serialiser( const SerialiserFlags &sf )
             , f3_s( Serialisable<ADL::sys::types::Either<int32_t,std::string> >::serialiser(sf) )
             , f4_s( Serialisable<ADL::sys::types::Either<int32_t,std::string> >::serialiser(sf) )
             , f5_s( Serialisable<std::pair<int32_t,double> >::serialiser(sf) )
+            , f6_s( Serialisable<std::set<std::string> >::serialiser(sf) )
+            , f7_s( Serialisable<std::map<std::string,int32_t> >::serialiser(sf) )
             {}
         
         
@@ -105,6 +119,8 @@ Serialisable<ADL::test::S2>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<ADL::sys::types::Either<int32_t,std::string> >::Ptr f3_s;
         typename Serialiser<ADL::sys::types::Either<int32_t,std::string> >::Ptr f4_s;
         typename Serialiser<std::pair<int32_t,double> >::Ptr f5_s;
+        typename Serialiser<std::set<std::string> >::Ptr f6_s;
+        typename Serialiser<std::map<std::string,int32_t> >::Ptr f7_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
@@ -114,6 +130,8 @@ Serialisable<ADL::test::S2>::serialiser( const SerialiserFlags &sf )
             writeField<ADL::sys::types::Either<int32_t,std::string> >( json, f3_s, "f3", v.f3 );
             writeField<ADL::sys::types::Either<int32_t,std::string> >( json, f4_s, "f4", v.f4 );
             writeField<std::pair<int32_t,double> >( json, f5_s, "f5", v.f5 );
+            writeField<std::set<std::string> >( json, f6_s, "f6", v.f6 );
+            writeField<std::map<std::string,int32_t> >( json, f7_s, "f7", v.f7 );
             json.endObject();
         }
         
@@ -127,6 +145,8 @@ Serialisable<ADL::test::S2>::serialiser( const SerialiserFlags &sf )
                 readField( f3_s, v.f3, "f3", json ) ||
                 readField( f4_s, v.f4, "f4", json ) ||
                 readField( f5_s, v.f5, "f5", json ) ||
+                readField( f6_s, v.f6, "f6", json ) ||
+                readField( f7_s, v.f7, "f7", json ) ||
                 ignoreField( json );
             }
         }

@@ -81,6 +81,8 @@ data S2 = S2
     , s2_f3 :: (ADL.Sys.Types.Either Data.Int.Int32 T.Text)
     , s2_f4 :: (ADL.Sys.Types.Either Data.Int.Int32 T.Text)
     , s2_f5 :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double)
+    , s2_f6 :: (ADL.Sys.Types.Set T.Text)
+    , s2_f7 :: (ADL.Sys.Types.Map T.Text Data.Int.Int32)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -93,6 +95,8 @@ instance ADLValue S2 where
         (fromJSONLiteral "{\"left\":7}")
         (fromJSONLiteral "{\"right\":\"go\"}")
         (fromJSONLiteral "{\"v1\":5,\"v2\":7.8}")
+        (fromJSONLiteral "[\"a\",\"xzf\",\"hum\"]")
+        (fromJSONLiteral "[{\"v1\":\"key1\",\"v2\":7},{\"v1\":\"key2\",\"v2\":32}]")
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -101,6 +105,8 @@ instance ADLValue S2 where
             f3_js = jsonSerialiser jf
             f4_js = jsonSerialiser jf
             f5_js = jsonSerialiser jf
+            f6_js = jsonSerialiser jf
+            f7_js = jsonSerialiser jf
             
             to v = JSON.Object ( HM.fromList
                 [ ("f1",aToJSON f1_js (s2_f1 v))
@@ -108,6 +114,8 @@ instance ADLValue S2 where
                 , ("f3",aToJSON f3_js (s2_f3 v))
                 , ("f4",aToJSON f4_js (s2_f4 v))
                 , ("f5",aToJSON f5_js (s2_f5 v))
+                , ("f6",aToJSON f6_js (s2_f6 v))
+                , ("f7",aToJSON f7_js (s2_f7 v))
                 ] )
             
             from (JSON.Object hm) = S2 
@@ -116,4 +124,6 @@ instance ADLValue S2 where
                 <*> fieldFromJSON f3_js "f3" defaultv hm
                 <*> fieldFromJSON f4_js "f4" defaultv hm
                 <*> fieldFromJSON f5_js "f5" defaultv hm
+                <*> fieldFromJSON f6_js "f6" defaultv hm
+                <*> fieldFromJSON f7_js "f7" defaultv hm
             from _ = Prelude.Nothing

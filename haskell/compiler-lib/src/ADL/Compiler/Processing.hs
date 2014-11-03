@@ -4,6 +4,8 @@ module ADL.Compiler.Processing where
 
 import Prelude
 
+import Debug.Trace
+
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
@@ -326,8 +328,55 @@ checkDefaultOverrides m = execWriter checkModule
       (Just err) -> tell [DefaultOverrideError (template "Invalid override of $1: $2" [n,err])]
 
 validateLiteralForTypeExpr :: TypeExpr ResolvedType -> JSON.Value -> Maybe T.Text
-validateLiteralForTypeExpr te v = validateTE Map.empty te v
+validateLiteralForTypeExpr te v = validateTE (resolveBoundTypeVariables te) v
   where
+    validateTE (TypeExpr (RT_Primitive pt) []) v = ptValidateLiteral pt v
+    validateTE (TypeExpr (RT_Primitive P_Vector) [te]) v = vecLiteral te v
+    validateTE (TypeExpr (RT_Primitive P_Sink) [te]) v = Just "literals not allowed for sinks"
+    validateTE (TypeExpr (RT_Primitive _) _) v =
+      error "INTERNAL ERROR: found primitive type with incorrect number of type parameters"
+
+    validateTE (TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
+      (Decl_Struct s) -> structLiteral s tes v
+      (Decl_Union u) -> unionLiteral u tes v 
+      (Decl_Typedef t) -> typedefLiteral t tes v
+      (Decl_Newtype n) -> newtypeLiteral n tes v
+    validateTE (TypeExpr (RT_Param id) _) v = Just (template "literal not allowed for expression with unbound type variable: $1" [id])
+    
+    vecLiteral te (JSON.Array v) = case catMaybes errs of
+      [] -> Nothing
+      (e:_) -> (Just e)
+      where
+        errs = map (validateTE te) (V.toList v)
+    vecLiteral _ _ = Just "expected an array"
+
+    structLiteral s tes (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
+      where
+        checkField :: T.Text -> JSON.Value -> Maybe T.Text -> Maybe T.Text
+        checkField k v e@(Just t)= e
+        checkField k v Nothing = case find ((k==).f_name) (s_fields s) of
+          (Just f) -> validateTE (f_type f) v
+          Nothing ->
+            Just (T.concat ["Field ",k, " in literal doesn't match any in struct definition" ])
+    structLiteral s _ _ = Just "expected an object"
+
+    unionLiteral u tes (JSON.Object hm) = case HM.toList hm of
+      [(k,v)] -> case find ((k==).f_name) (u_fields u) of
+        (Just f) -> validateTE (f_type f) v
+        Nothing ->
+          Just (T.concat ["Field ",k, " in literal doesn't match any in union definition" ])
+      _ -> Just "literal union must have a single key/value pair"
+      where
+    unionLiteral s tes _ = Just "expected an object"
+
+    typedefLiteral t tes v = validateTE (t_typeExpr t) v
+    newtypeLiteral n tes v = validateTE (n_typeExpr n) v
+
+validateLiteralForTypeExprOrig :: TypeExpr ResolvedType -> JSON.Value -> Maybe T.Text
+validateLiteralForTypeExprOrig te v = validateTE0 Map.empty te v
+  where
+    validateTE0 m te v = (validateTE m te v)
+    
     validateTE m (TypeExpr (RT_Primitive pt) []) v = ptValidateLiteral pt v
     validateTE m (TypeExpr (RT_Primitive P_Vector) [te]) v = vecLiteral m te v
     validateTE m (TypeExpr (RT_Primitive P_Sink) [te]) v = Just "literals not allowed for sinks"
@@ -340,14 +389,14 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
       (Decl_Typedef t) -> typedefLiteral m t tes v
       (Decl_Newtype n) -> newtypeLiteral m n tes v
     validateTE m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
-         (Just te) -> validateTE Map.empty te v
+         (Just te) -> validateTE0 Map.empty te v
          Nothing -> Just "literals not allows for parameterised fields"
     
     vecLiteral m te (JSON.Array v) = case catMaybes errs of
       [] -> Nothing
       (e:_) -> (Just e)
       where
-        errs = map (validateTE m te) (V.toList v)
+        errs = map (validateTE0 m te) (V.toList v)
     vecLiteral _ _ _ = Just "expected an array"
 
     structLiteral m s tes (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
@@ -355,7 +404,7 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
         checkField :: T.Text -> JSON.Value -> Maybe T.Text -> Maybe T.Text
         checkField k v e@(Just t)= e
         checkField k v Nothing = case find ((k==).f_name) (s_fields s) of
-          (Just f) -> validateTE pm (f_type f) v
+          (Just f) -> validateTE0 pm (f_type f) v
           Nothing ->
             Just (T.concat ["Field ",k, " in literal doesn't match any in struct definition" ])
         pm = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
@@ -363,7 +412,7 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
 
     unionLiteral m u tes (JSON.Object hm) = case HM.toList hm of
       [(k,v)] -> case find ((k==).f_name) (u_fields u) of
-        (Just f) -> validateTE pm (f_type f) v
+        (Just f) -> validateTE0 pm (f_type f) v
         Nothing ->
           Just (T.concat ["Field ",k, " in literal doesn't match any in union definition" ])
       _ -> Just "literal union must have a single key/value pair"
@@ -371,11 +420,11 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
         pm = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
     unionLiteral m s tes _ = Just "expected an object"
 
-    typedefLiteral m t tes v = validateTE pm (t_typeExpr t) v
+    typedefLiteral m t tes v = validateTE0 pm (t_typeExpr t) v
       where
         pm = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
 
-    newtypeLiteral m n tes v = validateTE pm (n_typeExpr n) v
+    newtypeLiteral m n tes v = validateTE0 pm (n_typeExpr n) v
       where
         pm = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
@@ -497,3 +546,39 @@ substTypeParams m  (TypeExpr (RT_Param n) ts) =
         [] -> e
         _ -> error "BUG: Type param not a concrete type"
 substTypeParams m  (TypeExpr t ts) = TypeExpr t (map (substTypeParams m) ts)
+
+
+resolveBoundTypeVariables :: TypeExpr ResolvedType -> TypeExpr ResolvedType
+resolveBoundTypeVariables = resolve
+  where                              
+    resolve (TypeExpr (RT_Primitive p) tes) = TypeExpr (RT_Primitive p) (map resolve tes)
+    resolve (TypeExpr (RT_Named (sn,decl)) tes) = (TypeExpr (RT_Named (sn,resolveDecl decl (map resolve tes))) [])
+    
+    resolveDecl :: Decl ResolvedType -> [TypeExpr ResolvedType] -> Decl ResolvedType
+    resolveDecl d tes = case (d_type d) of
+      (Decl_Struct s) -> d{d_type=Decl_Struct (resolveStruct s tes)}
+      (Decl_Union u) -> d{d_type=Decl_Union (resolveUnion u tes)}
+      (Decl_Typedef t) -> d{d_type=Decl_Typedef (resolveTypedef t tes)}
+      (Decl_Newtype n) -> d{d_type=Decl_Newtype (resolveNewtype n tes)}
+      
+    resolveStruct :: Struct ResolvedType -> [TypeExpr ResolvedType] -> Struct ResolvedType
+    resolveStruct s tes = s{s_fields=fields'}
+      where
+        fields' = map (\f ->f{f_type=resolve (substTypeParams m (f_type f))} ) (s_fields s)
+        m = Map.fromList (zip (s_typeParams s) tes)
+
+    resolveUnion :: Union ResolvedType -> [TypeExpr ResolvedType] -> Union ResolvedType
+    resolveUnion u tes = u{u_fields=fields'}
+      where
+        fields' = map (\f ->f{f_type=resolve (substTypeParams m (f_type f))} ) (u_fields u)
+        m = Map.fromList (zip (u_typeParams u) tes)
+
+    resolveTypedef :: Typedef ResolvedType -> [TypeExpr ResolvedType] -> Typedef ResolvedType
+    resolveTypedef t tes = t{t_typeExpr=resolve (substTypeParams m (t_typeExpr t))}
+      where
+        m = Map.fromList (zip (t_typeParams t) tes)
+    
+    resolveNewtype :: Newtype ResolvedType -> [TypeExpr ResolvedType] -> Newtype ResolvedType
+    resolveNewtype n tes = n{n_typeExpr=resolve (substTypeParams m (n_typeExpr n))}
+      where
+        m = Map.fromList (zip (n_typeParams n) tes)
