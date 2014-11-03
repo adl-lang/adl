@@ -23,12 +23,10 @@ data S1 = S1
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkS1 v_x v_y = S1 v_x v_y
+
 instance ADLValue S1 where
     atype _ = "test.S1"
-    
-    defaultv = S1
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -41,8 +39,8 @@ instance ADLValue S1 where
                 ] )
             
             from (JSON.Object hm) = S1 
-                <$> fieldFromJSON x_js "x" defaultv hm
-                <*> fieldFromJSON y_js "y" defaultv hm
+                <$> fieldFromJSON x_js "x" hm
+                <*> fieldFromJSON y_js "y" hm
             from _ = Prelude.Nothing
 
 data S2 = S2
@@ -51,12 +49,10 @@ data S2 = S2
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkS2 v_f1 v_f2 = S2 v_f1 v_f2
+
 instance ADLValue S2 where
     atype _ = "test.S2"
-    
-    defaultv = S2
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -69,8 +65,8 @@ instance ADLValue S2 where
                 ] )
             
             from (JSON.Object hm) = S2 
-                <$> fieldFromJSON f1_js "f1" defaultv hm
-                <*> fieldFromJSON f2_js "f2" defaultv hm
+                <$> fieldFromJSON f1_js "f1" hm
+                <*> fieldFromJSON f2_js "f2" hm
             from _ = Prelude.Nothing
 
 data Tree t = Tree
@@ -79,15 +75,13 @@ data Tree t = Tree
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkTree v_value v_children = Tree v_value v_children
+
 instance (ADLValue t) => ADLValue (Tree t) where
     atype _ = T.concat
         [ "test.Tree"
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
-    
-    defaultv = Tree
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -100,6 +94,6 @@ instance (ADLValue t) => ADLValue (Tree t) where
                 ] )
             
             from (JSON.Object hm) = Tree 
-                <$> fieldFromJSON value_js "value" defaultv hm
-                <*> fieldFromJSON children_js "children" defaultv hm
+                <$> fieldFromJSON value_js "value" hm
+                <*> fieldFromJSON children_js "children" hm
             from _ = Prelude.Nothing

@@ -1123,7 +1123,7 @@ mkLiteral te jv = mk Map.empty te jv
       return (LPrimitive ct (cPrimitiveLiteral pt v))
     mk  m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
      (Just te) -> mk m te v
-     Nothing -> error "BUG: Failed to find type binding in mkLiteral"
+     Nothing -> error ("BUG: Failed to find type binding in mkLiteral for parameter " ++ T.unpack id ++ ", in map " ++ show m)
     mk m (TypeExpr (RT_Primitive P_Vector) [te]) jv = mkVec m te jv
     mk m te0@(TypeExpr (RT_Named (_,decl)) tes) jv = case d_type decl of
       (Decl_Struct s) -> mkStruct m te0 decl s tes jv
@@ -1150,7 +1150,7 @@ mkLiteral te jv = mk Map.empty te jv
       t <- cTypeExprB False m te0
       let [(fname,jv)] = HM.toList hm
           f = getF fname
-      lv <- mk m (f_type f) jv
+      lv <- mk m2 (f_type f) jv
       return (LUnion t (cUnionConstructorName d f) lv)
       where
         getF fname = case L.find (\f -> f_name f == fname) (u_fields u) of

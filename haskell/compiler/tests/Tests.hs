@@ -51,12 +51,12 @@ runVerifyBackend ipath mpaths = do
 runVerifyBackend1 :: FilePath -> IO CodeGenResult
 runVerifyBackend1 mpath = runVerifyBackend (takeDirectory mpath) [mpath]
 
-runHaskellBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
+runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
 runHaskellBackend ipath mpaths epath customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags =  H.HaskellFlags {
-    H.hf_searchPath = [ipath],
+    H.hf_searchPath = ipath,
     H.hf_modulePrefix = "ADL",
     H.hf_customTypeFiles = customTypeFiles,
     H.hf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
@@ -65,17 +65,17 @@ runHaskellBackend ipath mpaths epath customTypeFiles = do
   processCompilerOutput epath tempDir er
 
 runHaskellBackend1 :: FilePath-> IO CodeGenResult
-runHaskellBackend1 mpath = runHaskellBackend ipath [mpath] epath []
+runHaskellBackend1 mpath = runHaskellBackend [ipath] [mpath] epath []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "hs-output"
 
-runCppBackend :: FilePath -> [FilePath] -> FilePath -> FilePath -> [FilePath] -> IO CodeGenResult
+runCppBackend :: [FilePath] -> [FilePath] -> FilePath -> FilePath -> [FilePath] -> IO CodeGenResult
 runCppBackend ipath mpaths epath iprefix customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags = CPP.CppFlags {
-    CPP.cf_searchPath = [ipath],
+    CPP.cf_searchPath = ipath,
     CPP.cf_customTypeFiles = customTypeFiles,
     CPP.cf_incFilePrefix = iprefix,
     CPP.cf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
@@ -84,7 +84,7 @@ runCppBackend ipath mpaths epath iprefix customTypeFiles = do
   processCompilerOutput epath tempDir er
 
 runCppBackend1 :: FilePath-> IO CodeGenResult
-runCppBackend1 mpath = runCppBackend ipath [mpath] epath "" []
+runCppBackend1 mpath = runCppBackend [ipath] [mpath] epath "" []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "cpp-output"
@@ -150,13 +150,13 @@ main = hspec $ do
       runHaskellBackend1 "test3/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runHaskellBackend "test4/input" ["test4/input/test.adl"] "test4/hs-output" ["test4/input/hs-custom-types.json"]
+      runHaskellBackend [stdsrc,"test4/input"] ["test4/input/test.adl"] "test4/hs-output" ("test4/input/hs-custom-types.json":stdHsCustomTypes)
           `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       runHaskellBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      runHaskellBackend stdsrc stdfiles "test6/hs-output" stdHsCustomTypes
+      runHaskellBackend [stdsrc] stdfiles "test6/hs-output" stdHsCustomTypes
           `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       runHaskellBackend1 "test7/input/test.adl"
@@ -181,13 +181,13 @@ main = hspec $ do
       runCppBackend1 "test3/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runCppBackend "test4/input" ["test4/input/test.adl"] "test4/cpp-output" "" ["test4/input/cpp-custom-types.json"]
+      runCppBackend [stdsrc,"test4/input"] ["test4/input/test.adl"] "test4/cpp-output" "" ("test4/input/cpp-custom-types.json":stdCppCustomTypes)
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       runCppBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      runCppBackend stdsrc stdfiles "test6/cpp-output" "" stdCppCustomTypes
+      runCppBackend [stdsrc] stdfiles "test6/cpp-output" "" stdCppCustomTypes
         `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       runCppBackend1 "test7/input/test.adl"
@@ -196,7 +196,7 @@ main = hspec $ do
       runCppBackend1 "test14/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      runCppBackend "test16/input" ["test16/input/test.adl"] "test16/cpp-output" "adl" []
+      runCppBackend ["test16/input"] ["test16/input/test.adl"] "test16/cpp-output" "adl" []
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation when necessary" $ do
       runCppBackend1 "test17/input/test.adl"

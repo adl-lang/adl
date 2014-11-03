@@ -6,22 +6,26 @@
             "haskellimports" : [
                 "Data.Time.Calendar(Day)",
                 "Data.Time.Format(parseTime,formatTime)",
+                "Data.Text(pack,unpack)",
                 "System.Locale(defaultTimeLocale)"
              ],
             "insertCode" : [
                 "type Date = Day",
                 "",
-                "toDate :: DateO -> Maybe Day",
-                "toDate (Date s) = parseTime defaultTimeLocale \"%F\" s",
+                "toDate :: DateO -> Prelude.Maybe Day",
+                "toDate (DateO s) = parseTime defaultTimeLocale \"%F\" (Data.Text.unpack s)",
                 "",
-                "fromDate :: Day -> Date_ADL",
-                "fromDate d = Date (formatTime defaultTimeLocale \"%F\" d)",
+                "fromDate :: Day -> DateO",
+                "fromDate d = DateO (Data.Text.pack (formatTime defaultTimeLocale \"%F\" d))",
                 "",
                 "instance ADLValue Day where",
-                "  atype _ = atype (defaultv :: ODate)",
-                "  defaultv = let (Just d) = toDate defaultv in d",
-                "  aToJSON jf d = aToJSON jf (fromDate d)",
-                "  afromJSON jf jv = (aFromJSON jf jv) >>= toDate"
+                "  atype _ = atype (defaultv :: DateO)",
+                "  defaultv = let (Prelude.Just d) = toDate defaultv in d",
+                "  jsonSerialiser jf = JSONSerialiser aTo aFrom",
+                "    where",
+                "      js = jsonSerialiser jf",
+                "      aTo d = aToJSON js (fromDate d)",
+                "      aFrom jv = (Prelude.>>=) (aFromJSON js jv) toDate"
             ],
             "generateOrigADLType" : { "just" : "DateO" }
         }

@@ -73,13 +73,14 @@ docs:
 	cd haskell && cabal install runtime/ --force-reinstalls --enable-documentation
 	cd haskell && cabal install comms-http/ --force-reinstalls --enable-documentation
 
-clean: 
+unregister:
 	-rm -f .make/built-*
 	-cd haskell && cabal sandbox hc-pkg unregister adl-compiler-lib
 	-cd haskell && cabal sandbox hc-pkg unregister adl-comms-http
 	-cd haskell && cabal sandbox hc-pkg unregister adl-runtime
 	-cd haskell && cabal sandbox hc-pkg unregister adl-utils
 
+clean: unregister
 	-(cd haskell/examples; cabal clean ; rm -rf dist)
 	-(cd haskell/compiler; cabal clean ; rm -rf dist)
 	-(cd haskell/compiler-bootstrap; cabal clean ; rm -rf dist)
