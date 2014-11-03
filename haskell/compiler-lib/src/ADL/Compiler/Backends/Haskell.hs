@@ -206,24 +206,22 @@ litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)
       (Left r) -> show n
       (Right i) -> show (i::Integer)
 
-type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
-
 hTypeExpr :: TypeExpr ResolvedType -> HGen T.Text
-hTypeExpr = hTypeExprB Map.empty
+hTypeExpr te = hTypeExprB (resolveBoundTypeVariables te)
 
-hTypeExprB :: TypeBindingMap -> TypeExpr ResolvedType -> HGen T.Text
-hTypeExprB m (TypeExpr rt []) = hTypeExprB1 m rt
-hTypeExprB m (TypeExpr (RT_Primitive P_Vector) args) = do
-  argt <- hTypeExprB m (head args)
+hTypeExprB :: TypeExpr ResolvedType -> HGen T.Text
+hTypeExprB (TypeExpr rt []) = hTypeExprB1 rt
+hTypeExprB (TypeExpr (RT_Primitive P_Vector) args) = do
+  argt <- hTypeExprB (head args)
   return (template "[$1]" [argt])
   
-hTypeExprB m (TypeExpr c args) = do
-  ct <- hTypeExprB1 m c
-  argst <- mapM (hTypeExprB m) args
+hTypeExprB (TypeExpr c args) = do
+  ct <- hTypeExprB1 c
+  argst <- mapM hTypeExprB args
   return (T.concat $ ["(", ct, " "] ++ L.intersperse " " argst ++ [")"])
 
-hTypeExprB1 :: TypeBindingMap -> ResolvedType -> HGen T.Text
-hTypeExprB1 m (RT_Named (sn,d)) = do
+hTypeExprB1 :: ResolvedType -> HGen T.Text
+hTypeExprB1 (RT_Named (sn,d)) = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
@@ -239,10 +237,8 @@ hTypeExprB1 m (RT_Named (sn,d)) = do
       hm <- importADLModule (sn_moduleName sn)
       return (T.intercalate "." [formatText hm,hTypeName (sn_name sn)])
 
-hTypeExprB1 m (RT_Param i) = case Map.lookup i m of
-    (Just te) -> hTypeExprB m te
-    Nothing -> return (hTypeParamName i)
-hTypeExprB1 m (RT_Primitive pt) = hPrimitiveType pt
+hTypeExprB1 (RT_Param i) = return (hTypeParamName i)
+hTypeExprB1 (RT_Primitive pt) = hPrimitiveType pt
 
 hTParams :: [Ident] -> T.Text
 hTParams [] = T.empty
@@ -430,14 +426,14 @@ generateDefaultValue _ Nothing = return "defaultv"
 generateDefaultValue te (Just v) = generateLiteral te v
 
 generateLiteral :: TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
-generateLiteral te v =  generateLV Map.empty te v
+generateLiteral te v =  generateLV (resolveBoundTypeVariables te) v
   where
     -- We only need to match the appropriate JSON cases here, as the JSON value
     -- has already been validated by the compiler
-    generateLV :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
-    generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
-    generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
-    generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = do
+    generateLV :: TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
+    generateLV (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
+    generateLV (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec te v
+    generateLV te0@(TypeExpr (RT_Named (sn,decl)) tes) v = do
         ms <- get
         case Map.lookup sn (ms_customTypes ms) of
           (Just ct) -> do
@@ -454,20 +450,18 @@ generateLiteral te v =  generateLV Map.empty te v
             return (template "(fromJSONLiteral $1)"  [T.pack (show (LT.toStrict (LT.toLazyText (JSON.encodeToTextBuilder v))))])
 
           Nothing -> case d_type decl of
-            (Decl_Struct s) -> generateStruct m te0 decl s tes v
-            (Decl_Union u) -> generateUnion m decl u tes v 
-            (Decl_Typedef t) -> generateTypedef m decl t tes v
-            (Decl_Newtype n) -> generateNewtype m decl n tes v
-    generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
-         (Just te) -> generateLV m te v
-
-    generateVec m te (JSON.Array v) = do
-      vals <- mapM (generateLV m te) (V.toList v) 
+            (Decl_Struct s) -> generateStruct te0 decl s tes v
+            (Decl_Union u) -> generateUnion decl u tes v 
+            (Decl_Typedef t) -> generateTypedef decl t tes v
+            (Decl_Newtype n) -> generateNewtype decl n tes v
+    generateLV (TypeExpr (RT_Param id) _) v = error "INTERNAL ERROR: unable to generate literal for unbound type variable"
+    generateVec te (JSON.Array v) = do
+      vals <- mapM (generateLV te) (V.toList v) 
       return (template "[ $1 ]" [T.intercalate ", " vals])
 
-    generateStruct m te0 d s tes (JSON.Object hm) = do
+    generateStruct te0 d s tes (JSON.Object hm) = do
       fields <- forM (L.sortBy (comparing fst) $ HM.toList hm) $ \(fname,v) -> do
-        lit <- generateLV m2 (getTE s fname) v
+        lit <- generateLV (getTE s fname) v
         return (template "$1 = $2" [hFieldName (d_name d) fname, lit])
       let fields1 = T.intercalate ", " fields
       case tes of
@@ -476,32 +470,26 @@ generateLiteral te v =  generateLV Map.empty te v
         _  -> do
           -- If the type has parameters, then we may need to specify the type
           -- of defaultv... so do it just in case
-          hte0 <- hTypeExprB m te0
+          hte0 <- hTypeExpr te0
           return (template "(defaultv :: $1) { $2 }" [hte0,fields1])
       where
         getTE s fname = case L.find (\f -> f_name f == fname) (s_fields s) of
           Just f -> f_type f
-        m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
 
-    generateUnion m d u tes (JSON.Object hm) = do
-      lit <- generateLV m2 te v
+    generateUnion d u tes (JSON.Object hm) = do
+      lit <- generateLV te v
       return (template "($1 $2)" [hDiscName (d_name d) fname,lit])
       where
         (fname,v) = case HM.toList hm of
           [v] -> v
         (name,te) = case L.find (\f -> f_name f == fname) (u_fields u) of
           Just f -> (f_name f,f_type f)
-        m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
 
-    generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
-      where
-        m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
+    generateTypedef d t tes v = generateLV (t_typeExpr t) v
 
-    generateNewtype m d n tes v = do
-      lit <- generateLV m2 (n_typeExpr n) v
+    generateNewtype d n tes v = do
+      lit <- generateLV (n_typeExpr n) v
       return (template "($1 $2)" [hTypeName (d_name d),lit])
-      where
-        m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
 generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> HGen ()
 generateCustomType n d ct = do

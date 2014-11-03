@@ -552,7 +552,8 @@ resolveBoundTypeVariables :: TypeExpr ResolvedType -> TypeExpr ResolvedType
 resolveBoundTypeVariables = resolve
   where                              
     resolve (TypeExpr (RT_Primitive p) tes) = TypeExpr (RT_Primitive p) (map resolve tes)
-    resolve (TypeExpr (RT_Named (sn,decl)) tes) = (TypeExpr (RT_Named (sn,resolveDecl decl (map resolve tes))) [])
+    resolve (TypeExpr (RT_Named (sn,decl)) tes) =  let tes' = map resolve tes in  (TypeExpr (RT_Named (sn,resolveDecl decl tes')) tes')
+    resolve (TypeExpr (RT_Param id) tes) = TypeExpr (RT_Param id) (map resolve tes)
     
     resolveDecl :: Decl ResolvedType -> [TypeExpr ResolvedType] -> Decl ResolvedType
     resolveDecl d tes = case (d_type d) of
