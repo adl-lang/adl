@@ -25,13 +25,10 @@ data A = A
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkA v_f_int v_f_string v_f_bool = A v_f_int v_f_string v_f_bool
+
 instance ADLValue A where
     atype _ = "test.A"
-    
-    defaultv = A
-        defaultv
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -46,9 +43,9 @@ instance ADLValue A where
                 ] )
             
             from (JSON.Object hm) = A 
-                <$> fieldFromJSON f_int_js "f_int" defaultv hm
-                <*> fieldFromJSON f_string_js "f_string" defaultv hm
-                <*> fieldFromJSON f_bool_js "f_bool" defaultv hm
+                <$> fieldFromJSON f_int_js "f_int" hm
+                <*> fieldFromJSON f_string_js "f_string" hm
+                <*> fieldFromJSON f_bool_js "f_bool" hm
             from _ = Prelude.Nothing
 
 data B t = B
@@ -59,17 +56,13 @@ data B t = B
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkB v_f_t v_f_string v_f_tvec v_f_xy = B v_f_t v_f_string v_f_tvec v_f_xy
+
 instance (ADLValue t) => ADLValue (B t) where
     atype _ = T.concat
         [ "test.B"
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
-    
-    defaultv = B
-        defaultv
-        defaultv
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -86,10 +79,10 @@ instance (ADLValue t) => ADLValue (B t) where
                 ] )
             
             from (JSON.Object hm) = B 
-                <$> fieldFromJSON f_t_js "f_t" defaultv hm
-                <*> fieldFromJSON f_string_js "f_string" defaultv hm
-                <*> fieldFromJSON f_tvec_js "f_tvec" defaultv hm
-                <*> fieldFromJSON f_xy_js "f_xy" defaultv hm
+                <$> fieldFromJSON f_t_js "f_t" hm
+                <*> fieldFromJSON f_string_js "f_string" hm
+                <*> fieldFromJSON f_tvec_js "f_tvec" hm
+                <*> fieldFromJSON f_xy_js "f_xy" hm
             from _ = Prelude.Nothing
 
 data S t = S
@@ -115,32 +108,13 @@ data S t = S
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkS v_f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] A{ a_f_bool = Prelude.True, a_f_int = 31, a_f_string = "xyz" } (U_f_int 45) v_f_t B{ b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = XY{ xY_x = 5, xY_y = 5 } }
+
 instance (ADLValue t) => ADLValue (S t) where
     atype _ = T.concat
         [ "test.S"
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
-    
-    defaultv = S
-        ()
-        Prelude.True
-        (-5)
-        (-10000)
-        56
-        40000
-        32
-        50000
-        124456
-        2344
-        0.5
-        0.45
-        "hello"
-        "abcd"
-        [ "xy", "ab" ]
-        defaultv { a_f_bool = Prelude.True, a_f_string = "xyz" }
-        (U_f_int 45)
-        defaultv
-        (defaultv :: (B Data.Int.Int16)) { b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = (defaultv :: (XY Data.Int.Int16)) { xY_x = 5, xY_y = 5 } }
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -187,25 +161,25 @@ instance (ADLValue t) => ADLValue (S t) where
                 ] )
             
             from (JSON.Object hm) = S 
-                <$> fieldFromJSON f_void_js "f_void" defaultv hm
-                <*> fieldFromJSON f_bool_js "f_bool" defaultv hm
-                <*> fieldFromJSON f_int8_js "f_int8" defaultv hm
-                <*> fieldFromJSON f_int16_js "f_int16" defaultv hm
-                <*> fieldFromJSON f_int32_js "f_int32" defaultv hm
-                <*> fieldFromJSON f_int64_js "f_int64" defaultv hm
-                <*> fieldFromJSON f_word8_js "f_word8" defaultv hm
-                <*> fieldFromJSON f_word16_js "f_word16" defaultv hm
-                <*> fieldFromJSON f_word32_js "f_word32" defaultv hm
-                <*> fieldFromJSON f_word64_js "f_word64" defaultv hm
-                <*> fieldFromJSON f_float_js "f_float" defaultv hm
-                <*> fieldFromJSON f_double_js "f_double" defaultv hm
-                <*> fieldFromJSON f_bytes_js "f_bytes" defaultv hm
-                <*> fieldFromJSON f_string_js "f_string" defaultv hm
-                <*> fieldFromJSON f_vstring_js "f_vstring" defaultv hm
-                <*> fieldFromJSON f_a_js "f_a" defaultv hm
-                <*> fieldFromJSON f_u_js "f_u" defaultv hm
-                <*> fieldFromJSON f_t_js "f_t" defaultv hm
-                <*> fieldFromJSON f_bint16_js "f_bint16" defaultv hm
+                <$> fieldFromJSON' f_void_js "f_void" () hm
+                <*> fieldFromJSON' f_bool_js "f_bool" Prelude.True hm
+                <*> fieldFromJSON' f_int8_js "f_int8" (-5) hm
+                <*> fieldFromJSON' f_int16_js "f_int16" (-10000) hm
+                <*> fieldFromJSON' f_int32_js "f_int32" 56 hm
+                <*> fieldFromJSON' f_int64_js "f_int64" 40000 hm
+                <*> fieldFromJSON' f_word8_js "f_word8" 32 hm
+                <*> fieldFromJSON' f_word16_js "f_word16" 50000 hm
+                <*> fieldFromJSON' f_word32_js "f_word32" 124456 hm
+                <*> fieldFromJSON' f_word64_js "f_word64" 2344 hm
+                <*> fieldFromJSON' f_float_js "f_float" 0.5 hm
+                <*> fieldFromJSON' f_double_js "f_double" 0.45 hm
+                <*> fieldFromJSON' f_bytes_js "f_bytes" "hello" hm
+                <*> fieldFromJSON' f_string_js "f_string" "abcd" hm
+                <*> fieldFromJSON' f_vstring_js "f_vstring" [ "xy", "ab" ] hm
+                <*> fieldFromJSON' f_a_js "f_a" A{ a_f_bool = Prelude.True, a_f_int = 31, a_f_string = "xyz" } hm
+                <*> fieldFromJSON' f_u_js "f_u" (U_f_int 45) hm
+                <*> fieldFromJSON f_t_js "f_t" hm
+                <*> fieldFromJSON' f_bint16_js "f_bint16" B{ b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = XY{ xY_x = 5, xY_y = 5 } } hm
             from _ = Prelude.Nothing
 
 data U
@@ -215,8 +189,6 @@ data U
 
 instance ADLValue U where
     atype _ = "test.U"
-    
-    defaultv = U_f_int defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -238,15 +210,13 @@ data XY t = XY
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkXY v_x v_y = XY v_x v_y
+
 instance (ADLValue t) => ADLValue (XY t) where
     atype _ = T.concat
         [ "test.XY"
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
-    
-    defaultv = XY
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -259,6 +229,6 @@ instance (ADLValue t) => ADLValue (XY t) where
                 ] )
             
             from (JSON.Object hm) = XY 
-                <$> fieldFromJSON x_js "x" defaultv hm
-                <*> fieldFromJSON y_js "y" defaultv hm
+                <$> fieldFromJSON x_js "x" hm
+                <*> fieldFromJSON y_js "y" hm
             from _ = Prelude.Nothing

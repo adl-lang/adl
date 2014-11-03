@@ -19,16 +19,14 @@ data Rpc i o = Rpc
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkRpc v_params v_replyTo = Rpc v_params v_replyTo
+
 instance (ADLValue i, ADLValue o) => ADLValue (Rpc i o) where
     atype _ = T.concat
         [ "sys.rpc.Rpc"
         , "<", atype (Prelude.undefined ::i)
         , ",", atype (Prelude.undefined ::o)
         , ">" ]
-    
-    defaultv = Rpc
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -41,8 +39,8 @@ instance (ADLValue i, ADLValue o) => ADLValue (Rpc i o) where
                 ] )
             
             from (JSON.Object hm) = Rpc 
-                <$> fieldFromJSON params_js "params" defaultv hm
-                <*> fieldFromJSON replyTo_js "replyTo" defaultv hm
+                <$> fieldFromJSON params_js "params" hm
+                <*> fieldFromJSON replyTo_js "replyTo" hm
             from _ = Prelude.Nothing
 
 type RpcSvc i o = (Sink (Rpc i o))

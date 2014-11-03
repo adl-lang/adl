@@ -40,6 +40,11 @@ fieldFromJSON js nme hm = case HM.lookup nme hm of
   (Just v) -> aFromJSON js v
   Nothing -> Nothing
 
+fieldFromJSON' :: (ADLValue a) => JSONSerialiser a -> T.Text -> a -> HM.HashMap T.Text JSON.Value -> Maybe a
+fieldFromJSON' js nme defv hm = case HM.lookup nme hm of
+  (Just v) -> aFromJSON js v
+  Nothing -> (Just defv)
+
 unionFromJSON :: HM.HashMap T.Text (JSONSerialiser a) -> JSON.Value -> Maybe a
 unionFromJSON umap (JSON.Object hm) = decodeField (HM.toList hm)
   where

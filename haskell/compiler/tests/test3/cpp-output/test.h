@@ -278,7 +278,7 @@ S<T>::S()
     , f_bytes(ByteVector::fromLiteral("hello"))
     , f_string("abcd")
     , f_vstring(mkvec<std::string>("xy","ab"))
-    , f_a(A(0,"xyz",true))
+    , f_a(A(31,"xyz",true))
     , f_u(U::mk_f_int(45))
     , f_bint16(B<int16_t> (56,"yikes",mkvec<int16_t>(1,2,3),XY<int16_t> (5,5)))
 {

@@ -37,8 +37,6 @@ newtype Int2 = Int2 { unInt2 :: Data.Int.Int64 }
 instance ADLValue Int2 where
     atype _ = "test.Int2"
     
-    defaultv = Int2 defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
@@ -50,8 +48,6 @@ newtype Int3 = Int3 { unInt3 :: Data.Int.Int64 }
 
 instance ADLValue Int3 where
     atype _ = "test.Int3"
-    
-    defaultv = Int3 42
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -70,8 +66,6 @@ instance (ADLValue x) => ADLValue (Int5 x) where
         , "<", atype (Prelude.undefined ::x)
         , ">" ]
     
-    defaultv = Int5 defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
@@ -87,8 +81,6 @@ instance (ADLValue x) => ADLValue (Int6 x) where
         , "<", atype (Prelude.undefined ::x)
         , ">" ]
     
-    defaultv = Int6 43
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
@@ -103,8 +95,6 @@ newtype IntPoint2 = IntPoint2 { unIntPoint2 :: (Point Data.Int.Int64) }
 instance ADLValue IntPoint2 where
     atype _ = "test.IntPoint2"
     
-    defaultv = IntPoint2 defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
@@ -116,8 +106,6 @@ newtype IntPoint3 = IntPoint3 { unIntPoint3 :: (Point Data.Int.Int64) }
 
 instance ADLValue IntPoint3 where
     atype _ = "test.IntPoint3"
-    
-    defaultv = IntPoint3 (defaultv :: (Point Data.Int.Int64)) { point_x = 5, point_y = 27 }
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -131,15 +119,13 @@ data Point t = Point
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkPoint v_x v_y = Point v_x v_y
+
 instance (ADLValue t) => ADLValue (Point t) where
     atype _ = T.concat
         [ "test.Point"
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
-    
-    defaultv = Point
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -152,8 +138,8 @@ instance (ADLValue t) => ADLValue (Point t) where
                 ] )
             
             from (JSON.Object hm) = Point 
-                <$> fieldFromJSON x_js "x" defaultv hm
-                <*> fieldFromJSON y_js "y" defaultv hm
+                <$> fieldFromJSON x_js "x" hm
+                <*> fieldFromJSON y_js "y" hm
             from _ = Prelude.Nothing
 
 type Point1 x = (Point x)
@@ -166,8 +152,6 @@ instance (ADLValue x) => ADLValue (Point2 x) where
         [ "test.Point2"
         , "<", atype (Prelude.undefined ::x)
         , ">" ]
-    
-    defaultv = Point2 defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -183,8 +167,6 @@ newtype String2 = String2 { unString2 :: T.Text }
 instance ADLValue String2 where
     atype _ = "test.String2"
     
-    defaultv = String2 defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
@@ -196,8 +178,6 @@ newtype String3 = String3 { unString3 :: T.Text }
 
 instance ADLValue String3 where
     atype _ = "test.String3"
-    
-    defaultv = String3 "hello"
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -216,8 +196,6 @@ instance (ADLValue x) => ADLValue (String5 x) where
         , "<", atype (Prelude.undefined ::x)
         , ">" ]
     
-    defaultv = String5 defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
@@ -232,8 +210,6 @@ instance (ADLValue x) => ADLValue (String6 x) where
         [ "test.String6"
         , "<", atype (Prelude.undefined ::x)
         , ">" ]
-    
-    defaultv = String6 "goodbye"
     
     jsonSerialiser jf = JSONSerialiser to from
         where

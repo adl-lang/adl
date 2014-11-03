@@ -26,11 +26,10 @@ data S1 = S1
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkS1  = S1 100
+
 instance ADLValue S1 where
     atype _ = "test.S1"
-    
-    defaultv = S1
-        100
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -41,7 +40,7 @@ instance ADLValue S1 where
                 ] )
             
             from (JSON.Object hm) = S1 
-                <$> fieldFromJSON f_js "f" defaultv hm
+                <$> fieldFromJSON' f_js "f" 100 hm
             from _ = Prelude.Nothing
 
 data U1
@@ -50,8 +49,6 @@ data U1
 
 instance ADLValue U1 where
     atype _ = "test.U1"
-    
-    defaultv = U1_v
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -69,8 +66,6 @@ data U2
 
 instance ADLValue U2 where
     atype _ = "test.U2"
-    
-    defaultv = U2_v defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -90,8 +85,6 @@ data U3
 instance ADLValue U3 where
     atype _ = "test.U3"
     
-    defaultv = U3_v defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             v_js = jsonSerialiser jf
@@ -109,8 +102,6 @@ data U4
 
 instance ADLValue U4 where
     atype _ = "test.U4"
-    
-    defaultv = U4_v defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -130,8 +121,6 @@ data U5
 instance ADLValue U5 where
     atype _ = "test.U5"
     
-    defaultv = U5_v defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             v_js = jsonSerialiser jf
@@ -149,8 +138,6 @@ data U6
 
 instance ADLValue U6 where
     atype _ = "test.U6"
-    
-    defaultv = U6_v defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -170,8 +157,6 @@ data U7
 instance ADLValue U7 where
     atype _ = "test.U7"
     
-    defaultv = U7_v defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             v_js = jsonSerialiser jf
@@ -190,8 +175,6 @@ data U8
 
 instance ADLValue U8 where
     atype _ = "test.U8"
-    
-    defaultv = U8_v1 defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -217,8 +200,6 @@ instance (ADLValue t) => ADLValue (U9 t) where
         [ "test.U9"
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
-    
-    defaultv = U9_v1 defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where

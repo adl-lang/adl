@@ -22,8 +22,6 @@ data X1
 instance ADLValue X1 where
     atype _ = "test.X1"
     
-    defaultv = X1_f1 defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             f1_js = jsonSerialiser jf
@@ -44,12 +42,10 @@ data X2 = X2
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkX2 v_f1 v_f2 = X2 v_f1 v_f2
+
 instance ADLValue X2 where
     atype _ = "test.X2"
-    
-    defaultv = X2
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -62,8 +58,8 @@ instance ADLValue X2 where
                 ] )
             
             from (JSON.Object hm) = X2 
-                <$> fieldFromJSON f1_js "f1" defaultv hm
-                <*> fieldFromJSON f2_js "f2" defaultv hm
+                <$> fieldFromJSON f1_js "f1" hm
+                <*> fieldFromJSON f2_js "f2" hm
             from _ = Prelude.Nothing
 
 data Y1
@@ -73,8 +69,6 @@ data Y1
 
 instance ADLValue Y1 where
     atype _ = "test.Y1"
-    
-    defaultv = Y1_f1 defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -96,12 +90,10 @@ data Y2 = Y2
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkY2 v_f1 v_f2 = Y2 v_f1 v_f2
+
 instance ADLValue Y2 where
     atype _ = "test.Y2"
-    
-    defaultv = Y2
-        defaultv
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -114,6 +106,6 @@ instance ADLValue Y2 where
                 ] )
             
             from (JSON.Object hm) = Y2 
-                <$> fieldFromJSON f1_js "f1" defaultv hm
-                <*> fieldFromJSON f2_js "f2" defaultv hm
+                <$> fieldFromJSON f1_js "f1" hm
+                <*> fieldFromJSON f2_js "f2" hm
             from _ = Prelude.Nothing

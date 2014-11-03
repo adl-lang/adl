@@ -358,7 +358,11 @@ generateStructADLInstance lname mn d s = do
             wt "from (JSON.Object hm) = $1 " [lname]
             indent $ do
               forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
-                wt "$1 fieldFromJSON $2_js \"$2\" hm" [p, (f_name f)]
+                case (f_default f) of
+                  Nothing -> wt "$1 fieldFromJSON $2_js \"$2\" hm" [p, (f_name f)]
+                  (Just jv) -> do
+                    defv <- generateLiteral (f_type f) jv
+                    wt "$1 fieldFromJSON' $2_js \"$2\" $3 hm" [p, (f_name f), defv]
             wl "from _ = Prelude.Nothing"
 
 generateUnionDataType :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()

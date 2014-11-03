@@ -17,7 +17,7 @@ import Data.Ord(comparing)
 import Data.List(find,partition,sortBy)
 import Data.Foldable(foldMap)
 import Data.Monoid
-import Data.Maybe(catMaybes)
+import Data.Maybe(catMaybes,isNothing)
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -350,8 +350,19 @@ validateLiteralForTypeExpr te v = validateTE (resolveBoundTypeVariables te) v
         errs = map (validateTE te) (V.toList v)
     vecLiteral _ _ = Just "expected an array"
 
-    structLiteral s tes (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
+    structLiteral s tes (JSON.Object hm) = 
+      case Set.toList extraKeys of
+        (k:_) -> Just (template "struct literal containing illegal field: $1" [k])
+        [] -> case Set.toList missingKeys of
+          (k:_) -> Just (template "struct literal missing non-optional field: $1" [k])
+          [] -> HM.foldrWithKey checkField Nothing hm 
       where
+        literalKeys = Set.fromList (HM.keys hm)
+        validKeys = Set.fromList [f_name f | f <- s_fields s]
+        nonOptionalKeys = Set.fromList [f_name f | f <- s_fields s, isNothing (f_default f)]
+        extraKeys = Set.difference literalKeys validKeys
+        missingKeys = Set.difference nonOptionalKeys literalKeys
+        
         checkField :: T.Text -> JSON.Value -> Maybe T.Text -> Maybe T.Text
         checkField k v e@(Just t)= e
         checkField k v Nothing = case find ((k==).f_name) (s_fields s) of

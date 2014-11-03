@@ -1,9 +1,4 @@
 {
-    "__comment__" : [
-        "This file contains mappings from the standard ADL types in sys.types to",
-        "their corresponding types in haskell"
-    ],
-
     "customTypes" : [
         {
             "adlname" : "sys.types.Maybe",

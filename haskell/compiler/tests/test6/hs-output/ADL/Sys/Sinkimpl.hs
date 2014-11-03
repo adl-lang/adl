@@ -21,8 +21,6 @@ newtype SerialisationType = SerialisationType { unSerialisationType :: T.Text }
 instance ADLValue SerialisationType where
     atype _ = "sys.sinkimpl.SerialisationType"
     
-    defaultv = SerialisationType defaultv
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
@@ -36,13 +34,10 @@ data SinkData = SinkData
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkSinkData  = SinkData (TransportName "null") (TransportAddr_stringv "") (SerialisationType "json")
+
 instance ADLValue SinkData where
     atype _ = "sys.sinkimpl.SinkData"
-    
-    defaultv = SinkData
-        (TransportName "null")
-        (TransportAddr_stringv "")
-        (SerialisationType "json")
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -57,9 +52,9 @@ instance ADLValue SinkData where
                 ] )
             
             from (JSON.Object hm) = SinkData 
-                <$> fieldFromJSON transport_js "transport" defaultv hm
-                <*> fieldFromJSON address_js "address" defaultv hm
-                <*> fieldFromJSON serialisation_js "serialisation" defaultv hm
+                <$> fieldFromJSON' transport_js "transport" (TransportName "null") hm
+                <*> fieldFromJSON' address_js "address" (TransportAddr_stringv "") hm
+                <*> fieldFromJSON' serialisation_js "serialisation" (SerialisationType "json") hm
             from _ = Prelude.Nothing
 
 data TransportAddr
@@ -70,8 +65,6 @@ data TransportAddr
 
 instance ADLValue TransportAddr where
     atype _ = "sys.sinkimpl.TransportAddr"
-    
-    defaultv = TransportAddr_stringv defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -95,8 +88,6 @@ newtype TransportName = TransportName { unTransportName :: T.Text }
 
 instance ADLValue TransportName where
     atype _ = "sys.sinkimpl.TransportName"
-    
-    defaultv = TransportName defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where

@@ -30,8 +30,7 @@ fromDate :: Day -> DateO
 fromDate d = DateO (Data.Text.pack (formatTime defaultTimeLocale "%F" d))
 
 instance ADLValue Day where
-  atype _ = atype (defaultv :: DateO)
-  defaultv = let (Prelude.Just d) = toDate defaultv in d
+  atype _ = atype (Prelude.undefined :: DateO)
   jsonSerialiser jf = JSONSerialiser aTo aFrom
     where
       js = jsonSerialiser jf
@@ -44,8 +43,6 @@ newtype DateO = DateO { unDateO :: T.Text }
 instance ADLValue DateO where
     atype _ = "test.Date"
     
-    defaultv = DateO "1900-01-01"
-    
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
@@ -57,11 +54,10 @@ data S = S
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkS v_v1 = S v_v1
+
 instance ADLValue S where
     atype _ = "test.S"
-    
-    defaultv = S
-        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -72,7 +68,7 @@ instance ADLValue S where
                 ] )
             
             from (JSON.Object hm) = S 
-                <$> fieldFromJSON v1_js "v1" defaultv hm
+                <$> fieldFromJSON v1_js "v1" hm
             from _ = Prelude.Nothing
 
 data S2 = S2
@@ -86,17 +82,10 @@ data S2 = S2
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkS2  = S2 (fromJSONLiteral "{\"just\":5}") (fromJSONLiteral "{\"nothing\":null}") (fromJSONLiteral "{\"left\":7}") (fromJSONLiteral "{\"right\":\"go\"}") (fromJSONLiteral "{\"v1\":5,\"v2\":7.8}") (fromJSONLiteral "[\"a\",\"xzf\",\"hum\"]") (fromJSONLiteral "[{\"v1\":\"key1\",\"v2\":7},{\"v1\":\"key2\",\"v2\":32}]")
+
 instance ADLValue S2 where
     atype _ = "test.S2"
-    
-    defaultv = S2
-        (fromJSONLiteral "{\"just\":5}")
-        (fromJSONLiteral "{\"nothing\":null}")
-        (fromJSONLiteral "{\"left\":7}")
-        (fromJSONLiteral "{\"right\":\"go\"}")
-        (fromJSONLiteral "{\"v1\":5,\"v2\":7.8}")
-        (fromJSONLiteral "[\"a\",\"xzf\",\"hum\"]")
-        (fromJSONLiteral "[{\"v1\":\"key1\",\"v2\":7},{\"v1\":\"key2\",\"v2\":32}]")
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -119,11 +108,11 @@ instance ADLValue S2 where
                 ] )
             
             from (JSON.Object hm) = S2 
-                <$> fieldFromJSON f1_js "f1" defaultv hm
-                <*> fieldFromJSON f2_js "f2" defaultv hm
-                <*> fieldFromJSON f3_js "f3" defaultv hm
-                <*> fieldFromJSON f4_js "f4" defaultv hm
-                <*> fieldFromJSON f5_js "f5" defaultv hm
-                <*> fieldFromJSON f6_js "f6" defaultv hm
-                <*> fieldFromJSON f7_js "f7" defaultv hm
+                <$> fieldFromJSON' f1_js "f1" (fromJSONLiteral "{\"just\":5}") hm
+                <*> fieldFromJSON' f2_js "f2" (fromJSONLiteral "{\"nothing\":null}") hm
+                <*> fieldFromJSON' f3_js "f3" (fromJSONLiteral "{\"left\":7}") hm
+                <*> fieldFromJSON' f4_js "f4" (fromJSONLiteral "{\"right\":\"go\"}") hm
+                <*> fieldFromJSON' f5_js "f5" (fromJSONLiteral "{\"v1\":5,\"v2\":7.8}") hm
+                <*> fieldFromJSON' f6_js "f6" (fromJSONLiteral "[\"a\",\"xzf\",\"hum\"]") hm
+                <*> fieldFromJSON' f7_js "f7" (fromJSONLiteral "[{\"v1\":\"key1\",\"v2\":7},{\"v1\":\"key2\",\"v2\":32}]") hm
             from _ = Prelude.Nothing
