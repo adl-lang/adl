@@ -26,9 +26,6 @@ class ADLValue a where
   -- the type - the parameter must be ignored.
   atype :: a -> T.Text
 
-  -- | A default value of the given type
-  defaultv :: a
-
   -- | Construct a serialiser for a json value of this type
   jsonSerialiser :: JSONFlags -> JSONSerialiser a
 
@@ -38,10 +35,10 @@ defaultJSONFlags = JSONFlags True
 toJSONObject :: T.Text -> [ (T.Text,JSON.Value) ] -> JSON.Value
 toJSONObject _ fields = JSON.Object $ HM.fromList fields
 
-fieldFromJSON :: (ADLValue a) => JSONSerialiser a -> T.Text -> a -> HM.HashMap T.Text JSON.Value -> Maybe a
-fieldFromJSON js nme defv hm = case HM.lookup nme hm of
+fieldFromJSON :: (ADLValue a) => JSONSerialiser a -> T.Text -> HM.HashMap T.Text JSON.Value -> Maybe a
+fieldFromJSON js nme hm = case HM.lookup nme hm of
   (Just v) -> aFromJSON js v
-  Nothing -> (Just defv)
+  Nothing -> Nothing
 
 unionFromJSON :: HM.HashMap T.Text (JSONSerialiser a) -> JSON.Value -> Maybe a
 unionFromJSON umap (JSON.Object hm) = decodeField (HM.toList hm)

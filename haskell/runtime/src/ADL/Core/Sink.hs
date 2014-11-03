@@ -24,9 +24,7 @@ newtype Sink a = Sink SinkData
   deriving (Eq,Ord,Show)
 
 instance forall a . (ADLValue a) => ADLValue (Sink a) where
-  atype _ = T.concat ["sink<",atype (defaultv::a),">"]
-
-  defaultv = Sink defaultv
+  atype _ = T.concat ["sink<",atype (undefined::a),">"]
 
   jsonSerialiser jf = JSONSerialiser to from
     where

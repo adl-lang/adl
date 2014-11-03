@@ -11,6 +11,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
 import Data.Ord (comparing)
+import Data.Maybe (isNothing)
 
 import System.FilePath(takeDirectory,joinPath,addExtension)
 import Control.Monad
@@ -192,9 +193,9 @@ hPrimitiveLiteral P_ByteVector (JSON.String s) = T.pack (show (decode s))
     decode s = case B64.decode (T.encodeUtf8 s) of
       (Left _) -> "???"
       (Right s) -> s
-hPrimitiveLiteral P_Vector _ = "defaultv" -- never called
+hPrimitiveLiteral P_Vector _ = "undefined" -- never called
 hPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
-hPrimitiveLiteral P_Sink _ = "defaultv" -- never called
+hPrimitiveLiteral P_Sink _ = "undefined" -- never called
 
 litNumber :: S.Scientific -> T.Text
 litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)
@@ -283,6 +284,8 @@ generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
     mn <- fmap ms_name get
     generateStructDataType lname mn d s
     nl
+    generateStructCtor lname mn d s
+    nl
     generateStructADLInstance lname mn d s
 
 generateDecl lname d@(Decl{d_type=(Decl_Union u)}) = do
@@ -322,18 +325,25 @@ generateStructDataType lname mn d s = do
         wl "}"
         derivingStdClasses
 
+generateStructCtor :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateStructCtor lname mn d s = do
+    let params = [ paramName f | f <- (s_fields s), isNothing (f_default f)]
+    values <-  mapM mkValue (s_fields s)
+    wt "mk$1 $2 = $1 $3" [lname,T.intercalate " " params, T.intercalate " " values]
+  where
+    paramName f = template "v_$1" [f_name f]
+    mkValue :: Field ResolvedType -> HGen T.Text
+    mkValue f = case (f_default f) of
+      Nothing -> return (paramName f)
+      (Just defv) -> generateLiteral (f_type f) defv
+    
+
 generateStructADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
 generateStructADLInstance lname mn d s = do
     wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (s_typeParams s)
         nl
-        wt "defaultv = $1" [lname]
-        indent $ do
-          forM_ (s_fields s) $ \f -> do
-            defv <- generateDefaultValue (f_type f) (f_default f) 
-            wl $ defv
-        nl    
         wl "jsonSerialiser jf = JSONSerialiser to from"
         indent $ do
           wl "where"
@@ -349,7 +359,7 @@ generateStructADLInstance lname mn d s = do
             wt "from (JSON.Object hm) = $1 " [lname]
             indent $ do
               forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
-                wt "$1 fieldFromJSON $2_js \"$2\" defaultv hm" [p, (f_name f)]
+                wt "$1 fieldFromJSON $2_js \"$2\" hm" [p, (f_name f)]
             wl "from _ = Prelude.Nothing"
 
 generateUnionDataType :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
@@ -372,12 +382,6 @@ generateUnionADLInstance lname mn d u = do
     wl $ hInstanceHeader "ADLValue" lname (u_typeParams u)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (u_typeParams u)
-        nl
-        let f0 = head (u_fields u)
-            dn0 = hDiscName (d_name d) (f_name f0)
-        if isVoidType (f_type f0)
-          then wt "defaultv = $1" [dn0]
-          else wt "defaultv = $1 defaultv" [dn0]
         nl
         wl "jsonSerialiser jf = JSONSerialiser to from"
         indent $ do
@@ -411,9 +415,6 @@ generateNewtypeADLInstance lname mn d n = do
     indent $ do
         declareAType (ScopedName mn (d_name d)) (n_typeParams n)
         nl
-        defv <- generateDefaultValue (n_typeExpr n) (n_default n) 
-        wt "defaultv = $1 $2" [lname, defv]
-        nl
         wl "jsonSerialiser jf = JSONSerialiser to from"
         indent $ do
           wl "where"
@@ -421,10 +422,6 @@ generateNewtypeADLInstance lname mn d n = do
             wl "js = jsonSerialiser jf"
             wt "to ($1 v) = aToJSON js v" [lname]
             wt "from o = Prelude.fmap $1 (aFromJSON js o)" [lname]
-
-generateDefaultValue :: TypeExpr ResolvedType -> (Maybe JSON.Value) -> HGen T.Text
-generateDefaultValue _ Nothing = return "defaultv"
-generateDefaultValue te (Just v) = generateLiteral te v
 
 generateLiteral :: TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
 generateLiteral te v =  generateLV Map.empty te v
@@ -453,12 +450,12 @@ generateLiteral te v =  generateLV Map.empty te v
       let fields1 = T.intercalate ", " fields
       case tes of
         [] -> do
-          return (template "defaultv { $1 }" [fields1])
+          return (template "PUT_TYPENAME_HERE { $1 }" [fields1])
         _  -> do
           -- If the type has parameters, then we may need to specify the type
           -- of defaultv... so do it just in case
           hte0 <- hTypeExprB m te0
-          return (template "(defaultv :: $1) { $2 }" [hte0,fields1])
+          return (template "(PUT_TYPENAME_HERE :: $1) { $2 }" [hte0,fields1])
       where
         getTE s fname = case L.find (\f -> f_name f == fname) (s_fields s) of
           Just f -> f_type f

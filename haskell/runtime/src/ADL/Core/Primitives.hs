@@ -19,7 +19,6 @@ import ADL.Core.Value
 
 instance ADLValue () where
   atype _ = "void"
-  defaultv = ()
 
   jsonSerialiser jf = JSONSerialiser to from
     where
@@ -29,7 +28,6 @@ instance ADLValue () where
 
 instance ADLValue Bool where
   atype _ = "bool"
-  defaultv = False
 
   jsonSerialiser jf = JSONSerialiser to from
     where
@@ -48,47 +46,38 @@ iFromJSON _ = Nothing
   
 instance ADLValue Int8 where
   atype _ = "int8"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser iToJSON iFromJSON
 
 instance ADLValue Int16 where
   atype _ = "int16"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser iToJSON iFromJSON
 
 instance ADLValue Int32 where
   atype _ = "int32"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser iToJSON iFromJSON
 
 instance ADLValue Int64 where
   atype _ = "int64"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser iToJSON iFromJSON
 
 instance ADLValue Word8 where
   atype _ = "word8"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser iToJSON iFromJSON
 
 instance ADLValue Word16 where
   atype _ = "word16"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser iToJSON iFromJSON
 
 instance ADLValue Word32 where
   atype _ = "word32"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser iToJSON iFromJSON
 
 instance ADLValue Word64 where
   atype _ = "word64"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser iToJSON iFromJSON
 
 instance ADLValue Double where
   atype _ = "double"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser to from
     where
       to v = JSON.Number (S.fromFloatDigits v)
@@ -97,7 +86,6 @@ instance ADLValue Double where
 
 instance ADLValue Float where
   atype _ = "float"
-  defaultv = 0
   jsonSerialiser jf = JSONSerialiser to from
     where
       to v = JSON.Number (S.fromFloatDigits v)
@@ -106,7 +94,6 @@ instance ADLValue Float where
 
 instance ADLValue T.Text where
   atype _ = "string"
-  defaultv = T.empty
   jsonSerialiser jf = JSONSerialiser to from
     where
       to v = JSON.String v
@@ -115,7 +102,6 @@ instance ADLValue T.Text where
 
 instance ADLValue B.ByteString where
   atype _ = "bytes"
-  defaultv = B.empty
   jsonSerialiser jf = JSONSerialiser to from
     where
       to v = JSON.String (T.decodeUtf8 (B64.encode v))
@@ -126,7 +112,6 @@ instance ADLValue B.ByteString where
 
 instance forall a . (ADLValue a) => ADLValue [a] where
   atype _ = T.concat ["vector<",atype (undefined :: a),">"]
-  defaultv = []
   jsonSerialiser jf = JSONSerialiser to from
     where
       js = jsonSerialiser jf

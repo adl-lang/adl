@@ -17,7 +17,6 @@ instance (ADLValue t) => ADLValue (Maybe t) where
         [ "sys.types.Maybe"
         , "<", atype (Prelude.undefined ::t)
         , ">" ]
-  defaultv = Nothing
 
   jsonSerialiser jf = JSONSerialiser to from
     where
@@ -39,8 +38,6 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
         , ",", atype (Prelude.undefined ::t2)
         , ">" ]
     
-  defaultv = Left defaultv
-
   jsonSerialiser jf = JSONSerialiser to from
     where
       js1 = jsonSerialiser jf
@@ -61,8 +58,6 @@ instance forall t1 t2 . (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
         , ",", atype (Prelude.undefined ::t2)
         , ">" ]
     
-  defaultv = (defaultv,defaultv)
-
   jsonSerialiser jf = JSONSerialiser to from
     where
       js1 = jsonSerialiser jf
@@ -72,14 +67,13 @@ instance forall t1 t2 . (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
         ("v2",aToJSON js2 v2)
         ]
       from (JSON.Object hm) = do
-        v1 <- fieldFromJSON js1 "v1" (fst (defaultv :: (t1,t2))) hm
-        v2 <- fieldFromJSON js2 "v2" (snd (defaultv :: (t1,t2))) hm
+        v1 <- fieldFromJSON js1 "v1" hm
+        v2 <- fieldFromJSON js2 "v2" hm
         return (v1,v2)
       from _ = Nothing
 
 instance (ADLValue k, Ord k, ADLValue v) => ADLValue (Map.Map k v) where
   atype _ = atype (undefined :: [(k,v)])
-  defaultv = Map.empty
   jsonSerialiser jf = JSONSerialiser to from
     where
       js = jsonSerialiser jf
@@ -88,7 +82,6 @@ instance (ADLValue k, Ord k, ADLValue v) => ADLValue (Map.Map k v) where
 
 instance (Ord v, ADLValue v) => ADLValue (Set.Set v) where
   atype _ = atype (undefined :: [v])
-  defaultv = Set.empty
   jsonSerialiser jf = JSONSerialiser to from
     where
       js = jsonSerialiser jf

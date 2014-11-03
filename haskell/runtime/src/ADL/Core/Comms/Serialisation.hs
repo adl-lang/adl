@@ -33,7 +33,7 @@ deserialiseJSON lbs =  do
   case v of
     (JSON.Array a) -> case V.toList a of
       [j] -> case aFromJSON (jsonSerialiser defaultJSONFlags) j of
-        Nothing -> Left ("Can't parse JSON to type " ++ T.unpack (atype (defaultv::a)))
+        Nothing -> Left ("Can't parse JSON to type " ++ T.unpack (atype (undefined::a)))
         (Just a1) -> Right a1
       _ -> Left emsg
     _ -> Left emsg
