@@ -81,6 +81,16 @@ aFromJSONFile' js file = do
       ("Unable to parse a value of type " ++
        T.unpack (atype (undefined :: a)) ++ " from " ++ file)
     (Just a) -> return a
+    
+-- Parse a value from a JSON literal. This is a partial function 
+-- only intended for only use within ADL compiler generated code.
+fromJSONLiteral :: forall a . (ADLValue a) => LBS.ByteString -> a
+fromJSONLiteral lbs = case JSON.eitherDecode' lbs of 
+  (Left _) -> error ("unable to parse json literal: " ++ show lbs)
+  (Right jv) -> case aFromJSON (jsonSerialiser defaultJSONFlags) jv of
+    (Just a) -> a
+    Nothing -> error ("Unable to convert json literal to type: " ++ T.unpack (atype (undefined::a)))
+  
 
 wrapToplevel :: JSON.Value -> JSON.Value
 wrapToplevel v@(JSON.Object _) = v

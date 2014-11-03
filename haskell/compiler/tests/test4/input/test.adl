@@ -1,6 +1,8 @@
 module test
 {
 
+import sys.types.*;
+
 // This will be a custom type which serialises as a ISO formatted date
 // stream.
 
@@ -9,6 +11,18 @@ newtype Date = String = "1900-01-01";
 struct S
 {
         Date v1;
+};
+
+// And some tests for the "standard" custom mappings
+
+struct S2
+{
+        Maybe<Int32> f1 = { "just" : 5 };
+        Maybe<Int32> f2 = { "nothing" : null };
+        Either<Int32,String> f3 = { "left" : 7 };
+        Either<Int32,String> f4 = { "right" : "go" };
+        Pair<Int32,Double> f5 = { "v1" : 5, "v2" : 7.8 };
+//        Map<String,Int32> f6 = [ { "v1" : "key1", "v2" : 7 },  { "v1" : "key2", "v2" : 32 } ];
 };
 
 };

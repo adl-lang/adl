@@ -20,10 +20,13 @@ import Control.Monad.Trans.State.Strict
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Encode as JSON
 import qualified Data.Scientific as S
 import Data.Attoparsec.Number
 
 import qualified Data.Text as T
+import qualified Data.Text.Lazy.Builder as LT
+import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as LBS
@@ -434,11 +437,27 @@ generateLiteral te v =  generateLV Map.empty te v
     generateLV :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
     generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
-    generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
-      (Decl_Struct s) -> generateStruct m te0 decl s tes v
-      (Decl_Union u) -> generateUnion m decl u tes v 
-      (Decl_Typedef t) -> generateTypedef m decl t tes v
-      (Decl_Newtype n) -> generateNewtype m decl n tes v
+    generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = do
+        ms <- get
+        case Map.lookup sn (ms_customTypes ms) of
+          (Just ct) -> do
+            -- We don't know how to turn a json literal for custom type into
+            -- code at compile time. This would require, I think, either:
+            --
+            --   * specialised code n the compiler for each custom type
+            --     (going against the idea of custom types)
+            --   * some sort of plugin architecture for custom types
+            --     (currently we just have confif data)
+            --
+            -- So for now, we cheat, and just write the JSON literal and the code
+            -- to deserialise it at runtime.
+            return (template "(fromJSONLiteral $1)"  [T.pack (show (LT.toStrict (LT.toLazyText (JSON.encodeToTextBuilder v))))])
+
+          Nothing -> case d_type decl of
+            (Decl_Struct s) -> generateStruct m te0 decl s tes v
+            (Decl_Union u) -> generateUnion m decl u tes v 
+            (Decl_Typedef t) -> generateTypedef m decl t tes v
+            (Decl_Newtype n) -> generateNewtype m decl n tes v
     generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
          (Just te) -> generateLV m te v
 

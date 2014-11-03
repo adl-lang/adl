@@ -31,6 +31,20 @@ module unittests
 values of type X will always be infinite. Values of type L1 may be constructed to
 be finite, but the default value will be - this is also problematic.
 
+** Fix incorrect error generated for literal maps:
+
+from  haskell/compiler/tests/test4/input/test.adl:
+
+struct S2
+{
+        Map<String,Int32> f6 = [ { "v1" : "key1", "v2" : 7 },  { "v1" : "key2", "v2" : 32 } ];
+};
+
+gives:
+
+    In module test :\nInvalid override of field f6 of S2: literals not allows for parameterised fields"
+
+
 ** DONE Throw compiler errors for type parameters applied to arguments
 
 This should be illegal:
