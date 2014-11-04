@@ -161,22 +161,20 @@ includeStd fr i = include0 fr (IncFilePath i False)
 include0 :: FileRef -> IncFilePath -> Gen ()
 include0 fl i = modify (fl $ \fs -> fs{fs_includes=Set.insert i (fs_includes fs)})
 
-type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
-
 -- Returns the c++ typer expression corresponding to the
 -- given ADL type expression
 cTypeExpr :: Bool -> TypeExpr ResolvedType -> Gen T.Text
-cTypeExpr scopeLocalNames te = cTypeExprB scopeLocalNames Map.empty te
+cTypeExpr scopeLocalNames te = cTypeExprB scopeLocalNames (resolveBoundTypeVariables te)
 
-cTypeExprB :: Bool -> TypeBindingMap -> TypeExpr ResolvedType -> Gen T.Text
-cTypeExprB scopeLocalNames m (TypeExpr rt []) = cTypeExprB1 scopeLocalNames m rt
-cTypeExprB scopeLocalNames m (TypeExpr c args) = do
-  ct <- cTypeExprB1 scopeLocalNames m c
-  argst <- mapM (cTypeExprB scopeLocalNames m) args
+cTypeExprB :: Bool -> TypeExpr ResolvedType -> Gen T.Text
+cTypeExprB scopeLocalNames (TypeExpr rt []) = cTypeExprB1 scopeLocalNames rt
+cTypeExprB scopeLocalNames (TypeExpr c args) = do
+  ct <- cTypeExprB1 scopeLocalNames c
+  argst <- mapM (cTypeExprB scopeLocalNames) args
   return (T.concat $ [ct, "<"] ++ L.intersperse "," argst ++ ["> "])
 
-cTypeExprB1 :: Bool -> TypeBindingMap -> ResolvedType -> Gen T.Text
-cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_)) = do
+cTypeExprB1 :: Bool -> ResolvedType -> Gen T.Text
+cTypeExprB1 scopeLocalNames (RT_Named (sn,_)) = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
@@ -204,10 +202,8 @@ cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_)) = do
         includeModule ifile m
         return (template "$1::$2" [formatText namespace, cTypeName (sn_name sn)])
         
-cTypeExprB1 scopeLocalNames m (RT_Param i) = case Map.lookup i m of
-    (Just te) -> cTypeExprB scopeLocalNames m te
-    Nothing -> return (cTypeParamName i)
-cTypeExprB1 scopeLocalNames _ (RT_Primitive pt) = cPrimitiveType pt
+cTypeExprB1 scopeLocalNames (RT_Param i) = return (cTypeParamName i)
+cTypeExprB1 scopeLocalNames (RT_Primitive pt) = cPrimitiveType pt
 
 reservedWords = Set.fromList
   [ "null"
@@ -1115,58 +1111,49 @@ mkDefaultLiteral te = do
     
 
 mkLiteral :: TypeExpr ResolvedType -> JSON.Value -> Gen Literal
-mkLiteral te jv = mk Map.empty te jv
+mkLiteral te jv = mk (resolveBoundTypeVariables te) jv
   where
-    mk :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> Gen Literal
-    mk _ (TypeExpr (RT_Primitive pt) []) v = do
+    mk :: TypeExpr ResolvedType -> JSON.Value -> Gen Literal
+    mk (TypeExpr (RT_Primitive pt) []) v = do
       ct <- cPrimitiveType pt
       return (LPrimitive ct (cPrimitiveLiteral pt v))
-    mk  m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
-     (Just te) -> mk m te v
-     Nothing -> error ("BUG: Failed to find type binding in mkLiteral for parameter " ++ T.unpack id ++ ", in map " ++ show m)
-    mk m (TypeExpr (RT_Primitive P_Vector) [te]) jv = mkVec m te jv
-    mk m te0@(TypeExpr (RT_Named (_,decl)) tes) jv = case d_type decl of
-      (Decl_Struct s) -> mkStruct m te0 decl s tes jv
-      (Decl_Union u) -> mkUnion m te0 decl u tes jv 
-      (Decl_Typedef t) -> mkTypedef m decl t tes jv
-      (Decl_Newtype n) -> mkNewType m te0 decl n tes jv
+    mk  (TypeExpr (RT_Param id) _) v = error ("BUG: Unable to make literal for unbound type variable " ++ T.unpack id)
+    mk (TypeExpr (RT_Primitive P_Vector) [te]) jv = mkVec te jv
+    mk te0@(TypeExpr (RT_Named (_,decl)) tes) jv = case d_type decl of
+      (Decl_Struct s) -> mkStruct te0 decl s tes jv
+      (Decl_Union u) -> mkUnion te0 decl u tes jv 
+      (Decl_Typedef t) -> mkTypedef decl t tes jv
+      (Decl_Newtype n) -> mkNewType te0 decl n tes jv
 
-    mkVec m te (JSON.Array v) = do
-      t <- cTypeExprB False m te
-      vals <- mapM (mk m te) (V.toList v)
+    mkVec te (JSON.Array v) = do
+      t <- cTypeExprB False te
+      vals <- mapM (mk te) (V.toList v)
       return (LVector t vals)
       
-    mkStruct m te0 d s tes (JSON.Object hm) = do
-      t <- cTypeExprB False m te0
+    mkStruct te0 d s tes (JSON.Object hm) = do
+      t <- cTypeExprB False te0
       fields1 <- forM (s_fields s) $ \f -> do
         case HM.lookup (f_name f) hm of
           Nothing -> mkDefaultLiteral (f_type f) 
-          (Just jv) -> mk m2 (f_type f) jv
+          (Just jv) -> mk (f_type f) jv
       return (LCtor t fields1)
-      where
-        m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
       
-    mkUnion  m te0 d u tes (JSON.Object hm) = do
-      t <- cTypeExprB False m te0
+    mkUnion  te0 d u tes (JSON.Object hm) = do
+      t <- cTypeExprB False te0
       let [(fname,jv)] = HM.toList hm
           f = getF fname
-      lv <- mk m2 (f_type f) jv
+      lv <- mk  (f_type f) jv
       return (LUnion t (cUnionConstructorName d f) lv)
       where
         getF fname = case L.find (\f -> f_name f == fname) (u_fields u) of
           Just f -> f
-        m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
 
-    mkTypedef m d t tes v = mk m2 (t_typeExpr t) v
-      where
-        m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
+    mkTypedef d t tes v = mk (t_typeExpr t) v
 
-    mkNewType m te0 d n tes v = do
-      t <- cTypeExprB False m te0
-      lv <- mk m2 (n_typeExpr n) v
+    mkNewType te0 d n tes v = do
+      t <- cTypeExprB False te0
+      lv <- mk (n_typeExpr n) v
       return (LCtor t [lv])
-      where
-        m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
 literalLValue :: Literal -> T.Text
 literalLValue (LDefault t) = template "$1()" [t]
