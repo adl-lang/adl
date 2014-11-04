@@ -8,6 +8,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
 import Data.Ord (comparing)
+import Data.Maybe (isJust,isNothing)
 
 import System.FilePath(joinPath,takeDirectory,(</>))
 import Control.Monad
@@ -398,8 +399,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     t <- cTypeExpr False (f_type f)
     scopedt <- cTypeExpr True (f_type f)
     litv <- case f_default f of
-        (Just v) -> mkLiteral (f_type f) v
-        Nothing -> mkDefaultLiteral (f_type f)
+        (Just v) -> fmap Just (mkLiteral (f_type f) v)
+        Nothing -> return Nothing
     return (cFieldName dn (f_name f), f, t, scopedt, litv)
 
   let ns = ms_moduleMapper ms (ms_name ms)
@@ -407,41 +408,40 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       ctnameP = case s_typeParams s of
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
+      
+      hasAnyDefaults = any (isJust.f_default) (s_fields s)
+      fts' = [ (fname,f,t,scopedt,litv) | (fname,f,t,scopedt,litv) <- fts, isNothing litv]
 
       -- icfile is where we write definitions: the include file if
       -- parametrised, otherwise the cpp file
       icfile = if null (s_typeParams s) then cppfile else ifile
       icfileS = if null (s_typeParams s) then cppfileS else ifileS
-
+      
+      declareCtor fts = do
+       wt "$1(" [ctname]
+       indent $ do
+         forM_ (commaSep fts) $ \((fname,f,t,_,_),sep) -> do
+            wt "const $1 & $2$3" [t, fname,sep]
+         wl ");"
+         
   -- Class Declaration
   write ifile $ do        
     wl ""
     genTemplate (s_typeParams s)
     wt "struct $1" [ctname]
     dblock $ do
-       wt "$1();" [ctname]
-       wl ""
-       wt "$1(" [ctname]
-       indent $ do
-         forM_ (commaSep fts) $ \((fname,f,t,_,_),sep) -> do
-            wt "const $1 & $2$3" [t, fname,sep]
-         wl ");"
-       wl ""
-       forM_ fts $ \(fname,_,t,_,_) -> do
-           wt "$1 $2;" [t, fname]
+      declareCtor fts
+      wl ""
+      when hasAnyDefaults $ do
+        declareCtor fts'
+        wl ""
+      forM_ fts $ \(fname,_,t,_,_) -> do
+        wt "$1 $2;" [t, fname]
 
     declareOperators ifile (s_typeParams s) ctnameP
 
   write icfile $ do
-    -- Constructors
-    wl ""
-    genTemplate (s_typeParams s)
-    wt "$1::$2()" [ctnameP, ctname]
-    indent $ do
-      let ifts = [ v | v@(_,_,_,_,litv) <- fts, not (literalIsDefault litv) ]
-      forM_ (addMarker ":" "," "," ifts) $ \(mark,(fname,f,t,_,litv)) -> do
-          wt "$1 $2($3)" [mark,fname,literalLValue litv]
-    cblock $ return ()
+    -- The constructor taking each argument
     wl ""
     genTemplate (s_typeParams s)
     wt "$1::$2(" [ctnameP,ctname]
@@ -452,6 +452,21 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_,_)) -> do
         wt "$1 $2($2_)" [mark,fname]
     cblock $ return ()
+    
+    -- The constructor taking only the non-optional arguments
+    when hasAnyDefaults $ do
+      wl ""
+      genTemplate (s_typeParams s)
+      wt "$1::$2(" [ctnameP,ctname]
+      indent $ do
+        forM_ (commaSep fts') $ \((fname, f,t,_,_),sep) -> do
+          wt "const $1 & $2_$3" [t,fname,sep]
+        wl ")"
+        forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_,litv)) -> do
+          case litv of
+            (Just lv) -> wt "$1 $2($3)" [mark,fname,literalLValue lv]
+            Nothing   -> wt "$1 $2($2_)" [mark,fname]
+      cblock $ return ()
 
     -- Non-inline functions
     wl ""
@@ -520,8 +535,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     t <- cTypeExpr False (f_type f)
     scopedt <- cTypeExpr True (f_type f)
     litv <- case f_default f of
-        (Just v) -> mkLiteral (f_type f) v
-        Nothing -> mkDefaultLiteral (f_type f)
+        (Just v) -> fmap Just (mkLiteral (f_type f) v)
+        Nothing -> return Nothing
     return (f, t, scopedt, litv)
 
   let ns = ms_moduleMapper ms (ms_name ms)
@@ -543,7 +558,6 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wl "{"
     wl "public:"
     indent $ do
-      wt "$1();" [ctname]
       forM_ fts $ \(f,t,_,_) -> do
         let ctorName = cUnionConstructorName d f
         if isVoidType (f_type f)
@@ -572,6 +586,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl ""
     wl "private:"
     indent $ do
+      wt "$1();" [ctname]
+      wl ""
       wt "$1( DiscType d, void * v);" [ctname]
       wl ""
       wl "DiscType d_;"
@@ -605,17 +621,6 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
 
   write icfile $ do
     wl ""
-    genTemplate (u_typeParams u)
-    wt "$1::$2()" [ctnameP,ctname]
-    -- FIXME :: Confirm that typechecker disallows empty unions, so the
-    -- head below is ok.
-    let (f,t,_,litv) = head fts
-        lv = if isVoidType (f_type f)
-             then "0"
-             else template "new $1" [literalPValue litv]
-    indent $ wt ": d_($1), p_($2)" [cUnionDiscName d f,lv]
-    wl "{"
-    wl "}"
     forM_ fts $ \(f,t,_,_) -> do
       let ctorName = cUnionConstructorName d f
       wl ""
@@ -1134,8 +1139,8 @@ mkLiteral te jv = mk (resolveBoundTypeVariables te) jv
       t <- cTypeExprB False te0
       fields1 <- forM (s_fields s) $ \f -> do
         case HM.lookup (f_name f) hm of
-          Nothing -> mkDefaultLiteral (f_type f) 
           (Just jv) -> mk (f_type f) jv
+          Nothing -> error ("BUG: No value found in literal for field " ++ T.unpack (f_name f) ++ " of struct " ++ T.unpack (d_name d))
       return (LCtor t fields1)
       
     mkUnion  te0 d u tes (JSON.Object hm) = do

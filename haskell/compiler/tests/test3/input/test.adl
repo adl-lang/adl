@@ -8,6 +8,13 @@ struct A
    Bool f_bool;
 };
 
+struct A2
+{
+   Int16 f_int;
+   String f_string = "Hello";
+   Bool f_bool = false;
+};
+
 struct XY<T>
 {
    T x;

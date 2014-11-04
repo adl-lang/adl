@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Test(
     A(..),
+    A2(..),
     B(..),
     S(..),
     U(..),
@@ -46,6 +47,36 @@ instance ADLValue A where
                 <$> fieldFromJSON f_int_js "f_int" hm
                 <*> fieldFromJSON f_string_js "f_string" hm
                 <*> fieldFromJSON f_bool_js "f_bool" hm
+            from _ = Prelude.Nothing
+
+data A2 = A2
+    { a2_f_int :: Data.Int.Int16
+    , a2_f_string :: T.Text
+    , a2_f_bool :: Prelude.Bool
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkA2 v_f_int = A2 v_f_int "Hello" Prelude.False
+
+instance ADLValue A2 where
+    atype _ = "test.A2"
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f_int_js = jsonSerialiser jf
+            f_string_js = jsonSerialiser jf
+            f_bool_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("f_int",aToJSON f_int_js (a2_f_int v))
+                , ("f_string",aToJSON f_string_js (a2_f_string v))
+                , ("f_bool",aToJSON f_bool_js (a2_f_bool v))
+                ] )
+            
+            from (JSON.Object hm) = A2 
+                <$> fieldFromJSON f_int_js "f_int" hm
+                <*> fieldFromJSON' f_string_js "f_string" "Hello" hm
+                <*> fieldFromJSON' f_bool_js "f_bool" Prelude.False hm
             from _ = Prelude.Nothing
 
 data B t = B
