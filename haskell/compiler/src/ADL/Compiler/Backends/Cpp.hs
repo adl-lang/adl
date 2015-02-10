@@ -392,16 +392,31 @@ generateFwdDecl dn (Decl{d_type=(Decl_Union u)}) = generateFwdDecl1 dn (u_typePa
 generateFwdDecl dn (Decl{d_type=(Decl_Newtype n)}) = generateFwdDecl1 dn (n_typeParams n)
 generateFwdDecl _ (Decl{d_type=(Decl_Typedef _)}) = error "BUG: Unexpected fwd declaration of typedef"
 
+data FieldDetails = FieldDetails {
+  fd_fieldName :: T.Text,
+  fd_tdlName :: T.Text,
+  fd_typeExpr :: T.Text,
+  fd_scopedTypeExpr :: T.Text,
+  fd_hasDefault :: Bool,
+  fd_literal :: Literal
+  
+}
+
+mkFieldDetails :: Ident -> Field ResolvedType -> Gen FieldDetails
+mkFieldDetails dn f = do
+  t <- cTypeExpr False (f_type f)
+  scopedt <- cTypeExpr True (f_type f)
+  litv <- case f_default f of
+    (Just v) -> mkLiteral (f_type f) v
+    Nothing -> mkDefaultLiteral (f_type f)
+  let hasDefault = isJust (f_default f)
+  return (FieldDetails (cFieldName dn (f_name f)) (f_name f) t scopedt hasDefault litv)
+  
+
 generateDecl :: Ident -> Decl ResolvedType -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
-  fts <- forM (s_fields s) $ \f -> do
-    t <- cTypeExpr False (f_type f)
-    scopedt <- cTypeExpr True (f_type f)
-    litv <- case f_default f of
-        (Just v) -> fmap Just (mkLiteral (f_type f) v)
-        Nothing -> return Nothing
-    return (cFieldName dn (f_name f), f, t, scopedt, litv)
+  fds <- mapM (mkFieldDetails dn) (s_fields s)
 
   let ns = ms_moduleMapper ms (ms_name ms)
       ctname = cTypeName dn
@@ -410,18 +425,18 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
       
       hasAnyDefaults = any (isJust.f_default) (s_fields s)
-      fts' = [ (fname,f,t,scopedt,litv) | (fname,f,t,scopedt,litv) <- fts, isNothing litv]
+      fds' = [ fd | fd <- fds, not (fd_hasDefault fd)]
 
       -- icfile is where we write definitions: the include file if
       -- parametrised, otherwise the cpp file
       icfile = if null (s_typeParams s) then cppfile else ifile
       icfileS = if null (s_typeParams s) then cppfileS else ifileS
       
-      declareCtor fts = do
+      declareCtor fds = do
        wt "$1(" [ctname]
        indent $ do
-         forM_ (commaSep fts) $ \((fname,f,t,_,_),sep) -> do
-            wt "const $1 & $2$3" [t, fname,sep]
+         forM_ (commaSep fds) $ \(fd,sep) -> do
+            wt "const $1 & $2$3" [fd_typeExpr fd, fd_fieldName fd,sep]
          wl ");"
          
   -- Class Declaration
@@ -430,13 +445,15 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     genTemplate (s_typeParams s)
     wt "struct $1" [ctname]
     dblock $ do
-      declareCtor fts
+      wt "$1();" [ctname]
+      wl ""
+      declareCtor fds
       wl ""
       when hasAnyDefaults $ do
-        declareCtor fts'
+        declareCtor fds'
         wl ""
-      forM_ fts $ \(fname,_,t,_,_) -> do
-        wt "$1 $2;" [t, fname]
+      forM_ fds $ \fd -> do
+        wt "$1 $2;" [fd_typeExpr fd, fd_fieldName fd]
 
     declareOperators ifile (s_typeParams s) ctnameP
 
@@ -446,11 +463,11 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     genTemplate (s_typeParams s)
     wt "$1::$2(" [ctnameP,ctname]
     indent $ do
-      forM_ (commaSep fts) $ \((fname, f,t,_,_),sep) -> do
-        wt "const $1 & $2_$3" [t,fname,sep]
+      forM_ (commaSep fds) $ \(fd,sep) -> do
+        wt "const $1 & $2_$3" [fd_typeExpr fd,fd_fieldName fd,sep]
       wl ")"
-      forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_,_)) -> do
-        wt "$1 $2($2_)" [mark,fname]
+      forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
+        wt "$1 $2($2_)" [mark,fd_fieldName fd]
     cblock $ return ()
     
     -- The constructor taking only the non-optional arguments
@@ -459,14 +476,23 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       genTemplate (s_typeParams s)
       wt "$1::$2(" [ctnameP,ctname]
       indent $ do
-        forM_ (commaSep fts') $ \((fname, f,t,_,_),sep) -> do
-          wt "const $1 & $2_$3" [t,fname,sep]
+        forM_ (commaSep fds') $ \(fd,sep) -> do
+          wt "const $1 & $2_$3" [fd_typeExpr fd,fd_fieldName fd,sep]
         wl ")"
-        forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_,litv)) -> do
-          case litv of
-            (Just lv) -> wt "$1 $2($3)" [mark,fname,literalLValue lv]
-            Nothing   -> wt "$1 $2($2_)" [mark,fname]
+        forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
+          if (fd_hasDefault fd)
+            then wt "$1 $2($3)"  [mark,fd_fieldName fd,literalLValue (fd_literal fd)]
+            else wt "$1 $2($2_)" [mark,fd_fieldName fd]
       cblock $ return ()
+
+    -- The default constructor
+    wl ""
+    genTemplate (s_typeParams s)
+    wt "$1::$2()" [ctnameP, ctname]
+    indent $ do
+      forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
+        wt "$1 $2($3)" [mark,fd_fieldName fd,literalLValue (fd_literal fd)]
+    cblock $ return ()
 
     -- Non-inline functions
     wl ""
@@ -474,9 +500,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     wl "bool"
     wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do
-      forM_ fts $ \(fname, f,t,_,_) -> do
-        wt "if( a.$1 < b.$1 ) return true;" [fname]
-        wt "if( b.$1 < a.$1 ) return false;" [fname]
+      forM_ fds $ \fd -> do
+        wt "if( a.$1 < b.$1 ) return true;" [fd_fieldName fd]
+        wt "if( b.$1 < a.$1 ) return false;" [fd_fieldName fd]
       wl "return false;"
     wl ""
     genTemplate (s_typeParams s)
@@ -484,8 +510,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do 
       wl "return"
-      forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_,_),sep) -> do
-        indent $ wt "a.$1 == b.$1 $2" [fname,sep]
+      forM_ (sepWithTerm "&&" ";" fds) $ \(fd,sep) -> do
+        indent $ wt "a.$1 == b.$1 $2" [fd_fieldName fd,sep]
 
   write ifileS $ do
     declareSerialisation (s_typeParams s) ms ctnameP
@@ -502,19 +528,20 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
         dblock $ do
             wl "S_( const SerialiserFlags & sf )"
             indent $ do
-              forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,_,_,scopedt,_)) -> do
-                wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,fname,scopedt]
+              forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
+                wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )"
+                   [mark,fd_fieldName fd,fd_scopedTypeExpr fd]
               wl "{}"
             wl ""
             wl ""
-            forM_ fts $ \(fname,_,_,scopedt,_) -> do
-              wt "typename Serialiser<$1>::Ptr $2_s;" [scopedt,fname]
+            forM_ fds $ \fd -> do
+              wt "typename Serialiser<$1>::Ptr $2_s;" [fd_scopedTypeExpr fd,fd_fieldName fd]
             wl ""
             wl "void toJson( JsonWriter &json, const _T & v ) const"
             cblock $ do
               wl "json.startObject();"
-              forM_ fts $ \(fname, f,_,scopedt,_) -> do
-                wt "writeField<$1>( json, $3_s, \"$2\", v.$3 );" [scopedt,f_name f,fname]
+              forM_ fds $ \fd -> do
+                wt "writeField<$1>( json, $3_s, \"$2\", v.$3 );" [fd_scopedTypeExpr fd,fd_tdlName fd,fd_fieldName fd]
               wl "json.endObject();"
               return ()
             wl ""
@@ -523,8 +550,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
               wl "match( json, JsonReader::START_OBJECT );"
               wl "while( !match0( json, JsonReader::END_OBJECT ) )"
               cblock $ do
-                forM_ fts $ \(fname, f,_,_,_) -> do
-                  wt "readField( $1_s, v.$1, \"$2\", json ) ||" [fname,f_name f]
+                forM_ fds $ \fd -> do
+                  wt "readField( $1_s, v.$1, \"$2\", json ) ||" [fd_fieldName fd,fd_tdlName fd]
                 wl "ignoreField( json );"
         wl ""
         wl "return typename Serialiser<_T>::Ptr( new S_(sf) );"

@@ -32,7 +32,7 @@ import Network.HTTP.Client(defaultManagerSettings)
 import qualified Data.Conduit.List as DC
 import qualified Network.HTTP.Conduit as HC
 
-import qualified System.Log.Logger as L
+import Control.Logging
 import Control.Monad.Trans.Resource(runResourceT)
 
 import ADL.Utils.Format
