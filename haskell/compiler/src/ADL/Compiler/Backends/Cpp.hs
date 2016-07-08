@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
 module ADL.Compiler.Backends.Cpp(
   generate,
   CppFlags(..)
@@ -29,6 +29,7 @@ import qualified ADL.Compiler.ParserP as P
 
 import ADL.Utils.Format
 import ADL.Compiler.AST
+import ADL.Compiler.Backends.Literals
 import ADL.Compiler.EIO
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
@@ -142,6 +143,14 @@ write fr cw = do
 type CustomTypeMap = Map.Map ScopedName CustomType
 
 type Gen = State MState
+
+instance MGen (State MState) where
+  getPrimitiveType = cPrimitiveType
+  getPrimitiveDefault pt = return (cPrimitiveDefault pt)
+  getPrimitiveLiteral pt jv = return (cPrimitiveLiteral pt jv)
+  getTypeExpr = cTypeExpr
+  getTypeExprB = cTypeExprB
+  getUnionConstructorName d f = return (cUnionConstructorName d f)
 
 -- Selector function to control which file is being updated.
 type FileRef = (FState -> FState) -> MState-> MState
@@ -1092,81 +1101,8 @@ generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath 
                   customTypes
                   (cf_fileWriter cf)
                   rm
+
 ----------------------------------------------------------------------
-
-data Literal = LDefault Ident
-             | LCtor Ident [Literal]
-             | LUnion Ident T.Text Literal
-             | LVector Ident [Literal]
-             | LPrimitive Ident T.Text
-
-mkDefaultLiteral :: TypeExpr ResolvedType -> Gen Literal
-mkDefaultLiteral te@(TypeExpr (RT_Primitive pt) []) =
-  case cPrimitiveDefault pt of
-    Nothing -> do
-      t <- cTypeExpr False te
-      return (LDefault t)
-    Just l -> do
-      ct <- cPrimitiveType pt
-      return (LPrimitive ct l)
-mkDefaultLiteral te = do
-  t <- cTypeExpr False te
-  return (LDefault t)
-    
-
-mkLiteral :: TypeExpr ResolvedType -> JSON.Value -> Gen Literal
-mkLiteral te jv = mk Map.empty te jv
-  where
-    mk :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> Gen Literal
-    mk _ (TypeExpr (RT_Primitive pt) []) v = do
-      ct <- cPrimitiveType pt
-      return (LPrimitive ct (cPrimitiveLiteral pt v))
-    mk  m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
-     (Just te) -> mk m te v
-     Nothing -> error "BUG: Failed to find type binding in mkLiteral"
-    mk m (TypeExpr (RT_Primitive P_Vector) [te]) jv = mkVec m te jv
-    mk m te0@(TypeExpr (RT_Named (_,decl)) tes) jv = case d_type decl of
-      (Decl_Struct s) -> mkStruct m te0 decl s tes jv
-      (Decl_Union u) -> mkUnion m te0 decl u tes jv 
-      (Decl_Typedef t) -> mkTypedef m decl t tes jv
-      (Decl_Newtype n) -> mkNewType m te0 decl n tes jv
-
-    mkVec m te (JSON.Array v) = do
-      t <- cTypeExprB False m te
-      vals <- mapM (mk m te) (V.toList v)
-      return (LVector t vals)
-      
-    mkStruct m te0 d s tes (JSON.Object hm) = do
-      t <- cTypeExprB False m te0
-      fields1 <- forM (s_fields s) $ \f -> do
-        case HM.lookup (f_name f) hm of
-          Nothing -> mkDefaultLiteral (f_type f) 
-          (Just jv) -> mk m2 (f_type f) jv
-      return (LCtor t fields1)
-      where
-        m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
-      
-    mkUnion  m te0 d u tes (JSON.Object hm) = do
-      t <- cTypeExprB False m te0
-      let [(fname,jv)] = HM.toList hm
-          f = getF fname
-      lv <- mk m (f_type f) jv
-      return (LUnion t (cUnionConstructorName d f) lv)
-      where
-        getF fname = case L.find (\f -> f_name f == fname) (u_fields u) of
-          Just f -> f
-        m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
-
-    mkTypedef m d t tes v = mk m2 (t_typeExpr t) v
-      where
-        m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
-
-    mkNewType m te0 d n tes v = do
-      t <- cTypeExprB False m te0
-      lv <- mk m2 (n_typeExpr n) v
-      return (LCtor t [lv])
-      where
-        m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
 literalLValue :: Literal -> T.Text
 literalLValue (LDefault t) = template "$1()" [t]
@@ -1181,10 +1117,6 @@ literalPValue l@(LCtor _ _) = literalLValue l
 literalPValue l@(LUnion t _ _) = template "$1($2)" [t, literalLValue l]
 literalPValue l@(LVector t _) = template "std::vector<$1>( $2 )" [t, literalLValue l]
 literalPValue (LPrimitive t v) = template "$1($2)" [t, v]
-
-literalIsDefault :: Literal -> Bool
-literalIsDefault (LDefault _) = True
-literalIsDefault _ = False
 
 ----------------------------------------------------------------------
 
@@ -1249,12 +1181,5 @@ cPrimitiveLiteral P_ByteVector (JSON.String s) = template "ByteVector::fromLiter
 cPrimitiveLiteral P_Vector _ = "????" -- never called
 cPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
 cPrimitiveLiteral P_Sink _ = "????" -- never called
-
-litNumber :: S.Scientific -> T.Text
-litNumber n = T.pack s
-  where
-    s = case S.floatingOrInteger n of
-      (Left r) -> show n
-      (Right i) -> show (i::Integer)
 
   

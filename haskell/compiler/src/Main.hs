@@ -17,6 +17,7 @@ import ADL.Compiler.Backends.Verify as V
 import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.AST as A
 import ADL.Compiler.Backends.Cpp as C
+import ADL.Compiler.Backends.Java as J
 import HaskellCustomTypes
 import Paths_adl_compiler
 
@@ -44,6 +45,11 @@ noOverwriteOption ufn =
   Option "" ["no-overwrite"]
     (NoArg ufn)
     "Don't update files that haven't changed"
+
+javaPackageOption ufn =
+  Option "" ["package"]
+    (ReqArg ufn "PACKAGE")
+    "The java package into which the generated ADL code will be placed"
 
 runVerify args0 =
   case getOpt Permute optDescs args0 of
@@ -147,11 +153,43 @@ runCpp args0 =
       , noOverwriteOption (\(cf,o)-> (cf,o{oa_noOverwrite=True}))
       ]
 
+runJava args0 =
+  case getOpt Permute optDescs args0 of
+    (opts,args,[]) -> do
+        flags <- mkFlags opts
+        J.generate flags args
+    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+  where
+    header = "Usage: adl java [OPTION...] files..."
+
+    mkFlags opts = do
+      let (flags1,out) = (foldl (.) id opts) (flags0,out0)
+      return flags1{jf_fileWriter=writeOutputFile out}
+
+    flags0 = J.JavaFlags {
+      jf_searchPath=[],
+      jf_package = "Adl",
+      jf_fileWriter= \_ _ -> return ()
+    }
+    out0 = OutputArgs {
+      oa_log = putStrLn,
+      oa_noOverwrite = True,
+      oa_outputPath = "."
+    }
+
+    optDescs =
+      [ searchDirOption (\s (jf,o)-> (jf{jf_searchPath=s:jf_searchPath jf},o))
+      , outputDirOption (\s (jf,o)-> (jf,o{oa_outputPath=s}))
+      , noOverwriteOption (\(jf,o)-> (jf,o{oa_noOverwrite=True}))
+      , javaPackageOption (\s (jf,o) -> (jf{jf_package=T.pack s},o))
+      ]
+
 usage = T.intercalate "\n"
   [ "Usage: adl verify [OPTION..] <modulePath>..."
   , "       adl ast [OPTION..] <modulePath>..."
   , "       adl haskell [OPTION..] <modulePath>..."
   , "       adl cpp [OPTION..] <modulePath>..."
+  , "       adl java [OPTION..] <modulePath>..."
   ]    
     
 main = do
@@ -161,6 +199,7 @@ main = do
     ("haskell":args) -> runHaskell args
     ("ast":args) -> runAst args
     ("cpp":args) -> runCpp args
+    ("java":args) -> runJava args
     _ -> eioError usage
   where
     runEIO eio = do
