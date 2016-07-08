@@ -6,6 +6,13 @@ import qualified Data.Text as T
 
 newtype EIO e a = EIO { unEIO :: IO (Either e a) }
 
+instance Functor (EIO e) where
+   fmap f (EIO mea) =  EIO $ do
+        ea <- mea
+        case ea of
+            (Left e) -> return (Left e)
+            (Right a) -> return (Right (f a))
+
 instance Monad (EIO e) where
     return a = EIO (return (Right a))
     (EIO mea) >>= fmb = EIO $ do
@@ -14,12 +21,9 @@ instance Monad (EIO e) where
             (Left e) -> return (Left e)
             (Right a) -> unEIO (fmb a)
 
-instance Functor (EIO e) where
-   fmap f (EIO mea) =  EIO $ do
-        ea <- mea
-        case ea of
-            (Left e) -> return (Left e)
-            (Right a) -> return (Right (f a))
+instance Applicative (EIO e) where
+    pure a = return a
+    af <*> aa = do {f <- af; a <- aa; return (f a)}
 
 instance MonadIO (EIO e) where
     liftIO a = EIO (fmap Right a)

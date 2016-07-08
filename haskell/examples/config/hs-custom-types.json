@@ -5,8 +5,7 @@
             "haskellname" : "Day",
             "haskellimports" : [
                 "Data.Time.Calendar(Day)",
-                "Data.Time.Format(parseTime,formatTime)",
-                "System.Locale(defaultTimeLocale)",
+                "Data.Time.Format(parseTime,formatTime,defaultTimeLocale)",
                 "Prelude(Maybe(..),(>>=))",
                 "qualified Data.Text as T"
                 ],
@@ -35,8 +34,7 @@
             "haskellname" : "UTCTime",
             "haskellimports" : [
                 "Data.Time.Clock(UTCTime)",
-                "Data.Time.Format(parseTime,formatTime)",
-                "System.Locale(defaultTimeLocale)",
+                "Data.Time.Format(parseTime,formatTime,defaultTimeLocale)",
                 "Prelude(Maybe(..),(>>=))",
                 "qualified Data.Text as T"
             ],

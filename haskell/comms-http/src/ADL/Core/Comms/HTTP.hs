@@ -81,7 +81,7 @@ transportName = TransportName "http"
 
 newTransport :: CT.Context -> IO Transport
 newTransport c = do
-  manager <- HC.newManager HC.def
+  manager <- HC.newManager HC.tlsManagerSettings
   hc <- return Transport
     { transport = CT.Transport
       { CT.t_name = transportName
@@ -120,7 +120,7 @@ newEndPoint1 eport = do
     bindNewSocket :: Either Int (Int,Int) -> IO (Int,Socket)
 
     bindNewSocket (Left port) = do
-      socket <- DC.bindPort port DC.HostAny
+      socket <- undefined -- fixme: old code was DC.bindPort port DC.HostAny
       return (port,socket)
 
     bindNewSocket (Right (port,maxPort))
@@ -135,7 +135,7 @@ newEndPoint1 eport = do
                (runWarp1 socket sinksv nextactionv)
 
     runWarp1 :: Socket -> SinksV -> TMVar (Maybe (IO ())) -> IO ()
-    runWarp1 socket sinksv nextactionv = runSettingsSocket defaultSettings socket waiApplication
+    runWarp1 socket sinksv nextactionv = runSettingsSocket defaultSettings socket undefined -- FIXME, was: waiApplication
       where
         waiApplication :: Request -> ResourceT IO Response
         waiApplication req = do
@@ -143,7 +143,7 @@ newEndPoint1 eport = do
             then errResponse badRequest400 "Only POST requests are supported"
             else case pathInfo req of
                 [i] -> do
-                  body <- requestBody req $$ (fmap LBS.fromChunks DC.consume)
+                  body <- undefined -- FIXME, was: requestBody req $$ (fmap LBS.fromChunks DC.consume)
                   handleMessage i body
                 _ -> errResponse badRequest400 "request must have a single path component"
 
@@ -216,7 +216,7 @@ connect1 manager addr = do
         port = httpPort addr1
         path = httpPath addr1
         
-        req0 = HC.def {
+        req0 = undefined {  -- FIXME
           HC.host = BSC8.pack host,
           HC.port = port,
           HC.path = T.encodeUtf8 path,

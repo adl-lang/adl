@@ -23,6 +23,9 @@ executable adlc
                        parsec, mtl, transformers,
                        filepath, directory, unordered-containers, vector, base64-bytestring,
                        attoparsec, aeson, scientific, adl-utils, adl-compiler-lib, adl-runtime, aeson-pretty
+  other-modules:       ADL.Compiler.Backends.AST
+                     , ADL.Compiler.Backends.Cpp
+                     , HaskellCustomTypes
 
 executable adlc-tests
   hs-source-dirs:      tests, src
@@ -34,4 +37,7 @@ executable adlc-tests
                        attoparsec, aeson, scientific,
                        aeson-pretty, temporary, hspec,
                        adl-utils, adl-compiler-lib, adl-runtime
+  other-modules:       ADL.Compiler.Backends.AST
+                     , ADL.Compiler.Backends.Cpp
+                     , HaskellCustomTypes
 

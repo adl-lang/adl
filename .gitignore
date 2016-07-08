@@ -1,16 +1,6 @@
 *~
 .make/
-haskell/.cabal-sandbox/
-cabal.sandbox.config
-haskell/compiler-bootstrap/dist/
-haskell/compiler-lib/dist/
-haskell/comms-http/dist/
-haskell/compiler/dist/
-haskell/examples/dist/
-haskell/runtime/dist/
-haskell/utils/dist/
-
-!haskell/cabal.config
+haskell/.stack-work/
 
 ext/
 

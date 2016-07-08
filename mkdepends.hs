@@ -30,14 +30,4 @@ isValidFile f = not ("dist" `isPrefixOf` f) &&
                 not ("~" `isSuffixOf` f)
   
 main = do
-  generate "UTILS-SRC" "haskell/utils"
-  generate "COMPILER-LIB-SRC" "haskell/compiler-lib"
-  generate "COMPILER-BOOTSTRAP-SRC" "haskell/compiler-bootstrap"
-  generate "RUNTIME-SRC" "haskell/runtime"
-  generate "COMPILER-SRC" "haskell/compiler"
-  generate "COMMS-HTTP-SRC" "haskell/comms-http"
-  generate "EXAMPLE-SRC" "haskell/examples"
-
-  generate "ADL-STDLIB-SRC" "adl/stdlib"
-
   generate "RUNTIME-CPP-SRC" "cpp/runtime"

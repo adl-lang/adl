@@ -1,4 +1,4 @@
-name:                adl-example
+name:                adl-examples
 version:             0.1.0.0
 synopsis:            Examples for the Actor Definition Language (ADL)
 -- description:         
@@ -19,3 +19,12 @@ executable runexample
                         old-locale,
                         aeson, unordered-containers, stm, hslogger, time, unix,
                         adl-utils, adl-runtime, adl-comms-http
+   other-modules:       Echo
+                      , KVClient1
+                      , KVClient2
+                      , KVServer1
+                      , KVServer2
+                      , PSClient
+                      , PSServer
+                      , Serialisation
+                      , Utils
