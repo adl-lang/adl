@@ -16,6 +16,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
 import qualified Data.Aeson as JSON
 import Data.Foldable(for_)
+import Data.List(intersperse)
 import Data.Monoid
 
 import ADL.Compiler.AST
@@ -48,8 +49,8 @@ data CodeGenProfile = CodeGenProfile {
 data ClassFile = ClassFile {
    cf_module :: ModuleName,
    cf_decl :: T.Text,
-   cf_fields :: [T.Text],
-   cf_methods :: [[T.Text]]
+   cf_fields :: [Code],
+   cf_methods :: [Code]
 }
 
 classFile :: ModuleName -> T.Text -> ClassFile
@@ -65,10 +66,10 @@ instance MGen (State ClassFile) where
   getTypeExprB _ _ te = genTypeExpr te
   getUnionConstructorName d f = return "FIXME"
 
-addField :: T.Text -> CState ()
-addField declString = modify (\cf->cf{cf_fields=declString:cf_fields cf})
+addField :: Code -> CState ()
+addField decl = modify (\cf->cf{cf_fields=decl:cf_fields cf})
 
-addMethod :: [T.Text] -> CState ()
+addMethod :: Code -> CState ()
 addMethod method = modify (\cf->cf{cf_methods=method:cf_methods cf})
 
 genTypeExpr :: TypeExpr ResolvedType -> CState T.Text
@@ -173,9 +174,6 @@ genPrimitiveDetails P_Sink = PrimitiveDetails {
   pd_copy = \v -> template "new Sink($1)" [v]
   }
 
-indent ::T.Text
-indent = "  "
-
 data FieldDetails = FieldDetails {
   fd_field :: Field ResolvedType,
   fd_typeExprStr :: T.Text,
@@ -212,19 +210,21 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
 
     writeClassFile :: FilePath -> ClassFile -> EIO a ()
     writeClassFile path content = do
-      let lines = [ template "package $1;" [genJavaPackage (mPackage (cf_module content))]
-                  , ""
-                  , template "$1 {" [cf_decl content]
-                  ] <> 
-                  [ indent <> fieldStr <> ";" | fieldStr <- reverse (cf_fields content)
-                  ] <>
-                  [ ""
-                  ] <>
-                  [ T.intercalate "\n" (map (indent <>) method) <> "\n" | method <- reverse (cf_methods content)
-                  ] <>
-                  [ "}"
-                  ]
-      liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines)))
+      let body =
+            ctemplate "package $1;" [genJavaPackage (mPackage (cf_module content))]
+            <>
+            cline ""
+            <>
+            cblock (template "$1" [cf_decl content]) (
+              cline ""
+              <>
+              mconcat (reverse (cf_fields content))
+              <>
+              cline ""
+              <>
+              mconcat (intersperse (cline "") (reverse (cf_methods content)))
+            )
+      liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" (codeText body))))
   
     generateStruct decl struct =  execState gen state0
       where
@@ -236,37 +236,47 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
         gen = do
           for_ (s_fields struct) $ \field -> do
             typeExpr <- genTypeExpr (f_type field)
-            addField ("public " <> typeExpr <> " " <> f_name field)
+            addField (ctemplate "public $1 $2;" [typeExpr,f_name field])
           fieldDetails <- mapM genFieldDetails (s_fields struct)
           let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> f_name (fd_field fd) | fd <- fieldDetails]
+              classArgs = T.intercalate ", " [template "Class<$1> class$1" [typeParam] | typeParam <- s_typeParams struct] 
+              isGeneric = length (s_typeParams struct) > 0
+              
               ctor1 =
-               [ template "public $1($2) {" [d_name decl,ctorArgs]
-               ] <>
-               [ indent <> template "this.$1 = $1;" [f_name f] | f <- s_fields struct
-               ] <>
-               [ "}"
-               ]
+               cblock (template "public $1($2)" [d_name decl,ctorArgs]) (
+                 clineN [template "this.$1 = $1;" [f_name f] | f <- s_fields struct]
+               )
 
               ctor2 =
-               [ template "public $1($2 other) {" [d_name decl, d_name decl <> typeArgs]
-               ] <>
-               [ indent <> template "this.$1 = $2;" (let n = f_name (fd_field fd) in [n,fd_copy fd ("other." <> n)])
-                 | fd <- fieldDetails
-               ] <>
-               [ "}"
-               ]
+                cblock (template "public $1()" [d_name decl]) (
+                  clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
+                )
+
+              ctor2g =
+                cblock (template "public $1($2)" [d_name decl,classArgs]) (
+                  cblock "try" ( 
+                    clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
+                  ) <> 
+                  cblock "catch (ReflectiveOperationException e)" (
+                    cline "throw new RuntimeException(e);"
+                  )
+                )
 
               ctor3 =
-               [ template "public $1() {" [d_name decl]
-               ] <>
-               [ indent <> template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails
-               ] <>
-               [ "}"
-               ]
+               cblock (template "public $1($2 other)" [d_name decl, d_name decl <> typeArgs]) (
+                 clineN [ template "this.$1 = $2;" (let n = f_name (fd_field fd) in [n,fd_copy fd ("other." <> n)])
+                       | fd <- fieldDetails ]
+               )
 
-          addMethod ctor1 
-          addMethod ctor2
-          addMethod ctor3
+              ctor3g =
+               cblock (template "public $1($2 other, $3)" [d_name decl, d_name decl <> typeArgs, classArgs]) (
+                 clineN [template "this.$1 = $2;" (let n = f_name (fd_field fd) in [n,fd_copy fd ("other." <> n)])
+                       | fd <- fieldDetails]
+               )
+
+          addMethod ctor1
+          addMethod (if isGeneric then ctor2g else ctor2)
+          addMethod (if isGeneric then ctor3g else ctor3)
 
 literalValue :: Literal -> T.Text
 literalValue (LDefault t) = template "new $1()" [t]
@@ -295,4 +305,45 @@ generate jf modulePaths = catchAllExceptions  $ for_ modulePaths $ \modulePath -
                  (jf_fileWriter jf)
                  m
 
+----------------------------------------------------------------------
+-- A trivial DSL for generated indented block structured text
+
+data Code = CEmpty
+          | CLine T.Text      
+          | CAppend Code Code
+          | CIndent Code
+
+instance Monoid Code where
+  mempty = CEmpty
+  mappend = CAppend
+
+cline :: T.Text -> Code
+cline t = CLine t
+
+clineN :: [T.Text] -> Code
+clineN ts = mconcat (map CLine ts)
+
+indent :: Code -> Code
+indent = CIndent
+
+indentN :: [Code] -> Code
+indentN = CIndent . mconcat
+
+cblock :: T.Text -> Code -> Code
+cblock intro body =
+  cline (intro <> " {")  <> indent body <> cline "}"
+
+ctemplate :: T.Text -> [T.Text] -> Code
+ctemplate pattern params = cline $ template pattern params
+
+codeText :: Code -> [T.Text]
+codeText c = mkLines "" c
+  where
+    mkLines i CEmpty = []
+    mkLines i (CLine "") = [""]
+    mkLines i (CLine t) = [i <> t]
+    mkLines i (CAppend c1 c2) = mkLines i c1 <> mkLines i c2
+    mkLines i (CIndent c) = mkLines (indentStr <> i) c
+    indentStr = "  "
+    
 
