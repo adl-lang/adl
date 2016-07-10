@@ -1105,15 +1105,15 @@ generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath 
 ----------------------------------------------------------------------
 
 literalLValue :: Literal -> T.Text
-literalLValue (LDefault t) = template "$1()" [t]
-literalLValue (LCtor t ls) = template "$1($2)" [t, T.intercalate "," (map literalLValue ls)]
+literalLValue (LDefault t _) = template "$1()" [t]
+literalLValue (LCtor t _ ls) = template "$1($2)" [t, T.intercalate "," (map literalLValue ls)]
 literalLValue (LUnion t ctor l) = template "$1::$2($3)" [t, ctor, literalLValue l ]
 literalLValue (LVector t ls) = template "mkvec<$1>($2)" [t, T.intercalate "," (map literalLValue ls)]
 literalLValue (LPrimitive _ t) = t
 
 literalPValue :: Literal -> T.Text
-literalPValue l@(LDefault _) = literalLValue l
-literalPValue l@(LCtor _ _) = literalLValue l
+literalPValue l@(LDefault _ _) = literalLValue l
+literalPValue l@(LCtor _ _ _) = literalLValue l
 literalPValue l@(LUnion t _ _) = template "$1($2)" [t, literalLValue l]
 literalPValue l@(LVector t _) = template "std::vector<$1>( $2 )" [t, literalLValue l]
 literalPValue (LPrimitive t v) = template "$1($2)" [t, v]

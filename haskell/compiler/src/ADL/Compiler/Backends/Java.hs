@@ -101,7 +101,7 @@ data PrimitiveDetails = PrimitiveDetails {
   pd_boxed :: CState T.Text,
   pd_default :: Maybe T.Text,
   pd_genLiteral :: JSON.Value -> T.Text,
-  pd_copy :: T.Text -> T.Text
+  pd_copy :: T.Text -> T.Text -> Code
 }
 
 numPrimitive :: T.Text -> T.Text -> PrimitiveDetails
@@ -110,7 +110,7 @@ numPrimitive unboxed boxed = PrimitiveDetails {
   pd_boxed = return boxed,
   pd_default = Just "0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
-  pd_copy = id
+  pd_copy = assignValue
   }
   
 genPrimitiveDetails :: PrimitiveType -> PrimitiveDetails
@@ -119,7 +119,7 @@ genPrimitiveDetails P_Void = PrimitiveDetails {
   pd_boxed = return "Void",
   pd_default = Just "null",
   pd_genLiteral = \jv -> "null",
-  pd_copy = id
+  pd_copy = assignValue
   }
 genPrimitiveDetails P_Bool = PrimitiveDetails {
   pd_unboxed = return "boolean",
@@ -129,7 +129,7 @@ genPrimitiveDetails P_Bool = PrimitiveDetails {
     case jv of
       (JSON.Bool True) -> "true"
       (JSON.Bool False) -> "false",
-  pd_copy = id
+  pd_copy = assignValue
   }
 genPrimitiveDetails P_Int8 = numPrimitive "byte" "Byte"
 genPrimitiveDetails P_Int16 = numPrimitive "short" "Short"
@@ -146,7 +146,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
   pd_boxed = return "byte[]",
   pd_default = Just "new byte[0]",
   pd_genLiteral = \(JSON.String s) -> template "$1.getBytes()" [T.pack (show (decode s))],
-  pd_copy = \v -> template "java.util.Arrays.copyOf($1, $1.length)" [v]
+  pd_copy = \to from -> ctemplate "$1 = java.util.Arrays.copyOf($2, $2.length);" [to,from]
   }
   where
     decode s = case B64.decode (T.encodeUtf8 s) of
@@ -157,40 +157,55 @@ genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_boxed = return "java.util.ArrayList",
   pd_default = Just "new java.util.ArrayList()",
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
-  pd_copy = \v -> template "new java.util.ArrayList($1)" [v] -- FIXME should be a deep copy
+  pd_copy = \to from -> ctemplate "$1 = new java.util.ArrayList($1);" [to,from] -- FIXME should be a deep copy
   }
 genPrimitiveDetails P_String = PrimitiveDetails {
   pd_unboxed = return "String",
   pd_boxed = return "String",
   pd_default = Just "\"\"",
   pd_genLiteral = \(JSON.String s) -> T.pack (show s),
-  pd_copy = id
+  pd_copy = assignValue
   }
 genPrimitiveDetails P_Sink = PrimitiveDetails {
   pd_unboxed = return "Sink",
   pd_boxed = return "Sink",
   pd_default = Just "new Sink()",
   pd_genLiteral = \_ -> "????", -- never called
-  pd_copy = \v -> template "new Sink($1)" [v]
+  pd_copy = assignValue
   }
+
+assignValue :: T.Text -> T.Text -> Code
+assignValue to from = ctemplate "$1 = $2;" [to,from]
 
 data FieldDetails = FieldDetails {
   fd_field :: Field ResolvedType,
   fd_typeExprStr :: T.Text,
   fd_defValue :: Literal,
-  fd_copy :: T.Text -> T.Text
+  fd_copy :: T.Text -> T.Text -> Code
 }
 
 genFieldDetails :: Field ResolvedType -> CState FieldDetails
 genFieldDetails f = do
-  typeExprStr <- genTypeExpr (f_type f)
+  typeExprStr <- genTypeExpr te
   litv <- case f_default f of
-    (Just v) -> mkLiteral (f_type f) v
-    Nothing -> mkDefaultLiteral (f_type f)
-  let copy = case (f_type f) of
-        (TypeExpr (RT_Primitive pt) []) -> pd_copy (genPrimitiveDetails pt)
-        _ -> \v -> template "new $1($2)" [typeExprStr,v]
-  return (FieldDetails f typeExprStr litv copy)
+    (Just v) -> mkLiteral te v
+    Nothing -> mkDefaultLiteral te
+  return (FieldDetails f typeExprStr litv (copy typeExprStr))
+  where
+    te = f_type f
+
+    copy typeExprStr to from = case te of
+      (TypeExpr (RT_Primitive pt) []) ->
+        pd_copy (genPrimitiveDetails pt) to from
+      (TypeExpr (RT_Param i) _) ->
+        ctemplate "$1 = $2.getDeclaredConstructor($3).newInstance($4);" [to,classArgName i,argTypes from,argValues from]
+      _ -> 
+        ctemplate "$1 = new $2($3);" [to,typeExprStr,argValues from]
+
+    argValues from = commaSep ([from] <> getClassArgNames te)
+    argTypes from = commaSep ([from <> ".getClass()"] <> ["Class.forName(\"java.lang.Class\")" | _ <- getClassArgNames te])
+
+
 
 generateModule :: (ModuleName -> JavaPackage) ->
                   (ScopedName -> FilePath) ->
@@ -232,14 +247,15 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
         classDecl = "public class " <> d_name decl <> typeArgs
         typeArgs = case s_typeParams struct of
           [] -> ""
-          args -> "<" <> T.intercalate "," args <> ">"
+          args -> "<" <> commaSep args <> ">"
         gen = do
           for_ (s_fields struct) $ \field -> do
             typeExpr <- genTypeExpr (f_type field)
             addField (ctemplate "public $1 $2;" [typeExpr,f_name field])
           fieldDetails <- mapM genFieldDetails (s_fields struct)
           let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> f_name (fd_field fd) | fd <- fieldDetails]
-              classArgs = T.intercalate ", " [template "Class<$1> class$1" [typeParam] | typeParam <- s_typeParams struct] 
+              classArgs = T.intercalate ", " [template "Class<$1> $2" [typeParam,classArgName typeParam]
+                                             | typeParam <- s_typeParams struct] 
               isGeneric = length (s_typeParams struct) > 0
               
               ctor1 =
@@ -264,14 +280,20 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
 
               ctor3 =
                cblock (template "public $1($2 other)" [d_name decl, d_name decl <> typeArgs]) (
-                 clineN [ template "this.$1 = $2;" (let n = f_name (fd_field fd) in [n,fd_copy fd ("other." <> n)])
-                       | fd <- fieldDetails ]
+                 mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
+                         | fd <- fieldDetails ]
                )
 
               ctor3g =
                cblock (template "public $1($2 other, $3)" [d_name decl, d_name decl <> typeArgs, classArgs]) (
-                 clineN [template "this.$1 = $2;" (let n = f_name (fd_field fd) in [n,fd_copy fd ("other." <> n)])
-                       | fd <- fieldDetails]
+                 cblock "try" ( 
+                    mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
+                            | fd <- fieldDetails ]
+                   )
+                 <> 
+                 cblock "catch (ReflectiveOperationException e)" (
+                   cline "throw new RuntimeException(e);"
+                 )
                )
 
           addMethod ctor1
@@ -279,12 +301,25 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
           addMethod (if isGeneric then ctor3g else ctor3)
 
 literalValue :: Literal -> T.Text
-literalValue (LDefault t) = template "new $1()" [t]
-literalValue (LCtor t ls) = template "new $1($2)" [t, T.intercalate ", " (map literalValue ls)]
+literalValue (LDefault t te) = template "$1($2)" [ctor te,commaSep (getClassArgNames te)]
+  where
+    ctor (TypeExpr (RT_Param i) _) = template "$1.getDeclaredConstructor($2).newInstance" [classArgName i,commaSep (getCtorArgTypes te)]
+    ctor _ = template "new $1" [t]
+
+literalValue (LCtor t _ ls) = template "new $1($2)" [t, T.intercalate ", " (map literalValue ls)]
 literalValue (LUnion t ctor l) = template "$1.$2($3)" [t, ctor, literalValue l ]
-literalValue (LVector t ls) = template "java.util.Arrays.asList($1)" [T.intercalate "," (map literalValue ls)] -- FIXME
+literalValue (LVector t ls) = template "java.util.Arrays.asList($1)" [commaSep (map literalValue ls)] -- FIXME
 literalValue (LPrimitive _ t) = t
-          
+
+getClassArgNames :: TypeExpr ResolvedType -> [Ident]
+getClassArgNames (TypeExpr (RT_Primitive _) targs) = []
+getClassArgNames (TypeExpr _ targs) = [classArgName i | (TypeExpr (RT_Param i) _) <- targs]
+
+getCtorArgTypes :: TypeExpr ResolvedType -> [Ident]
+getCtorArgTypes (TypeExpr _ targs) = ["FIXME" | targ <- targs]
+
+classArgName :: Ident -> Ident
+classArgName i = "class"<>i
 
 packageGenerator :: T.Text -> ModuleName -> JavaPackage
 packageGenerator basePackage mn = JavaPackage (T.splitOn "." basePackage <> unModuleName mn)
@@ -304,6 +339,9 @@ generate jf modulePaths = catchAllExceptions  $ for_ modulePaths $ \modulePath -
                  (const defaultCodeGenProfile)
                  (jf_fileWriter jf)
                  m
+
+commaSep :: [T.Text] -> T.Text
+commaSep = T.intercalate ","
 
 ----------------------------------------------------------------------
 -- A trivial DSL for generated indented block structured text

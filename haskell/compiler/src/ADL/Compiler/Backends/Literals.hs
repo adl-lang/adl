@@ -26,8 +26,8 @@ import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
 import ADL.Core.Value
 
-data Literal = LDefault Ident
-             | LCtor Ident [Literal]
+data Literal = LDefault Ident (TypeExpr ResolvedType)
+             | LCtor Ident (TypeExpr ResolvedType) [Literal]
              | LUnion Ident T.Text Literal
              | LVector Ident [Literal]
              | LPrimitive Ident T.Text
@@ -48,13 +48,13 @@ mkDefaultLiteral te@(TypeExpr (RT_Primitive pt) []) = do
   case mdef of
     Nothing -> do
       t <- getTypeExpr False te
-      return (LDefault t)
+      return (LDefault t te)
     Just l -> do
       ct <- getPrimitiveType pt
       return (LPrimitive ct l)
 mkDefaultLiteral te = do
   t <- getTypeExpr False te
-  return (LDefault t)
+  return (LDefault t te)
 
 mkLiteral :: (MGen m) => TypeExpr ResolvedType -> JSON.Value -> m Literal
 mkLiteral te jv = mk Map.empty te jv
@@ -85,7 +85,7 @@ mkLiteral te jv = mk Map.empty te jv
         case HM.lookup (f_name f) hm of
           Nothing -> mkDefaultLiteral (f_type f) 
           (Just jv) -> mk m2 (f_type f) jv
-      return (LCtor t fields1)
+      return (LCtor t te0 fields1)
       where
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
       
@@ -108,12 +108,12 @@ mkLiteral te jv = mk Map.empty te jv
     mkNewType m te0 d n tes v = do
       t <- getTypeExprB False m te0
       lv <- mk m2 (n_typeExpr n) v
-      return (LCtor t [lv])
+      return (LCtor t te0 [lv])
       where
         m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
 literalIsDefault :: Literal -> Bool
-literalIsDefault (LDefault _) = True
+literalIsDefault (LDefault _ _) = True
 literalIsDefault _ = False
 
 litNumber :: S.Scientific -> T.Text

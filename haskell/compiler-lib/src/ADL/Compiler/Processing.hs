@@ -137,6 +137,10 @@ type RModuleMap = Map.Map ModuleName RModule
 
 type TMap = Map.Map ScopedName ResolvedType
 
+isPrimitiveType :: TypeExpr ResolvedType -> Bool
+isPrimitiveType (TypeExpr (RT_Primitive _) _) = True
+isPrimitiveType _ = False
+
 isVoidType :: TypeExpr ResolvedType -> Bool
 isVoidType (TypeExpr (RT_Primitive P_Void) []) = True
 isVoidType _ = False
