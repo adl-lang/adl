@@ -3,7 +3,7 @@ module Main where
 import Test.Hspec
 
 import System.FilePath(takeDirectory,(</>),combine)
-import System.Directory(getTemporaryDirectory,removeDirectoryRecursive,getCurrentDirectory)
+import System.Directory(getTemporaryDirectory,removeDirectoryRecursive,getCurrentDirectory,setCurrentDirectory)
 import System.IO.Temp(createTempDirectory)
 
 import ADL.Utils.FileDiff
@@ -114,8 +114,8 @@ stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/rpc.adl", "sys/sinkimpl.a
 stdHsCustomTypes = ["../../compiler/config/hs-custom-types.json"]
 stdCppCustomTypes = ["../../compiler/config/cpp-custom-types.json"]
 
-main :: IO ()
-main = hspec $ do
+runTests :: IO ()
+runTests = hspec $ do
   describe "adlc verify backend" $ do
     it "aborts with error for duplicate definitions of a name" $ do
       runVerifyBackend1 "test8/input/test.adl"
@@ -204,3 +204,8 @@ main = hspec $ do
     it "Generates code correctly for mutually recursive types" $ do
       runCppBackend1 "test18/input/test.adl"
         `shouldReturn` MatchOutput
+
+main :: IO ()
+main = do
+  setCurrentDirectory "tests"
+  runTests

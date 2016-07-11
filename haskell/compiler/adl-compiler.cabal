@@ -29,7 +29,8 @@ executable adlc
                      , ADL.Compiler.Backends.Literals
                      , HaskellCustomTypes
 
-executable adlc-tests
+test-suite adlc-tests
+  type:                exitcode-stdio-1.0
   hs-source-dirs:      tests, src
   main-is:             Tests.hs
   build-depends:       base, text, containers, bytestring,
