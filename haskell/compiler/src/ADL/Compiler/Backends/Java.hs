@@ -43,18 +43,39 @@ genJavaPackage :: JavaPackage -> T.Text
 genJavaPackage package = T.intercalate "." (unJavaPackage package)
 
 data CodeGenProfile = CodeGenProfile {
-  cgp_mutable :: Bool
+  cgp_mutable :: Bool,
+  cgp_publicMembers :: Bool,
+  cgp_genericFactories :: Bool
 }
+
+defaultCodeGenProfile = CodeGenProfile True True False
 
 data ClassFile = ClassFile {
    cf_module :: ModuleName,
+   cf_package :: JavaPackage,
    cf_decl :: T.Text,
    cf_fields :: [Code],
    cf_methods :: [Code]
 }
 
-classFile :: ModuleName -> T.Text -> ClassFile
-classFile mname decl = ClassFile mname decl [] []
+classFile :: ModuleName -> JavaPackage -> T.Text -> ClassFile
+classFile mname javapackage decl = ClassFile mname javapackage decl [] []
+
+classFileCode :: ClassFile -> Code
+classFileCode content =
+  ctemplate "package $1;" [genJavaPackage (cf_package content)]
+  <>
+  cline ""
+  <>
+  cblock (template "$1" [cf_decl content]) (
+    cline ""
+    <>
+    mconcat (reverse (cf_fields content))
+    <>
+    cline ""
+    <>
+    mconcat (intersperse (cline "") (reverse (cf_methods content)))
+  )
 
 type CState a = State ClassFile a
 
@@ -215,91 +236,97 @@ generateModule :: (ModuleName -> JavaPackage) ->
                   EIO a ()
 generateModule mPackage mFile mCodeGetProfile fileWriter m = do
   let decls = Map.elems (m_decls m)
-  for_ decls $ generateDecl
-  where
-    generateDecl decl = case d_type decl of
-      Decl_Struct s -> writeClassFile (declFile decl) (generateStruct decl s)
+  for_ decls $ \decl -> do
+    let moduleName = m_name m
+        scopedName = ScopedName moduleName (d_name decl)
+        javaPackage = mPackage moduleName
+        codeProfile = mCodeGetProfile scopedName
+        file = mFile scopedName
+    case d_type decl of
+      (Decl_Struct s) -> writeClassFile file (generateStruct codeProfile moduleName javaPackage decl s)
       _ -> return ()
-
-    declFile decl = mFile (ScopedName (m_name m) (d_name decl))
-
+  where
     writeClassFile :: FilePath -> ClassFile -> EIO a ()
-    writeClassFile path content = do
-      let body =
-            ctemplate "package $1;" [genJavaPackage (mPackage (cf_module content))]
-            <>
-            cline ""
-            <>
-            cblock (template "$1" [cf_decl content]) (
-              cline ""
-              <>
-              mconcat (reverse (cf_fields content))
-              <>
-              cline ""
-              <>
-              mconcat (intersperse (cline "") (reverse (cf_methods content)))
+    writeClassFile path cfile = do
+      let lines = codeText (classFileCode cfile)
+      liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines)))
+      
+
+generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Struct ResolvedType -> ClassFile
+generateStruct codeProfile moduleName javaPackage decl struct =  execState gen state0
+  where
+    state0 = classFile moduleName javaPackage classDecl
+    classDecl = "public class " <> d_name decl <> typeArgs
+    typeArgs = case s_typeParams struct of
+      [] -> ""
+      args -> "<" <> commaSep args <> ">"
+    gen = do
+      fieldDetails <- mapM genFieldDetails (s_fields struct)
+
+      -- Fields
+      for_ (s_fields struct) $ \field -> do
+        typeExpr <- genTypeExpr (f_type field)
+        let modifiers =
+             (if cgp_publicMembers codeProfile then ["public"] else [])
+             <>
+             (if cgp_mutable codeProfile then [] else ["final"])
+        addField (ctemplate "$1 $2 $3;" [T.intercalate " " modifiers,typeExpr,f_name field])
+
+      -- Constructors
+      let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> f_name (fd_field fd) | fd <- fieldDetails]
+          classArgs = T.intercalate ", " [template "Class<$1> $2" [typeParam,classArgName typeParam]
+                                         | typeParam <- s_typeParams struct] 
+          isGeneric = length (s_typeParams struct) > 0
+          
+          ctor1 =
+            cblock (template "public $1($2)" [d_name decl,ctorArgs]) (
+              clineN [template "this.$1 = $1;" [f_name f] | f <- s_fields struct]
             )
-      liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" (codeText body))))
-  
-    generateStruct decl struct =  execState gen state0
-      where
-        state0 = classFile (m_name m) classDecl
-        classDecl = "public class " <> d_name decl <> typeArgs
-        typeArgs = case s_typeParams struct of
-          [] -> ""
-          args -> "<" <> commaSep args <> ">"
-        gen = do
-          for_ (s_fields struct) $ \field -> do
-            typeExpr <- genTypeExpr (f_type field)
-            addField (ctemplate "public $1 $2;" [typeExpr,f_name field])
-          fieldDetails <- mapM genFieldDetails (s_fields struct)
-          let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> f_name (fd_field fd) | fd <- fieldDetails]
-              classArgs = T.intercalate ", " [template "Class<$1> $2" [typeParam,classArgName typeParam]
-                                             | typeParam <- s_typeParams struct] 
-              isGeneric = length (s_typeParams struct) > 0
-              
-              ctor1 =
-               cblock (template "public $1($2)" [d_name decl,ctorArgs]) (
-                 clineN [template "this.$1 = $1;" [f_name f] | f <- s_fields struct]
-               )
 
-              ctor2 =
-                cblock (template "public $1()" [d_name decl]) (
-                  clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
-                )
+          ctor2 =
+            cblock (template "public $1()" [d_name decl]) (
+              clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
+            )
 
-              ctor2g =
-                cblock (template "public $1($2)" [d_name decl,classArgs]) (
-                  cblock "try" ( 
-                    clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
-                  ) <> 
-                  cblock "catch (ReflectiveOperationException e)" (
-                    cline "throw new RuntimeException(e);"
-                  )
-                )
+          ctor2g =
+            cblock (template "public $1($2)" [d_name decl,classArgs]) (
+              cblock "try" ( 
+                clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
+              ) <> 
+              cblock "catch (ReflectiveOperationException e)" (
+                cline "throw new RuntimeException(e);"
+              )
+            )
+            
+          ctor3 =
+            cblock (template "public $1($2 other)" [d_name decl, d_name decl <> typeArgs]) (
+              mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
+                      | fd <- fieldDetails ]
+            )
 
-              ctor3 =
-               cblock (template "public $1($2 other)" [d_name decl, d_name decl <> typeArgs]) (
-                 mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
-                         | fd <- fieldDetails ]
-               )
+          ctor3g =
+            cblock (template "public $1($2 other, $3)" [d_name decl, d_name decl <> typeArgs, classArgs]) (
+              cblock "try" ( 
+                mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
+                        | fd <- fieldDetails ]
+              )
+              <> 
+              cblock "catch (ReflectiveOperationException e)" (
+                cline "throw new RuntimeException(e);"
+              )
+            )
 
-              ctor3g =
-               cblock (template "public $1($2 other, $3)" [d_name decl, d_name decl <> typeArgs, classArgs]) (
-                 cblock "try" ( 
-                    mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
-                            | fd <- fieldDetails ]
-                   )
-                 <> 
-                 cblock "catch (ReflectiveOperationException e)" (
-                   cline "throw new RuntimeException(e);"
-                 )
-               )
-
-          addMethod ctor1
-          addMethod (if isGeneric then ctor2g else ctor2)
-          addMethod (if isGeneric then ctor3g else ctor3)
-
+      addMethod ctor1
+      if isGeneric
+        then when (cgp_genericFactories codeProfile) $ do
+          addMethod ctor2g
+          addMethod ctor3g
+        else do
+          addMethod ctor2
+          addMethod ctor3
+        
+        
+      
 literalValue :: Literal -> T.Text
 literalValue (LDefault t te) = template "$1($2)" [ctor te,commaSep (getClassArgNames te)]
   where
@@ -328,8 +355,6 @@ fileGenerator :: T.Text -> ScopedName -> FilePath
 fileGenerator basePackage sn = T.unpack (T.intercalate "/" idents <> ".java")
   where
     idents = unJavaPackage (packageGenerator basePackage (sn_moduleName sn)) <> [sn_name sn]
-
-defaultCodeGenProfile = CodeGenProfile False
 
 generate :: JavaFlags -> [FilePath] -> EIOT ()
 generate jf modulePaths = catchAllExceptions  $ for_ modulePaths $ \modulePath -> do
