@@ -18,6 +18,7 @@ import qualified ADL.Compiler.Backends.Verify as V
 import qualified ADL.Compiler.Backends.Haskell as H
 import qualified ADL.Compiler.Backends.Cpp as CPP
 import qualified ADL.Compiler.Backends.AST as AST
+import qualified ADL.Compiler.Backends.Java as J
 
 data CodeGenResult = MatchOutput
                    | CompilerFailed T.Text
@@ -105,6 +106,24 @@ runAstBackend1 mpath = runAstBackend ipath [mpath] epath
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "ast-output"
+
+runJavaBackend :: FilePath -> [FilePath] -> FilePath -> IO CodeGenResult
+runJavaBackend ipath mpaths epath = do
+  tdir <- getTemporaryDirectory
+  tempDir <- createTempDirectory tdir "adl.test."
+  let flags = J.JavaFlags {
+    J.jf_searchPath = [ipath],
+    J.jf_package = "adl",
+    J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+    }
+  er <- unEIO $ J.generate flags mpaths
+  processCompilerOutput epath tempDir er
+
+runJavaBackend1 :: FilePath-> IO CodeGenResult
+runJavaBackend1 mpath = runJavaBackend ipath [mpath] epath
+  where
+    ipath = takeDirectory mpath
+    epath = (takeDirectory ipath) </> "java-output"
 
 stdsrc :: FilePath
 stdsrc = "../../../adl/stdlib"
@@ -205,6 +224,11 @@ runTests = hspec $ do
       runCppBackend1 "test18/input/test.adl"
         `shouldReturn` MatchOutput
 
+  describe "adlc java backend" $ do
+    it "generates expected code for various structures" $ do
+      runJavaBackend1 "test2/input/test.adl"
+        `shouldReturn` MatchOutput
+    
 main :: IO ()
 main = do
   setCurrentDirectory "tests"

@@ -42,10 +42,12 @@ S2::S2()
 
 S2::S2(
     const std::string & f1_,
-    const double & f2_
+    const double & f2_,
+    const std::vector<int32_t>  & f3_
     )
     : f1(f1_)
     , f2(f2_)
+    , f3(f3_)
 {
 }
 
@@ -56,6 +58,8 @@ operator<( const S2 &a, const S2 &b )
     if( b.f1 < a.f1 ) return false;
     if( a.f2 < b.f2 ) return true;
     if( b.f2 < a.f2 ) return false;
+    if( a.f3 < b.f3 ) return true;
+    if( b.f3 < a.f3 ) return false;
     return false;
 }
 
@@ -64,7 +68,8 @@ operator==( const S2 &a, const S2 &b )
 {
     return
         a.f1 == b.f1 &&
-        a.f2 == b.f2 ;
+        a.f2 == b.f2 &&
+        a.f3 == b.f3 ;
 }
 
 }}; // ADL::test
@@ -120,17 +125,20 @@ Serialisable<ADL::test::S2>::serialiser( const SerialiserFlags &sf )
         S_( const SerialiserFlags & sf )
             : f1_s( Serialisable<std::string>::serialiser(sf) )
             , f2_s( Serialisable<double>::serialiser(sf) )
+            , f3_s( Serialisable<std::vector<int32_t> >::serialiser(sf) )
             {}
         
         
         typename Serialiser<std::string>::Ptr f1_s;
         typename Serialiser<double>::Ptr f2_s;
+        typename Serialiser<std::vector<int32_t> >::Ptr f3_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             writeField<std::string>( json, f1_s, "f1", v.f1 );
             writeField<double>( json, f2_s, "f2", v.f2 );
+            writeField<std::vector<int32_t> >( json, f3_s, "f3", v.f3 );
             json.endObject();
         }
         
@@ -141,6 +149,7 @@ Serialisable<ADL::test::S2>::serialiser( const SerialiserFlags &sf )
             {
                 readField( f1_s, v.f1, "f1", json ) ||
                 readField( f2_s, v.f2, "f2", json ) ||
+                readField( f3_s, v.f3, "f3", json ) ||
                 ignoreField( json );
             }
         }

@@ -3,6 +3,8 @@ module ADL.Test(
     IntTree,
     S1(..),
     S2(..),
+    S3(..),
+    S4(..),
     Tree(..),
 ) where
 
@@ -48,6 +50,7 @@ instance ADLValue S1 where
 data S2 = S2
     { s2_f1 :: T.Text
     , s2_f2 :: Prelude.Double
+    , s2_f3 :: [Data.Int.Int32]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -57,6 +60,82 @@ instance ADLValue S2 where
     defaultv = S2
         defaultv
         defaultv
+        defaultv
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f1_js = jsonSerialiser jf
+            f2_js = jsonSerialiser jf
+            f3_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("f1",aToJSON f1_js (s2_f1 v))
+                , ("f2",aToJSON f2_js (s2_f2 v))
+                , ("f3",aToJSON f3_js (s2_f3 v))
+                ] )
+            
+            from (JSON.Object hm) = S2 
+                <$> fieldFromJSON f1_js "f1" defaultv hm
+                <*> fieldFromJSON f2_js "f2" defaultv hm
+                <*> fieldFromJSON f3_js "f3" defaultv hm
+            from _ = Prelude.Nothing
+
+data S3 t = S3
+    { s3_f1 :: T.Text
+    , s3_f2 :: Prelude.Double
+    , s3_f3 :: t
+    , s3_f4 :: [t]
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance (ADLValue t) => ADLValue (S3 t) where
+    atype _ = T.concat
+        [ "test.S3"
+        , "<", atype (Prelude.undefined ::t)
+        , ">" ]
+    
+    defaultv = S3
+        defaultv
+        defaultv
+        defaultv
+        defaultv
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            f1_js = jsonSerialiser jf
+            f2_js = jsonSerialiser jf
+            f3_js = jsonSerialiser jf
+            f4_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("f1",aToJSON f1_js (s3_f1 v))
+                , ("f2",aToJSON f2_js (s3_f2 v))
+                , ("f3",aToJSON f3_js (s3_f3 v))
+                , ("f4",aToJSON f4_js (s3_f4 v))
+                ] )
+            
+            from (JSON.Object hm) = S3 
+                <$> fieldFromJSON f1_js "f1" defaultv hm
+                <*> fieldFromJSON f2_js "f2" defaultv hm
+                <*> fieldFromJSON f3_js "f3" defaultv hm
+                <*> fieldFromJSON f4_js "f4" defaultv hm
+            from _ = Prelude.Nothing
+
+data S4 t = S4
+    { s4_f1 :: (S3 T.Text)
+    , s4_f2 :: (S3 t)
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance (ADLValue t) => ADLValue (S4 t) where
+    atype _ = T.concat
+        [ "test.S4"
+        , "<", atype (Prelude.undefined ::t)
+        , ">" ]
+    
+    defaultv = S4
+        defaultv
+        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -64,11 +143,11 @@ instance ADLValue S2 where
             f2_js = jsonSerialiser jf
             
             to v = JSON.Object ( HM.fromList
-                [ ("f1",aToJSON f1_js (s2_f1 v))
-                , ("f2",aToJSON f2_js (s2_f2 v))
+                [ ("f1",aToJSON f1_js (s4_f1 v))
+                , ("f2",aToJSON f2_js (s4_f2 v))
                 ] )
             
-            from (JSON.Object hm) = S2 
+            from (JSON.Object hm) = S4 
                 <$> fieldFromJSON f1_js "f1" defaultv hm
                 <*> fieldFromJSON f2_js "f2" defaultv hm
             from _ = Prelude.Nothing
