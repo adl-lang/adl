@@ -15,8 +15,10 @@ import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
 import qualified Data.Aeson as JSON
+import Data.Char(toUpper)
+import Data.Maybe(fromMaybe,isJust)
 import Data.Foldable(for_)
-import Data.List(intersperse)
+import Data.List(intersperse,replicate)
 import Data.Monoid
 
 import ADL.Compiler.AST
@@ -48,7 +50,7 @@ data CodeGenProfile = CodeGenProfile {
   cgp_genericFactories :: Bool
 }
 
-defaultCodeGenProfile = CodeGenProfile True True False
+defaultCodeGenProfile = CodeGenProfile True False False
 
 data ClassFile = ClassFile {
    cf_module :: ModuleName,
@@ -80,7 +82,10 @@ classFileCode content =
 type CState a = State ClassFile a
 
 instance MGen (State ClassFile) where
-  getPrimitiveType = pd_unboxed . genPrimitiveDetails 
+  getPrimitiveType pt = let pd = genPrimitiveDetails pt in
+    case pd_unboxed pd of
+      Nothing -> pd_type pd
+      (Just t) -> t
   getPrimitiveDefault pt = return (pd_default (genPrimitiveDetails pt))
   getPrimitiveLiteral pt jv = return (pd_genLiteral (genPrimitiveDetails pt) jv)
   getTypeExpr _ te = genTypeExpr te
@@ -106,8 +111,8 @@ genTypeExprB boxed (TypeExpr rt params) = do
 genResolvedType :: Bool -> ResolvedType -> CState T.Text
 genResolvedType _ (RT_Named (scopedName,_)) = genScopedName scopedName
 genResolvedType _(RT_Param ident) = return ident
-genResolvedType False (RT_Primitive pt) = pd_unboxed (genPrimitiveDetails pt)
-genResolvedType True (RT_Primitive pt) = pd_boxed (genPrimitiveDetails pt)
+genResolvedType False (RT_Primitive pt) = let pd = genPrimitiveDetails pt in fromMaybe (pd_type pd) (pd_unboxed pd)
+genResolvedType True (RT_Primitive pt) = pd_type (genPrimitiveDetails pt)
 
 genScopedName :: ScopedName -> CState T.Text
 genScopedName scopedName = do
@@ -118,81 +123,92 @@ genScopedName scopedName = do
     else return (T.intercalate "." (unModuleName mname) <> sn_name scopedName)
 
 data PrimitiveDetails = PrimitiveDetails {
-  pd_unboxed :: CState T.Text,
-  pd_boxed :: CState T.Text,
+  pd_type :: CState T.Text,
+  pd_unboxed :: Maybe (CState T.Text),
   pd_default :: Maybe T.Text,
   pd_genLiteral :: JSON.Value -> T.Text,
-  pd_copy :: T.Text -> T.Text -> Code
+  pd_copy :: T.Text -> T.Text -> Code,
+  pd_hashfn :: T.Text -> T.Text
 }
 
 numPrimitive :: T.Text -> T.Text -> PrimitiveDetails
 numPrimitive unboxed boxed = PrimitiveDetails {
-  pd_unboxed = return unboxed,
-  pd_boxed = return boxed,
+  pd_unboxed = Just (return unboxed),
+  pd_type = return boxed,
   pd_default = Just "0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
-  pd_copy = assignValue
+  pd_copy = assignValue,
+  pd_hashfn = \from -> template "(int)$1" [from]
   }
   
 genPrimitiveDetails :: PrimitiveType -> PrimitiveDetails
 genPrimitiveDetails P_Void = PrimitiveDetails {
-  pd_unboxed = return "Void",
-  pd_boxed = return "Void",
+  pd_unboxed = Nothing,
+  pd_type = return "Void",
   pd_default = Just "null",
   pd_genLiteral = \jv -> "null",
-  pd_copy = assignValue
+  pd_copy = assignValue,
+  pd_hashfn = \from -> "0"
   }
 genPrimitiveDetails P_Bool = PrimitiveDetails {
-  pd_unboxed = return "boolean",
-  pd_boxed = return "Boolean",
+  pd_unboxed = Just (return "boolean"),
+  pd_type = return "Boolean",
   pd_default = Just "false",
   pd_genLiteral = \jv ->
     case jv of
       (JSON.Bool True) -> "true"
       (JSON.Bool False) -> "false",
-  pd_copy = assignValue
+  pd_copy = assignValue,
+  pd_hashfn = \from -> template "($1 ? 0 : 1)" [from]
   }
 genPrimitiveDetails P_Int8 = numPrimitive "byte" "Byte"
 genPrimitiveDetails P_Int16 = numPrimitive "short" "Short"
-genPrimitiveDetails P_Int32 = numPrimitive "int" "Int"
-genPrimitiveDetails P_Int64 = numPrimitive "long" "Long"
-genPrimitiveDetails P_Word8 = numPrimitive "byte" "Byte"
-genPrimitiveDetails P_Word16 = numPrimitive "short" "Short"
-genPrimitiveDetails P_Word32 = numPrimitive "int" "Int"
-genPrimitiveDetails P_Word64 = numPrimitive "long" "Long"
+genPrimitiveDetails P_Int32 = numPrimitive "int" "Integer"
+genPrimitiveDetails P_Int64 = (numPrimitive "long" "Long") {
+  pd_hashfn = \from -> template "(int)($1 ^ ($1 >>> 32))" [from]
+}
+genPrimitiveDetails P_Word8 = genPrimitiveDetails P_Int8
+genPrimitiveDetails P_Word16 = genPrimitiveDetails P_Int16
+genPrimitiveDetails P_Word32 = genPrimitiveDetails P_Int32
+genPrimitiveDetails P_Word64 = genPrimitiveDetails P_Int64
+
 genPrimitiveDetails P_Float = numPrimitive "float" "Float"
 genPrimitiveDetails P_Double = numPrimitive "double" "Double"
 genPrimitiveDetails P_ByteVector = PrimitiveDetails {
-  pd_unboxed = return "byte[]",
-  pd_boxed = return "byte[]",
-  pd_default = Just "new byte[0]",
-  pd_genLiteral = \(JSON.String s) -> template "$1.getBytes()" [T.pack (show (decode s))],
-  pd_copy = \to from -> ctemplate "$1 = java.util.Arrays.copyOf($2, $2.length);" [to,from]
+  pd_unboxed = Nothing,
+  pd_type = return "java.nio.ByteBuffer",
+  pd_default = Just "java.nio.ByteBuffer.allocate(0)",
+  pd_genLiteral = \(JSON.String s) -> template "java.nio.ByteBuffer.allocate(0).put($1.getBytes())" [T.pack (show (decode s))],
+  pd_copy = \to from -> ctemplate "$1 = $2.duplicate();" [to,from],
+  pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
   where
     decode s = case B64.decode (T.encodeUtf8 s) of
       (Left _) -> "???"
       (Right s) -> s
 genPrimitiveDetails P_Vector = PrimitiveDetails {
-  pd_unboxed = return "java.util.ArrayList",
-  pd_boxed = return "java.util.ArrayList",
+  pd_unboxed = Nothing,
+  pd_type = return "java.util.ArrayList",
   pd_default = Just "new java.util.ArrayList()",
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
-  pd_copy = \to from -> ctemplate "$1 = new java.util.ArrayList($1);" [to,from] -- FIXME should be a deep copy
+  pd_copy = \to from -> ctemplate "$1 = new java.util.ArrayList($1);" [to,from], -- FIXME should be a deep copy
+  pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_String = PrimitiveDetails {
-  pd_unboxed = return "String",
-  pd_boxed = return "String",
+  pd_unboxed = Nothing,
+  pd_type = return "String",
   pd_default = Just "\"\"",
   pd_genLiteral = \(JSON.String s) -> T.pack (show s),
-  pd_copy = assignValue
+  pd_copy = assignValue,
+  pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_Sink = PrimitiveDetails {
-  pd_unboxed = return "Sink",
-  pd_boxed = return "Sink",
+  pd_unboxed = Nothing,
+  pd_type = return "Sink",
   pd_default = Just "new Sink()",
   pd_genLiteral = \_ -> "????", -- never called
-  pd_copy = assignValue
+  pd_copy = assignValue,
+  pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 
 assignValue :: T.Text -> T.Text -> Code
@@ -204,6 +220,10 @@ data FieldDetails = FieldDetails {
   fd_defValue :: Literal,
   fd_copy :: T.Text -> T.Text -> Code
 }
+
+unboxedField fd = case (f_type (fd_field fd)) of
+  (TypeExpr (RT_Primitive pt) []) -> isJust (pd_unboxed (genPrimitiveDetails pt))
+  _ -> False
 
 genFieldDetails :: Field ResolvedType -> CState FieldDetails
 genFieldDetails f = do
@@ -256,7 +276,8 @@ generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedTy
 generateStruct codeProfile moduleName javaPackage decl struct =  execState gen state0
   where
     state0 = classFile moduleName javaPackage classDecl
-    classDecl = "public class " <> d_name decl <> typeArgs
+    className = d_name decl
+    classDecl = "public class " <> className <> typeArgs
     typeArgs = case s_typeParams struct of
       [] -> ""
       args -> "<" <> commaSep args <> ">"
@@ -267,7 +288,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
       for_ (s_fields struct) $ \field -> do
         typeExpr <- genTypeExpr (f_type field)
         let modifiers =
-             (if cgp_publicMembers codeProfile then ["public"] else [])
+             (if cgp_publicMembers codeProfile then ["public"] else ["private"])
              <>
              (if cgp_mutable codeProfile then [] else ["final"])
         addField (ctemplate "$1 $2 $3;" [T.intercalate " " modifiers,typeExpr,f_name field])
@@ -279,17 +300,21 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
           isGeneric = length (s_typeParams struct) > 0
           
           ctor1 =
-            cblock (template "public $1($2)" [d_name decl,ctorArgs]) (
-              clineN [template "this.$1 = $1;" [f_name f] | f <- s_fields struct]
+            cblock (template "public $1($2)" [className,ctorArgs]) (
+              clineN [
+                if unboxedField fd
+                  then template "this.$1 = $1;" [f_name (fd_field fd)]
+                  else template "this.$1 = java.util.Objects.requireNonNull($1);" [f_name (fd_field fd)]
+                | fd <- fieldDetails]
             )
 
           ctor2 =
-            cblock (template "public $1()" [d_name decl]) (
+            cblock (template "public $1()" [className]) (
               clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
             )
 
           ctor2g =
-            cblock (template "public $1($2)" [d_name decl,classArgs]) (
+            cblock (template "public $1($2)" [className,classArgs]) (
               cblock "try" ( 
                 clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
               ) <> 
@@ -299,13 +324,13 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
             )
             
           ctor3 =
-            cblock (template "public $1($2 other)" [d_name decl, d_name decl <> typeArgs]) (
+            cblock (template "public $1($2 other)" [className, className <> typeArgs]) (
               mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
                       | fd <- fieldDetails ]
             )
 
           ctor3g =
-            cblock (template "public $1($2 other, $3)" [d_name decl, d_name decl <> typeArgs, classArgs]) (
+            cblock (template "public $1($2 other, $3)" [className, className <> typeArgs, classArgs]) (
               cblock "try" ( 
                 mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
                         | fd <- fieldDetails ]
@@ -324,9 +349,48 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
         else do
           addMethod ctor2
           addMethod ctor3
-        
-        
-      
+
+      -- Getters/Setters
+      when (not (cgp_publicMembers codeProfile)) $ do
+        for_ fieldDetails $ \fd -> do
+          let fieldName = f_name (fd_field fd)
+              capsFieldName = javaCapsName fieldName
+              typeExprStr = fd_typeExprStr fd
+              getter =
+                cblock (template "public $1 get$2()" [typeExprStr,capsFieldName]) (
+                  ctemplate "return $1;" [fieldName]
+                )
+              setter =
+                cblock (template "public void set$1($2 new$1)" [capsFieldName,typeExprStr]) (
+                  ctemplate "$1 = new$2;" [fieldName,capsFieldName]
+                )
+          addMethod getter
+          when (cgp_mutable codeProfile) (addMethod setter)
+
+      -- equals
+      addMethod $ cblock (template "public boolean equals($1 other)"[className]) (
+        cline "return"
+        <>
+        let terminators = replicate (length fieldDetails-1) " &&" <> [";"]
+            tests = [ctemplate (if unboxedField fd then "$1 == other.$1$2" else "$1.equals(other.$1)$2")
+                               [f_name (fd_field fd),term]
+                    | (fd,term) <- zip fieldDetails terminators]
+        in  indent (mconcat tests)
+        )
+
+      -- hashcode
+      addMethod $ cblock "public int hashCode()" (
+        cline "int result = 1;"
+        <>
+        let hashfn fd from = case (f_type (fd_field fd)) of
+              (TypeExpr (RT_Primitive pt) []) -> pd_hashfn (genPrimitiveDetails pt) from
+              _ -> template "$1.hashCode()" [from]
+        in mconcat [ctemplate "result = result * 37 + $1;" [hashfn fd (f_name (fd_field fd))] | fd <- fieldDetails]
+        <>
+        cline "return result;"
+        )
+          
+          
 literalValue :: Literal -> T.Text
 literalValue (LDefault t te) = template "$1($2)" [ctor te,commaSep (getClassArgNames te)]
   where
@@ -347,6 +411,11 @@ getCtorArgTypes (TypeExpr _ targs) = ["FIXME" | targ <- targs]
 
 classArgName :: Ident -> Ident
 classArgName i = "class"<>i
+
+javaCapsName :: Ident -> Ident
+javaCapsName n = case T.uncons n of
+  Nothing -> ""
+  (Just (c,t)) -> T.cons (toUpper c) t
 
 packageGenerator :: T.Text -> ModuleName -> JavaPackage
 packageGenerator basePackage mn = JavaPackage (T.splitOn "." basePackage <> unModuleName mn)
