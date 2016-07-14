@@ -55,17 +55,22 @@ defaultCodeGenProfile = CodeGenProfile True False False
 data ClassFile = ClassFile {
    cf_module :: ModuleName,
    cf_package :: JavaPackage,
+   cf_imports :: Set.Set T.Text,
    cf_decl :: T.Text,
    cf_fields :: [Code],
    cf_methods :: [Code]
 }
 
 classFile :: ModuleName -> JavaPackage -> T.Text -> ClassFile
-classFile mname javapackage decl = ClassFile mname javapackage decl [] []
+classFile mname javapackage decl = ClassFile mname javapackage Set.empty decl [] []
 
 classFileCode :: ClassFile -> Code
 classFileCode content =
   ctemplate "package $1;" [genJavaPackage (cf_package content)]
+  <>
+  cline ""
+  <>
+  mconcat [ctemplate "import $1;" [imp] | imp <- Set.toList (cf_imports content)]
   <>
   cline ""
   <>
@@ -97,6 +102,9 @@ addField decl = modify (\cf->cf{cf_fields=decl:cf_fields cf})
 
 addMethod :: Code -> CState ()
 addMethod method = modify (\cf->cf{cf_methods=method:cf_methods cf})
+
+addImport :: T.Text -> CState ()
+addImport imp = modify (\cf->cf{cf_imports=Set.insert imp (cf_imports cf)})
 
 genTypeExpr :: TypeExpr ResolvedType -> CState T.Text
 genTypeExpr te = genTypeExprB False te
@@ -312,40 +320,14 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
               clineN [template "this.$1 = $2;" [fd_fieldName fd,literalValue (fd_defValue fd)] | fd <- fieldDetails]
             )
 
-          ctor2g =
-            cblock (template "public $1($2)" [className,classArgs]) (
-              cblock "try" ( 
-                clineN [template "this.$1 = $2;" [fd_fieldName fd,literalValue (fd_defValue fd)] | fd <- fieldDetails]
-              ) <> 
-              cblock "catch (ReflectiveOperationException e)" (
-                cline "throw new RuntimeException(e);"
-              )
-            )
-            
           ctor3 =
             cblock (template "public $1($2 other)" [className, className <> typeArgs]) (
               mconcat [ let n = fd_fieldName fd in fd_copy fd ("this."<>n) ("other."<>n)
                       | fd <- fieldDetails ]
             )
 
-          ctor3g =
-            cblock (template "public $1($2 other, $3)" [className, className <> typeArgs, classArgs]) (
-              cblock "try" ( 
-                mconcat [ let n = fd_fieldName fd in fd_copy fd ("this."<>n) ("other."<>n)
-                        | fd <- fieldDetails ]
-              )
-              <> 
-              cblock "catch (ReflectiveOperationException e)" (
-                cline "throw new RuntimeException(e);"
-              )
-            )
-
       addMethod ctor1
-      if isGeneric
-        then when (cgp_genericFactories codeProfile) $ do
-          addMethod ctor2g
-          addMethod ctor3g
-        else do
+      when (not isGeneric) $ do
           addMethod ctor2
           addMethod ctor3
 
@@ -388,6 +370,22 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
         <>
         cline "return result;"
         )
+
+      -- factory
+      let factory =
+            cblock1 (template "public Factory<$1> factory = new Factory<$1>()" [className]) (
+              cblock (template "public $1 create()" [className]) (
+                 ctemplate "return new $1();" [className]
+              )
+              <>
+              cblock (template "public $1 create($1 other)" [className]) (
+                 ctemplate "return new $1(other);" [className]
+              )
+            )
+            
+      addImport "org.adl.runtime.Factory"
+      when (not isGeneric) $ do
+          addMethod factory
           
           
 literalValue :: Literal -> T.Text
@@ -487,6 +485,10 @@ reservedWords = Set.fromList
  , "void"
  , "volatile"
  , "while"
+
+ -- reserved for ADL  
+ , "factory"
+ , "Factory"
  ]
 
 unreserveWord :: Ident -> Ident
@@ -526,6 +528,10 @@ indentN = CIndent . mconcat
 cblock :: T.Text -> Code -> Code
 cblock intro body =
   cline (intro <> " {")  <> indent body <> cline "}"
+
+cblock1 :: T.Text -> Code -> Code
+cblock1 intro body =
+  cline (intro <> " {")  <> indent body <> cline "};"
 
 ctemplate :: T.Text -> [T.Text] -> Code
 ctemplate pattern params = cline $ template pattern params

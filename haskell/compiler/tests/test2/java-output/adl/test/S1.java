@@ -1,5 +1,7 @@
 package adl.test;
 
+import org.adl.runtime.Factory;
+
 public class S1 {
 
   private int x;
@@ -48,4 +50,13 @@ public class S1 {
     result = result * 37 + y.hashCode();
     return result;
   }
+
+  public Factory<S1> factory = new Factory<S1>() {
+    public S1 create() {
+      return new S1();
+    }
+    public S1 create(S1 other) {
+      return new S1(other);
+    }
+  };
 }

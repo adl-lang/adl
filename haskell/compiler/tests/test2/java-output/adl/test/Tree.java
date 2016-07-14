@@ -1,5 +1,7 @@
 package adl.test;
 
+import org.adl.runtime.Factory;
+
 public class Tree<T> {
 
   private T value;

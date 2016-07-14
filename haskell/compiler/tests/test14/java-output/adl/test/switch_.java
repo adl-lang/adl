@@ -1,5 +1,7 @@
 package adl.test;
 
+import org.adl.runtime.Factory;
+
 public class switch_ {
 
   private double double_;
@@ -76,4 +78,13 @@ public class switch_ {
     result = result * 37 + (for_ ? 0 : 1);
     return result;
   }
+
+  public Factory<switch_> factory = new Factory<switch_>() {
+    public switch_ create() {
+      return new switch_();
+    }
+    public switch_ create(switch_ other) {
+      return new switch_(other);
+    }
+  };
 }

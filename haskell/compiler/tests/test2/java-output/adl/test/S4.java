@@ -1,5 +1,7 @@
 package adl.test;
 
+import org.adl.runtime.Factory;
+
 public class S4<T> {
 
   private S3<String> f1;
