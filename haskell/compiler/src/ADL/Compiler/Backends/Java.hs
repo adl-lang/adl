@@ -42,7 +42,7 @@ newtype JavaPackage = JavaPackage {
 }
 
 genJavaPackage :: JavaPackage -> T.Text
-genJavaPackage package = T.intercalate "." (unJavaPackage package)
+genJavaPackage package = T.intercalate "." (map unreserveWord (unJavaPackage package))
 
 data CodeGenProfile = CodeGenProfile {
   cgp_mutable :: Bool,
@@ -110,7 +110,7 @@ genTypeExprB boxed (TypeExpr rt params) = do
 
 genResolvedType :: Bool -> ResolvedType -> CState T.Text
 genResolvedType _ (RT_Named (scopedName,_)) = genScopedName scopedName
-genResolvedType _(RT_Param ident) = return ident
+genResolvedType _(RT_Param ident) = return (unreserveWord ident)
 genResolvedType False (RT_Primitive pt) = let pd = genPrimitiveDetails pt in fromMaybe (pd_type pd) (pd_unboxed pd)
 genResolvedType True (RT_Primitive pt) = pd_type (genPrimitiveDetails pt)
 
@@ -120,7 +120,7 @@ genScopedName scopedName = do
   let mname = sn_moduleName scopedName
   if mname  == currentModuleName
     then return (sn_name scopedName)
-    else return (T.intercalate "." (unModuleName mname) <> sn_name scopedName)
+    else return (T.intercalate "." (map unreserveWord (unModuleName mname <> [sn_name scopedName])))
 
 data PrimitiveDetails = PrimitiveDetails {
   pd_type :: CState T.Text,
@@ -216,6 +216,7 @@ assignValue to from = ctemplate "$1 = $2;" [to,from]
 
 data FieldDetails = FieldDetails {
   fd_field :: Field ResolvedType,
+  fd_fieldName :: Ident,
   fd_typeExprStr :: T.Text,
   fd_defValue :: Literal,
   fd_copy :: T.Text -> T.Text -> Code
@@ -231,7 +232,7 @@ genFieldDetails f = do
   litv <- case f_default f of
     (Just v) -> mkLiteral te v
     Nothing -> mkDefaultLiteral te
-  return (FieldDetails f typeExprStr litv (copy typeExprStr))
+  return (FieldDetails f (unreserveWord (f_name f)) typeExprStr litv (copy typeExprStr))
   where
     te = f_type f
 
@@ -258,10 +259,9 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
   let decls = Map.elems (m_decls m)
   for_ decls $ \decl -> do
     let moduleName = m_name m
-        scopedName = ScopedName moduleName (d_name decl)
         javaPackage = mPackage moduleName
-        codeProfile = mCodeGetProfile scopedName
-        file = mFile scopedName
+        codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
+        file = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
     case d_type decl of
       (Decl_Struct s) -> writeClassFile file (generateStruct codeProfile moduleName javaPackage decl s)
       _ -> return ()
@@ -276,25 +276,24 @@ generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedTy
 generateStruct codeProfile moduleName javaPackage decl struct =  execState gen state0
   where
     state0 = classFile moduleName javaPackage classDecl
-    className = d_name decl
+    className = unreserveWord (d_name decl)
     classDecl = "public class " <> className <> typeArgs
     typeArgs = case s_typeParams struct of
       [] -> ""
-      args -> "<" <> commaSep args <> ">"
+      args -> "<" <> commaSep (map unreserveWord args) <> ">"
     gen = do
       fieldDetails <- mapM genFieldDetails (s_fields struct)
 
       -- Fields
-      for_ (s_fields struct) $ \field -> do
-        typeExpr <- genTypeExpr (f_type field)
+      for_ fieldDetails $ \fd -> do
         let modifiers =
              (if cgp_publicMembers codeProfile then ["public"] else ["private"])
              <>
              (if cgp_mutable codeProfile then [] else ["final"])
-        addField (ctemplate "$1 $2 $3;" [T.intercalate " " modifiers,typeExpr,f_name field])
+        addField (ctemplate "$1 $2 $3;" [T.intercalate " " modifiers,fd_typeExprStr fd,fd_fieldName fd])
 
       -- Constructors
-      let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> f_name (fd_field fd) | fd <- fieldDetails]
+      let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_fieldName fd | fd <- fieldDetails]
           classArgs = T.intercalate ", " [template "Class<$1> $2" [typeParam,classArgName typeParam]
                                          | typeParam <- s_typeParams struct] 
           isGeneric = length (s_typeParams struct) > 0
@@ -303,20 +302,20 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
             cblock (template "public $1($2)" [className,ctorArgs]) (
               clineN [
                 if unboxedField fd
-                  then template "this.$1 = $1;" [f_name (fd_field fd)]
-                  else template "this.$1 = java.util.Objects.requireNonNull($1);" [f_name (fd_field fd)]
+                  then template "this.$1 = $1;" [fd_fieldName fd]
+                  else template "this.$1 = java.util.Objects.requireNonNull($1);" [fd_fieldName fd]
                 | fd <- fieldDetails]
             )
 
           ctor2 =
             cblock (template "public $1()" [className]) (
-              clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
+              clineN [template "this.$1 = $2;" [fd_fieldName fd,literalValue (fd_defValue fd)] | fd <- fieldDetails]
             )
 
           ctor2g =
             cblock (template "public $1($2)" [className,classArgs]) (
               cblock "try" ( 
-                clineN [template "this.$1 = $2;" [f_name (fd_field fd),literalValue (fd_defValue fd)] | fd <- fieldDetails]
+                clineN [template "this.$1 = $2;" [fd_fieldName fd,literalValue (fd_defValue fd)] | fd <- fieldDetails]
               ) <> 
               cblock "catch (ReflectiveOperationException e)" (
                 cline "throw new RuntimeException(e);"
@@ -325,14 +324,14 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
             
           ctor3 =
             cblock (template "public $1($2 other)" [className, className <> typeArgs]) (
-              mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
+              mconcat [ let n = fd_fieldName fd in fd_copy fd ("this."<>n) ("other."<>n)
                       | fd <- fieldDetails ]
             )
 
           ctor3g =
             cblock (template "public $1($2 other, $3)" [className, className <> typeArgs, classArgs]) (
               cblock "try" ( 
-                mconcat [ let n = f_name (fd_field fd) in fd_copy fd ("this."<>n) ("other."<>n)
+                mconcat [ let n = fd_fieldName fd in fd_copy fd ("this."<>n) ("other."<>n)
                         | fd <- fieldDetails ]
               )
               <> 
@@ -353,8 +352,8 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
       -- Getters/Setters
       when (not (cgp_publicMembers codeProfile)) $ do
         for_ fieldDetails $ \fd -> do
-          let fieldName = f_name (fd_field fd)
-              capsFieldName = javaCapsName fieldName
+          let fieldName = fd_fieldName fd
+              capsFieldName = javaCapsFieldName fd
               typeExprStr = fd_typeExprStr fd
               getter =
                 cblock (template "public $1 get$2()" [typeExprStr,capsFieldName]) (
@@ -373,7 +372,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
         <>
         let terminators = replicate (length fieldDetails-1) " &&" <> [";"]
             tests = [ctemplate (if unboxedField fd then "$1 == other.$1$2" else "$1.equals(other.$1)$2")
-                               [f_name (fd_field fd),term]
+                               [fd_fieldName fd,term]
                     | (fd,term) <- zip fieldDetails terminators]
         in  indent (mconcat tests)
         )
@@ -385,7 +384,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
         let hashfn fd from = case (f_type (fd_field fd)) of
               (TypeExpr (RT_Primitive pt) []) -> pd_hashfn (genPrimitiveDetails pt) from
               _ -> template "$1.hashCode()" [from]
-        in mconcat [ctemplate "result = result * 37 + $1;" [hashfn fd (f_name (fd_field fd))] | fd <- fieldDetails]
+        in mconcat [ctemplate "result = result * 37 + $1;" [hashfn fd (fd_fieldName fd)] | fd <- fieldDetails]
         <>
         cline "return result;"
         )
@@ -412,11 +411,6 @@ getCtorArgTypes (TypeExpr _ targs) = ["FIXME" | targ <- targs]
 classArgName :: Ident -> Ident
 classArgName i = "class"<>i
 
-javaCapsName :: Ident -> Ident
-javaCapsName n = case T.uncons n of
-  Nothing -> ""
-  (Just (c,t)) -> T.cons (toUpper c) t
-
 packageGenerator :: T.Text -> ModuleName -> JavaPackage
 packageGenerator basePackage mn = JavaPackage (T.splitOn "." basePackage <> unModuleName mn)
 
@@ -436,6 +430,74 @@ generate jf modulePaths = catchAllExceptions  $ for_ modulePaths $ \modulePath -
 
 commaSep :: [T.Text] -> T.Text
 commaSep = T.intercalate ","
+
+----------------------------------------------------------------------
+reservedWords :: Set.Set Ident
+reservedWords = Set.fromList
+ [ "abstract"
+ , "assert"
+ , "boolean"
+ , "break"
+ , "byte"
+ , "case"
+ , "catch"
+ , "char"
+ , "class"
+ , "const"
+ , "continue"
+ , "default"
+ , "do"
+ , "double"
+ , "else"
+ , "enum"
+ , "extends"
+ , "false"
+ , "final"
+ , "finally"
+ , "float"
+ , "for"
+ , "goto"
+ , "if"
+ , "implements"
+ , "import"
+ , "instanceof"
+ , "int"
+ , "interface"
+ , "long"
+ , "native"
+ , "new"
+ , "null"
+ , "package"
+ , "private"
+ , "protected"
+ , "public"
+ , "return"
+ , "short"
+ , "static"
+ , "strictfp"
+ , "super"
+ , "switch"
+ , "synchronized"
+ , "this"
+ , "throw"
+ , "throws"
+ , "transient"
+ , "true"
+ , "try"
+ , "void"
+ , "volatile"
+ , "while"
+ ]
+
+unreserveWord :: Ident -> Ident
+unreserveWord n | Set.member n reservedWords = T.append n "_"
+                | otherwise = n
+
+javaCapsFieldName :: FieldDetails -> Ident
+javaCapsFieldName fd = case T.uncons (f_name (fd_field fd)) of
+  Nothing -> ""
+  (Just (c,t)) -> T.cons (toUpper c) t
+
 
 ----------------------------------------------------------------------
 -- A trivial DSL for generated indented block structured text

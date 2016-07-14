@@ -23,7 +23,13 @@ import qualified ADL.Compiler.Backends.Java as J
 data CodeGenResult = MatchOutput
                    | CompilerFailed T.Text
                    | OutputDiff FilePath FilePath [(FilePath,FileDiff)]
-   deriving (Eq,Show)                     
+   deriving (Eq)
+
+instance Show CodeGenResult where
+  show MatchOutput = "matching output"
+  show (CompilerFailed t) = "compiler failure: " ++ T.unpack t
+  show (OutputDiff expected actual diffs ) = "diff " ++ expected ++ " " ++ actual ++ " (details: " ++ show diffs ++ ")"
+  
 
 processCompilerOutput :: FilePath -> FilePath -> Either T.Text () -> IO CodeGenResult
 processCompilerOutput _ tempDir (Left err) = do
@@ -227,6 +233,9 @@ runTests = hspec $ do
   describe "adlc java backend" $ do
     it "generates expected code for various structures" $ do
       runJavaBackend1 "test2/input/test.adl"
+        `shouldReturn` MatchOutput
+    it "generates valid names when ADL contains java reserved words" $ do
+      runJavaBackend1 "test14/input/test.adl"
         `shouldReturn` MatchOutput
     
 main :: IO ()
