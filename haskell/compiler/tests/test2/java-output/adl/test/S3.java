@@ -1,5 +1,6 @@
 package adl.test;
 
+import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
 public class S3<T> {
@@ -63,5 +64,22 @@ public class S3<T> {
     result = result * 37 + f3.hashCode();
     result = result * 37 + f4.hashCode();
     return result;
+  }
+
+  public static <T> Factory<S3<T>> factory(Factory<T> factoryT) {
+    return new Factory<S3<T>>() {
+      final Factory<String> f1 = Factories.StringFactory;
+      final Factory<Double> f2 = Factories.DoubleFactory;
+      final Factory<T> f3 = factoryT;
+      final Factory<java.util.ArrayList<T>> f4 = Factories.ArrayListFactory(factoryT);
+
+      public S3<T> create() {
+        return new S3<T>(f1.create(),f2.create(),f3.create(),f4.create());
+      }
+
+      public S3<T> create(S3<T> other) {
+        return new S3<T>(f1.create(other.getF1()),f2.create(other.getF2()),f3.create(other.getF3()),f4.create(other.getF4()));
+      }
+    };
   }
 }

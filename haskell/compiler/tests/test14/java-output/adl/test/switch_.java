@@ -1,5 +1,6 @@
 package adl.test;
 
+import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
 public class switch_ {
@@ -79,7 +80,7 @@ public class switch_ {
     return result;
   }
 
-  public Factory<switch_> factory = new Factory<switch_>() {
+  public static Factory<switch_> factory = new Factory<switch_>() {
     public switch_ create() {
       return new switch_();
     }

@@ -1,5 +1,6 @@
 package adl.test;
 
+import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
 public class S4<T> {
@@ -39,5 +40,20 @@ public class S4<T> {
     result = result * 37 + f1.hashCode();
     result = result * 37 + f2.hashCode();
     return result;
+  }
+
+  public static <T> Factory<S4<T>> factory(Factory<T> factoryT) {
+    return new Factory<S4<T>>() {
+      final Factory<S3<String>> f1 = S3.factory(Factories.StringFactory);
+      final Factory<S3<T>> f2 = S3.factory(factoryT);
+
+      public S4<T> create() {
+        return new S4<T>(f1.create(),f2.create());
+      }
+
+      public S4<T> create(S4<T> other) {
+        return new S4<T>(f1.create(other.getF1()),f2.create(other.getF2()));
+      }
+    };
   }
 }

@@ -130,12 +130,26 @@ genScopedName scopedName = do
     then return (sn_name scopedName)
     else return (T.intercalate "." (map unreserveWord (unModuleName mname <> [sn_name scopedName])))
 
+genFactoryExpr :: TypeExpr ResolvedType -> CState T.Text
+genFactoryExpr (TypeExpr rt params) = do
+  fparams <- mapM genFactoryExpr params
+  fe <- case rt of
+    (RT_Named (scopedName,_)) -> do
+      fe <- genScopedName scopedName
+      return (template "$1.factory" [fe])
+    (RT_Param ident) -> return (factoryTypeArg ident)
+    (RT_Primitive pt) -> pd_factory (genPrimitiveDetails pt)
+  case fparams of
+    [] -> return fe
+    _ -> return (template "$1($2)" [fe,commaSep fparams])
+
 data PrimitiveDetails = PrimitiveDetails {
   pd_type :: CState T.Text,
   pd_unboxed :: Maybe (CState T.Text),
   pd_default :: Maybe T.Text,
   pd_genLiteral :: JSON.Value -> T.Text,
   pd_copy :: T.Text -> T.Text -> Code,
+  pd_factory :: CState T.Text,
   pd_hashfn :: T.Text -> T.Text
 }
 
@@ -146,6 +160,7 @@ numPrimitive unboxed boxed = PrimitiveDetails {
   pd_default = Just "0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
   pd_copy = assignValue,
+  pd_factory = primitiveFactory boxed,
   pd_hashfn = \from -> template "(int)$1" [from]
   }
   
@@ -156,6 +171,7 @@ genPrimitiveDetails P_Void = PrimitiveDetails {
   pd_default = Just "null",
   pd_genLiteral = \jv -> "null",
   pd_copy = assignValue,
+  pd_factory = primitiveFactory "Void",
   pd_hashfn = \from -> "0"
   }
 genPrimitiveDetails P_Bool = PrimitiveDetails {
@@ -167,6 +183,7 @@ genPrimitiveDetails P_Bool = PrimitiveDetails {
       (JSON.Bool True) -> "true"
       (JSON.Bool False) -> "false",
   pd_copy = assignValue,
+  pd_factory = primitiveFactory "Boolean",
   pd_hashfn = \from -> template "($1 ? 0 : 1)" [from]
   }
 genPrimitiveDetails P_Int8 = numPrimitive "byte" "Byte"
@@ -188,6 +205,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
   pd_default = Just "java.nio.ByteBuffer.allocate(0)",
   pd_genLiteral = \(JSON.String s) -> template "java.nio.ByteBuffer.allocate(0).put($1.getBytes())" [T.pack (show (decode s))],
   pd_copy = \to from -> ctemplate "$1 = $2.duplicate();" [to,from],
+  pd_factory = primitiveFactory "ByteBuffer",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
   where
@@ -200,6 +218,7 @@ genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_default = Just "new java.util.ArrayList()",
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
   pd_copy = \to from -> ctemplate "$1 = new java.util.ArrayList($1);" [to,from], -- FIXME should be a deep copy
+  pd_factory = primitiveFactory "ArrayList",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_String = PrimitiveDetails {
@@ -208,6 +227,7 @@ genPrimitiveDetails P_String = PrimitiveDetails {
   pd_default = Just "\"\"",
   pd_genLiteral = \(JSON.String s) -> T.pack (show s),
   pd_copy = assignValue,
+  pd_factory = primitiveFactory "String",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_Sink = PrimitiveDetails {
@@ -216,16 +236,22 @@ genPrimitiveDetails P_Sink = PrimitiveDetails {
   pd_default = Just "new Sink()",
   pd_genLiteral = \_ -> "????", -- never called
   pd_copy = assignValue,
+  pd_factory = primitiveFactory "Sink",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 
 assignValue :: T.Text -> T.Text -> Code
 assignValue to from = ctemplate "$1 = $2;" [to,from]
 
+primitiveFactory :: T.Text -> CState T.Text
+primitiveFactory name = addImport "org.adl.runtime.Factories" >> return (template "Factories.$1Factory" [name])
+
 data FieldDetails = FieldDetails {
   fd_field :: Field ResolvedType,
   fd_fieldName :: Ident,
   fd_typeExprStr :: T.Text,
+  fd_boxedTypeExprStr :: T.Text,
+  fd_factoryExprStr :: T.Text,
   fd_defValue :: Literal,
   fd_copy :: T.Text -> T.Text -> Code
 }
@@ -236,11 +262,13 @@ unboxedField fd = case (f_type (fd_field fd)) of
 
 genFieldDetails :: Field ResolvedType -> CState FieldDetails
 genFieldDetails f = do
-  typeExprStr <- genTypeExpr te
+  typeExprStr <- genTypeExprB False te
+  boxedTypeExprStr <- genTypeExprB True te
+  factoryExprStr <- genFactoryExpr te
   litv <- case f_default f of
     (Just v) -> mkLiteral te v
     Nothing -> mkDefaultLiteral te
-  return (FieldDetails f (unreserveWord (f_name f)) typeExprStr litv (copy typeExprStr))
+  return (FieldDetails f (unreserveWord (f_name f)) typeExprStr boxedTypeExprStr factoryExprStr litv (copy typeExprStr))
   where
     te = f_type f
 
@@ -373,7 +401,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
 
       -- factory
       let factory =
-            cblock1 (template "public Factory<$1> factory = new Factory<$1>()" [className]) (
+            cblock1 (template "public static Factory<$1> factory = new Factory<$1>()" [className]) (
               cblock (template "public $1 create()" [className]) (
                  ctemplate "return new $1();" [className]
               )
@@ -382,10 +410,33 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
                  ctemplate "return new $1(other);" [className]
               )
             )
-            
+
+      let factoryg =
+            cblock (template "public static $2 Factory<$1$2> factory($3)" [className,typeArgs,factoryArgs]) (
+              cblock1 (template "return new Factory<$1$2>()" [className,typeArgs]) (
+                mconcat [ctemplate "final Factory<$1> $2 = $3;" [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
+                <>
+                cline ""
+                <>
+                cblock (template "public $1$2 create()" [className,typeArgs]) (
+                   ctemplate "return new $1$2($3);" [className,typeArgs,ctor1Args]
+                )
+                <>
+                cline ""
+                <>
+                cblock (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
+                   ctemplate "return new $1$2($3);" [className,typeArgs,ctor2Args]
+                )
+              )
+            )
+
+          factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- s_typeParams struct]
+          ctor1Args = commaSep [template "$1.create()" [fd_fieldName fd] | fd <-fieldDetails]
+          ctor2Args = commaSep [template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]
+                               | fd <- fieldDetails]
+
       addImport "org.adl.runtime.Factory"
-      when (not isGeneric) $ do
-          addMethod factory
+      addMethod (if isGeneric then factoryg else factory)
           
           
 literalValue :: Literal -> T.Text
@@ -500,6 +551,13 @@ javaCapsFieldName fd = case T.uncons (f_name (fd_field fd)) of
   Nothing -> ""
   (Just (c,t)) -> T.cons (toUpper c) t
 
+factoryTypeArg :: Ident -> Ident
+factoryTypeArg n = "factory" <> n
+
+fieldAccessExpr :: CodeGenProfile -> FieldDetails -> Ident
+fieldAccessExpr cgp fd
+  | cgp_publicMembers cgp = fd_fieldName fd
+  | otherwise = template "get$1()" [javaCapsFieldName fd]
 
 ----------------------------------------------------------------------
 -- A trivial DSL for generated indented block structured text

@@ -1,5 +1,6 @@
 package adl.test;
 
+import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
 public class S1 {
@@ -51,7 +52,7 @@ public class S1 {
     return result;
   }
 
-  public Factory<S1> factory = new Factory<S1>() {
+  public static Factory<S1> factory = new Factory<S1>() {
     public S1 create() {
       return new S1();
     }
