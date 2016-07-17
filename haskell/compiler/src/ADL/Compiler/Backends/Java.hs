@@ -148,7 +148,7 @@ data PrimitiveDetails = PrimitiveDetails {
   pd_unboxed :: Maybe (CState T.Text),
   pd_default :: Maybe T.Text,
   pd_genLiteral :: JSON.Value -> T.Text,
-  pd_copy :: T.Text -> T.Text -> Code,
+  pd_mutable :: Bool,
   pd_factory :: CState T.Text,
   pd_hashfn :: T.Text -> T.Text
 }
@@ -159,7 +159,7 @@ numPrimitive unboxed boxed = PrimitiveDetails {
   pd_type = return boxed,
   pd_default = Just "0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
-  pd_copy = assignValue,
+  pd_mutable = False,
   pd_factory = primitiveFactory boxed,
   pd_hashfn = \from -> template "(int)$1" [from]
   }
@@ -170,7 +170,7 @@ genPrimitiveDetails P_Void = PrimitiveDetails {
   pd_type = return "Void",
   pd_default = Just "null",
   pd_genLiteral = \jv -> "null",
-  pd_copy = assignValue,
+  pd_mutable = False,
   pd_factory = primitiveFactory "Void",
   pd_hashfn = \from -> "0"
   }
@@ -182,7 +182,7 @@ genPrimitiveDetails P_Bool = PrimitiveDetails {
     case jv of
       (JSON.Bool True) -> "true"
       (JSON.Bool False) -> "false",
-  pd_copy = assignValue,
+  pd_mutable = False,
   pd_factory = primitiveFactory "Boolean",
   pd_hashfn = \from -> template "($1 ? 0 : 1)" [from]
   }
@@ -204,7 +204,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
   pd_type = return "java.nio.ByteBuffer",
   pd_default = Just "java.nio.ByteBuffer.allocate(0)",
   pd_genLiteral = \(JSON.String s) -> template "java.nio.ByteBuffer.allocate(0).put($1.getBytes())" [T.pack (show (decode s))],
-  pd_copy = \to from -> ctemplate "$1 = $2.duplicate();" [to,from],
+  pd_mutable = True,
   pd_factory = primitiveFactory "ByteBuffer",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
@@ -217,7 +217,7 @@ genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_type = return "java.util.ArrayList",
   pd_default = Just "new java.util.ArrayList()",
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
-  pd_copy = \to from -> ctemplate "$1 = new java.util.ArrayList($1);" [to,from], -- FIXME should be a deep copy
+  pd_mutable = True,
   pd_factory = primitiveFactory "ArrayList",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
@@ -226,7 +226,7 @@ genPrimitiveDetails P_String = PrimitiveDetails {
   pd_type = return "String",
   pd_default = Just "\"\"",
   pd_genLiteral = \(JSON.String s) -> T.pack (show s),
-  pd_copy = assignValue,
+  pd_mutable= False,
   pd_factory = primitiveFactory "String",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
@@ -235,13 +235,10 @@ genPrimitiveDetails P_Sink = PrimitiveDetails {
   pd_type = return "Sink",
   pd_default = Just "new Sink()",
   pd_genLiteral = \_ -> "????", -- never called
-  pd_copy = assignValue,
+  pd_mutable = True,
   pd_factory = primitiveFactory "Sink",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
-
-assignValue :: T.Text -> T.Text -> Code
-assignValue to from = ctemplate "$1 = $2;" [to,from]
 
 primitiveFactory :: T.Text -> CState T.Text
 primitiveFactory name = addImport "org.adl.runtime.Factories" >> return (template "Factories.$1Factory" [name])
@@ -253,7 +250,7 @@ data FieldDetails = FieldDetails {
   fd_boxedTypeExprStr :: T.Text,
   fd_factoryExprStr :: T.Text,
   fd_defValue :: Literal,
-  fd_copy :: T.Text -> T.Text -> Code
+  fd_copy :: T.Text -> T.Text
 }
 
 unboxedField fd = case (f_type (fd_field fd)) of
@@ -262,26 +259,20 @@ unboxedField fd = case (f_type (fd_field fd)) of
 
 genFieldDetails :: Field ResolvedType -> CState FieldDetails
 genFieldDetails f = do
+  let te = f_type f
   typeExprStr <- genTypeExprB False te
   boxedTypeExprStr <- genTypeExprB True te
   factoryExprStr <- genFactoryExpr te
   litv <- case f_default f of
     (Just v) -> mkLiteral te v
     Nothing -> mkDefaultLiteral te
-  return (FieldDetails f (unreserveWord (f_name f)) typeExprStr boxedTypeExprStr factoryExprStr litv (copy typeExprStr))
-  where
-    te = f_type f
 
-    copy typeExprStr to from = case te of
-      (TypeExpr (RT_Primitive pt) []) ->
-        pd_copy (genPrimitiveDetails pt) to from
-      (TypeExpr (RT_Param i) _) ->
-        ctemplate "$1 = $2.getDeclaredConstructor($3).newInstance($4);" [to,classArgName i,argTypes from,argValues from]
-      _ -> 
-        ctemplate "$1 = new $2($3);" [to,typeExprStr,argValues from]
+  let copy from = case te of
+        (TypeExpr (RT_Primitive pt) []) | not (pd_mutable (genPrimitiveDetails pt)) -> from
+        (TypeExpr (RT_Param i) []) -> template "FIXME($1)" [from]
+        _ -> template "$1.create($2)" [factoryExprStr,from]
 
-    argValues from = commaSep ([from] <> getClassArgNames te)
-    argTypes from = commaSep ([from <> ".getClass()"] <> ["Class.forName(\"java.lang.Class\")" | _ <- getClassArgNames te])
+  return (FieldDetails f (unreserveWord (f_name f)) typeExprStr boxedTypeExprStr factoryExprStr litv copy)
 
 
 
@@ -352,7 +343,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
 
           ctor3 =
             cblock (template "public $1($2 other)" [className, className <> typeArgs]) (
-              mconcat [ let n = fd_fieldName fd in fd_copy fd ("this."<>n) ("other."<>n)
+              mconcat [ let n = fd_fieldName fd in ctemplate "this.$1 = $2;" [n,fd_copy fd ("other." <>n)]
                       | fd <- fieldDetails ]
             )
 

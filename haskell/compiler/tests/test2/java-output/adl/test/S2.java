@@ -24,7 +24,7 @@ public class S2 {
   public S2(S2 other) {
     this.f1 = other.f1;
     this.f2 = other.f2;
-    this.f3 = new java.util.ArrayList<Integer>(other.f3);
+    this.f3 = Factories.ArrayListFactory(Factories.IntegerFactory).create(other.f3);
   }
 
   public String getF1() {
