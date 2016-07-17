@@ -300,6 +300,8 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
         file = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
     case d_type decl of
       (Decl_Struct s) -> writeClassFile file (generateStruct codeProfile moduleName javaPackage decl s)
+      (Decl_Union u) -> let s = Struct (u_typeParams u) (u_fields u)  -- FIXME: hack to get some sort out output for unions
+                         in writeClassFile file (generateStruct codeProfile moduleName javaPackage decl s)
       _ -> return ()
   where
     writeClassFile :: FilePath -> ClassFile -> EIO a ()
@@ -337,7 +339,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
           ctor1 =
             cblock (template "public $1($2)" [className,ctorArgs]) (
               clineN [
-                if unboxedField fd
+                if unboxedField fd || fd_typeExprStr fd == "Void"
                   then template "this.$1 = $1;" [fd_fieldName fd]
                   else template "this.$1 = java.util.Objects.requireNonNull($1);" [fd_fieldName fd]
                 | fd <- fieldDetails]
