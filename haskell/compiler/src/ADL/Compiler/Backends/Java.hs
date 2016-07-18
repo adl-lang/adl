@@ -327,8 +327,6 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
 
       -- Constructors
       let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_fieldName fd | fd <- fieldDetails]
-          classArgs = T.intercalate ", " [template "Class<$1> $2" [typeParam,classArgName typeParam]
-                                         | typeParam <- s_typeParams struct] 
           isGeneric = length (s_typeParams struct) > 0
           
           ctor1 =
@@ -441,25 +439,11 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
           
           
 literalValue :: Literal -> T.Text
-literalValue (LDefault t te) = template "$1($2)" [ctor te,commaSep (getClassArgNames te)]
-  where
-    ctor (TypeExpr (RT_Param i) _) = template "$1.getDeclaredConstructor($2).newInstance" [classArgName i,commaSep (getCtorArgTypes te)]
-    ctor _ = template "new $1" [t]
-
+literalValue (LDefault t _) = template "new $1()" [t]
 literalValue (LCtor t _ ls) = template "new $1($2)" [t, T.intercalate ", " (map literalValue ls)]
 literalValue (LUnion t ctor l) = template "$1.$2($3)" [t, ctor, literalValue l ]
-literalValue (LVector t ls) = template "java.util.Arrays.asList($1)" [commaSep (map literalValue ls)] -- FIXME
+literalValue (LVector t ls) = template "java.util.Arrays.asList($1)" [commaSep (map literalValue ls)]
 literalValue (LPrimitive _ t) = t
-
-getClassArgNames :: TypeExpr ResolvedType -> [Ident]
-getClassArgNames (TypeExpr (RT_Primitive _) targs) = []
-getClassArgNames (TypeExpr _ targs) = [classArgName i | (TypeExpr (RT_Param i) _) <- targs]
-
-getCtorArgTypes :: TypeExpr ResolvedType -> [Ident]
-getCtorArgTypes (TypeExpr _ targs) = ["FIXME" | targ <- targs]
-
-classArgName :: Ident -> Ident
-classArgName i = "class"<>i
 
 packageGenerator :: T.Text -> ModuleName -> JavaPackage
 packageGenerator basePackage mn = JavaPackage (T.splitOn "." basePackage <> unModuleName mn)
