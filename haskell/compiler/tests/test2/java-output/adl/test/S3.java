@@ -68,17 +68,15 @@ public class S3<T> {
 
   public static <T> Factory<S3<T>> factory(Factory<T> factoryT) {
     return new Factory<S3<T>>() {
-      final Factory<String> f1 = Factories.StringFactory;
-      final Factory<Double> f2 = Factories.DoubleFactory;
       final Factory<T> f3 = factoryT;
       final Factory<java.util.ArrayList<T>> f4 = Factories.ArrayListFactory(factoryT);
 
       public S3<T> create() {
-        return new S3<T>(f1.create(),f2.create(),f3.create(),f4.create());
+        return new S3<T>("",0,f3.create(),f4.create());
       }
 
       public S3<T> create(S3<T> other) {
-        return new S3<T>(f1.create(other.getF1()),f2.create(other.getF2()),f3.create(other.getF3()),f4.create(other.getF4()));
+        return new S3<T>(other.getF1(),other.getF2(),f3.create(other.getF3()),f4.create(other.getF4()));
       }
     };
   }

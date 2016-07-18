@@ -257,6 +257,10 @@ unboxedField fd = case (f_type (fd_field fd)) of
   (TypeExpr (RT_Primitive pt) []) -> isJust (pd_unboxed (genPrimitiveDetails pt))
   _ -> False
 
+immutableType te = case te of
+  (TypeExpr (RT_Primitive pt) _) -> not (pd_mutable (genPrimitiveDetails pt))
+  _-> False
+
 genFieldDetails :: Field ResolvedType -> CState FieldDetails
 genFieldDetails f = do
   let te = f_type f
@@ -267,10 +271,10 @@ genFieldDetails f = do
     (Just v) -> mkLiteral te v
     Nothing -> mkDefaultLiteral te
 
-  let copy from = case te of
-        (TypeExpr (RT_Primitive pt) []) | not (pd_mutable (genPrimitiveDetails pt)) -> from
-        (TypeExpr (RT_Param i) []) -> template "FIXME($1)" [from]
-        _ -> template "$1.create($2)" [factoryExprStr,from]
+  let copy from =
+        if immutableType te
+          then from
+          else template "$1.create($2)" [factoryExprStr,from]
 
   return (FieldDetails f (unreserveWord (f_name f)) typeExprStr boxedTypeExprStr factoryExprStr litv copy)
 
@@ -407,7 +411,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
       let factoryg =
             cblock (template "public static $2 Factory<$1$2> factory($3)" [className,typeArgs,factoryArgs]) (
               cblock1 (template "return new Factory<$1$2>()" [className,typeArgs]) (
-                mconcat [ctemplate "final Factory<$1> $2 = $3;" [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
+                mconcat [ctemplate "final Factory<$1> $2 = $3;" [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails, not (immutableType (f_type (fd_field fd)))]
                 <>
                 cline ""
                 <>
@@ -424,8 +428,12 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
             )
 
           factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- s_typeParams struct]
-          ctor1Args = commaSep [template "$1.create()" [fd_fieldName fd] | fd <-fieldDetails]
-          ctor2Args = commaSep [template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]
+          ctor1Args = commaSep [if immutableType (f_type (fd_field fd))
+                                then literalValue (fd_defValue fd)
+                                else template "$1.create()" [fd_fieldName fd] | fd <-fieldDetails]
+          ctor2Args = commaSep [if immutableType (f_type (fd_field fd))
+                                then template "other.$1" [fieldAccessExpr codeProfile fd]
+                                else template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]
                                | fd <- fieldDetails]
 
       addImport "org.adl.runtime.Factory"
