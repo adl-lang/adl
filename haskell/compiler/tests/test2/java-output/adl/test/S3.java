@@ -60,7 +60,7 @@ public class S3<T> {
   public int hashCode() {
     int result = 1;
     result = result * 37 + f1.hashCode();
-    result = result * 37 + (int)f2;
+    result = result * 37 + Double.hashCode(f2);
     result = result * 37 + f3.hashCode();
     result = result * 37 + f4.hashCode();
     return result;
@@ -72,7 +72,7 @@ public class S3<T> {
       final Factory<java.util.ArrayList<T>> f4 = Factories.ArrayListFactory(factoryT);
 
       public S3<T> create() {
-        return new S3<T>("",0,f3.create(),f4.create());
+        return new S3<T>("",0.0,f3.create(),f4.create());
       }
 
       public S3<T> create(S3<T> other) {

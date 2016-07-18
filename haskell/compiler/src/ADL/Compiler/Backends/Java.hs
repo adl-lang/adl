@@ -153,17 +153,6 @@ data PrimitiveDetails = PrimitiveDetails {
   pd_hashfn :: T.Text -> T.Text
 }
 
-numPrimitive :: T.Text -> T.Text -> PrimitiveDetails
-numPrimitive unboxed boxed = PrimitiveDetails {
-  pd_unboxed = Just (return unboxed),
-  pd_type = return boxed,
-  pd_default = Just "0",
-  pd_genLiteral = \(JSON.Number n) -> litNumber n,
-  pd_mutable = False,
-  pd_factory = primitiveFactory boxed,
-  pd_hashfn = \from -> template "(int)$1" [from]
-  }
-  
 genPrimitiveDetails :: PrimitiveType -> PrimitiveDetails
 genPrimitiveDetails P_Void = PrimitiveDetails {
   pd_unboxed = Nothing,
@@ -186,19 +175,66 @@ genPrimitiveDetails P_Bool = PrimitiveDetails {
   pd_factory = primitiveFactory "Boolean",
   pd_hashfn = \from -> template "($1 ? 0 : 1)" [from]
   }
-genPrimitiveDetails P_Int8 = numPrimitive "byte" "Byte"
-genPrimitiveDetails P_Int16 = numPrimitive "short" "Short"
-genPrimitiveDetails P_Int32 = numPrimitive "int" "Integer"
-genPrimitiveDetails P_Int64 = (numPrimitive "long" "Long") {
+genPrimitiveDetails P_Int8 = PrimitiveDetails {
+  pd_unboxed = Just (return "byte"),
+  pd_type = return "Byte",
+  pd_default = Just "0",
+  pd_genLiteral = \(JSON.Number n) -> "(byte)" <> litNumber n,
+  pd_mutable = False,
+  pd_factory = primitiveFactory "Byte",
+  pd_hashfn = \from -> template "(int)$1" [from]
+}
+genPrimitiveDetails P_Int16 = PrimitiveDetails {
+  pd_unboxed = Just (return "short"),
+  pd_type = return "Short",
+  pd_default = Just "0",
+  pd_genLiteral = \(JSON.Number n) -> "(short)" <> litNumber n,
+  pd_mutable = False,
+  pd_factory = primitiveFactory "Short",
+  pd_hashfn = \from -> template "(int)$1" [from]
+}
+genPrimitiveDetails P_Int32 = PrimitiveDetails {
+  pd_unboxed = Just (return "int"),
+  pd_type = return "Integer",
+  pd_default = Just "0",
+  pd_genLiteral = \(JSON.Number n) -> litNumber n,
+  pd_mutable = False,
+  pd_factory = primitiveFactory "Integer",
+  pd_hashfn = \from -> template "$1" [from]
+}
+genPrimitiveDetails P_Int64 = PrimitiveDetails {
+  pd_unboxed = Just (return "long"),
+  pd_type = return "Long",
+  pd_default = Just "0L",
+  pd_genLiteral = \(JSON.Number n) -> litNumber n <> "L",
+  pd_mutable = False,
+  pd_factory = primitiveFactory "Long",
   pd_hashfn = \from -> template "(int)($1 ^ ($1 >>> 32))" [from]
 }
+genPrimitiveDetails P_Float = PrimitiveDetails {
+  pd_unboxed = Just (return "float"),
+  pd_type = return "Float",
+  pd_default = Just "0.0",
+  pd_genLiteral = \(JSON.Number n) -> litNumber n <> "F",
+  pd_mutable = False,
+  pd_factory = primitiveFactory "Float",
+  pd_hashfn = \from -> template "Float.hashCode($1)" [from]
+}
+genPrimitiveDetails P_Double = PrimitiveDetails {
+  pd_unboxed = Just (return "double"),
+  pd_type = return "Double",
+  pd_default = Just "0.0",
+  pd_genLiteral = \(JSON.Number n) -> litNumber n,
+  pd_mutable = False,
+  pd_factory = primitiveFactory "Double",
+  pd_hashfn = \from -> template "Double.hashCode($1)" [from]
+}
+
 genPrimitiveDetails P_Word8 = genPrimitiveDetails P_Int8
 genPrimitiveDetails P_Word16 = genPrimitiveDetails P_Int16
 genPrimitiveDetails P_Word32 = genPrimitiveDetails P_Int32
 genPrimitiveDetails P_Word64 = genPrimitiveDetails P_Int64
 
-genPrimitiveDetails P_Float = numPrimitive "float" "Float"
-genPrimitiveDetails P_Double = numPrimitive "double" "Double"
 genPrimitiveDetails P_ByteVector = PrimitiveDetails {
   pd_unboxed = Nothing,
   pd_type = return "java.nio.ByteBuffer",

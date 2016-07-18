@@ -17,7 +17,7 @@ public class S2 {
 
   public S2() {
     this.f1 = "";
-    this.f2 = 0;
+    this.f2 = 0.0;
     this.f3 = new java.util.ArrayList<Integer>();
   }
 
@@ -61,7 +61,7 @@ public class S2 {
   public int hashCode() {
     int result = 1;
     result = result * 37 + f1.hashCode();
-    result = result * 37 + (int)f2;
+    result = result * 37 + Double.hashCode(f2);
     result = result * 37 + f3.hashCode();
     return result;
   }

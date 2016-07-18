@@ -47,7 +47,7 @@ public class S1 {
 
   public int hashCode() {
     int result = 1;
-    result = result * 37 + (int)x;
+    result = result * 37 + x;
     result = result * 37 + y.hashCode();
     return result;
   }

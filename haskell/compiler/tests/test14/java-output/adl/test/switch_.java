@@ -18,7 +18,7 @@ public class switch_ {
   }
 
   public switch_() {
-    this.double_ = 0;
+    this.double_ = 0.0;
     this.int_ = 0;
     this.string = "";
     this.for_ = false;
@@ -73,8 +73,8 @@ public class switch_ {
 
   public int hashCode() {
     int result = 1;
-    result = result * 37 + (int)double_;
-    result = result * 37 + (int)int_;
+    result = result * 37 + Double.hashCode(double_);
+    result = result * 37 + int_;
     result = result * 37 + string.hashCode();
     result = result * 37 + (for_ ? 0 : 1);
     return result;
