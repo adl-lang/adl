@@ -1,49 +1,40 @@
 package adl.test;
 
 import org.adl.runtime.Factories;
-import org.adl.runtime.Factory;
 
 public class unsigned {
 
-  private Void null_;
+  private Disc disc;
+  private Object value;
 
-  public unsigned(Void null_) {
-    this.null_ = null_;
+  public enum Disc {
+    NULL_
+  }
+
+  public static unsigned null_(Void v) {
+    return new unsigned(Disc.NULL_,v);
   }
 
   public unsigned() {
-    this.null_ = null;
+    this.disc = Disc.NULL_;
+    this.value = null;
   }
 
   public unsigned(unsigned other) {
-    this.null_ = other.null_;
-  }
-
-  public Void getNull() {
-    return null_;
-  }
-
-  public void setNull(Void newNull) {
-    null_ = newNull;
-  }
-
-  public boolean equals(unsigned other) {
-    return
-      null_.equals(other.null_);
-  }
-
-  public int hashCode() {
-    int result = 1;
-    result = result * 37 + 0;
-    return result;
-  }
-
-  public static Factory<unsigned> factory = new Factory<unsigned>() {
-    public unsigned create() {
-      return new unsigned();
+    this.disc = other.disc;
+    switch (other.disc) {
+      case NULL_:
+        this.value = (Void) other.value;
+        break;
     }
-    public unsigned create(unsigned other) {
-      return new unsigned(other);
-    }
-  };
+  }
+
+  private unsigned(Disc disc, Object value) {
+    this.disc = disc;
+    this.value = value;
+  }
+
+  public Disc getDisc() {
+    return disc;
+  }
 }

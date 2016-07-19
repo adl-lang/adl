@@ -1,63 +1,48 @@
 package adl.test;
 
 import org.adl.runtime.Factories;
-import org.adl.runtime.Factory;
 
 public class U {
 
-  private short f_int;
-  private String f_string;
+  private Disc disc;
+  private Object value;
 
-  public U(short f_int, String f_string) {
-    this.f_int = f_int;
-    this.f_string = java.util.Objects.requireNonNull(f_string);
+  public enum Disc {
+    F_INT,
+    F_STRING
+  }
+
+  public static U f_int(short v) {
+    return new U(Disc.F_INT,v);
+  }
+
+  public static U f_string(String v) {
+    return new U(Disc.F_STRING,java.util.Objects.requireNonNull(v));
   }
 
   public U() {
-    this.f_int = 0;
-    this.f_string = "";
+    this.disc = Disc.F_INT;
+    this.value = 0;
   }
 
   public U(U other) {
-    this.f_int = other.f_int;
-    this.f_string = other.f_string;
-  }
-
-  public short getF_int() {
-    return f_int;
-  }
-
-  public void setF_int(short newF_int) {
-    f_int = newF_int;
-  }
-
-  public String getF_string() {
-    return f_string;
-  }
-
-  public void setF_string(String newF_string) {
-    f_string = newF_string;
-  }
-
-  public boolean equals(U other) {
-    return
-      f_int == other.f_int &&
-      f_string.equals(other.f_string);
-  }
-
-  public int hashCode() {
-    int result = 1;
-    result = result * 37 + (int)f_int;
-    result = result * 37 + f_string.hashCode();
-    return result;
-  }
-
-  public static Factory<U> factory = new Factory<U>() {
-    public U create() {
-      return new U();
+    this.disc = other.disc;
+    switch (other.disc) {
+      case F_INT:
+        this.value = (Short) other.value;
+        break;
+      case F_STRING:
+        this.value = (String) other.value;
+        break;
     }
-    public U create(U other) {
-      return new U(other);
-    }
-  };
+  }
+
+  private U(Disc disc, Object value) {
+    this.disc = disc;
+    this.value = value;
+  }
+
+  public Disc getDisc() {
+    return disc;
+  }
 }

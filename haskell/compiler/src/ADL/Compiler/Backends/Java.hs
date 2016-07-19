@@ -293,6 +293,8 @@ unboxedField fd = case (f_type (fd_field fd)) of
   (TypeExpr (RT_Primitive pt) []) -> isJust (pd_unboxed (genPrimitiveDetails pt))
   _ -> False
 
+needsNullCheck fd = not (unboxedField fd || fd_typeExprStr fd == "Void")
+
 immutableType te = case te of
   (TypeExpr (RT_Primitive pt) _) -> not (pd_mutable (genPrimitiveDetails pt))
   _-> False
@@ -331,8 +333,7 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
         file = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
     case d_type decl of
       (Decl_Struct s) -> writeClassFile file (generateStruct codeProfile moduleName javaPackage decl s)
-      (Decl_Union u) -> let s = Struct (u_typeParams u) (u_fields u)  -- FIXME: hack to get some sort out output for unions
-                         in writeClassFile file (generateStruct codeProfile moduleName javaPackage decl s)
+      (Decl_Union u)  -> writeClassFile file (generateUnion codeProfile moduleName javaPackage decl u)
       _ -> return ()
   where
     writeClassFile :: FilePath -> ClassFile -> EIO a ()
@@ -368,9 +369,9 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
           ctor1 =
             cblock (template "public $1($2)" [className,ctorArgs]) (
               clineN [
-                if unboxedField fd || fd_typeExprStr fd == "Void"
-                  then template "this.$1 = $1;" [fd_fieldName fd]
-                  else template "this.$1 = java.util.Objects.requireNonNull($1);" [fd_fieldName fd]
+                if needsNullCheck fd
+                  then template "this.$1 = java.util.Objects.requireNonNull($1);" [fd_fieldName fd]
+                  else template "this.$1 = $1;" [fd_fieldName fd]
                 | fd <- fieldDetails]
             )
 
@@ -473,6 +474,83 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
       addImport "org.adl.runtime.Factory"
       addMethod (if isGeneric then factoryg else factory)
           
+generateUnion :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Union ResolvedType -> ClassFile
+generateUnion codeProfile moduleName javaPackage decl union =  execState gen state0
+  where
+    state0 = classFile moduleName javaPackage classDecl
+    className = unreserveWord (d_name decl)
+    classDecl = "public class " <> className <> typeArgs
+    isGeneric = length (u_typeParams union) > 0
+    typeArgs = case u_typeParams union of
+      [] -> ""
+      args -> "<" <> commaSep (map unreserveWord args) <> ">"
+    gen = do
+      fieldDetails <- mapM genFieldDetails (u_fields union)
+      fieldDetail0 <- case fieldDetails of
+        [] -> error "BUG: unions with no fields are illegal"
+        (fd:_) -> return fd
+
+      -- Fields
+      let modifiers = T.intercalate " " (["private"] <> if cgp_mutable codeProfile then [] else ["final"])
+      addField (ctemplate "$1 Disc disc;" [modifiers])
+      addField (ctemplate "$1 Object value;" [modifiers])
+
+      -- Discriminator enum
+      let terminators = replicate (length fieldDetails-1) "," <> [""]
+          discdef = cblock "public enum Disc" (
+            mconcat [ctemplate "$1$2" [discriminatorName (fd_fieldName fd),term]
+                    | (fd,term) <- zip fieldDetails terminators]
+             )
+      addMethod discdef
+
+      -- constructors
+      for_ fieldDetails $ \fd -> do
+        let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
+            ctor = cblock (template "public static $1 $2($3 v)" [className, fd_fieldName fd, fd_typeExprStr fd]) (
+            
+              ctemplate "return new $1(Disc.$2,$3);" [className, discriminatorName (fd_fieldName fd), checkedv]
+              )
+
+        addMethod ctor
+
+      let ctorPrivate = cblock (template "private $1(Disc disc, Object value)" [className]) (
+            cline "this.disc = disc;"
+            <>
+            cline "this.value = value;"
+            )
+
+          ctorDefault = cblock (template "public $1()" [className]) (
+            ctemplate "this.disc = Disc.$1;" [discriminatorName (fd_fieldName fieldDetail0)]
+            <>
+            ctemplate "this.value = $1;" [literalValue (fd_defValue fieldDetail0)]
+            )
+
+          ctorCopy = cblock (template "public $1($1 other)" [className]) (
+            ctemplate "this.disc = other.disc;" [discriminatorName (fd_fieldName fieldDetail0)]
+            <>
+            cblock "switch (other.disc)" (
+              mconcat [
+                ctemplate "case $1:" [discriminatorName (fd_fieldName fd)]
+                <>
+                indent (
+                  ctemplate "this.value = $1;" [fd_copy fd (template "($1) other.value" [fd_boxedTypeExprStr fd])]
+                  <>
+                  cline "break;"
+                  )
+                | fd <- fieldDetails]
+              )
+            )
+
+      when (not isGeneric) $ do
+          addMethod ctorDefault
+          addMethod ctorCopy
+      addMethod $ ctorPrivate
+
+      -- getters
+      addMethod $ cblock "public Disc getDisc()" (
+        cline "return disc;"
+        )
+
           
 literalValue :: Literal -> T.Text
 literalValue (LDefault t _) = template "new $1()" [t]
@@ -579,6 +657,9 @@ fieldAccessExpr :: CodeGenProfile -> FieldDetails -> Ident
 fieldAccessExpr cgp fd
   | cgp_publicMembers cgp = fd_fieldName fd
   | otherwise = template "get$1()" [javaCapsFieldName fd]
+
+discriminatorName :: Ident -> Ident
+discriminatorName n =T.toUpper n
 
 ----------------------------------------------------------------------
 -- A trivial DSL for generated indented block structured text
