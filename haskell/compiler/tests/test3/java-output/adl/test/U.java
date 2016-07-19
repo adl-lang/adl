@@ -1,6 +1,7 @@
 package adl.test;
 
 import org.adl.runtime.Factories;
+import org.adl.runtime.Factory;
 
 public class U {
 
@@ -45,4 +46,50 @@ public class U {
   public Disc getDisc() {
     return disc;
   }
+
+  public short getF_int() {
+    if (disc == Disc.F_INT) {
+      return cast(value);
+    }
+    throw new IllegalStateException();
+  }
+
+  public String getF_string() {
+    if (disc == Disc.F_STRING) {
+      return cast(value);
+    }
+    throw new IllegalStateException();
+  }
+
+  public void setF_int(short v) {
+    this.value = v;
+    this.disc = Disc.F_INT;
+  }
+
+  public void setF_string(String v) {
+    this.value = java.util.Objects.requireNonNull(v);
+    this.disc = Disc.F_STRING;
+  }
+
+  public boolean equals(U other) {
+    return disc == other.disc && value.equals(other.value);
+  }
+
+  public int hashCode() {
+    return disc.hashCode() * 37 + value.hashCode();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> T cast(final Object o) {
+    return (T)o;
+  }
+
+  public static Factory<U> factory = new Factory<U>() {
+    public U create() {
+      return new U();
+    }
+    public U create(U other) {
+      return new U(other);
+    }
+  };
 }

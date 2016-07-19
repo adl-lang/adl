@@ -95,7 +95,7 @@ instance MGen (State ClassFile) where
   getPrimitiveLiteral pt jv = return (pd_genLiteral (genPrimitiveDetails pt) jv)
   getTypeExpr _ te = genTypeExpr te
   getTypeExprB _ _ te = genTypeExpr te
-  getUnionConstructorName d f = return "FIXME"
+  getUnionConstructorName d f = return (unreserveWord (f_name f))
 
 addField :: Code -> CState ()
 addField decl = modify (\cf->cf{cf_fields=decl:cf_fields cf})
@@ -498,7 +498,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       -- Discriminator enum
       let terminators = replicate (length fieldDetails-1) "," <> [""]
           discdef = cblock "public enum Disc" (
-            mconcat [ctemplate "$1$2" [discriminatorName (fd_fieldName fd),term]
+            mconcat [ctemplate "$1$2" [discriminatorName fd,term]
                     | (fd,term) <- zip fieldDetails terminators]
              )
       addMethod discdef
@@ -506,9 +506,8 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       -- constructors
       for_ fieldDetails $ \fd -> do
         let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
-            ctor = cblock (template "public static $1 $2($3 v)" [className, fd_fieldName fd, fd_typeExprStr fd]) (
-            
-              ctemplate "return new $1(Disc.$2,$3);" [className, discriminatorName (fd_fieldName fd), checkedv]
+            ctor = cblock (template "public static$1 $2 $3($4 v)" [leadSpace typeArgs, className, fd_fieldName fd, fd_typeExprStr fd]) (
+              ctemplate "return new $1(Disc.$2,$3);" [className, discriminatorName fd, checkedv]
               )
 
         addMethod ctor
@@ -520,17 +519,17 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
             )
 
           ctorDefault = cblock (template "public $1()" [className]) (
-            ctemplate "this.disc = Disc.$1;" [discriminatorName (fd_fieldName fieldDetail0)]
+            ctemplate "this.disc = Disc.$1;" [discriminatorName fieldDetail0]
             <>
             ctemplate "this.value = $1;" [literalValue (fd_defValue fieldDetail0)]
             )
 
           ctorCopy = cblock (template "public $1($1 other)" [className]) (
-            ctemplate "this.disc = other.disc;" [discriminatorName (fd_fieldName fieldDetail0)]
+            ctemplate "this.disc = other.disc;" [discriminatorName fieldDetail0]
             <>
             cblock "switch (other.disc)" (
               mconcat [
-                ctemplate "case $1:" [discriminatorName (fd_fieldName fd)]
+                ctemplate "case $1:" [discriminatorName fd]
                 <>
                 indent (
                   ctemplate "this.value = $1;" [fd_copy fd (template "($1) other.value" [fd_boxedTypeExprStr fd])]
@@ -551,7 +550,104 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
         cline "return disc;"
         )
 
-          
+      for_ fieldDetails $ \fd -> do
+        let getter = cblock (template "public $1 get$2()" [fd_typeExprStr fd, javaCapsFieldName fd]) (
+              cblock (template "if (disc == Disc.$1)" [discriminatorName fd]) (
+                 ctemplate "return cast(value);" [fd_boxedTypeExprStr fd]
+                 )
+              <>
+              cline "throw new IllegalStateException();"
+              )
+
+        addMethod getter
+
+      -- settings
+      when (cgp_mutable codeProfile) $ do 
+        for_ fieldDetails $ \fd -> do
+          let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
+              ctor = cblock (template "public void set$1($2 v)" [javaCapsFieldName fd, fd_typeExprStr fd]) (
+                ctemplate "this.value = $1;" [checkedv]
+                <>
+                ctemplate "this.disc = Disc.$1;" [discriminatorName fd]
+                )
+          addMethod ctor
+
+      -- equals
+      addMethod $ cblock (template "public boolean equals($1 other)"[className]) (
+        cline "return disc == other.disc && value.equals(other.value);"
+        )
+
+      -- hashcode
+      addMethod $ cblock "public int hashCode()" (
+        cline "return disc.hashCode() * 37 + value.hashCode();"
+        )
+
+      -- cast helper
+      addMethod (
+        cline "@SuppressWarnings(\"unchecked\")"
+        <>
+        cblock "private static <T> T cast(final Object o)" (
+          cline "return (T)o;"
+          )
+        )
+
+      -- factory
+      let factory =
+            cblock1 (template "public static Factory<$1> factory = new Factory<$1>()" [className]) (
+              cblock (template "public $1 create()" [className]) (
+                 ctemplate "return new $1();" [className]
+              )
+              <>
+              cblock (template "public $1 create($1 other)" [className]) (
+                 ctemplate "return new $1(other);" [className]
+              )
+            )
+
+      let factoryg =
+            cblock (template "public static$2 Factory<$1$2> factory($3)" [className,leadSpace typeArgs,factoryArgs]) (
+              cblock1 (template "return new Factory<$1$2>()" [className,typeArgs]) (
+                mconcat [ctemplate "final Factory<$1> $2 = $3;" [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails, not (immutableType (f_type (fd_field fd)))]
+                <>
+                cline ""
+                <>
+                cblock (template "public $1$2 create()" [className,typeArgs]) (
+                  let val = if immutableType (f_type (fd_field fieldDetail0))
+                            then literalValue (fd_defValue fieldDetail0)
+                            else template "$1.create()" [fd_fieldName fieldDetail0]
+                  in ctemplate "return new $1$2(Disc.$3,$4);" [className,typeArgs,discriminatorName fieldDetail0,val]
+                )
+                <>
+                cline ""
+                <>
+                cblock (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
+                  cline "Object value = null;"
+                  <>
+                  cblock "switch (other.disc)" (
+                    mconcat [
+                      ctemplate "case $1:" [discriminatorName fd]
+                      <>
+                      indent (
+                        ctemplate "value = $1;"
+                          [if immutableType (f_type (fd_field fd))
+                           then "other.value"
+                           else template "$1.create(cast(other.value))" [fd_fieldName fd,fd_boxedTypeExprStr fd]
+                          ]
+                        <>
+                        cline "break;"
+                        )
+                      | fd <- fieldDetails]
+                    )
+                  <>
+                  ctemplate "return new $1$2(other.disc,value);" [className,typeArgs]
+                  )
+                )
+              )
+
+          factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- u_typeParams union]
+
+      addImport "org.adl.runtime.Factory"
+      addMethod (if isGeneric then factoryg else factory)
+
 literalValue :: Literal -> T.Text
 literalValue (LDefault t _) = template "new $1()" [t]
 literalValue (LCtor t _ ls) = template "new $1($2)" [t, T.intercalate ", " (map literalValue ls)]
@@ -658,8 +754,12 @@ fieldAccessExpr cgp fd
   | cgp_publicMembers cgp = fd_fieldName fd
   | otherwise = template "get$1()" [javaCapsFieldName fd]
 
-discriminatorName :: Ident -> Ident
-discriminatorName n =T.toUpper n
+discriminatorName :: FieldDetails -> Ident
+discriminatorName fd = T.toUpper (fd_fieldName fd)
+
+leadSpace :: T.Text -> T.Text
+leadSpace "" = ""
+leadSpace t = " " <> t
 
 ----------------------------------------------------------------------
 -- A trivial DSL for generated indented block structured text

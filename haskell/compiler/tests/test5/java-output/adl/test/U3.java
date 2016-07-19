@@ -3,34 +3,34 @@ package adl.test;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
-public class unsigned {
+public class U3 {
 
   private Disc disc;
   private Object value;
 
   public enum Disc {
-    NULL_
+    V
   }
 
-  public static unsigned null_(Void v) {
-    return new unsigned(Disc.NULL_,v);
+  public static U3 v(short v) {
+    return new U3(Disc.V,v);
   }
 
-  public unsigned() {
-    this.disc = Disc.NULL_;
-    this.value = null;
+  public U3() {
+    this.disc = Disc.V;
+    this.value = (short)100;
   }
 
-  public unsigned(unsigned other) {
+  public U3(U3 other) {
     this.disc = other.disc;
     switch (other.disc) {
-      case NULL_:
-        this.value = (Void) other.value;
+      case V:
+        this.value = (Short) other.value;
         break;
     }
   }
 
-  private unsigned(Disc disc, Object value) {
+  private U3(Disc disc, Object value) {
     this.disc = disc;
     this.value = value;
   }
@@ -39,19 +39,19 @@ public class unsigned {
     return disc;
   }
 
-  public Void getNull() {
-    if (disc == Disc.NULL_) {
+  public short getV() {
+    if (disc == Disc.V) {
       return cast(value);
     }
     throw new IllegalStateException();
   }
 
-  public void setNull(Void v) {
+  public void setV(short v) {
     this.value = v;
-    this.disc = Disc.NULL_;
+    this.disc = Disc.V;
   }
 
-  public boolean equals(unsigned other) {
+  public boolean equals(U3 other) {
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -64,12 +64,12 @@ public class unsigned {
     return (T)o;
   }
 
-  public static Factory<unsigned> factory = new Factory<unsigned>() {
-    public unsigned create() {
-      return new unsigned();
+  public static Factory<U3> factory = new Factory<U3>() {
+    public U3 create() {
+      return new U3();
     }
-    public unsigned create(unsigned other) {
-      return new unsigned(other);
+    public U3 create(U3 other) {
+      return new U3(other);
     }
   };
 }
