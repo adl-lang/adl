@@ -483,6 +483,29 @@ topologicalSort idf depf as = fmap (map fst) (sort1 (addDeps as) Set.empty)
 
     addDeps as = map (\a -> (a,depf a)) as
 
+-- | expand all of the typedefs in a module
+expandModuleTypedefs :: Module ResolvedType -> Module ResolvedType
+expandModuleTypedefs = exModule
+  where
+  exModule mod@Module{m_decls=ds} = mod{m_decls=fmap exDecl ds}
+  exDecl decl@Decl{d_type=d} = decl{d_type=exDeclType d}
+  exDeclType (Decl_Struct s) = Decl_Struct (exStruct s)
+  exDeclType (Decl_Union u) = Decl_Union (exUnion u)
+  exDeclType (Decl_Typedef t) = Decl_Typedef (exTypedef t)
+  exDeclType (Decl_Newtype n) = Decl_Newtype (exNewtype n)
+  exStruct struct@Struct{s_fields=fs} = struct{s_fields=fmap exField fs}
+  exUnion union@Union{u_fields=fs} = union{u_fields=fmap exField fs}
+  exTypedef typedef@Typedef{t_typeExpr=t} = typedef{t_typeExpr=expandTypedefs t}
+  exNewtype ntype@Newtype{n_typeExpr=t} = ntype{n_typeExpr=expandTypedefs t}
+  exField field@Field{f_type=t} = field{f_type=expandTypedefs t}
+
+-- | Remove all typedef declations from a module
+removeModuleTypedefs :: Module ResolvedType -> Module ResolvedType
+removeModuleTypedefs mod@Module{m_decls=ds} = mod{m_decls=Map.filter (not . isTypedef) ds}
+  where
+    isTypedef Decl{d_type=Decl_Typedef _} = True
+    isTypedef _ = False
+  
 -- | eliminate the typedefs from an expression through substitution
 expandTypedefs :: TypeExpr ResolvedType -> TypeExpr ResolvedType
 expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)

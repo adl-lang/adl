@@ -323,9 +323,10 @@ generateModule :: (ModuleName -> JavaPackage) ->
                   (ScopedName -> CodeGenProfile) ->
                   (FilePath -> LBS.ByteString -> IO ()) ->
                   Module ResolvedType ->
-                  EIO a ()
-generateModule mPackage mFile mCodeGetProfile fileWriter m = do
-  let decls = Map.elems (m_decls m)
+                  EIO T.Text ()
+generateModule mPackage mFile mCodeGetProfile fileWriter m0 = do
+  let m = removeModuleTypedefs (expandModuleTypedefs m0)
+      decls = Map.elems (m_decls m)
   for_ decls $ \decl -> do
     let moduleName = m_name m
         javaPackage = mPackage moduleName
@@ -334,7 +335,8 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m = do
     case d_type decl of
       (Decl_Struct s) -> writeClassFile file (generateStruct codeProfile moduleName javaPackage decl s)
       (Decl_Union u)  -> writeClassFile file (generateUnion codeProfile moduleName javaPackage decl u)
-      _ -> return ()
+      (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
+      (Decl_Newtype _) -> eioError "FIXME: newtypes haven't been implemented"
   where
     writeClassFile :: FilePath -> ClassFile -> EIO a ()
     writeClassFile path cfile = do

@@ -3,6 +3,7 @@
 module ADL.Compiler.AST where
 
 import Data.Foldable
+import Data.Traversable
 import Data.Monoid
 
 import qualified Data.Text as T
@@ -125,6 +126,32 @@ instance Foldable Decl where
     foldMap f Decl{d_type=d} = foldMap f d
 instance Foldable Module where
     foldMap f Module{m_decls=ds} = (foldMap.foldMap) f ds
+
+instance Functor TypeExpr where
+    fmap f (TypeExpr t ts) = TypeExpr (f t) (fmap (fmap f) ts)
+instance Functor Field where
+    fmap f field@Field{f_type=t} = field{f_type=fmap f t}
+instance Functor Struct where
+    fmap f struct@Struct{s_fields=fs} = struct{s_fields=fmap (fmap f) fs}
+instance Functor Union where
+    fmap f union@Union{u_fields=fs} = union{u_fields=fmap (fmap f) fs}
+instance Functor Typedef where
+    fmap f typedef@Typedef{t_typeExpr=t} = typedef{t_typeExpr=fmap f t}
+instance Functor Newtype where
+    fmap f ntype@Newtype{n_typeExpr=t} = ntype{n_typeExpr=fmap f t}
+instance Functor DeclType where
+    fmap f (Decl_Struct s) = Decl_Struct (fmap f s)
+    fmap f (Decl_Union u) = Decl_Union (fmap f u)
+    fmap f (Decl_Typedef t) = Decl_Typedef (fmap f t)
+    fmap f (Decl_Newtype n) = Decl_Newtype (fmap f n)
+instance Functor Decl where
+    fmap f decl@Decl{d_type=d} = decl{d_type=fmap f d}
+instance Functor Module where
+    fmap f mod@Module{m_decls=ds} = mod{m_decls=(fmap.fmap) f ds}
+
+    
+instance Traversable TypeExpr where
+    traverse f (TypeExpr t ts) = TypeExpr <$> (f t) <*> traverse (traverse f) ts
 
 getReferencedModules :: Module ScopedName -> Set.Set ModuleName
 getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` foldMap ref m
