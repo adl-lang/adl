@@ -8,6 +8,18 @@
 namespace ADL {
 namespace test {
 
+struct S0
+{
+    S0();
+    
+    S0(
+        );
+    
+};
+
+bool operator<( const S0 &a, const S0 &b );
+bool operator==( const S0 &a, const S0 &b );
+
 struct S1
 {
     S1();
@@ -224,6 +236,12 @@ operator==( const S4<T> &a, const S4<T> &b )
 }}; // ADL::test
 
 namespace ADL {
+
+template <>
+struct Serialisable<ADL::test::S0>
+{
+    static Serialiser<ADL::test::S0>::Ptr serialiser(const SerialiserFlags &);
+};
 
 template <>
 struct Serialisable<ADL::test::S1>

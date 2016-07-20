@@ -3,6 +3,27 @@
 namespace ADL {
 namespace test {
 
+S0::S0()
+{
+}
+
+S0::S0(
+    )
+{
+}
+
+bool
+operator<( const S0 &a, const S0 &b )
+{
+    return false;
+}
+
+bool
+operator==( const S0 &a, const S0 &b )
+{
+    return
+}
+
 S1::S1()
     : x(0)
 {
@@ -75,6 +96,37 @@ operator==( const S2 &a, const S2 &b )
 }}; // ADL::test
 
 namespace ADL {
+
+typename Serialiser<ADL::test::S0>::Ptr
+Serialisable<ADL::test::S0>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test::S0 _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            {}
+        
+        
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
 
 typename Serialiser<ADL::test::S1>::Ptr
 Serialisable<ADL::test::S1>::serialiser( const SerialiserFlags &sf )

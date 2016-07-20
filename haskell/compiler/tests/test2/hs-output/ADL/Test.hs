@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Test(
     IntTree,
+    S0(..),
     S1(..),
     S2(..),
     S3(..),
@@ -18,6 +19,24 @@ import qualified Data.Text as T
 import qualified Prelude
 
 type IntTree = (Tree Data.Int.Int32)
+
+data S0 = S0
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance ADLValue S0 where
+    atype _ = "test.S0"
+    
+    defaultv = S0
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            
+            to v = JSON.Object ( HM.fromList
+                ] )
+            
+            from (JSON.Object hm) = S0 
+            from _ = Prelude.Nothing
 
 data S1 = S1
     { s1_x :: Data.Int.Int32

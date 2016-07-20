@@ -348,6 +348,7 @@ generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedTy
 generateStruct codeProfile moduleName javaPackage decl struct =  execState gen state0
   where
     state0 = classFile moduleName javaPackage classDecl
+    isEmpty = null (s_fields struct)
     className = unreserveWord (d_name decl)
     classDecl = "public class " <> className <> typeArgs
     typeArgs = case s_typeParams struct of
@@ -389,9 +390,8 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
             )
 
       addMethod ctor1
-      when (not isGeneric) $ do
-          addMethod ctor2
-          addMethod ctor3
+      when (not isGeneric && not isEmpty) (addMethod ctor2)
+      when (not isGeneric) (addMethod ctor3)
 
       -- Getters/Setters
       when (not (cgp_publicMembers codeProfile)) $ do
@@ -411,15 +411,19 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
           when (cgp_mutable codeProfile) (addMethod setter)
 
       -- equals
-      addMethod $ cblock (template "public boolean equals($1 other)"[className]) (
-        cline "return"
-        <>
-        let terminators = replicate (length fieldDetails-1) " &&" <> [";"]
-            tests = [ctemplate (if unboxedField fd then "$1 == other.$1$2" else "$1.equals(other.$1)$2")
-                               [fd_fieldName fd,term]
-                    | (fd,term) <- zip fieldDetails terminators]
-        in  indent (mconcat tests)
-        )
+      let equals = cblock (template "public boolean equals($1 other)"[className]) (
+            cline "return"
+            <>
+            let terminators = replicate (length fieldDetails-1) " &&" <> [";"]
+                tests = [ctemplate (if unboxedField fd then "$1 == other.$1$2" else "$1.equals(other.$1)$2")
+                                   [fd_fieldName fd,term]
+                        | (fd,term) <- zip fieldDetails terminators]
+            in  indent (mconcat tests)
+            )
+          equalsEmpty = cblock (template "public boolean equals($1 other)"[className]) (
+           cline "return true;"
+           )
+      addMethod (if isEmpty then equalsEmpty else equals)
 
       -- hashcode
       addMethod $ cblock "public int hashCode()" (

@@ -3,6 +3,10 @@ module test
 
 // Simple structures
 
+struct S0
+{
+};
+
 struct S1
 {
     Int32 x;
