@@ -5,6 +5,8 @@ import org.adl.runtime.Factory;
 
 public class S<T> {
 
+  /* Members */
+
   private Void f_void;
   private boolean f_bool;
   private byte f_int8;
@@ -24,6 +26,8 @@ public class S<T> {
   private U f_u;
   private T f_t;
   private B<Short> f_bint16;
+
+  /* Constructors */
 
   public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, java.nio.ByteBuffer f_bytes, String f_string, java.util.ArrayList<String> f_vstring, A f_a, U f_u, T f_t, B<Short> f_bint16) {
     this.f_void = f_void;
@@ -46,6 +50,8 @@ public class S<T> {
     this.f_t = java.util.Objects.requireNonNull(f_t);
     this.f_bint16 = java.util.Objects.requireNonNull(f_bint16);
   }
+
+  /* Accessors and mutators */
 
   public Void getF_void() {
     return f_void;
@@ -199,6 +205,8 @@ public class S<T> {
     f_bint16 = newF_bint16;
   }
 
+  /* Object level helpers */
+
   public boolean equals(S other) {
     return
       f_void.equals(other.f_void) &&
@@ -246,6 +254,8 @@ public class S<T> {
     return result;
   }
 
+  /* Factory for construction of generic values */
+
   public static <T> Factory<S<T>> factory(Factory<T> factoryT) {
     return new Factory<S<T>>() {
       final Factory<java.nio.ByteBuffer> f_bytes = Factories.ByteBufferFactory;
@@ -256,11 +266,11 @@ public class S<T> {
       final Factory<B<Short>> f_bint16 = B.factory(Factories.ShortFactory);
 
       public S<T> create() {
-        return new S<T>(null,true,(byte)-5,(short)-10000,56,40000L,(byte)32,(short)50000,124456,2344L,0.5F,0.45,f_bytes.create(),"abcd",f_vstring.create(),f_a.create(),f_u.create(),f_t.create(),f_bint16.create());
+        return new S<T>(null, true, (byte)-5, (short)-10000, 56, 40000L, (byte)32, (short)50000, 124456, 2344L, 0.5F, 0.45, f_bytes.create(), "abcd", f_vstring.create(), f_a.create(), f_u.create(), f_t.create(), f_bint16.create());
       }
 
       public S<T> create(S<T> other) {
-        return new S<T>(other.getF_void(),other.getF_bool(),other.getF_int8(),other.getF_int16(),other.getF_int32(),other.getF_int64(),other.getF_word8(),other.getF_word16(),other.getF_word32(),other.getF_word64(),other.getF_float(),other.getF_double(),f_bytes.create(other.getF_bytes()),other.getF_string(),f_vstring.create(other.getF_vstring()),f_a.create(other.getF_a()),f_u.create(other.getF_u()),f_t.create(other.getF_t()),f_bint16.create(other.getF_bint16()));
+        return new S<T>(other.getF_void(), other.getF_bool(), other.getF_int8(), other.getF_int16(), other.getF_int32(), other.getF_int64(), other.getF_word8(), other.getF_word16(), other.getF_word32(), other.getF_word64(), other.getF_float(), other.getF_double(), f_bytes.create(other.getF_bytes()), other.getF_string(), f_vstring.create(other.getF_vstring()), f_a.create(other.getF_a()), f_u.create(other.getF_u()), f_t.create(other.getF_t()), f_bint16.create(other.getF_bint16()));
       }
     };
   }

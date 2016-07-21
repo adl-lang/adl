@@ -5,10 +5,14 @@ import org.adl.runtime.Factory;
 
 public class switch_ {
 
+  /* Members */
+
   private double double_;
   private int int_;
   private String string;
   private boolean for_;
+
+  /* Constructors */
 
   public switch_(double double_, int int_, String string, boolean for_) {
     this.double_ = double_;
@@ -30,6 +34,8 @@ public class switch_ {
     this.string = other.string;
     this.for_ = other.for_;
   }
+
+  /* Accessors and mutators */
 
   public double getDouble() {
     return double_;
@@ -63,6 +69,8 @@ public class switch_ {
     for_ = newFor;
   }
 
+  /* Object level helpers */
+
   public boolean equals(switch_ other) {
     return
       double_ == other.double_ &&
@@ -79,6 +87,8 @@ public class switch_ {
     result = result * 37 + (for_ ? 0 : 1);
     return result;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<switch_> factory = new Factory<switch_>() {
     public switch_ create() {

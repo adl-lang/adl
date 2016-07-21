@@ -77,6 +77,11 @@ classFileCode content =
   cblock (template "$1" [cf_decl content]) (
     cline ""
     <>
+    ( if null (cf_fields content)
+        then mempty
+        else mconcat [cline "/* Members */" , cline ""]
+    )
+    <>
     mconcat (reverse (cf_fields content))
     <>
     cline ""
@@ -389,11 +394,15 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
                       | fd <- fieldDetails ]
             )
 
+      addMethod (cline "/* Constructors */")
+
       addMethod ctor1
       when (not isGeneric && not isEmpty) (addMethod ctor2)
       when (not isGeneric) (addMethod ctor3)
 
       -- Getters/Setters
+      when (not isEmpty) (addMethod (cline "/* Accessors and mutators */"))
+      
       when (not (cgp_publicMembers codeProfile)) $ do
         for_ fieldDetails $ \fd -> do
           let fieldName = fd_fieldName fd
@@ -410,7 +419,9 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
           addMethod getter
           when (cgp_mutable codeProfile) (addMethod setter)
 
-      -- equals
+      -- equals and hashcode
+      addMethod (cline "/* Object level helpers */")
+
       let equals = cblock (template "public boolean equals($1 other)"[className]) (
             cline "return"
             <>
@@ -425,7 +436,6 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
            )
       addMethod (if isEmpty then equalsEmpty else equals)
 
-      -- hashcode
       addMethod $ cblock "public int hashCode()" (
         cline "int result = 1;"
         <>
@@ -477,6 +487,8 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
                                 else template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]
                                | fd <- fieldDetails]
 
+      addMethod (cline "/* Factory for construction of generic values */")
+
       addImport "org.adl.runtime.Factory"
       addMethod (if isGeneric then factoryg else factory)
           
@@ -510,6 +522,8 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       addMethod discdef
 
       -- constructors
+      addMethod (cline "/* Constructors */")
+      
       for_ fieldDetails $ \fd -> do
         let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
             ctor = cblock (template "public static$1 $2 $3($4 v)" [leadSpace typeArgs, className, fd_fieldName fd, fd_typeExprStr fd]) (
@@ -551,7 +565,9 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
           addMethod ctorCopy
       addMethod $ ctorPrivate
 
-      -- getters
+      -- accessors
+      addMethod (cline "/* Accessors */")
+
       addMethod $ cblock "public Disc getDisc()" (
         cline "return disc;"
         )
@@ -567,7 +583,9 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
 
         addMethod getter
 
-      -- settings
+      -- mutators
+      addMethod (cline "/* Mutators */")
+
       when (cgp_mutable codeProfile) $ do 
         for_ fieldDetails $ \fd -> do
           let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
@@ -578,12 +596,13 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
                 )
           addMethod ctor
 
-      -- equals
+      -- equals and hashcode
+      addMethod (cline "/* Object level helpers */")
+
       addMethod $ cblock (template "public boolean equals($1 other)"[className]) (
         cline "return disc == other.disc && value.equals(other.value);"
         )
 
-      -- hashcode
       addMethod $ cblock "public int hashCode()" (
         cline "return disc.hashCode() * 37 + value.hashCode();"
         )
@@ -651,6 +670,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
 
           factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- u_typeParams union]
 
+      addMethod (cline "/* Factory for construction of generic values */")
       addImport "org.adl.runtime.Factory"
       addMethod (if isGeneric then factoryg else factory)
 
@@ -679,7 +699,7 @@ generate jf modulePaths = catchAllExceptions  $ for_ modulePaths $ \modulePath -
                  m
 
 commaSep :: [T.Text] -> T.Text
-commaSep = T.intercalate ","
+commaSep = T.intercalate ", "
 
 ----------------------------------------------------------------------
 reservedWords :: Set.Set Ident

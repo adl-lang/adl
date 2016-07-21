@@ -4,12 +4,16 @@ import org.adl.runtime.Factory;
 
 public class U5 {
 
+  /* Members */
+
   private Disc disc;
   private Object value;
 
   public enum Disc {
     V
   }
+
+  /* Constructors */
 
   public static U5 v(S1 v) {
     return new U5(Disc.V,java.util.Objects.requireNonNull(v));
@@ -34,6 +38,8 @@ public class U5 {
     this.value = value;
   }
 
+  /* Accessors */
+
   public Disc getDisc() {
     return disc;
   }
@@ -45,10 +51,14 @@ public class U5 {
     throw new IllegalStateException();
   }
 
+  /* Mutators */
+
   public void setV(S1 v) {
     this.value = java.util.Objects.requireNonNull(v);
     this.disc = Disc.V;
   }
+
+  /* Object level helpers */
 
   public boolean equals(U5 other) {
     return disc == other.disc && value.equals(other.value);
@@ -62,6 +72,8 @@ public class U5 {
   private static <T> T cast(final Object o) {
     return (T)o;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<U5> factory = new Factory<U5>() {
     public U5 create() {

@@ -5,12 +5,16 @@ import org.adl.runtime.Factory;
 
 public class unsigned {
 
+  /* Members */
+
   private Disc disc;
   private Object value;
 
   public enum Disc {
     NULL_
   }
+
+  /* Constructors */
 
   public static unsigned null_(Void v) {
     return new unsigned(Disc.NULL_,v);
@@ -35,6 +39,8 @@ public class unsigned {
     this.value = value;
   }
 
+  /* Accessors */
+
   public Disc getDisc() {
     return disc;
   }
@@ -46,10 +52,14 @@ public class unsigned {
     throw new IllegalStateException();
   }
 
+  /* Mutators */
+
   public void setNull(Void v) {
     this.value = v;
     this.disc = Disc.NULL_;
   }
+
+  /* Object level helpers */
 
   public boolean equals(unsigned other) {
     return disc == other.disc && value.equals(other.value);
@@ -63,6 +73,8 @@ public class unsigned {
   private static <T> T cast(final Object o) {
     return (T)o;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<unsigned> factory = new Factory<unsigned>() {
     public unsigned create() {

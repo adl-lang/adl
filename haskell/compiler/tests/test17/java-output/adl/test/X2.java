@@ -5,6 +5,8 @@ import org.adl.runtime.Factory;
 
 public class X2 {
 
+  /* Members */
+
   private Disc disc;
   private Object value;
 
@@ -17,6 +19,8 @@ public class X2 {
     F6,
     F7
   }
+
+  /* Constructors */
 
   public static X2 f1(int v) {
     return new X2(Disc.F1,v);
@@ -61,19 +65,19 @@ public class X2 {
         this.value = (Integer) other.value;
         break;
       case F3:
-        this.value = Pair.factory(Factories.StringFactory,Factories.IntegerFactory).create((Pair<String, Integer>) other.value);
+        this.value = Pair.factory(Factories.StringFactory, Factories.IntegerFactory).create((Pair<String, Integer>) other.value);
         break;
       case F4:
-        this.value = Pair.factory(Factories.StringFactory,Factories.StringFactory).create((Pair<String, String>) other.value);
+        this.value = Pair.factory(Factories.StringFactory, Factories.StringFactory).create((Pair<String, String>) other.value);
         break;
       case F5:
         this.value = Factories.ArrayListFactory(Factories.IntegerFactory).create((java.util.ArrayList<Integer>) other.value);
         break;
       case F6:
-        this.value = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory,Factories.IntegerFactory)).create((java.util.ArrayList<Pair<String, Integer>>) other.value);
+        this.value = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory, Factories.IntegerFactory)).create((java.util.ArrayList<Pair<String, Integer>>) other.value);
         break;
       case F7:
-        this.value = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory,Factories.StringFactory)).create((java.util.ArrayList<Pair<String, String>>) other.value);
+        this.value = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory, Factories.StringFactory)).create((java.util.ArrayList<Pair<String, String>>) other.value);
         break;
     }
   }
@@ -82,6 +86,8 @@ public class X2 {
     this.disc = disc;
     this.value = value;
   }
+
+  /* Accessors */
 
   public Disc getDisc() {
     return disc;
@@ -136,6 +142,8 @@ public class X2 {
     throw new IllegalStateException();
   }
 
+  /* Mutators */
+
   public void setF1(int v) {
     this.value = v;
     this.disc = Disc.F1;
@@ -171,6 +179,8 @@ public class X2 {
     this.disc = Disc.F7;
   }
 
+  /* Object level helpers */
+
   public boolean equals(X2 other) {
     return disc == other.disc && value.equals(other.value);
   }
@@ -183,6 +193,8 @@ public class X2 {
   private static <T> T cast(final Object o) {
     return (T)o;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<X2> factory = new Factory<X2>() {
     public X2 create() {

@@ -4,13 +4,19 @@ import org.adl.runtime.Factory;
 
 public class XY<T> {
 
+  /* Members */
+
   private T x;
   private T y;
+
+  /* Constructors */
 
   public XY(T x, T y) {
     this.x = java.util.Objects.requireNonNull(x);
     this.y = java.util.Objects.requireNonNull(y);
   }
+
+  /* Accessors and mutators */
 
   public T getX() {
     return x;
@@ -28,6 +34,8 @@ public class XY<T> {
     y = newY;
   }
 
+  /* Object level helpers */
+
   public boolean equals(XY other) {
     return
       x.equals(other.x) &&
@@ -41,17 +49,19 @@ public class XY<T> {
     return result;
   }
 
+  /* Factory for construction of generic values */
+
   public static <T> Factory<XY<T>> factory(Factory<T> factoryT) {
     return new Factory<XY<T>>() {
       final Factory<T> x = factoryT;
       final Factory<T> y = factoryT;
 
       public XY<T> create() {
-        return new XY<T>(x.create(),y.create());
+        return new XY<T>(x.create(), y.create());
       }
 
       public XY<T> create(XY<T> other) {
-        return new XY<T>(x.create(other.getX()),y.create(other.getY()));
+        return new XY<T>(x.create(other.getX()), y.create(other.getY()));
       }
     };
   }

@@ -5,8 +5,12 @@ import org.adl.runtime.Factory;
 
 public class S1 {
 
+  /* Members */
+
   private int x;
   private String y;
+
+  /* Constructors */
 
   public S1(int x, String y) {
     this.x = x;
@@ -22,6 +26,8 @@ public class S1 {
     this.x = other.x;
     this.y = other.y;
   }
+
+  /* Accessors and mutators */
 
   public int getX() {
     return x;
@@ -39,6 +45,8 @@ public class S1 {
     y = newY;
   }
 
+  /* Object level helpers */
+
   public boolean equals(S1 other) {
     return
       x == other.x &&
@@ -51,6 +59,8 @@ public class S1 {
     result = result * 37 + y.hashCode();
     return result;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<S1> factory = new Factory<S1>() {
     public S1 create() {

@@ -5,11 +5,15 @@ import org.adl.runtime.Factory;
 public class S0 {
 
 
+  /* Constructors */
+
   public S0() {
   }
 
   public S0(S0 other) {
   }
+
+  /* Object level helpers */
 
   public boolean equals(S0 other) {
     return true;
@@ -19,6 +23,8 @@ public class S0 {
     int result = 1;
     return result;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<S0> factory = new Factory<S0>() {
     public S0 create() {

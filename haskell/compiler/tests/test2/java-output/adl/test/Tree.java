@@ -5,13 +5,19 @@ import org.adl.runtime.Factory;
 
 public class Tree<T> {
 
+  /* Members */
+
   private T value;
   private java.util.ArrayList<Tree<T>> children;
+
+  /* Constructors */
 
   public Tree(T value, java.util.ArrayList<Tree<T>> children) {
     this.value = java.util.Objects.requireNonNull(value);
     this.children = java.util.Objects.requireNonNull(children);
   }
+
+  /* Accessors and mutators */
 
   public T getValue() {
     return value;
@@ -29,6 +35,8 @@ public class Tree<T> {
     children = newChildren;
   }
 
+  /* Object level helpers */
+
   public boolean equals(Tree other) {
     return
       value.equals(other.value) &&
@@ -42,17 +50,19 @@ public class Tree<T> {
     return result;
   }
 
+  /* Factory for construction of generic values */
+
   public static <T> Factory<Tree<T>> factory(Factory<T> factoryT) {
     return new Factory<Tree<T>>() {
       final Factory<T> value = factoryT;
       final Factory<java.util.ArrayList<Tree<T>>> children = Factories.ArrayListFactory(Tree.factory(factoryT));
 
       public Tree<T> create() {
-        return new Tree<T>(value.create(),children.create());
+        return new Tree<T>(value.create(), children.create());
       }
 
       public Tree<T> create(Tree<T> other) {
-        return new Tree<T>(value.create(other.getValue()),children.create(other.getChildren()));
+        return new Tree<T>(value.create(other.getValue()), children.create(other.getChildren()));
       }
     };
   }

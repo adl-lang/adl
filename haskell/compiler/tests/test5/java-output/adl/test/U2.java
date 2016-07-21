@@ -5,12 +5,16 @@ import org.adl.runtime.Factory;
 
 public class U2 {
 
+  /* Members */
+
   private Disc disc;
   private Object value;
 
   public enum Disc {
     V
   }
+
+  /* Constructors */
 
   public static U2 v(short v) {
     return new U2(Disc.V,v);
@@ -35,6 +39,8 @@ public class U2 {
     this.value = value;
   }
 
+  /* Accessors */
+
   public Disc getDisc() {
     return disc;
   }
@@ -46,10 +52,14 @@ public class U2 {
     throw new IllegalStateException();
   }
 
+  /* Mutators */
+
   public void setV(short v) {
     this.value = v;
     this.disc = Disc.V;
   }
+
+  /* Object level helpers */
 
   public boolean equals(U2 other) {
     return disc == other.disc && value.equals(other.value);
@@ -63,6 +73,8 @@ public class U2 {
   private static <T> T cast(final Object o) {
     return (T)o;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<U2> factory = new Factory<U2>() {
     public U2 create() {

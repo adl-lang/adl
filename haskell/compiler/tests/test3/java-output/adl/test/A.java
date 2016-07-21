@@ -5,9 +5,13 @@ import org.adl.runtime.Factory;
 
 public class A {
 
+  /* Members */
+
   private short f_int;
   private String f_string;
   private boolean f_bool;
+
+  /* Constructors */
 
   public A(short f_int, String f_string, boolean f_bool) {
     this.f_int = f_int;
@@ -26,6 +30,8 @@ public class A {
     this.f_string = other.f_string;
     this.f_bool = other.f_bool;
   }
+
+  /* Accessors and mutators */
 
   public short getF_int() {
     return f_int;
@@ -51,6 +57,8 @@ public class A {
     f_bool = newF_bool;
   }
 
+  /* Object level helpers */
+
   public boolean equals(A other) {
     return
       f_int == other.f_int &&
@@ -65,6 +73,8 @@ public class A {
     result = result * 37 + (f_bool ? 0 : 1);
     return result;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<A> factory = new Factory<A>() {
     public A create() {

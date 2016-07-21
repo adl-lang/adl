@@ -5,9 +5,13 @@ import org.adl.runtime.Factory;
 
 public class S2 {
 
+  /* Members */
+
   private String f1;
   private double f2;
   private java.util.ArrayList<Integer> f3;
+
+  /* Constructors */
 
   public S2(String f1, double f2, java.util.ArrayList<Integer> f3) {
     this.f1 = java.util.Objects.requireNonNull(f1);
@@ -26,6 +30,8 @@ public class S2 {
     this.f2 = other.f2;
     this.f3 = Factories.ArrayListFactory(Factories.IntegerFactory).create(other.f3);
   }
+
+  /* Accessors and mutators */
 
   public String getF1() {
     return f1;
@@ -51,6 +57,8 @@ public class S2 {
     f3 = newF3;
   }
 
+  /* Object level helpers */
+
   public boolean equals(S2 other) {
     return
       f1.equals(other.f1) &&
@@ -65,6 +73,8 @@ public class S2 {
     result = result * 37 + f3.hashCode();
     return result;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<S2> factory = new Factory<S2>() {
     public S2 create() {

@@ -5,6 +5,8 @@ import org.adl.runtime.Factory;
 
 public class U9<T> {
 
+  /* Members */
+
   private Disc disc;
   private Object value;
 
@@ -12,6 +14,8 @@ public class U9<T> {
     V1,
     V2
   }
+
+  /* Constructors */
 
   public static <T> U9 v1(T v) {
     return new U9(Disc.V1,java.util.Objects.requireNonNull(v));
@@ -25,6 +29,8 @@ public class U9<T> {
     this.disc = disc;
     this.value = value;
   }
+
+  /* Accessors */
 
   public Disc getDisc() {
     return disc;
@@ -44,6 +50,8 @@ public class U9<T> {
     throw new IllegalStateException();
   }
 
+  /* Mutators */
+
   public void setV1(T v) {
     this.value = java.util.Objects.requireNonNull(v);
     this.disc = Disc.V1;
@@ -53,6 +61,8 @@ public class U9<T> {
     this.value = v;
     this.disc = Disc.V2;
   }
+
+  /* Object level helpers */
 
   public boolean equals(U9 other) {
     return disc == other.disc && value.equals(other.value);
@@ -66,6 +76,8 @@ public class U9<T> {
   private static <T> T cast(final Object o) {
     return (T)o;
   }
+
+  /* Factory for construction of generic values */
 
   public static <T> Factory<U9 <T>> factory(Factory<T> factoryT) {
     return new Factory<U9<T>>() {

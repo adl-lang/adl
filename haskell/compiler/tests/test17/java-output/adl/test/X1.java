@@ -5,6 +5,8 @@ import org.adl.runtime.Factory;
 
 public class X1 {
 
+  /* Members */
+
   private int f1;
   private int f2;
   private Pair<String, Integer> f3;
@@ -12,6 +14,8 @@ public class X1 {
   private java.util.ArrayList<Integer> f5;
   private java.util.ArrayList<Pair<String, Integer>> f6;
   private java.util.ArrayList<Pair<String, String>> f7;
+
+  /* Constructors */
 
   public X1(int f1, int f2, Pair<String, Integer> f3, Pair<String, String> f4, java.util.ArrayList<Integer> f5, java.util.ArrayList<Pair<String, Integer>> f6, java.util.ArrayList<Pair<String, String>> f7) {
     this.f1 = f1;
@@ -36,12 +40,14 @@ public class X1 {
   public X1(X1 other) {
     this.f1 = other.f1;
     this.f2 = other.f2;
-    this.f3 = Pair.factory(Factories.StringFactory,Factories.IntegerFactory).create(other.f3);
-    this.f4 = Pair.factory(Factories.StringFactory,Factories.StringFactory).create(other.f4);
+    this.f3 = Pair.factory(Factories.StringFactory, Factories.IntegerFactory).create(other.f3);
+    this.f4 = Pair.factory(Factories.StringFactory, Factories.StringFactory).create(other.f4);
     this.f5 = Factories.ArrayListFactory(Factories.IntegerFactory).create(other.f5);
-    this.f6 = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory,Factories.IntegerFactory)).create(other.f6);
-    this.f7 = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory,Factories.StringFactory)).create(other.f7);
+    this.f6 = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory, Factories.IntegerFactory)).create(other.f6);
+    this.f7 = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory, Factories.StringFactory)).create(other.f7);
   }
+
+  /* Accessors and mutators */
 
   public int getF1() {
     return f1;
@@ -99,6 +105,8 @@ public class X1 {
     f7 = newF7;
   }
 
+  /* Object level helpers */
+
   public boolean equals(X1 other) {
     return
       f1 == other.f1 &&
@@ -121,6 +129,8 @@ public class X1 {
     result = result * 37 + f7.hashCode();
     return result;
   }
+
+  /* Factory for construction of generic values */
 
   public static Factory<X1> factory = new Factory<X1>() {
     public X1 create() {
