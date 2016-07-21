@@ -242,8 +242,8 @@ public class S<T> {
     result = result * 37 + (int)f_word16;
     result = result * 37 + f_word32;
     result = result * 37 + (int)(f_word64 ^ (f_word64 >>> 32));
-    result = result * 37 + Float.hashCode(f_float);
-    result = result * 37 + Double.hashCode(f_double);
+    result = result * 37 + new Float(f_float).hashCode();
+    result = result * 37 + new Double(f_double).hashCode();
     result = result * 37 + f_bytes.hashCode();
     result = result * 37 + f_string.hashCode();
     result = result * 37 + f_vstring.hashCode();
