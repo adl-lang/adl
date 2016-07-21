@@ -168,7 +168,7 @@ runJava args0 =
 
     flags0 = J.JavaFlags {
       jf_searchPath=[],
-      jf_package = "Adl",
+      jf_package = "adl",
       jf_fileWriter= \_ _ -> return ()
     }
     out0 = OutputArgs {

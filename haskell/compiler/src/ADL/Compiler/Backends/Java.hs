@@ -20,6 +20,7 @@ import Data.Maybe(fromMaybe,isJust)
 import Data.Foldable(for_)
 import Data.List(intersperse,replicate)
 import Data.Monoid
+import Data.Traversable(for)
 
 import ADL.Compiler.AST
 import ADL.Compiler.EIO
@@ -47,22 +48,32 @@ genJavaPackage package = T.intercalate "." (map unreserveWord (unJavaPackage pac
 data CodeGenProfile = CodeGenProfile {
   cgp_mutable :: Bool,
   cgp_publicMembers :: Bool,
-  cgp_genericFactories :: Bool
+  cgp_genericFactories :: Bool,
+  cgp_parcelable :: Bool,
+  cgp_runtimePackage :: T.Text
 }
 
-defaultCodeGenProfile = CodeGenProfile True False False
+defaultCodeGenProfile = CodeGenProfile {
+  cgp_mutable = True,
+  cgp_publicMembers = False,
+  cgp_genericFactories = False,
+  cgp_parcelable = False,
+  cgp_runtimePackage = "org.adl.runtime"
+}
 
 data ClassFile = ClassFile {
+   cf_codeProfile :: CodeGenProfile,
    cf_module :: ModuleName,
    cf_package :: JavaPackage,
    cf_imports :: Set.Set T.Text,
+   cf_implements :: Set.Set T.Text,
    cf_decl :: T.Text,
    cf_fields :: [Code],
    cf_methods :: [Code]
 }
 
-classFile :: ModuleName -> JavaPackage -> T.Text -> ClassFile
-classFile mname javapackage decl = ClassFile mname javapackage Set.empty decl [] []
+classFile :: CodeGenProfile -> ModuleName -> JavaPackage -> T.Text -> ClassFile
+classFile codeProfile mname javapackage decl = ClassFile codeProfile mname javapackage Set.empty Set.empty decl [] []
 
 classFileCode :: ClassFile -> Code
 classFileCode content =
@@ -74,7 +85,7 @@ classFileCode content =
   <>
   cline ""
   <>
-  cblock (template "$1" [cf_decl content]) (
+  cblock decl (
     cline ""
     <>
     ( if null (cf_fields content)
@@ -88,7 +99,9 @@ classFileCode content =
     <>
     mconcat (intersperse (cline "") (reverse (cf_methods content)))
   )
-
+  where
+    decl | Set.null (cf_implements content) = (template "$1" [cf_decl content])
+         | otherwise = (template "$1 implements $2" [cf_decl content,commaSep (Set.toList (cf_implements content))])
 type CState a = State ClassFile a
 
 instance MGen (State ClassFile) where
@@ -110,6 +123,12 @@ addMethod method = modify (\cf->cf{cf_methods=method:cf_methods cf})
 
 addImport :: T.Text -> CState ()
 addImport imp = modify (\cf->cf{cf_imports=Set.insert imp (cf_imports cf)})
+
+addImplements :: T.Text -> CState ()
+addImplements imp = modify (\cf->cf{cf_implements=Set.insert imp (cf_implements cf)})
+
+getRuntimePackage :: CState T.Text
+getRuntimePackage = (cgp_runtimePackage . cf_codeProfile) <$> get
 
 genTypeExpr :: TypeExpr ResolvedType -> CState T.Text
 genTypeExpr te = genTypeExprB False te
@@ -282,7 +301,9 @@ genPrimitiveDetails P_Sink = PrimitiveDetails {
   }
 
 primitiveFactory :: T.Text -> CState T.Text
-primitiveFactory name = addImport "org.adl.runtime.Factories" >> return (template "Factories.$1Factory" [name])
+primitiveFactory name = do
+  rtpackage <- getRuntimePackage
+  addImport (rtpackage <> ".Factories") >> return (template "Factories.$1Factory" [name])
 
 data FieldDetails = FieldDetails {
   fd_field :: Field ResolvedType,
@@ -352,7 +373,7 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m0 = do
 generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Struct ResolvedType -> ClassFile
 generateStruct codeProfile moduleName javaPackage decl struct =  execState gen state0
   where
-    state0 = classFile moduleName javaPackage classDecl
+    state0 = classFile codeProfile moduleName javaPackage classDecl
     isEmpty = null (s_fields struct)
     className = unreserveWord (d_name decl)
     classDecl = "public class " <> className <> typeArgs
@@ -489,13 +510,114 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
 
       addMethod (cline "/* Factory for construction of generic values */")
 
-      addImport "org.adl.runtime.Factory"
+      addImport (cgp_runtimePackage codeProfile <> ".Factory")
       addMethod (if isGeneric then factoryg else factory)
-          
+
+      -- Parcelable
+      when (cgp_parcelable codeProfile) $ do
+        importParcelable
+        addImplements "Parcelable"
+
+        addMethod (cline "/* Android Parcelable implementation */")
+        
+        addMethod $ coverride "public int describeContents()" (
+          cline "return 0;"
+          )
+
+        writeFields <- for fieldDetails $ \fd -> do
+          writeToParcel (f_type (fd_field fd)) "out" (fd_fieldName fd) "flags"
+
+        readFields <- for fieldDetails $ \fd -> do
+          readFromParcel (f_type (fd_field fd)) (Just (fd_typeExprStr fd)) (fd_fieldName fd) "in"
+
+        addMethod $ coverride "public void writeToParcel(Parcel out, int flags)" (
+          mconcat writeFields
+          )
+
+        addMethod $ cblock1 (template "public static final Parcelable.Creator<$1> CREATOR = new Parcelable.Creator<$1>()" [className]) (
+          coverride (template "public $1 createFromParcel(Parcel in)" [className]) (
+            mconcat readFields
+            <>
+            ctemplate "return new $1($2);" [className,commaSep [fd_fieldName fd | fd <- fieldDetails]]
+            )
+          <>
+          cline ""
+          <>
+          coverride (template "public $1[] newArray(int size)" [className]) (
+            ctemplate "return new $1[size];" [className]
+            )
+          )
+
+importParcelable :: CState ()
+importParcelable = do
+  addImport "android.os.Parcel"
+  addImport "android.os.Parcelable"
+
+writeToParcel :: TypeExpr ResolvedType -> Ident -> Ident -> Ident -> CState Code
+writeToParcel te to from flags = return $ case te of
+  (TypeExpr (RT_Primitive P_Void) _) -> mempty
+  (TypeExpr (RT_Primitive P_Bool) _) -> ctemplate "$1.writeByte($2 ? (byte)1 : (byte)0);" [to,from]
+  (TypeExpr (RT_Primitive P_Int8) _) -> ctemplate "$1.writeByte($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Int16) _) -> ctemplate "$1.writeInt($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Int32) _) -> ctemplate "$1.writeInt($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Int64) _) -> ctemplate "$1.writeLong($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Word8) _) -> ctemplate "$1.writeByte($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Word16) _) -> ctemplate "$1.writeInt($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Word32) _) -> ctemplate "$1.writeInt($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Word64) _) -> ctemplate "$1.writeLong($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Float) _) -> ctemplate "$1.writeFloat($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Double) _) -> ctemplate "$1.writeDouble($2);" [to,from]
+  (TypeExpr (RT_Primitive P_ByteVector) _) -> ctemplate "$1.writeByteArray($2.array());" [to,from]
+  (TypeExpr (RT_Primitive P_String) _) -> ctemplate "$1.writeString($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Vector) _) -> ctemplate "$1.writeList($2);" [to,from]
+  _ -> ctemplate "$1.writeToParcel($2,$3);" [from,to,flags]
+                                 
+readFromParcel :: TypeExpr ResolvedType -> Maybe Ident -> Ident -> Ident -> CState Code
+readFromParcel te mtotype tovar from = do
+  let to = case mtotype of
+        Nothing -> tovar
+        (Just totype) -> totype <> " " <> tovar
+  case te of
+    (TypeExpr (RT_Primitive P_Void) _) -> return $ctemplate "$1 = null;" [to]
+    (TypeExpr (RT_Primitive P_Bool) _) -> return $ ctemplate "$1 = $2.readByte() != 0;" [to,from]
+    (TypeExpr (RT_Primitive P_Int8) _) -> return $ ctemplate "$1 = $2.readByte();" [to,from]
+    (TypeExpr (RT_Primitive P_Int16) _) -> return $ ctemplate "$1 = $2.readInt();" [to,from]
+    (TypeExpr (RT_Primitive P_Int32) _) -> return $ ctemplate "$1 = $2.readInt();" [to,from]
+    (TypeExpr (RT_Primitive P_Int64) _) -> return $ ctemplate "$1 = $2.readLong();" [to,from]
+    (TypeExpr (RT_Primitive P_Word8) _) -> return $ ctemplate "$1 = $2.readByte();" [to,from]
+    (TypeExpr (RT_Primitive P_Word16) _) -> return $ ctemplate "$1 = $2.readInt();" [to,from]
+    (TypeExpr (RT_Primitive P_Word32) _) -> return $ ctemplate "$1 = $2.readInt();" [to,from]
+    (TypeExpr (RT_Primitive P_Word64) _) -> return $ ctemplate "$1 = $2.readLong();" [to,from]
+    (TypeExpr (RT_Primitive P_Float) _) -> return $ ctemplate "$1 = $2.readFloat();" [to,from]
+    (TypeExpr (RT_Primitive P_Double) _) -> return $ ctemplate "$1 = $2.readDouble();" [to,from]
+    (TypeExpr (RT_Primitive P_String) _) -> return $ ctemplate "$1 = $2.readString();" [to,from]
+    (TypeExpr (RT_Primitive P_ByteVector) _) -> do
+      return (
+        ctemplate "$1 = java.nio.ByteBuffer.allocate(0);" [to]
+        <>
+        cblock "" (
+           ctemplate "byte[] bytes = $1.createByteArray();" [from]
+           <>
+           ctemplate "$1.put(bytes);" [tovar,from]
+           )
+        )
+    (TypeExpr (RT_Primitive P_Vector) [te']) ->  do
+      typeExprStr <- genTypeExprB True te'
+      return (
+        ctemplate "$1 = new java.util.ArrayList<$2>();" [to,typeExprStr]
+        <>
+        ctemplate "$1.readList($2,$3.class.getClassLoader());" [from,tovar,typeExprStr]
+        )
+    _ -> do
+      typeExprStr <- genTypeExprB True te
+      return (
+        ctemplate "$1 = $2.CREATOR.createFromParcel($3);" [to,typeExprStr,from]
+        )
+
 generateUnion :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Union ResolvedType -> ClassFile
 generateUnion codeProfile moduleName javaPackage decl union =  execState gen state0
   where
-    state0 = classFile moduleName javaPackage classDecl
+    state0 = classFile codeProfile moduleName javaPackage classDecl
     className = unreserveWord (d_name decl)
     classDecl = "public class " <> className <> typeArgs
     isGeneric = length (u_typeParams union) > 0
@@ -671,8 +793,69 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
           factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- u_typeParams union]
 
       addMethod (cline "/* Factory for construction of generic values */")
-      addImport "org.adl.runtime.Factory"
+      addImport (cgp_runtimePackage codeProfile <> ".Factory")
       addMethod (if isGeneric then factoryg else factory)
+
+      -- Parcelable
+      when (cgp_parcelable codeProfile) $ do
+        importParcelable
+        addImplements "Parcelable"
+
+        addMethod (cline "/* Android Parcelable implementation */")
+        
+        addMethod $ coverride "public int describeContents()" (
+          cline "return 0;"
+          )
+
+        writeFields <- for fieldDetails $ \fd -> do
+          writeToParcel (f_type (fd_field fd)) "out" (template "(($1)value)" [fd_typeExprStr fd]) "flags"
+
+        readFields <- for fieldDetails $ \fd -> do
+          readFromParcel (f_type (fd_field fd)) Nothing "value" "in"
+
+        addMethod $ coverride "public void writeToParcel(Parcel out, int flags)" (
+          cline "out.writeInt(disc.ordinal());"
+          <>
+          cblock "switch(disc)" (
+            mconcat [
+              ctemplate "case $1:" [discriminatorName fd]
+              <>
+              indent (
+                writeField
+                <>
+                cline "break;"
+                )
+              | (fd,writeField) <- zip fieldDetails writeFields]
+            )
+          )
+
+        addMethod $ cblock1 (template "public static final Parcelable.Creator<$1> CREATOR = new Parcelable.Creator<$1>()" [className]) (
+          coverride (template "public $1 createFromParcel(Parcel in)" [className]) (
+            cline "Disc disc = Disc.values()[in.readInt()];"
+            <>
+            cline "Object value = null;"
+            <>
+            cblock "switch(disc)" (
+              mconcat [
+                ctemplate "case $1:" [discriminatorName fd]
+                <>
+                indent (
+                  readField
+                  <>
+                  cline "break;"
+                  )
+                | (fd,readField) <- zip fieldDetails readFields]
+              )
+            <>
+            ctemplate "return new $1(disc, value);" [className]
+            )
+          <>
+          cline ""
+          <>
+          coverride (template "public $1[] newArray(int size)" [className]) (
+            ctemplate "return new $1[size];" [className]
+            )
+          )
 
 literalValue :: Literal -> T.Text
 literalValue (LDefault t _) = template "new $1()" [t]
@@ -812,12 +995,17 @@ indentN :: [Code] -> Code
 indentN = CIndent . mconcat
 
 cblock :: T.Text -> Code -> Code
-cblock intro body =
-  cline (intro <> " {")  <> indent body <> cline "}"
+cblock "" body = cline "{"  <> indent body <> cline "}"
+cblock intro body =  cline (intro <> " {")  <> indent body <> cline "}"
+  
 
 cblock1 :: T.Text -> Code -> Code
 cblock1 intro body =
   cline (intro <> " {")  <> indent body <> cline "};"
+
+coverride :: T.Text -> Code -> Code
+coverride intro body =
+  cline "@Override" <> cline (intro <> " {")  <> indent body <> cline "}"
 
 ctemplate :: T.Text -> [T.Text] -> Code
 ctemplate pattern params = cline $ template pattern params
