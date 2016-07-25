@@ -261,11 +261,14 @@ genPrimitiveDetails P_Word64 = genPrimitiveDetails P_Int64
 
 genPrimitiveDetails P_ByteVector = PrimitiveDetails {
   pd_unboxed = Nothing,
-  pd_type = return "java.nio.ByteBuffer",
-  pd_default = Just "java.nio.ByteBuffer.allocate(0)",
-  pd_genLiteral = \(JSON.String s) -> template "java.nio.ByteBuffer.allocate(0).put($1.getBytes())" [T.pack (show (decode s))],
+  pd_type = do
+    rtpackage <- getRuntimePackage
+    addImport (rtpackage <> ".ByteArray")
+    return "ByteArray",
+  pd_default = Just "new ByteArray()",
+  pd_genLiteral = \(JSON.String s) -> template "new ByteArray($1.getBytes())" [T.pack (show (decode s))],
   pd_mutable = True,
-  pd_factory = primitiveFactory "ByteBuffer",
+  pd_factory = primitiveFactory "ByteArray",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
   where
@@ -567,7 +570,7 @@ writeToParcel te to from flags = return $ case te of
   (TypeExpr (RT_Primitive P_Word64) _) -> ctemplate "$1.writeLong($2);" [to,from]
   (TypeExpr (RT_Primitive P_Float) _) -> ctemplate "$1.writeFloat($2);" [to,from]
   (TypeExpr (RT_Primitive P_Double) _) -> ctemplate "$1.writeDouble($2);" [to,from]
-  (TypeExpr (RT_Primitive P_ByteVector) _) -> ctemplate "$1.writeByteArray($2.array());" [to,from]
+  (TypeExpr (RT_Primitive P_ByteVector) _) -> ctemplate "$1.writeByteArray($2.getValue());" [to,from]
   (TypeExpr (RT_Primitive P_String) _) -> ctemplate "$1.writeString($2);" [to,from]
   (TypeExpr (RT_Primitive P_Vector) _) -> ctemplate "$1.writeList($2);" [to,from]
   _ -> ctemplate "$1.writeToParcel($2,$3);" [from,to,flags]
@@ -593,13 +596,7 @@ readFromParcel te mtotype tovar from = do
     (TypeExpr (RT_Primitive P_String) _) -> return $ ctemplate "$1 = $2.readString();" [to,from]
     (TypeExpr (RT_Primitive P_ByteVector) _) -> do
       return (
-        ctemplate "$1 = java.nio.ByteBuffer.allocate(0);" [to]
-        <>
-        cblock "" (
-           ctemplate "byte[] bytes = $1.createByteArray();" [from]
-           <>
-           ctemplate "$1.put(bytes);" [tovar,from]
-           )
+        ctemplate "$1 = new ByteArray($2.createByteArray());" [to,from]
         )
     (TypeExpr (RT_Primitive P_Vector) [te']) ->  do
       typeExprStr <- genTypeExprB True te'

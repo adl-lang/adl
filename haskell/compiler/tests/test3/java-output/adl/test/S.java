@@ -1,5 +1,6 @@
 package adl.test;
 
+import org.adl.runtime.ByteArray;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
@@ -19,7 +20,7 @@ public class S<T> {
   private long f_word64;
   private float f_float;
   private double f_double;
-  private java.nio.ByteBuffer f_bytes;
+  private ByteArray f_bytes;
   private String f_string;
   private java.util.ArrayList<String> f_vstring;
   private A f_a;
@@ -29,7 +30,7 @@ public class S<T> {
 
   /* Constructors */
 
-  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, java.nio.ByteBuffer f_bytes, String f_string, java.util.ArrayList<String> f_vstring, A f_a, U f_u, T f_t, B<Short> f_bint16) {
+  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, java.util.ArrayList<String> f_vstring, A f_a, U f_u, T f_t, B<Short> f_bint16) {
     this.f_void = f_void;
     this.f_bool = f_bool;
     this.f_int8 = f_int8;
@@ -149,11 +150,11 @@ public class S<T> {
     f_double = newF_double;
   }
 
-  public java.nio.ByteBuffer getF_bytes() {
+  public ByteArray getF_bytes() {
     return f_bytes;
   }
 
-  public void setF_bytes(java.nio.ByteBuffer newF_bytes) {
+  public void setF_bytes(ByteArray newF_bytes) {
     f_bytes = newF_bytes;
   }
 
@@ -258,7 +259,7 @@ public class S<T> {
 
   public static <T> Factory<S<T>> factory(Factory<T> factoryT) {
     return new Factory<S<T>>() {
-      final Factory<java.nio.ByteBuffer> f_bytes = Factories.ByteBufferFactory;
+      final Factory<ByteArray> f_bytes = Factories.ByteArrayFactory;
       final Factory<java.util.ArrayList<String>> f_vstring = Factories.ArrayListFactory(Factories.StringFactory);
       final Factory<A> f_a = A.factory;
       final Factory<U> f_u = U.factory;

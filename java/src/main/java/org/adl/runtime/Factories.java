@@ -50,11 +50,10 @@ public class Factories
     public String create(String other) { return other; }
   };
 
-  public static final Factory<ByteBuffer> ByteBufferFactory = new Factory<ByteBuffer>() {
-    public ByteBuffer create() { return ByteBuffer.allocate(0); }
-    public ByteBuffer create(ByteBuffer other) { return other.duplicate(); }
+  public static final Factory<ByteArray> ByteArrayFactory = new Factory<ByteArray>() {
+    public ByteArray create() { return new ByteArray(); }
+      public ByteArray create(ByteArray other) { return new ByteArray(other); }
   };
-
 
   public static <T> Factory<ArrayList<T>> ArrayListFactory(final Factory<T> factoryT) {
     return new Factory<ArrayList<T>>() {
