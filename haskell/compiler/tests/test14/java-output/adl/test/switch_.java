@@ -87,7 +87,7 @@ public class switch_ {
   @Override
   public int hashCode() {
     int result = 1;
-    result = result * 37 + new Double(double_).hashCode();
+    result = result * 37 + Double.valueOf(double_).hashCode();
     result = result * 37 + int_;
     result = result * 37 + string.hashCode();
     result = result * 37 + (for_ ? 0 : 1);

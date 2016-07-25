@@ -248,7 +248,7 @@ genPrimitiveDetails P_Float = PrimitiveDetails {
   pd_genLiteral = \(JSON.Number n) -> litNumber n <> "F",
   pd_mutable = False,
   pd_factory = primitiveFactory "Float",
-  pd_hashfn = \from -> template "new Float($1).hashCode()" [from]
+  pd_hashfn = \from -> template "Float.valueOf($1).hashCode()" [from]
 }
 genPrimitiveDetails P_Double = PrimitiveDetails {
   pd_unboxed = Just (return "double"),
@@ -257,7 +257,7 @@ genPrimitiveDetails P_Double = PrimitiveDetails {
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
   pd_mutable = False,
   pd_factory = primitiveFactory "Double",
-  pd_hashfn = \from -> template "new Double($1).hashCode()" [from]
+  pd_hashfn = \from -> template "Double.valueOf($1).hashCode()" [from]
 }
 
 genPrimitiveDetails P_Word8 = genPrimitiveDetails P_Int8

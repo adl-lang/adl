@@ -77,7 +77,7 @@ public class S3<T> {
   public int hashCode() {
     int result = 1;
     result = result * 37 + f1.hashCode();
-    result = result * 37 + new Double(f2).hashCode();
+    result = result * 37 + Double.valueOf(f2).hashCode();
     result = result * 37 + f3.hashCode();
     result = result * 37 + f4.hashCode();
     return result;
