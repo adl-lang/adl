@@ -648,8 +648,11 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
             ctor = cblock (template "public static$1 $2 $3($4 v)" [leadSpace typeArgs, className, fd_fieldName fd, fd_typeExprStr fd]) (
               ctemplate "return new $1(Disc.$2,$3);" [className, discriminatorName fd, checkedv]
               )
+            ctorvoid = cblock (template "public static$1 $2 $3()" [leadSpace typeArgs, className, fd_fieldName fd]) (
+              ctemplate "return new $1(Disc.$2,null);" [className, discriminatorName fd]
+              )
 
-        addMethod ctor
+        addMethod (if isVoidType (f_type (fd_field fd)) then ctorvoid else ctor)
 
       let ctorPrivate = cblock (template "private $1(Disc disc, Object value)" [className]) (
             cline "this.disc = disc;"
@@ -700,7 +703,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
               cline "throw new IllegalStateException();"
               )
 
-        addMethod getter
+        when (not (isVoidType (f_type (fd_field fd)))) (addMethod getter)
 
       -- mutators
       addMethod (cline "/* Mutators */")
@@ -708,12 +711,17 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       when (cgp_mutable codeProfile) $ do 
         for_ fieldDetails $ \fd -> do
           let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
-              ctor = cblock (template "public void set$1($2 v)" [javaCapsFieldName fd, fd_typeExprStr fd]) (
+              mtor = cblock (template "public void set$1($2 v)" [javaCapsFieldName fd, fd_typeExprStr fd]) (
                 ctemplate "this.value = $1;" [checkedv]
                 <>
                 ctemplate "this.disc = Disc.$1;" [discriminatorName fd]
                 )
-          addMethod ctor
+              mtorvoid = cblock (template "public void set$1()" [javaCapsFieldName fd]) (
+                cline "this.value = null;"
+                <>
+                ctemplate "this.disc = Disc.$1;" [discriminatorName fd]
+                )
+          addMethod (if isVoidType (f_type (fd_field fd)) then mtorvoid else mtor)
 
       -- equals and hashcode
       addMethod (cline "/* Object level helpers */")

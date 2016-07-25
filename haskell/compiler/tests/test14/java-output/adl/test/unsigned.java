@@ -16,8 +16,8 @@ public class unsigned {
 
   /* Constructors */
 
-  public static unsigned null_(Void v) {
-    return new unsigned(Disc.NULL_,v);
+  public static unsigned null_() {
+    return new unsigned(Disc.NULL_,null);
   }
 
   public unsigned() {
@@ -45,17 +45,10 @@ public class unsigned {
     return disc;
   }
 
-  public Void getNull() {
-    if (disc == Disc.NULL_) {
-      return cast(value);
-    }
-    throw new IllegalStateException();
-  }
-
   /* Mutators */
 
-  public void setNull(Void v) {
-    this.value = v;
+  public void setNull() {
+    this.value = null;
     this.disc = Disc.NULL_;
   }
 

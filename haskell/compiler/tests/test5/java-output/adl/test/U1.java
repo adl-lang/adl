@@ -16,8 +16,8 @@ public class U1 {
 
   /* Constructors */
 
-  public static U1 v(Void v) {
-    return new U1(Disc.V,v);
+  public static U1 v() {
+    return new U1(Disc.V,null);
   }
 
   public U1() {
@@ -45,17 +45,10 @@ public class U1 {
     return disc;
   }
 
-  public Void getV() {
-    if (disc == Disc.V) {
-      return cast(value);
-    }
-    throw new IllegalStateException();
-  }
-
   /* Mutators */
 
-  public void setV(Void v) {
-    this.value = v;
+  public void setV() {
+    this.value = null;
     this.disc = Disc.V;
   }
 
