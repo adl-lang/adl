@@ -51,6 +51,21 @@ javaPackageOption ufn =
     (ReqArg ufn "PACKAGE")
     "The java package into which the generated ADL code will be placed"
 
+javaRuntimePackageOption ufn =
+  Option "" ["rtpackage"]
+    (ReqArg ufn "PACKAGE")
+    "The java package into which the ADL runtime should be placed"
+
+javaGenerateParcelable ufn =
+  Option "" ["parcelable"]
+    (NoArg ufn)
+    "Generated java code will include android parcellable implementations"
+
+javaHeaderComment ufn =
+  Option "" ["header-comment"]
+    (ReqArg ufn "PACKAGE")
+    "A comment to be placed at the start of each java file"
+
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> V.verify (mkFlags opts) args
@@ -169,7 +184,8 @@ runJava args0 =
     flags0 = J.JavaFlags {
       jf_searchPath=[],
       jf_package = "adl",
-      jf_fileWriter= \_ _ -> return ()
+      jf_fileWriter= \_ _ -> return (),
+      jf_codeGenProfile = J.defaultCodeGenProfile
     }
     out0 = OutputArgs {
       oa_log = putStrLn,
@@ -182,6 +198,9 @@ runJava args0 =
       , outputDirOption (\s (jf,o)-> (jf,o{oa_outputPath=s}))
       , noOverwriteOption (\(jf,o)-> (jf,o{oa_noOverwrite=True}))
       , javaPackageOption (\s (jf,o) -> (jf{jf_package=T.pack s},o))
+      , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=T.pack s}},o))
+      , javaGenerateParcelable (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_parcelable=True}},o))
+      , javaHeaderComment (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_header=T.pack s}},o))
       ]
 
 usage = T.intercalate "\n"

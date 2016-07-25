@@ -120,7 +120,8 @@ runJavaBackend ipath mpaths epath = do
   let flags = J.JavaFlags {
     J.jf_searchPath = [ipath],
     J.jf_package = "adl",
-    J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+    J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir),
+    J.jf_codeGenProfile = J.defaultCodeGenProfile
     }
   er <- unEIO $ J.generate flags mpaths
   processCompilerOutput epath tempDir er

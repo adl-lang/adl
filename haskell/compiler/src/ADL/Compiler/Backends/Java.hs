@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
 module ADL.Compiler.Backends.Java(
   generate,
-  JavaFlags(..)
+  JavaFlags(..),
+  CodeGenProfile(..),
+  defaultCodeGenProfile,
   ) where
 
 import qualified Data.ByteString.Base64 as B64
@@ -35,7 +37,9 @@ data JavaFlags = JavaFlags {
 
   -- The java package under which we hang the generated ADL
   jf_package :: T.Text,
-  jf_fileWriter :: FilePath -> LBS.ByteString -> IO ()
+  jf_fileWriter :: FilePath -> LBS.ByteString -> IO (),
+
+  jf_codeGenProfile :: CodeGenProfile
   }
 
 newtype JavaPackage = JavaPackage {
@@ -46,6 +50,7 @@ genJavaPackage :: JavaPackage -> T.Text
 genJavaPackage package = T.intercalate "." (map unreserveWord (unJavaPackage package))
 
 data CodeGenProfile = CodeGenProfile {
+  cgp_header :: T.Text,
   cgp_mutable :: Bool,
   cgp_publicMembers :: Bool,
   cgp_genericFactories :: Bool,
@@ -54,6 +59,7 @@ data CodeGenProfile = CodeGenProfile {
 }
 
 defaultCodeGenProfile = CodeGenProfile {
+  cgp_header = "",
   cgp_mutable = True,
   cgp_publicMembers = False,
   cgp_genericFactories = False,
@@ -78,6 +84,11 @@ classFile codeProfile mname javapackage decl = ClassFile codeProfile mname javap
 
 classFileCode :: ClassFile -> Code
 classFileCode content =
+  ( if T.null header
+      then mempty
+      else multiLineComment header <> cline ""
+  )
+  <>
   ctemplate "package $1;" [genJavaPackage (cf_package content)]
   <>
   cline ""
@@ -103,6 +114,7 @@ classFileCode content =
     mconcat (intersperse (cline "") (reverse (cf_methods content)))
   )
   where
+    header = cgp_header (cf_codeProfile content)
     decl | Set.null (cf_implements content) = (template "$1" [cf_decl content])
          | otherwise = (template "$1 implements $2" [cf_decl content,commaSep (Set.toList (cf_implements content))])
 type CState a = State ClassFile a
@@ -887,6 +899,10 @@ generateDocString annotations = case Map.lookup (ScopedName (ModuleName []) "Doc
    (Just (JSON.String text)) -> cline "/**" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
    _ -> mempty
 
+
+multiLineComment :: T.Text -> Code
+multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
+
 literalValue :: Literal -> T.Text
 literalValue (LDefault t _) = template "new $1()" [t]
 literalValue (LCtor t _ ls) = template "new $1($2)" [t, T.intercalate ", " (map literalValue ls)]
@@ -907,7 +923,7 @@ generate jf modulePaths = catchAllExceptions  $ for_ modulePaths $ \modulePath -
   m <- loadAndCheckModule (moduleFinder (jf_searchPath jf)) modulePath
   generateModule (packageGenerator (jf_package jf))
                  (fileGenerator (jf_package jf))
-                 (const defaultCodeGenProfile)
+                 (const (jf_codeGenProfile jf))
                  (jf_fileWriter jf)
                  m
 
