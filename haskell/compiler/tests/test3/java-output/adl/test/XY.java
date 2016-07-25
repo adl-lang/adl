@@ -23,7 +23,7 @@ public class XY<T> {
   }
 
   public void setX(T newX) {
-    x = newX;
+    x = java.util.Objects.requireNonNull(newX);
   }
 
   public T getY() {
@@ -31,7 +31,7 @@ public class XY<T> {
   }
 
   public void setY(T newY) {
-    y = newY;
+    y = java.util.Objects.requireNonNull(newY);
   }
 
   /* Object level helpers */

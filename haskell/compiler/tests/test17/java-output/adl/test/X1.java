@@ -70,7 +70,7 @@ public class X1 {
   }
 
   public void setF3(Pair<String, Integer> newF3) {
-    f3 = newF3;
+    f3 = java.util.Objects.requireNonNull(newF3);
   }
 
   public Pair<String, String> getF4() {
@@ -78,7 +78,7 @@ public class X1 {
   }
 
   public void setF4(Pair<String, String> newF4) {
-    f4 = newF4;
+    f4 = java.util.Objects.requireNonNull(newF4);
   }
 
   public java.util.ArrayList<Integer> getF5() {
@@ -86,7 +86,7 @@ public class X1 {
   }
 
   public void setF5(java.util.ArrayList<Integer> newF5) {
-    f5 = newF5;
+    f5 = java.util.Objects.requireNonNull(newF5);
   }
 
   public java.util.ArrayList<Pair<String, Integer>> getF6() {
@@ -94,7 +94,7 @@ public class X1 {
   }
 
   public void setF6(java.util.ArrayList<Pair<String, Integer>> newF6) {
-    f6 = newF6;
+    f6 = java.util.Objects.requireNonNull(newF6);
   }
 
   public java.util.ArrayList<Pair<String, String>> getF7() {
@@ -102,7 +102,7 @@ public class X1 {
   }
 
   public void setF7(java.util.ArrayList<Pair<String, String>> newF7) {
-    f7 = newF7;
+    f7 = java.util.Objects.requireNonNull(newF7);
   }
 
   /* Object level helpers */

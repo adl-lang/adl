@@ -41,7 +41,7 @@ public class S2 {
   }
 
   public void setF1(String newF1) {
-    f1 = newF1;
+    f1 = java.util.Objects.requireNonNull(newF1);
   }
 
   public double getF2() {
@@ -57,7 +57,7 @@ public class S2 {
   }
 
   public void setF3(java.util.ArrayList<Integer> newF3) {
-    f3 = newF3;
+    f3 = java.util.Objects.requireNonNull(newF3);
   }
 
   /* Object level helpers */

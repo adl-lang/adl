@@ -46,7 +46,7 @@ public class A {
   }
 
   public void setF_string(String newF_string) {
-    f_string = newF_string;
+    f_string = java.util.Objects.requireNonNull(newF_string);
   }
 
   public boolean getF_bool() {

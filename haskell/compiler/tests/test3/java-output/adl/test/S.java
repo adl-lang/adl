@@ -155,7 +155,7 @@ public class S<T> {
   }
 
   public void setF_bytes(ByteArray newF_bytes) {
-    f_bytes = newF_bytes;
+    f_bytes = java.util.Objects.requireNonNull(newF_bytes);
   }
 
   public String getF_string() {
@@ -163,7 +163,7 @@ public class S<T> {
   }
 
   public void setF_string(String newF_string) {
-    f_string = newF_string;
+    f_string = java.util.Objects.requireNonNull(newF_string);
   }
 
   public java.util.ArrayList<String> getF_vstring() {
@@ -171,7 +171,7 @@ public class S<T> {
   }
 
   public void setF_vstring(java.util.ArrayList<String> newF_vstring) {
-    f_vstring = newF_vstring;
+    f_vstring = java.util.Objects.requireNonNull(newF_vstring);
   }
 
   public A getF_a() {
@@ -179,7 +179,7 @@ public class S<T> {
   }
 
   public void setF_a(A newF_a) {
-    f_a = newF_a;
+    f_a = java.util.Objects.requireNonNull(newF_a);
   }
 
   public U getF_u() {
@@ -187,7 +187,7 @@ public class S<T> {
   }
 
   public void setF_u(U newF_u) {
-    f_u = newF_u;
+    f_u = java.util.Objects.requireNonNull(newF_u);
   }
 
   public T getF_t() {
@@ -195,7 +195,7 @@ public class S<T> {
   }
 
   public void setF_t(T newF_t) {
-    f_t = newF_t;
+    f_t = java.util.Objects.requireNonNull(newF_t);
   }
 
   public B<Short> getF_bint16() {
@@ -203,7 +203,7 @@ public class S<T> {
   }
 
   public void setF_bint16(B<Short> newF_bint16) {
-    f_bint16 = newF_bint16;
+    f_bint16 = java.util.Objects.requireNonNull(newF_bint16);
   }
 
   /* Object level helpers */

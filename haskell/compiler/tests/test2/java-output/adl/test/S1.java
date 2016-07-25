@@ -47,7 +47,7 @@ public class S1 {
   }
 
   public void setY(String newY) {
-    y = newY;
+    y = java.util.Objects.requireNonNull(newY);
   }
 
   /* Object level helpers */

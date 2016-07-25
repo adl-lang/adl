@@ -58,7 +58,7 @@ public class switch_ {
   }
 
   public void setString(String newString) {
-    string = newString;
+    string = java.util.Objects.requireNonNull(newString);
   }
 
   public boolean getFor() {

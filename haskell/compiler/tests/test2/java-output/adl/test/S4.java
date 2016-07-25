@@ -24,7 +24,7 @@ public class S4<T> {
   }
 
   public void setF1(S3<String> newF1) {
-    f1 = newF1;
+    f1 = java.util.Objects.requireNonNull(newF1);
   }
 
   public S3<T> getF2() {
@@ -32,7 +32,7 @@ public class S4<T> {
   }
 
   public void setF2(S3<T> newF2) {
-    f2 = newF2;
+    f2 = java.util.Objects.requireNonNull(newF2);
   }
 
   /* Object level helpers */

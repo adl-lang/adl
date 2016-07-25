@@ -28,7 +28,7 @@ public class B<T> {
   }
 
   public void setF_t(T newF_t) {
-    f_t = newF_t;
+    f_t = java.util.Objects.requireNonNull(newF_t);
   }
 
   public String getF_string() {
@@ -36,7 +36,7 @@ public class B<T> {
   }
 
   public void setF_string(String newF_string) {
-    f_string = newF_string;
+    f_string = java.util.Objects.requireNonNull(newF_string);
   }
 
   public java.util.ArrayList<T> getF_tvec() {
@@ -44,7 +44,7 @@ public class B<T> {
   }
 
   public void setF_tvec(java.util.ArrayList<T> newF_tvec) {
-    f_tvec = newF_tvec;
+    f_tvec = java.util.Objects.requireNonNull(newF_tvec);
   }
 
   public XY<T> getF_xy() {
@@ -52,7 +52,7 @@ public class B<T> {
   }
 
   public void setF_xy(XY<T> newF_xy) {
-    f_xy = newF_xy;
+    f_xy = java.util.Objects.requireNonNull(newF_xy);
   }
 
   /* Object level helpers */

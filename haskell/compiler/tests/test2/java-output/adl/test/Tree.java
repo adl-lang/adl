@@ -24,7 +24,7 @@ public class Tree<T> {
   }
 
   public void setValue(T newValue) {
-    value = newValue;
+    value = java.util.Objects.requireNonNull(newValue);
   }
 
   public java.util.ArrayList<Tree<T>> getChildren() {
@@ -32,7 +32,7 @@ public class Tree<T> {
   }
 
   public void setChildren(java.util.ArrayList<Tree<T>> newChildren) {
-    children = newChildren;
+    children = java.util.Objects.requireNonNull(newChildren);
   }
 
   /* Object level helpers */

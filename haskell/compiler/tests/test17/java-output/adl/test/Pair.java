@@ -23,7 +23,7 @@ public class Pair<A, B> {
   }
 
   public void setV1(A newV1) {
-    v1 = newV1;
+    v1 = java.util.Objects.requireNonNull(newV1);
   }
 
   public B getV2() {
@@ -31,7 +31,7 @@ public class Pair<A, B> {
   }
 
   public void setV2(B newV2) {
-    v2 = newV2;
+    v2 = java.util.Objects.requireNonNull(newV2);
   }
 
   /* Object level helpers */

@@ -462,7 +462,9 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
                 )
               setter =
                 cblock (template "public void set$1($2 new$1)" [capsFieldName,typeExprStr]) (
-                  ctemplate "$1 = new$2;" [fieldName,capsFieldName]
+                  if needsNullCheck fd
+                     then ctemplate "$1 = java.util.Objects.requireNonNull(new$2);" [fieldName,capsFieldName]
+                     else ctemplate "$1 = new$2;" [fieldName,capsFieldName]
                 )
           addMethod getter
           when (cgp_mutable codeProfile) (addMethod setter)
