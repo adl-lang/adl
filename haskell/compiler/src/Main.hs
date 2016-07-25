@@ -66,6 +66,11 @@ javaHeaderComment ufn =
     (ReqArg ufn "PACKAGE")
     "A comment to be placed at the start of each java file"
 
+javaHungarianNaming ufn =
+  Option "" ["hungarian-naming"]
+    (NoArg ufn)
+    "Use hungarian naming conventions"
+
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> V.verify (mkFlags opts) args
@@ -200,6 +205,7 @@ runJava args0 =
       , javaPackageOption (\s (jf,o) -> (jf{jf_package=T.pack s},o))
       , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=T.pack s}},o))
       , javaGenerateParcelable (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_parcelable=True}},o))
+      , javaHungarianNaming (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_hungarianNaming=True}},o))
       , javaHeaderComment (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_header=T.pack s}},o))
       ]
 

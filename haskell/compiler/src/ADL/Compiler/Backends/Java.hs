@@ -52,6 +52,7 @@ genJavaPackage package = T.intercalate "." (map unreserveWord (unJavaPackage pac
 data CodeGenProfile = CodeGenProfile {
   cgp_header :: T.Text,
   cgp_mutable :: Bool,
+  cgp_hungarianNaming :: Bool,
   cgp_publicMembers :: Bool,
   cgp_genericFactories :: Bool,
   cgp_parcelable :: Bool,
@@ -61,6 +62,7 @@ data CodeGenProfile = CodeGenProfile {
 defaultCodeGenProfile = CodeGenProfile {
   cgp_header = "",
   cgp_mutable = True,
+  cgp_hungarianNaming = False,
   cgp_publicMembers = False,
   cgp_genericFactories = False,
   cgp_parcelable = False,
@@ -355,13 +357,16 @@ genFieldDetails f = do
   litv <- case f_default f of
     (Just v) -> mkLiteral te v
     Nothing -> mkDefaultLiteral te
+  cgp <- cf_codeProfile <$> get
 
   let copy from =
         if immutableType te
           then from
           else template "$1.create($2)" [factoryExprStr,from]
+      hungarian = cgp_hungarianNaming cgp && not (cgp_publicMembers cgp)
+      fieldName = if hungarian then "m" <> javaCapsFieldName f else unreserveWord (f_name f)
 
-  return (FieldDetails f (unreserveWord (f_name f)) typeExprStr boxedTypeExprStr factoryExprStr litv copy)
+  return (FieldDetails f fieldName typeExprStr boxedTypeExprStr factoryExprStr litv copy)
 
 
 
@@ -449,7 +454,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
       when (not (cgp_publicMembers codeProfile)) $ do
         for_ fieldDetails $ \fd -> do
           let fieldName = fd_fieldName fd
-              capsFieldName = javaCapsFieldName fd
+              capsFieldName = javaCapsFieldName (fd_field fd)
               typeExprStr = fd_typeExprStr fd
               getter =
                 cblock (template "public $1 get$2()" [typeExprStr,capsFieldName]) (
@@ -643,6 +648,8 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
     className = unreserveWord (d_name decl)
     classDecl = "public class " <> className <> typeArgs
     isGeneric = length (u_typeParams union) > 0
+    discVar = if cgp_hungarianNaming codeProfile then "mDisc" else "disc"
+    valueVar = if cgp_hungarianNaming codeProfile then "mValue" else "value"
     typeArgs = case u_typeParams union of
       [] -> ""
       args -> "<" <> commaSep (map unreserveWord args) <> ">"
@@ -655,8 +662,8 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
 
       -- Fields
       let modifiers = T.intercalate " " (["private"] <> if cgp_mutable codeProfile then [] else ["final"])
-      addField (ctemplate "$1 Disc disc;" [modifiers])
-      addField (ctemplate "$1 Object value;" [modifiers])
+      addField (ctemplate "$1 Disc $2;" [modifiers,discVar])
+      addField (ctemplate "$1 Object $2;" [modifiers,valueVar])
 
       -- Discriminator enum
       let terminators = replicate (length fieldDetails-1) "," <> [""]
@@ -671,36 +678,36 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       
       for_ fieldDetails $ \fd -> do
         let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
-            ctor = cblock (template "public static$1 $2 $3($4 v)" [leadSpace typeArgs, className, fd_fieldName fd, fd_typeExprStr fd]) (
+            ctor = cblock (template "public static$1 $2 $3($4 v)" [leadSpace typeArgs, className, unionCtorName (fd_field fd), fd_typeExprStr fd]) (
               ctemplate "return new $1(Disc.$2,$3);" [className, discriminatorName fd, checkedv]
               )
-            ctorvoid = cblock (template "public static$1 $2 $3()" [leadSpace typeArgs, className, fd_fieldName fd]) (
+            ctorvoid = cblock (template "public static$1 $2 $3()" [leadSpace typeArgs, className, unionCtorName (fd_field fd)]) (
               ctemplate "return new $1(Disc.$2,null);" [className, discriminatorName fd]
               )
 
         addMethod (if isVoidType (f_type (fd_field fd)) then ctorvoid else ctor)
 
       let ctorPrivate = cblock (template "private $1(Disc disc, Object value)" [className]) (
-            cline "this.disc = disc;"
+            ctemplate "this.$1 = disc;" [discVar]
             <>
-            cline "this.value = value;"
+            ctemplate "this.$1 = value;" [valueVar]
             )
 
           ctorDefault = cblock (template "public $1()" [className]) (
-            ctemplate "this.disc = Disc.$1;" [discriminatorName fieldDetail0]
+            ctemplate "this.$1 = Disc.$2;" [discVar,discriminatorName fieldDetail0]
             <>
-            ctemplate "this.value = $1;" [literalValue (fd_defValue fieldDetail0)]
+            ctemplate "this.$1 = $2;" [valueVar,literalValue (fd_defValue fieldDetail0)]
             )
 
           ctorCopy = cblock (template "public $1($1 other)" [className]) (
-            ctemplate "this.disc = other.disc;" [discriminatorName fieldDetail0]
+            ctemplate "this.$1 = other.$1;" [discVar]
             <>
-            cblock "switch (other.disc)" (
+            cblock (template "switch (other.$1)" [discVar]) (
               mconcat [
                 ctemplate "case $1:" [discriminatorName fd]
                 <>
                 indent (
-                  ctemplate "this.value = $1;" [fd_copy fd (template "($1) other.value" [fd_boxedTypeExprStr fd])]
+                  ctemplate "this.$1 = $2;" [valueVar,fd_copy fd (template "($1) other.$2" [fd_boxedTypeExprStr fd,valueVar])]
                   <>
                   cline "break;"
                   )
@@ -717,13 +724,13 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       addMethod (cline "/* Accessors */")
 
       addMethod $ cblock "public Disc getDisc()" (
-        cline "return disc;"
+        ctemplate "return $1;" [discVar]
         )
 
       for_ fieldDetails $ \fd -> do
-        let getter = cblock (template "public $1 get$2()" [fd_typeExprStr fd, javaCapsFieldName fd]) (
-              cblock (template "if (disc == Disc.$1)" [discriminatorName fd]) (
-                 ctemplate "return cast(value);" [fd_boxedTypeExprStr fd]
+        let getter = cblock (template "public $1 get$2()" [fd_typeExprStr fd, javaCapsFieldName (fd_field fd)]) (
+              cblock (template "if ($1 == Disc.$2)" [discVar,discriminatorName fd]) (
+                 ctemplate "return cast($1);" [valueVar]
                  )
               <>
               cline "throw new IllegalStateException();"
@@ -737,15 +744,15 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       when (cgp_mutable codeProfile) $ do 
         for_ fieldDetails $ \fd -> do
           let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
-              mtor = cblock (template "public void set$1($2 v)" [javaCapsFieldName fd, fd_typeExprStr fd]) (
-                ctemplate "this.value = $1;" [checkedv]
+              mtor = cblock (template "public void set$1($2 v)" [javaCapsFieldName (fd_field fd), fd_typeExprStr fd]) (
+                ctemplate "this.$1 = $2;" [valueVar,checkedv]
                 <>
-                ctemplate "this.disc = Disc.$1;" [discriminatorName fd]
+                ctemplate "this.$1 = Disc.$2;" [discVar,discriminatorName fd]
                 )
-              mtorvoid = cblock (template "public void set$1()" [javaCapsFieldName fd]) (
-                cline "this.value = null;"
+              mtorvoid = cblock (template "public void set$1()" [javaCapsFieldName (fd_field fd)]) (
+                ctemplate "this.$1 = null;" [valueVar]
                 <>
-                ctemplate "this.disc = Disc.$1;" [discriminatorName fd]
+                ctemplate "this.$1 = Disc.$2;" [discVar,discriminatorName fd]
                 )
           addMethod (if isVoidType (f_type (fd_field fd)) then mtorvoid else mtor)
 
@@ -759,11 +766,11 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
         <>
         ctemplate "$1 other = ($1)other0;" [className]
         <>
-        cline "return disc == other.disc && value.equals(other.value);"
+        ctemplate "return $1 == other.$1 && $2.equals(other.$2);" [discVar,valueVar]
         )
 
       addMethod $ coverride "public int hashCode()" (
-        cline "return disc.hashCode() * 37 + value.hashCode();"
+        ctemplate "return $1.hashCode() * 37 + $2.hashCode();" [discVar,valueVar]
         )
 
       -- cast helper
@@ -806,7 +813,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
                 cblock (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
                   cline "Object value = null;"
                   <>
-                  cblock "switch (other.disc)" (
+                  cblock (template "switch (other.$1)" [discVar]) (
                     mconcat [
                       ctemplate "case $1:" [discriminatorName fd]
                       <>
@@ -822,7 +829,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
                       | fd <- fieldDetails]
                     )
                   <>
-                  ctemplate "return new $1$2(other.disc,value);" [className,typeArgs]
+                  ctemplate "return new $1$2(other.$3,$4);" [className,typeArgs,discVar,valueVar]
                   )
                 )
               )
@@ -845,15 +852,15 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
           )
 
         writeFields <- for fieldDetails $ \fd -> do
-          writeToParcel (f_type (fd_field fd)) "out" (template "(($1)value)" [fd_typeExprStr fd]) "flags"
+          writeToParcel (f_type (fd_field fd)) "out" (template "(($1)$2)" [fd_typeExprStr fd,valueVar]) "flags"
 
         readFields <- for fieldDetails $ \fd -> do
           readFromParcel (f_type (fd_field fd)) Nothing "value" "in"
 
         addMethod $ coverride "public void writeToParcel(Parcel out, int flags)" (
-          cline "out.writeInt(disc.ordinal());"
+          ctemplate "out.writeInt($1.ordinal());" [discVar]
           <>
-          cblock "switch(disc)" (
+          cblock (template "switch($1)" [discVar]) (
             mconcat [
               ctemplate "case $1:" [discriminatorName fd]
               <>
@@ -996,8 +1003,8 @@ unreserveWord :: Ident -> Ident
 unreserveWord n | Set.member n reservedWords = T.append n "_"
                 | otherwise = n
 
-javaCapsFieldName :: FieldDetails -> Ident
-javaCapsFieldName fd = case T.uncons (f_name (fd_field fd)) of
+javaCapsFieldName :: Field ResolvedType -> Ident
+javaCapsFieldName f = case T.uncons (f_name f) of
   Nothing -> ""
   (Just (c,t)) -> T.cons (toUpper c) t
 
@@ -1007,10 +1014,13 @@ factoryTypeArg n = "factory" <> n
 fieldAccessExpr :: CodeGenProfile -> FieldDetails -> Ident
 fieldAccessExpr cgp fd
   | cgp_publicMembers cgp = fd_fieldName fd
-  | otherwise = template "get$1()" [javaCapsFieldName fd]
+  | otherwise = template "get$1()" [javaCapsFieldName (fd_field fd)]
+
+unionCtorName :: Field a -> Ident
+unionCtorName f = unreserveWord (f_name f)
 
 discriminatorName :: FieldDetails -> Ident
-discriminatorName fd = T.toUpper (fd_fieldName fd)
+discriminatorName = T.toUpper . unreserveWord . f_name . fd_field
 
 leadSpace :: T.Text -> T.Text
 leadSpace "" = ""
