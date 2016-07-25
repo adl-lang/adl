@@ -57,7 +57,12 @@ public class B<T> {
 
   /* Object level helpers */
 
-  public boolean equals(B other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof B)) {
+      return false;
+    }
+    B other = (B)other0;
     return
       f_t.equals(other.f_t) &&
       f_string.equals(other.f_string) &&
@@ -65,6 +70,7 @@ public class B<T> {
       f_xy.equals(other.f_xy);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + f_t.hashCode();

@@ -60,10 +60,16 @@ public class U4 {
 
   /* Object level helpers */
 
-  public boolean equals(U4 other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof U4)) {
+      return false;
+    }
+    U4 other = (U4)other0;
     return disc == other.disc && value.equals(other.value);
   }
 
+  @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
   }

@@ -71,7 +71,12 @@ public class switch_ {
 
   /* Object level helpers */
 
-  public boolean equals(switch_ other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof switch_)) {
+      return false;
+    }
+    switch_ other = (switch_)other0;
     return
       double_ == other.double_ &&
       int_ == other.int_ &&
@@ -79,6 +84,7 @@ public class switch_ {
       for_ == other.for_;
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + new Double(double_).hashCode();

@@ -37,12 +37,18 @@ public class S4<T> {
 
   /* Object level helpers */
 
-  public boolean equals(S4 other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof S4)) {
+      return false;
+    }
+    S4 other = (S4)other0;
     return
       f1.equals(other.f1) &&
       f2.equals(other.f2);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + f1.hashCode();

@@ -64,10 +64,16 @@ public class U9<T> {
 
   /* Object level helpers */
 
-  public boolean equals(U9 other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof U9)) {
+      return false;
+    }
+    U9 other = (U9)other0;
     return disc == other.disc && value.equals(other.value);
   }
 
+  @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
   }

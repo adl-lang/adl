@@ -59,13 +59,19 @@ public class A {
 
   /* Object level helpers */
 
-  public boolean equals(A other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof A)) {
+      return false;
+    }
+    A other = (A)other0;
     return
       f_int == other.f_int &&
       f_string.equals(other.f_string) &&
       f_bool == other.f_bool;
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + (int)f_int;

@@ -81,10 +81,16 @@ public class U {
 
   /* Object level helpers */
 
-  public boolean equals(U other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof U)) {
+      return false;
+    }
+    U other = (U)other0;
     return disc == other.disc && value.equals(other.value);
   }
 
+  @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
   }

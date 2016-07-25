@@ -60,7 +60,12 @@ public class S3<T> {
 
   /* Object level helpers */
 
-  public boolean equals(S3 other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof S3)) {
+      return false;
+    }
+    S3 other = (S3)other0;
     return
       f1.equals(other.f1) &&
       f2 == other.f2 &&
@@ -68,6 +73,7 @@ public class S3<T> {
       f4.equals(other.f4);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + f1.hashCode();

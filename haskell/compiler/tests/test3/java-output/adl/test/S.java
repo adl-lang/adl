@@ -208,7 +208,12 @@ public class S<T> {
 
   /* Object level helpers */
 
-  public boolean equals(S other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof S)) {
+      return false;
+    }
+    S other = (S)other0;
     return
       f_void.equals(other.f_void) &&
       f_bool == other.f_bool &&
@@ -231,6 +236,7 @@ public class S<T> {
       f_bint16.equals(other.f_bint16);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + 0;

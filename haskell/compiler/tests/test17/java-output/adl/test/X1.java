@@ -107,7 +107,12 @@ public class X1 {
 
   /* Object level helpers */
 
-  public boolean equals(X1 other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof X1)) {
+      return false;
+    }
+    X1 other = (X1)other0;
     return
       f1 == other.f1 &&
       f2 == other.f2 &&
@@ -118,6 +123,7 @@ public class X1 {
       f7.equals(other.f7);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + f1;

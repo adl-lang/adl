@@ -36,12 +36,18 @@ public class Pair<A, B> {
 
   /* Object level helpers */
 
-  public boolean equals(Pair other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof Pair)) {
+      return false;
+    }
+    Pair other = (Pair)other0;
     return
       v1.equals(other.v1) &&
       v2.equals(other.v2);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + v1.hashCode();

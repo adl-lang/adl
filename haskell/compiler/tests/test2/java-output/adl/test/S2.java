@@ -62,13 +62,19 @@ public class S2 {
 
   /* Object level helpers */
 
-  public boolean equals(S2 other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof S2)) {
+      return false;
+    }
+    S2 other = (S2)other0;
     return
       f1.equals(other.f1) &&
       f2 == other.f2 &&
       f3.equals(other.f3);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + f1.hashCode();

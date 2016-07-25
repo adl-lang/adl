@@ -453,7 +453,13 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
       -- equals and hashcode
       addMethod (cline "/* Object level helpers */")
 
-      let equals = cblock (template "public boolean equals($1 other)"[className]) (
+      let equals = coverride "public boolean equals(Object other0)" (
+            cblock (template "if (!(other0 instanceof $1))"  [className]) (
+              cline "return false;"
+              )
+            <>
+            ctemplate "$1 other = ($1)other0;" [className]
+            <>
             cline "return"
             <>
             let terminators = replicate (length fieldDetails-1) " &&" <> [";"]
@@ -462,12 +468,12 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
                         | (fd,term) <- zip fieldDetails terminators]
             in  indent (mconcat tests)
             )
-          equalsEmpty = cblock (template "public boolean equals($1 other)"[className]) (
-           cline "return true;"
-           )
+          equalsEmpty = coverride "public boolean equals(Object other)" (
+            ctemplate "return other instanceof $1;" [className]
+            )
       addMethod (if isEmpty then equalsEmpty else equals)
 
-      addMethod $ cblock "public int hashCode()" (
+      addMethod $ coverride "public int hashCode()" (
         cline "int result = 1;"
         <>
         let hashfn fd from = case (f_type (fd_field fd)) of
@@ -734,11 +740,17 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       -- equals and hashcode
       addMethod (cline "/* Object level helpers */")
 
-      addMethod $ cblock (template "public boolean equals($1 other)"[className]) (
+      addMethod $ coverride "public boolean equals(Object other0)" (
+        cblock (template "if (!(other0 instanceof $1))"  [className]) (
+          cline "return false;"
+          )
+        <>
+        ctemplate "$1 other = ($1)other0;" [className]
+        <>
         cline "return disc == other.disc && value.equals(other.value);"
         )
 
-      addMethod $ cblock "public int hashCode()" (
+      addMethod $ coverride "public int hashCode()" (
         cline "return disc.hashCode() * 37 + value.hashCode();"
         )
 

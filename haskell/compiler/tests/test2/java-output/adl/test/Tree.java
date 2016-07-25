@@ -37,12 +37,18 @@ public class Tree<T> {
 
   /* Object level helpers */
 
-  public boolean equals(Tree other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof Tree)) {
+      return false;
+    }
+    Tree other = (Tree)other0;
     return
       value.equals(other.value) &&
       children.equals(other.children);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + value.hashCode();

@@ -181,10 +181,16 @@ public class X2 {
 
   /* Object level helpers */
 
-  public boolean equals(X2 other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof X2)) {
+      return false;
+    }
+    X2 other = (X2)other0;
     return disc == other.disc && value.equals(other.value);
   }
 
+  @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
   }

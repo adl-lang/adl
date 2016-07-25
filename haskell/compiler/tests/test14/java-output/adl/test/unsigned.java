@@ -54,10 +54,16 @@ public class unsigned {
 
   /* Object level helpers */
 
-  public boolean equals(unsigned other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof unsigned)) {
+      return false;
+    }
+    unsigned other = (unsigned)other0;
     return disc == other.disc && value.equals(other.value);
   }
 
+  @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
   }

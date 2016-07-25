@@ -52,12 +52,18 @@ public class S1 {
 
   /* Object level helpers */
 
-  public boolean equals(S1 other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof S1)) {
+      return false;
+    }
+    S1 other = (S1)other0;
     return
       x == other.x &&
       y.equals(other.y);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + x;

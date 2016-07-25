@@ -36,12 +36,18 @@ public class XY<T> {
 
   /* Object level helpers */
 
-  public boolean equals(XY other) {
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof XY)) {
+      return false;
+    }
+    XY other = (XY)other0;
     return
       x.equals(other.x) &&
       y.equals(other.y);
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     result = result * 37 + x.hashCode();

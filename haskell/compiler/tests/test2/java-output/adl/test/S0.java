@@ -18,10 +18,12 @@ public class S0 {
 
   /* Object level helpers */
 
-  public boolean equals(S0 other) {
-    return true;
+  @Override
+  public boolean equals(Object other) {
+    return other instanceof S0;
   }
 
+  @Override
   public int hashCode() {
     int result = 1;
     return result;
