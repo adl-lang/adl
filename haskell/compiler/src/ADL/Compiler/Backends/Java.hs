@@ -67,13 +67,14 @@ data ClassFile = ClassFile {
    cf_package :: JavaPackage,
    cf_imports :: Set.Set T.Text,
    cf_implements :: Set.Set T.Text,
+   cf_docString :: Code,
    cf_decl :: T.Text,
    cf_fields :: [Code],
    cf_methods :: [Code]
 }
 
 classFile :: CodeGenProfile -> ModuleName -> JavaPackage -> T.Text -> ClassFile
-classFile codeProfile mname javapackage decl = ClassFile codeProfile mname javapackage Set.empty Set.empty decl [] []
+classFile codeProfile mname javapackage decl = ClassFile codeProfile mname javapackage Set.empty Set.empty mempty decl [] []
 
 classFileCode :: ClassFile -> Code
 classFileCode content =
@@ -84,6 +85,8 @@ classFileCode content =
   mconcat [ctemplate "import $1;" [imp] | imp <- Set.toList (cf_imports content)]
   <>
   cline ""
+  <>
+  cf_docString content
   <>
   cblock decl (
     cline ""
@@ -126,6 +129,9 @@ addImport imp = modify (\cf->cf{cf_imports=Set.insert imp (cf_imports cf)})
 
 addImplements :: T.Text -> CState ()
 addImplements imp = modify (\cf->cf{cf_implements=Set.insert imp (cf_implements cf)})
+
+setDocString :: Code -> CState ()
+setDocString code = modify (\cf->cf{cf_docString=code})
 
 getRuntimePackage :: CState T.Text
 getRuntimePackage = (cgp_runtimePackage . cf_codeProfile) <$> get
@@ -384,6 +390,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
       [] -> ""
       args -> "<" <> commaSep (map unreserveWord args) <> ">"
     gen = do
+      setDocString (generateDocString (d_annotations decl))
       fieldDetails <- mapM genFieldDetails (s_fields struct)
 
       -- Fields
@@ -622,6 +629,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       [] -> ""
       args -> "<" <> commaSep (map unreserveWord args) <> ">"
     gen = do
+      setDocString (generateDocString (d_annotations decl))
       fieldDetails <- mapM genFieldDetails (u_fields union)
       fieldDetail0 <- case fieldDetails of
         [] -> error "BUG: unions with no fields are illegal"
@@ -861,6 +869,11 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
             ctemplate "return new $1[size];" [className]
             )
           )
+
+generateDocString :: Annotations -> Code
+generateDocString annotations = case Map.lookup (ScopedName (ModuleName []) "Doc") annotations of
+   (Just (JSON.String text)) -> cline "/**" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
+   _ -> mempty
 
 literalValue :: Literal -> T.Text
 literalValue (LDefault t _) = template "new $1()" [t]

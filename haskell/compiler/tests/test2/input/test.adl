@@ -3,16 +3,19 @@ module test
 
 // Simple structures
 
+@Doc "An empty structure."
 struct S0
 {
 };
 
+@Doc "A structure containing primitives.\n\nIt has two fields: an integer x and a String y."
 struct S1
 {
     Int32 x;
     String y;
 };
 
+@Doc "A structure containing a vector."
 struct S2
 {
     String f1;
@@ -20,6 +23,7 @@ struct S2
     Vector<Int32> f3;           
 };
 
+@Doc "A generic structure."
 struct S3<T>
 {
     String f1;

@@ -2,6 +2,9 @@ package adl.test;
 
 import org.adl.runtime.Factory;
 
+/**
+ * An empty structure.
+ */
 public class S0 {
 
 

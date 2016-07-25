@@ -3,6 +3,9 @@ package adl.test;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
+/**
+ * A structure containing a vector.
+ */
 public class S2 {
 
   /* Members */

@@ -3,6 +3,9 @@ package adl.test;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
+/**
+ * A generic structure.
+ */
 public class S3<T> {
 
   /* Members */

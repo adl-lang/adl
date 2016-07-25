@@ -13,9 +13,9 @@ import qualified Data.Set as Set
 
 import ADL.Utils.Format
 
-type Annotations = Map.Map String String
-
 type Ident = T.Text
+
+type Annotations = Map.Map ScopedName JSON.Value
 
 newtype ModuleName = ModuleName { unModuleName :: [Ident] }
   deriving (Eq,Ord,Show)

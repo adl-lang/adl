@@ -3,6 +3,11 @@ package adl.test;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 
+/**
+ * A structure containing primitives.
+ * 
+ * It has two fields: an integer x and a String y.
+ */
 public class S1 {
 
   /* Members */

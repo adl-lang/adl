@@ -407,6 +407,7 @@ loadAndCheckModule :: ModuleFinder -> FilePath -> EIOT RModule
 loadAndCheckModule moduleFinder modulePath = do
     (m,mm) <- loadModule1
     mapM_ checkModuleForDuplicates (m:Map.elems mm)
+    mapM_ checkModuleAnnotations (m:Map.elems mm)
     case sortByDeps (Map.elems mm) of
       Nothing -> eioError "Mutually dependent modules are not allowed"
       (Just mmSorted) -> do  
@@ -424,6 +425,22 @@ loadAndCheckModule moduleFinder modulePath = do
         _ -> eioError (moduleErrorMessage m (map formatText dups))
       where
         dups = checkDuplicates m
+
+    checkModuleAnnotations :: SModule -> EIOT ()
+    checkModuleAnnotations m = mapM_ checkDecl (m_decls m)
+      where
+        checkDecl d = do
+          checkAnns (d_annotations d)
+          case d_type d of
+            (Decl_Struct s) -> mapM_ (checkAnns . f_annotations) (s_fields s)
+            (Decl_Union u) -> mapM_ (checkAnns . f_annotations) (u_fields u)
+            _ -> return ()
+        checkAnns annotations = mapM_ checkAnn (Map.toList annotations)
+
+        -- For now we only support docstrings
+        checkAnn :: (ScopedName,JSON.Value) -> EIOT ()
+        checkAnn (ScopedName (ModuleName []) "Doc",JSON.String _) = return ()
+        checkAnn (sn,_) = eioError (moduleErrorMessage m ["Illegal annotation " <> formatText sn])
 
     checkModuleForTypeParamApp :: SModule -> EIOT ()
     checkModuleForTypeParamApp m = return ()

@@ -123,16 +123,29 @@ newtype_ = do
     mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
     return (n,mv,Newtype tparams te mdefault)
 
+annotation :: P.Parser (ScopedName,JSON.Value)
+annotation = do
+  token "@"
+  n <- scopedName
+  jv <- jsonValue
+  return (n,jv)
+
+annotations :: P.Parser Annotations
+annotations = Map.fromList <$> many annotation
+
 decl :: P.Parser (Decl ScopedName)
-decl =   (mkStruct <$> struct)
-     <|> (mkUnion <$> union)
-     <|> (mkType <$> type_)
-     <|> (mkNewtype <$> newtype_)
+decl =  do
+  as <- annotations
+  (      (mkStruct as <$> struct)
+     <|> (mkUnion as <$> union)
+     <|> (mkType as <$> type_)
+     <|> (mkNewtype as <$> newtype_)
+     )
   where
-    mkStruct (n,mv,s) = Decl n mv Map.empty (Decl_Struct s)
-    mkUnion (n,mv,u) = Decl n mv Map.empty (Decl_Union u)
-    mkType (n,mv,t) = Decl n mv Map.empty (Decl_Typedef t)
-    mkNewtype (n,mv,nt) = Decl n mv Map.empty (Decl_Newtype nt)
+    mkStruct as (n,mv,s) = Decl n mv as (Decl_Struct s)
+    mkUnion as (n,mv,u) = Decl n mv as (Decl_Union u)
+    mkType as (n,mv,t) = Decl n mv as (Decl_Typedef t)
+    mkNewtype as (n,mv,nt) = Decl n mv as (Decl_Newtype nt)
 
 importP :: P.Parser Import
 importP = token "import" *> (P.try importAll <|> import1 )
