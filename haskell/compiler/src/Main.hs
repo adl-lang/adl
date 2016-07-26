@@ -71,6 +71,11 @@ javaHungarianNaming ufn =
     (NoArg ufn)
     "Use hungarian naming conventions"
 
+javaMaxLineLength ufn =
+  Option "" ["max-line-length"]
+    (ReqArg ufn "PACKAGE")
+    "The maximum length of the generated code lines"
+
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> V.verify (mkFlags opts) args
@@ -206,6 +211,7 @@ runJava args0 =
       , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=T.pack s}},o))
       , javaGenerateParcelable (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_parcelable=True}},o))
       , javaHungarianNaming (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_hungarianNaming=True}},o))
+      , javaMaxLineLength (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_maxLineLength=read s}},o))
       , javaHeaderComment (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_header=T.pack s}},o))
       ]
 
@@ -233,6 +239,5 @@ main = do
         (Left perr) ->
           T.putStrLn perr >> exitWith (ExitFailure 1)
         (Right _) -> exitWith ExitSuccess
-
 
       

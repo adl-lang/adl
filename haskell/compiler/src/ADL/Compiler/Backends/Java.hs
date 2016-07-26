@@ -51,6 +51,7 @@ genJavaPackage package = T.intercalate "." (map unreserveWord (unJavaPackage pac
 
 data CodeGenProfile = CodeGenProfile {
   cgp_header :: T.Text,
+  cgp_maxLineLength :: Int,
   cgp_mutable :: Bool,
   cgp_hungarianNaming :: Bool,
   cgp_publicMembers :: Bool,
@@ -62,6 +63,7 @@ data CodeGenProfile = CodeGenProfile {
 defaultCodeGenProfile = CodeGenProfile {
   cgp_header = "",
   cgp_mutable = True,
+  cgp_maxLineLength = 10000,
   cgp_hungarianNaming = False,
   cgp_publicMembers = False,
   cgp_genericFactories = False,
@@ -383,16 +385,17 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m0 = do
     let moduleName = m_name m
         javaPackage = mPackage moduleName
         codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
+        maxLineLength = cgp_maxLineLength codeProfile
         file = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
     case d_type decl of
-      (Decl_Struct s) -> writeClassFile file (generateStruct codeProfile moduleName javaPackage decl s)
-      (Decl_Union u)  -> writeClassFile file (generateUnion codeProfile moduleName javaPackage decl u)
+      (Decl_Struct s) -> writeClassFile file maxLineLength (generateStruct codeProfile moduleName javaPackage decl s)
+      (Decl_Union u)  -> writeClassFile file maxLineLength (generateUnion codeProfile moduleName javaPackage decl u)
       (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
       (Decl_Newtype _) -> eioError "FIXME: newtypes haven't been implemented"
   where
-    writeClassFile :: FilePath -> ClassFile -> EIO a ()
-    writeClassFile path cfile = do
-      let lines = codeText (classFileCode cfile)
+    writeClassFile :: FilePath -> Int -> ClassFile -> EIO a ()
+    writeClassFile path maxLineLength cfile = do
+      let lines = codeText maxLineLength (classFileCode cfile)
       liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
       
 
@@ -1080,14 +1083,50 @@ coverride intro body =
 ctemplate :: T.Text -> [T.Text] -> Code
 ctemplate pattern params = cline $ template pattern params
 
-codeText :: Code -> [T.Text]
-codeText c = mkLines "" c
+codeText :: Int -> Code -> [T.Text]
+codeText maxLineLength c = mkLines "" c
   where
     mkLines i CEmpty = []
-    mkLines i (CLine "") = [""]
-    mkLines i (CLine t) = [i <> t]
     mkLines i (CAppend c1 c2) = mkLines i c1 <> mkLines i c2
     mkLines i (CIndent c) = mkLines (indentStr <> i) c
+    mkLines i (CLine "") = [""]
+    mkLines i (CLine t) = case breakLine (maxLineLength - T.length i) t of
+      [] -> []
+      (l1:ls) -> (i <> l1):[i <> i <> l | l <- ls]
     indentStr = "  "
-    
 
+breakLine :: Int -> T.Text -> [T.Text]
+breakLine maxlength t
+  | T.length t < maxlength = [t]
+  | otherwise = map (T.strip . T.concat) (assemble 0 [] (lineBreakChunks t))
+  where
+    assemble len cline [] = [cline]
+    assemble len cline (c:cs)
+      | len + T.length c > maxlength = case cline of
+           [] -> assemble (T.length c) [c] cs
+           _ -> cline : assemble (T.length c) [c] cs
+      | otherwise = assemble (len + T.length c) (cline++[c]) cs
+
+
+lineBreakChunks :: T.Text -> [T.Text]
+lineBreakChunks t = map (T.pack . reverse) (chunks "" (T.unpack t))
+  where
+    -- We break after ',' '=', or '(', but never within                                                                      
+    -- strings                                                                                                                       
+    chunks cs [] = [cs]
+    chunks cs ('\'':s) = quote1 ('\'':cs) s                                                                                          
+    chunks cs ('\"':s) = quote2 ('\"':cs) s
+    chunks cs (',':s) = (',':cs) : chunks "" s
+    chunks cs ('=':s) = ('=':cs) : chunks "" s
+    chunks cs ('(':s) = ('(':cs) : chunks "" s
+    chunks cs (c:s) =  chunks (c:cs) s
+
+    quote1 cs [] = [cs]
+    quote1 cs ('\'':s) = chunks ('\'':cs) s
+    quote1 cs ('\\':'\'':s) = quote1 ('\\':'\'':cs) s
+    quote1 cs (c:s) =  quote1 (c:cs) s
+
+    quote2 cs [] = [cs]
+    quote2 cs ('\"':s) = chunks ('\"':cs) s
+    quote2 cs ('\\':'\"':s) = quote2 ('\\':'\"':cs) s
+    quote2 cs (c:s) =  quote2 (c:cs) s
