@@ -20,7 +20,7 @@ import qualified Data.Aeson as JSON
 import Data.Char(toUpper)
 import Data.Maybe(fromMaybe,isJust)
 import Data.Foldable(for_)
-import Data.List(intersperse,replicate)
+import Data.List(intersperse,replicate,sort)
 import Data.Monoid
 import Data.Traversable(for)
 
@@ -95,7 +95,7 @@ classFileCode content =
   <>
   cline ""
   <>
-  mconcat [ctemplate "import $1;" [imp] | imp <- Set.toList (cf_imports content)]
+  mconcat [ctemplate "import $1;" [imp] | imp <- sortedImports (cf_imports content)]
   <>
   cline ""
   <>
@@ -226,7 +226,7 @@ genPrimitiveDetails P_Int8 = PrimitiveDetails {
   pd_genLiteral = \(JSON.Number n) -> "(byte)" <> litNumber n,
   pd_mutable = False,
   pd_factory = primitiveFactory "Byte",
-  pd_hashfn = \from -> template "(int)$1" [from]
+  pd_hashfn = \from -> template "(int) $1" [from]
 }
 genPrimitiveDetails P_Int16 = PrimitiveDetails {
   pd_unboxed = Just (return "short"),
@@ -235,7 +235,7 @@ genPrimitiveDetails P_Int16 = PrimitiveDetails {
   pd_genLiteral = \(JSON.Number n) -> "(short)" <> litNumber n,
   pd_mutable = False,
   pd_factory = primitiveFactory "Short",
-  pd_hashfn = \from -> template "(int)$1" [from]
+  pd_hashfn = \from -> template "(int) $1" [from]
 }
 genPrimitiveDetails P_Int32 = PrimitiveDetails {
   pd_unboxed = Just (return "int"),
@@ -253,7 +253,7 @@ genPrimitiveDetails P_Int64 = PrimitiveDetails {
   pd_genLiteral = \(JSON.Number n) -> litNumber n <> "L",
   pd_mutable = False,
   pd_factory = primitiveFactory "Long",
-  pd_hashfn = \from -> template "(int)($1 ^ ($1 >>> 32))" [from]
+  pd_hashfn = \from -> template "(int) ($1 ^ ($1 >>> 32))" [from]
 }
 genPrimitiveDetails P_Float = PrimitiveDetails {
   pd_unboxed = Just (return "float"),
@@ -393,7 +393,7 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m0 = do
     writeClassFile :: FilePath -> ClassFile -> EIO a ()
     writeClassFile path cfile = do
       let lines = codeText (classFileCode cfile)
-      liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines)))
+      liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
       
 
 generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Struct ResolvedType -> ClassFile
@@ -477,7 +477,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
               cline "return false;"
               )
             <>
-            ctemplate "$1 other = ($1)other0;" [className]
+            ctemplate "$1 other = ($1) other0;" [className]
             <>
             cline "return"
             <>
@@ -591,7 +591,7 @@ importParcelable = do
 writeToParcel :: TypeExpr ResolvedType -> Ident -> Ident -> Ident -> CState Code
 writeToParcel te to from flags = return $ case te of
   (TypeExpr (RT_Primitive P_Void) _) -> mempty
-  (TypeExpr (RT_Primitive P_Bool) _) -> ctemplate "$1.writeByte($2 ? (byte)1 : (byte)0);" [to,from]
+  (TypeExpr (RT_Primitive P_Bool) _) -> ctemplate "$1.writeByte($2 ? (byte) 1 : (byte) 0);" [to,from]
   (TypeExpr (RT_Primitive P_Int8) _) -> ctemplate "$1.writeByte($2);" [to,from]
   (TypeExpr (RT_Primitive P_Int16) _) -> ctemplate "$1.writeInt($2);" [to,from]
   (TypeExpr (RT_Primitive P_Int32) _) -> ctemplate "$1.writeInt($2);" [to,from]
@@ -605,7 +605,7 @@ writeToParcel te to from flags = return $ case te of
   (TypeExpr (RT_Primitive P_ByteVector) _) -> ctemplate "$1.writeByteArray($2.getValue());" [to,from]
   (TypeExpr (RT_Primitive P_String) _) -> ctemplate "$1.writeString($2);" [to,from]
   (TypeExpr (RT_Primitive P_Vector) _) -> ctemplate "$1.writeList($2);" [to,from]
-  _ -> ctemplate "$1.writeToParcel($2,$3);" [from,to,flags]
+  _ -> ctemplate "$1.writeToParcel($2, $3);" [from,to,flags]
                                  
 readFromParcel :: TypeExpr ResolvedType -> Maybe Ident -> Ident -> Ident -> CState Code
 readFromParcel te mtotype tovar from = do
@@ -635,7 +635,7 @@ readFromParcel te mtotype tovar from = do
       return (
         ctemplate "$1 = new java.util.ArrayList<$2>();" [to,typeExprStr]
         <>
-        ctemplate "$1.readList($2,$3.class.getClassLoader());" [from,tovar,typeExprStr]
+        ctemplate "$1.readList($2, $3.class.getClassLoader());" [from,tovar,typeExprStr]
         )
     _ -> do
       typeExprStr <- genTypeExprB True te
@@ -669,10 +669,13 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
 
       -- Discriminator enum
       let terminators = replicate (length fieldDetails-1) "," <> [""]
-          discdef = cblock "public enum Disc" (
-            mconcat [ctemplate "$1$2" [discriminatorName fd,term]
-                    | (fd,term) <- zip fieldDetails terminators]
-             )
+          discdef =
+            docStringComment (template "The $1 discriminator type." [className])
+            <>
+            cblock "public enum Disc" (
+              mconcat [ctemplate "$1$2" [discriminatorName fd,term]
+                      | (fd,term) <- zip fieldDetails terminators]
+               )
       addMethod discdef
 
       -- constructors
@@ -681,10 +684,10 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       for_ fieldDetails $ \fd -> do
         let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
             ctor = cblock (template "public static$1 $2 $3($4 v)" [leadSpace typeArgs, className, unionCtorName (fd_field fd), fd_typeExprStr fd]) (
-              ctemplate "return new $1(Disc.$2,$3);" [className, discriminatorName fd, checkedv]
+              ctemplate "return new $1(Disc.$2, $3);" [className, discriminatorName fd, checkedv]
               )
             ctorvoid = cblock (template "public static$1 $2 $3()" [leadSpace typeArgs, className, unionCtorName (fd_field fd)]) (
-              ctemplate "return new $1(Disc.$2,null);" [className, discriminatorName fd]
+              ctemplate "return new $1(Disc.$2, null);" [className, discriminatorName fd]
               )
 
         addMethod (if isVoidType (f_type (fd_field fd)) then ctorvoid else ctor)
@@ -766,7 +769,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
           cline "return false;"
           )
         <>
-        ctemplate "$1 other = ($1)other0;" [className]
+        ctemplate "$1 other = ($1) other0;" [className]
         <>
         ctemplate "return $1 == other.$1 && $2.equals(other.$2);" [discVar,valueVar]
         )
@@ -780,7 +783,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
         cline "@SuppressWarnings(\"unchecked\")"
         <>
         cblock "private static <T> T cast(final Object o)" (
-          cline "return (T)o;"
+          cline "return (T) o;"
           )
         )
 
@@ -854,7 +857,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
           )
 
         writeFields <- for fieldDetails $ \fd -> do
-          writeToParcel (f_type (fd_field fd)) "out" (template "(($1)$2)" [fd_typeExprStr fd,valueVar]) "flags"
+          writeToParcel (f_type (fd_field fd)) "out" (template "(($1) $2)" [fd_typeExprStr fd,valueVar]) "flags"
 
         readFields <- for fieldDetails $ \fd -> do
           readFromParcel (f_type (fd_field fd)) Nothing "value" "in"
@@ -905,9 +908,11 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
 
 generateDocString :: Annotations -> Code
 generateDocString annotations = case Map.lookup (ScopedName (ModuleName []) "Doc") annotations of
-   (Just (JSON.String text)) -> cline "/**" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
+   (Just (JSON.String text)) -> docStringComment text
    _ -> mempty
 
+docStringComment :: T.Text -> Code
+docStringComment text = cline "/**" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
 
 multiLineComment :: T.Text -> Code
 multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
@@ -938,6 +943,13 @@ generate jf modulePaths = catchAllExceptions  $ for_ modulePaths $ \modulePath -
 
 commaSep :: [T.Text] -> T.Text
 commaSep = T.intercalate ", "
+
+sortedImports :: Set.Set T.Text -> [T.Text]
+sortedImports imports = map snd (sort [(classify i,i) | i <- Set.toList imports])
+  where
+    classify i = if T.isPrefixOf "java." i
+                   then 2
+                   else if T.isPrefixOf "android." i then 1 else 0
 
 ----------------------------------------------------------------------
 reservedWords :: Set.Set Ident
