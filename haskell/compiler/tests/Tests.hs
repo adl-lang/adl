@@ -241,6 +241,9 @@ runTests = hspec $ do
     it "generates expected code for various unions" $ do
       runJavaBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
+    it "generates expected code for the standard library" $ do
+      runJavaBackend stdsrc stdfiles "test6/java-output"
+        `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do
       runJavaBackend1 "test14/input/test.adl"
         `shouldReturn` MatchOutput

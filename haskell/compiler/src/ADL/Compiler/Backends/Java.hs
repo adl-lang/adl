@@ -392,8 +392,8 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m0 = do
     case d_type decl of
       (Decl_Struct s) -> writeClassFile file maxLineLength (generateStruct codeProfile moduleName javaPackage decl s)
       (Decl_Union u)  -> writeClassFile file maxLineLength (generateUnion codeProfile moduleName javaPackage decl u)
+      (Decl_Newtype n) -> writeClassFile file maxLineLength (generateNewtype codeProfile moduleName javaPackage decl n)
       (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
-      (Decl_Newtype _) -> eioError "FIXME: newtypes haven't been implemented"
   where
     writeClassFile :: FilePath -> Int -> ClassFile -> EIO a ()
     writeClassFile path maxLineLength cfile = do
@@ -647,6 +647,23 @@ readFromParcel te mtotype tovar from = do
       return (
         ctemplate "$1 = $2.CREATOR.createFromParcel($3);" [to,typeExprStr,from]
         )
+
+generateNewtype :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Newtype ResolvedType -> ClassFile
+generateNewtype codeProfile moduleName javaPackage decl newtype_ =
+  -- In java a newtype is just a single valuesed struct
+  generateStruct codeProfile moduleName javaPackage decl struct
+  where
+    struct = Struct {
+      s_typeParams = n_typeParams newtype_,
+      s_fields =
+        [ Field {
+           f_name = "value",
+           f_type = n_typeExpr newtype_,
+           f_default = n_default newtype_,
+           f_annotations = mempty
+           }
+        ]
+      }
 
 generateUnion :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Union ResolvedType -> ClassFile
 generateUnion codeProfile moduleName javaPackage decl union =  execState gen state0
