@@ -1,9 +1,13 @@
 package org.adl.runtime;
 
-public interface Factory<T>
-{
+/**
+ * A generic factory class for constructing generic instances.
+ *
+ * @param <T> The type of object being constructed.
+ */
+public interface Factory<T> {
   /**
-   * Create a value of type T, initialised to a default value
+   * Create a value of type T, initialised to a default value.
    */
   T create();
 

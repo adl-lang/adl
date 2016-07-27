@@ -3,8 +3,10 @@ package org.adl.runtime;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class ByteArray
-{
+/**
+ * Wrapper class for byte[].
+ */
+public class ByteArray {
   private byte[] value;
   
   public ByteArray() {
@@ -23,14 +25,15 @@ public class ByteArray
     return this.value;
   }
 
-  public void setValue( byte[] value ) {
+  public void setValue(byte[] value) {
     Objects.requireNonNull(value);
   }
 
   @Override
   public boolean equals(Object other) {
-    if (!(other instanceof ByteArray))
+    if (!(other instanceof ByteArray)) {
       return false;
+    }
     return Arrays.equals(value, ((ByteArray) other).value);
   }
 

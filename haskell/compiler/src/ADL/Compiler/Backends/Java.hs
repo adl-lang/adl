@@ -182,7 +182,9 @@ genFactoryExpr (TypeExpr rt params) = do
   fe <- case rt of
     (RT_Named (scopedName,_)) -> do
       fe <- genScopedName scopedName
-      return (template "$1.factory" [fe])
+      case params of
+        [] -> return (template "$1.FACTORY" [fe])
+        _ -> return (template "$1.factory" [fe])
     (RT_Param ident) -> return (factoryTypeArg ident)
     (RT_Primitive pt) -> pd_factory (genPrimitiveDetails pt)
   case fparams of
@@ -206,7 +208,7 @@ genPrimitiveDetails P_Void = PrimitiveDetails {
   pd_default = Just "null",
   pd_genLiteral = \jv -> "null",
   pd_mutable = False,
-  pd_factory = primitiveFactory "Void",
+  pd_factory = primitiveFactory "VOID",
   pd_hashfn = \from -> "0"
   }
 genPrimitiveDetails P_Bool = PrimitiveDetails {
@@ -218,7 +220,7 @@ genPrimitiveDetails P_Bool = PrimitiveDetails {
       (JSON.Bool True) -> "true"
       (JSON.Bool False) -> "false",
   pd_mutable = False,
-  pd_factory = primitiveFactory "Boolean",
+  pd_factory = primitiveFactory "BOOLEAN",
   pd_hashfn = \from -> template "($1 ? 0 : 1)" [from]
   }
 genPrimitiveDetails P_Int8 = PrimitiveDetails {
@@ -227,7 +229,7 @@ genPrimitiveDetails P_Int8 = PrimitiveDetails {
   pd_default = Just "0",
   pd_genLiteral = \(JSON.Number n) -> "(byte)" <> litNumber n,
   pd_mutable = False,
-  pd_factory = primitiveFactory "Byte",
+  pd_factory = primitiveFactory "BYTE",
   pd_hashfn = \from -> template "(int) $1" [from]
 }
 genPrimitiveDetails P_Int16 = PrimitiveDetails {
@@ -236,7 +238,7 @@ genPrimitiveDetails P_Int16 = PrimitiveDetails {
   pd_default = Just "0",
   pd_genLiteral = \(JSON.Number n) -> "(short)" <> litNumber n,
   pd_mutable = False,
-  pd_factory = primitiveFactory "Short",
+  pd_factory = primitiveFactory "SHORT",
   pd_hashfn = \from -> template "(int) $1" [from]
 }
 genPrimitiveDetails P_Int32 = PrimitiveDetails {
@@ -245,7 +247,7 @@ genPrimitiveDetails P_Int32 = PrimitiveDetails {
   pd_default = Just "0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
   pd_mutable = False,
-  pd_factory = primitiveFactory "Integer",
+  pd_factory = primitiveFactory "INTEGER",
   pd_hashfn = \from -> template "$1" [from]
 }
 genPrimitiveDetails P_Int64 = PrimitiveDetails {
@@ -254,7 +256,7 @@ genPrimitiveDetails P_Int64 = PrimitiveDetails {
   pd_default = Just "0L",
   pd_genLiteral = \(JSON.Number n) -> litNumber n <> "L",
   pd_mutable = False,
-  pd_factory = primitiveFactory "Long",
+  pd_factory = primitiveFactory "LONG",
   pd_hashfn = \from -> template "(int) ($1 ^ ($1 >>> 32))" [from]
 }
 genPrimitiveDetails P_Float = PrimitiveDetails {
@@ -263,7 +265,7 @@ genPrimitiveDetails P_Float = PrimitiveDetails {
   pd_default = Just "0.0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n <> "F",
   pd_mutable = False,
-  pd_factory = primitiveFactory "Float",
+  pd_factory = primitiveFactory "FLOAT",
   pd_hashfn = \from -> template "Float.valueOf($1).hashCode()" [from]
 }
 genPrimitiveDetails P_Double = PrimitiveDetails {
@@ -272,7 +274,7 @@ genPrimitiveDetails P_Double = PrimitiveDetails {
   pd_default = Just "0.0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
   pd_mutable = False,
-  pd_factory = primitiveFactory "Double",
+  pd_factory = primitiveFactory "DOUBLE",
   pd_hashfn = \from -> template "Double.valueOf($1).hashCode()" [from]
 }
 
@@ -290,7 +292,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
   pd_default = Just "new ByteArray()",
   pd_genLiteral = \(JSON.String s) -> template "new ByteArray($1.getBytes())" [T.pack (show (decode s))],
   pd_mutable = True,
-  pd_factory = primitiveFactory "ByteArray",
+  pd_factory = primitiveFactory "BYTE_ARRAY",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
   where
@@ -303,7 +305,7 @@ genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_default = Just "new java.util.ArrayList()",
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
   pd_mutable = True,
-  pd_factory = primitiveFactory "ArrayList",
+  pd_factory = primitiveFactory "arrayList",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_String = PrimitiveDetails {
@@ -312,7 +314,7 @@ genPrimitiveDetails P_String = PrimitiveDetails {
   pd_default = Just "\"\"",
   pd_genLiteral = \(JSON.String s) -> T.pack (show s),
   pd_mutable= False,
-  pd_factory = primitiveFactory "String",
+  pd_factory = primitiveFactory "STRING",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_Sink = PrimitiveDetails {
@@ -321,14 +323,14 @@ genPrimitiveDetails P_Sink = PrimitiveDetails {
   pd_default = Just "new Sink()",
   pd_genLiteral = \_ -> "????", -- never called
   pd_mutable = True,
-  pd_factory = primitiveFactory "Sink",
+  pd_factory = primitiveFactory "SINK",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 
 primitiveFactory :: T.Text -> CState T.Text
 primitiveFactory name = do
   rtpackage <- getRuntimePackage
-  addImport (rtpackage <> ".Factories") >> return (template "Factories.$1Factory" [name])
+  addImport (rtpackage <> ".Factories") >> return (template "Factories.$1" [name])
 
 data FieldDetails = FieldDetails {
   fd_field :: Field ResolvedType,
@@ -508,7 +510,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
 
       -- factory
       let factory =
-            cblock1 (template "public static Factory<$1> factory = new Factory<$1>()" [className]) (
+            cblock1 (template "public static final Factory<$1> FACTORY = new Factory<$1>()" [className]) (
               cblock (template "public $1 create()" [className]) (
                  ctemplate "return new $1();" [className]
               )
@@ -792,7 +794,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
 
       -- factory
       let factory =
-            cblock1 (template "public static Factory<$1> factory = new Factory<$1>()" [className]) (
+            cblock1 (template "public static final Factory<$1> FACTORY = new Factory<$1>()" [className]) (
               cblock (template "public $1 create()" [className]) (
                  ctemplate "return new $1();" [className]
               )
