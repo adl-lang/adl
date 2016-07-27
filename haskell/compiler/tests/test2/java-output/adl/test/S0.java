@@ -31,7 +31,7 @@ public class S0 {
 
   /* Factory for construction of generic values */
 
-  public static Factory<S0> factory = new Factory<S0>() {
+  public static final Factory<S0> FACTORY = new Factory<S0>() {
     public S0 create() {
       return new S0();
     }

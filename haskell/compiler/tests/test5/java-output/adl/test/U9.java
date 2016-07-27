@@ -10,6 +10,9 @@ public class U9<T> {
   private Disc disc;
   private Object value;
 
+  /**
+   * The U9 discriminator type.
+   */
   public enum Disc {
     V1,
     V2
@@ -18,11 +21,11 @@ public class U9<T> {
   /* Constructors */
 
   public static <T> U9 v1(T v) {
-    return new U9(Disc.V1,java.util.Objects.requireNonNull(v));
+    return new U9(Disc.V1, java.util.Objects.requireNonNull(v));
   }
 
   public static <T> U9 v2(short v) {
-    return new U9(Disc.V2,v);
+    return new U9(Disc.V2, v);
   }
 
   private U9(Disc disc, Object value) {
@@ -69,7 +72,7 @@ public class U9<T> {
     if (!(other0 instanceof U9)) {
       return false;
     }
-    U9 other = (U9)other0;
+    U9 other = (U9) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -80,7 +83,7 @@ public class U9<T> {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */

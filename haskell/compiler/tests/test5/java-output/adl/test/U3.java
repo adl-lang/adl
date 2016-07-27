@@ -10,6 +10,9 @@ public class U3 {
   private Disc disc;
   private Object value;
 
+  /**
+   * The U3 discriminator type.
+   */
   public enum Disc {
     V
   }
@@ -17,7 +20,7 @@ public class U3 {
   /* Constructors */
 
   public static U3 v(short v) {
-    return new U3(Disc.V,v);
+    return new U3(Disc.V, v);
   }
 
   public U3() {
@@ -66,7 +69,7 @@ public class U3 {
     if (!(other0 instanceof U3)) {
       return false;
     }
-    U3 other = (U3)other0;
+    U3 other = (U3) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -77,12 +80,12 @@ public class U3 {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<U3> factory = new Factory<U3>() {
+  public static final Factory<U3> FACTORY = new Factory<U3>() {
     public U3 create() {
       return new U3();
     }

@@ -9,6 +9,9 @@ public class U4 {
   private Disc disc;
   private Object value;
 
+  /**
+   * The U4 discriminator type.
+   */
   public enum Disc {
     V
   }
@@ -16,7 +19,7 @@ public class U4 {
   /* Constructors */
 
   public static U4 v(S1 v) {
-    return new U4(Disc.V,java.util.Objects.requireNonNull(v));
+    return new U4(Disc.V, java.util.Objects.requireNonNull(v));
   }
 
   public U4() {
@@ -28,7 +31,7 @@ public class U4 {
     this.disc = other.disc;
     switch (other.disc) {
       case V:
-        this.value = S1.factory.create((S1) other.value);
+        this.value = S1.FACTORY.create((S1) other.value);
         break;
     }
   }
@@ -65,7 +68,7 @@ public class U4 {
     if (!(other0 instanceof U4)) {
       return false;
     }
-    U4 other = (U4)other0;
+    U4 other = (U4) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -76,12 +79,12 @@ public class U4 {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<U4> factory = new Factory<U4>() {
+  public static final Factory<U4> FACTORY = new Factory<U4>() {
     public U4 create() {
       return new U4();
     }

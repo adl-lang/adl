@@ -31,7 +31,7 @@ public class S2 {
   public S2(S2 other) {
     this.f1 = other.f1;
     this.f2 = other.f2;
-    this.f3 = Factories.ArrayListFactory(Factories.IntegerFactory).create(other.f3);
+    this.f3 = Factories.arrayList(Factories.INTEGER).create(other.f3);
   }
 
   /* Accessors and mutators */
@@ -67,7 +67,7 @@ public class S2 {
     if (!(other0 instanceof S2)) {
       return false;
     }
-    S2 other = (S2)other0;
+    S2 other = (S2) other0;
     return
       f1.equals(other.f1) &&
       f2 == other.f2 &&
@@ -85,7 +85,7 @@ public class S2 {
 
   /* Factory for construction of generic values */
 
-  public static Factory<S2> factory = new Factory<S2>() {
+  public static final Factory<S2> FACTORY = new Factory<S2>() {
     public S2 create() {
       return new S2();
     }

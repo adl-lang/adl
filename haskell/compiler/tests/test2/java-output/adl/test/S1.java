@@ -57,7 +57,7 @@ public class S1 {
     if (!(other0 instanceof S1)) {
       return false;
     }
-    S1 other = (S1)other0;
+    S1 other = (S1) other0;
     return
       x == other.x &&
       y.equals(other.y);
@@ -73,7 +73,7 @@ public class S1 {
 
   /* Factory for construction of generic values */
 
-  public static Factory<S1> factory = new Factory<S1>() {
+  public static final Factory<S1> FACTORY = new Factory<S1>() {
     public S1 create() {
       return new S1();
     }

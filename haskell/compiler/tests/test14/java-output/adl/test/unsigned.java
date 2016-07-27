@@ -10,6 +10,9 @@ public class unsigned {
   private Disc disc;
   private Object value;
 
+  /**
+   * The unsigned discriminator type.
+   */
   public enum Disc {
     NULL_
   }
@@ -17,7 +20,7 @@ public class unsigned {
   /* Constructors */
 
   public static unsigned null_() {
-    return new unsigned(Disc.NULL_,null);
+    return new unsigned(Disc.NULL_, null);
   }
 
   public unsigned() {
@@ -59,7 +62,7 @@ public class unsigned {
     if (!(other0 instanceof unsigned)) {
       return false;
     }
-    unsigned other = (unsigned)other0;
+    unsigned other = (unsigned) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -70,12 +73,12 @@ public class unsigned {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<unsigned> factory = new Factory<unsigned>() {
+  public static final Factory<unsigned> FACTORY = new Factory<unsigned>() {
     public unsigned create() {
       return new unsigned();
     }

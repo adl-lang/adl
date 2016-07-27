@@ -10,6 +10,9 @@ public class U1 {
   private Disc disc;
   private Object value;
 
+  /**
+   * The U1 discriminator type.
+   */
   public enum Disc {
     V
   }
@@ -17,7 +20,7 @@ public class U1 {
   /* Constructors */
 
   public static U1 v() {
-    return new U1(Disc.V,null);
+    return new U1(Disc.V, null);
   }
 
   public U1() {
@@ -59,7 +62,7 @@ public class U1 {
     if (!(other0 instanceof U1)) {
       return false;
     }
-    U1 other = (U1)other0;
+    U1 other = (U1) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -70,12 +73,12 @@ public class U1 {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<U1> factory = new Factory<U1>() {
+  public static final Factory<U1> FACTORY = new Factory<U1>() {
     public U1 create() {
       return new U1();
     }

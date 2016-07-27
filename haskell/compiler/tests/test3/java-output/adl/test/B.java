@@ -62,7 +62,7 @@ public class B<T> {
     if (!(other0 instanceof B)) {
       return false;
     }
-    B other = (B)other0;
+    B other = (B) other0;
     return
       f_t.equals(other.f_t) &&
       f_string.equals(other.f_string) &&
@@ -85,7 +85,7 @@ public class B<T> {
   public static <T> Factory<B<T>> factory(Factory<T> factoryT) {
     return new Factory<B<T>>() {
       final Factory<T> f_t = factoryT;
-      final Factory<java.util.ArrayList<T>> f_tvec = Factories.ArrayListFactory(factoryT);
+      final Factory<java.util.ArrayList<T>> f_tvec = Factories.arrayList(factoryT);
       final Factory<XY<T>> f_xy = XY.factory(factoryT);
 
       public B<T> create() {

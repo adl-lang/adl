@@ -10,6 +10,9 @@ public class X2 {
   private Disc disc;
   private Object value;
 
+  /**
+   * The X2 discriminator type.
+   */
   public enum Disc {
     F1,
     F2,
@@ -23,31 +26,31 @@ public class X2 {
   /* Constructors */
 
   public static X2 f1(int v) {
-    return new X2(Disc.F1,v);
+    return new X2(Disc.F1, v);
   }
 
   public static X2 f2(int v) {
-    return new X2(Disc.F2,v);
+    return new X2(Disc.F2, v);
   }
 
   public static X2 f3(Pair<String, Integer> v) {
-    return new X2(Disc.F3,java.util.Objects.requireNonNull(v));
+    return new X2(Disc.F3, java.util.Objects.requireNonNull(v));
   }
 
   public static X2 f4(Pair<String, String> v) {
-    return new X2(Disc.F4,java.util.Objects.requireNonNull(v));
+    return new X2(Disc.F4, java.util.Objects.requireNonNull(v));
   }
 
   public static X2 f5(java.util.ArrayList<Integer> v) {
-    return new X2(Disc.F5,java.util.Objects.requireNonNull(v));
+    return new X2(Disc.F5, java.util.Objects.requireNonNull(v));
   }
 
   public static X2 f6(java.util.ArrayList<Pair<String, Integer>> v) {
-    return new X2(Disc.F6,java.util.Objects.requireNonNull(v));
+    return new X2(Disc.F6, java.util.Objects.requireNonNull(v));
   }
 
   public static X2 f7(java.util.ArrayList<Pair<String, String>> v) {
-    return new X2(Disc.F7,java.util.Objects.requireNonNull(v));
+    return new X2(Disc.F7, java.util.Objects.requireNonNull(v));
   }
 
   public X2() {
@@ -65,19 +68,19 @@ public class X2 {
         this.value = (Integer) other.value;
         break;
       case F3:
-        this.value = Pair.factory(Factories.StringFactory, Factories.IntegerFactory).create((Pair<String, Integer>) other.value);
+        this.value = Pair.factory(Factories.STRING, Factories.INTEGER).create((Pair<String, Integer>) other.value);
         break;
       case F4:
-        this.value = Pair.factory(Factories.StringFactory, Factories.StringFactory).create((Pair<String, String>) other.value);
+        this.value = Pair.factory(Factories.STRING, Factories.STRING).create((Pair<String, String>) other.value);
         break;
       case F5:
-        this.value = Factories.ArrayListFactory(Factories.IntegerFactory).create((java.util.ArrayList<Integer>) other.value);
+        this.value = Factories.arrayList(Factories.INTEGER).create((java.util.ArrayList<Integer>) other.value);
         break;
       case F6:
-        this.value = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory, Factories.IntegerFactory)).create((java.util.ArrayList<Pair<String, Integer>>) other.value);
+        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create((java.util.ArrayList<Pair<String, Integer>>) other.value);
         break;
       case F7:
-        this.value = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory, Factories.StringFactory)).create((java.util.ArrayList<Pair<String, String>>) other.value);
+        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create((java.util.ArrayList<Pair<String, String>>) other.value);
         break;
     }
   }
@@ -186,7 +189,7 @@ public class X2 {
     if (!(other0 instanceof X2)) {
       return false;
     }
-    X2 other = (X2)other0;
+    X2 other = (X2) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -197,12 +200,12 @@ public class X2 {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<X2> factory = new Factory<X2>() {
+  public static final Factory<X2> FACTORY = new Factory<X2>() {
     public X2 create() {
       return new X2();
     }

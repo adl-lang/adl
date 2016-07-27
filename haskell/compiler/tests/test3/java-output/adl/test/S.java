@@ -213,7 +213,7 @@ public class S<T> {
     if (!(other0 instanceof S)) {
       return false;
     }
-    S other = (S)other0;
+    S other = (S) other0;
     return
       f_void.equals(other.f_void) &&
       f_bool == other.f_bool &&
@@ -241,14 +241,14 @@ public class S<T> {
     int result = 1;
     result = result * 37 + 0;
     result = result * 37 + (f_bool ? 0 : 1);
-    result = result * 37 + (int)f_int8;
-    result = result * 37 + (int)f_int16;
+    result = result * 37 + (int) f_int8;
+    result = result * 37 + (int) f_int16;
     result = result * 37 + f_int32;
-    result = result * 37 + (int)(f_int64 ^ (f_int64 >>> 32));
-    result = result * 37 + (int)f_word8;
-    result = result * 37 + (int)f_word16;
+    result = result * 37 + (int) (f_int64 ^ (f_int64 >>> 32));
+    result = result * 37 + (int) f_word8;
+    result = result * 37 + (int) f_word16;
     result = result * 37 + f_word32;
-    result = result * 37 + (int)(f_word64 ^ (f_word64 >>> 32));
+    result = result * 37 + (int) (f_word64 ^ (f_word64 >>> 32));
     result = result * 37 + Float.valueOf(f_float).hashCode();
     result = result * 37 + Double.valueOf(f_double).hashCode();
     result = result * 37 + f_bytes.hashCode();
@@ -265,12 +265,12 @@ public class S<T> {
 
   public static <T> Factory<S<T>> factory(Factory<T> factoryT) {
     return new Factory<S<T>>() {
-      final Factory<ByteArray> f_bytes = Factories.ByteArrayFactory;
-      final Factory<java.util.ArrayList<String>> f_vstring = Factories.ArrayListFactory(Factories.StringFactory);
-      final Factory<A> f_a = A.factory;
-      final Factory<U> f_u = U.factory;
+      final Factory<ByteArray> f_bytes = Factories.BYTE_ARRAY;
+      final Factory<java.util.ArrayList<String>> f_vstring = Factories.arrayList(Factories.STRING);
+      final Factory<A> f_a = A.FACTORY;
+      final Factory<U> f_u = U.FACTORY;
       final Factory<T> f_t = factoryT;
-      final Factory<B<Short>> f_bint16 = B.factory(Factories.ShortFactory);
+      final Factory<B<Short>> f_bint16 = B.factory(Factories.SHORT);
 
       public S<T> create() {
         return new S<T>(null, true, (byte)-5, (short)-10000, 56, 40000L, (byte)32, (short)50000, 124456, 2344L, 0.5F, 0.45, f_bytes.create(), "abcd", f_vstring.create(), f_a.create(), f_u.create(), f_t.create(), f_bint16.create());

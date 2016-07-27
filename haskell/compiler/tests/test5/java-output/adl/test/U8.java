@@ -10,6 +10,9 @@ public class U8 {
   private Disc disc;
   private Object value;
 
+  /**
+   * The U8 discriminator type.
+   */
   public enum Disc {
     V1,
     V2
@@ -18,11 +21,11 @@ public class U8 {
   /* Constructors */
 
   public static U8 v1(S1 v) {
-    return new U8(Disc.V1,java.util.Objects.requireNonNull(v));
+    return new U8(Disc.V1, java.util.Objects.requireNonNull(v));
   }
 
   public static U8 v2(short v) {
-    return new U8(Disc.V2,v);
+    return new U8(Disc.V2, v);
   }
 
   public U8() {
@@ -34,7 +37,7 @@ public class U8 {
     this.disc = other.disc;
     switch (other.disc) {
       case V1:
-        this.value = S1.factory.create((S1) other.value);
+        this.value = S1.FACTORY.create((S1) other.value);
         break;
       case V2:
         this.value = (Short) other.value;
@@ -86,7 +89,7 @@ public class U8 {
     if (!(other0 instanceof U8)) {
       return false;
     }
-    U8 other = (U8)other0;
+    U8 other = (U8) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -97,12 +100,12 @@ public class U8 {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<U8> factory = new Factory<U8>() {
+  public static final Factory<U8> FACTORY = new Factory<U8>() {
     public U8 create() {
       return new U8();
     }

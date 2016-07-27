@@ -64,7 +64,7 @@ public class A {
     if (!(other0 instanceof A)) {
       return false;
     }
-    A other = (A)other0;
+    A other = (A) other0;
     return
       f_int == other.f_int &&
       f_string.equals(other.f_string) &&
@@ -74,7 +74,7 @@ public class A {
   @Override
   public int hashCode() {
     int result = 1;
-    result = result * 37 + (int)f_int;
+    result = result * 37 + (int) f_int;
     result = result * 37 + f_string.hashCode();
     result = result * 37 + (f_bool ? 0 : 1);
     return result;
@@ -82,7 +82,7 @@ public class A {
 
   /* Factory for construction of generic values */
 
-  public static Factory<A> factory = new Factory<A>() {
+  public static final Factory<A> FACTORY = new Factory<A>() {
     public A create() {
       return new A();
     }

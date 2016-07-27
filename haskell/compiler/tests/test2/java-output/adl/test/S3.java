@@ -65,7 +65,7 @@ public class S3<T> {
     if (!(other0 instanceof S3)) {
       return false;
     }
-    S3 other = (S3)other0;
+    S3 other = (S3) other0;
     return
       f1.equals(other.f1) &&
       f2 == other.f2 &&
@@ -88,7 +88,7 @@ public class S3<T> {
   public static <T> Factory<S3<T>> factory(Factory<T> factoryT) {
     return new Factory<S3<T>>() {
       final Factory<T> f3 = factoryT;
-      final Factory<java.util.ArrayList<T>> f4 = Factories.ArrayListFactory(factoryT);
+      final Factory<java.util.ArrayList<T>> f4 = Factories.arrayList(factoryT);
 
       public S3<T> create() {
         return new S3<T>("", 0.0, f3.create(), f4.create());

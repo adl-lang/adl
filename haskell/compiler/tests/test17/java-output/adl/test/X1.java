@@ -40,11 +40,11 @@ public class X1 {
   public X1(X1 other) {
     this.f1 = other.f1;
     this.f2 = other.f2;
-    this.f3 = Pair.factory(Factories.StringFactory, Factories.IntegerFactory).create(other.f3);
-    this.f4 = Pair.factory(Factories.StringFactory, Factories.StringFactory).create(other.f4);
-    this.f5 = Factories.ArrayListFactory(Factories.IntegerFactory).create(other.f5);
-    this.f6 = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory, Factories.IntegerFactory)).create(other.f6);
-    this.f7 = Factories.ArrayListFactory(Pair.factory(Factories.StringFactory, Factories.StringFactory)).create(other.f7);
+    this.f3 = Pair.factory(Factories.STRING, Factories.INTEGER).create(other.f3);
+    this.f4 = Pair.factory(Factories.STRING, Factories.STRING).create(other.f4);
+    this.f5 = Factories.arrayList(Factories.INTEGER).create(other.f5);
+    this.f6 = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create(other.f6);
+    this.f7 = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(other.f7);
   }
 
   /* Accessors and mutators */
@@ -112,7 +112,7 @@ public class X1 {
     if (!(other0 instanceof X1)) {
       return false;
     }
-    X1 other = (X1)other0;
+    X1 other = (X1) other0;
     return
       f1 == other.f1 &&
       f2 == other.f2 &&
@@ -138,7 +138,7 @@ public class X1 {
 
   /* Factory for construction of generic values */
 
-  public static Factory<X1> factory = new Factory<X1>() {
+  public static final Factory<X1> FACTORY = new Factory<X1>() {
     public X1 create() {
       return new X1();
     }

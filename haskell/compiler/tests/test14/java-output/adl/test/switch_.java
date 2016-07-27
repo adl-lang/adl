@@ -76,7 +76,7 @@ public class switch_ {
     if (!(other0 instanceof switch_)) {
       return false;
     }
-    switch_ other = (switch_)other0;
+    switch_ other = (switch_) other0;
     return
       double_ == other.double_ &&
       int_ == other.int_ &&
@@ -96,7 +96,7 @@ public class switch_ {
 
   /* Factory for construction of generic values */
 
-  public static Factory<switch_> factory = new Factory<switch_>() {
+  public static final Factory<switch_> FACTORY = new Factory<switch_>() {
     public switch_ create() {
       return new switch_();
     }

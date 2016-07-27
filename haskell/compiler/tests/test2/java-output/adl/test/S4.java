@@ -42,7 +42,7 @@ public class S4<T> {
     if (!(other0 instanceof S4)) {
       return false;
     }
-    S4 other = (S4)other0;
+    S4 other = (S4) other0;
     return
       f1.equals(other.f1) &&
       f2.equals(other.f2);
@@ -60,7 +60,7 @@ public class S4<T> {
 
   public static <T> Factory<S4<T>> factory(Factory<T> factoryT) {
     return new Factory<S4<T>>() {
-      final Factory<S3<String>> f1 = S3.factory(Factories.StringFactory);
+      final Factory<S3<String>> f1 = S3.factory(Factories.STRING);
       final Factory<S3<T>> f2 = S3.factory(factoryT);
 
       public S4<T> create() {

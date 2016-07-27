@@ -40,7 +40,7 @@ public class S1 {
     if (!(other0 instanceof S1)) {
       return false;
     }
-    S1 other = (S1)other0;
+    S1 other = (S1) other0;
     return
       f == other.f;
   }
@@ -48,13 +48,13 @@ public class S1 {
   @Override
   public int hashCode() {
     int result = 1;
-    result = result * 37 + (int)f;
+    result = result * 37 + (int) f;
     return result;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<S1> factory = new Factory<S1>() {
+  public static final Factory<S1> FACTORY = new Factory<S1>() {
     public S1 create() {
       return new S1();
     }

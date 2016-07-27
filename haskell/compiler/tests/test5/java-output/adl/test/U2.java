@@ -10,6 +10,9 @@ public class U2 {
   private Disc disc;
   private Object value;
 
+  /**
+   * The U2 discriminator type.
+   */
   public enum Disc {
     V
   }
@@ -17,7 +20,7 @@ public class U2 {
   /* Constructors */
 
   public static U2 v(short v) {
-    return new U2(Disc.V,v);
+    return new U2(Disc.V, v);
   }
 
   public U2() {
@@ -66,7 +69,7 @@ public class U2 {
     if (!(other0 instanceof U2)) {
       return false;
     }
-    U2 other = (U2)other0;
+    U2 other = (U2) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -77,12 +80,12 @@ public class U2 {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<U2> factory = new Factory<U2>() {
+  public static final Factory<U2> FACTORY = new Factory<U2>() {
     public U2 create() {
       return new U2();
     }

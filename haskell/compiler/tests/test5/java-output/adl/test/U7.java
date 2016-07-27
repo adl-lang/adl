@@ -9,6 +9,9 @@ public class U7 {
   private Disc disc;
   private Object value;
 
+  /**
+   * The U7 discriminator type.
+   */
   public enum Disc {
     V
   }
@@ -16,7 +19,7 @@ public class U7 {
   /* Constructors */
 
   public static U7 v(U3 v) {
-    return new U7(Disc.V,java.util.Objects.requireNonNull(v));
+    return new U7(Disc.V, java.util.Objects.requireNonNull(v));
   }
 
   public U7() {
@@ -28,7 +31,7 @@ public class U7 {
     this.disc = other.disc;
     switch (other.disc) {
       case V:
-        this.value = U3.factory.create((U3) other.value);
+        this.value = U3.FACTORY.create((U3) other.value);
         break;
     }
   }
@@ -65,7 +68,7 @@ public class U7 {
     if (!(other0 instanceof U7)) {
       return false;
     }
-    U7 other = (U7)other0;
+    U7 other = (U7) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -76,12 +79,12 @@ public class U7 {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<U7> factory = new Factory<U7>() {
+  public static final Factory<U7> FACTORY = new Factory<U7>() {
     public U7 create() {
       return new U7();
     }

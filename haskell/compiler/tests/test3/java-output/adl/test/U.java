@@ -10,6 +10,9 @@ public class U {
   private Disc disc;
   private Object value;
 
+  /**
+   * The U discriminator type.
+   */
   public enum Disc {
     F_INT,
     F_STRING
@@ -18,11 +21,11 @@ public class U {
   /* Constructors */
 
   public static U f_int(short v) {
-    return new U(Disc.F_INT,v);
+    return new U(Disc.F_INT, v);
   }
 
   public static U f_string(String v) {
-    return new U(Disc.F_STRING,java.util.Objects.requireNonNull(v));
+    return new U(Disc.F_STRING, java.util.Objects.requireNonNull(v));
   }
 
   public U() {
@@ -86,7 +89,7 @@ public class U {
     if (!(other0 instanceof U)) {
       return false;
     }
-    U other = (U)other0;
+    U other = (U) other0;
     return disc == other.disc && value.equals(other.value);
   }
 
@@ -97,12 +100,12 @@ public class U {
 
   @SuppressWarnings("unchecked")
   private static <T> T cast(final Object o) {
-    return (T)o;
+    return (T) o;
   }
 
   /* Factory for construction of generic values */
 
-  public static Factory<U> factory = new Factory<U>() {
+  public static final Factory<U> FACTORY = new Factory<U>() {
     public U create() {
       return new U();
     }

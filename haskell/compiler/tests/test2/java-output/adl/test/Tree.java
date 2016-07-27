@@ -42,7 +42,7 @@ public class Tree<T> {
     if (!(other0 instanceof Tree)) {
       return false;
     }
-    Tree other = (Tree)other0;
+    Tree other = (Tree) other0;
     return
       value.equals(other.value) &&
       children.equals(other.children);
@@ -61,7 +61,7 @@ public class Tree<T> {
   public static <T> Factory<Tree<T>> factory(Factory<T> factoryT) {
     return new Factory<Tree<T>>() {
       final Factory<T> value = factoryT;
-      final Factory<java.util.ArrayList<Tree<T>>> children = Factories.ArrayListFactory(Tree.factory(factoryT));
+      final Factory<java.util.ArrayList<Tree<T>>> children = Factories.arrayList(Tree.factory(factoryT));
 
       public Tree<T> create() {
         return new Tree<T>(value.create(), children.create());
