@@ -338,7 +338,7 @@ data FieldDetails = FieldDetails {
   fd_typeExprStr :: T.Text,
   fd_boxedTypeExprStr :: T.Text,
   fd_factoryExprStr :: T.Text,
-  fd_defValue :: Literal,
+  fd_defValue :: T.Text,
   fd_copy :: T.Text -> T.Text
 }
 
@@ -361,6 +361,7 @@ genFieldDetails f = do
   litv <- case f_default f of
     (Just v) -> mkLiteral te v
     Nothing -> mkDefaultLiteral te
+  litText <- genLiteralText litv
   cgp <- cf_codeProfile <$> get
 
   let copy from =
@@ -370,7 +371,7 @@ genFieldDetails f = do
       hungarian = cgp_hungarianNaming cgp && not (cgp_publicMembers cgp)
       fieldName = if hungarian then "m" <> javaCapsFieldName f else unreserveWord (f_name f)
 
-  return (FieldDetails f fieldName typeExprStr boxedTypeExprStr factoryExprStr litv copy)
+  return (FieldDetails f fieldName typeExprStr boxedTypeExprStr factoryExprStr litText copy)
 
 
 
@@ -438,7 +439,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
 
           ctor2 =
             cblock (template "public $1()" [className]) (
-              clineN [template "this.$1 = $2;" [fd_fieldName fd,literalValue (fd_defValue fd)] | fd <- fieldDetails]
+              clineN [template "this.$1 = $2;" [fd_fieldName fd,fd_defValue fd] | fd <- fieldDetails]
             )
 
           ctor3 =
@@ -541,7 +542,7 @@ generateStruct codeProfile moduleName javaPackage decl struct =  execState gen s
 
           factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- s_typeParams struct]
           ctor1Args = commaSep [if immutableType (f_type (fd_field fd))
-                                then literalValue (fd_defValue fd)
+                                then fd_defValue fd
                                 else template "$1.create()" [fd_fieldName fd] | fd <-fieldDetails]
           ctor2Args = commaSep [if immutableType (f_type (fd_field fd))
                                 then template "other.$1" [fieldAccessExpr codeProfile fd]
@@ -723,7 +724,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
           ctorDefault = cblock (template "public $1()" [className]) (
             ctemplate "this.$1 = Disc.$2;" [discVar,discriminatorName fieldDetail0]
             <>
-            ctemplate "this.$1 = $2;" [valueVar,literalValue (fd_defValue fieldDetail0)]
+            ctemplate "this.$1 = $2;" [valueVar,fd_defValue fieldDetail0]
             )
 
           ctorCopy = cblock (template "public $1($1 other)" [className]) (
@@ -734,7 +735,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
                 ctemplate "case $1:" [discriminatorName fd]
                 <>
                 indent (
-                  ctemplate "this.$1 = $2;" [valueVar,fd_copy fd (template "($1) other.$2" [fd_boxedTypeExprStr fd,valueVar])]
+                  ctemplate "this.$1 = $2;" [valueVar,fd_copy fd (template "cast(other.$1)" [valueVar])]
                   <>
                   cline "break;"
                   )
@@ -830,7 +831,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
                 <>
                 cblock (template "public $1$2 create()" [className,typeArgs]) (
                   let val = if immutableType (f_type (fd_field fieldDetail0))
-                            then literalValue (fd_defValue fieldDetail0)
+                            then fd_defValue fieldDetail0
                             else template "$1.create()" [fd_fieldName fieldDetail0]
                   in ctemplate "return new $1$2(Disc.$3,$4);" [className,typeArgs,discriminatorName fieldDetail0,val]
                 )
@@ -838,25 +839,24 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
                 cline ""
                 <>
                 cblock (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
-                  cline "Object value = null;"
-                  <>
                   cblock (template "switch (other.$1)" [discVar]) (
                     mconcat [
                       ctemplate "case $1:" [discriminatorName fd]
                       <>
                       indent (
-                        ctemplate "value = $1;"
-                          [if immutableType (f_type (fd_field fd))
-                           then "other.value"
-                           else template "$1.create(cast(other.value))" [fd_fieldName fd,fd_boxedTypeExprStr fd]
+                        ctemplate "return new $1$2(other.$3,$4);"
+                          [ className
+                          , typeArgs
+                          , discVar
+                          , if immutableType (f_type (fd_field fd))
+                              then template "other.$1" [valueVar]
+                              else template "$1.create(cast(other.$2))" [fd_fieldName fd,valueVar]
                           ]
-                        <>
-                        cline "break;"
                         )
                       | fd <- fieldDetails]
                     )
                   <>
-                  ctemplate "return new $1$2(other.$3,$4);" [className,typeArgs,discVar,valueVar]
+                  cline "throw new IllegalArgumentException();" 
                   )
                 )
               )
@@ -939,12 +939,25 @@ docStringComment text = cline "/**" <> mconcat [cline (" * " <> line) | line <- 
 multiLineComment :: T.Text -> Code
 multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
 
-literalValue :: Literal -> T.Text
-literalValue (LDefault t _) = template "new $1()" [t]
-literalValue (LCtor t _ ls) = template "new $1($2)" [t, T.intercalate ", " (map literalValue ls)]
-literalValue (LUnion t ctor l) = template "$1.$2($3)" [t, ctor, literalValue l ]
-literalValue (LVector t ls) = template "java.util.Arrays.asList($1)" [commaSep (map literalValue ls)]
-literalValue (LPrimitive _ t) = t
+genLiteralText :: Literal -> CState T.Text
+genLiteralText (LDefault t (TypeExpr te [])) = do
+  return (template "new $1()" [t])
+genLiteralText (LDefault t (TypeExpr (RT_Primitive _) _)) = do
+  return (template "new $1()" [t])
+genLiteralText (LDefault t te) = do
+  factoryExpr <- genFactoryExpr te
+  return (template "$1.create()" [factoryExpr])
+genLiteralText (LCtor t _ ls) = do
+  lits <- mapM genLiteralText ls
+  return (template "new $1($2)" [t, T.intercalate ", " lits])
+genLiteralText (LUnion t ctor l) = do
+  lit <- genLiteralText l
+  return (template "$1.$2($3)" [t, ctor, lit ])
+genLiteralText (LVector t ls) = do
+  lits <- mapM genLiteralText ls
+  return (template "java.util.Arrays.asList($1)" [commaSep lits])
+genLiteralText (LPrimitive _ t) = do
+  return t
 
 packageGenerator :: T.Text -> ModuleName -> JavaPackage
 packageGenerator basePackage mn = JavaPackage (T.splitOn "." basePackage <> unModuleName mn)

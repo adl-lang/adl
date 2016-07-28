@@ -97,16 +97,13 @@ public class Error<T> {
       }
 
       public Error<T> create(Error<T> other) {
-        Object value = null;
         switch (other.disc) {
           case VALUE:
-            value = value.create(cast(other.value));
-            break;
+            return new Error<T>(other.disc,value.create(cast(other.value)));
           case ERROR:
-            value = other.value;
-            break;
+            return new Error<T>(other.disc,other.value);
         }
-        return new Error<T>(other.disc,value);
+        throw new IllegalArgumentException();
       }
     };
   }

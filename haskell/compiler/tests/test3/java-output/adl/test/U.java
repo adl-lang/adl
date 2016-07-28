@@ -37,10 +37,10 @@ public class U {
     this.disc = other.disc;
     switch (other.disc) {
       case F_INT:
-        this.value = (Short) other.value;
+        this.value = cast(other.value);
         break;
       case F_STRING:
-        this.value = (String) other.value;
+        this.value = cast(other.value);
         break;
     }
   }

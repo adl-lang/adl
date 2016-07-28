@@ -97,16 +97,13 @@ public class U9<T> {
       }
 
       public U9<T> create(U9<T> other) {
-        Object value = null;
         switch (other.disc) {
           case V1:
-            value = v1.create(cast(other.value));
-            break;
+            return new U9<T>(other.disc,v1.create(cast(other.value)));
           case V2:
-            value = other.value;
-            break;
+            return new U9<T>(other.disc,other.value);
         }
-        return new U9<T>(other.disc,value);
+        throw new IllegalArgumentException();
       }
     };
   }

@@ -32,7 +32,7 @@ public class U3 {
     this.disc = other.disc;
     switch (other.disc) {
       case V:
-        this.value = (Short) other.value;
+        this.value = cast(other.value);
         break;
     }
   }

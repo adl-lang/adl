@@ -30,8 +30,8 @@ public class X1 {
   public X1() {
     this.f1 = 0;
     this.f2 = 0;
-    this.f3 = new Pair<String, Integer>();
-    this.f4 = new Pair<String, String>();
+    this.f3 = Pair.factory(Factories.STRING, Factories.INTEGER).create();
+    this.f4 = Pair.factory(Factories.STRING, Factories.STRING).create();
     this.f5 = new java.util.ArrayList<Integer>();
     this.f6 = new java.util.ArrayList<Pair<String, Integer>>();
     this.f7 = new java.util.ArrayList<Pair<String, String>>();

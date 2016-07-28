@@ -62,25 +62,25 @@ public class X2 {
     this.disc = other.disc;
     switch (other.disc) {
       case F1:
-        this.value = (Integer) other.value;
+        this.value = cast(other.value);
         break;
       case F2:
-        this.value = (Integer) other.value;
+        this.value = cast(other.value);
         break;
       case F3:
-        this.value = Pair.factory(Factories.STRING, Factories.INTEGER).create((Pair<String, Integer>) other.value);
+        this.value = Pair.factory(Factories.STRING, Factories.INTEGER).create(cast(other.value));
         break;
       case F4:
-        this.value = Pair.factory(Factories.STRING, Factories.STRING).create((Pair<String, String>) other.value);
+        this.value = Pair.factory(Factories.STRING, Factories.STRING).create(cast(other.value));
         break;
       case F5:
-        this.value = Factories.arrayList(Factories.INTEGER).create((java.util.ArrayList<Integer>) other.value);
+        this.value = Factories.arrayList(Factories.INTEGER).create(cast(other.value));
         break;
       case F6:
-        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create((java.util.ArrayList<Pair<String, Integer>>) other.value);
+        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create(cast(other.value));
         break;
       case F7:
-        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create((java.util.ArrayList<Pair<String, String>>) other.value);
+        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(cast(other.value));
         break;
     }
   }

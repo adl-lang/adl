@@ -28,7 +28,7 @@ data CodeGenResult = MatchOutput
 instance Show CodeGenResult where
   show MatchOutput = "matching output"
   show (CompilerFailed t) = "compiler failure: " ++ T.unpack t
-  show (OutputDiff expected actual diffs ) = "diff " ++ expected ++ " " ++ actual ++ " (details: " ++ show diffs ++ ")"
+  show (OutputDiff expected actual diffs ) = "diff " ++ actual ++ "/ " ++ expected ++ "/ (details: " ++ show diffs ++ ")"
   
 
 processCompilerOutput :: FilePath -> FilePath -> Either T.Text () -> IO CodeGenResult
@@ -241,8 +241,8 @@ runTests = hspec $ do
     it "generates expected code for various unions" $ do
       runJavaBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
-    it "generates expected code for the standard library" $ do
-      runJavaBackend stdsrc stdfiles "test6/java-output"
+    it "generates expected code for the core standard library" $ do
+      runJavaBackend stdsrc [combine stdsrc "sys/types.adl"] "test6/java-output"
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do
       runJavaBackend1 "test14/input/test.adl"

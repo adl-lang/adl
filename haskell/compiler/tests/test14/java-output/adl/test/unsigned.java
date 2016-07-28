@@ -32,7 +32,7 @@ public class unsigned {
     this.disc = other.disc;
     switch (other.disc) {
       case NULL_:
-        this.value = (Void) other.value;
+        this.value = cast(other.value);
         break;
     }
   }

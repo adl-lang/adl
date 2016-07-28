@@ -90,16 +90,13 @@ public class Maybe<T> {
       }
 
       public Maybe<T> create(Maybe<T> other) {
-        Object value = null;
         switch (other.disc) {
           case NOTHING:
-            value = other.value;
-            break;
+            return new Maybe<T>(other.disc,other.value);
           case JUST:
-            value = just.create(cast(other.value));
-            break;
+            return new Maybe<T>(other.disc,just.create(cast(other.value)));
         }
-        return new Maybe<T>(other.disc,value);
+        throw new IllegalArgumentException();
       }
     };
   }

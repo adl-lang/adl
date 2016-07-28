@@ -97,16 +97,13 @@ public class Either<T1, T2> {
       }
 
       public Either<T1, T2> create(Either<T1, T2> other) {
-        Object value = null;
         switch (other.disc) {
           case LEFT:
-            value = left.create(cast(other.value));
-            break;
+            return new Either<T1, T2>(other.disc,left.create(cast(other.value)));
           case RIGHT:
-            value = right.create(cast(other.value));
-            break;
+            return new Either<T1, T2>(other.disc,right.create(cast(other.value)));
         }
-        return new Either<T1, T2>(other.disc,value);
+        throw new IllegalArgumentException();
       }
     };
   }

@@ -31,7 +31,7 @@ public class U7 {
     this.disc = other.disc;
     switch (other.disc) {
       case V:
-        this.value = U3.FACTORY.create((U3) other.value);
+        this.value = U3.FACTORY.create(cast(other.value));
         break;
     }
   }

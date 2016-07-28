@@ -37,10 +37,10 @@ public class U8 {
     this.disc = other.disc;
     switch (other.disc) {
       case V1:
-        this.value = S1.FACTORY.create((S1) other.value);
+        this.value = S1.FACTORY.create(cast(other.value));
         break;
       case V2:
-        this.value = (Short) other.value;
+        this.value = cast(other.value);
         break;
     }
   }

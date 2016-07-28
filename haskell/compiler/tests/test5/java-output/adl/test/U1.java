@@ -32,7 +32,7 @@ public class U1 {
     this.disc = other.disc;
     switch (other.disc) {
       case V:
-        this.value = (Void) other.value;
+        this.value = cast(other.value);
         break;
     }
   }
