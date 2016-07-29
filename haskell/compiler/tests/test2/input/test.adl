@@ -8,7 +8,9 @@ struct S0
 {
 };
 
-@Doc "A structure containing primitives.\n\nIt has two fields: an integer x and a String y."
+/// A structure containing primitives.
+///
+/// It has two fields: an integer x and a String y.
 struct S1
 {
     Int32 x;

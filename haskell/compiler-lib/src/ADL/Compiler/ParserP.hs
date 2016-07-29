@@ -29,8 +29,21 @@ import ADL.Compiler.AST
 whiteSpace :: P.Parser ()
 whiteSpace
   =   P.space *> whiteSpace
-  <|> P.try (P.string "//" *> P.many (P.noneOf "\n") *> whiteSpace)
+  <|> P.try comment *> whiteSpace
   <|> pure ()
+
+comment :: P.Parser ()
+comment
+  = P.string "//" *> (
+      -- docstrings are not comments
+      P.string "\n" <|> P.noneOf "/" *> P.many (P.noneOf "\n")
+    ) *> pure ()
+
+docstring0 :: P.Parser T.Text
+docstring0 = P.string "///" *> P.optional (P.char ' ') *> (T.pack <$> P.many (P.noneOf "\n")) <* whiteSpace
+
+docstring :: P.Parser T.Text
+docstring = T.unlines <$> P.many1 docstring0
 
 ident0 :: P.Parser Ident
 ident0 = do
@@ -123,15 +136,20 @@ newtype_ = do
     mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
     return (n,mv,Newtype tparams te mdefault)
 
-annotation :: P.Parser (ScopedName,JSON.Value)
-annotation = do
+annotation1 :: P.Parser (ScopedName,JSON.Value)
+annotation1 = do
   token "@"
   n <- scopedName
   jv <- jsonValue
   return (n,jv)
 
+annotation2 :: P.Parser (ScopedName,JSON.Value)
+annotation2  = do
+  ds <- docstring
+  return (ScopedName (ModuleName []) "Doc",JSON.String ds)
+
 annotations :: P.Parser Annotations
-annotations = Map.fromList <$> many annotation
+annotations = Map.fromList <$> many (annotation1 <|> annotation2)
 
 decl :: P.Parser (Decl ScopedName)
 decl =  do
