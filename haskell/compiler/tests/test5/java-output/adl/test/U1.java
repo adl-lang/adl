@@ -32,7 +32,7 @@ public class U1 {
     this.disc = other.disc;
     switch (other.disc) {
       case V:
-        this.value = cast(other.value);
+        this.value = (Void) other.value;
         break;
     }
   }
@@ -69,11 +69,6 @@ public class U1 {
   @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> T cast(final Object o) {
-    return (T) o;
   }
 
   /* Factory for construction of generic values */

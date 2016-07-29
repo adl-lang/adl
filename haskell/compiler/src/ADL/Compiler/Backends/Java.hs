@@ -678,6 +678,11 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
     typeArgs = case u_typeParams union of
       [] -> ""
       args -> "<" <> commaSep (map unreserveWord args) <> ">"
+    typecast fd from =
+      if needsSuppressedCheckInCast (f_type (fd_field fd))
+        then template "$1.<$2>cast($3)" [className,fd_boxedTypeExprStr fd,from]
+        else template "($1) $2" [fd_boxedTypeExprStr fd,from]
+    
     gen = do
       setDocString (generateDocString (d_annotations decl))
       fieldDetails <- mapM genFieldDetails (u_fields union)
@@ -735,7 +740,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
                 ctemplate "case $1:" [discriminatorName fd]
                 <>
                 indent (
-                  ctemplate "this.$1 = $2;" [valueVar,fd_copy fd (template "cast(other.$1)" [valueVar])]
+                  ctemplate "this.$1 = $2;" [valueVar,fd_copy fd (typecast fd ("other." <> valueVar))]
                   <>
                   cline "break;"
                   )
@@ -758,7 +763,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
       for_ fieldDetails $ \fd -> do
         let getter = cblock (template "public $1 get$2()" [fd_typeExprStr fd, javaCapsFieldName (fd_field fd)]) (
               cblock (template "if ($1 == Disc.$2)" [discVar,discriminatorName fd]) (
-                 ctemplate "return cast($1);" [valueVar]
+                 ctemplate "return $1;" [typecast fd valueVar]
                  )
               <>
               cline "throw new IllegalStateException();"
@@ -802,7 +807,8 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
         )
 
       -- cast helper
-      addMethod (
+      let needCastHelper = (or [needsSuppressedCheckInCast (f_type (fd_field fd))| fd <- fieldDetails])
+      when needCastHelper $ addMethod (
         cline "@SuppressWarnings(\"unchecked\")"
         <>
         cblock "private static <T> T cast(final Object o)" (
@@ -850,7 +856,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
                           , discVar
                           , if immutableType (f_type (fd_field fd))
                               then template "other.$1" [valueVar]
-                              else template "$1.create(cast(other.$2))" [fd_fieldName fd,valueVar]
+                              else template "$1.create($2)" [fd_fieldName fd,typecast fd ("other." <>valueVar)]
                           ]
                         )
                       | fd <- fieldDetails]
@@ -927,6 +933,17 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
             ctemplate "return new $1[size];" [className]
             )
           )
+
+-- Inside the union implementation we need to be able to cast
+-- from Object to the type of the branch. For a simple enough type
+-- (T) v is enough. When generics are involved we need to call
+-- a helper function to suppress the warnings.
+    
+needsSuppressedCheckInCast :: TypeExpr ResolvedType -> Bool
+needsSuppressedCheckInCast (TypeExpr (RT_Param _) []) = True
+needsSuppressedCheckInCast (TypeExpr _ []) = False
+needsSuppressedCheckInCast _ = True
+
 
 generateDocString :: Annotations -> Code
 generateDocString annotations = case Map.lookup (ScopedName (ModuleName []) "Doc") annotations of

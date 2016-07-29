@@ -31,7 +31,7 @@ public class U7 {
     this.disc = other.disc;
     switch (other.disc) {
       case V:
-        this.value = U3.FACTORY.create(cast(other.value));
+        this.value = U3.FACTORY.create((U3) other.value);
         break;
     }
   }
@@ -49,7 +49,7 @@ public class U7 {
 
   public U3 getV() {
     if (disc == Disc.V) {
-      return cast(value);
+      return (U3) value;
     }
     throw new IllegalStateException();
   }
@@ -75,11 +75,6 @@ public class U7 {
   @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> T cast(final Object o) {
-    return (T) o;
   }
 
   /* Factory for construction of generic values */

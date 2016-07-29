@@ -41,14 +41,14 @@ public class U9<T> {
 
   public T getV1() {
     if (disc == Disc.V1) {
-      return cast(value);
+      return U9.<T>cast(value);
     }
     throw new IllegalStateException();
   }
 
   public short getV2() {
     if (disc == Disc.V2) {
-      return cast(value);
+      return (Short) value;
     }
     throw new IllegalStateException();
   }
@@ -99,7 +99,7 @@ public class U9<T> {
       public U9<T> create(U9<T> other) {
         switch (other.disc) {
           case V1:
-            return new U9<T>(other.disc,v1.create(cast(other.value)));
+            return new U9<T>(other.disc,v1.create(U9.<T>cast(other.value)));
           case V2:
             return new U9<T>(other.disc,other.value);
         }

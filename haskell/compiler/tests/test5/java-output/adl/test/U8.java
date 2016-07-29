@@ -37,10 +37,10 @@ public class U8 {
     this.disc = other.disc;
     switch (other.disc) {
       case V1:
-        this.value = S1.FACTORY.create(cast(other.value));
+        this.value = S1.FACTORY.create((S1) other.value);
         break;
       case V2:
-        this.value = cast(other.value);
+        this.value = (Short) other.value;
         break;
     }
   }
@@ -58,14 +58,14 @@ public class U8 {
 
   public S1 getV1() {
     if (disc == Disc.V1) {
-      return cast(value);
+      return (S1) value;
     }
     throw new IllegalStateException();
   }
 
   public short getV2() {
     if (disc == Disc.V2) {
-      return cast(value);
+      return (Short) value;
     }
     throw new IllegalStateException();
   }
@@ -96,11 +96,6 @@ public class U8 {
   @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> T cast(final Object o) {
-    return (T) o;
   }
 
   /* Factory for construction of generic values */

@@ -41,14 +41,14 @@ public class Error<T> {
 
   public T getValue() {
     if (disc == Disc.VALUE) {
-      return cast(value);
+      return Error.<T>cast(value);
     }
     throw new IllegalStateException();
   }
 
   public String getError() {
     if (disc == Disc.ERROR) {
-      return cast(value);
+      return (String) value;
     }
     throw new IllegalStateException();
   }
@@ -99,7 +99,7 @@ public class Error<T> {
       public Error<T> create(Error<T> other) {
         switch (other.disc) {
           case VALUE:
-            return new Error<T>(other.disc,value.create(cast(other.value)));
+            return new Error<T>(other.disc,value.create(Error.<T>cast(other.value)));
           case ERROR:
             return new Error<T>(other.disc,other.value);
         }

@@ -40,14 +40,14 @@ public class Either<T1, T2> {
 
   public T1 getLeft() {
     if (disc == Disc.LEFT) {
-      return cast(value);
+      return Either.<T1>cast(value);
     }
     throw new IllegalStateException();
   }
 
   public T2 getRight() {
     if (disc == Disc.RIGHT) {
-      return cast(value);
+      return Either.<T2>cast(value);
     }
     throw new IllegalStateException();
   }
@@ -99,9 +99,9 @@ public class Either<T1, T2> {
       public Either<T1, T2> create(Either<T1, T2> other) {
         switch (other.disc) {
           case LEFT:
-            return new Either<T1, T2>(other.disc,left.create(cast(other.value)));
+            return new Either<T1, T2>(other.disc,left.create(Either.<T1>cast(other.value)));
           case RIGHT:
-            return new Either<T1, T2>(other.disc,right.create(cast(other.value)));
+            return new Either<T1, T2>(other.disc,right.create(Either.<T2>cast(other.value)));
         }
         throw new IllegalArgumentException();
       }

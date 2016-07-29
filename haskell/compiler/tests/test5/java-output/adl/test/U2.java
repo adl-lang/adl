@@ -32,7 +32,7 @@ public class U2 {
     this.disc = other.disc;
     switch (other.disc) {
       case V:
-        this.value = cast(other.value);
+        this.value = (Short) other.value;
         break;
     }
   }
@@ -50,7 +50,7 @@ public class U2 {
 
   public short getV() {
     if (disc == Disc.V) {
-      return cast(value);
+      return (Short) value;
     }
     throw new IllegalStateException();
   }
@@ -76,11 +76,6 @@ public class U2 {
   @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> T cast(final Object o) {
-    return (T) o;
   }
 
   /* Factory for construction of generic values */

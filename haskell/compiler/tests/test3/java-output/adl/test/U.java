@@ -37,10 +37,10 @@ public class U {
     this.disc = other.disc;
     switch (other.disc) {
       case F_INT:
-        this.value = cast(other.value);
+        this.value = (Short) other.value;
         break;
       case F_STRING:
-        this.value = cast(other.value);
+        this.value = (String) other.value;
         break;
     }
   }
@@ -58,14 +58,14 @@ public class U {
 
   public short getF_int() {
     if (disc == Disc.F_INT) {
-      return cast(value);
+      return (Short) value;
     }
     throw new IllegalStateException();
   }
 
   public String getF_string() {
     if (disc == Disc.F_STRING) {
-      return cast(value);
+      return (String) value;
     }
     throw new IllegalStateException();
   }
@@ -96,11 +96,6 @@ public class U {
   @Override
   public int hashCode() {
     return disc.hashCode() * 37 + value.hashCode();
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> T cast(final Object o) {
-    return (T) o;
   }
 
   /* Factory for construction of generic values */

@@ -41,7 +41,7 @@ public class Maybe<T> {
 
   public T getJust() {
     if (disc == Disc.JUST) {
-      return cast(value);
+      return Maybe.<T>cast(value);
     }
     throw new IllegalStateException();
   }
@@ -94,7 +94,7 @@ public class Maybe<T> {
           case NOTHING:
             return new Maybe<T>(other.disc,other.value);
           case JUST:
-            return new Maybe<T>(other.disc,just.create(cast(other.value)));
+            return new Maybe<T>(other.disc,just.create(Maybe.<T>cast(other.value)));
         }
         throw new IllegalArgumentException();
       }

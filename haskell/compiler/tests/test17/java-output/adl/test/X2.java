@@ -62,25 +62,25 @@ public class X2 {
     this.disc = other.disc;
     switch (other.disc) {
       case F1:
-        this.value = cast(other.value);
+        this.value = (Integer) other.value;
         break;
       case F2:
-        this.value = cast(other.value);
+        this.value = (Integer) other.value;
         break;
       case F3:
-        this.value = Pair.factory(Factories.STRING, Factories.INTEGER).create(cast(other.value));
+        this.value = Pair.factory(Factories.STRING, Factories.INTEGER).create(X2.<Pair<String, Integer>>cast(other.value));
         break;
       case F4:
-        this.value = Pair.factory(Factories.STRING, Factories.STRING).create(cast(other.value));
+        this.value = Pair.factory(Factories.STRING, Factories.STRING).create(X2.<Pair<String, String>>cast(other.value));
         break;
       case F5:
-        this.value = Factories.arrayList(Factories.INTEGER).create(cast(other.value));
+        this.value = Factories.arrayList(Factories.INTEGER).create(X2.<java.util.ArrayList<Integer>>cast(other.value));
         break;
       case F6:
-        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create(cast(other.value));
+        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create(X2.<java.util.ArrayList<Pair<String, Integer>>>cast(other.value));
         break;
       case F7:
-        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(cast(other.value));
+        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(X2.<java.util.ArrayList<Pair<String, String>>>cast(other.value));
         break;
     }
   }
@@ -98,49 +98,49 @@ public class X2 {
 
   public int getF1() {
     if (disc == Disc.F1) {
-      return cast(value);
+      return (Integer) value;
     }
     throw new IllegalStateException();
   }
 
   public int getF2() {
     if (disc == Disc.F2) {
-      return cast(value);
+      return (Integer) value;
     }
     throw new IllegalStateException();
   }
 
   public Pair<String, Integer> getF3() {
     if (disc == Disc.F3) {
-      return cast(value);
+      return X2.<Pair<String, Integer>>cast(value);
     }
     throw new IllegalStateException();
   }
 
   public Pair<String, String> getF4() {
     if (disc == Disc.F4) {
-      return cast(value);
+      return X2.<Pair<String, String>>cast(value);
     }
     throw new IllegalStateException();
   }
 
   public java.util.ArrayList<Integer> getF5() {
     if (disc == Disc.F5) {
-      return cast(value);
+      return X2.<java.util.ArrayList<Integer>>cast(value);
     }
     throw new IllegalStateException();
   }
 
   public java.util.ArrayList<Pair<String, Integer>> getF6() {
     if (disc == Disc.F6) {
-      return cast(value);
+      return X2.<java.util.ArrayList<Pair<String, Integer>>>cast(value);
     }
     throw new IllegalStateException();
   }
 
   public java.util.ArrayList<Pair<String, String>> getF7() {
     if (disc == Disc.F7) {
-      return cast(value);
+      return X2.<java.util.ArrayList<Pair<String, String>>>cast(value);
     }
     throw new IllegalStateException();
   }
