@@ -149,9 +149,27 @@ instance Functor Decl where
 instance Functor Module where
     fmap f mod@Module{m_decls=ds} = mod{m_decls=(fmap.fmap) f ds}
 
-    
 instance Traversable TypeExpr where
-    traverse f (TypeExpr t ts) = TypeExpr <$> (f t) <*> traverse (traverse f) ts
+  traverse f (TypeExpr t ts) = TypeExpr <$> (f t) <*> traverse (traverse f) ts
+instance Traversable Field where
+    traverse f field = (\te->field{f_type=te}) <$> traverse f (f_type field)
+instance Traversable Struct where
+    traverse f struct = (\fs->struct{s_fields=fs}) <$> traverse (traverse f) (s_fields struct)
+instance Traversable Union where
+    traverse f union = (\fs->union{u_fields=fs}) <$> traverse (traverse f) (u_fields union)
+instance Traversable Typedef where
+    traverse f typedef = (\te->typedef{t_typeExpr=te}) <$> traverse f (t_typeExpr typedef)
+instance Traversable Newtype where
+    traverse f ntype = (\te->ntype{n_typeExpr=te}) <$> traverse f (n_typeExpr ntype)
+instance Traversable DeclType where
+    traverse f (Decl_Struct s) = Decl_Struct <$> traverse f s
+    traverse f (Decl_Union u) = Decl_Union <$> traverse f u
+    traverse f (Decl_Typedef t) = Decl_Typedef <$> traverse f t
+    traverse f (Decl_Newtype n) = Decl_Newtype <$> traverse f n
+instance Traversable Decl where
+    traverse f decl = (\dtype -> decl{d_type=dtype}) <$> traverse f (d_type decl)
+instance Traversable Module where
+    traverse f mod = (\decls -> mod{m_decls=decls}) <$> traverse (traverse f) (m_decls mod)
 
 getReferencedModules :: Module ScopedName -> Set.Set ModuleName
 getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` foldMap ref m
