@@ -1,6 +1,11 @@
 module test
 {
 
+import sys.types.Pair;
+import sys.types.Maybe;
+import sys.types.Set;
+import sys.types.Map;
+
 // This will be a custom type which serialises as a ISO formatted date
 // stream.
 
@@ -23,6 +28,17 @@ struct S
         "month" : 1,
         "day" : 1
         };
+
+    Maybe<String> v5;
+    Pair<String,Int32> v6;
+
+    Set<Int32> v7 = [1,2,3];
+
+    Map<String,Int32> v8;
+//    Map<String,Int32> v8 = [
+//      { "left" : "X", "right" : 1 },
+//      { "left" : "Y", "right" : 2 }
+//      ];
 };
 
 };

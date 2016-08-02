@@ -58,12 +58,12 @@ runVerifyBackend ipath mpaths = do
 runVerifyBackend1 :: FilePath -> IO CodeGenResult
 runVerifyBackend1 mpath = runVerifyBackend (takeDirectory mpath) [mpath]
 
-runHaskellBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
-runHaskellBackend ipath mpaths epath customTypeFiles = do
+runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
+runHaskellBackend ipaths mpaths epath customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags =  H.HaskellFlags {
-    H.hf_searchPath = [ipath],
+    H.hf_searchPath = ipaths,
     H.hf_modulePrefix = "ADL",
     H.hf_customTypeFiles = customTypeFiles,
     H.hf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
@@ -72,17 +72,17 @@ runHaskellBackend ipath mpaths epath customTypeFiles = do
   processCompilerOutput epath tempDir er
 
 runHaskellBackend1 :: FilePath-> IO CodeGenResult
-runHaskellBackend1 mpath = runHaskellBackend ipath [mpath] epath []
+runHaskellBackend1 mpath = runHaskellBackend [ipath] [mpath] epath []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "hs-output"
 
-runCppBackend :: FilePath -> [FilePath] -> FilePath -> FilePath -> [FilePath] -> IO CodeGenResult
-runCppBackend ipath mpaths epath iprefix customTypeFiles = do
+runCppBackend :: [FilePath] -> [FilePath] -> FilePath -> FilePath -> [FilePath] -> IO CodeGenResult
+runCppBackend ipaths mpaths epath iprefix customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags = CPP.CppFlags {
-    CPP.cf_searchPath = [ipath],
+    CPP.cf_searchPath = ipaths,
     CPP.cf_customTypeFiles = customTypeFiles,
     CPP.cf_incFilePrefix = iprefix,
     CPP.cf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
@@ -91,7 +91,7 @@ runCppBackend ipath mpaths epath iprefix customTypeFiles = do
   processCompilerOutput epath tempDir er
 
 runCppBackend1 :: FilePath-> IO CodeGenResult
-runCppBackend1 mpath = runCppBackend ipath [mpath] epath "" []
+runCppBackend1 mpath = runCppBackend [ipath] [mpath] epath "" []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "cpp-output"
@@ -113,12 +113,12 @@ runAstBackend1 mpath = runAstBackend ipath [mpath] epath
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "ast-output"
 
-runJavaBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
-runJavaBackend ipath mpaths epath customTypeFiles = do
+runJavaBackend :: [FilePath] -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
+runJavaBackend ipaths mpaths epath customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags = J.JavaFlags {
-    J.jf_searchPath = [ipath],
+    J.jf_searchPath = ipaths,
     J.jf_customTypeFiles = customTypeFiles,
     J.jf_package = "adl",
     J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir),
@@ -128,7 +128,7 @@ runJavaBackend ipath mpaths epath customTypeFiles = do
   processCompilerOutput epath tempDir er
 
 runJavaBackend1 :: FilePath-> IO CodeGenResult
-runJavaBackend1 mpath = runJavaBackend ipath [mpath] epath []
+runJavaBackend1 mpath = runJavaBackend [ipath] [mpath] epath []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "java-output"
@@ -140,6 +140,7 @@ stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
 stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/rpc.adl", "sys/sinkimpl.adl"]
 stdHsCustomTypes = ["../../compiler/config/hs-custom-types.json"]
 stdCppCustomTypes = ["../../compiler/config/cpp-custom-types.json"]
+stdJavaCustomTypes = ["../../compiler/config/java-custom-types.json"]
 
 runTests :: IO ()
 runTests = hspec $ do
@@ -177,13 +178,13 @@ runTests = hspec $ do
       runHaskellBackend1 "test3/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runHaskellBackend "test4/input" ["test4/input/test.adl"] "test4/hs-output" ["test4/input/hs-custom-types.json"]
+      runHaskellBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/hs-output" (stdHsCustomTypes++["test4/input/hs-custom-types.json"])
           `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       runHaskellBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      runHaskellBackend stdsrc stdfiles "test6/hs-output" stdHsCustomTypes
+      runHaskellBackend [stdsrc] stdfiles "test6/hs-output" stdHsCustomTypes
           `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       runHaskellBackend1 "test7/input/test.adl"
@@ -208,13 +209,13 @@ runTests = hspec $ do
       runCppBackend1 "test3/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runCppBackend "test4/input" ["test4/input/test.adl"] "test4/cpp-output" "" ["test4/input/cpp-custom-types.json"]
+      runCppBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/cpp-output" "" (stdCppCustomTypes ++ ["test4/input/cpp-custom-types.json"])
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       runCppBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      runCppBackend stdsrc stdfiles "test6/cpp-output" "" stdCppCustomTypes
+      runCppBackend [stdsrc] stdfiles "test6/cpp-output" "" stdCppCustomTypes
         `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       runCppBackend1 "test7/input/test.adl"
@@ -223,7 +224,7 @@ runTests = hspec $ do
       runCppBackend1 "test14/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      runCppBackend "test16/input" ["test16/input/test.adl"] "test16/cpp-output" "adl" []
+      runCppBackend ["test16/input"] ["test16/input/test.adl"] "test16/cpp-output" "adl" []
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation when necessary" $ do
       runCppBackend1 "test17/input/test.adl"
@@ -240,13 +241,15 @@ runTests = hspec $ do
       runJavaBackend1 "test3/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runJavaBackend "test4/input" ["test4/input/test.adl"] "test4/java-output" ["test4/input/java-custom-types.json"]
+      runJavaBackend
+          ["test4/input",stdsrc] ["test4/input/test.adl",combine stdsrc "sys/types.adl"]
+          "test4/java-output" (["test4/input/java-custom-types.json"] ++ stdJavaCustomTypes)
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       runJavaBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
-      runJavaBackend stdsrc [combine stdsrc "sys/types.adl"] "test6/java-output" []
+      runJavaBackend [stdsrc] [combine stdsrc "sys/types.adl"] "test6/java-output" stdJavaCustomTypes
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do
       runJavaBackend1 "test14/input/test.adl"

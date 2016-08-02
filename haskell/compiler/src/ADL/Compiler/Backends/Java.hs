@@ -449,14 +449,15 @@ generateModule :: (ModuleName -> JavaPackage) ->
                   EIO T.Text ()
 generateModule mPackage mFile mCodeGetProfile customTypes fileWriter m0 = do
   let moduleName = m_name m
+      javaPackage = mPackage moduleName
       m = ( associateCustomTypes moduleName customTypes
           . removeModuleTypedefs
           . expandModuleTypedefs
           ) m0
       decls = Map.elems (m_decls m)
+  liftIO $ putStrLn ("Generating " <> format (m_name m0) <> " into " <> T.unpack (genJavaPackage javaPackage))
   for_ decls $ \decl -> do
-    let javaPackage = mPackage moduleName
-        codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
+    let codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
         maxLineLength = cgp_maxLineLength codeProfile
         file = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
     case d_type decl of

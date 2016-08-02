@@ -12,6 +12,7 @@ import Control.Applicative( (<$>), (<*>) )
 import Data.Time.Calendar(Day)
 import Data.Time.Format(parseTime,formatTime)
 import System.Locale(defaultTimeLocale)
+import qualified ADL.Sys.Types
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
@@ -85,6 +86,10 @@ data S = S
     , s_v2 :: Date
     , s_v3 :: CDate
     , s_v4 :: CDate
+    , s_v5 :: (ADL.Sys.Types.Maybe T.Text)
+    , s_v6 :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)
+    , s_v7 :: (ADL.Sys.Types.Set Data.Int.Int32)
+    , s_v8 :: (ADL.Sys.Types.Map T.Text Data.Int.Int32)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -96,6 +101,10 @@ instance ADLValue S where
         (Date "2000-01-01")
         defaultv
         defaultv { cDate_day = 1, cDate_month = 1, cDate_year = 2000 }
+        defaultv
+        defaultv
+        (Set [ 1, 2, 3 ])
+        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -103,12 +112,20 @@ instance ADLValue S where
             v2_js = jsonSerialiser jf
             v3_js = jsonSerialiser jf
             v4_js = jsonSerialiser jf
+            v5_js = jsonSerialiser jf
+            v6_js = jsonSerialiser jf
+            v7_js = jsonSerialiser jf
+            v8_js = jsonSerialiser jf
             
             to v = JSON.Object ( HM.fromList
                 [ ("v1",aToJSON v1_js (s_v1 v))
                 , ("v2",aToJSON v2_js (s_v2 v))
                 , ("v3",aToJSON v3_js (s_v3 v))
                 , ("v4",aToJSON v4_js (s_v4 v))
+                , ("v5",aToJSON v5_js (s_v5 v))
+                , ("v6",aToJSON v6_js (s_v6 v))
+                , ("v7",aToJSON v7_js (s_v7 v))
+                , ("v8",aToJSON v8_js (s_v8 v))
                 ] )
             
             from (JSON.Object hm) = S 
@@ -116,4 +133,8 @@ instance ADLValue S where
                 <*> fieldFromJSON v2_js "v2" defaultv hm
                 <*> fieldFromJSON v3_js "v3" defaultv hm
                 <*> fieldFromJSON v4_js "v4" defaultv hm
+                <*> fieldFromJSON v5_js "v5" defaultv hm
+                <*> fieldFromJSON v6_js "v6" defaultv hm
+                <*> fieldFromJSON v7_js "v7" defaultv hm
+                <*> fieldFromJSON v8_js "v8" defaultv hm
             from _ = Prelude.Nothing

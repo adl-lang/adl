@@ -2,8 +2,12 @@
 #define TEST_H
 #include "Date.h"
 #include <adl/adl.h>
+#include <map>
+#include <set>
 #include <stdint.h>
 #include <string>
+#include "sys.types.h"
+#include <utility>
 
 namespace ADL {
 namespace test {
@@ -50,13 +54,21 @@ struct S
         const Date & v1,
         const Date & v2,
         const CDate & v3,
-        const CDate & v4
+        const CDate & v4,
+        const ADL::sys::types::Maybe<std::string>  & v5,
+        const std::pair<std::string,int32_t>  & v6,
+        const std::set<int32_t>  & v7,
+        const std::map<std::string,int32_t>  & v8
         );
     
     Date v1;
     Date v2;
     CDate v3;
     CDate v4;
+    ADL::sys::types::Maybe<std::string>  v5;
+    std::pair<std::string,int32_t>  v6;
+    std::set<int32_t>  v7;
+    std::map<std::string,int32_t>  v8;
 };
 
 bool operator<( const S &a, const S &b );
