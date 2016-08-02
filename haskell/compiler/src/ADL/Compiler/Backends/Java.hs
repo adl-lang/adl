@@ -12,6 +12,10 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Text.Parsec as P
+
+import qualified ADL.Adlc.Config.Java as JC
+import qualified ADL.Compiler.ParserP as P
 
 import Control.Monad
 import Control.Monad.Trans
@@ -19,7 +23,7 @@ import Control.Monad.Trans.State.Strict
 import qualified Data.Aeson as JSON
 import Data.Char(toUpper)
 import Data.Maybe(fromMaybe,isJust)
-import Data.Foldable(for_)
+import Data.Foldable(for_,fold)
 import Data.List(intersperse,replicate,sort)
 import Data.Monoid
 import Data.Traversable(for)
@@ -29,11 +33,15 @@ import ADL.Compiler.EIO
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
 import ADL.Compiler.Backends.Literals
+import ADL.Core.Value
 import ADL.Utils.Format
 
 data JavaFlags = JavaFlags {
   -- directories where we look for ADL files
   jf_searchPath :: [FilePath],
+
+  -- Files containing custom type definitions
+  jf_customTypeFiles :: [FilePath],
 
   -- The java package under which we hang the generated ADL
   jf_package :: T.Text,
@@ -41,6 +49,52 @@ data JavaFlags = JavaFlags {
 
   jf_codeGenProfile :: CodeGenProfile
   }
+
+-- Types we want to override
+data CustomType = CustomType {
+  ct_scopedName :: ScopedName,
+  ct_helpers :: ScopedName
+  } deriving (Show)
+
+type CustomTypeMap = Map.Map ScopedName CustomType
+
+loadCustomTypes :: [FilePath] -> EIOT CustomTypeMap
+loadCustomTypes fps = mconcat <$> sequence [loadFile fp | fp <- fps]
+  where
+    loadFile :: FilePath -> EIOT CustomTypeMap
+    loadFile fp = do
+      mv <- liftIO $ aFromJSONFile (jsonSerialiser jsflags) fp
+      case mv of
+        Nothing -> eioError (template "Unable to read java custom types from  $1" [T.pack fp])
+        Just v -> mconcat <$> sequence [convert c | c <- (JC.config_customTypes v)]
+    jsflags = JSONFlags True
+
+    convert :: JC.CustomType -> EIOT CustomTypeMap
+    convert jct = do
+      adlname <- scopedName (JC.customType_adlname jct)
+      javaname <- scopedName (JC.customType_javaname jct)
+      helpers <- scopedName (JC.customType_helpers jct)
+      return (Map.singleton adlname (CustomType javaname helpers))
+
+    scopedName :: T.Text -> EIOT ScopedName
+    scopedName t = case P.parse P.scopedName "" t of
+          (Right sn) -> return sn
+          _ -> eioError (template "Unable to parse scoped name '$1'" [t])
+
+-- A variant of ResolvedType that carries associated custom
+-- type information.
+type CResolvedType = ResolvedTypeT (Maybe CustomType)
+
+associateCustomTypes :: ModuleName -> CustomTypeMap -> Module ResolvedType -> Module CResolvedType
+associateCustomTypes moduleName customTypes mod = fmap assocf mod
+  where 
+    assocf :: ResolvedType -> CResolvedType
+    assocf (RT_Named (sn,decl,()))  = RT_Named (sn,fmap assocf decl,Map.lookup (fullyScope sn) customTypes)
+    assocf (RT_Param i) = RT_Param i
+    assocf (RT_Primitive pt) = RT_Primitive pt
+
+    fullyScope (ScopedName (ModuleName []) n) = ScopedName moduleName n
+    fullyScope sn = sn
 
 newtype JavaPackage = JavaPackage {
   unJavaPackage :: [Ident]
@@ -123,16 +177,18 @@ classFileCode content =
          | otherwise = (template "$1 implements $2" [cf_decl content,commaSep (Set.toList (cf_implements content))])
 type CState a = State ClassFile a
 
-instance MGen (State ClassFile) where
-  getPrimitiveType pt = let pd = genPrimitiveDetails pt in
+lgen :: LGen (State ClassFile) (Maybe CustomType)
+lgen = LGen {
+  getPrimitiveType = \pt -> let pd = genPrimitiveDetails pt in
     case pd_unboxed pd of
       Nothing -> pd_type pd
-      (Just t) -> t
-  getPrimitiveDefault pt = return (pd_default (genPrimitiveDetails pt))
-  getPrimitiveLiteral pt jv = return (pd_genLiteral (genPrimitiveDetails pt) jv)
-  getTypeExpr _ te = genTypeExpr te
-  getTypeExprB _ _ te = genTypeExpr te
-  getUnionConstructorName d f = return (unreserveWord (f_name f))
+      (Just t) -> t,
+  getPrimitiveDefault = \pt -> return (pd_default (genPrimitiveDetails pt)),
+  getPrimitiveLiteral = \pt jv -> return (pd_genLiteral (genPrimitiveDetails pt) jv),
+  getTypeExpr = \_ te -> genTypeExpr te,
+  getTypeExprB = \_ _ te -> genTypeExpr te,
+  getUnionConstructorName = \d f -> return (unreserveWord (f_name f))
+  }
 
 addField :: Code -> CState ()
 addField decl = modify (\cf->cf{cf_fields=decl:cf_fields cf})
@@ -152,18 +208,19 @@ setDocString code = modify (\cf->cf{cf_docString=code})
 getRuntimePackage :: CState T.Text
 getRuntimePackage = (cgp_runtimePackage . cf_codeProfile) <$> get
 
-genTypeExpr :: TypeExpr ResolvedType -> CState T.Text
+genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
 genTypeExpr te = genTypeExprB False te
 
-genTypeExprB :: Bool ->  TypeExpr ResolvedType -> CState T.Text
+genTypeExprB :: Bool ->  TypeExpr CResolvedType -> CState T.Text
 genTypeExprB boxed (TypeExpr rt []) = genResolvedType boxed rt
 genTypeExprB boxed (TypeExpr rt params) = do
   rtStr <- genResolvedType boxed rt
   rtParamsStr <- mapM (genTypeExprB True) params
   return (template "$1<$2>" [rtStr,T.intercalate ", " rtParamsStr])
 
-genResolvedType :: Bool -> ResolvedType -> CState T.Text
-genResolvedType _ (RT_Named (scopedName,_)) = genScopedName scopedName
+genResolvedType :: Bool -> CResolvedType -> CState T.Text
+genResolvedType _ (RT_Named (_,_,Just customType)) = genScopedName (ct_scopedName customType)
+genResolvedType _ (RT_Named (scopedName,_,Nothing)) = genScopedName scopedName
 genResolvedType _(RT_Param ident) = return (unreserveWord ident)
 genResolvedType False (RT_Primitive pt) = let pd = genPrimitiveDetails pt in fromMaybe (pd_type pd) (pd_unboxed pd)
 genResolvedType True (RT_Primitive pt) = pd_type (genPrimitiveDetails pt)
@@ -176,15 +233,17 @@ genScopedName scopedName = do
     then return (sn_name scopedName)
     else return (T.intercalate "." (map unreserveWord (unModuleName mname <> [sn_name scopedName])))
 
-genFactoryExpr :: TypeExpr ResolvedType -> CState T.Text
+genFactoryExpr :: TypeExpr CResolvedType -> CState T.Text
 genFactoryExpr (TypeExpr rt params) = do
   fparams <- mapM genFactoryExpr params
   fe <- case rt of
-    (RT_Named (scopedName,_)) -> do
-      fe <- genScopedName scopedName
+    (RT_Named (scopedName,_,mct)) -> do
+      fscope <- case mct of
+        Nothing -> genScopedName scopedName
+        (Just ct) -> genScopedName (ct_helpers ct)
       case params of
-        [] -> return (template "$1.FACTORY" [fe])
-        _ -> return (template "$1.factory" [fe])
+        [] -> return (template "$1.FACTORY" [fscope])
+        _ -> return (template "$1.factory" [fscope])
     (RT_Param ident) -> return (factoryTypeArg ident)
     (RT_Primitive pt) -> pd_factory (genPrimitiveDetails pt)
   case fparams of
@@ -333,7 +392,7 @@ primitiveFactory name = do
   addImport (rtpackage <> ".Factories") >> return (template "Factories.$1" [name])
 
 data FieldDetails = FieldDetails {
-  fd_field :: Field ResolvedType,
+  fd_field :: Field CResolvedType,
   fd_fieldName :: Ident,
   fd_typeExprStr :: T.Text,
   fd_boxedTypeExprStr :: T.Text,
@@ -352,16 +411,16 @@ immutableType te = case te of
   (TypeExpr (RT_Primitive pt) _) -> not (pd_mutable (genPrimitiveDetails pt))
   _-> False
 
-genFieldDetails :: Field ResolvedType -> CState FieldDetails
+genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails f = do
   let te = f_type f
   typeExprStr <- genTypeExprB False te
   boxedTypeExprStr <- genTypeExprB True te
   factoryExprStr <- genFactoryExpr te
   litv <- case f_default f of
-    (Just v) -> mkLiteral te v
-    Nothing -> mkDefaultLiteral te
-  litText <- genLiteralText litv
+    (Just v) -> mkLiteral lgen te v
+    Nothing -> mkDefaultLiteral lgen te
+  defValue <- genLiteralText litv
   cgp <- cf_codeProfile <$> get
 
   let copy from =
@@ -371,22 +430,32 @@ genFieldDetails f = do
       hungarian = cgp_hungarianNaming cgp && not (cgp_publicMembers cgp)
       fieldName = if hungarian then "m" <> javaCapsFieldName f else unreserveWord (f_name f)
 
-  return (FieldDetails f fieldName typeExprStr boxedTypeExprStr factoryExprStr litText copy)
-
-
+  return FieldDetails {
+    fd_field=f,
+    fd_fieldName=fieldName,
+    fd_typeExprStr=typeExprStr,
+    fd_boxedTypeExprStr=boxedTypeExprStr,
+    fd_factoryExprStr=factoryExprStr,
+    fd_defValue=defValue,
+    fd_copy=copy
+    }
 
 generateModule :: (ModuleName -> JavaPackage) ->
                   (ScopedName -> FilePath) ->
                   (ScopedName -> CodeGenProfile) ->
+                  CustomTypeMap ->
                   (FilePath -> LBS.ByteString -> IO ()) ->
                   Module ResolvedType ->
                   EIO T.Text ()
-generateModule mPackage mFile mCodeGetProfile fileWriter m0 = do
-  let m = removeModuleTypedefs (expandModuleTypedefs m0)
+generateModule mPackage mFile mCodeGetProfile customTypes fileWriter m0 = do
+  let moduleName = m_name m
+      m = ( associateCustomTypes moduleName customTypes
+          . removeModuleTypedefs
+          . expandModuleTypedefs
+          ) m0
       decls = Map.elems (m_decls m)
   for_ decls $ \decl -> do
-    let moduleName = m_name m
-        javaPackage = mPackage moduleName
+    let javaPackage = mPackage moduleName
         codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
         maxLineLength = cgp_maxLineLength codeProfile
         file = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
@@ -402,7 +471,7 @@ generateModule mPackage mFile mCodeGetProfile fileWriter m0 = do
       liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
       
 
-generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Struct ResolvedType -> ClassFile
+generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl CResolvedType -> Struct CResolvedType -> ClassFile
 generateStruct codeProfile moduleName javaPackage decl struct =  execState gen state0
   where
     state0 = classFile codeProfile moduleName javaPackage classDecl
@@ -594,7 +663,7 @@ importParcelable = do
   addImport "android.os.Parcel"
   addImport "android.os.Parcelable"
 
-writeToParcel :: TypeExpr ResolvedType -> Ident -> Ident -> Ident -> CState Code
+writeToParcel :: TypeExpr CResolvedType -> Ident -> Ident -> Ident -> CState Code
 writeToParcel te to from flags = return $ case te of
   (TypeExpr (RT_Primitive P_Void) _) -> mempty
   (TypeExpr (RT_Primitive P_Bool) _) -> ctemplate "$1.writeByte($2 ? (byte) 1 : (byte) 0);" [to,from]
@@ -613,7 +682,7 @@ writeToParcel te to from flags = return $ case te of
   (TypeExpr (RT_Primitive P_Vector) _) -> ctemplate "$1.writeList($2);" [to,from]
   _ -> ctemplate "$1.writeToParcel($2, $3);" [from,to,flags]
                                  
-readFromParcel :: TypeExpr ResolvedType -> Maybe Ident -> Ident -> Ident -> CState Code
+readFromParcel :: TypeExpr CResolvedType -> Maybe Ident -> Ident -> Ident -> CState Code
 readFromParcel te mtotype tovar from = do
   let to = case mtotype of
         Nothing -> tovar
@@ -649,7 +718,7 @@ readFromParcel te mtotype tovar from = do
         ctemplate "$1 = $2.CREATOR.createFromParcel($3);" [to,typeExprStr,from]
         )
 
-generateNewtype :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Newtype ResolvedType -> ClassFile
+generateNewtype :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl CResolvedType -> Newtype CResolvedType -> ClassFile
 generateNewtype codeProfile moduleName javaPackage decl newtype_ =
   -- In java a newtype is just a single valuesed struct
   generateStruct codeProfile moduleName javaPackage decl struct
@@ -666,7 +735,7 @@ generateNewtype codeProfile moduleName javaPackage decl newtype_ =
         ]
       }
 
-generateUnion :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl ResolvedType -> Union ResolvedType -> ClassFile
+generateUnion :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl CResolvedType -> Union CResolvedType -> ClassFile
 generateUnion codeProfile moduleName javaPackage decl union =  execState gen state0
   where
     state0 = classFile codeProfile moduleName javaPackage classDecl
@@ -939,7 +1008,7 @@ generateUnion codeProfile moduleName javaPackage decl union =  execState gen sta
 -- (T) v is enough. When generics are involved we need to call
 -- a helper function to suppress the warnings.
     
-needsSuppressedCheckInCast :: TypeExpr ResolvedType -> Bool
+needsSuppressedCheckInCast :: TypeExpr CResolvedType -> Bool
 needsSuppressedCheckInCast (TypeExpr (RT_Param _) []) = True
 needsSuppressedCheckInCast (TypeExpr _ []) = False
 needsSuppressedCheckInCast _ = True
@@ -956,7 +1025,10 @@ docStringComment text = cline "/**" <> mconcat [cline (" * " <> line) | line <- 
 multiLineComment :: T.Text -> Code
 multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
 
-genLiteralText :: Literal -> CState T.Text
+genLiteralText :: Literal (Maybe CustomType) -> CState T.Text
+genLiteralText (LDefault t (TypeExpr (RT_Named (_,_,Just customType)) [])) = do
+  helpers <- genScopedName (ct_helpers customType)
+  return (template "$1.FACTORY.create()" [helpers])
 genLiteralText (LDefault t (TypeExpr te [])) = do
   return (template "new $1()" [t])
 genLiteralText (LDefault t (TypeExpr (RT_Primitive _) _)) = do
@@ -964,10 +1036,18 @@ genLiteralText (LDefault t (TypeExpr (RT_Primitive _) _)) = do
 genLiteralText (LDefault t te) = do
   factoryExpr <- genFactoryExpr te
   return (template "$1.create()" [factoryExpr])
+genLiteralText (LCtor t (TypeExpr (RT_Named (_,_,Just customType)) _) ls) = do
+  helpers <- genScopedName (ct_helpers customType)
+  lits <- mapM genLiteralText ls
+  return (template "$1.create($2)" [helpers, T.intercalate ", " lits])
 genLiteralText (LCtor t _ ls) = do
   lits <- mapM genLiteralText ls
   return (template "new $1($2)" [t, T.intercalate ", " lits])
-genLiteralText (LUnion t ctor l) = do
+genLiteralText (LUnion t ctor (TypeExpr (RT_Named (_,_,Just customType)) _) l) = do
+  helpers <- genScopedName (ct_helpers customType)
+  lit <- genLiteralText l
+  return (template "$1.$2($3)" [helpers, ctor, lit ])
+genLiteralText (LUnion t ctor _ l) = do
   lit <- genLiteralText l
   return (template "$1.$2($3)" [t, ctor, lit ])
 genLiteralText (LVector t ls) = do
@@ -985,13 +1065,16 @@ fileGenerator basePackage sn = T.unpack (T.intercalate "/" idents <> ".java")
     idents = unJavaPackage (packageGenerator basePackage (sn_moduleName sn)) <> [sn_name sn]
 
 generate :: JavaFlags -> [FilePath] -> EIOT ()
-generate jf modulePaths = catchAllExceptions  $ for_ modulePaths $ \modulePath -> do
-  m <- loadAndCheckModule (moduleFinder (jf_searchPath jf)) modulePath
-  generateModule (packageGenerator (jf_package jf))
-                 (fileGenerator (jf_package jf))
-                 (const (jf_codeGenProfile jf))
-                 (jf_fileWriter jf)
-                 m
+generate jf modulePaths = catchAllExceptions  $ do
+  customTypes <- loadCustomTypes (jf_customTypeFiles jf)
+  for_ modulePaths $ \modulePath -> do
+    m <- loadAndCheckModule (moduleFinder (jf_searchPath jf)) modulePath
+    generateModule (packageGenerator (jf_package jf))
+                   (fileGenerator (jf_package jf))
+                   (const (jf_codeGenProfile jf))
+                   customTypes
+                   (jf_fileWriter jf)
+                   m
 
 commaSep :: [T.Text] -> T.Text
 commaSep = T.intercalate ", "
@@ -1069,7 +1152,7 @@ unreserveWord :: Ident -> Ident
 unreserveWord n | Set.member n reservedWords = T.append n "_"
                 | otherwise = n
 
-javaCapsFieldName :: Field ResolvedType -> Ident
+javaCapsFieldName :: Field CResolvedType -> Ident
 javaCapsFieldName f = case T.uncons (f_name f) of
   Nothing -> ""
   (Just (c,t)) -> T.cons (toUpper c) t

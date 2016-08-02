@@ -193,6 +193,7 @@ runJava args0 =
 
     flags0 = J.JavaFlags {
       jf_searchPath=[],
+      jf_customTypeFiles=[],
       jf_package = "adl",
       jf_fileWriter= \_ _ -> return (),
       jf_codeGenProfile = J.defaultCodeGenProfile
@@ -206,6 +207,7 @@ runJava args0 =
     optDescs =
       [ searchDirOption (\s (jf,o)-> (jf{jf_searchPath=s:jf_searchPath jf},o))
       , outputDirOption (\s (jf,o)-> (jf,o{oa_outputPath=s}))
+      , customTypesOption (\s (jf,o)-> (jf{jf_customTypeFiles=s:jf_customTypeFiles jf},o))
       , noOverwriteOption (\(jf,o)-> (jf,o{oa_noOverwrite=True}))
       , javaPackageOption (\s (jf,o) -> (jf{jf_package=T.pack s},o))
       , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=T.pack s}},o))

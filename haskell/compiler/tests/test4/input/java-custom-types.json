@@ -1,0 +1,15 @@
+{
+    "customTypes" : [
+        {
+            "adlname" : "test.Date",
+            "javaname" : "java.time.LocalDate",
+            "helpers" : "helpers.DateHelpers"
+          
+        },
+        {
+            "adlname" : "test.CDate",
+            "javaname" : "java.time.LocalDate",
+            "helpers" : "helpers.CDateHelpers"
+        }
+    ]
+}

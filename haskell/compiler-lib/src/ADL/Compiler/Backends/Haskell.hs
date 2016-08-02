@@ -220,7 +220,7 @@ hTypeExprB m (TypeExpr c args) = do
   return (T.concat $ ["(", ct, " "] ++ L.intersperse " " argst ++ [")"])
 
 hTypeExprB1 :: TypeBindingMap -> ResolvedType -> HGen T.Text
-hTypeExprB1 m (RT_Named (sn,d)) = do
+hTypeExprB1 m (RT_Named (sn,d,_)) = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
@@ -434,7 +434,7 @@ generateLiteral te v =  generateLV Map.empty te v
     generateLV :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
     generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
-    generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
+    generateLV m te0@(TypeExpr (RT_Named (sn,decl,_)) tes) v = case d_type decl of
       (Decl_Struct s) -> generateStruct m te0 decl s tes v
       (Decl_Union u) -> generateUnion m decl u tes v 
       (Decl_Typedef t) -> generateTypedef m decl t tes v

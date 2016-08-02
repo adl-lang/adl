@@ -1,0 +1,25 @@
+{
+    "__comment__" : [
+        "This file contains mappings from the standard ADL types in sys.types to",
+        "their corresponding types in java"
+    ],
+
+    "customTypes" : [
+      {
+        "adlname" : "sys.types.Set",
+        "javaname" : "java.util.HashSet",
+        "helpers" : "adl.runtime.HashSetHelpers"
+      },
+      {
+        "adlname" : "sys.types.Map",
+        "javaname" : "java.util.HashMap",
+        "helpers" : "adl.runtime.HashMapHelpers"
+      },
+      {
+        "adlname" : "sys.types.Maybe",
+        "javaname" : "java.util.Optional",
+        "helpers" : "adl.runtime.OptionalHelpers"
+      }
+    ]
+}
+

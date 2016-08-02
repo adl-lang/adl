@@ -122,15 +122,22 @@ checkDuplicates m = structErrors ++ unionErrors ++ typedefErrors ++ newtypeError
     findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) (T.toCaseFold a) 1) Map.empty as),
                           n > (1::Int) ]
 
-data ResolvedType = RT_Named (ScopedName,Decl ResolvedType)
-                  | RT_Param Ident
-                  | RT_Primitive PrimitiveType
-    deriving (Show)
+data ResolvedTypeT c
+  = RT_Named (ScopedName,Decl (ResolvedTypeT c),c)
+  | RT_Param Ident
+  | RT_Primitive PrimitiveType
 
-instance Format ResolvedType where
-    format (RT_Named (sn,_)) = format sn
+instance Show c => Show (ResolvedTypeT c) where
+    show (RT_Named (sn,_,c)) = show ("RT_Named",sn,c)
+    show (RT_Param i) = show ( "RT_Param",i)
+    show (RT_Primitive pt) = show ("RT_Primitive",pt)
+
+instance Format (ResolvedTypeT c) where
+    format (RT_Named (sn,_,_)) = format sn
     format (RT_Param i) = format i
     format (RT_Primitive pt) = format pt
+
+type ResolvedType = ResolvedTypeT ()
 
 type RModule = Module ResolvedType
 type RModuleMap = Map.Map ModuleName RModule
@@ -141,7 +148,7 @@ isPrimitiveType :: TypeExpr ResolvedType -> Bool
 isPrimitiveType (TypeExpr (RT_Primitive _) _) = True
 isPrimitiveType _ = False
 
-isVoidType :: TypeExpr ResolvedType -> Bool
+isVoidType :: TypeExpr (ResolvedTypeT a) -> Bool
 isVoidType (TypeExpr (RT_Primitive P_Void) []) = True
 isVoidType _ = False
 
@@ -246,11 +253,11 @@ resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
 
     resolveName :: NameScope -> ScopedName -> ResolvedType
     resolveName ns sn = case nlookup ns sn of
-        LR_Defined (LocalDecl decl) -> RT_Named (sn,decl)
-        LR_Defined (ImportedDecl mn decl) -> RT_Named (sn{sn_moduleName=mn},decl)
+        LR_Defined (LocalDecl decl) -> RT_Named (sn,decl,())
+        LR_Defined (ImportedDecl mn decl) -> RT_Named (sn{sn_moduleName=mn},decl,())
         LR_New decl -> let decl1 = resolveDecl ns1 decl
                            ns1 = ns{ns_locals=Map.insert (sn_name sn) (LocalDecl decl1) (ns_locals ns)}
-                       in RT_Named (sn,decl1)
+                       in RT_Named (sn,decl1,())
         LR_TypeVar -> RT_Param (sn_name sn)
         LR_Primitive pt -> RT_Primitive pt
         LR_NotFound -> error ("PRECONDITION FAIL: unable to resolve type for " ++ show sn)
@@ -287,7 +294,7 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
       checkTypeCtorApp (RT_Param _) [] = mempty
       checkTypeCtorApp rt@(RT_Param _) expr = [TypeCtorAppError (rt,0,length expr)]
       checkTypeCtorApp rt@(RT_Primitive pt) expr = check0 rt (ptArgCount pt) (length expr)
-      checkTypeCtorApp rt@(RT_Named (_,decl)) expr = check0 rt (declTypeArgCount (d_type decl)) (length expr)
+      checkTypeCtorApp rt@(RT_Named (_,decl,())) expr = check0 rt (declTypeArgCount (d_type decl)) (length expr)
 
       check0 rt expectedN actualN | expectedN == actualN = mempty
                                   | otherwise = [TypeCtorAppError (rt,expectedN,actualN)]
@@ -338,7 +345,7 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
     validateTE m (TypeExpr (RT_Primitive _) _) v =
       error "INTERNAL ERROR: found primitive type with incorrect number of type parameters"
 
-    validateTE m (TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
+    validateTE m (TypeExpr (RT_Named (sn,decl,())) tes) v = case d_type decl of
       (Decl_Struct s) -> structLiteral m s tes v
       (Decl_Union u) -> unionLiteral m u tes v 
       (Decl_Typedef t) -> typedefLiteral m t tes v
@@ -528,7 +535,7 @@ expandTypedefs :: TypeExpr ResolvedType -> TypeExpr ResolvedType
 expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
   where
     typeExpr :: ResolvedType -> [TypeExpr ResolvedType] -> TypeExpr ResolvedType
-    typeExpr (RT_Named (_,Decl{d_type=Decl_Typedef t})) ts =
+    typeExpr (RT_Named (_,Decl{d_type=Decl_Typedef t},())) ts =
       substTypeParams (Map.fromList (zip (t_typeParams t) ts))
                       (t_typeExpr t)
     typeExpr t ts = TypeExpr t ts

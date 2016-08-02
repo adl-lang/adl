@@ -2,10 +2,29 @@
 #define TEST_H
 #include "Date.h"
 #include <adl/adl.h>
+#include <stdint.h>
 #include <string>
 
 namespace ADL {
 namespace test {
+
+struct CDate
+{
+    CDate();
+    
+    CDate(
+        const int16_t & year,
+        const int16_t & month,
+        const int16_t & day
+        );
+    
+    int16_t year;
+    int16_t month;
+    int16_t day;
+};
+
+bool operator<( const CDate &a, const CDate &b );
+bool operator==( const CDate &a, const CDate &b );
 
 // Date generated as DateO due to custom definition
 
@@ -28,10 +47,16 @@ struct S
     S();
     
     S(
-        const Date & v1
+        const Date & v1,
+        const Date & v2,
+        const CDate & v3,
+        const CDate & v4
         );
     
     Date v1;
+    Date v2;
+    CDate v3;
+    CDate v4;
 };
 
 bool operator<( const S &a, const S &b );
@@ -40,6 +65,12 @@ bool operator==( const S &a, const S &b );
 }}; // ADL::test
 
 namespace ADL {
+
+template <>
+struct Serialisable<ADL::test::CDate>
+{
+    static Serialiser<ADL::test::CDate>::Ptr serialiser(const SerialiserFlags &);
+};
 
 template <>
 struct Serialisable<ADL::test::DateO>

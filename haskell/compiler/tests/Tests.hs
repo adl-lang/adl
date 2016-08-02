@@ -113,12 +113,13 @@ runAstBackend1 mpath = runAstBackend ipath [mpath] epath
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "ast-output"
 
-runJavaBackend :: FilePath -> [FilePath] -> FilePath -> IO CodeGenResult
-runJavaBackend ipath mpaths epath = do
+runJavaBackend :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
+runJavaBackend ipath mpaths epath customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags = J.JavaFlags {
     J.jf_searchPath = [ipath],
+    J.jf_customTypeFiles = customTypeFiles,
     J.jf_package = "adl",
     J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir),
     J.jf_codeGenProfile = J.defaultCodeGenProfile
@@ -127,7 +128,7 @@ runJavaBackend ipath mpaths epath = do
   processCompilerOutput epath tempDir er
 
 runJavaBackend1 :: FilePath-> IO CodeGenResult
-runJavaBackend1 mpath = runJavaBackend ipath [mpath] epath
+runJavaBackend1 mpath = runJavaBackend ipath [mpath] epath []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "java-output"
@@ -238,11 +239,14 @@ runTests = hspec $ do
     it "generates expected code for structures with default overrides" $ do
       runJavaBackend1 "test3/input/test.adl"
         `shouldReturn` MatchOutput
+    it "generates expected code for custom type mappings" $ do
+      runJavaBackend "test4/input" ["test4/input/test.adl"] "test4/java-output" ["test4/input/java-custom-types.json"]
+        `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       runJavaBackend1 "test5/input/test.adl"
         `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
-      runJavaBackend stdsrc [combine stdsrc "sys/types.adl"] "test6/java-output"
+      runJavaBackend stdsrc [combine stdsrc "sys/types.adl"] "test6/java-output" []
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do
       runJavaBackend1 "test14/input/test.adl"

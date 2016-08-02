@@ -144,13 +144,15 @@ type CustomTypeMap = Map.Map ScopedName CustomType
 
 type Gen = State MState
 
-instance MGen (State MState) where
-  getPrimitiveType = cPrimitiveType
-  getPrimitiveDefault pt = return (cPrimitiveDefault pt)
-  getPrimitiveLiteral pt jv = return (cPrimitiveLiteral pt jv)
-  getTypeExpr = cTypeExpr
-  getTypeExprB = cTypeExprB
-  getUnionConstructorName d f = return (cUnionConstructorName d f)
+lgen :: LGen (State MState) ()
+lgen = LGen {
+  getPrimitiveType = cPrimitiveType,
+  getPrimitiveDefault = \pt -> return (cPrimitiveDefault pt),
+  getPrimitiveLiteral = \pt jv -> return (cPrimitiveLiteral pt jv),
+  getTypeExpr = cTypeExpr,
+  getTypeExprB = cTypeExprB,
+  getUnionConstructorName = \d f -> return (cUnionConstructorName d f)
+  }
 
 -- Selector function to control which file is being updated.
 type FileRef = (FState -> FState) -> MState-> MState
@@ -185,7 +187,7 @@ cTypeExprB scopeLocalNames m (TypeExpr c args) = do
   return (T.concat $ [ct, "<"] ++ L.intersperse "," argst ++ ["> "])
 
 cTypeExprB1 :: Bool -> TypeBindingMap -> ResolvedType -> Gen T.Text
-cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_)) = do
+cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_,_)) = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
@@ -411,8 +413,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     t <- cTypeExpr False (f_type f)
     scopedt <- cTypeExpr True (f_type f)
     litv <- case f_default f of
-        (Just v) -> mkLiteral (f_type f) v
-        Nothing -> mkDefaultLiteral (f_type f)
+        (Just v) -> mkLiteral lgen (f_type f) v
+        Nothing -> mkDefaultLiteral lgen (f_type f)
     return (cFieldName dn (f_name f), f, t, scopedt, litv)
 
   let ns = ms_moduleMapper ms (ms_name ms)
@@ -533,8 +535,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     t <- cTypeExpr False (f_type f)
     scopedt <- cTypeExpr True (f_type f)
     litv <- case f_default f of
-        (Just v) -> mkLiteral (f_type f) v
-        Nothing -> mkDefaultLiteral (f_type f)
+        (Just v) -> mkLiteral lgen (f_type f) v
+        Nothing -> mkDefaultLiteral lgen (f_type f)
     return (f, t, scopedt, litv)
 
   let ns = ms_moduleMapper ms (ms_name ms)
@@ -819,8 +821,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
   t <- cTypeExpr False (n_typeExpr nt)
   scopedt <- cTypeExpr True (n_typeExpr nt)
   litv <- case n_default nt of
-    (Just v) -> mkLiteral (n_typeExpr nt) v
-    Nothing -> mkDefaultLiteral (n_typeExpr nt)
+    (Just v) -> mkLiteral lgen (n_typeExpr nt) v
+    Nothing -> mkDefaultLiteral lgen (n_typeExpr nt)
 
   let ns = ms_moduleMapper ms (ms_name ms)
       tparams = n_typeParams nt
@@ -895,7 +897,7 @@ localTypes (TypeExpr (RT_Primitive P_Vector) [te]) = Set.map nameOnly (localType
 localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
 
 localTypes1 :: ResolvedType -> Set.Set (TypeRefType Ident)
-localTypes1 (RT_Named (sn,_)) = case sn_moduleName sn of
+localTypes1 (RT_Named (sn,_,_)) = case sn_moduleName sn of
     ModuleName [] -> Set.singleton (FullDecl (sn_name sn))
     -- FIXME: need to either check if fully scoped name matches current module here,
     -- or, alternatively, map fully scoped local references to unscoped ones as a compiler
@@ -1104,17 +1106,17 @@ generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath 
 
 ----------------------------------------------------------------------
 
-literalLValue :: Literal -> T.Text
+literalLValue :: (Literal c) -> T.Text
 literalLValue (LDefault t _) = template "$1()" [t]
 literalLValue (LCtor t _ ls) = template "$1($2)" [t, T.intercalate "," (map literalLValue ls)]
-literalLValue (LUnion t ctor l) = template "$1::$2($3)" [t, ctor, literalLValue l ]
+literalLValue (LUnion t ctor _ l) = template "$1::$2($3)" [t, ctor, literalLValue l ]
 literalLValue (LVector t ls) = template "mkvec<$1>($2)" [t, T.intercalate "," (map literalLValue ls)]
 literalLValue (LPrimitive _ t) = t
 
-literalPValue :: Literal -> T.Text
+literalPValue :: (Literal c) -> T.Text
 literalPValue l@(LDefault _ _) = literalLValue l
 literalPValue l@(LCtor _ _ _) = literalLValue l
-literalPValue l@(LUnion t _ _) = template "$1($2)" [t, literalLValue l]
+literalPValue l@(LUnion t _ _ _) = template "$1($2)" [t, literalLValue l]
 literalPValue l@(LVector t _) = template "std::vector<$1>( $2 )" [t, literalLValue l]
 literalPValue (LPrimitive t v) = template "$1($2)" [t, v]
 

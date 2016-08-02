@@ -6,9 +6,23 @@ module test
 
 newtype Date = String = "1900-01-01";
 
+struct CDate
+{
+    Int16 year;
+    Int16 month;
+    Int16 day;
+};
+
 struct S
 {
-        Date v1;
+    Date v1;
+    Date v2 = "2000-01-01";
+    CDate v3;
+    CDate v4 = {
+        "year" : 2000,
+        "month" : 1,
+        "day" : 1
+        };
 };
 
 };

@@ -65,7 +65,7 @@ typeExprToA2 :: TypeExpr ResolvedType -> A2.TypeExpr
 typeExprToA2 (TypeExpr rt rts) = A2.TypeExpr (typeRefToA2 rt) (map typeExprToA2 rts)
 
 typeRefToA2 :: ResolvedType -> A2.TypeRef
-typeRefToA2 (RT_Named (sn,_)) = A2.TypeRef_reference (scopedNameToA2 sn)
+typeRefToA2 (RT_Named (sn,_,_)) = A2.TypeRef_reference (scopedNameToA2 sn)
 typeRefToA2 (RT_Param i) = A2.TypeRef_typeParam i
 typeRefToA2 (RT_Primitive p) = A2.TypeRef_primitive (ptToText p)
 

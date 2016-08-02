@@ -9,5 +9,5 @@ testdirs=`find $HERE -name 'java-output'`
 for dir in $testdirs ; do
     echo "**" $dir 
     javafiles=`find $dir -name '*.java'`
-    javac -Xlint:unchecked -d /tmp -sourcepath $libdir $javafiles
+    javac -Xlint:unchecked -d /tmp -sourcepath $libdir:$dir/../input/java $javafiles
 done

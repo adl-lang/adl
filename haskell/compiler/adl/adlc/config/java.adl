@@ -1,0 +1,23 @@
+module adlc.config.java {
+
+import sys.types.*;
+
+struct CustomType
+{
+    // The qualifed name of the ADL type
+    String adlname;
+
+    // The fully scoped java name of the type to be used    
+    String javaname;
+
+    // The fully scoped name of the class containing
+    // helper code.
+    String helpers;
+};
+
+struct Config
+{
+    Vector<CustomType> customTypes;
+};
+
+};
