@@ -14,7 +14,7 @@ import ADL.Compiler.EIO
 import ADL.Compiler.Utils
 import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.Verify as V
-import HaskellCustomTypes
+import BootstrapCustomTypes
 
 searchDirOption ufn =
   Option "I" ["searchdir"]

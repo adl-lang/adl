@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module HaskellCustomTypes where
+module BootstrapCustomTypes where
 
 import qualified Data.Map as Map
 import qualified Data.Text as T

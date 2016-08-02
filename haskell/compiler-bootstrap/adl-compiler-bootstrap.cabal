@@ -20,4 +20,4 @@ executable adlc-bootstrap
                        base64-bytestring,
                        attoparsec, aeson,
                        adl-utils, adl-compiler-lib
-  other-modules:       HaskellCustomTypes
+  other-modules:       BootstrapCustomTypes
