@@ -128,7 +128,7 @@ defaultCodeGenProfile = CodeGenProfile {
 data ClassFile = ClassFile {
    cf_codeProfile :: CodeGenProfile,
    cf_module :: ModuleName,
-   cf_package :: JavaPackage,
+   cf_javaPackageFn :: ModuleName -> JavaPackage,
    cf_imports :: Set.Set T.Text,
    cf_implements :: Set.Set T.Text,
    cf_docString :: Code,
@@ -137,8 +137,11 @@ data ClassFile = ClassFile {
    cf_methods :: [Code]
 }
 
-classFile :: CodeGenProfile -> ModuleName -> JavaPackage -> T.Text -> ClassFile
-classFile codeProfile mname javapackage decl = ClassFile codeProfile mname javapackage Set.empty Set.empty mempty decl [] []
+classFile :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> T.Text -> ClassFile
+classFile codeProfile mname javaPackageFn decl = ClassFile codeProfile mname javaPackageFn Set.empty Set.empty mempty decl [] []
+
+cf_package :: ClassFile -> JavaPackage
+cf_package  cf = cf_javaPackageFn cf (cf_module cf)
 
 classFileCode :: ClassFile -> Code
 classFileCode content =
@@ -219,7 +222,7 @@ genTypeExprB boxed (TypeExpr rt params) = do
   return (template "$1<$2>" [rtStr,T.intercalate ", " rtParamsStr])
 
 genResolvedType :: Bool -> CResolvedType -> CState T.Text
-genResolvedType _ (RT_Named (_,_,Just customType)) = genScopedName (ct_scopedName customType)
+genResolvedType _ (RT_Named (_,_,Just customType)) = return (formatText (ct_scopedName customType))
 genResolvedType _ (RT_Named (scopedName,_,Nothing)) = genScopedName scopedName
 genResolvedType _(RT_Param ident) = return (unreserveWord ident)
 genResolvedType False (RT_Primitive pt) = let pd = genPrimitiveDetails pt in fromMaybe (pd_type pd) (pd_unboxed pd)
@@ -227,11 +230,11 @@ genResolvedType True (RT_Primitive pt) = pd_type (genPrimitiveDetails pt)
 
 genScopedName :: ScopedName -> CState T.Text
 genScopedName scopedName = do
-  currentModuleName <- fmap cf_module get
+  cf <- get
   let mname = sn_moduleName scopedName
-  if mname  == currentModuleName
+  if mname  == cf_module cf || unModuleName mname == []
     then return (sn_name scopedName)
-    else return (T.intercalate "." (map unreserveWord (unModuleName mname <> [sn_name scopedName])))
+    else return (T.intercalate "." (unJavaPackage (cf_javaPackageFn cf mname) <> [sn_name scopedName]))
 
 genFactoryExpr :: TypeExpr CResolvedType -> CState T.Text
 genFactoryExpr (TypeExpr rt params) = do
@@ -240,7 +243,7 @@ genFactoryExpr (TypeExpr rt params) = do
     (RT_Named (scopedName,_,mct)) -> do
       fscope <- case mct of
         Nothing -> genScopedName scopedName
-        (Just ct) -> genScopedName (ct_helpers ct)
+        (Just ct) -> return (formatText (ct_helpers ct))
       case params of
         [] -> return (template "$1.FACTORY" [fscope])
         _ -> return (template "$1.factory" [fscope])
@@ -447,23 +450,21 @@ generateModule :: (ModuleName -> JavaPackage) ->
                   (FilePath -> LBS.ByteString -> IO ()) ->
                   Module ResolvedType ->
                   EIO T.Text ()
-generateModule mPackage mFile mCodeGetProfile customTypes fileWriter m0 = do
+generateModule javaPackageFn mFile mCodeGetProfile customTypes fileWriter m0 = do
   let moduleName = m_name m
-      javaPackage = mPackage moduleName
       m = ( associateCustomTypes moduleName customTypes
           . removeModuleTypedefs
           . expandModuleTypedefs
           ) m0
       decls = Map.elems (m_decls m)
-  liftIO $ putStrLn ("Generating " <> format (m_name m0) <> " into " <> T.unpack (genJavaPackage javaPackage))
   for_ decls $ \decl -> do
     let codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
         maxLineLength = cgp_maxLineLength codeProfile
         file = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
     case d_type decl of
-      (Decl_Struct s) -> writeClassFile file maxLineLength (generateStruct codeProfile moduleName javaPackage decl s)
-      (Decl_Union u)  -> writeClassFile file maxLineLength (generateUnion codeProfile moduleName javaPackage decl u)
-      (Decl_Newtype n) -> writeClassFile file maxLineLength (generateNewtype codeProfile moduleName javaPackage decl n)
+      (Decl_Struct s) -> writeClassFile file maxLineLength (generateStruct codeProfile moduleName javaPackageFn decl s)
+      (Decl_Union u)  -> writeClassFile file maxLineLength (generateUnion codeProfile moduleName javaPackageFn decl u)
+      (Decl_Newtype n) -> writeClassFile file maxLineLength (generateNewtype codeProfile moduleName javaPackageFn decl n)
       (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
   where
     writeClassFile :: FilePath -> Int -> ClassFile -> EIO a ()
@@ -472,10 +473,10 @@ generateModule mPackage mFile mCodeGetProfile customTypes fileWriter m0 = do
       liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
       
 
-generateStruct :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl CResolvedType -> Struct CResolvedType -> ClassFile
-generateStruct codeProfile moduleName javaPackage decl struct =  execState gen state0
+generateStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Struct CResolvedType -> ClassFile
+generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen state0
   where
-    state0 = classFile codeProfile moduleName javaPackage classDecl
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl
     isEmpty = null (s_fields struct)
     className = unreserveWord (d_name decl)
     classDecl = "public class " <> className <> typeArgs
@@ -719,10 +720,10 @@ readFromParcel te mtotype tovar from = do
         ctemplate "$1 = $2.CREATOR.createFromParcel($3);" [to,typeExprStr,from]
         )
 
-generateNewtype :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl CResolvedType -> Newtype CResolvedType -> ClassFile
-generateNewtype codeProfile moduleName javaPackage decl newtype_ =
-  -- In java a newtype is just a single valuesed struct
-  generateStruct codeProfile moduleName javaPackage decl struct
+generateNewtype :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Newtype CResolvedType -> ClassFile
+generateNewtype codeProfile moduleName javaPackageFn decl newtype_ =
+  -- In java a newtype is just a single valueed struct
+  generateStruct codeProfile moduleName javaPackageFn decl struct
   where
     struct = Struct {
       s_typeParams = n_typeParams newtype_,
@@ -736,10 +737,10 @@ generateNewtype codeProfile moduleName javaPackage decl newtype_ =
         ]
       }
 
-generateUnion :: CodeGenProfile -> ModuleName -> JavaPackage -> Decl CResolvedType -> Union CResolvedType -> ClassFile
-generateUnion codeProfile moduleName javaPackage decl union =  execState gen state0
+generateUnion :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Union CResolvedType -> ClassFile
+generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen state0
   where
-    state0 = classFile codeProfile moduleName javaPackage classDecl
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl
     className = unreserveWord (d_name decl)
     classDecl = "public class " <> className <> typeArgs
     isGeneric = length (u_typeParams union) > 0
@@ -1028,7 +1029,7 @@ multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T
 
 genLiteralText :: Literal (Maybe CustomType) -> CState T.Text
 genLiteralText (LDefault t (TypeExpr (RT_Named (_,_,Just customType)) [])) = do
-  helpers <- genScopedName (ct_helpers customType)
+  let helpers = formatText (ct_helpers customType)
   return (template "$1.FACTORY.create()" [helpers])
 genLiteralText (LDefault t (TypeExpr te [])) = do
   return (template "new $1()" [t])
@@ -1038,14 +1039,14 @@ genLiteralText (LDefault t te) = do
   factoryExpr <- genFactoryExpr te
   return (template "$1.create()" [factoryExpr])
 genLiteralText (LCtor t (TypeExpr (RT_Named (_,_,Just customType)) _) ls) = do
-  helpers <- genScopedName (ct_helpers customType)
+  let helpers = formatText (ct_helpers customType)
   lits <- mapM genLiteralText ls
   return (template "$1.create($2)" [helpers, T.intercalate ", " lits])
 genLiteralText (LCtor t _ ls) = do
   lits <- mapM genLiteralText ls
   return (template "new $1($2)" [t, T.intercalate ", " lits])
 genLiteralText (LUnion t ctor (TypeExpr (RT_Named (_,_,Just customType)) _) l) = do
-  helpers <- genScopedName (ct_helpers customType)
+  let helpers = formatText (ct_helpers customType)
   lit <- genLiteralText l
   return (template "$1.$2($3)" [helpers, ctor, lit ])
 genLiteralText (LUnion t ctor _ l) = do

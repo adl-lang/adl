@@ -254,6 +254,9 @@ runTests = hspec $ do
     it "generates valid names when ADL contains java reserved words" $ do
       runJavaBackend1 "test14/input/test.adl"
         `shouldReturn` MatchOutput
+    it "generates/references include files with a custom prefix" $ do
+      runJavaBackend ["test16/input"] ["test16/input/test.adl","test16/input/test2.adl"] "test16/java-output" []
+        `shouldReturn` MatchOutput
     it "Expands typedefs in code generation" $ do
       runJavaBackend1 "test17/input/test.adl"
         `shouldReturn` MatchOutput
