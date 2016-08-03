@@ -30,11 +30,22 @@ struct S
         };
 
     Maybe<String> v5;
-    Pair<String,Int32> v6;
+
+// FIXME: should work
+//    Maybe<String> v5a = { "nothing" : null };
+//    Maybe<String> v5b = { "just" : "hello" };
+
+
+    Pair<String,Int32> v6; 
 
     Set<Int32> v7 = [1,2,3];
 
+// FIXME: should work
+//    Set<Int32> v7a;
+
     Map<String,Int32> v8;
+
+// FIXME: should work
 //    Map<String,Int32> v8 = [
 //      { "left" : "X", "right" : 1 },
 //      { "left" : "Y", "right" : 2 }
