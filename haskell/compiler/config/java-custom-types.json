@@ -8,17 +8,17 @@
       {
         "adlname" : "sys.types.Set",
         "javaname" : "java.util.HashSet",
-        "helpers" : "adl.runtime.HashSetHelpers"
+        "helpers" : "org.adl.runtime.HashSetHelpers"
       },
       {
         "adlname" : "sys.types.Map",
         "javaname" : "java.util.HashMap",
-        "helpers" : "adl.runtime.HashMapHelpers"
+        "helpers" : "org.adl.runtime.HashMapHelpers"
       },
       {
         "adlname" : "sys.types.Maybe",
         "javaname" : "java.util.Optional",
-        "helpers" : "adl.runtime.OptionalHelpers"
+        "helpers" : "org.adl.runtime.OptionalHelpers"
       }
     ]
 }

@@ -34,10 +34,10 @@ public class S {
     this.v2 = helpers.DateHelpers.create("2000-01-01");
     this.v3 = helpers.CDateHelpers.FACTORY.create();
     this.v4 = helpers.CDateHelpers.create((short)2000, (short)1, (short)1);
-    this.v5 = adl.runtime.OptionalHelpers.factory(Factories.STRING).create();
+    this.v5 = org.adl.runtime.OptionalHelpers.factory(Factories.STRING).create();
     this.v6 = adl.sys.types.Pair.factory(Factories.STRING, Factories.INTEGER).create();
-    this.v7 = adl.runtime.HashSetHelpers.create(java.util.Arrays.asList(1, 2, 3));
-    this.v8 = adl.runtime.HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create();
+    this.v7 = org.adl.runtime.HashSetHelpers.create(java.util.Arrays.asList(1, 2, 3));
+    this.v8 = org.adl.runtime.HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create();
   }
 
   public S(S other) {
@@ -45,10 +45,10 @@ public class S {
     this.v2 = helpers.DateHelpers.FACTORY.create(other.v2);
     this.v3 = helpers.CDateHelpers.FACTORY.create(other.v3);
     this.v4 = helpers.CDateHelpers.FACTORY.create(other.v4);
-    this.v5 = adl.runtime.OptionalHelpers.factory(Factories.STRING).create(other.v5);
+    this.v5 = org.adl.runtime.OptionalHelpers.factory(Factories.STRING).create(other.v5);
     this.v6 = adl.sys.types.Pair.factory(Factories.STRING, Factories.INTEGER).create(other.v6);
-    this.v7 = adl.runtime.HashSetHelpers.factory(Factories.INTEGER).create(other.v7);
-    this.v8 = adl.runtime.HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(other.v8);
+    this.v7 = org.adl.runtime.HashSetHelpers.factory(Factories.INTEGER).create(other.v7);
+    this.v8 = org.adl.runtime.HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(other.v8);
   }
 
   /* Accessors and mutators */
