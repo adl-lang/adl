@@ -56,8 +56,11 @@ struct S
         const CDate & v3,
         const CDate & v4,
         const ADL::sys::types::Maybe<std::string>  & v5,
+        const ADL::sys::types::Maybe<std::string>  & v5a,
+        const ADL::sys::types::Maybe<std::string>  & v5b,
         const std::pair<std::string,int32_t>  & v6,
         const std::set<int32_t>  & v7,
+        const std::set<int32_t>  & v7a,
         const std::map<std::string,int32_t>  & v8
         );
     
@@ -66,8 +69,11 @@ struct S
     CDate v3;
     CDate v4;
     ADL::sys::types::Maybe<std::string>  v5;
+    ADL::sys::types::Maybe<std::string>  v5a;
+    ADL::sys::types::Maybe<std::string>  v5b;
     std::pair<std::string,int32_t>  v6;
     std::set<int32_t>  v7;
+    std::set<int32_t>  v7a;
     std::map<std::string,int32_t>  v8;
 };
 

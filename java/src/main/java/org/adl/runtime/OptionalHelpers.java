@@ -17,4 +17,12 @@ public class OptionalHelpers
       }
     };
   }
+
+  public static <T> Optional<T> nothing(Void value) {
+    return Optional.empty();
+  }
+
+  public static <T> Optional<T> just(T value) {
+    return Optional.of(value);
+  }
 };

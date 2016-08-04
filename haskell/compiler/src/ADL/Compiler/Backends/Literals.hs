@@ -92,10 +92,10 @@ mkLiteral lg te jv = mk Map.empty te jv
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
       
     mkUnion  m te0 d u tes (JSON.Object hm) = do
-      t <- getTypeExprB lg False m te0
+      t <- getTypeExprB lg False m2 te0
       let [(fname,jv)] = HM.toList hm
           f = getF fname
-      lv <- mk m (f_type f) jv
+      lv <- mk m2 (f_type f) jv
       ctorName <- getUnionConstructorName lg d f
       return (LUnion t ctorName te0 lv)
       where
