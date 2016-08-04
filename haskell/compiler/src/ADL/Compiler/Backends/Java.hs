@@ -32,7 +32,7 @@ import ADL.Compiler.AST
 import ADL.Compiler.EIO
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
-import ADL.Compiler.Backends.Literals
+import ADL.Compiler.Backends.Literals2
 import ADL.Core.Value
 import ADL.Utils.Format
 
@@ -180,18 +180,18 @@ classFileCode content =
          | otherwise = (template "$1 implements $2" [cf_decl content,commaSep (Set.toList (cf_implements content))])
 type CState a = State ClassFile a
 
-lgen :: LGen (State ClassFile) (Maybe CustomType)
-lgen = LGen {
-  getPrimitiveType = \pt -> let pd = genPrimitiveDetails pt in
-    case pd_unboxed pd of
-      Nothing -> pd_type pd
-      (Just t) -> t,
-  getPrimitiveDefault = \pt -> return (pd_default (genPrimitiveDetails pt)),
-  getPrimitiveLiteral = \pt jv -> return (pd_genLiteral (genPrimitiveDetails pt) jv),
-  getTypeExpr = \_ te -> genTypeExpr te,
-  getTypeExprB = \_ _ te -> genTypeExpr te,
-  getUnionConstructorName = \d f -> return (unreserveWord (f_name f))
-  }
+-- lgen :: LGen (State ClassFile) (Maybe CustomType)
+-- lgen = LGen {
+--   getPrimitiveType = \pt -> let pd = genPrimitiveDetails pt in
+--     case pd_unboxed pd of
+--       Nothing -> pd_type pd
+--       (Just t) -> t,
+--   getPrimitiveDefault = \pt -> return (pd_default (genPrimitiveDetails pt)),
+--   getPrimitiveLiteral = \pt jv -> return (pd_genLiteral (genPrimitiveDetails pt) jv),
+--   getTypeExpr = \_ te -> genTypeExpr te,
+--   getTypeExprB = \_ _ te -> genTypeExpr te,
+--   getUnionConstructorName = \d f -> return (unreserveWord (f_name f))
+--   }
 
 addField :: Code -> CState ()
 addField decl = modify (\cf->cf{cf_fields=decl:cf_fields cf})
@@ -364,7 +364,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
 genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_unboxed = Nothing,
   pd_type = return "java.util.ArrayList",
-  pd_default = Just "new java.util.ArrayList()",
+  pd_default = Nothing,
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
   pd_mutable = True,
   pd_factory = primitiveFactory "arrayList",
@@ -421,8 +421,10 @@ genFieldDetails f = do
   boxedTypeExprStr <- genTypeExprB True te
   factoryExprStr <- genFactoryExpr te
   litv <- case f_default f of
-    (Just v) -> mkLiteral lgen te v
-    Nothing -> mkDefaultLiteral lgen te
+    (Just v) -> case mkLiteral te v of
+      Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
+      Right litv -> return litv
+    Nothing -> return (LDefault te)
   defValue <- genLiteralText litv
   cgp <- cf_codeProfile <$> get
 
@@ -1027,36 +1029,43 @@ docStringComment text = cline "/**" <> mconcat [cline (" * " <> line) | line <- 
 multiLineComment :: T.Text -> Code
 multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
 
-genLiteralText :: Literal (Maybe CustomType) -> CState T.Text
-genLiteralText (LDefault t (TypeExpr (RT_Named (_,_,Just customType)) [])) = do
+genLiteralText :: Literal (TypeExpr CResolvedType) -> CState T.Text
+genLiteralText (LDefault (TypeExpr (RT_Named (_,_,Just customType)) [])) = do
   let helpers = formatText (ct_helpers customType)
   return (template "$1.FACTORY.create()" [helpers])
-genLiteralText (LDefault t (TypeExpr te [])) = do
-  return (template "new $1()" [t])
-genLiteralText (LDefault t (TypeExpr (RT_Primitive _) _)) = do
-  return (template "new $1()" [t])
-genLiteralText (LDefault t te) = do
+genLiteralText (LDefault te@(TypeExpr (RT_Primitive pt) _)) = do
+  case  pd_default (genPrimitiveDetails pt) of
+    Just defaultStr -> return defaultStr
+    Nothing -> do
+      typeExpr <- genTypeExpr te
+      return (template "new $1()" [typeExpr])
+genLiteralText (LDefault te@(TypeExpr _ [])) = do
+  typeExpr <- genTypeExpr te
+  return (template "new $1()" [typeExpr])
+genLiteralText (LDefault te) = do
   factoryExpr <- genFactoryExpr te
   return (template "$1.create()" [factoryExpr])
-genLiteralText (LCtor t (TypeExpr (RT_Named (_,_,Just customType)) _) ls) = do
+genLiteralText (LCtor (TypeExpr (RT_Named (_,_,Just customType)) _) ls) = do
   let helpers = formatText (ct_helpers customType)
   lits <- mapM genLiteralText ls
   return (template "$1.create($2)" [helpers, T.intercalate ", " lits])
-genLiteralText (LCtor t _ ls) = do
+genLiteralText (LCtor te ls) = do
+  typeExpr <- genTypeExpr te
   lits <- mapM genLiteralText ls
-  return (template "new $1($2)" [t, T.intercalate ", " lits])
-genLiteralText (LUnion t ctor (TypeExpr (RT_Named (_,_,Just customType)) _) l) = do
+  return (template "new $1($2)" [typeExpr, T.intercalate ", " lits])
+genLiteralText (LUnion (TypeExpr (RT_Named (_,_,Just customType)) _) ctor l) = do
   let helpers = formatText (ct_helpers customType)
   lit <- genLiteralText l
   return (template "$1.$2($3)" [helpers, ctor, lit ])
-genLiteralText (LUnion t ctor _ l) = do
+genLiteralText (LUnion te ctor l) = do
+  typeExpr <- genTypeExpr te
   lit <- genLiteralText l
-  return (template "$1.$2($3)" [t, ctor, lit ])
-genLiteralText (LVector t ls) = do
+  return (template "$1.$2($3)" [typeExpr, ctor, lit ])
+genLiteralText (LVector _ ls) = do
   lits <- mapM genLiteralText ls
   return (template "java.util.Arrays.asList($1)" [commaSep lits])
-genLiteralText (LPrimitive _ t) = do
-  return t
+genLiteralText (LPrimitive pt jv) = do
+  return (pd_genLiteral (genPrimitiveDetails pt) jv)
 
 packageGenerator :: T.Text -> ModuleName -> JavaPackage
 packageGenerator basePackage mn = JavaPackage (T.splitOn "." basePackage <> unModuleName mn)
