@@ -346,8 +346,8 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
       error "INTERNAL ERROR: found primitive type with incorrect number of type parameters"
 
     validateTE m (TypeExpr (RT_Named (sn,decl,())) tes) v = case d_type decl of
-      (Decl_Struct s) -> structLiteral m s tes v
-      (Decl_Union u) -> unionLiteral m u tes v 
+      (Decl_Struct s) -> structLiteral m decl s tes v
+      (Decl_Union u) -> unionLiteral m decl u tes v 
       (Decl_Typedef t) -> typedefLiteral m t tes v
       (Decl_Newtype n) -> newtypeLiteral m n tes v
     validateTE m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
@@ -361,26 +361,26 @@ validateLiteralForTypeExpr te v = validateTE Map.empty te v
         errs = map (validateTE m te) (V.toList v)
     vecLiteral _ _ _ = Just "expected an array"
 
-    structLiteral m s tes (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
+    structLiteral m decl s tes (JSON.Object hm) = HM.foldrWithKey checkField Nothing hm
       where
         checkField :: T.Text -> JSON.Value -> Maybe T.Text -> Maybe T.Text
         checkField k v e@(Just t)= e
         checkField k v Nothing = case find ((k==).f_name) (s_fields s) of
           (Just f) -> validateTE pm (f_type f) v
           Nothing ->
-            Just (T.concat ["Field ",k, " in literal doesn't match any in struct definition" ])
+            Just (T.concat ["Field ",k, " in literal doesn't match any in struct definition for ",d_name decl])
         pm = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
-    structLiteral m s _ _ = Just "expected an object"
+    structLiteral m _ s _ _ = Just "expected an object"
 
-    unionLiteral m u tes (JSON.Object hm) = case HM.toList hm of
+    unionLiteral m decl u tes (JSON.Object hm) = case HM.toList hm of
       [(k,v)] -> case find ((k==).f_name) (u_fields u) of
         (Just f) -> validateTE pm (f_type f) v
         Nothing ->
-          Just (T.concat ["Field ",k, " in literal doesn't match any in union definition" ])
+          Just (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
       _ -> Just "literal union must have a single key/value pair"
       where
         pm = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
-    unionLiteral m s tes _ = Just "expected an object"
+    unionLiteral m _ u tes _ = Just "expected an object"
 
     typedefLiteral m t tes v = validateTE pm (t_typeExpr t) v
       where
