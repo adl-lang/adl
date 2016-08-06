@@ -1,6 +1,7 @@
 package adl.test;
 
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class Pair<A, B> {
 
@@ -12,8 +13,8 @@ public class Pair<A, B> {
   /* Constructors */
 
   public Pair(A v1, B v2) {
-    this.v1 = java.util.Objects.requireNonNull(v1);
-    this.v2 = java.util.Objects.requireNonNull(v2);
+    this.v1 = Objects.requireNonNull(v1);
+    this.v2 = Objects.requireNonNull(v2);
   }
 
   /* Accessors and mutators */
@@ -23,7 +24,7 @@ public class Pair<A, B> {
   }
 
   public void setV1(A newV1) {
-    v1 = java.util.Objects.requireNonNull(newV1);
+    v1 = Objects.requireNonNull(newV1);
   }
 
   public B getV2() {
@@ -31,7 +32,7 @@ public class Pair<A, B> {
   }
 
   public void setV2(B newV2) {
-    v2 = java.util.Objects.requireNonNull(newV2);
+    v2 = Objects.requireNonNull(newV2);
   }
 
   /* Object level helpers */

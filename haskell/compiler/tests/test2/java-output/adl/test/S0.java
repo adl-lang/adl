@@ -1,6 +1,7 @@
 package adl.test;
 
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 /**
  * An empty structure.

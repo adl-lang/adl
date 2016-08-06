@@ -2,27 +2,29 @@ package adl.sys.types;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class Set<T> {
 
   /* Members */
 
-  private java.util.ArrayList<T> value;
+  private ArrayList<T> value;
 
   /* Constructors */
 
-  public Set(java.util.ArrayList<T> value) {
-    this.value = java.util.Objects.requireNonNull(value);
+  public Set(ArrayList<T> value) {
+    this.value = Objects.requireNonNull(value);
   }
 
   /* Accessors and mutators */
 
-  public java.util.ArrayList<T> getValue() {
+  public ArrayList<T> getValue() {
     return value;
   }
 
-  public void setValue(java.util.ArrayList<T> newValue) {
-    value = java.util.Objects.requireNonNull(newValue);
+  public void setValue(ArrayList<T> newValue) {
+    value = Objects.requireNonNull(newValue);
   }
 
   /* Object level helpers */
@@ -48,7 +50,7 @@ public class Set<T> {
 
   public static <T> Factory<Set<T>> factory(Factory<T> factoryT) {
     return new Factory<Set<T>>() {
-      final Factory<java.util.ArrayList<T>> value = Factories.arrayList(factoryT);
+      final Factory<ArrayList<T>> value = Factories.arrayList(factoryT);
 
       public Set<T> create() {
         return new Set<T>(value.create());

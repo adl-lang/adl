@@ -2,6 +2,8 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * A generic structure.
@@ -13,15 +15,15 @@ public class S3<T> {
   private String f1;
   private double f2;
   private T f3;
-  private java.util.ArrayList<T> f4;
+  private ArrayList<T> f4;
 
   /* Constructors */
 
-  public S3(String f1, double f2, T f3, java.util.ArrayList<T> f4) {
-    this.f1 = java.util.Objects.requireNonNull(f1);
+  public S3(String f1, double f2, T f3, ArrayList<T> f4) {
+    this.f1 = Objects.requireNonNull(f1);
     this.f2 = f2;
-    this.f3 = java.util.Objects.requireNonNull(f3);
-    this.f4 = java.util.Objects.requireNonNull(f4);
+    this.f3 = Objects.requireNonNull(f3);
+    this.f4 = Objects.requireNonNull(f4);
   }
 
   /* Accessors and mutators */
@@ -31,7 +33,7 @@ public class S3<T> {
   }
 
   public void setF1(String newF1) {
-    f1 = java.util.Objects.requireNonNull(newF1);
+    f1 = Objects.requireNonNull(newF1);
   }
 
   public double getF2() {
@@ -47,15 +49,15 @@ public class S3<T> {
   }
 
   public void setF3(T newF3) {
-    f3 = java.util.Objects.requireNonNull(newF3);
+    f3 = Objects.requireNonNull(newF3);
   }
 
-  public java.util.ArrayList<T> getF4() {
+  public ArrayList<T> getF4() {
     return f4;
   }
 
-  public void setF4(java.util.ArrayList<T> newF4) {
-    f4 = java.util.Objects.requireNonNull(newF4);
+  public void setF4(ArrayList<T> newF4) {
+    f4 = Objects.requireNonNull(newF4);
   }
 
   /* Object level helpers */
@@ -88,7 +90,7 @@ public class S3<T> {
   public static <T> Factory<S3<T>> factory(Factory<T> factoryT) {
     return new Factory<S3<T>>() {
       final Factory<T> f3 = factoryT;
-      final Factory<java.util.ArrayList<T>> f4 = Factories.arrayList(factoryT);
+      final Factory<ArrayList<T>> f4 = Factories.arrayList(factoryT);
 
       public S3<T> create() {
         return new S3<T>("", 0.0, f3.create(), f4.create());

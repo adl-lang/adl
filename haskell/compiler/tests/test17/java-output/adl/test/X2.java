@@ -2,6 +2,8 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class X2 {
 
@@ -34,23 +36,23 @@ public class X2 {
   }
 
   public static X2 f3(Pair<String, Integer> v) {
-    return new X2(Disc.F3, java.util.Objects.requireNonNull(v));
+    return new X2(Disc.F3, Objects.requireNonNull(v));
   }
 
   public static X2 f4(Pair<String, String> v) {
-    return new X2(Disc.F4, java.util.Objects.requireNonNull(v));
+    return new X2(Disc.F4, Objects.requireNonNull(v));
   }
 
-  public static X2 f5(java.util.ArrayList<Integer> v) {
-    return new X2(Disc.F5, java.util.Objects.requireNonNull(v));
+  public static X2 f5(ArrayList<Integer> v) {
+    return new X2(Disc.F5, Objects.requireNonNull(v));
   }
 
-  public static X2 f6(java.util.ArrayList<Pair<String, Integer>> v) {
-    return new X2(Disc.F6, java.util.Objects.requireNonNull(v));
+  public static X2 f6(ArrayList<Pair<String, Integer>> v) {
+    return new X2(Disc.F6, Objects.requireNonNull(v));
   }
 
-  public static X2 f7(java.util.ArrayList<Pair<String, String>> v) {
-    return new X2(Disc.F7, java.util.Objects.requireNonNull(v));
+  public static X2 f7(ArrayList<Pair<String, String>> v) {
+    return new X2(Disc.F7, Objects.requireNonNull(v));
   }
 
   public X2() {
@@ -74,13 +76,13 @@ public class X2 {
         this.value = Pair.factory(Factories.STRING, Factories.STRING).create(X2.<Pair<String, String>>cast(other.value));
         break;
       case F5:
-        this.value = Factories.arrayList(Factories.INTEGER).create(X2.<java.util.ArrayList<Integer>>cast(other.value));
+        this.value = Factories.arrayList(Factories.INTEGER).create(X2.<ArrayList<Integer>>cast(other.value));
         break;
       case F6:
-        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create(X2.<java.util.ArrayList<Pair<String, Integer>>>cast(other.value));
+        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create(X2.<ArrayList<Pair<String, Integer>>>cast(other.value));
         break;
       case F7:
-        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(X2.<java.util.ArrayList<Pair<String, String>>>cast(other.value));
+        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(X2.<ArrayList<Pair<String, String>>>cast(other.value));
         break;
     }
   }
@@ -124,23 +126,23 @@ public class X2 {
     throw new IllegalStateException();
   }
 
-  public java.util.ArrayList<Integer> getF5() {
+  public ArrayList<Integer> getF5() {
     if (disc == Disc.F5) {
-      return X2.<java.util.ArrayList<Integer>>cast(value);
+      return X2.<ArrayList<Integer>>cast(value);
     }
     throw new IllegalStateException();
   }
 
-  public java.util.ArrayList<Pair<String, Integer>> getF6() {
+  public ArrayList<Pair<String, Integer>> getF6() {
     if (disc == Disc.F6) {
-      return X2.<java.util.ArrayList<Pair<String, Integer>>>cast(value);
+      return X2.<ArrayList<Pair<String, Integer>>>cast(value);
     }
     throw new IllegalStateException();
   }
 
-  public java.util.ArrayList<Pair<String, String>> getF7() {
+  public ArrayList<Pair<String, String>> getF7() {
     if (disc == Disc.F7) {
-      return X2.<java.util.ArrayList<Pair<String, String>>>cast(value);
+      return X2.<ArrayList<Pair<String, String>>>cast(value);
     }
     throw new IllegalStateException();
   }
@@ -158,27 +160,27 @@ public class X2 {
   }
 
   public void setF3(Pair<String, Integer> v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.F3;
   }
 
   public void setF4(Pair<String, String> v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.F4;
   }
 
-  public void setF5(java.util.ArrayList<Integer> v) {
-    this.value = java.util.Objects.requireNonNull(v);
+  public void setF5(ArrayList<Integer> v) {
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.F5;
   }
 
-  public void setF6(java.util.ArrayList<Pair<String, Integer>> v) {
-    this.value = java.util.Objects.requireNonNull(v);
+  public void setF6(ArrayList<Pair<String, Integer>> v) {
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.F6;
   }
 
-  public void setF7(java.util.ArrayList<Pair<String, String>> v) {
-    this.value = java.util.Objects.requireNonNull(v);
+  public void setF7(ArrayList<Pair<String, String>> v) {
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.F7;
   }
 

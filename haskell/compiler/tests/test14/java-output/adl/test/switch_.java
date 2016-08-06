@@ -11,14 +11,16 @@ public class switch_ {
   private int int_;
   private String string;
   private boolean for_;
+  private String Objects;
 
   /* Constructors */
 
-  public switch_(double double_, int int_, String string, boolean for_) {
+  public switch_(double double_, int int_, String string, boolean for_, String Objects) {
     this.double_ = double_;
     this.int_ = int_;
     this.string = java.util.Objects.requireNonNull(string);
     this.for_ = for_;
+    this.Objects = java.util.Objects.requireNonNull(Objects);
   }
 
   public switch_() {
@@ -26,6 +28,7 @@ public class switch_ {
     this.int_ = 0;
     this.string = "";
     this.for_ = false;
+    this.Objects = "";
   }
 
   public switch_(switch_ other) {
@@ -33,6 +36,7 @@ public class switch_ {
     this.int_ = other.int_;
     this.string = other.string;
     this.for_ = other.for_;
+    this.Objects = other.Objects;
   }
 
   /* Accessors and mutators */
@@ -69,6 +73,14 @@ public class switch_ {
     for_ = newFor;
   }
 
+  public String getObjects() {
+    return Objects;
+  }
+
+  public void setObjects(String newObjects) {
+    Objects = java.util.Objects.requireNonNull(newObjects);
+  }
+
   /* Object level helpers */
 
   @Override
@@ -81,7 +93,8 @@ public class switch_ {
       double_ == other.double_ &&
       int_ == other.int_ &&
       string.equals(other.string) &&
-      for_ == other.for_;
+      for_ == other.for_ &&
+      Objects.equals(other.Objects);
   }
 
   @Override
@@ -91,6 +104,7 @@ public class switch_ {
     result = result * 37 + int_;
     result = result * 37 + string.hashCode();
     result = result * 37 + (for_ ? 0 : 1);
+    result = result * 37 + Objects.hashCode();
     return result;
   }
 

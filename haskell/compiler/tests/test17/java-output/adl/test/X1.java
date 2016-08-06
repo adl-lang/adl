@@ -2,6 +2,8 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class X1 {
 
@@ -11,20 +13,20 @@ public class X1 {
   private int f2;
   private Pair<String, Integer> f3;
   private Pair<String, String> f4;
-  private java.util.ArrayList<Integer> f5;
-  private java.util.ArrayList<Pair<String, Integer>> f6;
-  private java.util.ArrayList<Pair<String, String>> f7;
+  private ArrayList<Integer> f5;
+  private ArrayList<Pair<String, Integer>> f6;
+  private ArrayList<Pair<String, String>> f7;
 
   /* Constructors */
 
-  public X1(int f1, int f2, Pair<String, Integer> f3, Pair<String, String> f4, java.util.ArrayList<Integer> f5, java.util.ArrayList<Pair<String, Integer>> f6, java.util.ArrayList<Pair<String, String>> f7) {
+  public X1(int f1, int f2, Pair<String, Integer> f3, Pair<String, String> f4, ArrayList<Integer> f5, ArrayList<Pair<String, Integer>> f6, ArrayList<Pair<String, String>> f7) {
     this.f1 = f1;
     this.f2 = f2;
-    this.f3 = java.util.Objects.requireNonNull(f3);
-    this.f4 = java.util.Objects.requireNonNull(f4);
-    this.f5 = java.util.Objects.requireNonNull(f5);
-    this.f6 = java.util.Objects.requireNonNull(f6);
-    this.f7 = java.util.Objects.requireNonNull(f7);
+    this.f3 = Objects.requireNonNull(f3);
+    this.f4 = Objects.requireNonNull(f4);
+    this.f5 = Objects.requireNonNull(f5);
+    this.f6 = Objects.requireNonNull(f6);
+    this.f7 = Objects.requireNonNull(f7);
   }
 
   public X1() {
@@ -32,9 +34,9 @@ public class X1 {
     this.f2 = 0;
     this.f3 = Pair.factory(Factories.STRING, Factories.INTEGER).create();
     this.f4 = Pair.factory(Factories.STRING, Factories.STRING).create();
-    this.f5 = new java.util.ArrayList<Integer>();
-    this.f6 = new java.util.ArrayList<Pair<String, Integer>>();
-    this.f7 = new java.util.ArrayList<Pair<String, String>>();
+    this.f5 = new ArrayList<Integer>();
+    this.f6 = new ArrayList<Pair<String, Integer>>();
+    this.f7 = new ArrayList<Pair<String, String>>();
   }
 
   public X1(X1 other) {
@@ -70,7 +72,7 @@ public class X1 {
   }
 
   public void setF3(Pair<String, Integer> newF3) {
-    f3 = java.util.Objects.requireNonNull(newF3);
+    f3 = Objects.requireNonNull(newF3);
   }
 
   public Pair<String, String> getF4() {
@@ -78,31 +80,31 @@ public class X1 {
   }
 
   public void setF4(Pair<String, String> newF4) {
-    f4 = java.util.Objects.requireNonNull(newF4);
+    f4 = Objects.requireNonNull(newF4);
   }
 
-  public java.util.ArrayList<Integer> getF5() {
+  public ArrayList<Integer> getF5() {
     return f5;
   }
 
-  public void setF5(java.util.ArrayList<Integer> newF5) {
-    f5 = java.util.Objects.requireNonNull(newF5);
+  public void setF5(ArrayList<Integer> newF5) {
+    f5 = Objects.requireNonNull(newF5);
   }
 
-  public java.util.ArrayList<Pair<String, Integer>> getF6() {
+  public ArrayList<Pair<String, Integer>> getF6() {
     return f6;
   }
 
-  public void setF6(java.util.ArrayList<Pair<String, Integer>> newF6) {
-    f6 = java.util.Objects.requireNonNull(newF6);
+  public void setF6(ArrayList<Pair<String, Integer>> newF6) {
+    f6 = Objects.requireNonNull(newF6);
   }
 
-  public java.util.ArrayList<Pair<String, String>> getF7() {
+  public ArrayList<Pair<String, String>> getF7() {
     return f7;
   }
 
-  public void setF7(java.util.ArrayList<Pair<String, String>> newF7) {
-    f7 = java.util.Objects.requireNonNull(newF7);
+  public void setF7(ArrayList<Pair<String, String>> newF7) {
+    f7 = Objects.requireNonNull(newF7);
   }
 
   /* Object level helpers */

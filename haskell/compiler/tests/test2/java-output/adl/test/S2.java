@@ -2,6 +2,8 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * A structure containing a vector.
@@ -12,20 +14,20 @@ public class S2 {
 
   private String f1;
   private double f2;
-  private java.util.ArrayList<Integer> f3;
+  private ArrayList<Integer> f3;
 
   /* Constructors */
 
-  public S2(String f1, double f2, java.util.ArrayList<Integer> f3) {
-    this.f1 = java.util.Objects.requireNonNull(f1);
+  public S2(String f1, double f2, ArrayList<Integer> f3) {
+    this.f1 = Objects.requireNonNull(f1);
     this.f2 = f2;
-    this.f3 = java.util.Objects.requireNonNull(f3);
+    this.f3 = Objects.requireNonNull(f3);
   }
 
   public S2() {
     this.f1 = "";
     this.f2 = 0.0;
-    this.f3 = new java.util.ArrayList<Integer>();
+    this.f3 = new ArrayList<Integer>();
   }
 
   public S2(S2 other) {
@@ -41,7 +43,7 @@ public class S2 {
   }
 
   public void setF1(String newF1) {
-    f1 = java.util.Objects.requireNonNull(newF1);
+    f1 = Objects.requireNonNull(newF1);
   }
 
   public double getF2() {
@@ -52,12 +54,12 @@ public class S2 {
     f2 = newF2;
   }
 
-  public java.util.ArrayList<Integer> getF3() {
+  public ArrayList<Integer> getF3() {
     return f3;
   }
 
-  public void setF3(java.util.ArrayList<Integer> newF3) {
-    f3 = java.util.Objects.requireNonNull(newF3);
+  public void setF3(ArrayList<Integer> newF3) {
+    f3 = Objects.requireNonNull(newF3);
   }
 
   /* Object level helpers */

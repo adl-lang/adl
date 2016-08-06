@@ -1,35 +1,35 @@
 package adl.test;
 
-import org.adl.runtime.Factory;
+import org.adl.runtime.Factories;
 import java.util.Objects;
 
-public class X {
+public class Factory {
 
   /* Members */
 
-  private adl.test2.A value;
+  private String value;
 
   /* Constructors */
 
-  public X(adl.test2.A value) {
+  public Factory(String value) {
     this.value = Objects.requireNonNull(value);
   }
 
-  public X() {
-    this.value = new adl.test2.A();
+  public Factory() {
+    this.value = "";
   }
 
-  public X(X other) {
-    this.value = adl.test2.A.FACTORY.create(other.value);
+  public Factory(Factory other) {
+    this.value = other.value;
   }
 
   /* Accessors and mutators */
 
-  public adl.test2.A getValue() {
+  public String getValue() {
     return value;
   }
 
-  public void setValue(adl.test2.A newValue) {
+  public void setValue(String newValue) {
     value = Objects.requireNonNull(newValue);
   }
 
@@ -37,10 +37,10 @@ public class X {
 
   @Override
   public boolean equals(Object other0) {
-    if (!(other0 instanceof X)) {
+    if (!(other0 instanceof Factory)) {
       return false;
     }
-    X other = (X) other0;
+    Factory other = (Factory) other0;
     return
       value.equals(other.value);
   }
@@ -54,12 +54,12 @@ public class X {
 
   /* Factory for construction of generic values */
 
-  public static final Factory<X> FACTORY = new Factory<X>() {
-    public X create() {
-      return new X();
+  public static final org.adl.runtime.Factory<Factory> FACTORY = new org.adl.runtime.Factory<Factory>() {
+    public Factory create() {
+      return new Factory();
     }
-    public X create(X other) {
-      return new X(other);
+    public Factory create(Factory other) {
+      return new Factory(other);
     }
   };
 }

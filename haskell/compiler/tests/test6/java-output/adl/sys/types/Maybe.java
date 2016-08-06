@@ -2,6 +2,7 @@ package adl.sys.types;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class Maybe<T> {
 
@@ -25,7 +26,7 @@ public class Maybe<T> {
   }
 
   public static <T> Maybe just(T v) {
-    return new Maybe(Disc.JUST, java.util.Objects.requireNonNull(v));
+    return new Maybe(Disc.JUST, Objects.requireNonNull(v));
   }
 
   private Maybe(Disc disc, Object value) {
@@ -54,7 +55,7 @@ public class Maybe<T> {
   }
 
   public void setJust(T v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.JUST;
   }
 

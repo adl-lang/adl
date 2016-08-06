@@ -2,6 +2,7 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class U9<T> {
 
@@ -21,7 +22,7 @@ public class U9<T> {
   /* Constructors */
 
   public static <T> U9 v1(T v) {
-    return new U9(Disc.V1, java.util.Objects.requireNonNull(v));
+    return new U9(Disc.V1, Objects.requireNonNull(v));
   }
 
   public static <T> U9 v2(short v) {
@@ -56,7 +57,7 @@ public class U9<T> {
   /* Mutators */
 
   public void setV1(T v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.V1;
   }
 

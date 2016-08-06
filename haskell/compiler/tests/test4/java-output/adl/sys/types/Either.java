@@ -1,6 +1,7 @@
 package adl.sys.types;
 
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class Either<T1, T2> {
 
@@ -20,11 +21,11 @@ public class Either<T1, T2> {
   /* Constructors */
 
   public static <T1, T2> Either left(T1 v) {
-    return new Either(Disc.LEFT, java.util.Objects.requireNonNull(v));
+    return new Either(Disc.LEFT, Objects.requireNonNull(v));
   }
 
   public static <T1, T2> Either right(T2 v) {
-    return new Either(Disc.RIGHT, java.util.Objects.requireNonNull(v));
+    return new Either(Disc.RIGHT, Objects.requireNonNull(v));
   }
 
   private Either(Disc disc, Object value) {
@@ -55,12 +56,12 @@ public class Either<T1, T2> {
   /* Mutators */
 
   public void setLeft(T1 v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.LEFT;
   }
 
   public void setRight(T2 v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.RIGHT;
   }
 

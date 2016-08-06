@@ -3,6 +3,9 @@ package adl.test;
 import org.adl.runtime.ByteArray;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class S<T> {
 
@@ -22,7 +25,7 @@ public class S<T> {
   private double f_double;
   private ByteArray f_bytes;
   private String f_string;
-  private java.util.ArrayList<String> f_vstring;
+  private ArrayList<String> f_vstring;
   private A f_a;
   private U f_u;
   private T f_t;
@@ -30,7 +33,7 @@ public class S<T> {
 
   /* Constructors */
 
-  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, java.util.ArrayList<String> f_vstring, A f_a, U f_u, T f_t, B<Short> f_bint16) {
+  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, ArrayList<String> f_vstring, A f_a, U f_u, T f_t, B<Short> f_bint16) {
     this.f_void = f_void;
     this.f_bool = f_bool;
     this.f_int8 = f_int8;
@@ -43,13 +46,13 @@ public class S<T> {
     this.f_word64 = f_word64;
     this.f_float = f_float;
     this.f_double = f_double;
-    this.f_bytes = java.util.Objects.requireNonNull(f_bytes);
-    this.f_string = java.util.Objects.requireNonNull(f_string);
-    this.f_vstring = java.util.Objects.requireNonNull(f_vstring);
-    this.f_a = java.util.Objects.requireNonNull(f_a);
-    this.f_u = java.util.Objects.requireNonNull(f_u);
-    this.f_t = java.util.Objects.requireNonNull(f_t);
-    this.f_bint16 = java.util.Objects.requireNonNull(f_bint16);
+    this.f_bytes = Objects.requireNonNull(f_bytes);
+    this.f_string = Objects.requireNonNull(f_string);
+    this.f_vstring = Objects.requireNonNull(f_vstring);
+    this.f_a = Objects.requireNonNull(f_a);
+    this.f_u = Objects.requireNonNull(f_u);
+    this.f_t = Objects.requireNonNull(f_t);
+    this.f_bint16 = Objects.requireNonNull(f_bint16);
   }
 
   /* Accessors and mutators */
@@ -155,7 +158,7 @@ public class S<T> {
   }
 
   public void setF_bytes(ByteArray newF_bytes) {
-    f_bytes = java.util.Objects.requireNonNull(newF_bytes);
+    f_bytes = Objects.requireNonNull(newF_bytes);
   }
 
   public String getF_string() {
@@ -163,15 +166,15 @@ public class S<T> {
   }
 
   public void setF_string(String newF_string) {
-    f_string = java.util.Objects.requireNonNull(newF_string);
+    f_string = Objects.requireNonNull(newF_string);
   }
 
-  public java.util.ArrayList<String> getF_vstring() {
+  public ArrayList<String> getF_vstring() {
     return f_vstring;
   }
 
-  public void setF_vstring(java.util.ArrayList<String> newF_vstring) {
-    f_vstring = java.util.Objects.requireNonNull(newF_vstring);
+  public void setF_vstring(ArrayList<String> newF_vstring) {
+    f_vstring = Objects.requireNonNull(newF_vstring);
   }
 
   public A getF_a() {
@@ -179,7 +182,7 @@ public class S<T> {
   }
 
   public void setF_a(A newF_a) {
-    f_a = java.util.Objects.requireNonNull(newF_a);
+    f_a = Objects.requireNonNull(newF_a);
   }
 
   public U getF_u() {
@@ -187,7 +190,7 @@ public class S<T> {
   }
 
   public void setF_u(U newF_u) {
-    f_u = java.util.Objects.requireNonNull(newF_u);
+    f_u = Objects.requireNonNull(newF_u);
   }
 
   public T getF_t() {
@@ -195,7 +198,7 @@ public class S<T> {
   }
 
   public void setF_t(T newF_t) {
-    f_t = java.util.Objects.requireNonNull(newF_t);
+    f_t = Objects.requireNonNull(newF_t);
   }
 
   public B<Short> getF_bint16() {
@@ -203,7 +206,7 @@ public class S<T> {
   }
 
   public void setF_bint16(B<Short> newF_bint16) {
-    f_bint16 = java.util.Objects.requireNonNull(newF_bint16);
+    f_bint16 = Objects.requireNonNull(newF_bint16);
   }
 
   /* Object level helpers */
@@ -266,7 +269,7 @@ public class S<T> {
   public static <T> Factory<S<T>> factory(Factory<T> factoryT) {
     return new Factory<S<T>>() {
       final Factory<ByteArray> f_bytes = Factories.BYTE_ARRAY;
-      final Factory<java.util.ArrayList<String>> f_vstring = Factories.arrayList(Factories.STRING);
+      final Factory<ArrayList<String>> f_vstring = Factories.arrayList(Factories.STRING);
       final Factory<A> f_a = A.FACTORY;
       final Factory<U> f_u = U.FACTORY;
       final Factory<T> f_t = factoryT;

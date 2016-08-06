@@ -2,6 +2,7 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class Date {
 
@@ -12,7 +13,7 @@ public class Date {
   /* Constructors */
 
   public Date(String value) {
-    this.value = java.util.Objects.requireNonNull(value);
+    this.value = Objects.requireNonNull(value);
   }
 
   public Date() {
@@ -30,7 +31,7 @@ public class Date {
   }
 
   public void setValue(String newValue) {
-    value = java.util.Objects.requireNonNull(newValue);
+    value = Objects.requireNonNull(newValue);
   }
 
   /* Object level helpers */

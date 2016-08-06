@@ -1,6 +1,7 @@
 package adl.test;
 
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class XY<T> {
 
@@ -12,8 +13,8 @@ public class XY<T> {
   /* Constructors */
 
   public XY(T x, T y) {
-    this.x = java.util.Objects.requireNonNull(x);
-    this.y = java.util.Objects.requireNonNull(y);
+    this.x = Objects.requireNonNull(x);
+    this.y = Objects.requireNonNull(y);
   }
 
   /* Accessors and mutators */
@@ -23,7 +24,7 @@ public class XY<T> {
   }
 
   public void setX(T newX) {
-    x = java.util.Objects.requireNonNull(newX);
+    x = Objects.requireNonNull(newX);
   }
 
   public T getY() {
@@ -31,7 +32,7 @@ public class XY<T> {
   }
 
   public void setY(T newY) {
-    y = java.util.Objects.requireNonNull(newY);
+    y = Objects.requireNonNull(newY);
   }
 
   /* Object level helpers */

@@ -2,27 +2,29 @@ package adl.sys.types;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class Map<K, V> {
 
   /* Members */
 
-  private java.util.ArrayList<Pair<K, V>> value;
+  private ArrayList<Pair<K, V>> value;
 
   /* Constructors */
 
-  public Map(java.util.ArrayList<Pair<K, V>> value) {
-    this.value = java.util.Objects.requireNonNull(value);
+  public Map(ArrayList<Pair<K, V>> value) {
+    this.value = Objects.requireNonNull(value);
   }
 
   /* Accessors and mutators */
 
-  public java.util.ArrayList<Pair<K, V>> getValue() {
+  public ArrayList<Pair<K, V>> getValue() {
     return value;
   }
 
-  public void setValue(java.util.ArrayList<Pair<K, V>> newValue) {
-    value = java.util.Objects.requireNonNull(newValue);
+  public void setValue(ArrayList<Pair<K, V>> newValue) {
+    value = Objects.requireNonNull(newValue);
   }
 
   /* Object level helpers */
@@ -48,7 +50,7 @@ public class Map<K, V> {
 
   public static <K, V> Factory<Map<K, V>> factory(Factory<K> factoryK, Factory<V> factoryV) {
     return new Factory<Map<K, V>>() {
-      final Factory<java.util.ArrayList<Pair<K, V>>> value = Factories.arrayList(Pair.factory(factoryK, factoryV));
+      final Factory<ArrayList<Pair<K, V>>> value = Factories.arrayList(Pair.factory(factoryK, factoryV));
 
       public Map<K, V> create() {
         return new Map<K, V>(value.create());

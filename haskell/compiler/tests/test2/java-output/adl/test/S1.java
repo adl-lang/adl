@@ -2,6 +2,7 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 /**
  * A structure containing primitives.
@@ -19,7 +20,7 @@ public class S1 {
 
   public S1(int x, String y) {
     this.x = x;
-    this.y = java.util.Objects.requireNonNull(y);
+    this.y = Objects.requireNonNull(y);
   }
 
   public S1() {
@@ -47,7 +48,7 @@ public class S1 {
   }
 
   public void setY(String newY) {
-    y = java.util.Objects.requireNonNull(newY);
+    y = Objects.requireNonNull(newY);
   }
 
   /* Object level helpers */

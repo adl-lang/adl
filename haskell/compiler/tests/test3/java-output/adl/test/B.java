@@ -2,6 +2,8 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class B<T> {
 
@@ -9,16 +11,16 @@ public class B<T> {
 
   private T f_t;
   private String f_string;
-  private java.util.ArrayList<T> f_tvec;
+  private ArrayList<T> f_tvec;
   private XY<T> f_xy;
 
   /* Constructors */
 
-  public B(T f_t, String f_string, java.util.ArrayList<T> f_tvec, XY<T> f_xy) {
-    this.f_t = java.util.Objects.requireNonNull(f_t);
-    this.f_string = java.util.Objects.requireNonNull(f_string);
-    this.f_tvec = java.util.Objects.requireNonNull(f_tvec);
-    this.f_xy = java.util.Objects.requireNonNull(f_xy);
+  public B(T f_t, String f_string, ArrayList<T> f_tvec, XY<T> f_xy) {
+    this.f_t = Objects.requireNonNull(f_t);
+    this.f_string = Objects.requireNonNull(f_string);
+    this.f_tvec = Objects.requireNonNull(f_tvec);
+    this.f_xy = Objects.requireNonNull(f_xy);
   }
 
   /* Accessors and mutators */
@@ -28,7 +30,7 @@ public class B<T> {
   }
 
   public void setF_t(T newF_t) {
-    f_t = java.util.Objects.requireNonNull(newF_t);
+    f_t = Objects.requireNonNull(newF_t);
   }
 
   public String getF_string() {
@@ -36,15 +38,15 @@ public class B<T> {
   }
 
   public void setF_string(String newF_string) {
-    f_string = java.util.Objects.requireNonNull(newF_string);
+    f_string = Objects.requireNonNull(newF_string);
   }
 
-  public java.util.ArrayList<T> getF_tvec() {
+  public ArrayList<T> getF_tvec() {
     return f_tvec;
   }
 
-  public void setF_tvec(java.util.ArrayList<T> newF_tvec) {
-    f_tvec = java.util.Objects.requireNonNull(newF_tvec);
+  public void setF_tvec(ArrayList<T> newF_tvec) {
+    f_tvec = Objects.requireNonNull(newF_tvec);
   }
 
   public XY<T> getF_xy() {
@@ -52,7 +54,7 @@ public class B<T> {
   }
 
   public void setF_xy(XY<T> newF_xy) {
-    f_xy = java.util.Objects.requireNonNull(newF_xy);
+    f_xy = Objects.requireNonNull(newF_xy);
   }
 
   /* Object level helpers */
@@ -85,7 +87,7 @@ public class B<T> {
   public static <T> Factory<B<T>> factory(Factory<T> factoryT) {
     return new Factory<B<T>>() {
       final Factory<T> f_t = factoryT;
-      final Factory<java.util.ArrayList<T>> f_tvec = Factories.arrayList(factoryT);
+      final Factory<ArrayList<T>> f_tvec = Factories.arrayList(factoryT);
       final Factory<XY<T>> f_xy = XY.factory(factoryT);
 
       public B<T> create() {

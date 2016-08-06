@@ -7,6 +7,7 @@ import System.Exit
 import System.Environment (getArgs)
 import System.FilePath(joinPath)
 import Data.List(intercalate,partition)
+import Data.String(IsString(..))
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -210,7 +211,7 @@ runJava args0 =
       , customTypesOption (\s (jf,o)-> (jf{jf_customTypeFiles=s:jf_customTypeFiles jf},o))
       , noOverwriteOption (\(jf,o)-> (jf,o{oa_noOverwrite=True}))
       , javaPackageOption (\s (jf,o) -> (jf{jf_package=T.pack s},o))
-      , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=T.pack s}},o))
+      , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=fromString s}},o))
       , javaGenerateParcelable (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_parcelable=True}},o))
       , javaHungarianNaming (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_hungarianNaming=True}},o))
       , javaMaxLineLength (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_maxLineLength=read s}},o))

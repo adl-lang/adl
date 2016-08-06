@@ -2,6 +2,7 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class A {
 
@@ -15,7 +16,7 @@ public class A {
 
   public A(short f_int, String f_string, boolean f_bool) {
     this.f_int = f_int;
-    this.f_string = java.util.Objects.requireNonNull(f_string);
+    this.f_string = Objects.requireNonNull(f_string);
     this.f_bool = f_bool;
   }
 
@@ -46,7 +47,7 @@ public class A {
   }
 
   public void setF_string(String newF_string) {
-    f_string = java.util.Objects.requireNonNull(newF_string);
+    f_string = Objects.requireNonNull(newF_string);
   }
 
   public boolean getF_bool() {

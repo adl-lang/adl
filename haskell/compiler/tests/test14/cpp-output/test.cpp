@@ -14,12 +14,14 @@ switch_::switch_(
     const double & double__,
     const int32_t & int__,
     const std::string & string_,
-    const bool & for__
+    const bool & for__,
+    const std::string & Objects_
     )
     : double_(double__)
     , int_(int__)
     , string(string_)
     , for_(for__)
+    , Objects(Objects_)
 {
 }
 
@@ -34,6 +36,8 @@ operator<( const switch_ &a, const switch_ &b )
     if( b.string < a.string ) return false;
     if( a.for_ < b.for_ ) return true;
     if( b.for_ < a.for_ ) return false;
+    if( a.Objects < b.Objects ) return true;
+    if( b.Objects < a.Objects ) return false;
     return false;
 }
 
@@ -44,7 +48,8 @@ operator==( const switch_ &a, const switch_ &b )
         a.double_ == b.double_ &&
         a.int_ == b.int_ &&
         a.string == b.string &&
-        a.for_ == b.for_ ;
+        a.for_ == b.for_ &&
+        a.Objects == b.Objects ;
 }
 
 unsigned_::unsigned_()
@@ -146,6 +151,7 @@ Serialisable<ADL::test::switch_>::serialiser( const SerialiserFlags &sf )
             , int__s( Serialisable<int32_t>::serialiser(sf) )
             , string_s( Serialisable<std::string>::serialiser(sf) )
             , for__s( Serialisable<bool>::serialiser(sf) )
+            , Objects_s( Serialisable<std::string>::serialiser(sf) )
             {}
         
         
@@ -153,6 +159,7 @@ Serialisable<ADL::test::switch_>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<int32_t>::Ptr int__s;
         typename Serialiser<std::string>::Ptr string_s;
         typename Serialiser<bool>::Ptr for__s;
+        typename Serialiser<std::string>::Ptr Objects_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
@@ -161,6 +168,7 @@ Serialisable<ADL::test::switch_>::serialiser( const SerialiserFlags &sf )
             writeField<int32_t>( json, int__s, "int", v.int_ );
             writeField<std::string>( json, string_s, "string", v.string );
             writeField<bool>( json, for__s, "for", v.for_ );
+            writeField<std::string>( json, Objects_s, "Objects", v.Objects );
             json.endObject();
         }
         
@@ -173,6 +181,7 @@ Serialisable<ADL::test::switch_>::serialiser( const SerialiserFlags &sf )
                 readField( int__s, v.int_, "int", json ) ||
                 readField( string_s, v.string, "string", json ) ||
                 readField( for__s, v.for_, "for", json ) ||
+                readField( Objects_s, v.Objects, "Objects", json ) ||
                 ignoreField( json );
             }
         }

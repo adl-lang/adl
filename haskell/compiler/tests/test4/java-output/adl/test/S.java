@@ -2,6 +2,8 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class S {
 
@@ -22,17 +24,17 @@ public class S {
   /* Constructors */
 
   public S(java.time.LocalDate v1, java.time.LocalDate v2, java.time.LocalDate v3, java.time.LocalDate v4, java.util.Optional<String> v5, java.util.Optional<String> v5a, java.util.Optional<String> v5b, adl.sys.types.Pair<String, Integer> v6, java.util.HashSet<Integer> v7, java.util.HashSet<Integer> v7a, java.util.HashMap<String, Integer> v8) {
-    this.v1 = java.util.Objects.requireNonNull(v1);
-    this.v2 = java.util.Objects.requireNonNull(v2);
-    this.v3 = java.util.Objects.requireNonNull(v3);
-    this.v4 = java.util.Objects.requireNonNull(v4);
-    this.v5 = java.util.Objects.requireNonNull(v5);
-    this.v5a = java.util.Objects.requireNonNull(v5a);
-    this.v5b = java.util.Objects.requireNonNull(v5b);
-    this.v6 = java.util.Objects.requireNonNull(v6);
-    this.v7 = java.util.Objects.requireNonNull(v7);
-    this.v7a = java.util.Objects.requireNonNull(v7a);
-    this.v8 = java.util.Objects.requireNonNull(v8);
+    this.v1 = Objects.requireNonNull(v1);
+    this.v2 = Objects.requireNonNull(v2);
+    this.v3 = Objects.requireNonNull(v3);
+    this.v4 = Objects.requireNonNull(v4);
+    this.v5 = Objects.requireNonNull(v5);
+    this.v5a = Objects.requireNonNull(v5a);
+    this.v5b = Objects.requireNonNull(v5b);
+    this.v6 = Objects.requireNonNull(v6);
+    this.v7 = Objects.requireNonNull(v7);
+    this.v7a = Objects.requireNonNull(v7a);
+    this.v8 = Objects.requireNonNull(v8);
   }
 
   public S() {
@@ -44,7 +46,7 @@ public class S {
     this.v5a = org.adl.runtime.OptionalHelpers.nothing(null);
     this.v5b = org.adl.runtime.OptionalHelpers.just("hello");
     this.v6 = adl.sys.types.Pair.factory(Factories.STRING, Factories.INTEGER).create();
-    this.v7 = org.adl.runtime.HashSetHelpers.create(java.util.Arrays.asList(1, 2, 3));
+    this.v7 = org.adl.runtime.HashSetHelpers.create(Arrays.asList(1, 2, 3));
     this.v7a = org.adl.runtime.HashSetHelpers.factory(Factories.INTEGER).create();
     this.v8 = org.adl.runtime.HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create();
   }
@@ -70,7 +72,7 @@ public class S {
   }
 
   public void setV1(java.time.LocalDate newV1) {
-    v1 = java.util.Objects.requireNonNull(newV1);
+    v1 = Objects.requireNonNull(newV1);
   }
 
   public java.time.LocalDate getV2() {
@@ -78,7 +80,7 @@ public class S {
   }
 
   public void setV2(java.time.LocalDate newV2) {
-    v2 = java.util.Objects.requireNonNull(newV2);
+    v2 = Objects.requireNonNull(newV2);
   }
 
   public java.time.LocalDate getV3() {
@@ -86,7 +88,7 @@ public class S {
   }
 
   public void setV3(java.time.LocalDate newV3) {
-    v3 = java.util.Objects.requireNonNull(newV3);
+    v3 = Objects.requireNonNull(newV3);
   }
 
   public java.time.LocalDate getV4() {
@@ -94,7 +96,7 @@ public class S {
   }
 
   public void setV4(java.time.LocalDate newV4) {
-    v4 = java.util.Objects.requireNonNull(newV4);
+    v4 = Objects.requireNonNull(newV4);
   }
 
   public java.util.Optional<String> getV5() {
@@ -102,7 +104,7 @@ public class S {
   }
 
   public void setV5(java.util.Optional<String> newV5) {
-    v5 = java.util.Objects.requireNonNull(newV5);
+    v5 = Objects.requireNonNull(newV5);
   }
 
   public java.util.Optional<String> getV5a() {
@@ -110,7 +112,7 @@ public class S {
   }
 
   public void setV5a(java.util.Optional<String> newV5a) {
-    v5a = java.util.Objects.requireNonNull(newV5a);
+    v5a = Objects.requireNonNull(newV5a);
   }
 
   public java.util.Optional<String> getV5b() {
@@ -118,7 +120,7 @@ public class S {
   }
 
   public void setV5b(java.util.Optional<String> newV5b) {
-    v5b = java.util.Objects.requireNonNull(newV5b);
+    v5b = Objects.requireNonNull(newV5b);
   }
 
   public adl.sys.types.Pair<String, Integer> getV6() {
@@ -126,7 +128,7 @@ public class S {
   }
 
   public void setV6(adl.sys.types.Pair<String, Integer> newV6) {
-    v6 = java.util.Objects.requireNonNull(newV6);
+    v6 = Objects.requireNonNull(newV6);
   }
 
   public java.util.HashSet<Integer> getV7() {
@@ -134,7 +136,7 @@ public class S {
   }
 
   public void setV7(java.util.HashSet<Integer> newV7) {
-    v7 = java.util.Objects.requireNonNull(newV7);
+    v7 = Objects.requireNonNull(newV7);
   }
 
   public java.util.HashSet<Integer> getV7a() {
@@ -142,7 +144,7 @@ public class S {
   }
 
   public void setV7a(java.util.HashSet<Integer> newV7a) {
-    v7a = java.util.Objects.requireNonNull(newV7a);
+    v7a = Objects.requireNonNull(newV7a);
   }
 
   public java.util.HashMap<String, Integer> getV8() {
@@ -150,7 +152,7 @@ public class S {
   }
 
   public void setV8(java.util.HashMap<String, Integer> newV8) {
-    v8 = java.util.Objects.requireNonNull(newV8);
+    v8 = Objects.requireNonNull(newV8);
   }
 
   /* Object level helpers */

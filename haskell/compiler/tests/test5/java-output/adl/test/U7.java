@@ -1,6 +1,7 @@
 package adl.test;
 
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class U7 {
 
@@ -19,7 +20,7 @@ public class U7 {
   /* Constructors */
 
   public static U7 v(U3 v) {
-    return new U7(Disc.V, java.util.Objects.requireNonNull(v));
+    return new U7(Disc.V, Objects.requireNonNull(v));
   }
 
   public U7() {
@@ -57,7 +58,7 @@ public class U7 {
   /* Mutators */
 
   public void setV(U3 v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.V;
   }
 

@@ -1,6 +1,7 @@
 package adl.sys.types;
 
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class Pair<T1, T2> {
 
@@ -12,8 +13,8 @@ public class Pair<T1, T2> {
   /* Constructors */
 
   public Pair(T1 v1, T2 v2) {
-    this.v1 = java.util.Objects.requireNonNull(v1);
-    this.v2 = java.util.Objects.requireNonNull(v2);
+    this.v1 = Objects.requireNonNull(v1);
+    this.v2 = Objects.requireNonNull(v2);
   }
 
   /* Accessors and mutators */
@@ -23,7 +24,7 @@ public class Pair<T1, T2> {
   }
 
   public void setV1(T1 newV1) {
-    v1 = java.util.Objects.requireNonNull(newV1);
+    v1 = Objects.requireNonNull(newV1);
   }
 
   public T2 getV2() {
@@ -31,7 +32,7 @@ public class Pair<T1, T2> {
   }
 
   public void setV2(T2 newV2) {
-    v2 = java.util.Objects.requireNonNull(newV2);
+    v2 = Objects.requireNonNull(newV2);
   }
 
   /* Object level helpers */

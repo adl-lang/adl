@@ -2,6 +2,7 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class S4<T> {
 
@@ -13,8 +14,8 @@ public class S4<T> {
   /* Constructors */
 
   public S4(S3<String> f1, S3<T> f2) {
-    this.f1 = java.util.Objects.requireNonNull(f1);
-    this.f2 = java.util.Objects.requireNonNull(f2);
+    this.f1 = Objects.requireNonNull(f1);
+    this.f2 = Objects.requireNonNull(f2);
   }
 
   /* Accessors and mutators */
@@ -24,7 +25,7 @@ public class S4<T> {
   }
 
   public void setF1(S3<String> newF1) {
-    f1 = java.util.Objects.requireNonNull(newF1);
+    f1 = Objects.requireNonNull(newF1);
   }
 
   public S3<T> getF2() {
@@ -32,7 +33,7 @@ public class S4<T> {
   }
 
   public void setF2(S3<T> newF2) {
-    f2 = java.util.Objects.requireNonNull(newF2);
+    f2 = Objects.requireNonNull(newF2);
   }
 
   /* Object level helpers */

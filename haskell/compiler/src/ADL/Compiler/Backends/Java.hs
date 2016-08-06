@@ -26,6 +26,7 @@ import Data.Maybe(fromMaybe,isJust)
 import Data.Foldable(for_,fold)
 import Data.List(intersperse,replicate,sort)
 import Data.Monoid
+import Data.String(IsString(..))
 import Data.Traversable(for)
 
 import ADL.Compiler.AST
@@ -98,10 +99,16 @@ associateCustomTypes moduleName customTypes mod = fmap assocf mod
 
 newtype JavaPackage = JavaPackage {
   unJavaPackage :: [Ident]
-}
+} deriving (Eq)
+
+instance IsString JavaPackage where
+  fromString s = JavaPackage (T.splitOn "." (T.pack s))
 
 genJavaPackage :: JavaPackage -> T.Text
 genJavaPackage package = T.intercalate "." (map unreserveWord (unJavaPackage package))
+
+genJavaIdentifier :: JavaPackage -> Ident -> T.Text
+genJavaIdentifier package name = T.intercalate "." (map unreserveWord (unJavaPackage package) <> [name])
 
 data CodeGenProfile = CodeGenProfile {
   cgp_header :: T.Text,
@@ -111,7 +118,7 @@ data CodeGenProfile = CodeGenProfile {
   cgp_publicMembers :: Bool,
   cgp_genericFactories :: Bool,
   cgp_parcelable :: Bool,
-  cgp_runtimePackage :: T.Text
+  cgp_runtimePackage :: JavaPackage
 }
 
 defaultCodeGenProfile = CodeGenProfile {
@@ -129,7 +136,7 @@ data ClassFile = ClassFile {
    cf_codeProfile :: CodeGenProfile,
    cf_module :: ModuleName,
    cf_javaPackageFn :: ModuleName -> JavaPackage,
-   cf_imports :: Set.Set T.Text,
+   cf_imports :: Map.Map Ident (Maybe JavaPackage),
    cf_implements :: Set.Set T.Text,
    cf_docString :: Code,
    cf_decl :: T.Text,
@@ -138,7 +145,7 @@ data ClassFile = ClassFile {
 }
 
 classFile :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> T.Text -> ClassFile
-classFile codeProfile mname javaPackageFn decl = ClassFile codeProfile mname javaPackageFn Set.empty Set.empty mempty decl [] []
+classFile codeProfile mname javaPackageFn decl = ClassFile codeProfile mname javaPackageFn Map.empty Set.empty mempty decl [] []
 
 cf_package :: ClassFile -> JavaPackage
 cf_package  cf = cf_javaPackageFn cf (cf_module cf)
@@ -154,7 +161,7 @@ classFileCode content =
   <>
   cline ""
   <>
-  mconcat [ctemplate "import $1;" [imp] | imp <- sortedImports (cf_imports content)]
+  mconcat [ctemplate "import $1;" [imp] | imp <- sortedImports imports]
   <>
   cline ""
   <>
@@ -175,23 +182,12 @@ classFileCode content =
     mconcat (intersperse (cline "") (reverse (cf_methods content)))
   )
   where
+    imports = [genJavaIdentifier package name | (name,Just package) <- Map.toList (cf_imports content)]
     header = cgp_header (cf_codeProfile content)
     decl | Set.null (cf_implements content) = (template "$1" [cf_decl content])
          | otherwise = (template "$1 implements $2" [cf_decl content,commaSep (Set.toList (cf_implements content))])
-type CState a = State ClassFile a
 
--- lgen :: LGen (State ClassFile) (Maybe CustomType)
--- lgen = LGen {
---   getPrimitiveType = \pt -> let pd = genPrimitiveDetails pt in
---     case pd_unboxed pd of
---       Nothing -> pd_type pd
---       (Just t) -> t,
---   getPrimitiveDefault = \pt -> return (pd_default (genPrimitiveDetails pt)),
---   getPrimitiveLiteral = \pt jv -> return (pd_genLiteral (genPrimitiveDetails pt) jv),
---   getTypeExpr = \_ te -> genTypeExpr te,
---   getTypeExprB = \_ _ te -> genTypeExpr te,
---   getUnionConstructorName = \d f -> return (unreserveWord (f_name f))
---   }
+type CState a = State ClassFile a
 
 addField :: Code -> CState ()
 addField decl = modify (\cf->cf{cf_fields=decl:cf_fields cf})
@@ -199,16 +195,30 @@ addField decl = modify (\cf->cf{cf_fields=decl:cf_fields cf})
 addMethod :: Code -> CState ()
 addMethod method = modify (\cf->cf{cf_methods=method:cf_methods cf})
 
-addImport :: T.Text -> CState ()
-addImport imp = modify (\cf->cf{cf_imports=Set.insert imp (cf_imports cf)})
+-- | Add an import for an identifer and return the identifier. If there
+-- is an inconsistent existing import, return the fully scoped name.
+addImport :: JavaPackage -> Ident -> CState T.Text
+addImport package name = do
+  state <- get 
+  case Map.lookup name (cf_imports state) of
+    Just mpackage | (Just package) == mpackage -> return name
+                  | otherwise                  -> return (genJavaIdentifier package name)
+    Nothing -> do
+      put state{cf_imports=Map.insert name (Just package) (cf_imports state)}
+      return name
 
+preventImport :: Ident -> CState ()
+preventImport name = do
+  state <- get 
+  put state{cf_imports=Map.insert name Nothing (cf_imports state)}
+  
 addImplements :: T.Text -> CState ()
 addImplements imp = modify (\cf->cf{cf_implements=Set.insert imp (cf_implements cf)})
 
 setDocString :: Code -> CState ()
 setDocString code = modify (\cf->cf{cf_docString=code})
 
-getRuntimePackage :: CState T.Text
+getRuntimePackage :: CState JavaPackage
 getRuntimePackage = (cgp_runtimePackage . cf_codeProfile) <$> get
 
 genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
@@ -349,8 +359,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
   pd_unboxed = Nothing,
   pd_type = do
     rtpackage <- getRuntimePackage
-    addImport (rtpackage <> ".ByteArray")
-    return "ByteArray",
+    addImport rtpackage "ByteArray",
   pd_default = Just "new ByteArray()",
   pd_genLiteral = \(JSON.String s) -> template "new ByteArray($1.getBytes())" [T.pack (show (decode s))],
   pd_mutable = True,
@@ -363,7 +372,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
       (Right s) -> s
 genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_unboxed = Nothing,
-  pd_type = return "java.util.ArrayList",
+  pd_type = addImport "java.util" "ArrayList",
   pd_default = Nothing,
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
   pd_mutable = True,
@@ -392,7 +401,8 @@ genPrimitiveDetails P_Sink = PrimitiveDetails {
 primitiveFactory :: T.Text -> CState T.Text
 primitiveFactory name = do
   rtpackage <- getRuntimePackage
-  addImport (rtpackage <> ".Factories") >> return (template "Factories.$1" [name])
+  factories <- addImport rtpackage "Factories"
+  return (template "$1.$2" [factories,name])
 
 data FieldDetails = FieldDetails {
   fd_field :: Field CResolvedType,
@@ -478,9 +488,9 @@ generateModule javaPackageFn mFile mCodeGetProfile customTypes fileWriter m0 = d
 generateStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Struct CResolvedType -> ClassFile
 generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen state0
   where
-    state0 = classFile codeProfile moduleName javaPackageFn classDecl
-    isEmpty = null (s_fields struct)
     className = unreserveWord (d_name decl)
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl 
+    isEmpty = null (s_fields struct)
     classDecl = "public class " <> className <> typeArgs
     typeArgs = case s_typeParams struct of
       [] -> ""
@@ -488,6 +498,11 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
     gen = do
       setDocString (generateDocString (d_annotations decl))
       fieldDetails <- mapM genFieldDetails (s_fields struct)
+
+      preventImport className
+      for_ fieldDetails (\fd -> preventImport (fd_fieldName fd))
+      
+      objectsClass <- addImport "java.util" "Objects"
 
       -- Fields
       for_ fieldDetails $ \fd -> do
@@ -505,7 +520,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
             cblock (template "public $1($2)" [className,ctorArgs]) (
               clineN [
                 if needsNullCheck fd
-                  then template "this.$1 = java.util.Objects.requireNonNull($1);" [fd_fieldName fd]
+                  then template "this.$1 = $2.requireNonNull($1);" [fd_fieldName fd,objectsClass]
                   else template "this.$1 = $1;" [fd_fieldName fd]
                 | fd <- fieldDetails]
             )
@@ -542,7 +557,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
               setter =
                 cblock (template "public void set$1($2 new$1)" [capsFieldName,typeExprStr]) (
                   if needsNullCheck fd
-                     then ctemplate "$1 = java.util.Objects.requireNonNull(new$2);" [fieldName,capsFieldName]
+                     then ctemplate "$1 = $2.requireNonNull(new$3);" [fieldName,objectsClass,capsFieldName]
                      else ctemplate "$1 = new$2;" [fieldName,capsFieldName]
                 )
           addMethod getter
@@ -582,9 +597,11 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
         cline "return result;"
         )
 
+      factoryInterface <- addImport (cgp_runtimePackage codeProfile) "Factory"
+
       -- factory
       let factory =
-            cblock1 (template "public static final Factory<$1> FACTORY = new Factory<$1>()" [className]) (
+            cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (
               cblock (template "public $1 create()" [className]) (
                  ctemplate "return new $1();" [className]
               )
@@ -595,9 +612,9 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
             )
 
       let factoryg =
-            cblock (template "public static $2 Factory<$1$2> factory($3)" [className,typeArgs,factoryArgs]) (
-              cblock1 (template "return new Factory<$1$2>()" [className,typeArgs]) (
-                mconcat [ctemplate "final Factory<$1> $2 = $3;" [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails, not (immutableType (f_type (fd_field fd)))]
+            cblock (template "public static $2 $3<$1$2> factory($4)" [className,typeArgs,factoryInterface,factoryArgs]) (
+              cblock1 (template "return new $1<$2$3>()" [factoryInterface,className,typeArgs]) (
+                mconcat [ctemplate "final $1<$2> $3 = $4;" [factoryInterface,fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails, not (immutableType (f_type (fd_field fd)))]
                 <>
                 cline ""
                 <>
@@ -613,7 +630,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
               )
             )
 
-          factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- s_typeParams struct]
+          factoryArgs = commaSep [template "$1<$2> $3" [factoryInterface,arg,factoryTypeArg arg] | arg <- s_typeParams struct]
           ctor1Args = commaSep [if immutableType (f_type (fd_field fd))
                                 then fd_defValue fd
                                 else template "$1.create()" [fd_fieldName fd] | fd <-fieldDetails]
@@ -624,13 +641,13 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
 
       addMethod (cline "/* Factory for construction of generic values */")
 
-      addImport (cgp_runtimePackage codeProfile <> ".Factory")
       addMethod (if isGeneric then factoryg else factory)
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do
-        importParcelable
-        addImplements "Parcelable"
+        idParcel <- addImport "android.os" "Parcel"
+        idParcelable <- addImport "android.os" "Parcelable"
+        addImplements idParcelable
 
         addMethod (cline "/* Android Parcelable implementation */")
         
@@ -644,12 +661,12 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
         readFields <- for fieldDetails $ \fd -> do
           readFromParcel (f_type (fd_field fd)) (Just (fd_typeExprStr fd)) (fd_fieldName fd) "in"
 
-        addMethod $ coverride "public void writeToParcel(Parcel out, int flags)" (
+        addMethod $ coverride (template "public void writeToParcel($1 out, int flags)" [idParcel]) (
           mconcat writeFields
           )
 
-        addMethod $ cblock1 (template "public static final Parcelable.Creator<$1> CREATOR = new Parcelable.Creator<$1>()" [className]) (
-          coverride (template "public $1 createFromParcel(Parcel in)" [className]) (
+        addMethod $ cblock1 (template "public static final $1.Creator<$2> CREATOR = new $1.Creator<$2>()" [idParcelable,className]) (
+          coverride (template "public $1 createFromParcel($2 in)" [className,idParcel]) (
             mconcat readFields
             <>
             ctemplate "return new $1($2);" [className,commaSep [fd_fieldName fd | fd <- fieldDetails]]
@@ -662,10 +679,6 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
             )
           )
 
-importParcelable :: CState ()
-importParcelable = do
-  addImport "android.os.Parcel"
-  addImport "android.os.Parcelable"
 
 writeToParcel :: TypeExpr CResolvedType -> Ident -> Ident -> Ident -> CState Code
 writeToParcel te to from flags = return $ case te of
@@ -710,9 +723,10 @@ readFromParcel te mtotype tovar from = do
         ctemplate "$1 = new ByteArray($2.createByteArray());" [to,from]
         )
     (TypeExpr (RT_Primitive P_Vector) [te']) ->  do
+      arrayList <- addImport "java.util" "ArrayList"
       typeExprStr <- genTypeExprB True te'
       return (
-        ctemplate "$1 = new java.util.ArrayList<$2>();" [to,typeExprStr]
+        ctemplate "$1 = new $2<$3>();" [to,arrayList,typeExprStr]
         <>
         ctemplate "$1.readList($2, $3.class.getClassLoader());" [from,tovar,typeExprStr]
         )
@@ -742,8 +756,8 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ =
 generateUnion :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Union CResolvedType -> ClassFile
 generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen state0
   where
-    state0 = classFile codeProfile moduleName javaPackageFn classDecl
     className = unreserveWord (d_name decl)
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl
     classDecl = "public class " <> className <> typeArgs
     isGeneric = length (u_typeParams union) > 0
     discVar = if cgp_hungarianNaming codeProfile then "mDisc" else "disc"
@@ -762,6 +776,11 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       fieldDetail0 <- case fieldDetails of
         [] -> error "BUG: unions with no fields are illegal"
         (fd:_) -> return fd
+
+      preventImport className
+      for_ fieldDetails (\fd -> preventImport (fd_fieldName fd))
+        
+      objectsClass <- addImport "java.util" "Objects"
 
       -- Fields
       let modifiers = T.intercalate " " (["private"] <> if cgp_mutable codeProfile then [] else ["final"])
@@ -783,7 +802,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       addMethod (cline "/* Constructors */")
       
       for_ fieldDetails $ \fd -> do
-        let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
+        let checkedv = if needsNullCheck fd then template "$1.requireNonNull(v)" [objectsClass] else "v"
             ctor = cblock (template "public static$1 $2 $3($4 v)" [leadSpace typeArgs, className, unionCtorName (fd_field fd), fd_typeExprStr fd]) (
               ctemplate "return new $1(Disc.$2, $3);" [className, discriminatorName fd, checkedv]
               )
@@ -849,7 +868,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
 
       when (cgp_mutable codeProfile) $ do 
         for_ fieldDetails $ \fd -> do
-          let checkedv = if needsNullCheck fd then "java.util.Objects.requireNonNull(v)" else "v"
+          let checkedv = if needsNullCheck fd then template "$1.requireNonNull(v)" [objectsClass] else "v"
               mtor = cblock (template "public void set$1($2 v)" [javaCapsFieldName (fd_field fd), fd_typeExprStr fd]) (
                 ctemplate "this.$1 = $2;" [valueVar,checkedv]
                 <>
@@ -890,8 +909,10 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
         )
 
       -- factory
+      factoryInterface <- addImport (cgp_runtimePackage codeProfile) "Factory"
+      
       let factory =
-            cblock1 (template "public static final Factory<$1> FACTORY = new Factory<$1>()" [className]) (
+            cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (
               cblock (template "public $1 create()" [className]) (
                  ctemplate "return new $1();" [className]
               )
@@ -902,7 +923,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
             )
 
       let factoryg =
-            cblock (template "public static$2 Factory<$1$2> factory($3)" [className,leadSpace typeArgs,factoryArgs]) (
+            cblock (template "public static$2 $3<$1$2> factory($4)" [className,leadSpace typeArgs,factoryInterface,factoryArgs]) (
               cblock1 (template "return new Factory<$1$2>()" [className,typeArgs]) (
                 mconcat [ctemplate "final Factory<$1> $2 = $3;" [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails, not (immutableType (f_type (fd_field fd)))]
                 <>
@@ -943,12 +964,12 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
           factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- u_typeParams union]
 
       addMethod (cline "/* Factory for construction of generic values */")
-      addImport (cgp_runtimePackage codeProfile <> ".Factory")
       addMethod (if isGeneric then factoryg else factory)
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do
-        importParcelable
+        idParcel <- addImport "android.os" "Parcel"
+        idParcelable <- addImport "android.os" "Parcelable"
         addImplements "Parcelable"
 
         addMethod (cline "/* Android Parcelable implementation */")
@@ -963,7 +984,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
         readFields <- for fieldDetails $ \fd -> do
           readFromParcel (f_type (fd_field fd)) Nothing "value" "in"
 
-        addMethod $ coverride "public void writeToParcel(Parcel out, int flags)" (
+        addMethod $ coverride (template "public void writeToParcel($1 out, int flags)" [idParcel]) (
           ctemplate "out.writeInt($1.ordinal());" [discVar]
           <>
           cblock (template "switch($1)" [discVar]) (
@@ -979,8 +1000,8 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
             )
           )
 
-        addMethod $ cblock1 (template "public static final Parcelable.Creator<$1> CREATOR = new Parcelable.Creator<$1>()" [className]) (
-          coverride (template "public $1 createFromParcel(Parcel in)" [className]) (
+        addMethod $ cblock1 (template "public static final $1.Creator<$2> CREATOR = new $1.Creator<$2>()" [idParcelable,className]) (
+          coverride (template "public $1 createFromParcel($2 in)" [className,idParcel]) (
             cline "Disc disc = Disc.values()[in.readInt()];"
             <>
             cline "Object value = null;"
@@ -1063,7 +1084,8 @@ genLiteralText (LUnion te ctor l) = do
   return (template "$1.$2($3)" [typeExpr, ctor, lit ])
 genLiteralText (LVector _ ls) = do
   lits <- mapM genLiteralText ls
-  return (template "java.util.Arrays.asList($1)" [commaSep lits])
+  arrays <- addImport "java.util" "Arrays"
+  return (template "$1.asList($2)" [arrays,commaSep lits])
 genLiteralText (LPrimitive pt jv) = do
   return (pd_genLiteral (genPrimitiveDetails pt) jv)
 
@@ -1090,8 +1112,8 @@ generate jf modulePaths = catchAllExceptions  $ do
 commaSep :: [T.Text] -> T.Text
 commaSep = T.intercalate ", "
 
-sortedImports :: Set.Set T.Text -> [T.Text]
-sortedImports imports = map snd (sort [(classify i,i) | i <- Set.toList imports])
+sortedImports :: [T.Text] -> [T.Text]
+sortedImports imports = map snd (sort [(classify i,i) | i <- imports])
   where
     classify i = if T.isPrefixOf "java." i
                    then 2
@@ -1156,7 +1178,6 @@ reservedWords = Set.fromList
 
  -- reserved for ADL  
  , "factory"
- , "Factory"
  ]
 
 unreserveWord :: Ident -> Ident

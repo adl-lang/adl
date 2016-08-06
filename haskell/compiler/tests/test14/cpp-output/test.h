@@ -7,6 +7,19 @@
 namespace ADL {
 namespace test {
 
+struct Factory
+{
+    Factory() {}
+    explicit Factory(const std::string & v) : value(v) {}
+    
+    std::string value;
+};
+
+inline
+bool operator<( const Factory &a, const Factory &b ) { return a.value < b.value; }
+inline
+bool operator==( const Factory &a, const Factory &b ) { return a.value == b.value; }
+
 struct switch_
 {
     switch_();
@@ -15,13 +28,15 @@ struct switch_
         const double & double_,
         const int32_t & int_,
         const std::string & string,
-        const bool & for_
+        const bool & for_,
+        const std::string & Objects
         );
     
     double double_;
     int32_t int_;
     std::string string;
     bool for_;
+    std::string Objects;
 };
 
 bool operator<( const switch_ &a, const switch_ &b );
@@ -67,6 +82,32 @@ inline unsigned_::DiscType unsigned_::d() const
 }}; // ADL::test
 
 namespace ADL {
+
+template <>
+struct Serialisable<ADL::test::Factory>
+{
+    struct S : public Serialiser<ADL::test::Factory>
+    {
+        S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
+        
+        void toJson( JsonWriter &json, const ADL::test::Factory & v ) const
+        {
+            s->toJson( json, v.value );
+        }
+        
+        void fromJson( ADL::test::Factory &v, JsonReader &json ) const
+        {
+            s->fromJson( v.value, json );
+        }
+        
+        typename Serialiser<std::string>::Ptr s;
+    };
+    
+    static typename Serialiser<ADL::test::Factory>::Ptr serialiser(const SerialiserFlags &sf)
+    {
+        return typename Serialiser<ADL::test::Factory>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
+    }
+};
 
 template <>
 struct Serialisable<ADL::test::switch_>

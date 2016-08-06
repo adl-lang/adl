@@ -2,6 +2,7 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class U8 {
 
@@ -21,7 +22,7 @@ public class U8 {
   /* Constructors */
 
   public static U8 v1(S1 v) {
-    return new U8(Disc.V1, java.util.Objects.requireNonNull(v));
+    return new U8(Disc.V1, Objects.requireNonNull(v));
   }
 
   public static U8 v2(short v) {
@@ -73,7 +74,7 @@ public class U8 {
   /* Mutators */
 
   public void setV1(S1 v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.V1;
   }
 

@@ -2,19 +2,21 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class Tree<T> {
 
   /* Members */
 
   private T value;
-  private java.util.ArrayList<Tree<T>> children;
+  private ArrayList<Tree<T>> children;
 
   /* Constructors */
 
-  public Tree(T value, java.util.ArrayList<Tree<T>> children) {
-    this.value = java.util.Objects.requireNonNull(value);
-    this.children = java.util.Objects.requireNonNull(children);
+  public Tree(T value, ArrayList<Tree<T>> children) {
+    this.value = Objects.requireNonNull(value);
+    this.children = Objects.requireNonNull(children);
   }
 
   /* Accessors and mutators */
@@ -24,15 +26,15 @@ public class Tree<T> {
   }
 
   public void setValue(T newValue) {
-    value = java.util.Objects.requireNonNull(newValue);
+    value = Objects.requireNonNull(newValue);
   }
 
-  public java.util.ArrayList<Tree<T>> getChildren() {
+  public ArrayList<Tree<T>> getChildren() {
     return children;
   }
 
-  public void setChildren(java.util.ArrayList<Tree<T>> newChildren) {
-    children = java.util.Objects.requireNonNull(newChildren);
+  public void setChildren(ArrayList<Tree<T>> newChildren) {
+    children = Objects.requireNonNull(newChildren);
   }
 
   /* Object level helpers */
@@ -61,7 +63,7 @@ public class Tree<T> {
   public static <T> Factory<Tree<T>> factory(Factory<T> factoryT) {
     return new Factory<Tree<T>>() {
       final Factory<T> value = factoryT;
-      final Factory<java.util.ArrayList<Tree<T>>> children = Factories.arrayList(Tree.factory(factoryT));
+      final Factory<ArrayList<Tree<T>>> children = Factories.arrayList(Tree.factory(factoryT));
 
       public Tree<T> create() {
         return new Tree<T>(value.create(), children.create());

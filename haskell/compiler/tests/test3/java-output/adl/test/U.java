@@ -2,6 +2,7 @@ package adl.test;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class U {
 
@@ -25,7 +26,7 @@ public class U {
   }
 
   public static U f_string(String v) {
-    return new U(Disc.F_STRING, java.util.Objects.requireNonNull(v));
+    return new U(Disc.F_STRING, Objects.requireNonNull(v));
   }
 
   public U() {
@@ -78,7 +79,7 @@ public class U {
   }
 
   public void setF_string(String v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.F_STRING;
   }
 

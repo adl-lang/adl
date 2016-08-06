@@ -2,6 +2,7 @@ package adl.sys.types;
 
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import java.util.Objects;
 
 public class Error<T> {
 
@@ -21,11 +22,11 @@ public class Error<T> {
   /* Constructors */
 
   public static <T> Error value(T v) {
-    return new Error(Disc.VALUE, java.util.Objects.requireNonNull(v));
+    return new Error(Disc.VALUE, Objects.requireNonNull(v));
   }
 
   public static <T> Error error(String v) {
-    return new Error(Disc.ERROR, java.util.Objects.requireNonNull(v));
+    return new Error(Disc.ERROR, Objects.requireNonNull(v));
   }
 
   private Error(Disc disc, Object value) {
@@ -56,12 +57,12 @@ public class Error<T> {
   /* Mutators */
 
   public void setValue(T v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.VALUE;
   }
 
   public void setError(String v) {
-    this.value = java.util.Objects.requireNonNull(v);
+    this.value = Objects.requireNonNull(v);
     this.disc = Disc.ERROR;
   }
 
