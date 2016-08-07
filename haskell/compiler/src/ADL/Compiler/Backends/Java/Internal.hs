@@ -217,6 +217,11 @@ setDocString code = modify (\cf->cf{cf_docString=code})
 getRuntimePackage :: CState JavaPackage
 getRuntimePackage = (cgp_runtimePackage . cf_codeProfile) <$> get
 
+getHelpers :: CustomType -> CState Ident
+getHelpers customType = do
+  let (package,name) = javaFromScopedName (ct_helpers customType)
+  addImport package name
+
 genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
 genTypeExpr te = genTypeExprB False te
 
@@ -228,7 +233,9 @@ genTypeExprB boxed (TypeExpr rt params) = do
   return (template "$1<$2>" [rtStr,T.intercalate ", " rtParamsStr])
 
 genResolvedType :: Bool -> CResolvedType -> CState T.Text
-genResolvedType _ (RT_Named (_,_,Just customType)) = return (formatText (ct_scopedName customType))
+genResolvedType _ (RT_Named (_,_,Just customType)) = do
+  let (package,name) = javaFromScopedName (ct_scopedName customType)
+  addImport package name
 genResolvedType _ (RT_Named (scopedName,_,Nothing)) = genScopedName scopedName
 genResolvedType _(RT_Param ident) = return (unreserveWord ident)
 genResolvedType False (RT_Primitive pt) = let pd = genPrimitiveDetails pt in fromMaybe (pd_type pd) (pd_unboxed pd)
@@ -249,7 +256,7 @@ genFactoryExpr (TypeExpr rt params) = do
     (RT_Named (scopedName,_,mct)) -> do
       fscope <- case mct of
         Nothing -> genScopedName scopedName
-        (Just ct) -> return (formatText (ct_helpers ct))
+        (Just ct) -> getHelpers ct
       case params of
         [] -> return (template "$1.FACTORY" [fscope])
         _ -> return (template "$1.factory" [fscope])
@@ -475,8 +482,8 @@ multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T
 
 genLiteralText :: Literal (TypeExpr CResolvedType) -> CState T.Text
 genLiteralText (LDefault (TypeExpr (RT_Named (_,_,Just customType)) [])) = do
-  let helpers = formatText (ct_helpers customType)
-  return (template "$1.FACTORY.create()" [helpers])
+  idHelpers <- getHelpers customType
+  return (template "$1.FACTORY.create()" [idHelpers])
 genLiteralText (LDefault te@(TypeExpr (RT_Primitive pt) _)) = do
   case  pd_default (genPrimitiveDetails pt) of
     Just defaultStr -> return defaultStr
@@ -490,17 +497,17 @@ genLiteralText (LDefault te) = do
   factoryExpr <- genFactoryExpr te
   return (template "$1.create()" [factoryExpr])
 genLiteralText (LCtor (TypeExpr (RT_Named (_,_,Just customType)) _) ls) = do
-  let helpers = formatText (ct_helpers customType)
+  idHelpers <- getHelpers customType
   lits <- mapM genLiteralText ls
-  return (template "$1.create($2)" [helpers, T.intercalate ", " lits])
+  return (template "$1.create($2)" [idHelpers, T.intercalate ", " lits])
 genLiteralText (LCtor te ls) = do
   typeExpr <- genTypeExpr te
   lits <- mapM genLiteralText ls
   return (template "new $1($2)" [typeExpr, T.intercalate ", " lits])
 genLiteralText (LUnion (TypeExpr (RT_Named (_,_,Just customType)) _) ctor l) = do
-  let helpers = formatText (ct_helpers customType)
+  idHelpers <- getHelpers customType
   lit <- genLiteralText l
-  return (template "$1.$2($3)" [helpers, ctor, lit ])
+  return (template "$1.$2($3)" [idHelpers, ctor, lit ])
 genLiteralText (LUnion te ctor l) = do
   typeExpr <- genTypeExpr te
   lit <- genLiteralText l
@@ -610,6 +617,9 @@ fieldAccessExpr cgp fd
 
 unionCtorName :: Field a -> Ident
 unionCtorName f = unreserveWord (f_name f)
+
+javaFromScopedName :: ScopedName -> (JavaPackage,Ident)
+javaFromScopedName scopedName = (JavaPackage (unModuleName (sn_moduleName scopedName)),sn_name scopedName)
 
 discriminatorName :: FieldDetails -> Ident
 discriminatorName = T.toUpper . unreserveWord . f_name . fd_field
