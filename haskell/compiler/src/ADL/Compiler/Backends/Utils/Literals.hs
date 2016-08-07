@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Compiler.Backends.Literals(
+module ADL.Compiler.Backends.Utils.Literals(
   Literal(..),
   LGen(..),
   mkDefaultLiteral,

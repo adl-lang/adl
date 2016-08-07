@@ -33,7 +33,8 @@ import ADL.Compiler.AST
 import ADL.Compiler.EIO
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
-import ADL.Compiler.Backends.Literals2
+import ADL.Compiler.Backends.Utils.Literals2
+import ADL.Compiler.Backends.Utils.IndentedCode
 import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Java.Parcelable
 import ADL.Core.Value

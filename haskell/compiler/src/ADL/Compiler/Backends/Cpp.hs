@@ -29,7 +29,7 @@ import qualified ADL.Compiler.ParserP as P
 
 import ADL.Utils.Format
 import ADL.Compiler.AST
-import ADL.Compiler.Backends.Literals
+import ADL.Compiler.Backends.Utils.Literals
 import ADL.Compiler.EIO
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive

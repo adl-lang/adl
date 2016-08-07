@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Compiler.Backends.Literals2(
+module ADL.Compiler.Backends.Utils.Literals2(
   Literal(..),
   mkLiteral,
   litNumber,
