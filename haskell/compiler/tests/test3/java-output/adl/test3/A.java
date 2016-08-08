@@ -1,0 +1,94 @@
+package adl.test3;
+
+import org.adl.runtime.Factories;
+import org.adl.runtime.Factory;
+import java.util.Objects;
+
+public class A {
+
+  /* Members */
+
+  private short f_int;
+  private String f_string;
+  private boolean f_bool;
+
+  /* Constructors */
+
+  public A(short f_int, String f_string, boolean f_bool) {
+    this.f_int = f_int;
+    this.f_string = Objects.requireNonNull(f_string);
+    this.f_bool = f_bool;
+  }
+
+  public A() {
+    this.f_int = 0;
+    this.f_string = "";
+    this.f_bool = false;
+  }
+
+  public A(A other) {
+    this.f_int = other.f_int;
+    this.f_string = other.f_string;
+    this.f_bool = other.f_bool;
+  }
+
+  /* Accessors and mutators */
+
+  public short getF_int() {
+    return f_int;
+  }
+
+  public void setF_int(short newF_int) {
+    f_int = newF_int;
+  }
+
+  public String getF_string() {
+    return f_string;
+  }
+
+  public void setF_string(String newF_string) {
+    f_string = Objects.requireNonNull(newF_string);
+  }
+
+  public boolean getF_bool() {
+    return f_bool;
+  }
+
+  public void setF_bool(boolean newF_bool) {
+    f_bool = newF_bool;
+  }
+
+  /* Object level helpers */
+
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof A)) {
+      return false;
+    }
+    A other = (A) other0;
+    return
+      f_int == other.f_int &&
+      f_string.equals(other.f_string) &&
+      f_bool == other.f_bool;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = result * 37 + (int) f_int;
+    result = result * 37 + f_string.hashCode();
+    result = result * 37 + (f_bool ? 0 : 1);
+    return result;
+  }
+
+  /* Factory for construction of generic values */
+
+  public static final Factory<A> FACTORY = new Factory<A>() {
+    public A create() {
+      return new A();
+    }
+    public A create(A other) {
+      return new A(other);
+    }
+  };
+}

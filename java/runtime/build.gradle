@@ -1,4 +1,15 @@
 apply plugin: 'java'
 
 dependencies {
+  compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
 }
+
+sourceSets {
+  main {
+    java {
+      srcDir 'src/main/java'
+      srcDir '../../haskell/compiler/tests/test6/java-output'
+    }
+  }
+}
+

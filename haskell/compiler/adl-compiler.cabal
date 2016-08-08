@@ -37,7 +37,7 @@ test-suite adlc-tests
   hs-source-dirs:      tests, src
   main-is:             Tests.hs
   build-depends:       base, text, containers, bytestring,
-                       parsec, mtl, transformers,
+                       parsec, mtl, transformers, stm,
                        filepath, directory, unordered-containers, vector,
                        base64-bytestring,
                        attoparsec, aeson, scientific,

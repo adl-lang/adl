@@ -1,4 +1,4 @@
-module test
+module test14
 {
     struct switch
     {

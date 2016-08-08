@@ -1,1 +1,1 @@
-include ":runtime"
+include ":runtime", ":tests"

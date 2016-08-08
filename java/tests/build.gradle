@@ -1,0 +1,19 @@
+apply plugin: 'java'
+
+sourceSets {
+  main {
+    java {
+      srcDir '../../haskell/compiler/tests/test2/java-output'
+      srcDir '../../haskell/compiler/tests/test3/java-output'
+      srcDir '../../haskell/compiler/tests/test4/java-output'
+      srcDir '../../haskell/compiler/tests/test5/java-output'
+      srcDir '../../haskell/compiler/tests/test14/java-output'
+      srcDir '../../haskell/compiler/tests/test16/java-output'
+      srcDir '../../haskell/compiler/tests/test17/java-output'
+    }
+  }
+}
+
+dependencies {
+  compile project(':runtime')
+}

@@ -1,4 +1,4 @@
-module test
+module test4
 {
 
 import sys.types.Pair;

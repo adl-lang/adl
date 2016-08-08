@@ -2,9 +2,13 @@
 module Main where
 import Test.Hspec
 
+import Data.Monoid
 import System.FilePath(takeDirectory,(</>),combine)
 import System.Directory(getTemporaryDirectory,removeDirectoryRecursive,getCurrentDirectory,setCurrentDirectory)
 import System.IO.Temp(createTempDirectory)
+import Control.Concurrent.STM.TVar(newTVar,readTVar,modifyTVar',TVar)
+import Control.Concurrent.STM(atomically)
+                                   
 
 import ADL.Utils.FileDiff
 import qualified Data.Text as T
@@ -113,22 +117,28 @@ runAstBackend1 mpath = runAstBackend ipath [mpath] epath
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "ast-output"
 
-runJavaBackend :: [FilePath] -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
-runJavaBackend ipaths mpaths epath customTypeFiles = do
+runJavaBackend :: [FilePath] -> [FilePath] -> FilePath -> (J.JavaFlags -> J.JavaFlags) -> IO CodeGenResult
+runJavaBackend ipaths mpaths epath updateflags = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags = J.JavaFlags {
     J.jf_searchPath = ipaths,
-    J.jf_customTypeFiles = customTypeFiles,
+    J.jf_customTypeFiles = [],
     J.jf_package = "adl",
     J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir),
     J.jf_codeGenProfile = J.defaultCodeGenProfile
     }
-  er <- unEIO $ J.generate flags mpaths
-  processCompilerOutput epath tempDir er
+  er <- unEIO $ J.generate (updateflags flags) mpaths
+  processCompilerOutput epath tempDir er 
 
-runJavaBackend1 :: FilePath-> IO CodeGenResult
-runJavaBackend1 mpath = runJavaBackend [ipath] [mpath] epath []
+withJavaCustomTypeFiles :: [FilePath] -> J.JavaFlags -> J.JavaFlags
+withJavaCustomTypeFiles files flags = flags{J.jf_customTypeFiles=files}
+
+withJavaOutputPackage :: T.Text -> J.JavaFlags -> J.JavaFlags
+withJavaOutputPackage package flags = flags{J.jf_package=package}
+
+runJavaBackend1 :: FilePath -> IO CodeGenResult
+runJavaBackend1 mpath = runJavaBackend [ipath] [mpath] epath id
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "java-output"
@@ -143,7 +153,11 @@ stdCppCustomTypes = ["../../compiler/config/cpp-custom-types.json"]
 stdJavaCustomTypes = ["../../compiler/config/java-custom-types.json"]
 
 runTests :: IO ()
-runTests = hspec $ do
+runTests = do
+  resultvar <- atomically $ newTVar []
+  let collectResults = collectResults1 resultvar
+  
+  hspec $ afterAll_ (printRsyncCommands resultvar) $ do
   describe "adlc verify backend" $ do
     it "aborts with error for duplicate definitions of a name" $ do
       runVerifyBackend1 "test8/input/test.adl"
@@ -169,28 +183,28 @@ runTests = hspec $ do
     
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do
-      runHaskellBackend1 "test1/input/test.adl"
+      collectResults (runHaskellBackend1 "test1/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      runHaskellBackend1 "test2/input/test.adl"
+      collectResults (runHaskellBackend1 "test2/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      runHaskellBackend1 "test3/input/test.adl"
+      collectResults (runHaskellBackend1 "test3/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runHaskellBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/hs-output" (stdHsCustomTypes++["test4/input/hs-custom-types.json"])
+      collectResults (runHaskellBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/hs-output" (stdHsCustomTypes++["test4/input/hs-custom-types.json"]))
           `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      runHaskellBackend1 "test5/input/test.adl"
+      collectResults (runHaskellBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      runHaskellBackend [stdsrc] stdfiles "test6/hs-output" stdHsCustomTypes
+      collectResults (runHaskellBackend [stdsrc] stdfiles "test6/hs-output" stdHsCustomTypes)
           `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
-      runHaskellBackend1 "test7/input/test.adl"
+      collectResults (runHaskellBackend1 "test7/input/test.adl")
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
-      runHaskellBackend1 "test18/input/test.adl"
+      collectResults (runHaskellBackend1 "test18/input/test.adl")
         `shouldReturn` MatchOutput
 
   describe "adlc ast backend" $ do
@@ -200,66 +214,87 @@ runTests = hspec $ do
     
   describe "adlc cpp backend" $ do
     it "generates expected code for an empty module" $ do
-      runCppBackend1 "test1/input/test.adl"
+      collectResults (runCppBackend1 "test1/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      runCppBackend1 "test2/input/test.adl"
+      collectResults (runCppBackend1 "test2/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      runCppBackend1 "test3/input/test.adl"
+      collectResults (runCppBackend1 "test3/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runCppBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/cpp-output" "" (stdCppCustomTypes ++ ["test4/input/cpp-custom-types.json"])
+      collectResults (runCppBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/cpp-output" "" (stdCppCustomTypes ++ ["test4/input/cpp-custom-types.json"]))
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      runCppBackend1 "test5/input/test.adl"
+      collectResults (runCppBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      runCppBackend [stdsrc] stdfiles "test6/cpp-output" "" stdCppCustomTypes
+      collectResults (runCppBackend [stdsrc] stdfiles "test6/cpp-output" "" stdCppCustomTypes)
         `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
-      runCppBackend1 "test7/input/test.adl"
+      collectResults (runCppBackend1 "test7/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains C++ reserved words" $ do
-      runCppBackend1 "test14/input/test.adl"
+      collectResults (runCppBackend1 "test14/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      runCppBackend ["test16/input"] ["test16/input/test.adl"] "test16/cpp-output" "adl" []
+      collectResults (runCppBackend ["test16/input"] ["test16/input/test.adl"] "test16/cpp-output" "adl" [])
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation when necessary" $ do
-      runCppBackend1 "test17/input/test.adl"
+      collectResults (runCppBackend1 "test17/input/test.adl")
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
-      runCppBackend1 "test18/input/test.adl"
+      collectResults (runCppBackend1 "test18/input/test.adl")
         `shouldReturn` MatchOutput
 
   describe "adlc java backend" $ do
     it "generates expected code for various structures" $ do
-      runJavaBackend1 "test2/input/test.adl"
+      collectResults (runJavaBackend1 "test2/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      runJavaBackend1 "test3/input/test.adl"
+      collectResults (runJavaBackend1 "test3/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      runJavaBackend
-          ["test4/input",stdsrc] ["test4/input/test.adl",combine stdsrc "sys/types.adl"]
-          "test4/java-output" (["test4/input/java-custom-types.json"] ++ stdJavaCustomTypes)
+      collectResults (runJavaBackend 
+          ["test4/input",stdsrc] ["test4/input/test.adl"]
+          "test4/java-output"
+          (withJavaCustomTypeFiles (["test4/input/java-custom-types.json"]++stdJavaCustomTypes)
+          .withJavaOutputPackage "org.adl")
+          )
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      runJavaBackend1 "test5/input/test.adl"
+      collectResults (runJavaBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
-      runJavaBackend [stdsrc] [combine stdsrc "sys/types.adl"] "test6/java-output" stdJavaCustomTypes
+      collectResults (runJavaBackend [stdsrc] [combine stdsrc "sys/types.adl"] "test6/java-output"
+                      (withJavaCustomTypeFiles stdJavaCustomTypes
+                      .withJavaOutputPackage "org.adl"))
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do
-      runJavaBackend1 "test14/input/test.adl"
+      collectResults (runJavaBackend1 "test14/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      runJavaBackend ["test16/input"] ["test16/input/test.adl","test16/input/test2.adl"] "test16/java-output" []
+      collectResults (runJavaBackend ["test16/input"] ["test16/input/test.adl","test16/input/test2.adl"] "test16/java-output" id)
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation" $ do
-      runJavaBackend1 "test17/input/test.adl"
+      collectResults (runJavaBackend1 "test17/input/test.adl")
         `shouldReturn` MatchOutput
+
+    
+  where
+    collectResults1 resultvar test = do
+      r <- test
+      atomically $ do
+        modifyTVar' resultvar (r:)
+      return r
+
+    printRsyncCommands resultvar  = do
+      results <- atomically $ readTVar resultvar
+      putStrLn "\n** Rsync commands to update"
+      mapM_ printRsyncCommand results
+      
+    printRsyncCommand (OutputDiff expected actual _) = putStrLn ("rsync -r --delete " <> actual <> "/ " <> expected <> "/")
+    printRsyncCommand _ = return ()
     
 main :: IO ()
 main = do

@@ -1,0 +1,122 @@
+#ifndef TEST4_H
+#define TEST4_H
+#include <adl/adl.h>
+#include <map>
+#include <set>
+#include <stdint.h>
+#include <string>
+#include "sys.types.h"
+#include <utility>
+
+namespace ADL {
+namespace test4 {
+
+struct CDate
+{
+    CDate();
+    
+    CDate(
+        const int16_t & year,
+        const int16_t & month,
+        const int16_t & day
+        );
+    
+    int16_t year;
+    int16_t month;
+    int16_t day;
+};
+
+bool operator<( const CDate &a, const CDate &b );
+bool operator==( const CDate &a, const CDate &b );
+
+struct Date
+{
+    Date() : value("1900-01-01") {}
+    explicit Date(const std::string & v) : value(v) {}
+    
+    std::string value;
+};
+
+inline
+bool operator<( const Date &a, const Date &b ) { return a.value < b.value; }
+inline
+bool operator==( const Date &a, const Date &b ) { return a.value == b.value; }
+
+struct S
+{
+    S();
+    
+    S(
+        const Date & v1,
+        const Date & v2,
+        const CDate & v3,
+        const CDate & v4,
+        const ADL::sys::types::Maybe<std::string>  & v5,
+        const ADL::sys::types::Maybe<std::string>  & v5a,
+        const ADL::sys::types::Maybe<std::string>  & v5b,
+        const std::pair<std::string,int32_t>  & v6,
+        const std::set<int32_t>  & v7,
+        const std::set<int32_t>  & v7a,
+        const std::map<std::string,int32_t>  & v8
+        );
+    
+    Date v1;
+    Date v2;
+    CDate v3;
+    CDate v4;
+    ADL::sys::types::Maybe<std::string>  v5;
+    ADL::sys::types::Maybe<std::string>  v5a;
+    ADL::sys::types::Maybe<std::string>  v5b;
+    std::pair<std::string,int32_t>  v6;
+    std::set<int32_t>  v7;
+    std::set<int32_t>  v7a;
+    std::map<std::string,int32_t>  v8;
+};
+
+bool operator<( const S &a, const S &b );
+bool operator==( const S &a, const S &b );
+
+}}; // ADL::test4
+
+namespace ADL {
+
+template <>
+struct Serialisable<ADL::test4::CDate>
+{
+    static Serialiser<ADL::test4::CDate>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test4::Date>
+{
+    struct S : public Serialiser<ADL::test4::Date>
+    {
+        S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
+        
+        void toJson( JsonWriter &json, const ADL::test4::Date & v ) const
+        {
+            s->toJson( json, v.value );
+        }
+        
+        void fromJson( ADL::test4::Date &v, JsonReader &json ) const
+        {
+            s->fromJson( v.value, json );
+        }
+        
+        typename Serialiser<std::string>::Ptr s;
+    };
+    
+    static typename Serialiser<ADL::test4::Date>::Ptr serialiser(const SerialiserFlags &sf)
+    {
+        return typename Serialiser<ADL::test4::Date>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
+    }
+};
+
+template <>
+struct Serialisable<ADL::test4::S>
+{
+    static Serialiser<ADL::test4::S>::Ptr serialiser(const SerialiserFlags &);
+};
+
+}; // ADL
+#endif // TEST4_H

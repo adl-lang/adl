@@ -1,0 +1,2 @@
+include ':runtime'
+project(':runtime').projectDir = new File('../runtime')
