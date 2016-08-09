@@ -153,7 +153,7 @@ classFileCode content =
       else multiLineComment header <> cline ""
   )
   <>
-  ctemplate "package $1;" [genJavaPackage (cf_package content)]
+  ctemplate "package $1;" [genJavaPackage javaPackage]
   <>
   cline ""
   <>
@@ -178,7 +178,8 @@ classFileCode content =
     mconcat (intersperse (cline "") (reverse (cf_methods content)))
   )
   where
-    imports = [genJavaIdentifier package name | (name,Just package) <- Map.toList (cf_imports content)]
+    javaPackage = cf_package content
+    imports = [genJavaIdentifier package name | (name,Just package) <- Map.toList (cf_imports content), package /= javaPackage]
     header = cgp_header (cf_codeProfile content)
     decl | Set.null (cf_implements content) = (template "$1" [cf_decl content])
          | otherwise = (template "$1 implements $2" [cf_decl content,commaSep (Set.toList (cf_implements content))])
@@ -242,12 +243,13 @@ genResolvedType False (RT_Primitive pt) = let pd = genPrimitiveDetails pt in fro
 genResolvedType True (RT_Primitive pt) = pd_type (genPrimitiveDetails pt)
 
 genScopedName :: ScopedName -> CState T.Text
-genScopedName scopedName = do
+genScopedName scopedName0 = do
   cf <- get
-  let mname = sn_moduleName scopedName
-  if mname  == cf_module cf || unModuleName mname == []
-    then return (sn_name scopedName)
-    else return (T.intercalate "." (unJavaPackage (cf_javaPackageFn cf mname) <> [sn_name scopedName]))
+  let scopedName =
+        case sn_moduleName scopedName0 of
+          (ModuleName []) -> ScopedName (cf_module cf) (sn_name scopedName0)
+          _ -> scopedName0
+  addImport (cf_javaPackageFn cf (sn_moduleName scopedName)) (sn_name scopedName)
 
 genFactoryExpr :: TypeExpr CResolvedType -> CState T.Text
 genFactoryExpr (TypeExpr rt params) = do

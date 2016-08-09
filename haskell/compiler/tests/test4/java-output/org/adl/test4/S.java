@@ -5,6 +5,7 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
 import org.adl.runtime.HashSetHelpers;
 import org.adl.runtime.OptionalHelpers;
+import org.adl.sys.types.Pair;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,14 +23,14 @@ public class S {
   private Optional<String> v5;
   private Optional<String> v5a;
   private Optional<String> v5b;
-  private org.adl.sys.types.Pair<String, Integer> v6;
+  private Pair<String, Integer> v6;
   private HashSet<Integer> v7;
   private HashSet<Integer> v7a;
   private HashMap<String, Integer> v8;
 
   /* Constructors */
 
-  public S(Date v1, Date v2, CDate v3, CDate v4, Optional<String> v5, Optional<String> v5a, Optional<String> v5b, org.adl.sys.types.Pair<String, Integer> v6, HashSet<Integer> v7, HashSet<Integer> v7a, HashMap<String, Integer> v8) {
+  public S(Date v1, Date v2, CDate v3, CDate v4, Optional<String> v5, Optional<String> v5a, Optional<String> v5b, Pair<String, Integer> v6, HashSet<Integer> v7, HashSet<Integer> v7a, HashMap<String, Integer> v8) {
     this.v1 = Objects.requireNonNull(v1);
     this.v2 = Objects.requireNonNull(v2);
     this.v3 = Objects.requireNonNull(v3);
@@ -51,7 +52,7 @@ public class S {
     this.v5 = OptionalHelpers.factory(Factories.STRING).create();
     this.v5a = OptionalHelpers.nothing(null);
     this.v5b = OptionalHelpers.just("hello");
-    this.v6 = org.adl.sys.types.Pair.factory(Factories.STRING, Factories.INTEGER).create();
+    this.v6 = Pair.factory(Factories.STRING, Factories.INTEGER).create();
     this.v7 = HashSetHelpers.create(Arrays.asList(1, 2, 3));
     this.v7a = HashSetHelpers.factory(Factories.INTEGER).create();
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create();
@@ -65,7 +66,7 @@ public class S {
     this.v5 = OptionalHelpers.factory(Factories.STRING).create(other.v5);
     this.v5a = OptionalHelpers.factory(Factories.STRING).create(other.v5a);
     this.v5b = OptionalHelpers.factory(Factories.STRING).create(other.v5b);
-    this.v6 = org.adl.sys.types.Pair.factory(Factories.STRING, Factories.INTEGER).create(other.v6);
+    this.v6 = Pair.factory(Factories.STRING, Factories.INTEGER).create(other.v6);
     this.v7 = HashSetHelpers.factory(Factories.INTEGER).create(other.v7);
     this.v7a = HashSetHelpers.factory(Factories.INTEGER).create(other.v7a);
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(other.v8);
@@ -129,11 +130,11 @@ public class S {
     v5b = Objects.requireNonNull(newV5b);
   }
 
-  public org.adl.sys.types.Pair<String, Integer> getV6() {
+  public Pair<String, Integer> getV6() {
     return v6;
   }
 
-  public void setV6(org.adl.sys.types.Pair<String, Integer> newV6) {
+  public void setV6(Pair<String, Integer> newV6) {
     v6 = Objects.requireNonNull(newV6);
   }
 

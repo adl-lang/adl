@@ -1,5 +1,6 @@
 package adl.test;
 
+import adl.test2.A;
 import org.adl.runtime.Factory;
 import java.util.Objects;
 
@@ -7,29 +8,29 @@ public class X {
 
   /* Members */
 
-  private adl.test2.A value;
+  private A value;
 
   /* Constructors */
 
-  public X(adl.test2.A value) {
+  public X(A value) {
     this.value = Objects.requireNonNull(value);
   }
 
   public X() {
-    this.value = new adl.test2.A();
+    this.value = new A();
   }
 
   public X(X other) {
-    this.value = adl.test2.A.FACTORY.create(other.value);
+    this.value = A.FACTORY.create(other.value);
   }
 
   /* Accessors and mutators */
 
-  public adl.test2.A getValue() {
+  public A getValue() {
     return value;
   }
 
-  public void setValue(adl.test2.A newValue) {
+  public void setValue(A newValue) {
     value = Objects.requireNonNull(newValue);
   }
 
