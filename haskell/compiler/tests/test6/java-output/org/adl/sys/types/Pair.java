@@ -64,11 +64,17 @@ public class Pair<T1, T2> {
       final Factory<T2> v2 = factoryT2;
 
       public Pair<T1, T2> create() {
-        return new Pair<T1, T2>(v1.create(), v2.create());
+        return new Pair<T1, T2>(
+          v1.create(),
+          v2.create()
+          );
       }
 
       public Pair<T1, T2> create(Pair<T1, T2> other) {
-        return new Pair<T1, T2>(v1.create(other.getV1()), v2.create(other.getV2()));
+        return new Pair<T1, T2>(
+          v1.create(other.getV1()),
+          v2.create(other.getV2())
+          );
       }
     };
   }

@@ -65,11 +65,17 @@ public class S4<T> {
       final Factory<S3<T>> f2 = S3.factory(factoryT);
 
       public S4<T> create() {
-        return new S4<T>(f1.create(), f2.create());
+        return new S4<T>(
+          f1.create(),
+          f2.create()
+          );
       }
 
       public S4<T> create(S4<T> other) {
-        return new S4<T>(f1.create(other.getF1()), f2.create(other.getF2()));
+        return new S4<T>(
+          f1.create(other.getF1()),
+          f2.create(other.getF2())
+          );
       }
     };
   }

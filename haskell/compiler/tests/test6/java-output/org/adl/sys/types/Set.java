@@ -53,11 +53,15 @@ public class Set<T> {
       final Factory<ArrayList<T>> value = Factories.arrayList(factoryT);
 
       public Set<T> create() {
-        return new Set<T>(value.create());
+        return new Set<T>(
+          value.create()
+          );
       }
 
       public Set<T> create(Set<T> other) {
-        return new Set<T>(value.create(other.getValue()));
+        return new Set<T>(
+          value.create(other.getValue())
+          );
       }
     };
   }

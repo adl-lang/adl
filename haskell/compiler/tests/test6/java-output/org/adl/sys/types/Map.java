@@ -53,11 +53,15 @@ public class Map<K, V> {
       final Factory<ArrayList<Pair<K, V>>> value = Factories.arrayList(Pair.factory(factoryK, factoryV));
 
       public Map<K, V> create() {
-        return new Map<K, V>(value.create());
+        return new Map<K, V>(
+          value.create()
+          );
       }
 
       public Map<K, V> create(Map<K, V> other) {
-        return new Map<K, V>(value.create(other.getValue()));
+        return new Map<K, V>(
+          value.create(other.getValue())
+          );
       }
     };
   }

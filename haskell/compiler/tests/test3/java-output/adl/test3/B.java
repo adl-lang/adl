@@ -91,11 +91,21 @@ public class B<T> {
       final Factory<XY<T>> f_xy = XY.factory(factoryT);
 
       public B<T> create() {
-        return new B<T>(f_t.create(), "", f_tvec.create(), f_xy.create());
+        return new B<T>(
+          f_t.create(),
+          "",
+          f_tvec.create(),
+          f_xy.create()
+          );
       }
 
       public B<T> create(B<T> other) {
-        return new B<T>(f_t.create(other.getF_t()), other.getF_string(), f_tvec.create(other.getF_tvec()), f_xy.create(other.getF_xy()));
+        return new B<T>(
+          f_t.create(other.getF_t()),
+          other.getF_string(),
+          f_tvec.create(other.getF_tvec()),
+          f_xy.create(other.getF_xy())
+          );
       }
     };
   }

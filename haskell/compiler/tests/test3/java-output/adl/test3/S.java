@@ -276,11 +276,51 @@ public class S<T> {
       final Factory<B<Short>> f_bint16 = B.factory(Factories.SHORT);
 
       public S<T> create() {
-        return new S<T>(null, true, (byte)-5, (short)-10000, 56, 40000L, (byte)32, (short)50000, 124456, 2344L, 0.5F, 0.45, f_bytes.create(), "abcd", f_vstring.create(), f_a.create(), f_u.create(), f_t.create(), f_bint16.create());
+        return new S<T>(
+          null,
+          true,
+          (byte)-5,
+          (short)-10000,
+          56,
+          40000L,
+          (byte)32,
+          (short)50000,
+          124456,
+          2344L,
+          0.5F,
+          0.45,
+          f_bytes.create(),
+          "abcd",
+          f_vstring.create(),
+          f_a.create(),
+          f_u.create(),
+          f_t.create(),
+          f_bint16.create()
+          );
       }
 
       public S<T> create(S<T> other) {
-        return new S<T>(other.getF_void(), other.getF_bool(), other.getF_int8(), other.getF_int16(), other.getF_int32(), other.getF_int64(), other.getF_word8(), other.getF_word16(), other.getF_word32(), other.getF_word64(), other.getF_float(), other.getF_double(), f_bytes.create(other.getF_bytes()), other.getF_string(), f_vstring.create(other.getF_vstring()), f_a.create(other.getF_a()), f_u.create(other.getF_u()), f_t.create(other.getF_t()), f_bint16.create(other.getF_bint16()));
+        return new S<T>(
+          other.getF_void(),
+          other.getF_bool(),
+          other.getF_int8(),
+          other.getF_int16(),
+          other.getF_int32(),
+          other.getF_int64(),
+          other.getF_word8(),
+          other.getF_word16(),
+          other.getF_word32(),
+          other.getF_word64(),
+          other.getF_float(),
+          other.getF_double(),
+          f_bytes.create(other.getF_bytes()),
+          other.getF_string(),
+          f_vstring.create(other.getF_vstring()),
+          f_a.create(other.getF_a()),
+          f_u.create(other.getF_u()),
+          f_t.create(other.getF_t()),
+          f_bint16.create(other.getF_bint16())
+          );
       }
     };
   }

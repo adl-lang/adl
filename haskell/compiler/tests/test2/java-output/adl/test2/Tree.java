@@ -66,11 +66,17 @@ public class Tree<T> {
       final Factory<ArrayList<Tree<T>>> children = Factories.arrayList(Tree.factory(factoryT));
 
       public Tree<T> create() {
-        return new Tree<T>(value.create(), children.create());
+        return new Tree<T>(
+          value.create(),
+          children.create()
+          );
       }
 
       public Tree<T> create(Tree<T> other) {
-        return new Tree<T>(value.create(other.getValue()), children.create(other.getChildren()));
+        return new Tree<T>(
+          value.create(other.getValue()),
+          children.create(other.getChildren())
+          );
       }
     };
   }

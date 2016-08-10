@@ -64,11 +64,17 @@ public class XY<T> {
       final Factory<T> y = factoryT;
 
       public XY<T> create() {
-        return new XY<T>(x.create(), y.create());
+        return new XY<T>(
+          x.create(),
+          y.create()
+          );
       }
 
       public XY<T> create(XY<T> other) {
-        return new XY<T>(x.create(other.getX()), y.create(other.getY()));
+        return new XY<T>(
+          x.create(other.getX()),
+          y.create(other.getY())
+          );
       }
     };
   }

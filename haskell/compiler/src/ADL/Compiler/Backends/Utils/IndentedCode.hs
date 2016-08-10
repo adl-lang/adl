@@ -34,7 +34,6 @@ cblock :: T.Text -> Code -> Code
 cblock "" body = cline "{"  <> indent body <> cline "}"
 cblock intro body =  cline (intro <> " {")  <> indent body <> cline "}"
   
-
 cblock1 :: T.Text -> Code -> Code
 cblock1 intro body =
   cline (intro <> " {")  <> indent body <> cline "};"
@@ -93,3 +92,15 @@ lineBreakChunks t = map (T.pack . reverse) (chunks "" (T.unpack t))
     quote2 cs ('\"':s) = chunks ('\"':cs) s
     quote2 cs ('\\':'\"':s) = quote2 ('\\':'\"':cs) s
     quote2 cs (c:s) =  quote2 (c:cs) s
+
+-- | Add appropriate  terminators to each of the text values in the
+-- given list    
+addTerminators :: T.Text -> T.Text -> T.Text -> [T.Text] -> [T.Text]
+addTerminators first middle last ts = add0 ts
+  where
+    add0 (t1:t2:ts) =  (t1<>first):add1 (t2:ts)
+    add0 ts = add1 ts
+    add1 [t] = [t<>last]
+    add1 (t:ts) = (t<>middle):add1 ts
+    add1 [] = []
+

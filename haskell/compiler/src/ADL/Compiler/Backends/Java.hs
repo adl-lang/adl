@@ -217,25 +217,30 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
                 cline ""
                 <>
                 cblock (template "public $1$2 create()" [className,typeArgs]) (
-                   ctemplate "return new $1$2($3);" [className,typeArgs,ctor1Args]
-                )
+                   ctemplate "return new $1$2(" [className,typeArgs]
+                   <>
+                   indent (clineN (addTerminators "," "," ""  ctor1Args) <> cline ");")
+                   )
                 <>
                 cline ""
                 <>
                 cblock (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
-                   ctemplate "return new $1$2($3);" [className,typeArgs,ctor2Args]
+                   ctemplate "return new $1$2(" [className,typeArgs]
+                   <>
+                   indent (clineN (addTerminators "," "," ""  ctor2Args) <> cline ");")
+                   )
                 )
               )
-            )
 
           factoryArgs = commaSep [template "$1<$2> $3" [factoryInterface,arg,factoryTypeArg arg] | arg <- s_typeParams struct]
-          ctor1Args = commaSep [if immutableType (f_type (fd_field fd))
-                                then fd_defValue fd
-                                else template "$1.create()" [fd_fieldName fd] | fd <-fieldDetails]
-          ctor2Args = commaSep [if immutableType (f_type (fd_field fd))
-                                then template "other.$1" [fieldAccessExpr codeProfile fd]
-                                else template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]
-                               | fd <- fieldDetails]
+          ctor1Args = [if immutableType (f_type (fd_field fd))
+                       then fd_defValue fd
+                       else template "$1.create()" [fd_fieldName fd]
+                      | fd <-fieldDetails]
+          ctor2Args = [if immutableType (f_type (fd_field fd))
+                       then template "other.$1" [fieldAccessExpr codeProfile fd]
+                       else template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]
+                      | fd <- fieldDetails]
 
       addMethod (cline "/* Factory for construction of generic values */")
 

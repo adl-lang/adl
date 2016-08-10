@@ -93,11 +93,21 @@ public class S3<T> {
       final Factory<ArrayList<T>> f4 = Factories.arrayList(factoryT);
 
       public S3<T> create() {
-        return new S3<T>("", 0.0, f3.create(), f4.create());
+        return new S3<T>(
+          "",
+          0.0,
+          f3.create(),
+          f4.create()
+          );
       }
 
       public S3<T> create(S3<T> other) {
-        return new S3<T>(other.getF1(), other.getF2(), f3.create(other.getF3()), f4.create(other.getF4()));
+        return new S3<T>(
+          other.getF1(),
+          other.getF2(),
+          f3.create(other.getF3()),
+          f4.create(other.getF4())
+          );
       }
     };
   }
