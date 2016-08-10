@@ -1,8 +1,12 @@
 package adl.test3;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.ByteArray;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -333,6 +337,87 @@ public class S<T> {
           f_t.create(other.getF_t()),
           f_bint16.create(other.getF_bint16())
           );
+      }
+    };
+  }
+
+  /* Json serialization */
+
+  public static<T> JsonBinding<S<T>> jsonBinding(JsonBinding<T> bindingT) {
+    final JsonBinding<Void> f_void = JsonBindings.VOID;
+    final JsonBinding<Boolean> f_bool = JsonBindings.BOOLEAN;
+    final JsonBinding<Byte> f_int8 = JsonBindings.BYTE;
+    final JsonBinding<Short> f_int16 = JsonBindings.SHORT;
+    final JsonBinding<Integer> f_int32 = JsonBindings.INTEGER;
+    final JsonBinding<Long> f_int64 = JsonBindings.LONG;
+    final JsonBinding<Byte> f_word8 = JsonBindings.BYTE;
+    final JsonBinding<Short> f_word16 = JsonBindings.SHORT;
+    final JsonBinding<Integer> f_word32 = JsonBindings.INTEGER;
+    final JsonBinding<Long> f_word64 = JsonBindings.LONG;
+    final JsonBinding<Float> f_float = JsonBindings.FLOAT;
+    final JsonBinding<Double> f_double = JsonBindings.DOUBLE;
+    final JsonBinding<ByteArray> f_bytes = JsonBindings.BYTE_ARRAY;
+    final JsonBinding<String> f_string = JsonBindings.STRING;
+    final JsonBinding<ArrayList<String>> f_vstring = JsonBindings.arrayList(JsonBindings.STRING);
+    final JsonBinding<A> f_a = A.jsonBinding();
+    final JsonBinding<U> f_u = U.jsonBinding();
+    final JsonBinding<T> f_t = bindingT;
+    final JsonBinding<B<Short>> f_bint16 = B.jsonBinding(JsonBindings.SHORT);
+    final Factory<T> factoryT = bindingT.factory();
+    final Factory<S<T>> _factory = factory(bindingT.factory());
+
+    return new JsonBinding<S<T>>() {
+      public Factory<S<T>> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(S<T> _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("f_void", f_void.toJson(_value.f_void));
+        _result.add("f_bool", f_bool.toJson(_value.f_bool));
+        _result.add("f_int8", f_int8.toJson(_value.f_int8));
+        _result.add("f_int16", f_int16.toJson(_value.f_int16));
+        _result.add("f_int32", f_int32.toJson(_value.f_int32));
+        _result.add("f_int64", f_int64.toJson(_value.f_int64));
+        _result.add("f_word8", f_word8.toJson(_value.f_word8));
+        _result.add("f_word16", f_word16.toJson(_value.f_word16));
+        _result.add("f_word32", f_word32.toJson(_value.f_word32));
+        _result.add("f_word64", f_word64.toJson(_value.f_word64));
+        _result.add("f_float", f_float.toJson(_value.f_float));
+        _result.add("f_double", f_double.toJson(_value.f_double));
+        _result.add("f_bytes", f_bytes.toJson(_value.f_bytes));
+        _result.add("f_string", f_string.toJson(_value.f_string));
+        _result.add("f_vstring", f_vstring.toJson(_value.f_vstring));
+        _result.add("f_a", f_a.toJson(_value.f_a));
+        _result.add("f_u", f_u.toJson(_value.f_u));
+        _result.add("f_t", f_t.toJson(_value.f_t));
+        _result.add("f_bint16", f_bint16.toJson(_value.f_bint16));
+        return _result;
+      }
+
+      public S<T> fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new S<T>(
+          _obj.has("f_void") ? f_void.fromJson(_obj.get("f_void")) : null,
+          _obj.has("f_bool") ? f_bool.fromJson(_obj.get("f_bool")) : true,
+          _obj.has("f_int8") ? f_int8.fromJson(_obj.get("f_int8")) : (byte)-5,
+          _obj.has("f_int16") ? f_int16.fromJson(_obj.get("f_int16")) : (short)-10000,
+          _obj.has("f_int32") ? f_int32.fromJson(_obj.get("f_int32")) : 56,
+          _obj.has("f_int64") ? f_int64.fromJson(_obj.get("f_int64")) : 40000L,
+          _obj.has("f_word8") ? f_word8.fromJson(_obj.get("f_word8")) : (byte)32,
+          _obj.has("f_word16") ? f_word16.fromJson(_obj.get("f_word16")) : (short)50000,
+          _obj.has("f_word32") ? f_word32.fromJson(_obj.get("f_word32")) : 124456,
+          _obj.has("f_word64") ? f_word64.fromJson(_obj.get("f_word64")) : 2344L,
+          _obj.has("f_float") ? f_float.fromJson(_obj.get("f_float")) : 0.5F,
+          _obj.has("f_double") ? f_double.fromJson(_obj.get("f_double")) : 0.45,
+          _obj.has("f_bytes") ? f_bytes.fromJson(_obj.get("f_bytes")) : new ByteArray("hello".getBytes()),
+          _obj.has("f_string") ? f_string.fromJson(_obj.get("f_string")) : "abcd",
+          _obj.has("f_vstring") ? f_vstring.fromJson(_obj.get("f_vstring")) : Factories.arrayList("xy", "ab"),
+          _obj.has("f_a") ? f_a.fromJson(_obj.get("f_a")) : new A((short)0, "xyz", true),
+          _obj.has("f_u") ? f_u.fromJson(_obj.get("f_u")) : U.f_int((short)45),
+          _obj.has("f_t") ? f_t.fromJson(_obj.get("f_t")) : factoryT.create(),
+          _obj.has("f_bint16") ? f_bint16.fromJson(_obj.get("f_bint16")) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5))
+        );
       }
     };
   }

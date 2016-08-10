@@ -62,6 +62,11 @@ javaGenerateParcelable ufn =
     (NoArg ufn)
     "Generated java code will include android parcellable implementations"
 
+javaGenerateJson ufn =
+  Option "" ["json"]
+    (NoArg ufn)
+    "Generated java code will include gson json serialization"
+
 javaHeaderComment ufn =
   Option "" ["header-comment"]
     (ReqArg ufn "PACKAGE")
@@ -213,6 +218,7 @@ runJava args0 =
       , javaPackageOption (\s (jf,o) -> (jf{jf_package=T.pack s},o))
       , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=fromString s}},o))
       , javaGenerateParcelable (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_parcelable=True}},o))
+      , javaGenerateJson (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_json=True}},o))
       , javaHungarianNaming (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_hungarianNaming=True}},o))
       , javaMaxLineLength (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_maxLineLength=read s}},o))
       , javaHeaderComment (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_header=T.pack s}},o))

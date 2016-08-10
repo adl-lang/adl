@@ -1,8 +1,13 @@
 package adl.test17;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 
 public class X2 {
@@ -215,4 +220,79 @@ public class X2 {
       return new X2(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<X2> jsonBinding() {
+    final JsonBinding<Integer> f1 = JsonBindings.INTEGER;
+    final JsonBinding<Integer> f2 = JsonBindings.INTEGER;
+    final JsonBinding<Pair<String, Integer>> f3 = Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER);
+    final JsonBinding<Pair<String, String>> f4 = Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING);
+    final JsonBinding<ArrayList<Integer>> f5 = JsonBindings.arrayList(JsonBindings.INTEGER);
+    final JsonBinding<ArrayList<Pair<String, Integer>>> f6 = JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
+    final JsonBinding<ArrayList<Pair<String, String>>> f7 = JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING));
+    final Factory<X2> _factory = FACTORY;
+
+    return new JsonBinding<X2>() {
+      public Factory<X2> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(X2 _value) {
+        JsonObject _result = new JsonObject();
+        switch (_value.getDisc()) {
+          case F1:
+            _result.add("f1", f1.toJson(_value.getF1()));
+            break;
+          case F2:
+            _result.add("f2", f2.toJson(_value.getF2()));
+            break;
+          case F3:
+            _result.add("f3", f3.toJson(_value.getF3()));
+            break;
+          case F4:
+            _result.add("f4", f4.toJson(_value.getF4()));
+            break;
+          case F5:
+            _result.add("f5", f5.toJson(_value.getF5()));
+            break;
+          case F6:
+            _result.add("f6", f6.toJson(_value.getF6()));
+            break;
+          case F7:
+            _result.add("f7", f7.toJson(_value.getF7()));
+            break;
+        }
+        return _result;
+      }
+
+      public X2 fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
+          if (_v.getKey() == "f1") {
+            return X2.f1(f1.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "f2") {
+            return X2.f2(f2.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "f3") {
+            return X2.f3(f3.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "f4") {
+            return X2.f4(f4.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "f5") {
+            return X2.f5(f5.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "f6") {
+            return X2.f6(f6.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "f7") {
+            return X2.f7(f7.fromJson(_v.getValue()));
+          }
+        }
+        throw new IllegalStateException();
+      }
+    };
+  }
 }

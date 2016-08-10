@@ -1,7 +1,12 @@
 package adl.test3;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
+import java.util.Map;
 import java.util.Objects;
 
 public class U {
@@ -109,4 +114,44 @@ public class U {
       return new U(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<U> jsonBinding() {
+    final JsonBinding<Short> f_int = JsonBindings.SHORT;
+    final JsonBinding<String> f_string = JsonBindings.STRING;
+    final Factory<U> _factory = FACTORY;
+
+    return new JsonBinding<U>() {
+      public Factory<U> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(U _value) {
+        JsonObject _result = new JsonObject();
+        switch (_value.getDisc()) {
+          case F_INT:
+            _result.add("f_int", f_int.toJson(_value.getF_int()));
+            break;
+          case F_STRING:
+            _result.add("f_string", f_string.toJson(_value.getF_string()));
+            break;
+        }
+        return _result;
+      }
+
+      public U fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
+          if (_v.getKey() == "f_int") {
+            return U.f_int(f_int.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "f_string") {
+            return U.f_string(f_string.fromJson(_v.getValue()));
+          }
+        }
+        throw new IllegalStateException();
+      }
+    };
+  }
 }

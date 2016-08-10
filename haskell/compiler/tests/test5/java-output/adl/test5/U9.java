@@ -1,7 +1,12 @@
 package adl.test5;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
+import java.util.Map;
 import java.util.Objects;
 
 public class U9<T> {
@@ -21,12 +26,12 @@ public class U9<T> {
 
   /* Constructors */
 
-  public static <T> U9 v1(T v) {
-    return new U9(Disc.V1, Objects.requireNonNull(v));
+  public static <T> U9<T> v1(T v) {
+    return new U9<T>(Disc.V1, Objects.requireNonNull(v));
   }
 
-  public static <T> U9 v2(short v) {
-    return new U9(Disc.V2, v);
+  public static <T> U9<T> v2(short v) {
+    return new U9<T>(Disc.V2, v);
   }
 
   private U9(Disc disc, Object value) {
@@ -106,6 +111,47 @@ public class U9<T> {
             return new U9<T>(other.disc,other.value);
         }
         throw new IllegalArgumentException();
+      }
+    };
+  }
+
+  /* Json serialization */
+
+  public static<T> JsonBinding<U9<T>> jsonBinding(JsonBinding<T> bindingT) {
+    final JsonBinding<T> v1 = bindingT;
+    final JsonBinding<Short> v2 = JsonBindings.SHORT;
+    final Factory<T> factoryT = bindingT.factory();
+    final Factory<U9<T>> _factory = factory(bindingT.factory());
+
+    return new JsonBinding<U9<T>>() {
+      public Factory<U9<T>> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(U9<T> _value) {
+        JsonObject _result = new JsonObject();
+        switch (_value.getDisc()) {
+          case V1:
+            _result.add("v1", v1.toJson(_value.getV1()));
+            break;
+          case V2:
+            _result.add("v2", v2.toJson(_value.getV2()));
+            break;
+        }
+        return _result;
+      }
+
+      public U9<T> fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
+          if (_v.getKey() == "v1") {
+            return U9.<T>v1(v1.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "v2") {
+            return U9.<T>v2(v2.fromJson(_v.getValue()));
+          }
+        }
+        throw new IllegalStateException();
       }
     };
   }

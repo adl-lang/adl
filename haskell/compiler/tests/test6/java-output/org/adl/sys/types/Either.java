@@ -1,6 +1,10 @@
 package org.adl.sys.types;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import java.util.Map;
 import java.util.Objects;
 
 public class Either<T1, T2> {
@@ -20,12 +24,12 @@ public class Either<T1, T2> {
 
   /* Constructors */
 
-  public static <T1, T2> Either left(T1 v) {
-    return new Either(Disc.LEFT, Objects.requireNonNull(v));
+  public static <T1, T2> Either<T1, T2> left(T1 v) {
+    return new Either<T1, T2>(Disc.LEFT, Objects.requireNonNull(v));
   }
 
-  public static <T1, T2> Either right(T2 v) {
-    return new Either(Disc.RIGHT, Objects.requireNonNull(v));
+  public static <T1, T2> Either<T1, T2> right(T2 v) {
+    return new Either<T1, T2>(Disc.RIGHT, Objects.requireNonNull(v));
   }
 
   private Either(Disc disc, Object value) {
@@ -105,6 +109,48 @@ public class Either<T1, T2> {
             return new Either<T1, T2>(other.disc,right.create(Either.<T2>cast(other.value)));
         }
         throw new IllegalArgumentException();
+      }
+    };
+  }
+
+  /* Json serialization */
+
+  public static<T1, T2> JsonBinding<Either<T1, T2>> jsonBinding(JsonBinding<T1> bindingT1, JsonBinding<T2> bindingT2) {
+    final JsonBinding<T1> left = bindingT1;
+    final JsonBinding<T2> right = bindingT2;
+    final Factory<T1> factoryT1 = bindingT1.factory();
+    final Factory<T2> factoryT2 = bindingT2.factory();
+    final Factory<Either<T1, T2>> _factory = factory(bindingT1.factory(), bindingT2.factory());
+
+    return new JsonBinding<Either<T1, T2>>() {
+      public Factory<Either<T1, T2>> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(Either<T1, T2> _value) {
+        JsonObject _result = new JsonObject();
+        switch (_value.getDisc()) {
+          case LEFT:
+            _result.add("left", left.toJson(_value.getLeft()));
+            break;
+          case RIGHT:
+            _result.add("right", right.toJson(_value.getRight()));
+            break;
+        }
+        return _result;
+      }
+
+      public Either<T1, T2> fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
+          if (_v.getKey() == "left") {
+            return Either.<T1, T2>left(left.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "right") {
+            return Either.<T1, T2>right(right.fromJson(_v.getValue()));
+          }
+        }
+        throw new IllegalStateException();
       }
     };
   }

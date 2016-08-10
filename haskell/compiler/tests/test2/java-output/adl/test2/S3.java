@@ -1,7 +1,11 @@
 package adl.test2;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -110,6 +114,42 @@ public class S3<T> {
           f3.create(other.getF3()),
           f4.create(other.getF4())
           );
+      }
+    };
+  }
+
+  /* Json serialization */
+
+  public static<T> JsonBinding<S3<T>> jsonBinding(JsonBinding<T> bindingT) {
+    final JsonBinding<String> f1 = JsonBindings.STRING;
+    final JsonBinding<Double> f2 = JsonBindings.DOUBLE;
+    final JsonBinding<T> f3 = bindingT;
+    final JsonBinding<ArrayList<T>> f4 = JsonBindings.arrayList(bindingT);
+    final Factory<T> factoryT = bindingT.factory();
+    final Factory<S3<T>> _factory = factory(bindingT.factory());
+
+    return new JsonBinding<S3<T>>() {
+      public Factory<S3<T>> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(S3<T> _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("f1", f1.toJson(_value.f1));
+        _result.add("f2", f2.toJson(_value.f2));
+        _result.add("f3", f3.toJson(_value.f3));
+        _result.add("f4", f4.toJson(_value.f4));
+        return _result;
+      }
+
+      public S3<T> fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new S3<T>(
+          _obj.has("f1") ? f1.fromJson(_obj.get("f1")) : "",
+          _obj.has("f2") ? f2.fromJson(_obj.get("f2")) : 0.0,
+          _obj.has("f3") ? f3.fromJson(_obj.get("f3")) : factoryT.create(),
+          _obj.has("f4") ? f4.fromJson(_obj.get("f4")) : new ArrayList<T>()
+        );
       }
     };
   }

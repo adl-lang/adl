@@ -1,7 +1,11 @@
 package adl.test2;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import java.util.Objects;
 
 /**
@@ -82,4 +86,33 @@ public class S1 {
       return new S1(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<S1> jsonBinding() {
+    final JsonBinding<Integer> x = JsonBindings.INTEGER;
+    final JsonBinding<String> y = JsonBindings.STRING;
+    final Factory<S1> _factory = FACTORY;
+
+    return new JsonBinding<S1>() {
+      public Factory<S1> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(S1 _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("x", x.toJson(_value.x));
+        _result.add("y", y.toJson(_value.y));
+        return _result;
+      }
+
+      public S1 fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new S1(
+          _obj.has("x") ? x.fromJson(_obj.get("x")) : 0,
+          _obj.has("y") ? y.fromJson(_obj.get("y")) : ""
+        );
+      }
+    };
+  }
 }

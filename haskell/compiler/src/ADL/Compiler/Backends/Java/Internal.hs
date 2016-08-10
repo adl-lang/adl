@@ -113,6 +113,7 @@ data CodeGenProfile = CodeGenProfile {
   cgp_hungarianNaming :: Bool,
   cgp_publicMembers :: Bool,
   cgp_genericFactories :: Bool,
+  cgp_json :: Bool,
   cgp_parcelable :: Bool,
   cgp_runtimePackage :: JavaPackage
 }
@@ -124,6 +125,7 @@ defaultCodeGenProfile = CodeGenProfile {
   cgp_hungarianNaming = False,
   cgp_publicMembers = False,
   cgp_genericFactories = False,
+  cgp_json = False,
   cgp_parcelable = False,
   cgp_runtimePackage = "org.adl.runtime"
 }

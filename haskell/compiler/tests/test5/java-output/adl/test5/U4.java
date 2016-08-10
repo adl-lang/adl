@@ -1,6 +1,10 @@
 package adl.test5;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import java.util.Map;
 import java.util.Objects;
 
 public class U4 {
@@ -88,4 +92,37 @@ public class U4 {
       return new U4(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<U4> jsonBinding() {
+    final JsonBinding<S1> v = S1.jsonBinding();
+    final Factory<U4> _factory = FACTORY;
+
+    return new JsonBinding<U4>() {
+      public Factory<U4> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(U4 _value) {
+        JsonObject _result = new JsonObject();
+        switch (_value.getDisc()) {
+          case V:
+            _result.add("v", v.toJson(_value.getV()));
+            break;
+        }
+        return _result;
+      }
+
+      public U4 fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
+          if (_v.getKey() == "v") {
+            return U4.v(v.fromJson(_v.getValue()));
+          }
+        }
+        throw new IllegalStateException();
+      }
+    };
+  }
 }

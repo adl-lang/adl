@@ -1,6 +1,9 @@
 package adl.test2;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
 import java.util.Objects;
 
 /**
@@ -40,4 +43,27 @@ public class S0 {
       return new S0(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<S0> jsonBinding() {
+    final Factory<S0> _factory = FACTORY;
+
+    return new JsonBinding<S0>() {
+      public Factory<S0> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(S0 _value) {
+        JsonObject _result = new JsonObject();
+        return _result;
+      }
+
+      public S0 fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new S0(
+        );
+      }
+    };
+  }
 }

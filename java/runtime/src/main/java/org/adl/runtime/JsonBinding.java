@@ -7,8 +7,10 @@ import java.io.IOException;
 /**
  *  Interface for GSON based serialisation.
  */
-public interface JsonFactory<T>
+public interface JsonBinding<T>
 {
+  Factory<T> factory();
   JsonElement toJson( T value );
   T fromJson( JsonElement json ); 
 };
+

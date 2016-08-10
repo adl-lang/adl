@@ -36,6 +36,7 @@ import ADL.Compiler.Primitive
 import ADL.Compiler.Backends.Utils.IndentedCode
 import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Java.Parcelable
+import ADL.Compiler.Backends.Java.Json
 import ADL.Core.Value
 import ADL.Utils.Format
 
@@ -245,6 +246,10 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
 
       addMethod (if isGeneric then factoryg else factory)
 
+      -- Json
+      when (cgp_json codeProfile) $ do
+        generateStructJson codeProfile decl struct fieldDetails
+
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do
         generateStructParcelable codeProfile decl struct fieldDetails
@@ -316,11 +321,11 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       
       for_ fieldDetails $ \fd -> do
         let checkedv = if needsNullCheck fd then template "$1.requireNonNull(v)" [objectsClass] else "v"
-            ctor = cblock (template "public static$1 $2 $3($4 v)" [leadSpace typeArgs, className, unionCtorName (fd_field fd), fd_typeExprStr fd]) (
-              ctemplate "return new $1(Disc.$2, $3);" [className, discriminatorName fd, checkedv]
+            ctor = cblock (template "public static$1 $2$3 $4($5 v)" [leadSpace typeArgs, className, typeArgs, unionCtorName (fd_field fd), fd_typeExprStr fd]) (
+              ctemplate "return new $1$2(Disc.$3, $4);" [className, typeArgs, discriminatorName fd, checkedv]
               )
-            ctorvoid = cblock (template "public static$1 $2 $3()" [leadSpace typeArgs, className, unionCtorName (fd_field fd)]) (
-              ctemplate "return new $1(Disc.$2, null);" [className, discriminatorName fd]
+            ctorvoid = cblock (template "public static$1 $2$3 $4()" [leadSpace typeArgs, className, typeArgs, unionCtorName (fd_field fd)]) (
+              ctemplate "return new $1$2(Disc.$3, null);" [className, typeArgs, discriminatorName fd]
               )
 
         addMethod (if isVoidType (f_type (fd_field fd)) then ctorvoid else ctor)
@@ -479,6 +484,10 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
 
       addMethod (cline "/* Factory for construction of generic values */")
       addMethod (if isGeneric then factoryg else factory)
+
+      -- Json
+      when (cgp_json codeProfile) $ do
+        generateUnionJson codeProfile decl union fieldDetails
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do

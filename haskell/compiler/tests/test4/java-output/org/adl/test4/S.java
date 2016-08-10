@@ -1,9 +1,13 @@
 package org.adl.test4;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
 import org.adl.runtime.HashSetHelpers;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import org.adl.runtime.OptionalHelpers;
 import org.adl.sys.types.Pair;
 import java.util.HashMap;
@@ -224,4 +228,63 @@ public class S {
       return new S(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<S> jsonBinding() {
+    final JsonBinding<Date> v1 = Date.jsonBinding();
+    final JsonBinding<Date> v2 = Date.jsonBinding();
+    final JsonBinding<CDate> v3 = CDate.jsonBinding();
+    final JsonBinding<CDate> v4 = CDate.jsonBinding();
+    final JsonBinding<Optional<String>> v5 = OptionalHelpers.jsonBinding(JsonBindings.STRING);
+    final JsonBinding<Optional<String>> v5a = OptionalHelpers.jsonBinding(JsonBindings.STRING);
+    final JsonBinding<Optional<String>> v5b = OptionalHelpers.jsonBinding(JsonBindings.STRING);
+    final JsonBinding<Pair<String, Integer>> v6 = Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER);
+    final JsonBinding<HashSet<Integer>> v7 = HashSetHelpers.jsonBinding(JsonBindings.INTEGER);
+    final JsonBinding<HashSet<Integer>> v7a = HashSetHelpers.jsonBinding(JsonBindings.INTEGER);
+    final JsonBinding<HashMap<String, Integer>> v8 = HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER);
+    final JsonBinding<HashMap<String, Integer>> v8a = HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER);
+    final Factory<S> _factory = FACTORY;
+
+    return new JsonBinding<S>() {
+      public Factory<S> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(S _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("v1", v1.toJson(_value.v1));
+        _result.add("v2", v2.toJson(_value.v2));
+        _result.add("v3", v3.toJson(_value.v3));
+        _result.add("v4", v4.toJson(_value.v4));
+        _result.add("v5", v5.toJson(_value.v5));
+        _result.add("v5a", v5a.toJson(_value.v5a));
+        _result.add("v5b", v5b.toJson(_value.v5b));
+        _result.add("v6", v6.toJson(_value.v6));
+        _result.add("v7", v7.toJson(_value.v7));
+        _result.add("v7a", v7a.toJson(_value.v7a));
+        _result.add("v8", v8.toJson(_value.v8));
+        _result.add("v8a", v8a.toJson(_value.v8a));
+        return _result;
+      }
+
+      public S fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new S(
+          _obj.has("v1") ? v1.fromJson(_obj.get("v1")) : new Date(),
+          _obj.has("v2") ? v2.fromJson(_obj.get("v2")) : new Date("2000-01-01"),
+          _obj.has("v3") ? v3.fromJson(_obj.get("v3")) : new CDate(),
+          _obj.has("v4") ? v4.fromJson(_obj.get("v4")) : new CDate((short)2000, (short)1, (short)1),
+          _obj.has("v5") ? v5.fromJson(_obj.get("v5")) : OptionalHelpers.factory(Factories.STRING).create(),
+          _obj.has("v5a") ? v5a.fromJson(_obj.get("v5a")) : OptionalHelpers.nothing(null),
+          _obj.has("v5b") ? v5b.fromJson(_obj.get("v5b")) : OptionalHelpers.just("hello"),
+          _obj.has("v6") ? v6.fromJson(_obj.get("v6")) : Pair.factory(Factories.STRING, Factories.INTEGER).create(),
+          _obj.has("v7") ? v7.fromJson(_obj.get("v7")) : HashSetHelpers.create(Factories.arrayList(1, 2, 3)),
+          _obj.has("v7a") ? v7a.fromJson(_obj.get("v7a")) : HashSetHelpers.factory(Factories.INTEGER).create(),
+          _obj.has("v8") ? v8.fromJson(_obj.get("v8")) : HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(),
+          _obj.has("v8a") ? v8a.fromJson(_obj.get("v8a")) : HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)))
+        );
+      }
+    };
+  }
 }

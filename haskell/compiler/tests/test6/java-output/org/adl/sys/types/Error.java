@@ -1,7 +1,12 @@
 package org.adl.sys.types;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
+import java.util.Map;
 import java.util.Objects;
 
 public class Error<T> {
@@ -21,12 +26,12 @@ public class Error<T> {
 
   /* Constructors */
 
-  public static <T> Error value(T v) {
-    return new Error(Disc.VALUE, Objects.requireNonNull(v));
+  public static <T> Error<T> value(T v) {
+    return new Error<T>(Disc.VALUE, Objects.requireNonNull(v));
   }
 
-  public static <T> Error error(String v) {
-    return new Error(Disc.ERROR, Objects.requireNonNull(v));
+  public static <T> Error<T> error(String v) {
+    return new Error<T>(Disc.ERROR, Objects.requireNonNull(v));
   }
 
   private Error(Disc disc, Object value) {
@@ -106,6 +111,47 @@ public class Error<T> {
             return new Error<T>(other.disc,other.value);
         }
         throw new IllegalArgumentException();
+      }
+    };
+  }
+
+  /* Json serialization */
+
+  public static<T> JsonBinding<Error<T>> jsonBinding(JsonBinding<T> bindingT) {
+    final JsonBinding<T> value = bindingT;
+    final JsonBinding<String> error = JsonBindings.STRING;
+    final Factory<T> factoryT = bindingT.factory();
+    final Factory<Error<T>> _factory = factory(bindingT.factory());
+
+    return new JsonBinding<Error<T>>() {
+      public Factory<Error<T>> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(Error<T> _value) {
+        JsonObject _result = new JsonObject();
+        switch (_value.getDisc()) {
+          case VALUE:
+            _result.add("value", value.toJson(_value.getValue()));
+            break;
+          case ERROR:
+            _result.add("error", error.toJson(_value.getError()));
+            break;
+        }
+        return _result;
+      }
+
+      public Error<T> fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
+          if (_v.getKey() == "value") {
+            return Error.<T>value(value.fromJson(_v.getValue()));
+          }
+          else if (_v.getKey() == "error") {
+            return Error.<T>error(error.fromJson(_v.getValue()));
+          }
+        }
+        throw new IllegalStateException();
       }
     };
   }

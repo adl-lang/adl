@@ -1,7 +1,11 @@
 package adl.test3;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import java.util.Objects;
 
 public class A {
@@ -91,4 +95,36 @@ public class A {
       return new A(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<A> jsonBinding() {
+    final JsonBinding<Short> f_int = JsonBindings.SHORT;
+    final JsonBinding<String> f_string = JsonBindings.STRING;
+    final JsonBinding<Boolean> f_bool = JsonBindings.BOOLEAN;
+    final Factory<A> _factory = FACTORY;
+
+    return new JsonBinding<A>() {
+      public Factory<A> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(A _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("f_int", f_int.toJson(_value.f_int));
+        _result.add("f_string", f_string.toJson(_value.f_string));
+        _result.add("f_bool", f_bool.toJson(_value.f_bool));
+        return _result;
+      }
+
+      public A fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new A(
+          _obj.has("f_int") ? f_int.fromJson(_obj.get("f_int")) : (short)0,
+          _obj.has("f_string") ? f_string.fromJson(_obj.get("f_string")) : "",
+          _obj.has("f_bool") ? f_bool.fromJson(_obj.get("f_bool")) : false
+        );
+      }
+    };
+  }
 }

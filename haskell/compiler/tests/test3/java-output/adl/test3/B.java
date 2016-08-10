@@ -1,7 +1,11 @@
 package adl.test3;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -107,6 +111,42 @@ public class B<T> {
           f_tvec.create(other.getF_tvec()),
           f_xy.create(other.getF_xy())
           );
+      }
+    };
+  }
+
+  /* Json serialization */
+
+  public static<T> JsonBinding<B<T>> jsonBinding(JsonBinding<T> bindingT) {
+    final JsonBinding<T> f_t = bindingT;
+    final JsonBinding<String> f_string = JsonBindings.STRING;
+    final JsonBinding<ArrayList<T>> f_tvec = JsonBindings.arrayList(bindingT);
+    final JsonBinding<XY<T>> f_xy = XY.jsonBinding(bindingT);
+    final Factory<T> factoryT = bindingT.factory();
+    final Factory<B<T>> _factory = factory(bindingT.factory());
+
+    return new JsonBinding<B<T>>() {
+      public Factory<B<T>> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(B<T> _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("f_t", f_t.toJson(_value.f_t));
+        _result.add("f_string", f_string.toJson(_value.f_string));
+        _result.add("f_tvec", f_tvec.toJson(_value.f_tvec));
+        _result.add("f_xy", f_xy.toJson(_value.f_xy));
+        return _result;
+      }
+
+      public B<T> fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new B<T>(
+          _obj.has("f_t") ? f_t.fromJson(_obj.get("f_t")) : factoryT.create(),
+          _obj.has("f_string") ? f_string.fromJson(_obj.get("f_string")) : "",
+          _obj.has("f_tvec") ? f_tvec.fromJson(_obj.get("f_tvec")) : new ArrayList<T>(),
+          _obj.has("f_xy") ? f_xy.fromJson(_obj.get("f_xy")) : XY.factory(factoryT).create()
+        );
       }
     };
   }

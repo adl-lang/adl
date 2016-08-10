@@ -96,11 +96,15 @@ lineBreakChunks t = map (T.pack . reverse) (chunks "" (T.unpack t))
 -- | Add appropriate  terminators to each of the text values in the
 -- given list    
 addTerminators :: T.Text -> T.Text -> T.Text -> [T.Text] -> [T.Text]
-addTerminators first middle last ts = add0 ts
+addTerminators first other last ts = map (\(term,t) -> t<>term) (edgeCases first other last ts)
+
+-- | Assign first,other,last values to items in a list
+edgeCases :: a -> a -> a -> [b] -> [(a,b)]
+edgeCases first other last bs = add0 bs
   where
-    add0 (t1:t2:ts) =  (t1<>first):add1 (t2:ts)
-    add0 ts = add1 ts
-    add1 [t] = [t<>last]
-    add1 (t:ts) = (t<>middle):add1 ts
+    add0 (b1:b2:bs) =  (first,b1):add1 (b2:bs)
+    add0 bs = add1 bs
+    add1 [b] = [(last,b)]
+    add1 (b:bs) = ((other,b)):add1 bs
     add1 [] = []
 

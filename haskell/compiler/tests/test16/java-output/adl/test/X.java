@@ -1,7 +1,10 @@
 package adl.test;
 
 import adl.test2.A;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
 import java.util.Objects;
 
 public class X {
@@ -63,4 +66,30 @@ public class X {
       return new X(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<X> jsonBinding() {
+    final JsonBinding<A> value = A.jsonBinding();
+    final Factory<X> _factory = FACTORY;
+
+    return new JsonBinding<X>() {
+      public Factory<X> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(X _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("value", value.toJson(_value.value));
+        return _result;
+      }
+
+      public X fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new X(
+          _obj.has("value") ? value.fromJson(_obj.get("value")) : new A()
+        );
+      }
+    };
+  }
 }

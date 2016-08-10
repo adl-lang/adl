@@ -1,7 +1,11 @@
 package org.adl.test4;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import java.util.Objects;
 
 public class Date {
@@ -63,4 +67,30 @@ public class Date {
       return new Date(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<Date> jsonBinding() {
+    final JsonBinding<String> value = JsonBindings.STRING;
+    final Factory<Date> _factory = FACTORY;
+
+    return new JsonBinding<Date>() {
+      public Factory<Date> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(Date _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("value", value.toJson(_value.value));
+        return _result;
+      }
+
+      public Date fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new Date(
+          _obj.has("value") ? value.fromJson(_obj.get("value")) : "1900-01-01"
+        );
+      }
+    };
+  }
 }

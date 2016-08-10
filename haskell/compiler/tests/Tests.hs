@@ -126,7 +126,7 @@ runJavaBackend ipaths mpaths epath updateflags = do
     J.jf_customTypeFiles = [],
     J.jf_package = "adl",
     J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir),
-    J.jf_codeGenProfile = J.defaultCodeGenProfile
+    J.jf_codeGenProfile = J.defaultCodeGenProfile {J.cgp_json=True}
     }
   er <- unEIO $ J.generate (updateflags flags) mpaths
   processCompilerOutput epath tempDir er 

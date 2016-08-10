@@ -1,7 +1,11 @@
 package adl.test17;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -148,4 +152,48 @@ public class X1 {
       return new X1(other);
     }
   };
+
+  /* Json serialization */
+
+  public static JsonBinding<X1> jsonBinding() {
+    final JsonBinding<Integer> f1 = JsonBindings.INTEGER;
+    final JsonBinding<Integer> f2 = JsonBindings.INTEGER;
+    final JsonBinding<Pair<String, Integer>> f3 = Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER);
+    final JsonBinding<Pair<String, String>> f4 = Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING);
+    final JsonBinding<ArrayList<Integer>> f5 = JsonBindings.arrayList(JsonBindings.INTEGER);
+    final JsonBinding<ArrayList<Pair<String, Integer>>> f6 = JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
+    final JsonBinding<ArrayList<Pair<String, String>>> f7 = JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING));
+    final Factory<X1> _factory = FACTORY;
+
+    return new JsonBinding<X1>() {
+      public Factory<X1> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(X1 _value) {
+        JsonObject _result = new JsonObject();
+        _result.add("f1", f1.toJson(_value.f1));
+        _result.add("f2", f2.toJson(_value.f2));
+        _result.add("f3", f3.toJson(_value.f3));
+        _result.add("f4", f4.toJson(_value.f4));
+        _result.add("f5", f5.toJson(_value.f5));
+        _result.add("f6", f6.toJson(_value.f6));
+        _result.add("f7", f7.toJson(_value.f7));
+        return _result;
+      }
+
+      public X1 fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        return new X1(
+          _obj.has("f1") ? f1.fromJson(_obj.get("f1")) : 0,
+          _obj.has("f2") ? f2.fromJson(_obj.get("f2")) : 0,
+          _obj.has("f3") ? f3.fromJson(_obj.get("f3")) : Pair.factory(Factories.STRING, Factories.INTEGER).create(),
+          _obj.has("f4") ? f4.fromJson(_obj.get("f4")) : Pair.factory(Factories.STRING, Factories.STRING).create(),
+          _obj.has("f5") ? f5.fromJson(_obj.get("f5")) : new ArrayList<Integer>(),
+          _obj.has("f6") ? f6.fromJson(_obj.get("f6")) : new ArrayList<Pair<String, Integer>>(),
+          _obj.has("f7") ? f7.fromJson(_obj.get("f7")) : new ArrayList<Pair<String, String>>()
+        );
+      }
+    };
+  }
 }

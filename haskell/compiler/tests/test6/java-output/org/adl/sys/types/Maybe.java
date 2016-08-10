@@ -1,7 +1,12 @@
 package org.adl.sys.types;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
+import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
+import java.util.Map;
 import java.util.Objects;
 
 public class Maybe<T> {
@@ -21,12 +26,12 @@ public class Maybe<T> {
 
   /* Constructors */
 
-  public static <T> Maybe nothing() {
-    return new Maybe(Disc.NOTHING, null);
+  public static <T> Maybe<T> nothing() {
+    return new Maybe<T>(Disc.NOTHING, null);
   }
 
-  public static <T> Maybe just(T v) {
-    return new Maybe(Disc.JUST, Objects.requireNonNull(v));
+  public static <T> Maybe<T> just(T v) {
+    return new Maybe<T>(Disc.JUST, Objects.requireNonNull(v));
   }
 
   private Maybe(Disc disc, Object value) {
@@ -99,6 +104,46 @@ public class Maybe<T> {
             return new Maybe<T>(other.disc,just.create(Maybe.<T>cast(other.value)));
         }
         throw new IllegalArgumentException();
+      }
+    };
+  }
+
+  /* Json serialization */
+
+  public static<T> JsonBinding<Maybe<T>> jsonBinding(JsonBinding<T> bindingT) {
+    final JsonBinding<Void> nothing = JsonBindings.VOID;
+    final JsonBinding<T> just = bindingT;
+    final Factory<T> factoryT = bindingT.factory();
+    final Factory<Maybe<T>> _factory = factory(bindingT.factory());
+
+    return new JsonBinding<Maybe<T>>() {
+      public Factory<Maybe<T>> factory() {
+        return _factory;
+      }
+
+      public JsonElement toJson(Maybe<T> _value) {
+        JsonObject _result = new JsonObject();
+        switch (_value.getDisc()) {
+          case NOTHING:
+            _result.add("nothing", null);
+          case JUST:
+            _result.add("just", just.toJson(_value.getJust()));
+            break;
+        }
+        return _result;
+      }
+
+      public Maybe<T> fromJson(JsonElement _json) {
+        JsonObject _obj = _json.getAsJsonObject();
+        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
+          if (_v.getKey() == "nothing") {
+            return Maybe.<T>nothing();
+          }
+          else if (_v.getKey() == "just") {
+            return Maybe.<T>just(just.fromJson(_v.getValue()));
+          }
+        }
+        throw new IllegalStateException();
       }
     };
   }
