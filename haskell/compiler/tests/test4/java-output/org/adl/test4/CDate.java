@@ -21,9 +21,9 @@ public class CDate {
   }
 
   public CDate() {
-    this.year = 0;
-    this.month = 0;
-    this.day = 0;
+    this.year = (short)0;
+    this.month = (short)0;
+    this.day = (short)0;
   }
 
   public CDate(CDate other) {

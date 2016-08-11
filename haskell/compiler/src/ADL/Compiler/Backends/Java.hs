@@ -232,10 +232,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
               )
 
           factoryArgs = commaSep [template "$1<$2> $3" [factoryInterface,arg,factoryTypeArg arg] | arg <- s_typeParams struct]
-          ctor1Args = [if immutableType (f_type (fd_field fd))
-                       then fd_defValue fd
-                       else template "$1.create()" [fd_fieldName fd]
-                      | fd <-fieldDetails]
+          ctor1Args = [fd_defValue fd | fd <-fieldDetails]
           ctor2Args = [if immutableType (f_type (fd_field fd))
                        then template "other.$1" [fieldAccessExpr codeProfile fd]
                        else template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]

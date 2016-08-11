@@ -303,7 +303,7 @@ genPrimitiveDetails P_Bool = PrimitiveDetails {
 genPrimitiveDetails P_Int8 = PrimitiveDetails {
   pd_unboxed = Just (return "byte"),
   pd_type = return "Byte",
-  pd_default = Just "0",
+  pd_default = Just "(byte)0",
   pd_genLiteral = \(JSON.Number n) -> "(byte)" <> litNumber n,
   pd_mutable = False,
   pd_factory = primitiveFactory "BYTE",
@@ -312,7 +312,7 @@ genPrimitiveDetails P_Int8 = PrimitiveDetails {
 genPrimitiveDetails P_Int16 = PrimitiveDetails {
   pd_unboxed = Just (return "short"),
   pd_type = return "Short",
-  pd_default = Just "0",
+  pd_default = Just "(short)0",
   pd_genLiteral = \(JSON.Number n) -> "(short)" <> litNumber n,
   pd_mutable = False,
   pd_factory = primitiveFactory "SHORT",
@@ -492,6 +492,9 @@ genLiteralText (LDefault te@(TypeExpr (RT_Primitive pt) _)) = do
     Nothing -> do
       typeExpr <- genTypeExpr te
       return (template "new $1()" [typeExpr])
+genLiteralText (LDefault te@(TypeExpr (RT_Param i) [])) = do
+  typeExpr <- genTypeExpr te
+  return (template "$1.create()" [factoryTypeArg i])
 genLiteralText (LDefault te@(TypeExpr _ [])) = do
   typeExpr <- genTypeExpr te
   return (template "new $1()" [typeExpr])

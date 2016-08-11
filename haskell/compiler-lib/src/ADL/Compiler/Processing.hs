@@ -17,6 +17,7 @@ import Data.Foldable(foldMap)
 import Data.Traversable(for)
 import Data.Monoid
 import Data.Maybe(catMaybes)
+import Debug.Trace
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -335,7 +336,7 @@ checkDefaultOverrides m = execWriter checkModule
 
     checkType :: T.Text -> [Ident] -> TypeExpr ResolvedType -> Maybe JSON.Value -> Writer [DefaultOverrideError] ()
     checkType _ _ _ Nothing = return ()
-    checkType n tparams te (Just jv) = case literalForTypeExpr te jv of
+    checkType n tparams te (Just jv) = case literalForTypeExpr' te jv of
       Right _ -> return ()
       Left err -> tell [DefaultOverrideError (template "Invalid override of $1: $2" [n,err])]
 
@@ -349,6 +350,10 @@ data Literal te
   | LUnion te Ident (Literal te)
   | LVector te [Literal te]
   | LPrimitive PrimitiveType JSON.Value
+  deriving (Show)
+
+literalForTypeExpr' :: (Show c) => TypeExprRT c -> JSON.Value -> Either T.Text (Literal (TypeExprRT c))
+literalForTypeExpr' te v = let r = literalForTypeExpr te v in trace (show ("literalForTypeExpr",te,v,r)) $ r
 
 -- | Generate a `Literal` value from a JSON value.
 literalForTypeExpr :: TypeExprRT c -> JSON.Value -> Either T.Text (Literal (TypeExprRT c))
@@ -377,11 +382,12 @@ literalForTypeExpr te v = litForTE Map.empty te v
 
     structFields m decl s tes (JSON.Object hm) = for (s_fields s) $ \f -> do
       pm <- createParamMap (s_typeParams s) tes m
+      ftype <- substTypeParams pm (f_type f)
       case HM.lookup (f_name f) hm of
-       (Just jv) -> litForTE pm (f_type f) jv
+       (Just jv) -> litForTE pm ftype jv
        Nothing -> case f_default f of
-         (Just jv) -> litForTE pm (f_type f) jv
-         Nothing -> Right (LDefault (f_type f))
+         (Just jv) -> litForTE pm ftype jv
+         Nothing -> Right (LDefault ftype)
     structFields _ _ _ _ _ = Left "expected an object"
 
     unionField m decl u tes (JSON.Object hm) = do
@@ -389,7 +395,8 @@ literalForTypeExpr te v = litForTE Map.empty te v
       case HM.toList hm of
         [(k,v)] -> case find ((k==).f_name) (u_fields u) of
           (Just f) -> do
-            lit <- litForTE pm (f_type f) v
+            ftype <- substTypeParams pm (f_type f)
+            lit <- litForTE pm ftype v
             return (k,lit)
           Nothing ->
             Left (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
@@ -398,11 +405,13 @@ literalForTypeExpr te v = litForTE Map.empty te v
 
     typedefLiteral m t tes v = do
       pm <- createParamMap (t_typeParams t) tes m
-      litForTE pm (t_typeExpr t) v
+      te <- substTypeParams pm (t_typeExpr t)
+      litForTE pm te v
 
     newtypeLiteral m n tes v = do
       pm <- createParamMap (n_typeParams n) tes m
-      litForTE pm (n_typeExpr n) v
+      te <- substTypeParams pm (n_typeExpr n)
+      litForTE pm te v
 
     createParamMap :: [Ident] -> [TypeExprRT c] -> Map.Map Ident (TypeExprRT c) -> Either T.Text (Map.Map Ident (TypeExprRT c))
     createParamMap typeParams tes m = do
@@ -483,12 +492,12 @@ loadAndCheckModule moduleFinder modulePath = do
     resolve1 m ns = do
         checkUndefined1 m ns
         let rm = resolveModule m ns
-            mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (m_decls rm)
+            mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (fmap (fmap (fullyScopedType (m_name m))) (m_decls rm))
             ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
         checkTypeCtorApps1 rm
         checkDefaultOverrides1 rm
         return (ns', rm)
-
+    
     checkUndefined1 :: SModule -> NameScope -> EIOT ()
     checkUndefined1 m ns = case undefinedNames m ns of
         [] -> return ()
@@ -570,3 +579,11 @@ substTypeParams m  (TypeExpr (RT_Param n) ts) =
         [] -> Right e
         _ -> Left "Type param not a concrete type"
 substTypeParams m  (TypeExpr t ts) = TypeExpr t <$> mapM (substTypeParams m) ts
+
+fullyScopedName :: ModuleName -> ScopedName -> ScopedName
+fullyScopedName mname (ScopedName (ModuleName []) n) = ScopedName mname n
+fullyScopedName _ sn = sn
+
+fullyScopedType :: ModuleName -> ResolvedTypeT c -> ResolvedTypeT c
+fullyScopedType mname (RT_Named (sn,decl,c)) = RT_Named (fullyScopedName mname sn,fmap (fullyScopedType mname) decl,c)
+fullyScopedType _ rt = rt

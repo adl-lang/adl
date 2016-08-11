@@ -31,7 +31,7 @@ public class U {
 
   public U() {
     this.disc = Disc.F_INT;
-    this.value = 0;
+    this.value = (short)0;
   }
 
   public U(U other) {

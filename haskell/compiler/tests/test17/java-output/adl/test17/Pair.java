@@ -65,8 +65,8 @@ public class Pair<A, B> {
 
       public Pair<A, B> create() {
         return new Pair<A, B>(
-          v1.create(),
-          v2.create()
+          factoryA.create(),
+          factoryB.create()
           );
       }
 

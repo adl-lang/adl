@@ -96,8 +96,8 @@ public class S3<T> {
         return new S3<T>(
           "",
           0.0,
-          f3.create(),
-          f4.create()
+          factoryT.create(),
+          new ArrayList<T>()
           );
       }
 

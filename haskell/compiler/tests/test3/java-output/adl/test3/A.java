@@ -21,7 +21,7 @@ public class A {
   }
 
   public A() {
-    this.f_int = 0;
+    this.f_int = (short)0;
     this.f_string = "";
     this.f_bool = false;
   }

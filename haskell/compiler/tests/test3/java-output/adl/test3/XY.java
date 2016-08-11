@@ -65,8 +65,8 @@ public class XY<T> {
 
       public XY<T> create() {
         return new XY<T>(
-          x.create(),
-          y.create()
+          factoryT.create(),
+          factoryT.create()
           );
       }
 

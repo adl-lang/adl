@@ -92,10 +92,10 @@ public class B<T> {
 
       public B<T> create() {
         return new B<T>(
-          f_t.create(),
+          factoryT.create(),
           "",
-          f_tvec.create(),
-          f_xy.create()
+          new ArrayList<T>(),
+          XY.factory(factoryT).create()
           );
       }
 

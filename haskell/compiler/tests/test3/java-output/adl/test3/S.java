@@ -289,13 +289,13 @@ public class S<T> {
           2344L,
           0.5F,
           0.45,
-          f_bytes.create(),
+          new ByteArray("hello".getBytes()),
           "abcd",
-          f_vstring.create(),
-          f_a.create(),
-          f_u.create(),
-          f_t.create(),
-          f_bint16.create()
+          Arrays.asList("xy", "ab"),
+          new A((short)0, "xyz", true),
+          U.f_int((short)45),
+          factoryT.create(),
+          new B<Short>((short)56, "yikes", Arrays.asList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5))
           );
       }
 

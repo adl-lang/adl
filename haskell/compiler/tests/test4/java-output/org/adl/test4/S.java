@@ -58,7 +58,7 @@ public class S {
     this.v7 = HashSetHelpers.create(Arrays.asList(1, 2, 3));
     this.v7a = HashSetHelpers.factory(Factories.INTEGER).create();
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create();
-    this.v8a = HashMapHelpers.create(Arrays.asList(new org.adl.test4.Pair<K, V>("X", 1), new org.adl.test4.Pair<K, V>("Y", 2)));
+    this.v8a = HashMapHelpers.create(Arrays.asList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)));
   }
 
   public S(S other) {

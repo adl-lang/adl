@@ -26,7 +26,7 @@ public class U2 {
 
   public U2() {
     this.disc = Disc.V;
-    this.value = 0;
+    this.value = (short)0;
   }
 
   public U2(U2 other) {

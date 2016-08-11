@@ -93,7 +93,7 @@ instance ADLValue S where
         (Set [ 1, 2, 3 ])
         defaultv
         defaultv
-        (Map [ (defaultv :: (Pair T.Text Data.Int.Int32)) { pair_v1 = "X", pair_v2 = 1 }, (defaultv :: (Pair T.Text Data.Int.Int32)) { pair_v1 = "Y", pair_v2 = 2 } ])
+        (Map [ (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "X", pair_v2 = 1 }, (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "Y", pair_v2 = 2 } ])
     
     jsonSerialiser jf = JSONSerialiser to from
         where

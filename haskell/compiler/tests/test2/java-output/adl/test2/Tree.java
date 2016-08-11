@@ -67,8 +67,8 @@ public class Tree<T> {
 
       public Tree<T> create() {
         return new Tree<T>(
-          value.create(),
-          children.create()
+          factoryT.create(),
+          new ArrayList<Tree<T>>()
           );
       }
 
