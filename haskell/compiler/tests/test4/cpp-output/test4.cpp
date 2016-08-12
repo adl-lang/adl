@@ -48,6 +48,7 @@ S::S()
     , v5a(ADL::sys::types::Maybe<std::string> ::mk_nothing(Void()))
     , v5b(ADL::sys::types::Maybe<std::string> ::mk_just("hello"))
     , v7(std::set<int32_t> (mkvec<int32_t>(1,2,3)))
+    , v8a(std::map<std::string,int32_t> (mkvec<Pair<std::string,int32_t> >(Pair<std::string,int32_t> ("X",1),Pair<std::string,int32_t> ("Y",2))))
 {
 }
 
@@ -62,7 +63,8 @@ S::S(
     const std::pair<std::string,int32_t>  & v6_,
     const std::set<int32_t>  & v7_,
     const std::set<int32_t>  & v7a_,
-    const std::map<std::string,int32_t>  & v8_
+    const std::map<std::string,int32_t>  & v8_,
+    const std::map<std::string,int32_t>  & v8a_
     )
     : v1(v1_)
     , v2(v2_)
@@ -75,6 +77,7 @@ S::S(
     , v7(v7_)
     , v7a(v7a_)
     , v8(v8_)
+    , v8a(v8a_)
 {
 }
 
@@ -103,6 +106,8 @@ operator<( const S &a, const S &b )
     if( b.v7a < a.v7a ) return false;
     if( a.v8 < b.v8 ) return true;
     if( b.v8 < a.v8 ) return false;
+    if( a.v8a < b.v8a ) return true;
+    if( b.v8a < a.v8a ) return false;
     return false;
 }
 
@@ -120,7 +125,8 @@ operator==( const S &a, const S &b )
         a.v6 == b.v6 &&
         a.v7 == b.v7 &&
         a.v7a == b.v7a &&
-        a.v8 == b.v8 ;
+        a.v8 == b.v8 &&
+        a.v8a == b.v8a ;
 }
 
 }}; // ADL::test4
@@ -189,6 +195,7 @@ Serialisable<ADL::test4::S>::serialiser( const SerialiserFlags &sf )
             , v7_s( Serialisable<std::set<int32_t> >::serialiser(sf) )
             , v7a_s( Serialisable<std::set<int32_t> >::serialiser(sf) )
             , v8_s( Serialisable<std::map<std::string,int32_t> >::serialiser(sf) )
+            , v8a_s( Serialisable<std::map<std::string,int32_t> >::serialiser(sf) )
             {}
         
         
@@ -203,6 +210,7 @@ Serialisable<ADL::test4::S>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<std::set<int32_t> >::Ptr v7_s;
         typename Serialiser<std::set<int32_t> >::Ptr v7a_s;
         typename Serialiser<std::map<std::string,int32_t> >::Ptr v8_s;
+        typename Serialiser<std::map<std::string,int32_t> >::Ptr v8a_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
@@ -218,6 +226,7 @@ Serialisable<ADL::test4::S>::serialiser( const SerialiserFlags &sf )
             writeField<std::set<int32_t> >( json, v7_s, "v7", v.v7 );
             writeField<std::set<int32_t> >( json, v7a_s, "v7a", v.v7a );
             writeField<std::map<std::string,int32_t> >( json, v8_s, "v8", v.v8 );
+            writeField<std::map<std::string,int32_t> >( json, v8a_s, "v8a", v.v8a );
             json.endObject();
         }
         
@@ -237,6 +246,7 @@ Serialisable<ADL::test4::S>::serialiser( const SerialiserFlags &sf )
                 readField( v7_s, v.v7, "v7", json ) ||
                 readField( v7a_s, v.v7a, "v7a", json ) ||
                 readField( v8_s, v.v8, "v8", json ) ||
+                readField( v8a_s, v.v8a, "v8a", json ) ||
                 ignoreField( json );
             }
         }

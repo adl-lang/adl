@@ -43,13 +43,10 @@ struct S
 
     Map<String,Int32> v8;
 
-// FIXME: Should work, but gives error:
-//        Invalid override of field v8a of S: literals not allows for parameterised fields
-//
-//    Map<String,Int32> v8a = [
-//      { "v1" : "X", "v2" : 1 },
-//      { "v1" : "Y", "v2" : 2 }
-//      ];
+    Map<String,Int32> v8a = [
+      { "v1" : "X", "v2" : 1 },
+      { "v1" : "Y", "v2" : 2 }
+      ];
 };
 
 };

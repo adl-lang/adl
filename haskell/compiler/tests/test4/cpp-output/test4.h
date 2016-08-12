@@ -57,7 +57,8 @@ struct S
         const std::pair<std::string,int32_t>  & v6,
         const std::set<int32_t>  & v7,
         const std::set<int32_t>  & v7a,
-        const std::map<std::string,int32_t>  & v8
+        const std::map<std::string,int32_t>  & v8,
+        const std::map<std::string,int32_t>  & v8a
         );
     
     Date v1;
@@ -71,6 +72,7 @@ struct S
     std::set<int32_t>  v7;
     std::set<int32_t>  v7a;
     std::map<std::string,int32_t>  v8;
+    std::map<std::string,int32_t>  v8a;
 };
 
 bool operator<( const S &a, const S &b );

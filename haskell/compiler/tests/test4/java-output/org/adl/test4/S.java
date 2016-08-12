@@ -27,10 +27,11 @@ public class S {
   private HashSet<Integer> v7;
   private HashSet<Integer> v7a;
   private HashMap<String, Integer> v8;
+  private HashMap<String, Integer> v8a;
 
   /* Constructors */
 
-  public S(Date v1, Date v2, CDate v3, CDate v4, Optional<String> v5, Optional<String> v5a, Optional<String> v5b, Pair<String, Integer> v6, HashSet<Integer> v7, HashSet<Integer> v7a, HashMap<String, Integer> v8) {
+  public S(Date v1, Date v2, CDate v3, CDate v4, Optional<String> v5, Optional<String> v5a, Optional<String> v5b, Pair<String, Integer> v6, HashSet<Integer> v7, HashSet<Integer> v7a, HashMap<String, Integer> v8, HashMap<String, Integer> v8a) {
     this.v1 = Objects.requireNonNull(v1);
     this.v2 = Objects.requireNonNull(v2);
     this.v3 = Objects.requireNonNull(v3);
@@ -42,6 +43,7 @@ public class S {
     this.v7 = Objects.requireNonNull(v7);
     this.v7a = Objects.requireNonNull(v7a);
     this.v8 = Objects.requireNonNull(v8);
+    this.v8a = Objects.requireNonNull(v8a);
   }
 
   public S() {
@@ -56,6 +58,7 @@ public class S {
     this.v7 = HashSetHelpers.create(Arrays.asList(1, 2, 3));
     this.v7a = HashSetHelpers.factory(Factories.INTEGER).create();
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create();
+    this.v8a = HashMapHelpers.create(Arrays.asList(new org.adl.test4.Pair<K, V>("X", 1), new org.adl.test4.Pair<K, V>("Y", 2)));
   }
 
   public S(S other) {
@@ -70,6 +73,7 @@ public class S {
     this.v7 = HashSetHelpers.factory(Factories.INTEGER).create(other.v7);
     this.v7a = HashSetHelpers.factory(Factories.INTEGER).create(other.v7a);
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(other.v8);
+    this.v8a = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(other.v8a);
   }
 
   /* Accessors and mutators */
@@ -162,6 +166,14 @@ public class S {
     v8 = Objects.requireNonNull(newV8);
   }
 
+  public HashMap<String, Integer> getV8a() {
+    return v8a;
+  }
+
+  public void setV8a(HashMap<String, Integer> newV8a) {
+    v8a = Objects.requireNonNull(newV8a);
+  }
+
   /* Object level helpers */
 
   @Override
@@ -181,7 +193,8 @@ public class S {
       v6.equals(other.v6) &&
       v7.equals(other.v7) &&
       v7a.equals(other.v7a) &&
-      v8.equals(other.v8);
+      v8.equals(other.v8) &&
+      v8a.equals(other.v8a);
   }
 
   @Override
@@ -198,6 +211,7 @@ public class S {
     result = result * 37 + v7.hashCode();
     result = result * 37 + v7a.hashCode();
     result = result * 37 + v8.hashCode();
+    result = result * 37 + v8a.hashCode();
     return result;
   }
 

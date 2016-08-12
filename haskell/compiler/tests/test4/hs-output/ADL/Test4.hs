@@ -74,6 +74,7 @@ data S = S
     , s_v7 :: (ADL.Sys.Types.Set Data.Int.Int32)
     , s_v7a :: (ADL.Sys.Types.Set Data.Int.Int32)
     , s_v8 :: (ADL.Sys.Types.Map T.Text Data.Int.Int32)
+    , s_v8a :: (ADL.Sys.Types.Map T.Text Data.Int.Int32)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -92,6 +93,7 @@ instance ADLValue S where
         (Set [ 1, 2, 3 ])
         defaultv
         defaultv
+        (Map [ (defaultv :: (Pair T.Text Data.Int.Int32)) { pair_v1 = "X", pair_v2 = 1 }, (defaultv :: (Pair T.Text Data.Int.Int32)) { pair_v1 = "Y", pair_v2 = 2 } ])
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -106,6 +108,7 @@ instance ADLValue S where
             v7_js = jsonSerialiser jf
             v7a_js = jsonSerialiser jf
             v8_js = jsonSerialiser jf
+            v8a_js = jsonSerialiser jf
             
             to v = JSON.Object ( HM.fromList
                 [ ("v1",aToJSON v1_js (s_v1 v))
@@ -119,6 +122,7 @@ instance ADLValue S where
                 , ("v7",aToJSON v7_js (s_v7 v))
                 , ("v7a",aToJSON v7a_js (s_v7a v))
                 , ("v8",aToJSON v8_js (s_v8 v))
+                , ("v8a",aToJSON v8a_js (s_v8a v))
                 ] )
             
             from (JSON.Object hm) = S 
@@ -133,4 +137,5 @@ instance ADLValue S where
                 <*> fieldFromJSON v7_js "v7" defaultv hm
                 <*> fieldFromJSON v7a_js "v7a" defaultv hm
                 <*> fieldFromJSON v8_js "v8" defaultv hm
+                <*> fieldFromJSON v8a_js "v8a" defaultv hm
             from _ = Prelude.Nothing
