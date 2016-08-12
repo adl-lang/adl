@@ -5,6 +5,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Scientific as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Text.Parsec as P
@@ -28,7 +29,6 @@ import ADL.Compiler.AST
 import ADL.Compiler.EIO
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
-import ADL.Compiler.Backends.Utils.Literals2
 import ADL.Compiler.Backends.Utils.IndentedCode
 import ADL.Core.Value
 import ADL.Utils.Format
@@ -436,7 +436,7 @@ genFieldDetails f = do
   boxedTypeExprStr <- genTypeExprB True te
   factoryExprStr <- genFactoryExpr te
   litv <- case f_default f of
-    (Just v) -> case mkLiteral te v of
+    (Just v) -> case literalForTypeExpr te v of
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
       Right litv -> return litv
     Nothing -> return (LDefault te)
@@ -520,6 +520,13 @@ genLiteralText (LVector _ ls) = do
   return (template "$1.asList($2)" [arrays,commaSep lits])
 genLiteralText (LPrimitive pt jv) = do
   return (pd_genLiteral (genPrimitiveDetails pt) jv)
+
+litNumber :: S.Scientific -> T.Text
+litNumber n = T.pack s
+  where
+   s = case S.floatingOrInteger n of
+     (Left r) -> show n
+     (Right i) -> show (i::Integer)
 
 packageGenerator :: T.Text -> ModuleName -> JavaPackage
 packageGenerator basePackage mn = JavaPackage (T.splitOn "." basePackage <> unModuleName mn)

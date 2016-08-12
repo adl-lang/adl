@@ -31,7 +31,7 @@ import ADL.Utils.Format
 import ADL.Compiler.AST
 import ADL.Compiler.Backends.Utils.Literals
 import ADL.Compiler.EIO
-import ADL.Compiler.Processing
+import ADL.Compiler.Processing hiding(Literal(..))
 import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
 import ADL.Core.Value

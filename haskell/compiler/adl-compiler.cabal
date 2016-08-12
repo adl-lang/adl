@@ -29,7 +29,6 @@ executable adlc
                      , ADL.Compiler.Backends.Cpp
                      , ADL.Compiler.Backends.Java
                      , ADL.Compiler.Backends.Utils.Literals
-                     , ADL.Compiler.Backends.Utils.Literals2
                      , HaskellCustomTypes
 
 test-suite adlc-tests
@@ -47,6 +46,5 @@ test-suite adlc-tests
                      , ADL.Compiler.Backends.Cpp
                      , ADL.Compiler.Backends.Java
                      , ADL.Compiler.Backends.Utils.Literals
-                     , ADL.Compiler.Backends.Utils.Literals2
                      , HaskellCustomTypes
 

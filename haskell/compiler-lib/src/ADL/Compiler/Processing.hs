@@ -128,6 +128,8 @@ data ResolvedTypeT c
   | RT_Param Ident
   | RT_Primitive PrimitiveType
 
+type TypeExprRT c = TypeExpr (ResolvedTypeT c)
+
 instance Show c => Show (ResolvedTypeT c) where
     show (RT_Named (sn,_,c)) = show ("RT_Named",sn,c)
     show (RT_Param i) = show ( "RT_Param",i)
@@ -333,62 +335,76 @@ checkDefaultOverrides m = execWriter checkModule
 
     checkType :: T.Text -> [Ident] -> TypeExpr ResolvedType -> Maybe JSON.Value -> Writer [DefaultOverrideError] ()
     checkType _ _ _ Nothing = return ()
-    checkType n tparams te (Just jv) = case validateLiteralForTypeExpr te jv of
-      Right () -> return ()
+    checkType n tparams te (Just jv) = case literalForTypeExpr te jv of
+      Right _ -> return ()
       Left err -> tell [DefaultOverrideError (template "Invalid override of $1: $2" [n,err])]
 
-validateLiteralForTypeExpr :: TypeExpr ResolvedType -> JSON.Value -> Either T.Text ()
-validateLiteralForTypeExpr te v = validateTE Map.empty te v
-  where
-    validateTE m (TypeExpr (RT_Primitive pt) []) v = case ptValidateLiteral pt v of
-      Nothing -> Right ()
-      Just err -> Left err
-    validateTE m (TypeExpr (RT_Primitive P_Vector) [te]) v = vecLiteral m te v
-    validateTE m (TypeExpr (RT_Primitive P_Sink) [te]) v = Left "literals not allowed for sinks"
-    validateTE m (TypeExpr (RT_Primitive _) _) v =
-      error "INTERNAL ERROR: found primitive type with incorrect number of type parameters"
 
-    validateTE m (TypeExpr (RT_Named (sn,decl,())) tes) v = case d_type decl of
-      (Decl_Struct s) -> structLiteral m decl s tes v
-      (Decl_Union u) -> unionLiteral m decl u tes v 
+-- | Represent the construction of a literal value in a
+-- language independent way
+
+data Literal te
+  = LDefault te
+  | LCtor te [Literal te]
+  | LUnion te Ident (Literal te)
+  | LVector te [Literal te]
+  | LPrimitive PrimitiveType JSON.Value
+
+-- | Generate a `Literal` value from a JSON value.
+literalForTypeExpr :: TypeExprRT c -> JSON.Value -> Either T.Text (Literal (TypeExprRT c))
+literalForTypeExpr te v = litForTE Map.empty te v
+  where
+    litForTE m (TypeExpr (RT_Primitive pt) []) v = case ptValidateLiteral pt v of
+      Nothing -> Right (LPrimitive pt v)
+      Just err -> Left err
+    litForTE m te@(TypeExpr (RT_Primitive P_Vector) [te0]) v = LVector te <$> vecLiteral m te0 v
+    litForTE m (TypeExpr (RT_Primitive P_Sink) [te]) v = Left "literals not allowed for sinks"
+    litForTE m (TypeExpr (RT_Primitive _) _) v =
+      error "BUG: found primitive type with incorrect number of type parameters"
+
+    litForTE m te@(TypeExpr (RT_Named (_,decl,_)) tes) v = case d_type decl of
+      (Decl_Struct s) -> LCtor te <$> structFields m decl s tes v
+      (Decl_Union u) -> uncurry (LUnion te) <$> unionField m decl u tes v
       (Decl_Typedef t) -> typedefLiteral m t tes v
-      (Decl_Newtype n) -> newtypeLiteral m n tes v
-    validateTE m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
-         (Just te) -> validateTE Map.empty te v
-         Nothing -> Left "literals not allows for parameterised fields"
+      (Decl_Newtype n) -> (\t ->LCtor te [t]) <$> newtypeLiteral m n tes v
+      
+    litForTE m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
+      (Just te) -> litForTE Map.empty te v
+      Nothing -> Left "literals not allows for parameterised fields"
     
-    vecLiteral m te (JSON.Array v) = mapM_ (validateTE m te) (V.toList v)
+    vecLiteral m te (JSON.Array v) = mapM (litForTE m te) (V.toList v)
     vecLiteral _ _ _ = Left "expected an array"
 
-    structLiteral m decl s tes (JSON.Object hm) = mapM_ checkField (HM.toList hm)
-      where
-        checkField :: (T.Text,JSON.Value) -> Either T.Text ()
-        checkField (k,v) = do
-          pm <- createParamMap (s_typeParams s) tes m
-          case find ((k==).f_name) (s_fields s) of
-            (Just f) -> validateTE pm (f_type f) v
-            Nothing -> Left ("Field " <> k <> " in literal doesn't match any in struct definition for "<> d_name decl)
-    structLiteral m _ s _ _ = Left "expected an object"
+    structFields m decl s tes (JSON.Object hm) = for (s_fields s) $ \f -> do
+      pm <- createParamMap (s_typeParams s) tes m
+      case HM.lookup (f_name f) hm of
+       (Just jv) -> litForTE pm (f_type f) jv
+       Nothing -> case f_default f of
+         (Just jv) -> litForTE pm (f_type f) jv
+         Nothing -> Right (LDefault (f_type f))
+    structFields _ _ _ _ _ = Left "expected an object"
 
-    unionLiteral m decl u tes (JSON.Object hm) = do
+    unionField m decl u tes (JSON.Object hm) = do
       pm <- createParamMap (u_typeParams u) tes m
       case HM.toList hm of
         [(k,v)] -> case find ((k==).f_name) (u_fields u) of
-          (Just f) -> validateTE pm (f_type f) v
+          (Just f) -> do
+            lit <- litForTE pm (f_type f) v
+            return (k,lit)
           Nothing ->
             Left (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
         _ -> Left "literal union must have a single key/value pair"
-    unionLiteral m _ u tes _ = Left "expected an object"
+    unionLiteral _ _ _ _ _ _ = Left "expected an object"
 
     typedefLiteral m t tes v = do
       pm <- createParamMap (t_typeParams t) tes m
-      validateTE pm (t_typeExpr t) v
+      litForTE pm (t_typeExpr t) v
 
     newtypeLiteral m n tes v = do
       pm <- createParamMap (n_typeParams n) tes m
-      validateTE pm (n_typeExpr n) v
+      litForTE pm (n_typeExpr n) v
 
-    createParamMap :: [Ident] -> [TypeExpr ResolvedType] -> Map.Map Ident (TypeExpr ResolvedType) -> Either T.Text (Map.Map Ident (TypeExpr ResolvedType))
+    createParamMap :: [Ident] -> [TypeExprRT c] -> Map.Map Ident (TypeExprRT c) -> Either T.Text (Map.Map Ident (TypeExprRT c))
     createParamMap typeParams tes m = do
       items <- for (zip typeParams tes) $ \(id,te) -> do
         te' <- substTypeParams m te
@@ -546,7 +562,7 @@ expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
         Right te -> te
     typeExpr t ts = TypeExpr t ts
 
-substTypeParams :: Map.Map Ident (TypeExpr ResolvedType) -> TypeExpr ResolvedType -> Either T.Text (TypeExpr ResolvedType)
+substTypeParams :: Map.Map Ident (TypeExprRT c) -> TypeExprRT c -> Either T.Text (TypeExprRT c)
 substTypeParams m  (TypeExpr (RT_Param n) ts) =
   case Map.lookup n m of
     Nothing -> TypeExpr (RT_Param n) <$> mapM (substTypeParams m) ts
