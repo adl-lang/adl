@@ -519,8 +519,9 @@ genLiteralText (LUnion te ctor l) = do
   return (template "$1.$2($3)" [typeExpr, ctor, lit ])
 genLiteralText (LVector _ ls) = do
   lits <- mapM genLiteralText ls
-  arrays <- addImport "java.util" "Arrays"
-  return (template "$1.asList($2)" [arrays,commaSep lits])
+  rtpackage <- getRuntimePackage
+  factories <- addImport rtpackage "Factories"
+  return (template "$1.arrayList($2)" [factories,commaSep lits])
 genLiteralText (LPrimitive pt jv) = do
   return (pd_genLiteral (genPrimitiveDetails pt) jv)
 

@@ -1,5 +1,8 @@
 package org.adl.runtime;
 
+import org.adl.sys.types.Pair;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,5 +24,13 @@ public class HashMapHelpers
         return result;
       }
     };
+  }
+
+  public static <K,V> HashMap<K,V> create(ArrayList<Pair<K,V>> vals) {
+    HashMap<K,V> result = new HashMap<K,V>();
+    for (Pair<K,V> p : vals) {
+      result.put(p.getV1(),p.getV2());
+    }
+    return result;
   }
 };

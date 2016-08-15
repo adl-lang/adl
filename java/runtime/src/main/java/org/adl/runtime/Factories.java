@@ -72,4 +72,14 @@ public class Factories {
       }
     };
   }
+
+  @SafeVarargs
+  public static <T> ArrayList<T> arrayList(T... values) {
+    ArrayList<T> result  = new ArrayList<T>();
+    for (int i=  0; i < values.length; i++) {
+      result.add(values[i]);
+    }
+    return result;
+  }
+  
 };

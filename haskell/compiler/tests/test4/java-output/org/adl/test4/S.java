@@ -6,7 +6,6 @@ import org.adl.runtime.HashMapHelpers;
 import org.adl.runtime.HashSetHelpers;
 import org.adl.runtime.OptionalHelpers;
 import org.adl.sys.types.Pair;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
@@ -55,10 +54,10 @@ public class S {
     this.v5a = OptionalHelpers.nothing(null);
     this.v5b = OptionalHelpers.just("hello");
     this.v6 = Pair.factory(Factories.STRING, Factories.INTEGER).create();
-    this.v7 = HashSetHelpers.create(Arrays.asList(1, 2, 3));
+    this.v7 = HashSetHelpers.create(Factories.arrayList(1, 2, 3));
     this.v7a = HashSetHelpers.factory(Factories.INTEGER).create();
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create();
-    this.v8a = HashMapHelpers.create(Arrays.asList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)));
+    this.v8a = HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)));
   }
 
   public S(S other) {

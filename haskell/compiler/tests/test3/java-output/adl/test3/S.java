@@ -4,7 +4,6 @@ import org.adl.runtime.ByteArray;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 
 public class S<T> {
@@ -291,11 +290,11 @@ public class S<T> {
           0.45,
           new ByteArray("hello".getBytes()),
           "abcd",
-          Arrays.asList("xy", "ab"),
+          Factories.arrayList("xy", "ab"),
           new A((short)0, "xyz", true),
           U.f_int((short)45),
           factoryT.create(),
-          new B<Short>((short)56, "yikes", Arrays.asList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5))
+          new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5))
           );
       }
 
