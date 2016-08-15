@@ -211,7 +211,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
       let factoryg =
             cblock (template "public static $2 $3<$1$2> factory($4)" [className,typeArgs,factoryInterface,factoryArgs]) (
               cblock1 (template "return new $1<$2$3>()" [factoryInterface,className,typeArgs]) (
-                mconcat [ctemplate "final $1<$2> $3 = $4;" [factoryInterface,fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails, not (immutableType (f_type (fd_field fd)))]
+                mconcat [ctemplate "final $1<$2> $3 = $4;" [factoryInterface,fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
                 <>
                 cline ""
                 <>
@@ -232,7 +232,10 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
               )
 
           factoryArgs = commaSep [template "$1<$2> $3" [factoryInterface,arg,factoryTypeArg arg] | arg <- s_typeParams struct]
-          ctor1Args = [fd_defValue fd | fd <-fieldDetails]
+          ctor1Args = [case f_default (fd_field fd) of
+                        Nothing -> template "$1.create()" [fd_fieldName fd]
+                        (Just _) -> fd_defValue fd
+                      | fd <-fieldDetails]
           ctor2Args = [if immutableType (f_type (fd_field fd))
                        then template "other.$1" [fieldAccessExpr codeProfile fd]
                        else template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]
@@ -435,14 +438,15 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       let factoryg =
             cblock (template "public static$2 $3<$1$2> factory($4)" [className,leadSpace typeArgs,factoryInterface,factoryArgs]) (
               cblock1 (template "return new Factory<$1$2>()" [className,typeArgs]) (
-                mconcat [ctemplate "final Factory<$1> $2 = $3;" [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails, not (immutableType (f_type (fd_field fd)))]
+                mconcat [ctemplate "final Factory<$1> $2 = $3;"
+                                   [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
                 <>
                 cline ""
                 <>
                 cblock (template "public $1$2 create()" [className,typeArgs]) (
-                  let val = if immutableType (f_type (fd_field fieldDetail0))
-                            then fd_defValue fieldDetail0
-                            else template "$1.create()" [fd_fieldName fieldDetail0]
+                  let val = case f_default (fd_field fieldDetail0) of
+                        Nothing -> template "$1.create()" [fd_fieldName fieldDetail0]
+                        (Just _) -> fd_defValue fieldDetail0
                   in ctemplate "return new $1$2(Disc.$3,$4);" [className,typeArgs,discriminatorName fieldDetail0,val]
                 )
                 <>

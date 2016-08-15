@@ -89,15 +89,17 @@ public class S3<T> {
 
   public static <T> Factory<S3<T>> factory(Factory<T> factoryT) {
     return new Factory<S3<T>>() {
+      final Factory<String> f1 = Factories.STRING;
+      final Factory<Double> f2 = Factories.DOUBLE;
       final Factory<T> f3 = factoryT;
       final Factory<ArrayList<T>> f4 = Factories.arrayList(factoryT);
 
       public S3<T> create() {
         return new S3<T>(
-          "",
-          0.0,
-          factoryT.create(),
-          new ArrayList<T>()
+          f1.create(),
+          f2.create(),
+          f3.create(),
+          f4.create()
           );
       }
 

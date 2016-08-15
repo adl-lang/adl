@@ -54,7 +54,7 @@ public class Map<K, V> {
 
       public Map<K, V> create() {
         return new Map<K, V>(
-          new ArrayList<Pair<K, V>>()
+          value.create()
           );
       }
 

@@ -54,7 +54,7 @@ public class Set<T> {
 
       public Set<T> create() {
         return new Set<T>(
-          new ArrayList<T>()
+          value.create()
           );
       }
 

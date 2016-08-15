@@ -84,10 +84,11 @@ public class Maybe<T> {
 
   public static <T> Factory<Maybe <T>> factory(Factory<T> factoryT) {
     return new Factory<Maybe<T>>() {
+      final Factory<Void> nothing = Factories.VOID;
       final Factory<T> just = factoryT;
 
       public Maybe<T> create() {
-        return new Maybe<T>(Disc.NOTHING,null);
+        return new Maybe<T>(Disc.NOTHING,nothing.create());
       }
 
       public Maybe<T> create(Maybe<T> other) {

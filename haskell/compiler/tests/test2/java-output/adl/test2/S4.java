@@ -66,8 +66,8 @@ public class S4<T> {
 
       public S4<T> create() {
         return new S4<T>(
-          S3.factory(Factories.STRING).create(),
-          S3.factory(factoryT).create()
+          f1.create(),
+          f2.create()
           );
       }
 

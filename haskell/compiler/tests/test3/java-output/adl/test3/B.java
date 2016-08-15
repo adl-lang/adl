@@ -87,15 +87,16 @@ public class B<T> {
   public static <T> Factory<B<T>> factory(Factory<T> factoryT) {
     return new Factory<B<T>>() {
       final Factory<T> f_t = factoryT;
+      final Factory<String> f_string = Factories.STRING;
       final Factory<ArrayList<T>> f_tvec = Factories.arrayList(factoryT);
       final Factory<XY<T>> f_xy = XY.factory(factoryT);
 
       public B<T> create() {
         return new B<T>(
-          factoryT.create(),
-          "",
-          new ArrayList<T>(),
-          XY.factory(factoryT).create()
+          f_t.create(),
+          f_string.create(),
+          f_tvec.create(),
+          f_xy.create()
           );
       }
 

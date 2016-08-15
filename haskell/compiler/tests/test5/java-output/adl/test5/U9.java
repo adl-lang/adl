@@ -92,6 +92,7 @@ public class U9<T> {
   public static <T> Factory<U9 <T>> factory(Factory<T> factoryT) {
     return new Factory<U9<T>>() {
       final Factory<T> v1 = factoryT;
+      final Factory<Short> v2 = Factories.SHORT;
 
       public U9<T> create() {
         return new U9<T>(Disc.V1,v1.create());

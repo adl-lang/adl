@@ -267,7 +267,20 @@ public class S<T> {
 
   public static <T> Factory<S<T>> factory(Factory<T> factoryT) {
     return new Factory<S<T>>() {
+      final Factory<Void> f_void = Factories.VOID;
+      final Factory<Boolean> f_bool = Factories.BOOLEAN;
+      final Factory<Byte> f_int8 = Factories.BYTE;
+      final Factory<Short> f_int16 = Factories.SHORT;
+      final Factory<Integer> f_int32 = Factories.INTEGER;
+      final Factory<Long> f_int64 = Factories.LONG;
+      final Factory<Byte> f_word8 = Factories.BYTE;
+      final Factory<Short> f_word16 = Factories.SHORT;
+      final Factory<Integer> f_word32 = Factories.INTEGER;
+      final Factory<Long> f_word64 = Factories.LONG;
+      final Factory<Float> f_float = Factories.FLOAT;
+      final Factory<Double> f_double = Factories.DOUBLE;
       final Factory<ByteArray> f_bytes = Factories.BYTE_ARRAY;
+      final Factory<String> f_string = Factories.STRING;
       final Factory<ArrayList<String>> f_vstring = Factories.arrayList(Factories.STRING);
       final Factory<A> f_a = A.FACTORY;
       final Factory<U> f_u = U.FACTORY;
@@ -293,7 +306,7 @@ public class S<T> {
           Factories.arrayList("xy", "ab"),
           new A((short)0, "xyz", true),
           U.f_int((short)45),
-          factoryT.create(),
+          f_t.create(),
           new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5))
           );
       }

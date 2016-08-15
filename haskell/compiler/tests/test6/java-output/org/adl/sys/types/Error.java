@@ -92,6 +92,7 @@ public class Error<T> {
   public static <T> Factory<Error <T>> factory(Factory<T> factoryT) {
     return new Factory<Error<T>>() {
       final Factory<T> value = factoryT;
+      final Factory<String> error = Factories.STRING;
 
       public Error<T> create() {
         return new Error<T>(Disc.VALUE,value.create());
