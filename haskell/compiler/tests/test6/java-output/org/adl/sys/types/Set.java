@@ -73,8 +73,7 @@ public class Set<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<Set<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<ArrayList<T>> value = JsonBindings.arrayList(bindingT);
-    final Factory<T> factoryT = bindingT.factory();
+    final JsonBinding<ArrayList<T>> _binding = JsonBindings.arrayList(bindingT);
     final Factory<Set<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<Set<T>>() {
@@ -83,16 +82,11 @@ public class Set<T> {
       }
 
       public JsonElement toJson(Set<T> _value) {
-        JsonObject _result = new JsonObject();
-        _result.add("value", value.toJson(_value.value));
-        return _result;
+        return _binding.toJson(_value.value);
       }
 
       public Set<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        return new Set<T>(
-          _obj.has("value") ? value.fromJson(_obj.get("value")) : new ArrayList<T>()
-        );
+        return new Set<T>(_binding.fromJson(_json));
       }
     };
   }

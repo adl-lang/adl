@@ -70,7 +70,7 @@ public class Factory {
   /* Json serialization */
 
   public static JsonBinding<Factory> jsonBinding() {
-    final JsonBinding<String> value = JsonBindings.STRING;
+    final JsonBinding<String> _binding = JsonBindings.STRING;
     final org.adl.runtime.Factory<Factory> _factory = FACTORY;
 
     return new JsonBinding<Factory>() {
@@ -79,16 +79,11 @@ public class Factory {
       }
 
       public JsonElement toJson(Factory _value) {
-        JsonObject _result = new JsonObject();
-        _result.add("value", value.toJson(_value.value));
-        return _result;
+        return _binding.toJson(_value.value);
       }
 
       public Factory fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        return new Factory(
-          _obj.has("value") ? value.fromJson(_obj.get("value")) : ""
-        );
+        return new Factory(_binding.fromJson(_json));
       }
     };
   }

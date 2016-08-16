@@ -71,7 +71,7 @@ public class Date {
   /* Json serialization */
 
   public static JsonBinding<Date> jsonBinding() {
-    final JsonBinding<String> value = JsonBindings.STRING;
+    final JsonBinding<String> _binding = JsonBindings.STRING;
     final Factory<Date> _factory = FACTORY;
 
     return new JsonBinding<Date>() {
@@ -80,16 +80,11 @@ public class Date {
       }
 
       public JsonElement toJson(Date _value) {
-        JsonObject _result = new JsonObject();
-        _result.add("value", value.toJson(_value.value));
-        return _result;
+        return _binding.toJson(_value.value);
       }
 
       public Date fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        return new Date(
-          _obj.has("value") ? value.fromJson(_obj.get("value")) : "1900-01-01"
-        );
+        return new Date(_binding.fromJson(_json));
       }
     };
   }

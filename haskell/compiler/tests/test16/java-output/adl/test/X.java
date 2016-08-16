@@ -70,7 +70,7 @@ public class X {
   /* Json serialization */
 
   public static JsonBinding<X> jsonBinding() {
-    final JsonBinding<A> value = A.jsonBinding();
+    final JsonBinding<A> _binding = A.jsonBinding();
     final Factory<X> _factory = FACTORY;
 
     return new JsonBinding<X>() {
@@ -79,16 +79,11 @@ public class X {
       }
 
       public JsonElement toJson(X _value) {
-        JsonObject _result = new JsonObject();
-        _result.add("value", value.toJson(_value.value));
-        return _result;
+        return _binding.toJson(_value.value);
       }
 
       public X fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        return new X(
-          _obj.has("value") ? value.fromJson(_obj.get("value")) : new A()
-        );
+        return new X(_binding.fromJson(_json));
       }
     };
   }

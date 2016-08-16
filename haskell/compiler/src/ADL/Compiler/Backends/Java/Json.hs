@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Compiler.Backends.Java.Json(
   generateStructJson,
+  generateNewtypeJson,
   generateUnionJson
   ) where
 
@@ -84,6 +85,54 @@ generateStructJson cgp decl struct fieldDetails = do
                     <>
                     cline ");"
                     )
+                  )
+                )
+              )
+
+  addMethod (cline "/* Json serialization */")
+  addMethod factory
+
+generateNewtypeJson :: CodeGenProfile -> Decl CResolvedType -> Newtype CResolvedType -> CState ()
+generateNewtypeJson cgp decl newtype_ = do
+  let typeArgs = case n_typeParams newtype_ of
+        [] -> ""
+        args -> "<" <> commaSep (map unreserveWord args) <> ">"
+      className = unreserveWord (d_name decl) <> typeArgs
+
+  factoryI <- addImport (cgp_runtimePackage cgp) "Factory"
+  jsonBindingI <- addImport (cgp_runtimePackage cgp) "JsonBinding"
+  jsonElementI <- addImport "com.google.gson" "JsonElement"
+  jsonObjectI <- addImport "com.google.gson" "JsonObject"
+  jsonBinding <- genJsonBindingExpr cgp (n_typeExpr newtype_)
+  boxedTypeExprStr <- genTypeExprB True (n_typeExpr newtype_)
+  
+  let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- n_typeParams newtype_]
+
+  let factory =
+        cblock (template "public static$1 $2<$3> jsonBinding($4)" [typeArgs,jsonBindingI,className,bindingArgs]) (
+              ctemplate "final $1<$2> _binding = $3;" [jsonBindingI,boxedTypeExprStr,jsonBinding]
+              <>
+              case n_typeParams newtype_ of
+                [] -> ctemplate "final $1<$2> _factory = FACTORY;" [factoryI,className]
+                tparams -> ctemplate "final $1<$2> _factory = factory($3);" [factoryI,className,commaSep [template "binding$1.factory()" [i] | i <-tparams ]]
+              <> 
+              cline ""
+              <>
+              cblock1 (template "return new $1<$2>()" [jsonBindingI,className]) (
+                cblock (template "public $1<$2> factory()" [factoryI,className]) (
+                  cline "return _factory;"
+                  )
+                <>
+                cline ""
+                <>
+                cblock (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
+                  cline "return _binding.toJson(_value.value);"
+                  )
+                <>
+                cline ""
+                <>
+                cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
+                  ctemplate "return new $1(_binding.fromJson(_json));" [className]
                   )
                 )
               )

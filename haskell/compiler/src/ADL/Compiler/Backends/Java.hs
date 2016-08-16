@@ -93,9 +93,67 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
     typeArgs = case s_typeParams struct of
       [] -> ""
       args -> "<" <> commaSep (map unreserveWord args) <> ">"
+
+    gen = do
+      fieldDetails <- mapM genFieldDetails (s_fields struct)
+      generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
+
+      -- Json
+      when (cgp_json codeProfile) $ do
+        generateStructJson codeProfile decl struct fieldDetails
+
+      -- Parcelable
+      when (cgp_parcelable codeProfile) $ do
+        generateStructParcelable codeProfile decl struct fieldDetails
+
+generateNewtype :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Newtype CResolvedType -> ClassFile
+generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState gen state0
+  where 
+    className = unreserveWord (d_name decl)
+    classDecl = "public class " <> className <> typeArgs
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl 
+    typeArgs = case s_typeParams struct of
+      [] -> ""
+      args -> "<" <> commaSep (map unreserveWord args) <> ">"
+
+    -- In java a newtype is just a single valued struct (with special serialisation)
+    struct = Struct {
+      s_typeParams = n_typeParams newtype_,
+      s_fields =
+        [ Field {
+           f_name = "value",
+           f_type = n_typeExpr newtype_,
+           f_default = n_default newtype_,
+           f_annotations = mempty
+           }
+        ]
+      }
+
+    gen = do
+      fieldDetails <- mapM genFieldDetails (s_fields struct)
+      generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
+
+      -- Json
+      when (cgp_json codeProfile) $ do
+        generateNewtypeJson codeProfile decl newtype_
+
+      -- Parcelable
+      when (cgp_parcelable codeProfile) $ do
+        generateStructParcelable codeProfile decl struct fieldDetails
+
+generateCoreStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage)
+                   -> Decl CResolvedType -> Struct CResolvedType -> [FieldDetails] -> CState ()
+generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails =  gen
+  where
+    className = unreserveWord (d_name decl)
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl 
+    isEmpty = null (s_fields struct)
+    classDecl = "public class " <> className <> typeArgs
+    typeArgs = case s_typeParams struct of
+      [] -> ""
+      args -> "<" <> commaSep (map unreserveWord args) <> ">"
     gen = do
       setDocString (generateDocString (d_annotations decl))
-      fieldDetails <- mapM genFieldDetails (s_fields struct)
 
       preventImport className
       for_ fieldDetails (\fd -> preventImport (fd_fieldName fd))
@@ -245,31 +303,6 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
       addMethod (cline "/* Factory for construction of generic values */")
 
       addMethod (if isGeneric then factoryg else factory)
-
-      -- Json
-      when (cgp_json codeProfile) $ do
-        generateStructJson codeProfile decl struct fieldDetails
-
-      -- Parcelable
-      when (cgp_parcelable codeProfile) $ do
-        generateStructParcelable codeProfile decl struct fieldDetails
-
-generateNewtype :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Newtype CResolvedType -> ClassFile
-generateNewtype codeProfile moduleName javaPackageFn decl newtype_ =
-  -- In java a newtype is just a single valueed struct
-  generateStruct codeProfile moduleName javaPackageFn decl struct
-  where
-    struct = Struct {
-      s_typeParams = n_typeParams newtype_,
-      s_fields =
-        [ Field {
-           f_name = "value",
-           f_type = n_typeExpr newtype_,
-           f_default = n_default newtype_,
-           f_annotations = mempty
-           }
-        ]
-      }
 
 generateUnion :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Union CResolvedType -> ClassFile
 generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen state0

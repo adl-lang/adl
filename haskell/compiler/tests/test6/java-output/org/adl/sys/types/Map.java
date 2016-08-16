@@ -73,9 +73,7 @@ public class Map<K, V> {
   /* Json serialization */
 
   public static<K, V> JsonBinding<Map<K, V>> jsonBinding(JsonBinding<K> bindingK, JsonBinding<V> bindingV) {
-    final JsonBinding<ArrayList<Pair<K, V>>> value = JsonBindings.arrayList(Pair.jsonBinding(bindingK, bindingV));
-    final Factory<K> factoryK = bindingK.factory();
-    final Factory<V> factoryV = bindingV.factory();
+    final JsonBinding<ArrayList<Pair<K, V>>> _binding = JsonBindings.arrayList(Pair.jsonBinding(bindingK, bindingV));
     final Factory<Map<K, V>> _factory = factory(bindingK.factory(), bindingV.factory());
 
     return new JsonBinding<Map<K, V>>() {
@@ -84,16 +82,11 @@ public class Map<K, V> {
       }
 
       public JsonElement toJson(Map<K, V> _value) {
-        JsonObject _result = new JsonObject();
-        _result.add("value", value.toJson(_value.value));
-        return _result;
+        return _binding.toJson(_value.value);
       }
 
       public Map<K, V> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        return new Map<K, V>(
-          _obj.has("value") ? value.fromJson(_obj.get("value")) : new ArrayList<Pair<K, V>>()
-        );
+        return new Map<K, V>(_binding.fromJson(_json));
       }
     };
   }
