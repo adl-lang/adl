@@ -135,7 +135,7 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState g
 
       -- Json
       when (cgp_json codeProfile) $ do
-        generateNewtypeJson codeProfile decl newtype_
+        generateNewtypeJson codeProfile decl newtype_ (fd_memberVarName (head fieldDetails))
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do
@@ -156,7 +156,8 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       setDocString (generateDocString (d_annotations decl))
 
       preventImport className
-      for_ fieldDetails (\fd -> preventImport (fd_fieldName fd))
+      for_ fieldDetails (\fd -> preventImport (fd_memberVarName fd))
+      for_ fieldDetails (\fd -> preventImport (fd_varName fd))
       
       objectsClass <- addImport "java.util" "Objects"
 
@@ -166,29 +167,29 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
              (if cgp_publicMembers codeProfile then ["public"] else ["private"])
              <>
              (if cgp_mutable codeProfile then [] else ["final"])
-        addField (ctemplate "$1 $2 $3;" [T.intercalate " " modifiers,fd_typeExprStr fd,fd_fieldName fd])
+        addField (ctemplate "$1 $2 $3;" [T.intercalate " " modifiers,fd_typeExprStr fd,fd_memberVarName fd])
 
       -- Constructors
-      let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_fieldName fd | fd <- fieldDetails]
+      let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_varName fd | fd <- fieldDetails]
           isGeneric = length (s_typeParams struct) > 0
           
           ctor1 =
             cblock (template "public $1($2)" [className,ctorArgs]) (
               clineN [
                 if needsNullCheck fd
-                  then template "this.$1 = $2.requireNonNull($1);" [fd_fieldName fd,objectsClass]
-                  else template "this.$1 = $1;" [fd_fieldName fd]
+                  then template "this.$1 = $2.requireNonNull($3);" [fd_memberVarName fd, objectsClass, fd_varName fd]
+                  else template "this.$1 = $2;" [fd_memberVarName fd, fd_varName fd]
                 | fd <- fieldDetails]
             )
 
           ctor2 =
             cblock (template "public $1()" [className]) (
-              clineN [template "this.$1 = $2;" [fd_fieldName fd,fd_defValue fd] | fd <- fieldDetails]
+              clineN [template "this.$1 = $2;" [fd_memberVarName fd,fd_defValue fd] | fd <- fieldDetails]
             )
 
           ctor3 =
             cblock (template "public $1($2 other)" [className, className <> typeArgs]) (
-              mconcat [ let n = fd_fieldName fd in ctemplate "this.$1 = $2;" [n,fd_copy fd ("other." <>n)]
+              mconcat [ let n = fd_memberVarName fd in ctemplate "this.$1 = $2;" [n,fd_copy fd ("other." <>n)]
                       | fd <- fieldDetails ]
             )
 
@@ -203,18 +204,15 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       
       when (not (cgp_publicMembers codeProfile)) $ do
         for_ fieldDetails $ \fd -> do
-          let fieldName = fd_fieldName fd
-              capsFieldName = javaCapsFieldName (fd_field fd)
-              typeExprStr = fd_typeExprStr fd
-              getter =
-                cblock (template "public $1 get$2()" [typeExprStr,capsFieldName]) (
-                  ctemplate "return $1;" [fieldName]
+          let getter =
+                cblock (template "public $1 $2()" [fd_typeExprStr fd,fd_accessorName fd]) (
+                  ctemplate "return $1;" [fd_memberVarName fd]
                 )
               setter =
-                cblock (template "public void set$1($2 new$1)" [capsFieldName,typeExprStr]) (
+                cblock (template "public void $1($2 $3)" [fd_mutatorName fd,fd_typeExprStr fd, fd_varName fd]) (
                   if needsNullCheck fd
-                     then ctemplate "$1 = $2.requireNonNull(new$3);" [fieldName,objectsClass,capsFieldName]
-                     else ctemplate "$1 = new$2;" [fieldName,capsFieldName]
+                     then ctemplate "this.$1 = $2.requireNonNull($3);" [fd_memberVarName fd,objectsClass,fd_varName fd]
+                     else ctemplate "this.$1 = $2;" [fd_memberVarName fd,fd_varName fd]
                 )
           addMethod getter
           when (cgp_mutable codeProfile) (addMethod setter)
@@ -233,7 +231,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
             <>
             let terminators = replicate (length fieldDetails-1) " &&" <> [";"]
                 tests = [ctemplate (if unboxedField fd then "$1 == other.$1$2" else "$1.equals(other.$1)$2")
-                                   [fd_fieldName fd,term]
+                                   [fd_memberVarName fd,term]
                         | (fd,term) <- zip fieldDetails terminators]
             in  indent (mconcat tests)
             )
@@ -248,7 +246,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
         let hashfn fd from = case (f_type (fd_field fd)) of
               (TypeExpr (RT_Primitive pt) []) -> pd_hashfn (genPrimitiveDetails pt) from
               _ -> template "$1.hashCode()" [from]
-        in mconcat [ctemplate "result = result * 37 + $1;" [hashfn fd (fd_fieldName fd)] | fd <- fieldDetails]
+        in mconcat [ctemplate "result = result * 37 + $1;" [hashfn fd (fd_memberVarName fd)] | fd <- fieldDetails]
         <>
         cline "return result;"
         )
@@ -270,7 +268,9 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       let factoryg =
             cblock (template "public static $2 $3<$1$2> factory($4)" [className,typeArgs,factoryInterface,factoryArgs]) (
               cblock1 (template "return new $1<$2$3>()" [factoryInterface,className,typeArgs]) (
-                mconcat [ctemplate "final $1<$2> $3 = $4;" [factoryInterface,fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
+                mconcat [ctemplate "final $1<$2> $3 = $4;"
+                                   [factoryInterface,fd_boxedTypeExprStr fd,fd_varName fd,fd_factoryExprStr fd]
+                        | fd <- fieldDetails]
                 <>
                 cline ""
                 <>
@@ -292,12 +292,12 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
 
           factoryArgs = commaSep [template "$1<$2> $3" [factoryInterface,arg,factoryTypeArg arg] | arg <- s_typeParams struct]
           ctor1Args = [case f_default (fd_field fd) of
-                        Nothing -> template "$1.create()" [fd_fieldName fd]
+                        Nothing -> template "$1.create()" [fd_varName fd]
                         (Just _) -> fd_defValue fd
                       | fd <-fieldDetails]
           ctor2Args = [if immutableType (f_type (fd_field fd))
-                       then template "other.$1" [fieldAccessExpr codeProfile fd]
-                       else template "$1.create(other.$2)" [fd_fieldName fd,fieldAccessExpr codeProfile fd]
+                       then template "other.$1" [fd_accessExpr fd]
+                       else template "$1.create(other.$2)" [fd_varName fd,fd_accessExpr fd]
                       | fd <- fieldDetails]
 
       addMethod (cline "/* Factory for construction of generic values */")
@@ -329,7 +329,10 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
         (fd:_) -> return fd
 
       preventImport className
-      for_ fieldDetails (\fd -> preventImport (fd_fieldName fd))
+      for_ fieldDetails (\fd -> preventImport (fd_memberVarName fd))
+      for_ fieldDetails (\fd -> preventImport (fd_varName fd))
+      preventImport discVar
+      preventImport valueVar
         
       objectsClass <- addImport "java.util" "Objects"
 
@@ -354,10 +357,10 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       
       for_ fieldDetails $ \fd -> do
         let checkedv = if needsNullCheck fd then template "$1.requireNonNull(v)" [objectsClass] else "v"
-            ctor = cblock (template "public static$1 $2$3 $4($5 v)" [leadSpace typeArgs, className, typeArgs, unionCtorName (fd_field fd), fd_typeExprStr fd]) (
+            ctor = cblock (template "public static$1 $2$3 $4($5 v)" [leadSpace typeArgs, className, typeArgs, fd_unionCtorName fd, fd_typeExprStr fd]) (
               ctemplate "return new $1$2(Disc.$3, $4);" [className, typeArgs, discriminatorName fd, checkedv]
               )
-            ctorvoid = cblock (template "public static$1 $2$3 $4()" [leadSpace typeArgs, className, typeArgs, unionCtorName (fd_field fd)]) (
+            ctorvoid = cblock (template "public static$1 $2$3 $4()" [leadSpace typeArgs, className, typeArgs, fd_unionCtorName fd]) (
               ctemplate "return new $1$2(Disc.$3, null);" [className, typeArgs, discriminatorName fd]
               )
 
@@ -477,13 +480,13 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
             cblock (template "public static$2 $3<$1$2> factory($4)" [className,leadSpace typeArgs,factoryInterface,factoryArgs]) (
               cblock1 (template "return new Factory<$1$2>()" [className,typeArgs]) (
                 mconcat [ctemplate "final Factory<$1> $2 = $3;"
-                                   [fd_boxedTypeExprStr fd,fd_fieldName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
+                                   [fd_boxedTypeExprStr fd,fd_varName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
                 <>
                 cline ""
                 <>
                 cblock (template "public $1$2 create()" [className,typeArgs]) (
                   let val = case f_default (fd_field fieldDetail0) of
-                        Nothing -> template "$1.create()" [fd_fieldName fieldDetail0]
+                        Nothing -> template "$1.create()" [fd_varName fieldDetail0]
                         (Just _) -> fd_defValue fieldDetail0
                   in ctemplate "return new $1$2(Disc.$3,$4);" [className,typeArgs,discriminatorName fieldDetail0,val]
                 )
@@ -502,7 +505,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                           , discVar
                           , if immutableType (f_type (fd_field fd))
                               then template "other.$1" [valueVar]
-                              else template "$1.create($2)" [fd_fieldName fd,typecast fd ("other." <>valueVar)]
+                              else template "$1.create($2)" [fd_varName fd,typecast fd ("other." <>valueVar)]
                           ]
                         )
                       | fd <- fieldDetails]

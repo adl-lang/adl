@@ -64,152 +64,152 @@ public class S<T> {
     return f_void;
   }
 
-  public void setF_void(Void newF_void) {
-    f_void = newF_void;
+  public void setF_void(Void f_void) {
+    this.f_void = f_void;
   }
 
   public boolean getF_bool() {
     return f_bool;
   }
 
-  public void setF_bool(boolean newF_bool) {
-    f_bool = newF_bool;
+  public void setF_bool(boolean f_bool) {
+    this.f_bool = f_bool;
   }
 
   public byte getF_int8() {
     return f_int8;
   }
 
-  public void setF_int8(byte newF_int8) {
-    f_int8 = newF_int8;
+  public void setF_int8(byte f_int8) {
+    this.f_int8 = f_int8;
   }
 
   public short getF_int16() {
     return f_int16;
   }
 
-  public void setF_int16(short newF_int16) {
-    f_int16 = newF_int16;
+  public void setF_int16(short f_int16) {
+    this.f_int16 = f_int16;
   }
 
   public int getF_int32() {
     return f_int32;
   }
 
-  public void setF_int32(int newF_int32) {
-    f_int32 = newF_int32;
+  public void setF_int32(int f_int32) {
+    this.f_int32 = f_int32;
   }
 
   public long getF_int64() {
     return f_int64;
   }
 
-  public void setF_int64(long newF_int64) {
-    f_int64 = newF_int64;
+  public void setF_int64(long f_int64) {
+    this.f_int64 = f_int64;
   }
 
   public byte getF_word8() {
     return f_word8;
   }
 
-  public void setF_word8(byte newF_word8) {
-    f_word8 = newF_word8;
+  public void setF_word8(byte f_word8) {
+    this.f_word8 = f_word8;
   }
 
   public short getF_word16() {
     return f_word16;
   }
 
-  public void setF_word16(short newF_word16) {
-    f_word16 = newF_word16;
+  public void setF_word16(short f_word16) {
+    this.f_word16 = f_word16;
   }
 
   public int getF_word32() {
     return f_word32;
   }
 
-  public void setF_word32(int newF_word32) {
-    f_word32 = newF_word32;
+  public void setF_word32(int f_word32) {
+    this.f_word32 = f_word32;
   }
 
   public long getF_word64() {
     return f_word64;
   }
 
-  public void setF_word64(long newF_word64) {
-    f_word64 = newF_word64;
+  public void setF_word64(long f_word64) {
+    this.f_word64 = f_word64;
   }
 
   public float getF_float() {
     return f_float;
   }
 
-  public void setF_float(float newF_float) {
-    f_float = newF_float;
+  public void setF_float(float f_float) {
+    this.f_float = f_float;
   }
 
   public double getF_double() {
     return f_double;
   }
 
-  public void setF_double(double newF_double) {
-    f_double = newF_double;
+  public void setF_double(double f_double) {
+    this.f_double = f_double;
   }
 
   public ByteArray getF_bytes() {
     return f_bytes;
   }
 
-  public void setF_bytes(ByteArray newF_bytes) {
-    f_bytes = Objects.requireNonNull(newF_bytes);
+  public void setF_bytes(ByteArray f_bytes) {
+    this.f_bytes = Objects.requireNonNull(f_bytes);
   }
 
   public String getF_string() {
     return f_string;
   }
 
-  public void setF_string(String newF_string) {
-    f_string = Objects.requireNonNull(newF_string);
+  public void setF_string(String f_string) {
+    this.f_string = Objects.requireNonNull(f_string);
   }
 
   public ArrayList<String> getF_vstring() {
     return f_vstring;
   }
 
-  public void setF_vstring(ArrayList<String> newF_vstring) {
-    f_vstring = Objects.requireNonNull(newF_vstring);
+  public void setF_vstring(ArrayList<String> f_vstring) {
+    this.f_vstring = Objects.requireNonNull(f_vstring);
   }
 
   public A getF_a() {
     return f_a;
   }
 
-  public void setF_a(A newF_a) {
-    f_a = Objects.requireNonNull(newF_a);
+  public void setF_a(A f_a) {
+    this.f_a = Objects.requireNonNull(f_a);
   }
 
   public U getF_u() {
     return f_u;
   }
 
-  public void setF_u(U newF_u) {
-    f_u = Objects.requireNonNull(newF_u);
+  public void setF_u(U f_u) {
+    this.f_u = Objects.requireNonNull(f_u);
   }
 
   public T getF_t() {
     return f_t;
   }
 
-  public void setF_t(T newF_t) {
-    f_t = Objects.requireNonNull(newF_t);
+  public void setF_t(T f_t) {
+    this.f_t = Objects.requireNonNull(f_t);
   }
 
   public B<Short> getF_bint16() {
     return f_bint16;
   }
 
-  public void setF_bint16(B<Short> newF_bint16) {
-    f_bint16 = Objects.requireNonNull(newF_bint16);
+  public void setF_bint16(B<Short> f_bint16) {
+    this.f_bint16 = Objects.requireNonNull(f_bint16);
   }
 
   /* Object level helpers */

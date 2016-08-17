@@ -38,7 +38,7 @@ generateStructJson cgp decl struct fieldDetails = do
   let factory =
         cblock (template "public static$1 $2<$3> jsonBinding($4)" [typeArgs,jsonBindingI,className,bindingArgs]) (
               clineN
-                [ template "final $1<$2> $3 = $4;" [jsonBindingI,fd_boxedTypeExprStr fd,fd_fieldName fd,binding]
+                [ template "final $1<$2> $3 = $4;" [jsonBindingI,fd_boxedTypeExprStr fd,fd_varName fd,binding]
                 | (fd,binding) <- zip fieldDetails jsonBindings]
               <>
               clineN
@@ -62,7 +62,7 @@ generateStructJson cgp decl struct fieldDetails = do
                   ctemplate "$1 _result = new $1();" [jsonObjectI]
                   <>
                   clineN
-                    [ template "_result.add(\"$1\", $2.toJson(_value.$2));" [f_name (fd_field fd),fd_fieldName fd]
+                    [ template "_result.add(\"$1\", $2.toJson(_value.$3));" [fd_serializedName fd,fd_varName fd,fd_memberVarName fd]
                     | fd <- fieldDetails]
                   <>
                   cline "return _result;"
@@ -79,7 +79,7 @@ generateStructJson cgp decl struct fieldDetails = do
                       let terminators = replicate (length fieldDetails-1) "," <> [""] in
                       clineN
                       [ template "_obj.has(\"$1\") ? $2.fromJson(_obj.get(\"$1\")) : $3$4"
-                                 [f_name (fd_field fd),fd_fieldName fd,fd_defValue fd,terminator]
+                                 [fd_serializedName fd,fd_varName fd,fd_defValue fd,terminator]
                       | (fd,terminator) <- zip fieldDetails terminators]
                       )
                     <>
@@ -92,8 +92,8 @@ generateStructJson cgp decl struct fieldDetails = do
   addMethod (cline "/* Json serialization */")
   addMethod factory
 
-generateNewtypeJson :: CodeGenProfile -> Decl CResolvedType -> Newtype CResolvedType -> CState ()
-generateNewtypeJson cgp decl newtype_ = do
+generateNewtypeJson :: CodeGenProfile -> Decl CResolvedType -> Newtype CResolvedType -> Ident -> CState ()
+generateNewtypeJson cgp decl newtype_ memberVarName = do
   let typeArgs = case n_typeParams newtype_ of
         [] -> ""
         args -> "<" <> commaSep (map unreserveWord args) <> ">"
@@ -126,7 +126,7 @@ generateNewtypeJson cgp decl newtype_ = do
                 cline ""
                 <>
                 cblock (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
-                  cline "return _binding.toJson(_value.value);"
+                  ctemplate "return _binding.toJson(_value.$1);" [memberVarName]
                   )
                 <>
                 cline ""
@@ -160,7 +160,7 @@ generateUnionJson cgp decl union fieldDetails = do
   let factory =
         cblock (template "public static$1 $2<$3> jsonBinding($4)" [typeArgs,jsonBindingI,className,bindingArgs]) (
               clineN
-                [ template "final $1<$2> $3 = $4;" [jsonBindingI,fd_boxedTypeExprStr fd,fd_fieldName fd,binding]
+                [ template "final $1<$2> $3 = $4;" [jsonBindingI,fd_boxedTypeExprStr fd,fd_varName fd,binding]
                 | (fd,binding) <- zip fieldDetails jsonBindings]
               <>
               clineN
@@ -189,8 +189,8 @@ generateUnionJson cgp decl union fieldDetails = do
                        <>
                        indent (
                          if isVoidType (f_type (fd_field fd))
-                         then ctemplate "_result.add(\"$1\", null);" [f_name (fd_field fd)]
-                         else ctemplate "_result.add(\"$1\", $2.toJson(_value.$3));" [f_name (fd_field fd),fd_fieldName fd,fieldAccessExpr cgp fd]
+                         then ctemplate "_result.add(\"$1\", null);" [fd_serializedName fd]
+                         else ctemplate "_result.add(\"$1\", $2.toJson(_value.$3));" [fd_serializedName fd,fd_varName fd,fd_accessExpr fd]
                          <>
                          cline "break;"
                          )
@@ -208,17 +208,17 @@ generateUnionJson cgp decl union fieldDetails = do
                   cblock (template "for ($1.Entry<String,JsonElement> _v : _obj.entrySet())" [mapI]) (
                     let returnStatements = [
                           if isVoidType (f_type (fd_field fd))
-                          then ctemplate "return $1.$2$3();" [className0,typeArgs,unionCtorName (fd_field fd)]
-                          else ctemplate "return $1.$2$3($3.fromJson(_v.getValue()));" [className0,typeArgs,unionCtorName (fd_field fd)]
+                          then ctemplate "return $1.$2$3();" [className0,typeArgs,fd_unionCtorName fd]
+                          else ctemplate "return $1.$2$3($3.fromJson(_v.getValue()));" [className0,typeArgs,fd_unionCtorName fd]
                           | fd <- fieldDetails]
-                    in ctemplate "if (_v.getKey() == \"$1\") {" [f_name (fd_field (head fieldDetails))]
+                    in ctemplate "if (_v.getKey() == \"$1\") {" [fd_serializedName (head fieldDetails)]
                        <>
                        indent (head returnStatements)
                        <>
                        mconcat [
                          cline "}"
                          <>
-                         ctemplate "else if (_v.getKey() == \"$1\") {" [f_name (fd_field fd)]
+                         ctemplate "else if (_v.getKey() == \"$1\") {" [fd_serializedName fd]
                          <>
                          indent returnCase
                          | (fd,returnCase) <- zip (tail fieldDetails) (tail returnStatements)]

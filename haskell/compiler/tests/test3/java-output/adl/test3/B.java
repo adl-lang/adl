@@ -33,32 +33,32 @@ public class B<T> {
     return f_t;
   }
 
-  public void setF_t(T newF_t) {
-    f_t = Objects.requireNonNull(newF_t);
+  public void setF_t(T f_t) {
+    this.f_t = Objects.requireNonNull(f_t);
   }
 
   public String getF_string() {
     return f_string;
   }
 
-  public void setF_string(String newF_string) {
-    f_string = Objects.requireNonNull(newF_string);
+  public void setF_string(String f_string) {
+    this.f_string = Objects.requireNonNull(f_string);
   }
 
   public ArrayList<T> getF_tvec() {
     return f_tvec;
   }
 
-  public void setF_tvec(ArrayList<T> newF_tvec) {
-    f_tvec = Objects.requireNonNull(newF_tvec);
+  public void setF_tvec(ArrayList<T> f_tvec) {
+    this.f_tvec = Objects.requireNonNull(f_tvec);
   }
 
   public XY<T> getF_xy() {
     return f_xy;
   }
 
-  public void setF_xy(XY<T> newF_xy) {
-    f_xy = Objects.requireNonNull(newF_xy);
+  public void setF_xy(XY<T> f_xy) {
+    this.f_xy = Objects.requireNonNull(f_xy);
   }
 
   /* Object level helpers */

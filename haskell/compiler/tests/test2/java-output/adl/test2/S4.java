@@ -28,16 +28,16 @@ public class S4<T> {
     return f1;
   }
 
-  public void setF1(S3<String> newF1) {
-    f1 = Objects.requireNonNull(newF1);
+  public void setF1(S3<String> f1) {
+    this.f1 = Objects.requireNonNull(f1);
   }
 
   public S3<T> getF2() {
     return f2;
   }
 
-  public void setF2(S3<T> newF2) {
-    f2 = Objects.requireNonNull(newF2);
+  public void setF2(S3<T> f2) {
+    this.f2 = Objects.requireNonNull(f2);
   }
 
   /* Object level helpers */

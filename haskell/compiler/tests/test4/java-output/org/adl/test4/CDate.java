@@ -42,24 +42,24 @@ public class CDate {
     return year;
   }
 
-  public void setYear(short newYear) {
-    year = newYear;
+  public void setYear(short year) {
+    this.year = year;
   }
 
   public short getMonth() {
     return month;
   }
 
-  public void setMonth(short newMonth) {
-    month = newMonth;
+  public void setMonth(short month) {
+    this.month = month;
   }
 
   public short getDay() {
     return day;
   }
 
-  public void setDay(short newDay) {
-    day = newDay;
+  public void setDay(short day) {
+    this.day = day;
   }
 
   /* Object level helpers */

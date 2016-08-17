@@ -49,40 +49,40 @@ public class switch_ {
     return double_;
   }
 
-  public void setDouble(double newDouble) {
-    double_ = newDouble;
+  public void setDouble(double double_) {
+    this.double_ = double_;
   }
 
   public int getInt() {
     return int_;
   }
 
-  public void setInt(int newInt) {
-    int_ = newInt;
+  public void setInt(int int_) {
+    this.int_ = int_;
   }
 
   public String getString() {
     return string;
   }
 
-  public void setString(String newString) {
-    string = java.util.Objects.requireNonNull(newString);
+  public void setString(String string) {
+    this.string = java.util.Objects.requireNonNull(string);
   }
 
   public boolean getFor() {
     return for_;
   }
 
-  public void setFor(boolean newFor) {
-    for_ = newFor;
+  public void setFor(boolean for_) {
+    this.for_ = for_;
   }
 
   public String getObjects() {
     return Objects;
   }
 
-  public void setObjects(String newObjects) {
-    Objects = java.util.Objects.requireNonNull(newObjects);
+  public void setObjects(String Objects) {
+    this.Objects = java.util.Objects.requireNonNull(Objects);
   }
 
   /* Object level helpers */

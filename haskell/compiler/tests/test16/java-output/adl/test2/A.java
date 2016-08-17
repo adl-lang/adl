@@ -34,8 +34,8 @@ public class A {
     return a;
   }
 
-  public void setA(int newA) {
-    a = newA;
+  public void setA(int a) {
+    this.a = a;
   }
 
   /* Object level helpers */

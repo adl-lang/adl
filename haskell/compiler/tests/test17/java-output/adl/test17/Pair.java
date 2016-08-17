@@ -26,16 +26,16 @@ public class Pair<A, B> {
     return v1;
   }
 
-  public void setV1(A newV1) {
-    v1 = Objects.requireNonNull(newV1);
+  public void setV1(A v1) {
+    this.v1 = Objects.requireNonNull(v1);
   }
 
   public B getV2() {
     return v2;
   }
 
-  public void setV2(B newV2) {
-    v2 = Objects.requireNonNull(newV2);
+  public void setV2(B v2) {
+    this.v2 = Objects.requireNonNull(v2);
   }
 
   /* Object level helpers */

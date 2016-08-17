@@ -413,7 +413,13 @@ primitiveFactory name = do
 
 data FieldDetails = FieldDetails {
   fd_field :: Field CResolvedType,
-  fd_fieldName :: Ident,
+  fd_memberVarName :: Ident,
+  fd_varName :: Ident,
+  fd_accessorName :: Ident,
+  fd_mutatorName :: Ident,
+  fd_unionCtorName :: Ident,
+  fd_serializedName :: Ident,
+  fd_accessExpr :: Ident,
   fd_typeExprStr :: T.Text,
   fd_boxedTypeExprStr :: T.Text,
   fd_factoryExprStr :: T.Text,
@@ -450,11 +456,29 @@ genFieldDetails f = do
           then from
           else template "$1.create($2)" [factoryExprStr,from]
       hungarian = cgp_hungarianNaming cgp && not (cgp_publicMembers cgp)
-      fieldName = if hungarian then "m" <> javaCapsFieldName f else unreserveWord (f_name f)
+      varName = unreserveWord (f_name f)
+      memberVarName =
+        if hungarian
+        then "m" <> javaCapsFieldName f
+        else unreserveWord (f_name f)
+      accessorName = template "get$1" [javaCapsFieldName f]
+      mutatorName = template "set$1" [javaCapsFieldName f]
+      accessExpr =
+        if cgp_publicMembers cgp
+        then memberVarName
+        else accessorName <> "()"
+      unionCtorName = unreserveWord (f_name f)
+      serializedName = f_name f
 
   return FieldDetails {
     fd_field=f,
-    fd_fieldName=fieldName,
+    fd_varName=varName,
+    fd_memberVarName=memberVarName,
+    fd_accessExpr=accessExpr,
+    fd_accessorName=accessorName,
+    fd_mutatorName=mutatorName,
+    fd_unionCtorName=unionCtorName,
+    fd_serializedName=serializedName,
     fd_typeExprStr=typeExprStr,
     fd_boxedTypeExprStr=boxedTypeExprStr,
     fd_factoryExprStr=factoryExprStr,
@@ -624,14 +648,6 @@ javaCapsFieldName f = case T.uncons (f_name f) of
 
 factoryTypeArg :: Ident -> Ident
 factoryTypeArg n = "factory" <> n
-
-fieldAccessExpr :: CodeGenProfile -> FieldDetails -> Ident
-fieldAccessExpr cgp fd
-  | cgp_publicMembers cgp = fd_fieldName fd
-  | otherwise = template "get$1()" [javaCapsFieldName (fd_field fd)]
-
-unionCtorName :: Field a -> Ident
-unionCtorName f = unreserveWord (f_name f)
 
 javaFromScopedName :: ScopedName -> (JavaPackage,Ident)
 javaFromScopedName scopedName = (JavaPackage (unModuleName (sn_moduleName scopedName)),sn_name scopedName)

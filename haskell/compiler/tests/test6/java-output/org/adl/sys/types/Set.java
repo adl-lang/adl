@@ -27,8 +27,8 @@ public class Set<T> {
     return value;
   }
 
-  public void setValue(ArrayList<T> newValue) {
-    value = Objects.requireNonNull(newValue);
+  public void setValue(ArrayList<T> value) {
+    this.value = Objects.requireNonNull(value);
   }
 
   /* Object level helpers */

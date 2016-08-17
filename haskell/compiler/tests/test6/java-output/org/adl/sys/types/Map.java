@@ -27,8 +27,8 @@ public class Map<K, V> {
     return value;
   }
 
-  public void setValue(ArrayList<Pair<K, V>> newValue) {
-    value = Objects.requireNonNull(newValue);
+  public void setValue(ArrayList<Pair<K, V>> value) {
+    this.value = Objects.requireNonNull(value);
   }
 
   /* Object level helpers */

@@ -42,24 +42,24 @@ public class A {
     return f_int;
   }
 
-  public void setF_int(short newF_int) {
-    f_int = newF_int;
+  public void setF_int(short f_int) {
+    this.f_int = f_int;
   }
 
   public String getF_string() {
     return f_string;
   }
 
-  public void setF_string(String newF_string) {
-    f_string = Objects.requireNonNull(newF_string);
+  public void setF_string(String f_string) {
+    this.f_string = Objects.requireNonNull(f_string);
   }
 
   public boolean getF_bool() {
     return f_bool;
   }
 
-  public void setF_bool(boolean newF_bool) {
-    f_bool = newF_bool;
+  public void setF_bool(boolean f_bool) {
+    this.f_bool = f_bool;
   }
 
   /* Object level helpers */

@@ -85,96 +85,96 @@ public class S {
     return v1;
   }
 
-  public void setV1(Date newV1) {
-    v1 = Objects.requireNonNull(newV1);
+  public void setV1(Date v1) {
+    this.v1 = Objects.requireNonNull(v1);
   }
 
   public Date getV2() {
     return v2;
   }
 
-  public void setV2(Date newV2) {
-    v2 = Objects.requireNonNull(newV2);
+  public void setV2(Date v2) {
+    this.v2 = Objects.requireNonNull(v2);
   }
 
   public CDate getV3() {
     return v3;
   }
 
-  public void setV3(CDate newV3) {
-    v3 = Objects.requireNonNull(newV3);
+  public void setV3(CDate v3) {
+    this.v3 = Objects.requireNonNull(v3);
   }
 
   public CDate getV4() {
     return v4;
   }
 
-  public void setV4(CDate newV4) {
-    v4 = Objects.requireNonNull(newV4);
+  public void setV4(CDate v4) {
+    this.v4 = Objects.requireNonNull(v4);
   }
 
   public Optional<String> getV5() {
     return v5;
   }
 
-  public void setV5(Optional<String> newV5) {
-    v5 = Objects.requireNonNull(newV5);
+  public void setV5(Optional<String> v5) {
+    this.v5 = Objects.requireNonNull(v5);
   }
 
   public Optional<String> getV5a() {
     return v5a;
   }
 
-  public void setV5a(Optional<String> newV5a) {
-    v5a = Objects.requireNonNull(newV5a);
+  public void setV5a(Optional<String> v5a) {
+    this.v5a = Objects.requireNonNull(v5a);
   }
 
   public Optional<String> getV5b() {
     return v5b;
   }
 
-  public void setV5b(Optional<String> newV5b) {
-    v5b = Objects.requireNonNull(newV5b);
+  public void setV5b(Optional<String> v5b) {
+    this.v5b = Objects.requireNonNull(v5b);
   }
 
   public Pair<String, Integer> getV6() {
     return v6;
   }
 
-  public void setV6(Pair<String, Integer> newV6) {
-    v6 = Objects.requireNonNull(newV6);
+  public void setV6(Pair<String, Integer> v6) {
+    this.v6 = Objects.requireNonNull(v6);
   }
 
   public HashSet<Integer> getV7() {
     return v7;
   }
 
-  public void setV7(HashSet<Integer> newV7) {
-    v7 = Objects.requireNonNull(newV7);
+  public void setV7(HashSet<Integer> v7) {
+    this.v7 = Objects.requireNonNull(v7);
   }
 
   public HashSet<Integer> getV7a() {
     return v7a;
   }
 
-  public void setV7a(HashSet<Integer> newV7a) {
-    v7a = Objects.requireNonNull(newV7a);
+  public void setV7a(HashSet<Integer> v7a) {
+    this.v7a = Objects.requireNonNull(v7a);
   }
 
   public HashMap<String, Integer> getV8() {
     return v8;
   }
 
-  public void setV8(HashMap<String, Integer> newV8) {
-    v8 = Objects.requireNonNull(newV8);
+  public void setV8(HashMap<String, Integer> v8) {
+    this.v8 = Objects.requireNonNull(v8);
   }
 
   public HashMap<String, Integer> getV8a() {
     return v8a;
   }
 
-  public void setV8a(HashMap<String, Integer> newV8a) {
-    v8a = Objects.requireNonNull(newV8a);
+  public void setV8a(HashMap<String, Integer> v8a) {
+    this.v8a = Objects.requireNonNull(v8a);
   }
 
   /* Object level helpers */

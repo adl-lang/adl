@@ -26,16 +26,16 @@ public class XY<T> {
     return x;
   }
 
-  public void setX(T newX) {
-    x = Objects.requireNonNull(newX);
+  public void setX(T x) {
+    this.x = Objects.requireNonNull(x);
   }
 
   public T getY() {
     return y;
   }
 
-  public void setY(T newY) {
-    y = Objects.requireNonNull(newY);
+  public void setY(T y) {
+    this.y = Objects.requireNonNull(y);
   }
 
   /* Object level helpers */

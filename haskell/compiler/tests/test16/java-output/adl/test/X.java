@@ -33,8 +33,8 @@ public class X {
     return value;
   }
 
-  public void setValue(A newValue) {
-    value = Objects.requireNonNull(newValue);
+  public void setValue(A value) {
+    this.value = Objects.requireNonNull(value);
   }
 
   /* Object level helpers */

@@ -29,16 +29,16 @@ public class Tree<T> {
     return value;
   }
 
-  public void setValue(T newValue) {
-    value = Objects.requireNonNull(newValue);
+  public void setValue(T value) {
+    this.value = Objects.requireNonNull(value);
   }
 
   public ArrayList<Tree<T>> getChildren() {
     return children;
   }
 
-  public void setChildren(ArrayList<Tree<T>> newChildren) {
-    children = Objects.requireNonNull(newChildren);
+  public void setChildren(ArrayList<Tree<T>> children) {
+    this.children = Objects.requireNonNull(children);
   }
 
   /* Object level helpers */

@@ -33,8 +33,8 @@ public class Factory {
     return value;
   }
 
-  public void setValue(String newValue) {
-    value = Objects.requireNonNull(newValue);
+  public void setValue(String value) {
+    this.value = Objects.requireNonNull(value);
   }
 
   /* Object level helpers */

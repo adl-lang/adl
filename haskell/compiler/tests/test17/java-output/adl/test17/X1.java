@@ -59,56 +59,56 @@ public class X1 {
     return f1;
   }
 
-  public void setF1(int newF1) {
-    f1 = newF1;
+  public void setF1(int f1) {
+    this.f1 = f1;
   }
 
   public int getF2() {
     return f2;
   }
 
-  public void setF2(int newF2) {
-    f2 = newF2;
+  public void setF2(int f2) {
+    this.f2 = f2;
   }
 
   public Pair<String, Integer> getF3() {
     return f3;
   }
 
-  public void setF3(Pair<String, Integer> newF3) {
-    f3 = Objects.requireNonNull(newF3);
+  public void setF3(Pair<String, Integer> f3) {
+    this.f3 = Objects.requireNonNull(f3);
   }
 
   public Pair<String, String> getF4() {
     return f4;
   }
 
-  public void setF4(Pair<String, String> newF4) {
-    f4 = Objects.requireNonNull(newF4);
+  public void setF4(Pair<String, String> f4) {
+    this.f4 = Objects.requireNonNull(f4);
   }
 
   public ArrayList<Integer> getF5() {
     return f5;
   }
 
-  public void setF5(ArrayList<Integer> newF5) {
-    f5 = Objects.requireNonNull(newF5);
+  public void setF5(ArrayList<Integer> f5) {
+    this.f5 = Objects.requireNonNull(f5);
   }
 
   public ArrayList<Pair<String, Integer>> getF6() {
     return f6;
   }
 
-  public void setF6(ArrayList<Pair<String, Integer>> newF6) {
-    f6 = Objects.requireNonNull(newF6);
+  public void setF6(ArrayList<Pair<String, Integer>> f6) {
+    this.f6 = Objects.requireNonNull(f6);
   }
 
   public ArrayList<Pair<String, String>> getF7() {
     return f7;
   }
 
-  public void setF7(ArrayList<Pair<String, String>> newF7) {
-    f7 = Objects.requireNonNull(newF7);
+  public void setF7(ArrayList<Pair<String, String>> f7) {
+    this.f7 = Objects.requireNonNull(f7);
   }
 
   /* Object level helpers */

@@ -30,10 +30,10 @@ generateStructParcelable codeProfile decl struct fieldDetails = do
     )
 
   writeFields <- for fieldDetails $ \fd -> do
-    writeToParcel (f_type (fd_field fd)) "out" (fd_fieldName fd) "flags"
+    writeToParcel (f_type (fd_field fd)) "out" (fd_memberVarName fd) "flags"
 
   readFields <- for fieldDetails $ \fd -> do
-    readFromParcel (f_type (fd_field fd)) (Just (fd_typeExprStr fd)) (fd_fieldName fd) "in"
+    readFromParcel (f_type (fd_field fd)) (Just (fd_typeExprStr fd)) (fd_varName fd) "in"
 
   addMethod $ coverride (template "public void writeToParcel($1 out, int flags)" [idParcel]) (
     mconcat writeFields
@@ -43,7 +43,7 @@ generateStructParcelable codeProfile decl struct fieldDetails = do
     coverride (template "public $1 createFromParcel($2 in)" [className,idParcel]) (
       mconcat readFields
       <>
-      ctemplate "return new $1($2);" [className,commaSep [fd_fieldName fd | fd <- fieldDetails]]
+      ctemplate "return new $1($2);" [className,commaSep [fd_varName fd | fd <- fieldDetails]]
       )
     <>
     cline ""
