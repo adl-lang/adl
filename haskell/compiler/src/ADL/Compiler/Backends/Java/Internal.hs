@@ -468,7 +468,7 @@ genFieldDetails f = do
         then memberVarName
         else accessorName <> "()"
       unionCtorName = unreserveWord (f_name f)
-      serializedName = f_name f
+      serializedName = f_serializedName f
 
   return FieldDetails {
     fd_field=f,

@@ -279,6 +279,9 @@ runTests = do
     it "Expands typedefs in code generation" $ do
       collectResults (runJavaBackend1 "test17/input/test.adl")
         `shouldReturn` MatchOutput
+    it "Correctly uses specified serialisation field names" $ do
+      collectResults (runJavaBackend1 "test20/input/test.adl")
+        `shouldReturn` MatchOutput
 
     
   where

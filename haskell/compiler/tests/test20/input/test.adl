@@ -1,0 +1,25 @@
+module test20
+{
+    union Role
+    {
+        @SerializedName "u"
+        Void underling;
+
+        @SerializedName "b"
+        Void boss;
+
+        @SerializedName "sb"
+        Void superBoss;
+    };
+        
+    struct Person
+    {
+        @SerializedName "fn"
+        String firstName;
+
+        @SerializedName "ln"
+        String lastName;
+        Int16 age;
+        Role role;
+    };
+};

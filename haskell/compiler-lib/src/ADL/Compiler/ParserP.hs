@@ -88,10 +88,16 @@ typeExpression = do
 
 field :: P.Parser (Field ScopedName)
 field = do
-    t <- typeExpression
+    anns0 <- annotations
+    te <- typeExpression
     n <- name
     mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
-    return (Field n t mdefault Map.empty)
+    let serializedNameAttr = ScopedName (ModuleName []) "SerializedName"
+    (anns,serializedName) <- case Map.lookup serializedNameAttr anns0 of
+          Nothing -> return (anns0,n)
+          (Just (JSON.String s)) -> return (Map.delete serializedNameAttr anns0,s)
+          _ -> fail "need a String value for SerializedName attribute"
+    return (Field n serializedName te mdefault anns)
 
 mversion :: P.Parser MVersion
 mversion =   (Just . fromIntegral) <$> (ctoken '#' *> parseInt)

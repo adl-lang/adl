@@ -34,6 +34,7 @@ instance Format ScopedName where
 
 data Field t = Field {
   f_name :: Ident,
+  f_serializedName :: Ident,
   f_type :: TypeExpr t,
   f_default :: (Maybe JSON.Value),
   f_annotations :: Annotations
