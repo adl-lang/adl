@@ -44,6 +44,9 @@ data JavaFlags = JavaFlags {
   jf_package :: T.Text,
   jf_fileWriter :: FilePath -> LBS.ByteString -> IO (),
 
+  -- Whether to include the runtime in the generated output
+  jf_includeRuntime :: Bool,
+
   jf_codeGenProfile :: CodeGenProfile
   }
 
@@ -95,7 +98,9 @@ associateCustomTypes moduleName customTypes mod = fmap assocf mod
 
 newtype JavaPackage = JavaPackage {
   unJavaPackage :: [Ident]
-} deriving (Eq)
+} deriving (Eq,Ord,Show)
+
+type JavaClass = [Ident]
 
 instance IsString JavaPackage where
   fromString s = JavaPackage (T.splitOn "." (T.pack s))

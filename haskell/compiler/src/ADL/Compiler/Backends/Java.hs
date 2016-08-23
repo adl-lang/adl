@@ -28,38 +28,45 @@ import Data.List(intersperse,replicate,sort)
 import Data.Monoid
 import Data.String(IsString(..))
 import Data.Traversable(for)
+import System.FilePath
 
 import ADL.Compiler.AST
-import ADL.Compiler.EIO
-import ADL.Compiler.Processing
-import ADL.Compiler.Primitive
 import ADL.Compiler.Backends.Utils.IndentedCode
 import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Java.Parcelable
 import ADL.Compiler.Backends.Java.Json
+import ADL.Compiler.EIO
+import ADL.Compiler.DataFiles
+import ADL.Compiler.Primitive
+import ADL.Compiler.Processing
 import ADL.Core.Value
+import ADL.Utils.FileDiff(dirContents)
 import ADL.Utils.Format
 
 generate :: JavaFlags -> [FilePath] -> EIOT ()
 generate jf modulePaths = catchAllExceptions  $ do
   customTypes <- loadCustomTypes (jf_customTypeFiles jf)
-  for_ modulePaths $ \modulePath -> do
+  let cgp = (jf_codeGenProfile jf)
+  imports <- for modulePaths $ \modulePath -> do
     m <- loadAndCheckModule (moduleFinder (jf_searchPath jf)) modulePath
     generateModule (packageGenerator (jf_package jf))
                    (fileGenerator (jf_package jf))
-                   (const (jf_codeGenProfile jf))
+                   (const cgp)
                    customTypes
                    (jf_fileWriter jf)
                    m
+  when (jf_includeRuntime jf) $ liftIO $ do
+    generateRuntime jf (mconcat imports)
 
-
+-- | Generate and write the java code for a single ADL module
+-- The result value is the set of all java imports.
 generateModule :: (ModuleName -> JavaPackage) ->
                   (ScopedName -> FilePath) ->
                   (ScopedName -> CodeGenProfile) ->
                   CustomTypeMap ->
                   (FilePath -> LBS.ByteString -> IO ()) ->
                   Module ResolvedType ->
-                  EIO T.Text ()
+                  EIO T.Text (Set.Set JavaClass)
 generateModule javaPackageFn mFile mCodeGetProfile customTypes fileWriter m0 = do
   let moduleName = m_name m
       m = ( associateCustomTypes moduleName customTypes
@@ -67,21 +74,20 @@ generateModule javaPackageFn mFile mCodeGetProfile customTypes fileWriter m0 = d
           . expandModuleTypedefs
           ) m0
       decls = Map.elems (m_decls m)
-  for_ decls $ \decl -> do
+  imports <- for decls $ \decl -> do
     let codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
         maxLineLength = cgp_maxLineLength codeProfile
-        file = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
-    case d_type decl of
-      (Decl_Struct s) -> writeClassFile file maxLineLength (generateStruct codeProfile moduleName javaPackageFn decl s)
-      (Decl_Union u)  -> writeClassFile file maxLineLength (generateUnion codeProfile moduleName javaPackageFn decl u)
-      (Decl_Newtype n) -> writeClassFile file maxLineLength (generateNewtype codeProfile moduleName javaPackageFn decl n)
+        filePath = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
+    classFile <- case d_type decl of
+      (Decl_Struct s) -> return (generateStruct codeProfile moduleName javaPackageFn decl s)
+      (Decl_Union u)  -> return (generateUnion codeProfile moduleName javaPackageFn decl u)
+      (Decl_Newtype n) -> return (generateNewtype codeProfile moduleName javaPackageFn decl n)
       (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
-  where
-    writeClassFile :: FilePath -> Int -> ClassFile -> EIO a ()
-    writeClassFile path maxLineLength cfile = do
-      let lines = codeText maxLineLength (classFileCode cfile)
-      liftIO $ fileWriter path (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
-      
+    let lines = codeText maxLineLength (classFileCode classFile)
+        imports = Set.fromList ([ids <> [cls] | (cls,Just (JavaPackage ids)) <- Map.toList (cf_imports classFile)])
+    liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
+    return imports
+  return (mconcat imports)
 
 generateStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Struct CResolvedType -> ClassFile
 generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen state0
@@ -122,6 +128,7 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState g
       s_fields =
         [ Field {
            f_name = "value",
+           f_serializedName = "UNUSED",
            f_type = n_typeExpr newtype_,
            f_default = n_default newtype_,
            f_annotations = mempty
@@ -529,3 +536,30 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       when (cgp_parcelable codeProfile) $ do
         generateUnionParcelable codeProfile decl union fieldDetails
 
+
+generateRuntime :: JavaFlags -> Set.Set JavaClass -> IO ()
+generateRuntime jf imports = do
+    basedir <-  getDataFileDir
+    let runtimedir = basedir </> "runtime/java"
+    files <- dirContents runtimedir
+    for_ files $ \inpath -> do
+      let javaclass = unJavaPackage rtpackage <> [T.pack (dropExtensions (takeFileName inpath))]
+          outpath = joinPath (map T.unpack javaclass) <> ".java"
+          toGenerate = imports <> Set.fromList
+            [ unJavaPackage rtpackage <> ["ByteArray"]
+            , unJavaPackage rtpackage <> ["Factory"]
+            , unJavaPackage rtpackage <> ["Factories"]
+            ]
+      when (Set.member javaclass toGenerate) $ do
+        content <- LBS.readFile (runtimedir </> inpath)
+        jf_fileWriter jf outpath (adjustContent content)
+  where
+    rtpackage = cgp_runtimePackage (jf_codeGenProfile jf)
+    
+    adjustContent :: LBS.ByteString -> LBS.ByteString
+    adjustContent origLBS = LBS.fromStrict (T.encodeUtf8 newT)
+      where origT = T.decodeUtf8 (LBS.toStrict origLBS)
+            newT = T.replace "org.adl.runtime" (genJavaPackage rtpackage)
+                 . T.replace "org.adl.sys" (jf_package jf <> ".sys")
+                 $ origT
+      

@@ -17,6 +17,14 @@ data-files:          adl/adlc/config/haskell.adl
                      config/hs-custom-types.json
                      config/cpp-custom-types.json
                      config/java-custom-types.json
+                     runtime/java/org/adl/runtime/ByteArray.java
+                     runtime/java/org/adl/runtime/Factories.java
+                     runtime/java/org/adl/runtime/Factory.java
+                     runtime/java/org/adl/runtime/HashMapHelpers.java
+                     runtime/java/org/adl/runtime/HashSetHelpers.java
+                     runtime/java/org/adl/runtime/JsonBinding.java
+                     runtime/java/org/adl/runtime/JsonBindings.java
+                     runtime/java/org/adl/runtime/OptionalHelpers.java
 
 executable adlc
   hs-source-dirs:      src

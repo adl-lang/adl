@@ -13,14 +13,14 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
-import ADL.Compiler.Utils
 import ADL.Compiler.Backends.Verify as V
 import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.AST as A
 import ADL.Compiler.Backends.Cpp as C
 import ADL.Compiler.Backends.Java as J
+import ADL.Compiler.DataFiles
+import ADL.Compiler.Utils
 import HaskellCustomTypes
-import Paths_adl_compiler
 
 searchDirOption ufn =
   Option "I" ["searchdir"]
@@ -55,7 +55,12 @@ javaPackageOption ufn =
 javaRuntimePackageOption ufn =
   Option "" ["rtpackage"]
     (ReqArg ufn "PACKAGE")
-    "The java package into which the ADL runtime should be placed"
+    "The java package where the ADL runtime is located"
+
+javaIncludeRuntimePackageOption ufn =
+  Option "" ["include-rt"]
+    (NoArg ufn)
+    "Generate the runtime code"
 
 javaGenerateParcelable ufn =
   Option "" ["parcelable"]
@@ -202,6 +207,7 @@ runJava args0 =
       jf_customTypeFiles=[],
       jf_package = "adl",
       jf_fileWriter= \_ _ -> return (),
+      jf_includeRuntime = False,
       jf_codeGenProfile = J.defaultCodeGenProfile
     }
     out0 = OutputArgs {
@@ -217,6 +223,7 @@ runJava args0 =
       , noOverwriteOption (\(jf,o)-> (jf,o{oa_noOverwrite=True}))
       , javaPackageOption (\s (jf,o) -> (jf{jf_package=T.pack s},o))
       , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=fromString s}},o))
+      , javaIncludeRuntimePackageOption (\(jf,o) ->(jf{jf_includeRuntime=True},o))
       , javaGenerateParcelable (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_parcelable=True}},o))
       , javaGenerateJson (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_json=True}},o))
       , javaHungarianNaming (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_hungarianNaming=True}},o))
