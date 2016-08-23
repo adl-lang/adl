@@ -124,7 +124,7 @@ runJavaBackend ipaths mpaths epath updateflags = do
   let flags = J.JavaFlags {
     J.jf_searchPath = ipaths,
     J.jf_customTypeFiles = [],
-    J.jf_package = "adl",
+    J.jf_package = J.javaPackage "adl",
     J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir),
     J.jf_includeRuntime = False,
     J.jf_codeGenProfile = J.defaultCodeGenProfile {J.cgp_json=True}
@@ -136,7 +136,7 @@ withJavaCustomTypeFiles :: [FilePath] -> J.JavaFlags -> J.JavaFlags
 withJavaCustomTypeFiles files flags = flags{J.jf_customTypeFiles=files}
 
 withJavaOutputPackage :: T.Text -> J.JavaFlags -> J.JavaFlags
-withJavaOutputPackage package flags = flags{J.jf_package=package}
+withJavaOutputPackage package flags = flags{J.jf_package=J.javaPackage package}
 
 runJavaBackend1 :: FilePath -> IO CodeGenResult
 runJavaBackend1 mpath = runJavaBackend [ipath] [mpath] epath id

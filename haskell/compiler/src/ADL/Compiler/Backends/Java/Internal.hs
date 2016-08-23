@@ -41,7 +41,7 @@ data JavaFlags = JavaFlags {
   jf_customTypeFiles :: [FilePath],
 
   -- The java package under which we hang the generated ADL
-  jf_package :: T.Text,
+  jf_package :: JavaPackage,
   jf_fileWriter :: FilePath -> LBS.ByteString -> IO (),
 
   -- Whether to include the runtime in the generated output
@@ -49,6 +49,45 @@ data JavaFlags = JavaFlags {
 
   jf_codeGenProfile :: CodeGenProfile
   }
+
+-- A type for (part of) a java package name
+newtype JavaPackage = JavaPackage [Ident]
+  deriving (Eq,Ord,Show)
+
+javaPackage :: T.Text -> JavaPackage
+javaPackage s = JavaPackage (map unreserveWord (T.splitOn "." s ))
+
+instance Monoid JavaPackage where
+  mempty = JavaPackage []
+  mappend (JavaPackage p1) (JavaPackage p2) = JavaPackage (p1++p2)
+
+instance IsString JavaPackage where
+  fromString s = JavaPackage (T.splitOn "." (T.pack s))
+
+-- A type for a fully scoped java class name
+newtype JavaClass = JavaClass [Ident]
+  deriving (Eq,Ord,Show)
+
+instance IsString JavaClass where
+  fromString s = JavaClass (T.splitOn "." (T.pack s))
+
+javaClass :: JavaPackage -> Ident -> JavaClass
+javaClass (JavaPackage p1) name = JavaClass (p1++[unreserveWord name])
+
+splitJavaClass :: JavaClass -> (JavaPackage,Ident)
+splitJavaClass (JavaClass ids) = (JavaPackage (init ids),last ids)
+
+withPackagePrefix :: JavaPackage -> JavaClass -> JavaClass
+withPackagePrefix (JavaPackage ids1) (JavaClass ids2) = JavaClass (ids1++ids2)
+
+genJavaPackage :: JavaPackage -> T.Text
+genJavaPackage (JavaPackage ids) = T.intercalate "." ids
+
+genJavaClass :: JavaClass -> T.Text
+genJavaClass (JavaClass ids) = T.intercalate "." ids
+
+javaClassFilePath :: JavaClass -> FilePath
+javaClassFilePath (JavaClass ids) = T.unpack (T.intercalate "/" ids <> ".java")
 
 -- Types we want to override
 data CustomType = CustomType {
@@ -96,21 +135,6 @@ associateCustomTypes moduleName customTypes mod = fmap assocf mod
     fullyScope (ScopedName (ModuleName []) n) = ScopedName moduleName n
     fullyScope sn = sn
 
-newtype JavaPackage = JavaPackage {
-  unJavaPackage :: [Ident]
-} deriving (Eq,Ord,Show)
-
-type JavaClass = [Ident]
-
-instance IsString JavaPackage where
-  fromString s = JavaPackage (T.splitOn "." (T.pack s))
-
-genJavaPackage :: JavaPackage -> T.Text
-genJavaPackage package = T.intercalate "." (map unreserveWord (unJavaPackage package))
-
-genJavaIdentifier :: JavaPackage -> Ident -> T.Text
-genJavaIdentifier package name = T.intercalate "." (map unreserveWord (unJavaPackage package) <> [name])
-
 data CodeGenProfile = CodeGenProfile {
   cgp_header :: T.Text,
   cgp_maxLineLength :: Int,
@@ -132,7 +156,7 @@ defaultCodeGenProfile = CodeGenProfile {
   cgp_genericFactories = False,
   cgp_json = False,
   cgp_parcelable = False,
-  cgp_runtimePackage = "org.adl.runtime"
+  cgp_runtimePackage = javaPackage "org.adl.runtime"
 }
 
 data ClassFile = ClassFile {
@@ -164,7 +188,7 @@ classFileCode content =
   <>
   cline ""
   <>
-  mconcat [ctemplate "import $1;" [imp] | imp <- sortedImports imports]
+  mconcat [ctemplate "import $1;" [genJavaClass imp] | imp <- sortedImports imports]
   <>
   cline ""
   <>
@@ -186,7 +210,7 @@ classFileCode content =
   )
   where
     javaPackage = cf_package content
-    imports = [genJavaIdentifier package name | (name,Just package) <- Map.toList (cf_imports content), package /= javaPackage]
+    imports = [javaClass package name | (name,Just package) <- Map.toList (cf_imports content), package /= javaPackage]
     header = cgp_header (cf_codeProfile content)
     decl | Set.null (cf_implements content) = (template "$1" [cf_decl content])
          | otherwise = (template "$1 implements $2" [cf_decl content,commaSep (Set.toList (cf_implements content))])
@@ -199,14 +223,15 @@ addField decl = modify (\cf->cf{cf_fields=decl:cf_fields cf})
 addMethod :: Code -> CState ()
 addMethod method = modify (\cf->cf{cf_methods=method:cf_methods cf})
 
--- | Add an import for an identifer and return the identifier. If there
+-- | Add an import for a java class and return the identifier. If there
 -- is an inconsistent existing import, return the fully scoped name.
-addImport :: JavaPackage -> Ident -> CState T.Text
-addImport package name = do
+addImport :: JavaClass -> CState T.Text
+addImport cls  = do
+  let (package,name) = splitJavaClass cls
   state <- get 
   case Map.lookup name (cf_imports state) of
     Just mpackage | (Just package) == mpackage -> return name
-                  | otherwise                  -> return (genJavaIdentifier package name)
+                  | otherwise                  -> return (genJavaClass cls)
     Nothing -> do
       put state{cf_imports=Map.insert name (Just package) (cf_imports state)}
       return name
@@ -226,9 +251,7 @@ getRuntimePackage :: CState JavaPackage
 getRuntimePackage = (cgp_runtimePackage . cf_codeProfile) <$> get
 
 getHelpers :: CustomType -> CState Ident
-getHelpers customType = do
-  let (package,name) = javaFromScopedName (ct_helpers customType)
-  addImport package name
+getHelpers customType = addImport (classFromScopedName (ct_helpers customType))
 
 genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
 genTypeExpr te = genTypeExprB False te
@@ -241,9 +264,7 @@ genTypeExprB boxed (TypeExpr rt params) = do
   return (template "$1<$2>" [rtStr,T.intercalate ", " rtParamsStr])
 
 genResolvedType :: Bool -> CResolvedType -> CState T.Text
-genResolvedType _ (RT_Named (_,_,Just customType)) = do
-  let (package,name) = javaFromScopedName (ct_scopedName customType)
-  addImport package name
+genResolvedType _ (RT_Named (_,_,Just customType)) = addImport (classFromScopedName (ct_scopedName customType))
 genResolvedType _ (RT_Named (scopedName,_,Nothing)) = genScopedName scopedName
 genResolvedType _(RT_Param ident) = return (unreserveWord ident)
 genResolvedType False (RT_Primitive pt) = let pd = genPrimitiveDetails pt in fromMaybe (pd_type pd) (pd_unboxed pd)
@@ -256,7 +277,7 @@ genScopedName scopedName0 = do
         case sn_moduleName scopedName0 of
           (ModuleName []) -> ScopedName (cf_module cf) (sn_name scopedName0)
           _ -> scopedName0
-  addImport (cf_javaPackageFn cf (sn_moduleName scopedName)) (sn_name scopedName)
+  addImport (javaClass (cf_javaPackageFn cf (sn_moduleName scopedName)) (sn_name scopedName))
 
 genFactoryExpr :: TypeExpr CResolvedType -> CState T.Text
 genFactoryExpr (TypeExpr rt params) = do
@@ -371,7 +392,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
   pd_unboxed = Nothing,
   pd_type = do
     rtpackage <- getRuntimePackage
-    addImport rtpackage "ByteArray",
+    addImport (javaClass rtpackage "ByteArray"),
   pd_default = Just "new ByteArray()",
   pd_genLiteral = \(JSON.String s) -> template "new ByteArray($1.getBytes())" [T.pack (show (decode s))],
   pd_mutable = True,
@@ -384,7 +405,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
       (Right s) -> s
 genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_unboxed = Nothing,
-  pd_type = addImport "java.util" "ArrayList",
+  pd_type = addImport "java.util.ArrayList",
   pd_default = Nothing,
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
   pd_mutable = True,
@@ -413,7 +434,7 @@ genPrimitiveDetails P_Sink = PrimitiveDetails {
 primitiveFactory :: T.Text -> CState T.Text
 primitiveFactory name = do
   rtpackage <- getRuntimePackage
-  factories <- addImport rtpackage "Factories"
+  factories <- addImport (javaClass rtpackage "Factories")
   return (template "$1.$2" [factories,name])
 
 data FieldDetails = FieldDetails {
@@ -551,7 +572,7 @@ genLiteralText (LUnion te ctor l) = do
 genLiteralText (LVector _ ls) = do
   lits <- mapM genLiteralText ls
   rtpackage <- getRuntimePackage
-  factories <- addImport rtpackage "Factories"
+  factories <- addImport (javaClass rtpackage "Factories")
   return (template "$1.arrayList($2)" [factories,commaSep lits])
 genLiteralText (LPrimitive pt jv) = do
   return (pd_genLiteral (genPrimitiveDetails pt) jv)
@@ -563,23 +584,15 @@ litNumber n = T.pack s
      (Left r) -> show n
      (Right i) -> show (i::Integer)
 
-packageGenerator :: T.Text -> ModuleName -> JavaPackage
-packageGenerator basePackage mn = JavaPackage (T.splitOn "." basePackage <> unModuleName mn)
-
-fileGenerator :: T.Text -> ScopedName -> FilePath
-fileGenerator basePackage sn = T.unpack (T.intercalate "/" idents <> ".java")
-  where
-    idents = unJavaPackage (packageGenerator basePackage (sn_moduleName sn)) <> [sn_name sn]
-
 commaSep :: [T.Text] -> T.Text
 commaSep = T.intercalate ", "
 
-sortedImports :: [T.Text] -> [T.Text]
+sortedImports :: [JavaClass] -> [JavaClass]
 sortedImports imports = map snd (sort [(classify i,i) | i <- imports])
   where
-    classify i = if T.isPrefixOf "java." i
-                   then 2
-                   else if T.isPrefixOf "android." i then 1 else 0
+    classify (JavaClass ("java":_)) = 2
+    classify (JavaClass ("android":_)) = 1
+    classify _ = 0
 
 ----------------------------------------------------------------------
 reservedWords :: Set.Set Ident
@@ -654,8 +667,8 @@ javaCapsFieldName f = case T.uncons (f_name f) of
 factoryTypeArg :: Ident -> Ident
 factoryTypeArg n = "factory" <> n
 
-javaFromScopedName :: ScopedName -> (JavaPackage,Ident)
-javaFromScopedName scopedName = (JavaPackage (unModuleName (sn_moduleName scopedName)),sn_name scopedName)
+classFromScopedName :: ScopedName -> JavaClass
+classFromScopedName scopedName = javaClass (JavaPackage (unModuleName (sn_moduleName scopedName))) (sn_name scopedName)
 
 discriminatorName :: FieldDetails -> Ident
 discriminatorName = T.toUpper . unreserveWord . f_name . fd_field

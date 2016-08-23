@@ -4,6 +4,7 @@ module ADL.Compiler.Backends.Java(
   JavaFlags(..),
   CodeGenProfile(..),
   defaultCodeGenProfile,
+  javaPackage
   ) where
 
 import qualified Data.ByteString.Base64 as B64
@@ -49,43 +50,41 @@ generate jf modulePaths = catchAllExceptions  $ do
   let cgp = (jf_codeGenProfile jf)
   imports <- for modulePaths $ \modulePath -> do
     m <- loadAndCheckModule (moduleFinder (jf_searchPath jf)) modulePath
-    generateModule (packageGenerator (jf_package jf))
-                   (fileGenerator (jf_package jf))
+    generateModule jf
                    (const cgp)
                    customTypes
-                   (jf_fileWriter jf)
                    m
   when (jf_includeRuntime jf) $ liftIO $ do
     generateRuntime jf (mconcat imports)
 
 -- | Generate and write the java code for a single ADL module
 -- The result value is the set of all java imports.
-generateModule :: (ModuleName -> JavaPackage) ->
-                  (ScopedName -> FilePath) ->
+generateModule :: JavaFlags ->
                   (ScopedName -> CodeGenProfile) ->
                   CustomTypeMap ->
-                  (FilePath -> LBS.ByteString -> IO ()) ->
                   Module ResolvedType ->
                   EIO T.Text (Set.Set JavaClass)
-generateModule javaPackageFn mFile mCodeGetProfile customTypes fileWriter m0 = do
+generateModule jf mCodeGetProfile customTypes m0 = do
   let moduleName = m_name m
       m = ( associateCustomTypes moduleName customTypes
           . removeModuleTypedefs
           . expandModuleTypedefs
           ) m0
       decls = Map.elems (m_decls m)
+      javaPackageFn mn = jf_package jf <> JavaPackage (unModuleName mn)
   imports <- for decls $ \decl -> do
     let codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
         maxLineLength = cgp_maxLineLength codeProfile
-        filePath = mFile (ScopedName moduleName (unreserveWord (d_name decl)))
+        klass  = javaClass (JavaPackage (unModuleName moduleName)) (d_name decl)
+        filePath = javaClassFilePath (withPackagePrefix (jf_package jf) klass)
     classFile <- case d_type decl of
       (Decl_Struct s) -> return (generateStruct codeProfile moduleName javaPackageFn decl s)
       (Decl_Union u)  -> return (generateUnion codeProfile moduleName javaPackageFn decl u)
       (Decl_Newtype n) -> return (generateNewtype codeProfile moduleName javaPackageFn decl n)
       (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
     let lines = codeText maxLineLength (classFileCode classFile)
-        imports = Set.fromList ([ids <> [cls] | (cls,Just (JavaPackage ids)) <- Map.toList (cf_imports classFile)])
-    liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
+        imports = Set.fromList ([javaClass pkg cls| (cls,Just pkg) <- Map.toList (cf_imports classFile)])
+    liftIO $ (jf_fileWriter jf) filePath (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
     return imports
   return (mconcat imports)
 
@@ -166,7 +165,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       for_ fieldDetails (\fd -> preventImport (fd_memberVarName fd))
       for_ fieldDetails (\fd -> preventImport (fd_varName fd))
       
-      objectsClass <- addImport "java.util" "Objects"
+      objectsClass <- addImport "java.util.Objects"
 
       -- Fields
       for_ fieldDetails $ \fd -> do
@@ -258,7 +257,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
         cline "return result;"
         )
 
-      factoryInterface <- addImport (cgp_runtimePackage codeProfile) "Factory"
+      factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
 
       -- factory
       let factory =
@@ -341,7 +340,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       preventImport discVar
       preventImport valueVar
         
-      objectsClass <- addImport "java.util" "Objects"
+      objectsClass <- addImport "java.util.Objects"
 
       -- Fields
       let modifiers = T.intercalate " " (["private"] <> if cgp_mutable codeProfile then [] else ["final"])
@@ -470,7 +469,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
         )
 
       -- factory
-      factoryInterface <- addImport (cgp_runtimePackage codeProfile) "Factory"
+      factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
       
       let factory =
             cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (
@@ -543,16 +542,15 @@ generateRuntime jf imports = do
     let runtimedir = basedir </> "runtime/java"
     files <- dirContents runtimedir
     for_ files $ \inpath -> do
-      let javaclass = unJavaPackage rtpackage <> [T.pack (dropExtensions (takeFileName inpath))]
-          outpath = joinPath (map T.unpack javaclass) <> ".java"
+      let cls = javaClass rtpackage (T.pack (dropExtensions (takeFileName inpath)))
           toGenerate = imports <> Set.fromList
-            [ unJavaPackage rtpackage <> ["ByteArray"]
-            , unJavaPackage rtpackage <> ["Factory"]
-            , unJavaPackage rtpackage <> ["Factories"]
+            [ javaClass rtpackage "ByteArray"
+            , javaClass rtpackage "Factory"
+            , javaClass rtpackage "Factories"
             ]
-      when (Set.member javaclass toGenerate) $ do
+      when (Set.member cls toGenerate) $ do
         content <- LBS.readFile (runtimedir </> inpath)
-        jf_fileWriter jf outpath (adjustContent content)
+        jf_fileWriter jf (javaClassFilePath cls) (adjustContent content)
   where
     rtpackage = cgp_runtimePackage (jf_codeGenProfile jf)
     
@@ -560,6 +558,6 @@ generateRuntime jf imports = do
     adjustContent origLBS = LBS.fromStrict (T.encodeUtf8 newT)
       where origT = T.decodeUtf8 (LBS.toStrict origLBS)
             newT = T.replace "org.adl.runtime" (genJavaPackage rtpackage)
-                 . T.replace "org.adl.sys" (jf_package jf <> ".sys")
+                 . T.replace "org.adl.sys" (genJavaPackage (jf_package jf <> javaPackage "sys"))
                  $ origT
       

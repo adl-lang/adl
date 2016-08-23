@@ -221,7 +221,7 @@ runJava args0 =
       , outputDirOption (\s (jf,o)-> (jf,o{oa_outputPath=s}))
       , customTypesOption (\s (jf,o)-> (jf{jf_customTypeFiles=s:jf_customTypeFiles jf},o))
       , noOverwriteOption (\(jf,o)-> (jf,o{oa_noOverwrite=True}))
-      , javaPackageOption (\s (jf,o) -> (jf{jf_package=T.pack s},o))
+      , javaPackageOption (\s (jf,o) -> (jf{jf_package=javaPackage (T.pack s)},o))
       , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=fromString s}},o))
       , javaIncludeRuntimePackageOption (\(jf,o) ->(jf{jf_includeRuntime=True},o))
       , javaGenerateParcelable (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_parcelable=True}},o))

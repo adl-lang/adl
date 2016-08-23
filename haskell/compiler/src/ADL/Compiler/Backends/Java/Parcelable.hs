@@ -19,8 +19,8 @@ import ADL.Utils.Format
 generateStructParcelable :: CodeGenProfile -> Decl CResolvedType -> Struct CResolvedType -> [FieldDetails] -> CState ()
 generateStructParcelable codeProfile decl struct fieldDetails = do
   let className = unreserveWord (d_name decl)
-  idParcel <- addImport "android.os" "Parcel"
-  idParcelable <- addImport "android.os" "Parcelable"
+  idParcel <- addImport "android.os.Parcel"
+  idParcelable <- addImport "android.os.Parcelable"
   addImplements idParcelable
 
   addMethod (cline "/* Android Parcelable implementation */")
@@ -59,8 +59,8 @@ generateUnionParcelable codeProfile decl union fieldDetails = do
       discVar = if cgp_hungarianNaming codeProfile then "mDisc" else "disc"
       valueVar = if cgp_hungarianNaming codeProfile then "mValue" else "value"
 
-  idParcel <- addImport "android.os" "Parcel"
-  idParcelable <- addImport "android.os" "Parcelable"
+  idParcel <- addImport "android.os.Parcel"
+  idParcelable <- addImport "android.os.Parcelable"
   addImplements "Parcelable"
 
   addMethod (cline "/* Android Parcelable implementation */")
@@ -164,7 +164,7 @@ readFromParcel te mtotype tovar from = do
         ctemplate "$1 = new ByteArray($2.createByteArray());" [to,from]
         )
     (TypeExpr (RT_Primitive P_Vector) [te']) ->  do
-      arrayList <- addImport "java.util" "ArrayList"
+      arrayList <- addImport "java.util.ArrayList"
       typeExprStr <- genTypeExprB True te'
       return (
         ctemplate "$1 = new $2<$3>();" [to,arrayList,typeExprStr]

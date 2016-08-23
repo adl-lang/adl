@@ -27,10 +27,10 @@ generateStructJson cgp decl struct fieldDetails = do
         args -> "<" <> commaSep (map unreserveWord args) <> ">"
       className = unreserveWord (d_name decl) <> typeArgs
 
-  factoryI <- addImport (cgp_runtimePackage cgp) "Factory"
-  jsonBindingI <- addImport (cgp_runtimePackage cgp) "JsonBinding"
-  jsonElementI <- addImport "com.google.gson" "JsonElement"
-  jsonObjectI <- addImport "com.google.gson" "JsonObject"
+  factoryI <- addImport (javaClass (cgp_runtimePackage cgp) "Factory")
+  jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
+  jsonElementI <- addImport "com.google.gson.JsonElement"
+  jsonObjectI <- addImport "com.google.gson.JsonObject"
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
   
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- s_typeParams struct]
@@ -99,10 +99,10 @@ generateNewtypeJson cgp decl newtype_ memberVarName = do
         args -> "<" <> commaSep (map unreserveWord args) <> ">"
       className = unreserveWord (d_name decl) <> typeArgs
 
-  factoryI <- addImport (cgp_runtimePackage cgp) "Factory"
-  jsonBindingI <- addImport (cgp_runtimePackage cgp) "JsonBinding"
-  jsonElementI <- addImport "com.google.gson" "JsonElement"
-  jsonObjectI <- addImport "com.google.gson" "JsonObject"
+  factoryI <- addImport (javaClass (cgp_runtimePackage cgp) "Factory")
+  jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
+  jsonElementI <- addImport "com.google.gson.JsonElement"
+  jsonObjectI <- addImport "com.google.gson.JsonObject"
   jsonBinding <- genJsonBindingExpr cgp (n_typeExpr newtype_)
   boxedTypeExprStr <- genTypeExprB True (n_typeExpr newtype_)
   
@@ -148,11 +148,11 @@ generateUnionJson cgp decl union fieldDetails = do
       className0 = unreserveWord (d_name decl)
       className = className0 <> typeArgs
 
-  factoryI <- addImport (cgp_runtimePackage cgp) "Factory"
-  jsonBindingI <- addImport (cgp_runtimePackage cgp) "JsonBinding"
-  jsonElementI <- addImport "com.google.gson" "JsonElement"
-  jsonObjectI <- addImport "com.google.gson" "JsonObject"
-  mapI <- addImport "java.util" "Map"
+  factoryI <- addImport (javaClass (cgp_runtimePackage cgp) "Factory")
+  jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
+  jsonElementI <- addImport "com.google.gson.JsonElement"
+  jsonObjectI <- addImport "com.google.gson.JsonObject"
+  mapI <- addImport "java.util.Map"
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
   
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- u_typeParams union]
@@ -253,7 +253,7 @@ genJsonBindingExpr cgp (TypeExpr rt params) = do
 
 primJsonBinding :: CodeGenProfile -> PrimitiveType -> CState T.Text
 primJsonBinding cgp pt = do
-  jsonBindingsI <- addImport (cgp_runtimePackage cgp) "JsonBindings"
+  jsonBindingsI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBindings")
   return (jsonBindingsI <> "." <> bindingName pt)
   where
     bindingName P_Void = "VOID"
