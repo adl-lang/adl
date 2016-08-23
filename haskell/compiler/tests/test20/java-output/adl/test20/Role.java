@@ -131,11 +131,11 @@ public class Role {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case UNDERLING:
-            _result.add("underling", null);
+            _result.add("u", null);
           case BOSS:
-            _result.add("boss", null);
+            _result.add("b", null);
           case SUPERBOSS:
-            _result.add("superBoss", null);
+            _result.add("sb", null);
         }
         return _result;
       }
@@ -143,13 +143,13 @@ public class Role {
       public Role fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "underling") {
+          if (_v.getKey() == "u") {
             return Role.underling();
           }
-          else if (_v.getKey() == "boss") {
+          else if (_v.getKey() == "b") {
             return Role.boss();
           }
-          else if (_v.getKey() == "superBoss") {
+          else if (_v.getKey() == "sb") {
             return Role.superBoss();
           }
         }

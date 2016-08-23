@@ -126,8 +126,8 @@ public class Person {
 
       public JsonElement toJson(Person _value) {
         JsonObject _result = new JsonObject();
-        _result.add("firstName", firstName.toJson(_value.firstName));
-        _result.add("lastName", lastName.toJson(_value.lastName));
+        _result.add("fn", firstName.toJson(_value.firstName));
+        _result.add("ln", lastName.toJson(_value.lastName));
         _result.add("age", age.toJson(_value.age));
         _result.add("role", role.toJson(_value.role));
         return _result;
@@ -136,8 +136,8 @@ public class Person {
       public Person fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Person(
-          _obj.has("firstName") ? firstName.fromJson(_obj.get("firstName")) : "",
-          _obj.has("lastName") ? lastName.fromJson(_obj.get("lastName")) : "",
+          _obj.has("fn") ? firstName.fromJson(_obj.get("fn")) : "",
+          _obj.has("ln") ? lastName.fromJson(_obj.get("ln")) : "",
           _obj.has("age") ? age.fromJson(_obj.get("age")) : (short)0,
           _obj.has("role") ? role.fromJson(_obj.get("role")) : new Role()
         );
