@@ -260,17 +260,24 @@ genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
 genTypeExpr te = genTypeExprB TypeUnboxed te
 
 genTypeExprB :: TypeBoxed ->  TypeExpr CResolvedType -> CState T.Text
-genTypeExprB boxed (TypeExpr rt []) = genResolvedType boxed rt
 genTypeExprB boxed (TypeExpr rt params) = do
-  rtStr <- genResolvedType boxed rt
   rtParamsStr <- mapM (genTypeExprB TypeBoxed) params
-  return (template "$1<$2>" [rtStr,T.intercalate ", " rtParamsStr])
+  genResolvedType boxed rt rtParamsStr
 
-genResolvedType :: TypeBoxed -> CResolvedType -> CState T.Text
-genResolvedType _ (RT_Named (_,_,Just customType)) = addImport (classFromScopedName (ct_scopedName customType))
-genResolvedType _ (RT_Named (scopedName,_,Nothing)) = genScopedName scopedName
-genResolvedType _(RT_Param ident) = return (unreserveWord ident)
-genResolvedType boxed (RT_Primitive pt) = pd_type (genPrimitiveDetails pt) boxed
+genResolvedType :: TypeBoxed -> CResolvedType -> [T.Text] -> CState T.Text
+genResolvedType _ (RT_Named (_,_,Just customType)) args = do
+  ts <- addImport (classFromScopedName (ct_scopedName customType))
+  return (withTypeArgs ts args)
+genResolvedType _ (RT_Named (scopedName,_,Nothing)) args = do
+  ts <- genScopedName scopedName
+  return (withTypeArgs ts args)
+genResolvedType _(RT_Param ident) args = return (unreserveWord ident)
+genResolvedType boxed (RT_Primitive pt) args = do
+  pd_type (genPrimitiveDetails pt) boxed args
+
+withTypeArgs :: T.Text -> [T.Text] -> T.Text
+withTypeArgs ts [] = ts
+withTypeArgs ts tsargs = template "$1<$2>" [ts,T.intercalate ", " tsargs] 
 
 genScopedName :: ScopedName -> CState T.Text
 genScopedName scopedName0 = do
@@ -299,7 +306,7 @@ genFactoryExpr (TypeExpr rt params) = do
     _ -> return (template "$1($2)" [fe,commaSep fparams])
 
 data PrimitiveDetails = PrimitiveDetails {
-  pd_type :: TypeBoxed -> CState T.Text,
+  pd_type :: TypeBoxed -> [T.Text] -> CState T.Text,
   pd_default :: Maybe T.Text,
   pd_genLiteral :: JSON.Value -> T.Text,
   pd_mutable :: Bool,
@@ -382,7 +389,7 @@ genPrimitiveDetails P_Word32 = genPrimitiveDetails P_Int32
 genPrimitiveDetails P_Word64 = genPrimitiveDetails P_Int64
 
 genPrimitiveDetails P_ByteVector = PrimitiveDetails {
-  pd_type = const $ do
+  pd_type = \_ _ -> do
     rtpackage <- getRuntimePackage
     addImport (javaClass rtpackage "ByteArray"),
   pd_default = Just "new ByteArray()",
@@ -396,7 +403,9 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
       (Left _) -> "???"
       (Right s) -> s
 genPrimitiveDetails P_Vector = PrimitiveDetails {
-  pd_type = const $ addImport "java.util.ArrayList",
+  pd_type = \_ args -> do
+     arrayListI <- addImport "java.util.ArrayList"
+     return (withTypeArgs arrayListI args),
   pd_default = Nothing,
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
   pd_mutable = True,
@@ -404,7 +413,7 @@ genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_String = PrimitiveDetails {
-  pd_type = const $ return "String",
+  pd_type = \_ _ -> return "String",
   pd_default = Just "\"\"",
   pd_genLiteral = \(JSON.String s) -> T.pack (show s),
   pd_mutable= False,
@@ -412,7 +421,7 @@ genPrimitiveDetails P_String = PrimitiveDetails {
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_Sink = PrimitiveDetails {
-  pd_type = const $ return "Sink",
+  pd_type = \_ args -> return (withTypeArgs "Sink" args),
   pd_default = Just "new Sink()",
   pd_genLiteral = \_ -> "????", -- never called
   pd_mutable = True,
@@ -442,9 +451,9 @@ data FieldDetails = FieldDetails {
   fd_copy :: T.Text -> T.Text
 }
 
-unboxedPrimitive :: T.Text -> T.Text -> TypeBoxed -> CState T.Text
-unboxedPrimitive _ boxed TypeBoxed = return boxed
-unboxedPrimitive unboxed _ TypeUnboxed = return unboxed
+unboxedPrimitive :: T.Text -> T.Text -> TypeBoxed -> [T.Text] -> CState T.Text
+unboxedPrimitive _ boxed TypeBoxed _ = return boxed
+unboxedPrimitive unboxed _ TypeUnboxed _ = return unboxed
 
 unboxedField fd = fd_typeExprStr fd /= fd_boxedTypeExprStr fd
 
