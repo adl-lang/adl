@@ -112,6 +112,7 @@ data S t = S
     , s_f_u :: U
     , s_f_t :: t
     , s_f_bint16 :: (B Data.Int.Int16)
+    , s_f_smap :: (StringMap_FIXME Data.Int.Int32)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -141,6 +142,7 @@ instance (ADLValue t) => ADLValue (S t) where
         (U_f_int 45)
         defaultv
         (defaultv :: (B Data.Int.Int16)) { b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = (defaultv :: (XY Data.Int.Int16)) { xY_x = 5, xY_y = 5 } }
+        StringMap_FIXME()
     
     jsonSerialiser jf = JSONSerialiser to from
         where
@@ -163,6 +165,7 @@ instance (ADLValue t) => ADLValue (S t) where
             f_u_js = jsonSerialiser jf
             f_t_js = jsonSerialiser jf
             f_bint16_js = jsonSerialiser jf
+            f_smap_js = jsonSerialiser jf
             
             to v = JSON.Object ( HM.fromList
                 [ ("f_void",aToJSON f_void_js (s_f_void v))
@@ -184,6 +187,7 @@ instance (ADLValue t) => ADLValue (S t) where
                 , ("f_u",aToJSON f_u_js (s_f_u v))
                 , ("f_t",aToJSON f_t_js (s_f_t v))
                 , ("f_bint16",aToJSON f_bint16_js (s_f_bint16 v))
+                , ("f_smap",aToJSON f_smap_js (s_f_smap v))
                 ] )
             
             from (JSON.Object hm) = S 
@@ -206,6 +210,7 @@ instance (ADLValue t) => ADLValue (S t) where
                 <*> fieldFromJSON f_u_js "f_u" defaultv hm
                 <*> fieldFromJSON f_t_js "f_t" defaultv hm
                 <*> fieldFromJSON f_bint16_js "f_bint16" defaultv hm
+                <*> fieldFromJSON f_smap_js "f_smap" defaultv hm
             from _ = Prelude.Nothing
 
 data U

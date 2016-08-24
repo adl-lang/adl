@@ -70,6 +70,7 @@ mkLiteral lg te jv = mk Map.empty te jv
      (Just te) -> mk m te v
      Nothing -> error "BUG: Failed to find type binding in mkLiteral"
     mk m (TypeExpr (RT_Primitive P_Vector) [te]) jv = mkVec m te jv
+    mk m (TypeExpr (RT_Primitive P_StringMap) [te]) jv = mkStringMap m te jv
     mk m te0@(TypeExpr (RT_Named (_,decl,_)) tes) jv = case d_type decl of
       (Decl_Struct s) -> mkStruct m te0 decl s tes jv
       (Decl_Union u) -> mkUnion m te0 decl u tes jv 
@@ -80,7 +81,10 @@ mkLiteral lg te jv = mk Map.empty te jv
       t <- getTypeExprB lg False m te
       vals <- mapM (mk m te) (V.toList v)
       return (LVector t vals)
-      
+
+    mkStringMap m te (JSON.Object v) = do
+      return (LCtor "StringMap_FIXME" te [])
+
     mkStruct m te0 d s tes (JSON.Object hm) = do
       t <- getTypeExprB lg False m te0
       fields1 <- forM (s_fields s) $ \f -> do

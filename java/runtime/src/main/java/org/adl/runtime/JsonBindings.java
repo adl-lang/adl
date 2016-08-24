@@ -3,11 +3,14 @@ package org.adl.runtime;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *  helper implementations for GSON based serialisation.
@@ -151,6 +154,29 @@ public class JsonBindings
         ArrayList<T> result = new ArrayList<T>();
         for (JsonElement je : json.getAsJsonArray()) {
           result.add(factoryT.fromJson(je));
+        }
+        return result;
+      }
+    };
+  }
+
+  public static <T> JsonBinding<HashMap<String,T>> stringMap(final JsonBinding<T> factoryT) {
+    return new JsonBinding<HashMap<String,T>>() {
+      public Factory<HashMap<String,T>> factory() {
+        return Factories.stringMap(factoryT.factory());
+      }
+      public JsonElement toJson(HashMap<String,T> value) {
+        JsonObject result = new JsonObject();
+        for (Map.Entry<String,T> e : value.entrySet()) {
+          result.add(e.getKey(), factoryT.toJson(e.getValue()));
+        }
+        return result;
+      }
+      public HashMap<String,T> fromJson(JsonElement json) {
+        JsonObject jobj = json.getAsJsonObject();
+        HashMap<String,T> result = new HashMap<String,T>();
+        for (Map.Entry<String,JsonElement> e : jobj.entrySet()) {
+          result.put(e.getKey(), factoryT.fromJson(e.getValue()));
         }
         return result;
       }

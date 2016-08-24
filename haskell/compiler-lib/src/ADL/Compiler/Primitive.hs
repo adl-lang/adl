@@ -34,6 +34,7 @@ data PrimitiveType = P_Void
                    | P_ByteVector
                    | P_String
                    | P_Vector
+                   | P_StringMap
                    | P_Sink
   deriving (Eq,Ord,Show)
 
@@ -63,6 +64,7 @@ primitiveDetails =
   , PrimitiveDetails P_ByteVector "Bytes" 0 isBytes
   , PrimitiveDetails P_String "String" 0 isString
   , PrimitiveDetails P_Vector "Vector" 1 (const False)
+  , PrimitiveDetails P_StringMap "StringMap" 1 (const False)
   , PrimitiveDetails P_Sink "Sink" 1 (const False)
   ]
 

@@ -349,6 +349,7 @@ data Literal te
   | LCtor te [Literal te]
   | LUnion te Ident (Literal te)
   | LVector te [Literal te]
+  | LStringMap te (Map.Map T.Text (Literal te))
   | LPrimitive PrimitiveType JSON.Value
   deriving (Show)
 
@@ -363,6 +364,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
       Nothing -> Right (LPrimitive pt v)
       Just err -> Left err
     litForTE m te@(TypeExpr (RT_Primitive P_Vector) [te0]) v = LVector te <$> vecLiteral m te0 v
+    litForTE m te@(TypeExpr (RT_Primitive P_StringMap) [te0]) v = LStringMap te <$> stringMapLiteral m te0 v
     litForTE m (TypeExpr (RT_Primitive P_Sink) [te]) v = Left "literals not allowed for sinks"
     litForTE m (TypeExpr (RT_Primitive _) _) v =
       error "BUG: found primitive type with incorrect number of type parameters"
@@ -379,6 +381,13 @@ literalForTypeExpr te v = litForTE Map.empty te v
     
     vecLiteral m te (JSON.Array v) = mapM (litForTE m te) (V.toList v)
     vecLiteral _ _ _ = Left "expected an array"
+
+    stringMapLiteral m te (JSON.Object o) = Map.fromList <$> mapM mkItem (HM.toList o)
+      where
+         mkItem (key,jv) = do
+           lit <- litForTE m te jv
+           return (key,lit)
+    stringMapLiteral _ _ _ = Left "expected an object"
 
     structFields m decl s tes (JSON.Object hm) = for (s_fields s) $ \f -> do
       pm <- createParamMap (s_typeParams s) tes m

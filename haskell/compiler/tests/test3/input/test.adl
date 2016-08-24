@@ -60,6 +60,11 @@ struct S<T>
         "f_tvec" : [1,2,3],
         "f_xy" : { "x" : 5, "y" : 5 }
     };
+
+    StringMap<Int32> f_smap = {
+       "a" : 45,
+       "b" : 47
+    };
 }; 
 
 };

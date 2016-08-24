@@ -137,6 +137,7 @@ writeToParcel te to from flags = return $ case te of
   (TypeExpr (RT_Primitive P_ByteVector) _) -> ctemplate "$1.writeByteArray($2.getValue());" [to,from]
   (TypeExpr (RT_Primitive P_String) _) -> ctemplate "$1.writeString($2);" [to,from]
   (TypeExpr (RT_Primitive P_Vector) _) -> ctemplate "$1.writeList($2);" [to,from]
+  (TypeExpr (RT_Primitive P_StringMap) _) -> ctemplate "$1.writeStringMap($2);" [to,from]
   _ -> ctemplate "$1.writeToParcel($2, $3);" [from,to,flags]
 
 
@@ -171,6 +172,7 @@ readFromParcel te mtotype tovar from = do
         <>
         ctemplate "$1.readList($2, $3.class.getClassLoader());" [from,tovar,typeExprStr]
         )
+    (TypeExpr (RT_Primitive P_StringMap) _) -> return $ ctemplate "$1 = $2.readStringMap();" [to,from]
     _ -> do
       typeExprStr <- genTypeExprB TypeBoxed te
       return (

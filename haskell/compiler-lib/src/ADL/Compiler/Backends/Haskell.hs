@@ -168,6 +168,7 @@ hPrimitiveType P_Float = return "Prelude.Float"
 hPrimitiveType P_Double = return "Prelude.Double"
 hPrimitiveType P_ByteVector = importByteString >> return "B.ByteString"
 hPrimitiveType P_Vector = return "[]" -- never called
+hPrimitiveType P_StringMap = return "StringMap_FIXME"
 hPrimitiveType P_String = importText >> return "T.Text"
 hPrimitiveType P_Sink = do
   importModule (HaskellModule "ADL.Core.Sink")
@@ -434,6 +435,7 @@ generateLiteral te v =  generateLV Map.empty te v
     generateLV :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
     generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
+    generateLV m (TypeExpr (RT_Primitive P_StringMap) [te]) v = generateStringMap m te v
     generateLV m te0@(TypeExpr (RT_Named (sn,decl,_)) tes) v = case d_type decl of
       (Decl_Struct s) -> generateStruct m te0 decl s tes v
       (Decl_Union u) -> generateUnion m decl u tes v 
@@ -445,6 +447,9 @@ generateLiteral te v =  generateLV Map.empty te v
     generateVec m te (JSON.Array v) = do
       vals <- mapM (generateLV m te) (V.toList v) 
       return (template "[ $1 ]" [T.intercalate ", " vals])
+
+    generateStringMap m te (JSON.Object v) = do
+      return "StringMap_FIXME()"
 
     generateStruct m te0 d s tes (JSON.Object hm) = do
       fields <- forM (L.sortBy (comparing fst) $ HM.toList hm) $ \(fname,v) -> do

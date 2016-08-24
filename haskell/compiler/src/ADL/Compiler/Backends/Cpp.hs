@@ -1140,6 +1140,7 @@ cPrimitiveType P_Float = return "float"
 cPrimitiveType P_Double = return "double"
 cPrimitiveType P_ByteVector = return "ByteVector"
 cPrimitiveType P_Vector = includeStd ifile "vector" >> return "std::vector"
+cPrimitiveType P_StringMap = return "StringMap_FIXME"
 cPrimitiveType P_String = includeStd ifile "string" >> return "std::string"
 cPrimitiveType P_Sink = includeStd ifile "adl/sink.h" >> return "Sink"
 

@@ -8,6 +8,7 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class S<T> {
@@ -33,10 +34,11 @@ public class S<T> {
   private U f_u;
   private T f_t;
   private B<Short> f_bint16;
+  private HashMap<String, Integer> f_smap;
 
   /* Constructors */
 
-  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, ArrayList<String> f_vstring, A f_a, U f_u, T f_t, B<Short> f_bint16) {
+  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, ArrayList<String> f_vstring, A f_a, U f_u, T f_t, B<Short> f_bint16, HashMap<String, Integer> f_smap) {
     this.f_void = f_void;
     this.f_bool = f_bool;
     this.f_int8 = f_int8;
@@ -56,6 +58,7 @@ public class S<T> {
     this.f_u = Objects.requireNonNull(f_u);
     this.f_t = Objects.requireNonNull(f_t);
     this.f_bint16 = Objects.requireNonNull(f_bint16);
+    this.f_smap = Objects.requireNonNull(f_smap);
   }
 
   /* Accessors and mutators */
@@ -212,6 +215,14 @@ public class S<T> {
     this.f_bint16 = Objects.requireNonNull(f_bint16);
   }
 
+  public HashMap<String, Integer> getF_smap() {
+    return f_smap;
+  }
+
+  public void setF_smap(HashMap<String, Integer> f_smap) {
+    this.f_smap = Objects.requireNonNull(f_smap);
+  }
+
   /* Object level helpers */
 
   @Override
@@ -239,7 +250,8 @@ public class S<T> {
       f_a.equals(other.f_a) &&
       f_u.equals(other.f_u) &&
       f_t.equals(other.f_t) &&
-      f_bint16.equals(other.f_bint16);
+      f_bint16.equals(other.f_bint16) &&
+      f_smap.equals(other.f_smap);
   }
 
   @Override
@@ -264,6 +276,7 @@ public class S<T> {
     result = result * 37 + f_u.hashCode();
     result = result * 37 + f_t.hashCode();
     result = result * 37 + f_bint16.hashCode();
+    result = result * 37 + f_smap.hashCode();
     return result;
   }
 
@@ -290,6 +303,7 @@ public class S<T> {
       final Factory<U> f_u = U.FACTORY;
       final Factory<T> f_t = factoryT;
       final Factory<B<Short>> f_bint16 = B.factory(Factories.SHORT);
+      final Factory<HashMap<String, Integer>> f_smap = Factories.stringMap(Factories.INTEGER);
 
       public S<T> create() {
         return new S<T>(
@@ -311,7 +325,8 @@ public class S<T> {
           new A((short)0, "xyz", true),
           U.f_int((short)45),
           f_t.create(),
-          new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5))
+          new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
+          Factories.stringMap("a", 45, "b", 47)
           );
       }
 
@@ -335,7 +350,8 @@ public class S<T> {
           f_a.create(other.getF_a()),
           f_u.create(other.getF_u()),
           f_t.create(other.getF_t()),
-          f_bint16.create(other.getF_bint16())
+          f_bint16.create(other.getF_bint16()),
+          f_smap.create(other.getF_smap())
           );
       }
     };
@@ -363,6 +379,7 @@ public class S<T> {
     final JsonBinding<U> f_u = U.jsonBinding();
     final JsonBinding<T> f_t = bindingT;
     final JsonBinding<B<Short>> f_bint16 = B.jsonBinding(JsonBindings.SHORT);
+    final JsonBinding<HashMap<String, Integer>> f_smap = JsonBindings.stringMap(JsonBindings.INTEGER);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<S<T>> _factory = factory(bindingT.factory());
 
@@ -392,6 +409,7 @@ public class S<T> {
         _result.add("f_u", f_u.toJson(_value.f_u));
         _result.add("f_t", f_t.toJson(_value.f_t));
         _result.add("f_bint16", f_bint16.toJson(_value.f_bint16));
+        _result.add("f_smap", f_smap.toJson(_value.f_smap));
         return _result;
       }
 
@@ -416,7 +434,8 @@ public class S<T> {
           _obj.has("f_a") ? f_a.fromJson(_obj.get("f_a")) : new A((short)0, "xyz", true),
           _obj.has("f_u") ? f_u.fromJson(_obj.get("f_u")) : U.f_int((short)45),
           _obj.has("f_t") ? f_t.fromJson(_obj.get("f_t")) : factoryT.create(),
-          _obj.has("f_bint16") ? f_bint16.fromJson(_obj.get("f_bint16")) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5))
+          _obj.has("f_bint16") ? f_bint16.fromJson(_obj.get("f_bint16")) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
+          _obj.has("f_smap") ? f_smap.fromJson(_obj.get("f_smap")) : Factories.stringMap("a", 45, "b", 47)
         );
       }
     };

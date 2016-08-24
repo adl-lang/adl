@@ -2,6 +2,8 @@ package org.adl.runtime;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Useful standard implementations of the Factory interface.
@@ -78,6 +80,38 @@ public class Factories {
     ArrayList<T> result  = new ArrayList<T>();
     for (int i=  0; i < values.length; i++) {
       result.add(values[i]);
+    }
+    return result;
+  }
+
+  public static <T> Factory<HashMap<String,T>> stringMap(final Factory<T> factoryT) {
+    return new Factory<HashMap<String,T>>() {
+      public HashMap<String,T> create() {
+        return new java.util.HashMap<String,T>();
+      }
+
+      public HashMap<String,T> create(HashMap<String,T> other) {
+        HashMap<String,T> result = new HashMap<String,T>();
+        for (Map.Entry<String,T> e : other.entrySet()) {
+          result.put(e.getKey(), factoryT.create(e.getValue()));
+        }
+        return result;
+      }
+    };
+  }
+
+  public static <T> HashMap<String,T> stringMap() {
+    return new HashMap<String,T>();
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> HashMap<String,T> stringMap(String k1, T v1, Object... kvs) {
+    HashMap<String,T> result = new HashMap<String,T>();
+    result.put(k1, v1);
+    for (int i = 0; i < kvs.length;) {
+      String k = (String) kvs[i++];
+      T v = (T) kvs[i++];
+      result.put(k, v);
     }
     return result;
   }

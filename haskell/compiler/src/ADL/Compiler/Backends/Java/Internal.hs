@@ -412,6 +412,16 @@ genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_factory = primitiveFactory "arrayList",
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
+genPrimitiveDetails P_StringMap = PrimitiveDetails {
+  pd_type = \_ targs -> do
+    hashMapI <- addImport "java.util.HashMap"
+    return (withTypeArgs hashMapI ("String":targs)),
+  pd_default = Nothing,
+  pd_genLiteral = \(JSON.String s) -> "???", -- never called
+  pd_mutable = True,
+  pd_factory = primitiveFactory "stringMap",
+  pd_hashfn = \from -> template "$1.hashCode()" [from]
+  }
 genPrimitiveDetails P_String = PrimitiveDetails {
   pd_type = \_ _ -> return "String",
   pd_default = Just "\"\"",
@@ -574,6 +584,13 @@ genLiteralText (LVector _ ls) = do
   rtpackage <- getRuntimePackage
   factories <- addImport (javaClass rtpackage "Factories")
   return (template "$1.arrayList($2)" [factories,commaSep lits])
+genLiteralText (LStringMap _ kvPairs) = do
+  kvlits <- for (Map.toList kvPairs) $ \(k,v) -> do
+    litv <- genLiteralText v
+    return (template "\"$1\", $2" [k,litv])
+  rtpackage <- getRuntimePackage
+  factories <- addImport (javaClass rtpackage "Factories")
+  return (template "$1.stringMap($2)" [factories,commaSep kvlits])
 genLiteralText (LPrimitive pt jv) = do
   return (pd_genLiteral (genPrimitiveDetails pt) jv)
 
