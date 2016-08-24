@@ -104,7 +104,7 @@ generateNewtypeJson cgp decl newtype_ memberVarName = do
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonObjectI <- addImport "com.google.gson.JsonObject"
   jsonBinding <- genJsonBindingExpr cgp (n_typeExpr newtype_)
-  boxedTypeExprStr <- genTypeExprB True (n_typeExpr newtype_)
+  boxedTypeExprStr <- genTypeExprB TypeBoxed (n_typeExpr newtype_)
   
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- n_typeParams newtype_]
 

@@ -165,14 +165,14 @@ readFromParcel te mtotype tovar from = do
         )
     (TypeExpr (RT_Primitive P_Vector) [te']) ->  do
       arrayList <- addImport "java.util.ArrayList"
-      typeExprStr <- genTypeExprB True te'
+      typeExprStr <- genTypeExprB TypeBoxed te'
       return (
         ctemplate "$1 = new $2<$3>();" [to,arrayList,typeExprStr]
         <>
         ctemplate "$1.readList($2, $3.class.getClassLoader());" [from,tovar,typeExprStr]
         )
     _ -> do
-      typeExprStr <- genTypeExprB True te
+      typeExprStr <- genTypeExprB TypeBoxed te
       return (
         ctemplate "$1 = $2.CREATOR.createFromParcel($3);" [to,typeExprStr,from]
         )

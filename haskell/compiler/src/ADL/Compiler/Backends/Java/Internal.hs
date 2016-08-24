@@ -253,22 +253,24 @@ getRuntimePackage = (cgp_runtimePackage . cf_codeProfile) <$> get
 getHelpers :: CustomType -> CState Ident
 getHelpers customType = addImport (classFromScopedName (ct_helpers customType))
 
-genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
-genTypeExpr te = genTypeExprB False te
+data TypeBoxed = TypeBoxed | TypeUnboxed
 
-genTypeExprB :: Bool ->  TypeExpr CResolvedType -> CState T.Text
+
+genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
+genTypeExpr te = genTypeExprB TypeUnboxed te
+
+genTypeExprB :: TypeBoxed ->  TypeExpr CResolvedType -> CState T.Text
 genTypeExprB boxed (TypeExpr rt []) = genResolvedType boxed rt
 genTypeExprB boxed (TypeExpr rt params) = do
   rtStr <- genResolvedType boxed rt
-  rtParamsStr <- mapM (genTypeExprB True) params
+  rtParamsStr <- mapM (genTypeExprB TypeBoxed) params
   return (template "$1<$2>" [rtStr,T.intercalate ", " rtParamsStr])
 
-genResolvedType :: Bool -> CResolvedType -> CState T.Text
+genResolvedType :: TypeBoxed -> CResolvedType -> CState T.Text
 genResolvedType _ (RT_Named (_,_,Just customType)) = addImport (classFromScopedName (ct_scopedName customType))
 genResolvedType _ (RT_Named (scopedName,_,Nothing)) = genScopedName scopedName
 genResolvedType _(RT_Param ident) = return (unreserveWord ident)
-genResolvedType False (RT_Primitive pt) = let pd = genPrimitiveDetails pt in fromMaybe (pd_type pd) (pd_unboxed pd)
-genResolvedType True (RT_Primitive pt) = pd_type (genPrimitiveDetails pt)
+genResolvedType boxed (RT_Primitive pt) = pd_type (genPrimitiveDetails pt) boxed
 
 genScopedName :: ScopedName -> CState T.Text
 genScopedName scopedName0 = do
@@ -297,8 +299,7 @@ genFactoryExpr (TypeExpr rt params) = do
     _ -> return (template "$1($2)" [fe,commaSep fparams])
 
 data PrimitiveDetails = PrimitiveDetails {
-  pd_type :: CState T.Text,
-  pd_unboxed :: Maybe (CState T.Text),
+  pd_type :: TypeBoxed -> CState T.Text,
   pd_default :: Maybe T.Text,
   pd_genLiteral :: JSON.Value -> T.Text,
   pd_mutable :: Bool,
@@ -308,8 +309,7 @@ data PrimitiveDetails = PrimitiveDetails {
 
 genPrimitiveDetails :: PrimitiveType -> PrimitiveDetails
 genPrimitiveDetails P_Void = PrimitiveDetails {
-  pd_unboxed = Nothing,
-  pd_type = return "Void",
+  pd_type = unboxedPrimitive "Void" "Void",
   pd_default = Just "null",
   pd_genLiteral = \jv -> "null",
   pd_mutable = False,
@@ -317,8 +317,7 @@ genPrimitiveDetails P_Void = PrimitiveDetails {
   pd_hashfn = \from -> "0"
   }
 genPrimitiveDetails P_Bool = PrimitiveDetails {
-  pd_unboxed = Just (return "boolean"),
-  pd_type = return "Boolean",
+  pd_type = unboxedPrimitive "boolean" "Boolean",
   pd_default = Just "false",
   pd_genLiteral = \jv ->
     case jv of
@@ -329,8 +328,7 @@ genPrimitiveDetails P_Bool = PrimitiveDetails {
   pd_hashfn = \from -> template "($1 ? 0 : 1)" [from]
   }
 genPrimitiveDetails P_Int8 = PrimitiveDetails {
-  pd_unboxed = Just (return "byte"),
-  pd_type = return "Byte",
+  pd_type = unboxedPrimitive "byte" "Byte",
   pd_default = Just "(byte)0",
   pd_genLiteral = \(JSON.Number n) -> "(byte)" <> litNumber n,
   pd_mutable = False,
@@ -338,8 +336,7 @@ genPrimitiveDetails P_Int8 = PrimitiveDetails {
   pd_hashfn = \from -> template "(int) $1" [from]
 }
 genPrimitiveDetails P_Int16 = PrimitiveDetails {
-  pd_unboxed = Just (return "short"),
-  pd_type = return "Short",
+  pd_type = unboxedPrimitive "short" "Short",
   pd_default = Just "(short)0",
   pd_genLiteral = \(JSON.Number n) -> "(short)" <> litNumber n,
   pd_mutable = False,
@@ -347,8 +344,7 @@ genPrimitiveDetails P_Int16 = PrimitiveDetails {
   pd_hashfn = \from -> template "(int) $1" [from]
 }
 genPrimitiveDetails P_Int32 = PrimitiveDetails {
-  pd_unboxed = Just (return "int"),
-  pd_type = return "Integer",
+  pd_type = unboxedPrimitive "int" "Integer",
   pd_default = Just "0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
   pd_mutable = False,
@@ -356,8 +352,7 @@ genPrimitiveDetails P_Int32 = PrimitiveDetails {
   pd_hashfn = \from -> template "$1" [from]
 }
 genPrimitiveDetails P_Int64 = PrimitiveDetails {
-  pd_unboxed = Just (return "long"),
-  pd_type = return "Long",
+  pd_type = unboxedPrimitive "long" "Long",
   pd_default = Just "0L",
   pd_genLiteral = \(JSON.Number n) -> litNumber n <> "L",
   pd_mutable = False,
@@ -365,8 +360,7 @@ genPrimitiveDetails P_Int64 = PrimitiveDetails {
   pd_hashfn = \from -> template "(int) ($1 ^ ($1 >>> 32))" [from]
 }
 genPrimitiveDetails P_Float = PrimitiveDetails {
-  pd_unboxed = Just (return "float"),
-  pd_type = return "Float",
+  pd_type = unboxedPrimitive "float" "Float",
   pd_default = Just "0.0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n <> "F",
   pd_mutable = False,
@@ -374,8 +368,7 @@ genPrimitiveDetails P_Float = PrimitiveDetails {
   pd_hashfn = \from -> template "Float.valueOf($1).hashCode()" [from]
 }
 genPrimitiveDetails P_Double = PrimitiveDetails {
-  pd_unboxed = Just (return "double"),
-  pd_type = return "Double",
+  pd_type = unboxedPrimitive "double" "Double",
   pd_default = Just "0.0",
   pd_genLiteral = \(JSON.Number n) -> litNumber n,
   pd_mutable = False,
@@ -389,8 +382,7 @@ genPrimitiveDetails P_Word32 = genPrimitiveDetails P_Int32
 genPrimitiveDetails P_Word64 = genPrimitiveDetails P_Int64
 
 genPrimitiveDetails P_ByteVector = PrimitiveDetails {
-  pd_unboxed = Nothing,
-  pd_type = do
+  pd_type = const $ do
     rtpackage <- getRuntimePackage
     addImport (javaClass rtpackage "ByteArray"),
   pd_default = Just "new ByteArray()",
@@ -404,8 +396,7 @@ genPrimitiveDetails P_ByteVector = PrimitiveDetails {
       (Left _) -> "???"
       (Right s) -> s
 genPrimitiveDetails P_Vector = PrimitiveDetails {
-  pd_unboxed = Nothing,
-  pd_type = addImport "java.util.ArrayList",
+  pd_type = const $ addImport "java.util.ArrayList",
   pd_default = Nothing,
   pd_genLiteral = \(JSON.String s) -> "???", -- never called
   pd_mutable = True,
@@ -413,8 +404,7 @@ genPrimitiveDetails P_Vector = PrimitiveDetails {
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_String = PrimitiveDetails {
-  pd_unboxed = Nothing,
-  pd_type = return "String",
+  pd_type = const $ return "String",
   pd_default = Just "\"\"",
   pd_genLiteral = \(JSON.String s) -> T.pack (show s),
   pd_mutable= False,
@@ -422,8 +412,7 @@ genPrimitiveDetails P_String = PrimitiveDetails {
   pd_hashfn = \from -> template "$1.hashCode()" [from]
   }
 genPrimitiveDetails P_Sink = PrimitiveDetails {
-  pd_unboxed = Nothing,
-  pd_type = return "Sink",
+  pd_type = const $ return "Sink",
   pd_default = Just "new Sink()",
   pd_genLiteral = \_ -> "????", -- never called
   pd_mutable = True,
@@ -453,9 +442,11 @@ data FieldDetails = FieldDetails {
   fd_copy :: T.Text -> T.Text
 }
 
-unboxedField fd = case (f_type (fd_field fd)) of
-  (TypeExpr (RT_Primitive pt) []) -> isJust (pd_unboxed (genPrimitiveDetails pt))
-  _ -> False
+unboxedPrimitive :: T.Text -> T.Text -> TypeBoxed -> CState T.Text
+unboxedPrimitive _ boxed TypeBoxed = return boxed
+unboxedPrimitive unboxed _ TypeUnboxed = return unboxed
+
+unboxedField fd = fd_typeExprStr fd /= fd_boxedTypeExprStr fd
 
 needsNullCheck fd = not (unboxedField fd || fd_typeExprStr fd == "Void")
 
@@ -466,8 +457,8 @@ immutableType te = case te of
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails f = do
   let te = f_type f
-  typeExprStr <- genTypeExprB False te
-  boxedTypeExprStr <- genTypeExprB True te
+  typeExprStr <- genTypeExprB TypeUnboxed te
+  boxedTypeExprStr <- genTypeExprB TypeBoxed te
   factoryExprStr <- genFactoryExpr te
   litv <- case f_default f of
     (Just v) -> case literalForTypeExpr te v of
