@@ -151,7 +151,7 @@ lgen = LGen {
   getPrimitiveLiteral = \pt jv -> return (cPrimitiveLiteral pt jv),
   getTypeExpr = cTypeExpr,
   getTypeExprB = cTypeExprB,
-  getUnionConstructorName = \d f -> return (cUnionConstructorName d f)
+  getUnionConstructorName = \d f -> return (cUnionConstructorName f)
   }
 
 -- Selector function to control which file is being updated.
@@ -321,24 +321,24 @@ cTypeParamName :: Ident -> Ident
 cTypeParamName = unreserveWord
 
 -- Returns the c++ name corresponding to the ADL field name
-cFieldName :: Ident -> Ident -> Ident
-cFieldName _ = unreserveWord
+cFieldName :: Ident -> Ident
+cFieldName = unreserveWord
 
 -- Returns the c++ name for the accessor function for a union field
-cUnionAccessorName :: Decl t -> Field t  -> Ident
-cUnionAccessorName _ f = unreserveWord (f_name f)
+cUnionAccessorName :: Field t  -> Ident
+cUnionAccessorName f = unreserveWord (f_name f)
 
 -- Returns the c++ name for the constructor function for a union field
-cUnionConstructorName :: Decl t -> Field t -> Ident
-cUnionConstructorName d f = T.append "mk_" (cUnionAccessorName d f)
+cUnionConstructorName :: Field t -> Ident
+cUnionConstructorName f = T.append "mk_" (cUnionAccessorName f)
 
 -- Returns the c++ name for the setter function for a union field
-cUnionSetterName :: Decl t -> Field t -> Ident
-cUnionSetterName d f = T.append "set_" (cUnionAccessorName d f)
+cUnionSetterName ::Field t -> Ident
+cUnionSetterName f = T.append "set_" (cUnionAccessorName f)
 
 -- Returns the c++ name for the enum value corresponding to the ADL discriminator name
-cUnionDiscName :: Decl t -> Field t -> Ident
-cUnionDiscName t f = T.toUpper (cUnionAccessorName t f)
+cUnionDiscName :: Field t -> Ident
+cUnionDiscName f = T.toUpper (cUnionAccessorName f)
 
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
@@ -393,6 +393,41 @@ declareSerialisation tparams ms ctnameP = do
       wt "struct Serialisable<$1>" [ctnameP1]
       dblock $ wt "static typename Serialiser<$1>::Ptr serialiser(const SerialiserFlags &);" [ctnameP1]
 
+data FieldDetails = FieldDetails {
+  fd_field :: Field ResolvedType,
+  fd_fieldName :: Ident,
+  fd_typeExpr :: T.Text,
+  fd_scopedTypeExpr :: T.Text,
+  fd_literal :: Literal (),
+  fd_isVoidType :: Bool,
+  fd_unionDiscName :: T.Text,
+  fd_unionAccessorName :: T.Text,
+  fd_unionSetterName :: T.Text,
+  fd_unionConstructorName :: T.Text,
+  fd_serializedName :: Ident
+  }
+
+genFieldDetails :: Field ResolvedType -> Gen FieldDetails
+genFieldDetails f = do
+  t <- cTypeExpr False (f_type f)
+  scopedt <- cTypeExpr True (f_type f)
+  literal <- case f_default f of
+      (Just v) -> mkLiteral lgen (f_type f) v
+      Nothing -> mkDefaultLiteral lgen (f_type f)
+  return $ FieldDetails {
+    fd_field=f,
+    fd_fieldName=cFieldName (f_name f),
+    fd_typeExpr=t,
+    fd_scopedTypeExpr=scopedt,
+    fd_literal=literal,
+    fd_isVoidType=isVoidType (f_type f),
+    fd_unionDiscName=cUnionDiscName f,
+    fd_unionAccessorName=cUnionAccessorName f,
+    fd_unionSetterName=cUnionSetterName f,
+    fd_unionConstructorName=cUnionConstructorName f,
+    fd_serializedName=f_name f
+    }
+
 generateFwdDecl1 :: Ident -> [Ident] -> Gen ()
 generateFwdDecl1 dn tparams = do
   write ifile $ do        
@@ -409,13 +444,7 @@ generateFwdDecl _ (Decl{d_type=(Decl_Typedef _)}) = error "BUG: Unexpected fwd d
 generateDecl :: Ident -> Decl ResolvedType -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
-  fts <- forM (s_fields s) $ \f -> do
-    t <- cTypeExpr False (f_type f)
-    scopedt <- cTypeExpr True (f_type f)
-    litv <- case f_default f of
-        (Just v) -> mkLiteral lgen (f_type f) v
-        Nothing -> mkDefaultLiteral lgen (f_type f)
-    return (cFieldName dn (f_name f), f, t, scopedt, litv)
+  fds <- mapM genFieldDetails (s_fields s)
 
   let ns = ms_moduleMapper ms (ms_name ms)
       ctname = cTypeName dn
@@ -438,12 +467,12 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
        wl ""
        wt "$1(" [ctname]
        indent $ do
-         forM_ (commaSep fts) $ \((fname,f,t,_,_),sep) -> do
-            wt "const $1 & $2$3" [t, fname,sep]
+         forM_ (commaSep fds) $ \(fd,sep) -> do
+            wt "const $1 & $2$3" [fd_typeExpr fd,fd_fieldName fd,sep]
          wl ");"
        wl ""
-       forM_ fts $ \(fname,_,t,_,_) -> do
-           wt "$1 $2;" [t, fname]
+       forM_ fds $ \fd -> do
+           wt "$1 $2;" [fd_typeExpr fd, fd_fieldName fd]
 
     declareOperators ifile (s_typeParams s) ctnameP
 
@@ -453,19 +482,19 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     genTemplate (s_typeParams s)
     wt "$1::$2()" [ctnameP, ctname]
     indent $ do
-      let ifts = [ v | v@(_,_,_,_,litv) <- fts, not (literalIsDefault litv) ]
-      forM_ (addMarker ":" "," "," ifts) $ \(mark,(fname,f,t,_,litv)) -> do
-          wt "$1 $2($3)" [mark,fname,literalLValue litv]
+      let ifds = filter (not . literalIsDefault . fd_literal) fds
+      forM_ (addMarker ":" "," "," ifds) $ \(mark,fd) -> do
+          wt "$1 $2($3)" [mark,fd_fieldName fd,literalLValue (fd_literal fd)]
     cblock $ return ()
     wl ""
     genTemplate (s_typeParams s)
     wt "$1::$2(" [ctnameP,ctname]
     indent $ do
-      forM_ (commaSep fts) $ \((fname, f,t,_,_),sep) -> do
-        wt "const $1 & $2_$3" [t,fname,sep]
+      forM_ (commaSep fds) $ \(fd,sep) -> do
+        wt "const $1 & $2_$3" [fd_typeExpr fd,fd_fieldName fd,sep]
       wl ")"
-      forM_ (addMarker ":" "," "," fts) $ \(mark,(fname, f,t,_,_)) -> do
-        wt "$1 $2($2_)" [mark,fname]
+      forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
+        wt "$1 $2($2_)" [mark,fd_fieldName fd]
     cblock $ return ()
 
     -- Non-inline functions
@@ -474,9 +503,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     wl "bool"
     wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do
-      forM_ fts $ \(fname, f,t,_,_) -> do
-        wt "if( a.$1 < b.$1 ) return true;" [fname]
-        wt "if( b.$1 < a.$1 ) return false;" [fname]
+      forM_ fds $ \fd -> do
+        wt "if( a.$1 < b.$1 ) return true;" [fd_fieldName fd]
+        wt "if( b.$1 < a.$1 ) return false;" [fd_fieldName fd]
       wl "return false;"
     wl ""
     genTemplate (s_typeParams s)
@@ -484,8 +513,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do 
       wl "return"
-      forM_ (sepWithTerm "&&" ";" fts) $ \((fname, f,t,_,_),sep) -> do
-        indent $ wt "a.$1 == b.$1 $2" [fname,sep]
+      forM_ (sepWithTerm "&&" ";" fds) $ \(fd,sep) -> do
+        indent $ wt "a.$1 == b.$1 $2" [fd_fieldName fd,sep]
 
   write ifileS $ do
     declareSerialisation (s_typeParams s) ms ctnameP
@@ -502,19 +531,19 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
         dblock $ do
             wl "S_( const SerialiserFlags & sf )"
             indent $ do
-              forM_ (addMarker ":" "," "," fts) $ \(mark,(fname,_,_,scopedt,_)) -> do
-                wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,fname,scopedt]
+              forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
+                wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,fd_fieldName fd,fd_scopedTypeExpr fd]
               wl "{}"
             wl ""
             wl ""
-            forM_ fts $ \(fname,_,_,scopedt,_) -> do
-              wt "typename Serialiser<$1>::Ptr $2_s;" [scopedt,fname]
+            forM_ fds $ \fd -> do
+              wt "typename Serialiser<$1>::Ptr $2_s;" [fd_scopedTypeExpr fd,fd_fieldName fd]
             wl ""
             wl "void toJson( JsonWriter &json, const _T & v ) const"
             cblock $ do
               wl "json.startObject();"
-              forM_ fts $ \(fname, f,_,scopedt,_) -> do
-                wt "writeField<$1>( json, $3_s, \"$2\", v.$3 );" [scopedt,f_name f,fname]
+              forM_ fds $ \fd -> do
+                wt "writeField<$1>( json, $3_s, \"$2\", v.$3 );" [fd_scopedTypeExpr fd,fd_serializedName fd,fd_fieldName fd]
               wl "json.endObject();"
               return ()
             wl ""
@@ -523,21 +552,15 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
               wl "match( json, JsonReader::START_OBJECT );"
               wl "while( !match0( json, JsonReader::END_OBJECT ) )"
               cblock $ do
-                forM_ fts $ \(fname, f,_,_,_) -> do
-                  wt "readField( $1_s, v.$1, \"$2\", json ) ||" [fname,f_name f]
+                forM_ fds $ \fd -> do
+                  wt "readField( $1_s, v.$1, \"$2\", json ) ||" [fd_fieldName fd,fd_serializedName fd]
                 wl "ignoreField( json );"
         wl ""
         wl "return typename Serialiser<_T>::Ptr( new S_(sf) );"
 
 generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
   ms <- get
-  fts <- forM (u_fields u) $ \f -> do
-    t <- cTypeExpr False (f_type f)
-    scopedt <- cTypeExpr True (f_type f)
-    litv <- case f_default f of
-        (Just v) -> mkLiteral lgen (f_type f) v
-        Nothing -> mkDefaultLiteral lgen (f_type f)
-    return (f, t, scopedt, litv)
+  fds <- mapM genFieldDetails (u_fields u)
 
   let ns = ms_moduleMapper ms (ms_name ms)
       ctname = cTypeName dn
@@ -559,11 +582,11 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wl "public:"
     indent $ do
       wt "$1();" [ctname]
-      forM_ fts $ \(f,t,_,_) -> do
-        let ctorName = cUnionConstructorName d f
-        if isVoidType (f_type f)
-          then wt "static $1 $2();" [ctnameP, ctorName ] 
-          else wt "static $1 $2( const $3 & v );" [ ctnameP, ctorName, t ]
+      forM_ fds $ \fd -> do
+        let ctorName = fd_unionConstructorName fd
+        if fd_isVoidType fd
+          then wt "static $1 $2();" [ctnameP, ctorName] 
+          else wt "static $1 $2( const $3 & v );" [ctnameP, ctorName, fd_typeExpr fd]
 
       wl ""
       wt "$1( const $2 & );" [ctname,ctnameP]
@@ -572,18 +595,18 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl ""
       wl "enum DiscType"
       dblock $ 
-        forM_ (commaSep fts) $ \((f,t,_,_),sep) -> do
-          wt "$1$2" [cUnionDiscName d f, sep]
+        forM_ (commaSep fds) $ \(fd,sep) -> do
+          wt "$1$2" [fd_unionDiscName fd, sep]
       wl ""
       wl "DiscType d() const;"
-      forM_ fts $ \(f,t,_,_) -> do
-        when (not $ isVoidType (f_type f)) $
-          wt "$1 & $2() const;" [t,cUnionAccessorName d f]
+      forM_ fds $ \fd -> do
+        when (not $ fd_isVoidType fd) $
+          wt "$1 & $2() const;" [(fd_typeExpr fd),fd_unionAccessorName fd]
       wl ""
-      forM_ fts $ \(f,t,_,_) -> do
-        if isVoidType (f_type f)
-          then wt "void $1();" [cUnionSetterName d f]
-          else wt "const $1 & $2(const $1 & );" [t,cUnionSetterName d f]
+      forM_ fds $ \fd -> do
+        if fd_isVoidType fd
+          then wt "void $1();" [fd_unionSetterName fd]
+          else wt "const $1 & $2(const $1 & );" [(fd_typeExpr fd),fd_unionSetterName fd]
       wl ""
     wl "private:"
     indent $ do
@@ -607,15 +630,15 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     cblock $ do
       wl "return d_;"
 
-    forM_ fts $ \(f,t,_,_) -> do
-      when (not $ isVoidType (f_type f)) $ do
+    forM_ fds $ \fd -> do
+      when (not $ fd_isVoidType fd) $ do
         wl ""
         genTemplate (u_typeParams u)
-        wt "inline $1 & $2::$3() const" [t,ctnameP,cUnionAccessorName d f]
+        wt "inline $1 & $2::$3() const" [fd_typeExpr fd,ctnameP,fd_unionAccessorName fd]
         cblock $ do
-          wt "if( d_ == $1 )" [cUnionDiscName d f]
+          wt "if( d_ == $1 )" [fd_unionDiscName fd]
           cblock $ do
-            wt "return *($1 *)p_;" [t]
+            wt "return *($1 *)p_;" [fd_typeExpr fd]
           wl "throw invalid_union_access();"
 
   write icfile $ do
@@ -624,26 +647,26 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wt "$1::$2()" [ctnameP,ctname]
     -- FIXME :: Confirm that typechecker disallows empty unions, so the
     -- head below is ok.
-    let (f,t,_,litv) = head fts
-        lv = if isVoidType (f_type f)
+    let fd = head fds
+        lv = if fd_isVoidType fd
              then "0"
-             else template "new $1" [literalPValue litv]
-    indent $ wt ": d_($1), p_($2)" [cUnionDiscName d f,lv]
+             else template "new $1" [literalPValue (fd_literal fd)]
+    indent $ wt ": d_($1), p_($2)" [fd_unionDiscName fd,lv]
     wl "{"
     wl "}"
-    forM_ fts $ \(f,t,_,_) -> do
-      let ctorName = cUnionConstructorName d f
+    forM_ fds $ \fd -> do
+      let ctorName = fd_unionConstructorName fd
       wl ""
       genTemplate (u_typeParams u)
-      if isVoidType (f_type f)
+      if fd_isVoidType fd
         then do
           wt "$1 $1::$2()" [ctnameP, ctorName ]
           cblock $
-            wt "return $1( $2, 0 );" [ctnameP, cUnionDiscName d f]
+            wt "return $1( $2, 0 );" [ctnameP, fd_unionDiscName fd]
         else do
-          wt "$1 $1::$2( const $3 & v )" [ ctnameP, ctorName, t ]
+          wt "$1 $1::$2( const $3 & v )" [ctnameP, ctorName,fd_typeExpr fd]
           cblock $
-            wt "return $1( $2, new $3(v) );" [ctnameP, cUnionDiscName d f,t]
+            wt "return $1( $2, new $3(v) );" [ctnameP, fd_unionDiscName fd,fd_typeExpr fd]
     wl ""
     genTemplate (u_typeParams u)
     wt "$1::$2( const $1 & v )" [ctnameP,ctname]
@@ -663,31 +686,31 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl "p_ = copy( o.d_, o.p_ );"
       wl "return *this;"
 
-    forM_ fts $ \(f,t,_,_) -> do
+    forM_ fds $ \fd -> do
       wl ""
       genTemplate (u_typeParams u)
-      if isVoidType (f_type f)
+      if fd_isVoidType fd
         then do
-          wt "void $1::$2()" [ctnameP,cUnionSetterName d f]
+          wt "void $1::$2()" [ctnameP,fd_unionSetterName fd]
           cblock $ do
-            wt "if( d_ != $1 )" [cUnionDiscName d f]
+            wt "if( d_ != $1 )" [fd_unionDiscName fd]
             cblock $ do
               wl "free(d_,p_);"
-              wt "d_ = $1;" [cUnionDiscName d f]
-              wt "p_ = 0;" [cUnionDiscName d f]
+              wt "d_ = $1;" [fd_unionDiscName fd]
+              wt "p_ = 0;" [fd_unionDiscName fd]
 
         else do
-          wt "const $1 & $2::$3(const $1 &v)" [t,ctnameP,cUnionSetterName d f]
+          wt "const $1 & $2::$3(const $1 &v)" [fd_typeExpr fd,ctnameP,fd_unionSetterName fd]
           cblock $ do
-            wt "if( d_ == $1 )" [cUnionDiscName d f]
+            wt "if( d_ == $1 )" [fd_unionDiscName fd]
             cblock $ do
-              wt "*($1 *)p_ = v;" [t]
+              wt "*($1 *)p_ = v;" [fd_typeExpr fd]
             wl "else"
             cblock $ do
               wl "free(d_,p_);"
-              wt "d_ = $1;" [cUnionDiscName d f]
-              wt "p_ = new $1(v);" [t]
-            wt "return *($1 *)p_;" [t]
+              wt "d_ = $1;" [fd_unionDiscName fd]
+              wt "p_ = new $1(v);" [fd_typeExpr fd]
+            wt "return *($1 *)p_;" [fd_typeExpr fd]
 
     wl ""
     genTemplate (u_typeParams u)
@@ -701,24 +724,24 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     cblock $ do
       wl "switch( d )"
       cblock $ 
-        forM_ fts $ \(f,t,_,_) -> do
-          if isVoidType (f_type f)
+        forM_ fds $ \fd -> do
+          if fd_isVoidType fd
             then wt "case $1: return;"
-                 [cUnionDiscName d f]
+                 [fd_unionDiscName fd]
             else wt "case $1: delete ($2 *)p; return;"
-                 [cUnionDiscName d f,t]
+                 [fd_unionDiscName fd,fd_typeExpr fd]
     wl ""
     genTemplate (u_typeParams u)
     wt "void * $1::copy( DiscType d, void *p )" [ctnameP]
     cblock $ do
       wl "switch( d )"
       cblock $ 
-        forM_ fts $ \(f,t,_,_) -> do
-          if isVoidType (f_type f)
+        forM_ fds $ \fd -> do
+          if fd_isVoidType fd
             then wt "case $1: return 0;"
-                 [cUnionDiscName d f]
+                 [fd_unionDiscName fd]
             else wt "case $1: return new $2(*($2 *)p);"
-                 [cUnionDiscName d f,t]
+                 [fd_unionDiscName fd,fd_typeExpr fd]
       wl "return 0;"
     wl ""
     genTemplate (u_typeParams u)
@@ -729,12 +752,12 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl "if( b.d() < a.d()) return false;"
       wl "switch( a.d() )"
       cblock $ 
-        forM_ fts $ \(f,t,_,_) -> do
-          if isVoidType (f_type f)
+        forM_ fds $ \fd -> do
+          if fd_isVoidType fd
             then wt "case $1::$2: return false;"
-                 [ctnameP,cUnionDiscName d f]
+                 [ctnameP,fd_unionDiscName fd]
             else wt "case $1::$2: return a.$3() < b.$3();"
-                 [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+                 [ctnameP,fd_unionDiscName fd,fd_unionAccessorName fd]
       wl "return false;"
 
     wl ""
@@ -745,12 +768,12 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl "if( a.d() != b.d() ) return false;"
       wl "switch( a.d() )"
       cblock $ 
-        forM_ fts $ \(f,t,_,_) -> do
-          if isVoidType (f_type f)
+        forM_ fds $ \fd -> do
+          if fd_isVoidType fd
             then wt "case $1::$2: return true;"
-                 [ctnameP,cUnionDiscName d f]
+                 [ctnameP,fd_unionDiscName fd]
             else wt "case $1::$2: return a.$3() == b.$3();"
-                 [ctnameP,cUnionDiscName d f,cUnionAccessorName d f]
+                 [ctnameP,fd_unionDiscName fd,fd_unionAccessorName fd]
       wl "return false;"
 
   write ifileS $ do        
@@ -774,27 +797,27 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
               wl "{}"
             wl ""
             wl "SerialiserFlags sf_;";
-            forM_ fts $ \(f,_,scopedt,_) -> do
-              wt "mutable typename Serialiser<$1>::Ptr $2_;" [scopedt,f_name f]
+            forM_ fds $ \fd -> do
+              wt "mutable typename Serialiser<$1>::Ptr $2_;" [fd_scopedTypeExpr fd,f_name (fd_field fd)]
             wl ""
-            forM_ fts $ \(f,_,scopedt,_) -> do
-              wt "typename Serialiser<$1>::Ptr $2_s() const" [scopedt,f_name f]
+            forM_ fds $ \fd -> do
+              wt "typename Serialiser<$1>::Ptr $2_s() const" [fd_scopedTypeExpr fd,f_name (fd_field fd)]
               cblock $ do
-                wt "if( !$1_ )" [f_name f]
-                indent $ wt "$1_ = Serialisable<$2>::serialiser(sf_);" [f_name f,scopedt]
-                wt "return $1_;" [f_name f]
+                wt "if( !$1_ )" [f_name (fd_field fd)]
+                indent $ wt "$1_ = Serialisable<$2>::serialiser(sf_);" [f_name (fd_field fd),fd_scopedTypeExpr fd]
+                wt "return $1_;" [f_name (fd_field fd)]
               wl ""
             wl "void toJson( JsonWriter &json, const _T & v ) const"
             cblock $ do
               wl "json.startObject();"
               wl "switch( v.d() )"
               cblock $ do
-                forM_ fts $ \(f,_,_,_) -> do
-                   let v | isVoidType (f_type f) = "Void()"
-                         | otherwise = template "v.$1()" [cUnionAccessorName d f]
+                forM_ fds $ \fd -> do
+                   let v | fd_isVoidType fd = "Void()"
+                         | otherwise = template "v.$1()" [fd_unionAccessorName fd]
 
-                   wt "case $1::$2: writeField( json, $3_s(), \"$3\", $4 ); break;"
-                     [scopedctnameP,cUnionDiscName d f, f_name f,v]
+                   wt "case $1::$2: writeField( json, $3_s(), \"$4\", $5 ); break;"
+                     [scopedctnameP,fd_unionDiscName fd, f_name (fd_field fd), fd_serializedName fd,v]
               wl "json.endObject();"
               return ()
             wl ""
@@ -803,14 +826,14 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
               wl "match( json, JsonReader::START_OBJECT );"
               wl "while( !match0( json, JsonReader::END_OBJECT ) )"
               cblock $ do
-                forM_ (addMarker "if" "else if" "else if" fts) $ \(ifcmd,(f,_,_,_)) -> do
-                  wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name f]
-                  if isVoidType (f_type f)
+                forM_ (addMarker "if" "else if" "else if" fds) $ \(ifcmd,fd) -> do
+                  wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name (fd_field fd)]
+                  if fd_isVoidType fd
                     then cblock $ do
-                      wt "$1_s()->fromJson( json );" [f_name f]
-                      wt "v.$1();" [cUnionSetterName d f]
+                      wt "$1_s()->fromJson( json );" [f_name (fd_field fd)]
+                      wt "v.$1();" [fd_unionSetterName fd]
                     else indent $ do
-                      wt "v.$1($2_s()->fromJson( json ));" [cUnionSetterName d f,f_name f]
+                      wt "v.$1($2_s()->fromJson( json ));" [fd_unionSetterName fd,f_name (fd_field fd)]
                 wl "else"
                 indent $ wl "throw json_parse_failure();"
         wl ""
