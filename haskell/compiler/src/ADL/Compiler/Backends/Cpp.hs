@@ -425,7 +425,7 @@ genFieldDetails f = do
     fd_unionAccessorName=cUnionAccessorName f,
     fd_unionSetterName=cUnionSetterName f,
     fd_unionConstructorName=cUnionConstructorName f,
-    fd_serializedName=f_name f
+    fd_serializedName=f_serializedName f
     }
 
 generateFwdDecl1 :: Ident -> [Ident] -> Gen ()

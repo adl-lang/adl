@@ -247,6 +247,9 @@ runTests = do
     it "Generates code correctly for mutually recursive types" $ do
       collectResults (runCppBackend1 "test18/input/test.adl")
         `shouldReturn` MatchOutput
+    it "Correctly uses specified serialisation field names" $ do
+      collectResults (runCppBackend1 "test20/input/test.adl")
+        `shouldReturn` MatchOutput
 
   describe "adlc java backend" $ do
     it "generates expected code for various structures" $ do
