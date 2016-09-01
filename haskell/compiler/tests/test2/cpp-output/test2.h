@@ -12,9 +12,6 @@ struct S0
 {
     S0();
     
-    S0(
-        );
-    
 };
 
 bool operator<( const S0 &a, const S0 &b );

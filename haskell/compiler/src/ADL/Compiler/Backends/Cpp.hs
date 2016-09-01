@@ -444,8 +444,9 @@ generateDecl :: Ident -> Decl ResolvedType -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
   fds <- mapM genFieldDetails (s_fields s)
-
-  let ns = ms_moduleMapper ms (ms_name ms)
+  
+  let isEmpty = null (s_fields s)
+      ns = ms_moduleMapper ms (ms_name ms)
       ctname = cTypeName dn
       ctnameP = case s_typeParams s of
         [] -> ctname
@@ -464,12 +465,13 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     dblock $ do
        wt "$1();" [ctname]
        wl ""
-       wt "$1(" [ctname]
-       indent $ do
-         forM_ (commaSep fds) $ \(fd,sep) -> do
-            wt "const $1 & $2$3" [fd_typeExpr fd,fd_fieldName fd,sep]
-         wl ");"
-       wl ""
+       when (not isEmpty) $ do
+         wt "$1(" [ctname]
+         indent $ do
+           forM_ (commaSep fds) $ \(fd,sep) -> do
+              wt "const $1 & $2$3" [fd_typeExpr fd,fd_fieldName fd,sep]
+           wl ");"
+         wl ""
        forM_ fds $ \fd -> do
            wt "$1 $2;" [fd_typeExpr fd, fd_fieldName fd]
 
@@ -485,16 +487,17 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       forM_ (addMarker ":" "," "," ifds) $ \(mark,fd) -> do
           wt "$1 $2($3)" [mark,fd_fieldName fd,fd_defLValue fd]
     cblock $ return ()
-    wl ""
-    genTemplate (s_typeParams s)
-    wt "$1::$2(" [ctnameP,ctname]
-    indent $ do
-      forM_ (commaSep fds) $ \(fd,sep) -> do
-        wt "const $1 & $2_$3" [fd_typeExpr fd,fd_fieldName fd,sep]
-      wl ")"
-      forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
-        wt "$1 $2($2_)" [mark,fd_fieldName fd]
-    cblock $ return ()
+    when (not isEmpty) $ do
+      wl ""
+      genTemplate (s_typeParams s)
+      wt "$1::$2(" [ctnameP,ctname]
+      indent $ do
+        forM_ (commaSep fds) $ \(fd,sep) -> do
+          wt "const $1 & $2_$3" [fd_typeExpr fd,fd_fieldName fd,sep]
+        wl ")"
+        forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
+          wt "$1 $2($2_)" [mark,fd_fieldName fd]
+      cblock $ return ()
 
     -- Non-inline functions
     wl ""
@@ -511,9 +514,12 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     wl "bool"
     wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
     cblock $ do 
-      wl "return"
-      forM_ (sepWithTerm "&&" ";" fds) $ \(fd,sep) -> do
-        indent $ wt "a.$1 == b.$1 $2" [fd_fieldName fd,sep]
+      if isEmpty
+        then wl "return true;"
+        else do
+          wl "return"
+          forM_ (sepWithTerm "&&" ";" fds) $ \(fd,sep) -> do
+            indent $ wt "a.$1 == b.$1 $2" [fd_fieldName fd,sep]
 
   write ifileS $ do
     declareSerialisation (s_typeParams s) ms ctnameP
