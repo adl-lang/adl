@@ -594,13 +594,6 @@ genLiteralText (LStringMap _ kvPairs) = do
 genLiteralText (LPrimitive pt jv) = do
   return (pd_genLiteral (genPrimitiveDetails pt) jv)
 
-litNumber :: S.Scientific -> T.Text
-litNumber n = T.pack s
-  where
-   s = case S.floatingOrInteger n of
-     (Left r) -> show n
-     (Right i) -> show (i::Integer)
-
 commaSep :: [T.Text] -> T.Text
 commaSep = T.intercalate ", "
 

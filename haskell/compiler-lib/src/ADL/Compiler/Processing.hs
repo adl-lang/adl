@@ -26,6 +26,7 @@ import qualified Text.Parsec as P
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson as JSON
+import qualified Data.Scientific as S
 
 import qualified ADL.Compiler.ParserP as P
 
@@ -428,6 +429,14 @@ literalForTypeExpr te v = litForTE Map.empty te v
         te' <- substTypeParams m te
         return (id,te')
       return (Map.fromList items)
+
+litNumber :: S.Scientific -> T.Text
+litNumber n = T.pack s
+  where
+   s = case S.floatingOrInteger n of
+     (Left r) -> show n
+     (Right i) -> show (i::Integer)
+
 
 namescopeForModule :: Module ScopedName -> NameScope -> NameScope
 namescopeForModule m ns = ns

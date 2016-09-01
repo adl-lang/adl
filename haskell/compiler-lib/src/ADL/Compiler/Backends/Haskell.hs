@@ -31,7 +31,7 @@ import qualified Data.ByteString.Lazy as LBS
 import ADL.Utils.Format
 import ADL.Compiler.AST
 import ADL.Compiler.EIO
-import ADL.Compiler.Processing
+import ADL.Compiler.Processing hiding (litNumber)
 import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
 

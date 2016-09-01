@@ -7,6 +7,7 @@ module ADL.Compiler.Backends.Cpp(
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
+import Data.Maybe (isJust)
 import Data.Ord (comparing)
 
 import System.FilePath(joinPath,takeDirectory,(</>))
@@ -17,7 +18,6 @@ import Control.Monad.Trans.State.Strict
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson as JSON
-import qualified Data.Scientific as S
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -29,9 +29,9 @@ import qualified ADL.Compiler.ParserP as P
 
 import ADL.Utils.Format
 import ADL.Compiler.AST
-import ADL.Compiler.Backends.Utils.Literals
 import ADL.Compiler.EIO
-import ADL.Compiler.Processing hiding(Literal(..))
+import ADL.Compiler.Processing
+import qualified ADL.Compiler.Processing as PL
 import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
 import ADL.Core.Value
@@ -143,16 +143,6 @@ write fr cw = do
 type CustomTypeMap = Map.Map ScopedName CustomType
 
 type Gen = State MState
-
-lgen :: LGen (State MState) ()
-lgen = LGen {
-  getPrimitiveType = cPrimitiveType,
-  getPrimitiveDefault = \pt -> return (cPrimitiveDefault pt),
-  getPrimitiveLiteral = \pt jv -> return (cPrimitiveLiteral pt jv),
-  getTypeExpr = cTypeExpr,
-  getTypeExprB = cTypeExprB,
-  getUnionConstructorName = \d f -> return (cUnionConstructorName f)
-  }
 
 -- Selector function to control which file is being updated.
 type FileRef = (FState -> FState) -> MState-> MState
@@ -325,20 +315,20 @@ cFieldName :: Ident -> Ident
 cFieldName = unreserveWord
 
 -- Returns the c++ name for the accessor function for a union field
-cUnionAccessorName :: Field t  -> Ident
-cUnionAccessorName f = unreserveWord (f_name f)
+cUnionAccessorName :: Ident  -> Ident
+cUnionAccessorName n = unreserveWord n
 
 -- Returns the c++ name for the constructor function for a union field
-cUnionConstructorName :: Field t -> Ident
-cUnionConstructorName f = T.append "mk_" (cUnionAccessorName f)
+cUnionConstructorName :: Ident -> Ident
+cUnionConstructorName n = T.append "mk_" (cUnionAccessorName n)
 
 -- Returns the c++ name for the setter function for a union field
-cUnionSetterName ::Field t -> Ident
-cUnionSetterName f = T.append "set_" (cUnionAccessorName f)
+cUnionSetterName :: Ident -> Ident
+cUnionSetterName n = T.append "set_" (cUnionAccessorName n)
 
 -- Returns the c++ name for the enum value corresponding to the ADL discriminator name
-cUnionDiscName :: Field t -> Ident
-cUnionDiscName f = T.toUpper (cUnionAccessorName f)
+cUnionDiscName :: Ident -> Ident
+cUnionDiscName n = T.toUpper (cUnionAccessorName n)
 
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
@@ -398,7 +388,9 @@ data FieldDetails = FieldDetails {
   fd_fieldName :: Ident,
   fd_typeExpr :: T.Text,
   fd_scopedTypeExpr :: T.Text,
-  fd_literal :: Literal (),
+  fd_defValue :: Literal (TypeExprRT ()),
+  fd_defLValue :: T.Text,
+  fd_defPValue :: T.Text,
   fd_isVoidType :: Bool,
   fd_unionDiscName :: T.Text,
   fd_unionAccessorName :: T.Text,
@@ -409,22 +401,29 @@ data FieldDetails = FieldDetails {
 
 genFieldDetails :: Field ResolvedType -> Gen FieldDetails
 genFieldDetails f = do
-  t <- cTypeExpr False (f_type f)
-  scopedt <- cTypeExpr True (f_type f)
-  literal <- case f_default f of
-      (Just v) -> mkLiteral lgen (f_type f) v
-      Nothing -> mkDefaultLiteral lgen (f_type f)
+  let te = f_type f
+  t <- cTypeExpr False te
+  scopedt <- cTypeExpr True te
+  defValue <- case f_default f of
+    (Just v) -> case literalForTypeExpr te v of
+      Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
+      Right litv -> return litv
+    Nothing -> return (LDefault te)
+  defLValue <- literalLValue defValue
+  defPValue <- literalPValue defValue
   return $ FieldDetails {
     fd_field=f,
     fd_fieldName=cFieldName (f_name f),
     fd_typeExpr=t,
     fd_scopedTypeExpr=scopedt,
-    fd_literal=literal,
-    fd_isVoidType=isVoidType (f_type f),
-    fd_unionDiscName=cUnionDiscName f,
-    fd_unionAccessorName=cUnionAccessorName f,
-    fd_unionSetterName=cUnionSetterName f,
-    fd_unionConstructorName=cUnionConstructorName f,
+    fd_defValue=defValue,
+    fd_defLValue=defLValue,
+    fd_defPValue=defPValue,
+    fd_isVoidType=isVoidType te,
+    fd_unionDiscName=cUnionDiscName (f_name f),
+    fd_unionAccessorName=cUnionAccessorName (f_name f),
+    fd_unionSetterName=cUnionSetterName (f_name f),
+    fd_unionConstructorName=cUnionConstructorName (f_name f),
     fd_serializedName=f_serializedName f
     }
 
@@ -482,9 +481,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     genTemplate (s_typeParams s)
     wt "$1::$2()" [ctnameP, ctname]
     indent $ do
-      let ifds = filter (not . literalIsDefault . fd_literal) fds
+      let ifds = filter (literalNeedsInit . fd_defValue) fds
       forM_ (addMarker ":" "," "," ifds) $ \(mark,fd) -> do
-          wt "$1 $2($3)" [mark,fd_fieldName fd,literalLValue (fd_literal fd)]
+          wt "$1 $2($3)" [mark,fd_fieldName fd,fd_defLValue fd]
     cblock $ return ()
     wl ""
     genTemplate (s_typeParams s)
@@ -650,7 +649,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     let fd = head fds
         lv = if fd_isVoidType fd
              then "0"
-             else template "new $1" [literalPValue (fd_literal fd)]
+             else template "new $1" [fd_defPValue fd]
     indent $ wt ": d_($1), p_($2)" [fd_unionDiscName fd,lv]
     wl "{"
     wl "}"
@@ -840,12 +839,16 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
         wl "return typename Serialiser<_T>::Ptr( new S_(sf) );"
 
 generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
+  let te = (n_typeExpr nt)
   ms <- get
-  t <- cTypeExpr False (n_typeExpr nt)
-  scopedt <- cTypeExpr True (n_typeExpr nt)
-  litv <- case n_default nt of
-    (Just v) -> mkLiteral lgen (n_typeExpr nt) v
-    Nothing -> mkDefaultLiteral lgen (n_typeExpr nt)
+  t <- cTypeExpr False te
+  scopedt <- cTypeExpr True te
+  defValue <- case n_default nt of
+    (Just v) -> case literalForTypeExpr te v of
+      Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
+      Right litv -> return litv
+    Nothing -> return (LDefault te)
+  defLValue <- literalLValue defValue
 
   let ns = ms_moduleMapper ms (ms_name ms)
       tparams = n_typeParams nt
@@ -860,9 +863,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
     genTemplate tparams
     wt "struct $1" [ctname]
     dblock $ do
-       if literalIsDefault litv
-         then wt "$1() {}" [ctname]
-         else wt "$1() : value($2) {}" [ctname,literalLValue litv]
+       if literalNeedsInit defValue
+         then wt "$1() : value($2) {}" [ctname,defLValue]
+         else wt "$1() {}" [ctname]
 
        wt "explicit $1(const $2 & v) : value(v) {}" [ctname,t]
        wl ""
@@ -1129,19 +1132,56 @@ generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath 
 
 ----------------------------------------------------------------------
 
-literalLValue :: (Literal c) -> T.Text
-literalLValue (LDefault t _) = template "$1()" [t]
-literalLValue (LCtor t _ ls) = template "$1($2)" [t, T.intercalate "," (map literalLValue ls)]
-literalLValue (LUnion t ctor _ l) = template "$1::$2($3)" [t, ctor, literalLValue l ]
-literalLValue (LVector t ls) = template "mkvec<$1>($2)" [t, T.intercalate "," (map literalLValue ls)]
-literalLValue (LPrimitive _ t) = t
+literalLValue :: (Literal (TypeExprRT ())) -> Gen T.Text
+literalLValue (LDefault te@(TypeExpr (RT_Primitive pt) [])) = do
+  case cPrimitiveDefault pt of
+   (Just t) -> return t
+   Nothing -> do
+     t <- cTypeExpr False te
+     return (template "$1()" [t])
+literalLValue (LDefault te) = do
+  t <- cTypeExpr False te
+  return (template "$1()" [t])
+literalLValue (LCtor te ls) = do
+  t <- cTypeExpr False te
+  lits <- mapM literalLValue ls
+  return (template "$1($2)" [t, T.intercalate "," lits])
+literalLValue (LUnion te ctor l) = do
+  t <- cTypeExpr False te
+  lit <-  literalLValue l
+  return (template "$1::$2($3)" [t,cUnionConstructorName ctor,lit])
+literalLValue (LVector (TypeExpr _ [te]) ls) = do
+  t <- cTypeExpr False te
+  lits <- mapM literalLValue ls
+  return (template "mkvec<$1>($2)" [t, T.intercalate "," lits])
+literalLValue (LStringMap te map) = return "StringMap_FIXME()"
+literalLValue (LPrimitive pt jv) = return (cPrimitiveLiteral pt jv)
 
-literalPValue :: (Literal c) -> T.Text
-literalPValue l@(LDefault _ _) = literalLValue l
-literalPValue l@(LCtor _ _ _) = literalLValue l
-literalPValue l@(LUnion t _ _ _) = template "$1($2)" [t, literalLValue l]
-literalPValue l@(LVector t _) = template "std::vector<$1>( $2 )" [t, literalLValue l]
-literalPValue (LPrimitive t v) = template "$1($2)" [t, v]
+literalPValue :: (Literal (TypeExprRT ())) -> Gen T.Text
+literalPValue (LDefault te@(TypeExpr (RT_Primitive pt) [])) = do
+  t <- cTypeExpr False te
+  case cPrimitiveDefault pt of
+   (Just v) -> return (template "$1($2)" [t,v])
+   Nothing -> return (template "$1()" [t])
+literalPValue l@(LDefault te) = literalLValue l
+literalPValue l@(LCtor _ _) = literalLValue l
+literalPValue l@(LUnion te _ _) = do
+  t <- cTypeExpr False te
+  lit <- literalLValue l
+  return $ template "$1($2)" [t,lit]
+literalPValue l@(LVector te _) = do
+  t <- cTypeExpr False te
+  lit <- literalLValue l
+  return (template "std::vector<$1>( $2 )" [t,lit])
+literalPValue l@(LStringMap _ _) = literalLValue l  
+literalPValue (LPrimitive pt jv) = do
+  t <- cPrimitiveType pt
+  return (template "$1($2)" [t, cPrimitiveLiteral pt jv])
+
+literalNeedsInit :: Literal (TypeExprRT ()) -> Bool
+literalNeedsInit (LDefault (TypeExpr (RT_Primitive pt) _)) = isJust (cPrimitiveDefault pt)
+literalNeedsInit (LDefault _)  = False
+literalNeedsInit _  = True
 
 ----------------------------------------------------------------------
 
