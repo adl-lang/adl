@@ -36,7 +36,13 @@ executable adlc
   other-modules:       ADL.Compiler.Backends.AST
                      , ADL.Compiler.Backends.Cpp
                      , ADL.Compiler.Backends.Java
+                     , ADL.Compiler.Backends.Java.Internal
+                     , ADL.Compiler.Backends.Java.Json
+                     , ADL.Compiler.Backends.Java.Parcelable
+                     , ADL.Compiler.Backends.Utils.IndentedCode
+                     , ADL.Compiler.DataFiles
                      , HaskellCustomTypes
+  ghc-options:       -fwarn-incomplete-patterns
 
 test-suite adlc-tests
   type:                exitcode-stdio-1.0
@@ -52,5 +58,11 @@ test-suite adlc-tests
   other-modules:       ADL.Compiler.Backends.AST
                      , ADL.Compiler.Backends.Cpp
                      , ADL.Compiler.Backends.Java
+                     , ADL.Compiler.Backends.Java.Internal
+                     , ADL.Compiler.Backends.Java.Json
+                     , ADL.Compiler.Backends.Java.Parcelable
+                     , ADL.Compiler.Backends.Utils.IndentedCode
+                     , ADL.Compiler.DataFiles
                      , HaskellCustomTypes
+  ghc-options:       -fwarn-incomplete-patterns
 

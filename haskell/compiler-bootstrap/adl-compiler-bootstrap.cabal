@@ -12,12 +12,13 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable adlc-bootstrap
-  hs-source-dirs:      src
-  main-is:             Main.hs
-  build-depends:       base, text, containers, bytestring,
-                       parsec, mtl, transformers,
-                       filepath, directory, unordered-containers, vector,
-                       base64-bytestring,
-                       attoparsec, aeson,
-                       adl-utils, adl-compiler-lib
-  other-modules:       BootstrapCustomTypes
+  hs-source-dirs:    src
+  main-is:           Main.hs
+  build-depends:     base, text, containers, bytestring,
+                     parsec, mtl, transformers,
+                     filepath, directory, unordered-containers, vector,
+                     base64-bytestring,
+                     attoparsec, aeson,
+                     adl-utils, adl-compiler-lib
+  other-modules:     BootstrapCustomTypes
+  ghc-options:       -fwarn-incomplete-patterns

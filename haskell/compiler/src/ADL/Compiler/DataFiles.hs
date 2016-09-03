@@ -10,7 +10,7 @@ import qualified Paths_adl_compiler as P
 getDataFileName :: FilePath -> IO FilePath
 getDataFileName relFilePath = do
   base <- getDataFileDir
-  P.getDataFileName (base </> relFilePath)
+  return (base </> relFilePath)
 
 getDataFileDir :: IO FilePath
 getDataFileDir = do

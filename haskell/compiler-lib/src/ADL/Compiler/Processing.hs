@@ -17,7 +17,6 @@ import Data.Foldable(foldMap)
 import Data.Traversable(for)
 import Data.Monoid
 import Data.Maybe(catMaybes)
-import Debug.Trace
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -337,7 +336,7 @@ checkDefaultOverrides m = execWriter checkModule
 
     checkType :: T.Text -> [Ident] -> TypeExpr ResolvedType -> Maybe JSON.Value -> Writer [DefaultOverrideError] ()
     checkType _ _ _ Nothing = return ()
-    checkType n tparams te (Just jv) = case literalForTypeExpr' te jv of
+    checkType n tparams te (Just jv) = case literalForTypeExpr te jv of
       Right _ -> return ()
       Left err -> tell [DefaultOverrideError (template "Invalid override of $1: $2" [n,err])]
 
@@ -353,9 +352,6 @@ data Literal te
   | LStringMap te (Map.Map T.Text (Literal te))
   | LPrimitive PrimitiveType JSON.Value
   deriving (Show)
-
-literalForTypeExpr' :: (Show c) => TypeExprRT c -> JSON.Value -> Either T.Text (Literal (TypeExprRT c))
-literalForTypeExpr' te v = let r = literalForTypeExpr te v in trace (show ("literalForTypeExpr",te,v,r)) $ r
 
 -- | Generate a `Literal` value from a JSON value.
 literalForTypeExpr :: TypeExprRT c -> JSON.Value -> Either T.Text (Literal (TypeExprRT c))
