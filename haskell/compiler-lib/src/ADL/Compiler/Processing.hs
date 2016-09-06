@@ -407,7 +407,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
           Nothing ->
             Left (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
         _ -> Left "literal union must have a single key/value pair"
-    unionLiteral _ _ _ _ _ _ = Left "expected an object"
+    unionField _ _ _ _ _ = Left "expected an object"
 
     typedefLiteral m t tes v = do
       pm <- createParamMap (t_typeParams t) tes m

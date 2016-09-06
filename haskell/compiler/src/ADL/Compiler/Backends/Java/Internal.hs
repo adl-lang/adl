@@ -329,7 +329,8 @@ genPrimitiveDetails P_Bool = PrimitiveDetails {
   pd_genLiteral = \jv ->
     case jv of
       (JSON.Bool True) -> "true"
-      (JSON.Bool False) -> "false",
+      (JSON.Bool False) -> "false"
+      _ -> error "BUG: invalid literal type for P_Bool",
   pd_mutable = False,
   pd_factory = primitiveFactory "BOOLEAN",
   pd_hashfn = \from -> template "($1 ? 0 : 1)" [from]

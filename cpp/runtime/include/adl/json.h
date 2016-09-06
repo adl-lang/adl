@@ -314,6 +314,57 @@ struct Serialisable<std::vector<T>>
     }
 };
 
+// Specialised for maps with strings as keys
+
+template <class V>
+class StringMapSerialiser : public Serialiser<StringMap<V>>
+{
+public:
+    typedef StringMap<V> _M;
+    
+    StringMapSerialiser( const SerialiserFlags & sf )
+        : sf_( sf )
+    {}
+
+    typename Serialiser<V>::Ptr js() const {
+        if( !js_ )
+            js_ = Serialisable<V>::serialiser(sf_);
+        return js_;
+    }
+
+    void toJson( JsonWriter &json, const _M & v ) const
+    {
+        json.startObject();
+        for( typename _M::const_iterator mi = v.begin(); mi != v.end(); mi++ )
+            writeField( json, js(), mi.first(), mi.second() );
+        json.endObject();
+    }
+
+    void fromJson( _M &map, JsonReader &json ) const
+    {
+        match( json, JsonReader::START_OBJECT );
+        while( !match0( json, JsonReader::END_OBJECT ) )
+        {
+            if( json.type() != JsonReader::FIELD )
+                throw json_parse_failure("StringMap read failed");
+            std::string k = json.fieldName();
+            V v;
+            js()->fromJson( v, json );
+            map[k] = v;
+        }
+    }
+
+private:
+    SerialiserFlags sf_;
+    mutable typename Serialiser<V>::Ptr js_;
+};
+
+template <class V>
+static typename Serialiser<StringMap<V>>::Ptr stringMapSerialiser(const SerialiserFlags & sf)
+{
+    return typename Serialiser<StringMap<V>>::Ptr( new StringMapSerialiser<V>(sf) );
+}
+
 };
 
 #endif

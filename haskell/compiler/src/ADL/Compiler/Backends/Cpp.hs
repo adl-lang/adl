@@ -170,21 +170,19 @@ cTypeExpr :: Bool -> TypeExpr ResolvedType -> Gen T.Text
 cTypeExpr scopeLocalNames te = cTypeExprB scopeLocalNames Map.empty te
 
 cTypeExprB :: Bool -> TypeBindingMap -> TypeExpr ResolvedType -> Gen T.Text
-cTypeExprB scopeLocalNames m (TypeExpr rt []) = cTypeExprB1 scopeLocalNames m rt
 cTypeExprB scopeLocalNames m (TypeExpr c args) = do
-  ct <- cTypeExprB1 scopeLocalNames m c
-  argst <- mapM (cTypeExprB scopeLocalNames m) args
-  return (T.concat $ [ct, "<"] ++ L.intersperse "," argst ++ ["> "])
+  targs <- mapM (cTypeExprB scopeLocalNames m) args
+  cTypeExprB1 scopeLocalNames m c targs
 
-cTypeExprB1 :: Bool -> TypeBindingMap -> ResolvedType -> Gen T.Text
-cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_,_)) = do
+cTypeExprB1 :: Bool -> TypeBindingMap -> ResolvedType -> [T.Text] -> Gen T.Text
+cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_,_)) targs = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
         _ -> False
       fullyScopedName = if isLocalName then sn{sn_moduleName=ms_name ms} else sn
 
-  case Map.lookup fullyScopedName (ms_customTypes ms) of
+  ctype <- case Map.lookup fullyScopedName (ms_customTypes ms) of
     (Just ct) -> do
       -- custom type
       mapM_ (include0 ifile) (Set.toList $ ct_includes ct)
@@ -204,11 +202,18 @@ cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_,_)) = do
             namespace = ms_moduleMapper ms m
         includeModule ifile m
         return (template "$1::$2" [formatText namespace, cTypeName (sn_name sn)])
-        
-cTypeExprB1 scopeLocalNames m (RT_Param i) = case Map.lookup i m of
-    (Just te) -> cTypeExprB scopeLocalNames m te
-    Nothing -> return (cTypeParamName i)
-cTypeExprB1 scopeLocalNames _ (RT_Primitive pt) = cPrimitiveType pt
+  return (withTypeParams ctype targs)
+
+cTypeExprB1 scopeLocalNames m (RT_Param i) targs = case Map.lookup i m of
+    (Just te) -> do
+      e <- cTypeExprB scopeLocalNames m te
+      return (withTypeParams e targs)
+    Nothing -> return (withTypeParams (cTypeParamName i) targs)
+cTypeExprB1 scopeLocalNames _ (RT_Primitive pt) targs = cPrimitiveType pt targs
+
+withTypeParams :: T.Text -> [T.Text] -> T.Text
+withTypeParams e [] = e
+withTypeParams e targs = template "$1<$2> " [e,T.intercalate "," targs]
 
 reservedWords = Set.fromList
   [ "null"
@@ -330,6 +335,15 @@ cUnionSetterName n = T.append "set_" (cUnionAccessorName n)
 cUnionDiscName :: Ident -> Ident
 cUnionDiscName n = T.toUpper (cUnionAccessorName n)
 
+-- Return an expression to construct a serialiser for a given type
+cSerializerExpr :: TypeExpr ResolvedType -> Gen T.Text
+cSerializerExpr (TypeExpr (RT_Primitive P_StringMap) [te]) = do
+  t <- cTypeExpr True te
+  return (template "stringMapSerialiser<$1>" [t])
+cSerializerExpr te = do
+  t <- cTypeExpr True te
+  return (template "Serialisable<$1>::serialiser" [t])
+
 includeModule :: FileRef -> ModuleName -> Gen ()
 includeModule fr mn = do
   ms <- get
@@ -396,7 +410,8 @@ data FieldDetails = FieldDetails {
   fd_unionAccessorName :: T.Text,
   fd_unionSetterName :: T.Text,
   fd_unionConstructorName :: T.Text,
-  fd_serializedName :: Ident
+  fd_serializedName :: Ident,
+  fd_serializerExpr :: T.Text
   }
 
 genFieldDetails :: Field ResolvedType -> Gen FieldDetails
@@ -411,6 +426,7 @@ genFieldDetails f = do
     Nothing -> return (LDefault te)
   defLValue <- literalLValue defValue
   defPValue <- literalPValue defValue
+  serializerExpr <- cSerializerExpr te
   return $ FieldDetails {
     fd_field=f,
     fd_fieldName=cFieldName (f_name f),
@@ -424,7 +440,8 @@ genFieldDetails f = do
     fd_unionAccessorName=cUnionAccessorName (f_name f),
     fd_unionSetterName=cUnionSetterName (f_name f),
     fd_unionConstructorName=cUnionConstructorName (f_name f),
-    fd_serializedName=f_serializedName f
+    fd_serializedName=f_serializedName f,
+    fd_serializerExpr=serializerExpr
     }
 
 generateFwdDecl1 :: Ident -> [Ident] -> Gen ()
@@ -537,7 +554,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
             wl "S_( const SerialiserFlags & sf )"
             indent $ do
               forM_ (addMarker ":" "," "," fds) $ \(mark,fd) -> do
-                wt "$1 $2_s( Serialisable<$3>::serialiser(sf) )" [mark,fd_fieldName fd,fd_scopedTypeExpr fd]
+                wt "$1 $2_s( $3(sf) )" [mark,fd_fieldName fd,fd_serializerExpr fd]
               wl "{}"
             wl ""
             wl ""
@@ -809,7 +826,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
               wt "typename Serialiser<$1>::Ptr $2_s() const" [fd_scopedTypeExpr fd,f_name (fd_field fd)]
               cblock $ do
                 wt "if( !$1_ )" [f_name (fd_field fd)]
-                indent $ wt "$1_ = Serialisable<$2>::serialiser(sf_);" [f_name (fd_field fd),fd_scopedTypeExpr fd]
+                indent $ wt "$1_ = $2(sf_);" [f_name (fd_field fd),fd_serializerExpr fd]
                 wt "return $1_;" [f_name (fd_field fd)]
               wl ""
             wl "void toJson( JsonWriter &json, const _T & v ) const"
@@ -849,6 +866,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
   ms <- get
   t <- cTypeExpr False te
   scopedt <- cTypeExpr True te
+  serializer <- cSerializerExpr te
   defValue <- case n_default nt of
     (Just v) -> case literalForTypeExpr te v of
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
@@ -905,7 +923,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
       wl ""
       wt "static typename Serialiser<$1>::Ptr serialiser(const SerialiserFlags &sf)" [ctnameP1]
       cblock $ do
-        wt "return typename Serialiser<$1>::Ptr(new S(Serialisable<$2>::serialiser(sf)));" [ctnameP1,scopedt]
+        wt "return typename Serialiser<$1>::Ptr(new S($2(sf)));" [ctnameP1,serializer]
 
 generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
   te <- cTypeExpr False (t_typeExpr t)
@@ -1160,7 +1178,13 @@ literalLValue (LVector (TypeExpr _ [te]) ls) = do
   t <- cTypeExpr False te
   lits <- mapM literalLValue ls
   return (template "mkvec<$1>($2)" [t, T.intercalate "," lits])
-literalLValue (LStringMap te map) = return "StringMap_FIXME()"
+literalLValue (LVector (TypeExpr _ _) ls) = error "BUG: LVector must have a single type param"
+literalLValue (LStringMap (TypeExpr _ [te]) map) = do
+  t <- cTypeExpr False te
+  adds <- forM (Map.toList map) $ \(k,v) -> do
+    litv <- literalLValue v
+    return (template ".add(\"$1\",$2)" [k,litv])
+  return (template "MapBuilder<std::string,$1>()$2.result()" [t, T.intercalate "" adds])
 literalLValue (LPrimitive pt jv) = return (cPrimitiveLiteral pt jv)
 
 literalPValue :: (Literal (TypeExprRT ())) -> Gen T.Text
@@ -1181,7 +1205,7 @@ literalPValue l@(LVector te _) = do
   return (template "std::vector<$1>( $2 )" [t,lit])
 literalPValue l@(LStringMap _ _) = literalLValue l  
 literalPValue (LPrimitive pt jv) = do
-  t <- cPrimitiveType pt
+  t <- cPrimitiveType pt []
   return (template "$1($2)" [t, cPrimitiveLiteral pt jv])
 
 literalNeedsInit :: Literal (TypeExprRT ()) -> Bool
@@ -1194,24 +1218,33 @@ literalNeedsInit _  = True
 intType :: T.Text -> Gen T.Text
 intType s = includeStd ifile "stdint.h" >> return s
 
-cPrimitiveType :: PrimitiveType -> Gen T.Text
-cPrimitiveType P_Void = return "Void"
-cPrimitiveType P_Bool = return "bool"
-cPrimitiveType P_Int8 = intType "int8_t"
-cPrimitiveType P_Int16 = intType "int16_t"
-cPrimitiveType P_Int32 = intType "int32_t"
-cPrimitiveType P_Int64 = intType "int64_t"
-cPrimitiveType P_Word8 = intType "uint8_t"
-cPrimitiveType P_Word16 = intType "uint16_t"
-cPrimitiveType P_Word32 = intType "uint32_t"
-cPrimitiveType P_Word64 = intType "uint64_t"
-cPrimitiveType P_Float = return "float"
-cPrimitiveType P_Double = return "double"
-cPrimitiveType P_ByteVector = return "ByteVector"
-cPrimitiveType P_Vector = includeStd ifile "vector" >> return "std::vector"
-cPrimitiveType P_StringMap = return "StringMap_FIXME"
-cPrimitiveType P_String = includeStd ifile "string" >> return "std::string"
-cPrimitiveType P_Sink = includeStd ifile "adl/sink.h" >> return "Sink"
+cPrimitiveType :: PrimitiveType -> [T.Text] -> Gen T.Text
+cPrimitiveType P_Void _ = return "Void"
+cPrimitiveType P_Bool _ = return "bool"
+cPrimitiveType P_Int8 _ = intType "int8_t"
+cPrimitiveType P_Int16 _ = intType "int16_t"
+cPrimitiveType P_Int32 _ = intType "int32_t"
+cPrimitiveType P_Int64 _ = intType "int64_t"
+cPrimitiveType P_Word8 _ = intType "uint8_t"
+cPrimitiveType P_Word16 _ = intType "uint16_t"
+cPrimitiveType P_Word32 _ = intType "uint32_t"
+cPrimitiveType P_Word64 _ = intType "uint64_t"
+cPrimitiveType P_Float _ = return "float"
+cPrimitiveType P_Double _ = return "double"
+cPrimitiveType P_ByteVector _ = return "ByteVector"
+cPrimitiveType P_Vector targs = do
+  includeStd ifile "vector"
+  return (template "std::vector<$1> " targs)
+cPrimitiveType P_StringMap targs = do
+  includeStd ifile "string"
+  includeStd ifile "map"
+  return (template "std::map<std::string,$1>" targs)
+cPrimitiveType P_String targs = do
+  includeStd ifile "string"
+  return "std::string"
+cPrimitiveType P_Sink targs = do
+  includeStd ifile "adl/sink.h"
+  return (template "Sink<$1> " targs)
 
 cPrimitiveDefault :: PrimitiveType -> Maybe T.Text
 cPrimitiveDefault P_Void = Nothing
@@ -1228,11 +1261,12 @@ cPrimitiveDefault P_Float = Just "0.0"
 cPrimitiveDefault P_Double = Just "0.0"
 cPrimitiveDefault P_ByteVector = Nothing
 cPrimitiveDefault P_Vector = Nothing
+cPrimitiveDefault P_StringMap = Nothing
 cPrimitiveDefault P_String = Nothing
 cPrimitiveDefault P_Sink = Nothing
 
 cPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
-cPrimitiveLiteral P_Void JSON.Null = "Void()"
+cPrimitiveLiteral P_Void _ = "Void()"
 cPrimitiveLiteral P_Bool (JSON.Bool True) = "true"
 cPrimitiveLiteral P_Bool (JSON.Bool False) = "false"
 cPrimitiveLiteral P_Int8 (JSON.Number n) = litNumber n
@@ -1251,7 +1285,9 @@ cPrimitiveLiteral P_ByteVector (JSON.String s) = template "ByteVector::fromLiter
       (Left _) -> "???"
       (Right s) -> s
 cPrimitiveLiteral P_Vector _ = "????" -- never called
+cPrimitiveLiteral P_StringMap _ = "????" -- never called
 cPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
 cPrimitiveLiteral P_Sink _ = "????" -- never called
+cPrimitiveLiteral _ _ = error "BUG: invalid json literal for primitive"
 
   

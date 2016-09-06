@@ -1,6 +1,7 @@
 #ifndef TEST3_H
 #define TEST3_H
 #include <adl/adl.h>
+#include <map>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -233,7 +234,7 @@ struct S
         const U & f_u,
         const T & f_t,
         const B<int16_t>  & f_bint16,
-        const StringMap_FIXME<int32_t>  & f_smap
+        const std::map<std::string,int32_t> & f_smap
         );
     
     Void f_void;
@@ -255,7 +256,7 @@ struct S
     U f_u;
     T f_t;
     B<int16_t>  f_bint16;
-    StringMap_FIXME<int32_t>  f_smap;
+    std::map<std::string,int32_t> f_smap;
 };
 
 template <class T>
@@ -283,7 +284,7 @@ S<T>::S()
     , f_a(A(0,"xyz",true))
     , f_u(U::mk_f_int(45))
     , f_bint16(B<int16_t> (56,"yikes",mkvec<int16_t>(1,2,3),XY<int16_t> (5,5)))
-    , f_smap(StringMap_FIXME())
+    , f_smap(MapBuilder<std::string,int32_t>().add("a",45).add("b",47).result())
 {
 }
 
@@ -308,7 +309,7 @@ S<T>::S(
     const U & f_u_,
     const T & f_t_,
     const B<int16_t>  & f_bint16_,
-    const StringMap_FIXME<int32_t>  & f_smap_
+    const std::map<std::string,int32_t> & f_smap_
     )
     : f_void(f_void_)
     , f_bool(f_bool_)
@@ -557,7 +558,7 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
             , f_u_s( Serialisable<ADL::test3::U>::serialiser(sf) )
             , f_t_s( Serialisable<T>::serialiser(sf) )
             , f_bint16_s( Serialisable<ADL::test3::B<int16_t> >::serialiser(sf) )
-            , f_smap_s( Serialisable<StringMap_FIXME<int32_t> >::serialiser(sf) )
+            , f_smap_s( stringMapSerialiser<int32_t>(sf) )
             {}
         
         
@@ -580,7 +581,7 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<ADL::test3::U>::Ptr f_u_s;
         typename Serialiser<T>::Ptr f_t_s;
         typename Serialiser<ADL::test3::B<int16_t> >::Ptr f_bint16_s;
-        typename Serialiser<StringMap_FIXME<int32_t> >::Ptr f_smap_s;
+        typename Serialiser<std::map<std::string,int32_t>>::Ptr f_smap_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
@@ -604,7 +605,7 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
             writeField<ADL::test3::U>( json, f_u_s, "f_u", v.f_u );
             writeField<T>( json, f_t_s, "f_t", v.f_t );
             writeField<ADL::test3::B<int16_t> >( json, f_bint16_s, "f_bint16", v.f_bint16 );
-            writeField<StringMap_FIXME<int32_t> >( json, f_smap_s, "f_smap", v.f_smap );
+            writeField<std::map<std::string,int32_t>>( json, f_smap_s, "f_smap", v.f_smap );
             json.endObject();
         }
         

@@ -2,6 +2,7 @@
 #define ADL_TYPES_H
 
 #include <vector>
+#include <map>
 #include <string>
 #include <stdint.h>
 #include <exception>
@@ -81,6 +82,29 @@ std::vector<T> mkvec(const T & v1, const T & v2, const T & v3, const T &v4 ) {
     vec.push_back(v4);
     return vec;
 }
+
+//----------------------------------------------------------------------
+// Helpers for maps
+
+template <class K, class V>
+class MapBuilder
+{
+public:
+    MapBuilder<K,V> &add( const K &k, const V &v) {
+        map_[k] = v;
+        return *this;
+    }
+    const std::map<K,V> &result() const {
+        return map_;
+    }
+private:
+    std::map<K,V> map_;
+};
+
+
+template <class V>
+using StringMap = std::map<std::string,V>;
+
 
 } // namespace ADL
 
