@@ -8,7 +8,6 @@ lib_LTLIBRARIES = libadlcpp.la
 
 libadlcpp_la_SOURCES = \
     src/adl.cpp src/types.cpp src/sink.cpp src/json.cpp src/jsonimpl.cpp \
-    src/comms.cpp src/comms_http.cpp \
     src/example.cpp \
     src-generated/sys.types.cpp src-generated/sys.rpc.cpp \
     src-generated/sys.sinkimpl.cpp src-generated/sys.adlast.cpp \
@@ -19,8 +18,6 @@ adlcpp_libincludedir = $(libdir)/adlcpp/include
 
 adlcpp_include_HEADERS = \
     include/adl/adl.h \
-    include/adl/comms.h \
-    include/adl/comms_http.h \
     include/adl/json.h \
     include/adl/jsonimpl.h \
     include/adl/sink.h \
@@ -30,15 +27,31 @@ adlcpp_include_HEADERS = \
     src-generated/adl/sys.sinkimpl.h \
     src-generated/adl/sys.types.h
 
+
 TESTS = unit-tests
 
 check_PROGRAMS = unit-tests
 
 unit_tests_SOURCES = src-generated/unittests.cpp \
                      tests/tests-serialisation.cpp \
-                     tests/tests-comms.cpp \
                      tests/main.cpp
-unit_tests_LDFLAGS=-ladlcpp -lcppnetlib-uri -lcppnetlib-client-connections -lboost_system -lboost_thread -lssl -lcrypto -lpthread
+
+unit_tests_LDFLAGS=-ladlcpp
+
+# Comms stuff left out for now
+#
+# libadlcpp_la_SOURCES += \
+#    src/comms.cpp src/comms_http.cpp
+#
+# adlcpp_include_HEADERS += \
+#    include/adl/comms.h \
+#    include/adl/comms_http.h
+#
+# unit_tests_SOURCES += \
+#    tests/tests-comms.cpp
+# unit_tests_LDFLAGS += \
+#    -lcppnetlib-uri -lcppnetlib-client-connections \
+#    -lboost_system -lboost_thread -lssl -lcrypto -lpthread
 
 nodist_adlcpp_libinclude_HEADERS = adlcppconfig.h
 
