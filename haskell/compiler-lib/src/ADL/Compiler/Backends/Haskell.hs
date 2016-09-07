@@ -344,13 +344,13 @@ generateStructADLInstance lname mn d s = do
             nl
             wl "to v = JSON.Object ( HM.fromList"
             indent $ do
-              forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do                wt "$1 (\"$2\",aToJSON $2_js ($3 v))" [fp,(f_name f),hFieldName (d_name d) (f_name f)]
+              forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do                wt "$1 (\"$2\",aToJSON $2_js ($3 v))" [fp,(f_serializedName f),hFieldName (d_name d) (f_name f)]
               wl "] )"
             nl
             wt "from (JSON.Object hm) = $1 " [lname]
             indent $ do
               forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
-                wt "$1 fieldFromJSON $2_js \"$2\" defaultv hm" [p, (f_name f)]
+                wt "$1 fieldFromJSON $2_js \"$2\" defaultv hm" [p, (f_serializedName f)]
             wl "from _ = Prelude.Nothing"
 
 generateUnionDataType :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
@@ -390,8 +390,8 @@ generateUnionADLInstance lname mn d u = do
             forM_ (u_fields u) $ \f -> do
               let dn = hDiscName (d_name d) (f_name f)
               if isVoidType (f_type f)
-                then wt "to $1 = JSON.Object (HM.singleton \"$2\" JSON.Null)" [ dn, f_name f ]
-                else wt "to ($1 v) = JSON.Object (HM.singleton \"$2\" (aToJSON $2_js v))" [ dn, f_name f ]
+                then wt "to $1 = JSON.Object (HM.singleton \"$2\" JSON.Null)" [ dn, f_serializedName f ]
+                else wt "to ($1 v) = JSON.Object (HM.singleton \"$2\" (aToJSON $2_js v))" [ dn, f_serializedName f ]
             nl
             wl "from o = do"
             indent $ do
@@ -401,8 +401,8 @@ generateUnionADLInstance lname mn d u = do
                 forM_ (u_fields u) $ \f -> do
                   let dn = hDiscName (d_name d) (f_name f)
                   if isVoidType (f_type f)
-                    then wt "\"$1\" -> Prelude.Just $2" [f_name f, dn ]
-                    else wt "\"$1\" -> Prelude.fmap $2 (aFromJSON $1_js v)" [f_name f,dn]
+                    then wt "\"$1\" -> Prelude.Just $2" [f_serializedName f, dn ]
+                    else wt "\"$1\" -> Prelude.fmap $2 (aFromJSON $1_js v)" [f_serializedName f,dn]
 
 
 generateNewtypeADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Newtype ResolvedType -> HGen ()

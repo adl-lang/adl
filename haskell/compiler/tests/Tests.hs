@@ -207,6 +207,9 @@ runTests = do
     it "Generates code correctly for mutually recursive types" $ do
       collectResults (runHaskellBackend1 "test18/input/test.adl")
         `shouldReturn` MatchOutput
+    it "Correctly uses specified serialisation field names" $ do
+      collectResults (runHaskellBackend1 "test20/input/test.adl")
+        `shouldReturn` MatchOutput
 
   describe "adlc ast backend" $ do
     it "generates expected json serialisation for each type of decl" $ do
