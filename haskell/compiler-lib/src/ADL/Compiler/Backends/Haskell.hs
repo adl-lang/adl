@@ -282,9 +282,13 @@ generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
     addExport (template "$1(..)" [lname])
     enableScopedTypeVariables (s_typeParams s)
     mn <- fmap ms_name get
-    generateStructDataType lname mn d s
+    if (null (s_fields s))
+      then generateNullStructDataType lname mn d s
+      else generateStructDataType lname mn d s
     nl
-    generateStructADLInstance lname mn d s
+    if (null (s_fields s))
+      then generateNullStructADLInstance lname mn d s
+      else generateStructADLInstance lname mn d s
 
 generateDecl lname d@(Decl{d_type=(Decl_Union u)}) = do
     addExport (template "$1(..)" [lname])
@@ -319,9 +323,15 @@ generateStructDataType lname mn d s = do
           t <- hTypeExpr (f_type f)
           wt "$1 $2 :: $3" [fp,
                             hFieldName (d_name d) (f_name f),
-                            t ]
+                           t ]
         wl "}"
         derivingStdClasses
+
+generateNullStructDataType :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateNullStructDataType lname mn d s = do
+    wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
+    indent derivingStdClasses
+        
 
 generateStructADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
 generateStructADLInstance lname mn d s = do
@@ -351,6 +361,21 @@ generateStructADLInstance lname mn d s = do
             indent $ do
               forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
                 wt "$1 fieldFromJSON $2_js \"$2\" defaultv hm" [p, (f_serializedName f)]
+            wl "from _ = Prelude.Nothing"
+
+generateNullStructADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateNullStructADLInstance lname mn d s = do
+    wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
+    indent $ do
+        declareAType (ScopedName mn (d_name d)) (s_typeParams s)
+        nl
+        wt "defaultv = $1" [lname]
+        wl "jsonSerialiser jf = JSONSerialiser to from"
+        indent $ do
+          wl "where"
+          indent $ do
+            wl "to v = JSON.Object HM.empty"
+            wt "from (JSON.Object hm) = Prelude.Just $1 " [lname]
             wl "from _ = Prelude.Nothing"
 
 generateUnionDataType :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
