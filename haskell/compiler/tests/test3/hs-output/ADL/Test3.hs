@@ -14,6 +14,7 @@ import qualified Data.Aeson as JSON
 import qualified Data.ByteString as B
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
+import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Word
 import qualified Prelude
@@ -112,7 +113,7 @@ data S t = S
     , s_f_u :: U
     , s_f_t :: t
     , s_f_bint16 :: (B Data.Int.Int16)
-    , s_f_smap :: (StringMap_FIXME Data.Int.Int32)
+    , s_f_smap :: StringMap (Data.Int.Int32)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -142,7 +143,7 @@ instance (ADLValue t) => ADLValue (S t) where
         (U_f_int 45)
         defaultv
         (defaultv :: (B Data.Int.Int16)) { b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = (defaultv :: (XY Data.Int.Int16)) { xY_x = 5, xY_y = 5 } }
-        StringMap_FIXME()
+        (stringMapFromList [("a", 45), ("b", 47)])
     
     jsonSerialiser jf = JSONSerialiser to from
         where

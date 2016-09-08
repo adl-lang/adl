@@ -168,7 +168,7 @@ hPrimitiveType P_Float = return "Prelude.Float"
 hPrimitiveType P_Double = return "Prelude.Double"
 hPrimitiveType P_ByteVector = importByteString >> return "B.ByteString"
 hPrimitiveType P_Vector = return "[]" -- never called
-hPrimitiveType P_StringMap = return "StringMap_FIXME"
+hPrimitiveType P_StringMap = return "???" -- never called
 hPrimitiveType P_String = importText >> return "T.Text"
 hPrimitiveType P_Sink = do
   importModule (HaskellModule "ADL.Core.Sink")
@@ -211,9 +211,14 @@ hTypeExpr = hTypeExprB Map.empty
 
 hTypeExprB :: TypeBindingMap -> TypeExpr ResolvedType -> HGen T.Text
 hTypeExprB m (TypeExpr rt []) = hTypeExprB1 m rt
-hTypeExprB m (TypeExpr (RT_Primitive P_Vector) args) = do
-  argt <- hTypeExprB m (head args)
+hTypeExprB m (TypeExpr (RT_Primitive P_Vector) [te]) = do
+  argt <- hTypeExprB m te
   return (template "[$1]" [argt])
+hTypeExprB m (TypeExpr (RT_Primitive P_StringMap) [te]) = do
+  argt <- hTypeExprB m te
+  importMap
+  importText
+  return (template "StringMap ($1)" [argt])
   
 hTypeExprB m (TypeExpr c args) = do
   ct <- hTypeExprB1 m c
@@ -261,6 +266,7 @@ enableScopedTypeVariables [] = return ()
 enableScopedTypeVariables _ = addLanguageFeature "ScopedTypeVariables"
 
 importText = importQualifiedModuleAs (HaskellModule "Data.Text") "T"
+importMap = importQualifiedModuleAs (HaskellModule "Data.Map") "M"
 importByteString = importQualifiedModuleAs (HaskellModule "Data.ByteString")  "B"
 
 declareAType :: ScopedName -> [Ident] -> HGen ()
@@ -473,8 +479,13 @@ generateLiteral te v =  generateLV Map.empty te v
       vals <- mapM (generateLV m te) (V.toList v) 
       return (template "[ $1 ]" [T.intercalate ", " vals])
 
-    generateStringMap m te (JSON.Object v) = do
-      return "StringMap_FIXME()"
+    generateStringMap m te (JSON.Object hm) = do
+      pairs <- mapM genPair (HM.toList hm) 
+      return (template "(stringMapFromList [$1])" [T.intercalate ", " pairs])
+      where
+        genPair (k,jv) = do
+          v <- generateLV m te jv
+          return (template "(\"$1\", $2)" [k,v])
 
     generateStruct m te0 d s tes (JSON.Object hm) = do
       fields <- forM (L.sortBy (comparing fst) $ HM.toList hm) $ \(fname,v) -> do

@@ -1,14 +1,18 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Core.Primitives (
-  -- export only class instances
+  StringMap(..),
+  stringMapFromList,
+  -- also export class instances
   ) where
 
 import qualified Data.Aeson as JSON
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Vector as V
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Base64 as B64
 import Data.Int
 import Data.Word
 import GHC.Float
@@ -133,8 +137,24 @@ instance forall a . (ADLValue a) => ADLValue [a] where
       to vs = JSON.Array (V.fromList (map (aToJSON js) vs))
       from (JSON.Array v) = mapM (aFromJSON js) (V.toList v)
       from _ = Nothing
+
+newtype StringMap v = StringMap (M.Map T.Text v)
+  deriving (Eq,Ord,Show)
+
+stringMapFromList :: [(T.Text,v)] -> StringMap v
+stringMapFromList = StringMap . M.fromList
+
+instance forall a . (ADLValue a) => ADLValue (StringMap a) where
+  atype _ = T.concat ["StringMap<",atype (undefined :: a),">"]
+  defaultv = StringMap (M.empty)
+  jsonSerialiser jf = JSONSerialiser to from
+    where
+      js = jsonSerialiser jf
+      to (StringMap m) = JSON.Object (HM.fromList (map toPair (M.toList m)))
+      from (JSON.Object hm) = (StringMap . M.fromList) <$> mapM fromPair (HM.toList hm)
+      from _ = Nothing
+      toPair (k,v) = (k,aToJSON js v)
+      fromPair (k,jv) = do
+        v <- aFromJSON js jv
+        return (k,v)
   
-
-
-
-
