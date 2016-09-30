@@ -72,12 +72,24 @@ public class Maybe<T> {
       return false;
     }
     Maybe other = (Maybe) other0;
-    return disc == other.disc && value.equals(other.value);
+    switch (disc) {
+      case NOTHING:
+        return disc == other.disc;
+      case JUST:
+        return disc == other.disc && value.equals(other.value);
+    }
+    throw new IllegalStateException();
   }
 
   @Override
   public int hashCode() {
-    return disc.hashCode() * 37 + value.hashCode();
+    switch (disc) {
+      case NOTHING:
+        return disc.hashCode();
+      case JUST:
+        return disc.hashCode() * 37 + value.hashCode();
+    }
+    throw new IllegalStateException();
   }
 
   @SuppressWarnings("unchecked")

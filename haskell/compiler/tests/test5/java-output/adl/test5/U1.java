@@ -69,12 +69,12 @@ public class U1 {
       return false;
     }
     U1 other = (U1) other0;
-    return disc == other.disc && value.equals(other.value);
+    return disc == other.disc;
   }
 
   @Override
   public int hashCode() {
-    return disc.hashCode() * 37 + value.hashCode();
+    return disc.hashCode();
   }
 
   /* Factory for construction of generic values */

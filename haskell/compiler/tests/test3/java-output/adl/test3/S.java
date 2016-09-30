@@ -232,7 +232,7 @@ public class S<T> {
     }
     S other = (S) other0;
     return
-      f_void.equals(other.f_void) &&
+      true &&
       f_bool == other.f_bool &&
       f_int8 == other.f_int8 &&
       f_int16 == other.f_int16 &&

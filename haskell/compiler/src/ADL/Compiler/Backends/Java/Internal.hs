@@ -459,7 +459,9 @@ data FieldDetails = FieldDetails {
   fd_boxedTypeExprStr :: T.Text,
   fd_factoryExprStr :: T.Text,
   fd_defValue :: T.Text,
-  fd_copy :: T.Text -> T.Text
+  fd_copy :: T.Text -> T.Text,
+  fd_hashcode :: T.Text -> T.Text,
+  fd_equals :: T.Text -> T.Text -> T.Text
 }
 
 unboxedPrimitive :: T.Text -> T.Text -> TypeBoxed -> [T.Text] -> CState T.Text
@@ -506,6 +508,19 @@ genFieldDetails f = do
         else accessorName <> "()"
       unionCtorName = unreserveWord (f_name f)
       serializedName = f_serializedName f
+      hashCode =
+        if isVoidType te
+          then \_ -> "0"
+          else case te of
+            (TypeExpr (RT_Primitive pt) []) -> \v -> pd_hashfn (genPrimitiveDetails pt) v
+            _ -> \v -> template "$1.hashCode()" [v]
+      equals =
+        if isVoidType te
+          then \_ _ -> "true"
+          else if typeExprStr /= boxedTypeExprStr  -- ie is unboxed
+               then \v o -> template "$1 == $2" [v,o]
+               else \v o -> template "$1.equals($2)" [v,o]
+                     
 
   return FieldDetails {
     fd_field=f,
@@ -520,7 +535,9 @@ genFieldDetails f = do
     fd_boxedTypeExprStr=boxedTypeExprStr,
     fd_factoryExprStr=factoryExprStr,
     fd_defValue=defValue,
-    fd_copy=copy
+    fd_copy=copy,
+    fd_hashcode=hashCode,
+    fd_equals=equals
     }
 
 -- Inside the union implementation we need to be able to cast

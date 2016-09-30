@@ -236,8 +236,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
             cline "return"
             <>
             let terminators = replicate (length fieldDetails-1) " &&" <> [";"]
-                tests = [ctemplate (if unboxedField fd then "$1 == other.$1$2" else "$1.equals(other.$1)$2")
-                                   [fd_memberVarName fd,term]
+                tests = [cline (fd_equals fd (fd_memberVarName fd) ("other." <> fd_memberVarName fd) <> term)
                         | (fd,term) <- zip fieldDetails terminators]
             in  indent (mconcat tests)
             )
@@ -249,10 +248,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       addMethod $ coverride "public int hashCode()" (
         cline "int result = 1;"
         <>
-        let hashfn fd from = case (f_type (fd_field fd)) of
-              (TypeExpr (RT_Primitive pt) []) -> pd_hashfn (genPrimitiveDetails pt) from
-              _ -> template "$1.hashCode()" [from]
-        in mconcat [ctemplate "result = result * 37 + $1;" [hashfn fd (fd_memberVarName fd)] | fd <- fieldDetails]
+        mconcat [ctemplate "result = result * 37 + $1;" [fd_hashcode fd (fd_memberVarName fd)] | fd <- fieldDetails]
         <>
         cline "return result;"
         )
@@ -310,6 +306,8 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
 
       addMethod (if isGeneric then factoryg else factory)
 
+data UnionType = AllVoids | NoVoids | Mixed
+
 generateUnion :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Union CResolvedType -> ClassFile
 generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen state0
   where
@@ -326,6 +324,10 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       if needsSuppressedCheckInCast (f_type (fd_field fd))
         then template "$1.<$2>cast($3)" [className,fd_boxedTypeExprStr fd,from]
         else template "($1) $2" [fd_boxedTypeExprStr fd,from]
+
+    unionType = if and voidTypes then AllVoids else if or voidTypes then Mixed else NoVoids
+      where
+        voidTypes = [isVoidType (f_type f) | f <- u_fields union]
     
     gen = do
       setDocString (generateDocString (d_annotations decl))
@@ -451,11 +453,43 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
         <>
         ctemplate "$1 other = ($1) other0;" [className]
         <>
-        ctemplate "return $1 == other.$1 && $2.equals(other.$2);" [discVar,valueVar]
-        )
+        case unionType of
+          NoVoids -> ctemplate "return $1 == other.$1 && $2.equals(other.$2);" [discVar,valueVar]
+          AllVoids -> ctemplate "return $1 == other.$1;" [discVar]
+          Mixed ->
+            cblock (template "switch ($1)" [discVar]) (
+              mconcat [
+                ctemplate "case $1:" [discriminatorName fd]
+                <>
+                indent (
+                  if isVoidType (f_type (fd_field fd))
+                     then ctemplate "return $1 == other.$1;" [discVar]
+                     else ctemplate "return $1 == other.$1 && $2.equals(other.$2);" [discVar,valueVar]
+                  )
+                | fd <- fieldDetails]
+            )
+            <>
+            cline "throw new IllegalStateException();" 
+       )
 
       addMethod $ coverride "public int hashCode()" (
-        ctemplate "return $1.hashCode() * 37 + $2.hashCode();" [discVar,valueVar]
+        case unionType of
+          NoVoids -> ctemplate "return $1.hashCode() * 37 + $2.hashCode();" [discVar,valueVar]
+          AllVoids -> ctemplate "return $1.hashCode();" [discVar]
+          Mixed ->
+            cblock (template "switch ($1)" [discVar]) (
+              mconcat [
+                ctemplate "case $1:" [discriminatorName fd]
+                <>
+                indent (
+                  if isVoidType (f_type (fd_field fd))
+                     then ctemplate "return $1.hashCode();" [discVar]
+                     else ctemplate "return $1.hashCode() * 37 + $2.hashCode();" [discVar,valueVar]
+                  )
+                | fd <- fieldDetails]
+            )
+            <>
+            cline "throw new IllegalStateException();"
         )
 
       -- cast helper
