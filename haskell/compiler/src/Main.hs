@@ -199,12 +199,13 @@ runJava args0 =
     header = "Usage: adl java [OPTION...] files..."
 
     mkFlags opts = do
-      let (flags1,out) = (foldl (.) id opts) (flags0,out0)
+      stdCustomTypes <- liftIO $ getDataFileName "config/java-custom-types.json"
+      let (flags1,out) = (foldl (.) id opts) (flags0 [stdCustomTypes],out0)
       return flags1{jf_fileWriter=writeOutputFile out}
 
-    flags0 = J.JavaFlags {
+    flags0 ctypes = J.JavaFlags {
       jf_searchPath=[],
-      jf_customTypeFiles=[],
+      jf_customTypeFiles=ctypes,
       jf_package = "adl",
       jf_fileWriter= \_ _ -> return (),
       jf_includeRuntime = False,
