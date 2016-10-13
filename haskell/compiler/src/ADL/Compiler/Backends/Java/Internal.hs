@@ -251,10 +251,11 @@ getRuntimePackage :: CState JavaPackage
 getRuntimePackage = (cgp_runtimePackage . cf_codeProfile) <$> get
 
 getHelpers :: CustomType -> CState Ident
-getHelpers customType = addImport (classFromScopedName (ct_helpers customType))
+getHelpers customType = do
+  jclass <- fixStdRef (classFromScopedName (ct_helpers customType))
+  addImport jclass
 
 data TypeBoxed = TypeBoxed | TypeUnboxed
-
 
 genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
 genTypeExpr te = genTypeExprB TypeUnboxed te
@@ -704,3 +705,12 @@ discriminatorName = T.toUpper . unreserveWord . f_name . fd_field
 leadSpace :: T.Text -> T.Text
 leadSpace "" = ""
 leadSpace t = " " <> t
+
+-- | If a javaclass refers to the default standard library location, update
+--   it reference the configured standard library location
+fixStdRef :: JavaClass -> CState JavaClass
+fixStdRef (JavaClass ("org":"adl":"runtime":[ident])) = do
+  rtpackage <- (cgp_runtimePackage . cf_codeProfile) <$> get
+  return (javaClass rtpackage ident)
+fixStdRef jclass = return jclass
+
