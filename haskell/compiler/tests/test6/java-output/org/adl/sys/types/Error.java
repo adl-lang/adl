@@ -144,10 +144,10 @@ public class Error<T> {
       public Error<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "value") {
+          if (_v.getKey().equals("value")) {
             return Error.<T>value(value.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "error") {
+          else if (_v.getKey().equals("error")) {
             return Error.<T>error(error.fromJson(_v.getValue()));
           }
         }

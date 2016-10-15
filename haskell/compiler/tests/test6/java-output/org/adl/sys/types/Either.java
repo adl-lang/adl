@@ -143,10 +143,10 @@ public class Either<T1, T2> {
       public Either<T1, T2> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "left") {
+          if (_v.getKey().equals("left")) {
             return Either.<T1, T2>left(left.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "right") {
+          else if (_v.getKey().equals("right")) {
             return Either.<T1, T2>right(right.fromJson(_v.getValue()));
           }
         }

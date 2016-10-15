@@ -111,7 +111,7 @@ public class U1 {
       public U1 fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "v") {
+          if (_v.getKey().equals("v")) {
             return U1.v();
           }
         }

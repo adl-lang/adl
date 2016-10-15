@@ -269,25 +269,25 @@ public class X2 {
       public X2 fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "f1") {
+          if (_v.getKey().equals("f1")) {
             return X2.f1(f1.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "f2") {
+          else if (_v.getKey().equals("f2")) {
             return X2.f2(f2.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "f3") {
+          else if (_v.getKey().equals("f3")) {
             return X2.f3(f3.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "f4") {
+          else if (_v.getKey().equals("f4")) {
             return X2.f4(f4.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "f5") {
+          else if (_v.getKey().equals("f5")) {
             return X2.f5(f5.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "f6") {
+          else if (_v.getKey().equals("f6")) {
             return X2.f6(f6.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "f7") {
+          else if (_v.getKey().equals("f7")) {
             return X2.f7(f7.fromJson(_v.getValue()));
           }
         }

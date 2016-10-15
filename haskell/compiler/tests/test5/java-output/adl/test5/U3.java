@@ -119,7 +119,7 @@ public class U3 {
       public U3 fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "v") {
+          if (_v.getKey().equals("v")) {
             return U3.v(v.fromJson(_v.getValue()));
           }
         }

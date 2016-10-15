@@ -111,7 +111,7 @@ public class unsigned {
       public unsigned fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "null") {
+          if (_v.getKey().equals("null")) {
             return unsigned.null_();
           }
         }

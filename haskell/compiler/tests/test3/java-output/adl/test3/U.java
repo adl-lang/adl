@@ -143,10 +143,10 @@ public class U {
       public U fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "f_int") {
+          if (_v.getKey().equals("f_int")) {
             return U.f_int(f_int.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "f_string") {
+          else if (_v.getKey().equals("f_string")) {
             return U.f_string(f_string.fromJson(_v.getValue()));
           }
         }

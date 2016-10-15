@@ -144,10 +144,10 @@ public class U9<T> {
       public U9<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "v1") {
+          if (_v.getKey().equals("v1")) {
             return U9.<T>v1(v1.fromJson(_v.getValue()));
           }
-          else if (_v.getKey() == "v2") {
+          else if (_v.getKey().equals("v2")) {
             return U9.<T>v2(v2.fromJson(_v.getValue()));
           }
         }

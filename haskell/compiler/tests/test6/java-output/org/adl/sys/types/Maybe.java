@@ -148,10 +148,10 @@ public class Maybe<T> {
       public Maybe<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "nothing") {
+          if (_v.getKey().equals("nothing")) {
             return Maybe.<T>nothing();
           }
-          else if (_v.getKey() == "just") {
+          else if (_v.getKey().equals("just")) {
             return Maybe.<T>just(just.fromJson(_v.getValue()));
           }
         }

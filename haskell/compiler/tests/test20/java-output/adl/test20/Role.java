@@ -143,13 +143,13 @@ public class Role {
       public Role fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "u") {
+          if (_v.getKey().equals("u")) {
             return Role.underling();
           }
-          else if (_v.getKey() == "b") {
+          else if (_v.getKey().equals("b")) {
             return Role.boss();
           }
-          else if (_v.getKey() == "sb") {
+          else if (_v.getKey().equals("sb")) {
             return Role.superBoss();
           }
         }

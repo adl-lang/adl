@@ -211,14 +211,14 @@ generateUnionJson cgp decl union fieldDetails = do
                           then ctemplate "return $1.$2$3();" [className0,typeArgs,fd_unionCtorName fd]
                           else ctemplate "return $1.$2$3($3.fromJson(_v.getValue()));" [className0,typeArgs,fd_unionCtorName fd]
                           | fd <- fieldDetails]
-                    in ctemplate "if (_v.getKey() == \"$1\") {" [fd_serializedName (head fieldDetails)]
+                    in ctemplate "if (_v.getKey().equals(\"$1\")) {" [fd_serializedName (head fieldDetails)]
                        <>
                        indent (head returnStatements)
                        <>
                        mconcat [
                          cline "}"
                          <>
-                         ctemplate "else if (_v.getKey() == \"$1\") {" [fd_serializedName fd]
+                         ctemplate "else if (_v.getKey().equals(\"$1\")) {" [fd_serializedName fd]
                          <>
                          indent returnCase
                          | (fd,returnCase) <- zip (tail fieldDetails) (tail returnStatements)]

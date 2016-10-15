@@ -117,7 +117,7 @@ public class U4 {
       public U4 fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey() == "v") {
+          if (_v.getKey().equals("v")) {
             return U4.v(v.fromJson(_v.getValue()));
           }
         }
