@@ -1,6 +1,6 @@
 # Overview
 
-ADL (Actor Description Language) is the domain specific language at
+ADL (Algebraic Data Language) is the domain specific language at
 the core of the ADL framework. It is used to describe application
 level data types and communication protocols.
 
@@ -21,25 +21,40 @@ developers.
 
 Here is a tiny ADL example:
 
-    module demos.ping
+```
+module picture
+{
+    union Picture
     {
-        struct PingRequest
-        {
-           String body;
-           Sink<PingResponse> replyTo;
-        };
-
-        struct PingResponse
-        {
-           String body;
-        };
-
-        type PingServer = Sink<PingRequest>;
+        Circle circle;
+        Rectangle rectangle;
+        Vector<Picture> composed;
+        TranslatedPicture translated;
     };
 
-This specifies a simple service which accepts messages of type
-PingRequest. Such a message has a body, along with a target to which
-the server is to send the response. 
+    struct Circle
+    {
+        Double radius;
+    };
+
+    struct Rectangle
+    {
+        Double width;
+        Double height;
+    };
+
+    struct TranslatedPicture
+    {
+        Double xoffset;
+        Double yoffset;
+        Picture picture;
+    };
+};
+
+```
+
+This specifies a data type representing a Picture. In this example a
+picture composes Rectangles and Circles, with arbitrary translations.
 
 # Modules
 

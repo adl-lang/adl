@@ -39,6 +39,28 @@ a.b will be generated with a haskell module declaration:
 
     module MyApp.adl.a.b
 
+## java backend
+
+    adlc java [OPTION...] <adlfile>..
+
+The java backend parses and checks the supplied ADL files, and
+then generates corresponding java code. The available options are:
+
+```
+  -I DIR  --searchdir=DIR            Add the specifed directory to the ADL searchpath
+  -O DIR  --outputdir=DIR            Set the directory where generated code is written
+          --custom-types=FILE        Read custom type mapping from the specified file
+          --no-overwrite             Don't update files that haven't changed
+          --package=PACKAGE          The java package into which the generated ADL code will be placed
+          --rtpackage=PACKAGE        The java package where the ADL runtime is located
+          --include-rt               Generate the runtime code
+          --parcelable               Generated java code will include android parcellable implementations
+          --json                     Generated java code will include gson json serialization
+          --hungarian-naming         Use hungarian naming conventions
+          --max-line-length=PACKAGE  The maximum length of the generated code lines
+          --header-comment=PACKAGE   A comment to be placed at the start of each java file
+```
+
 ## cpp backend
 
     adlc cpp [OPTION..] <adlfile>..
