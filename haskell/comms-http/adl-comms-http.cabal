@@ -1,6 +1,6 @@
 name:                adl-comms-http
 version:             0.1.0.0
-synopsis:            HTTP communication transport for the Actor Definition Language (ADL)
+synopsis:            HTTP communication transport for the Algebraic Data Language (ADL)
 description:         
 license:             GPL-2
 license-file:        ../../LICENSE

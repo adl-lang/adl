@@ -1,6 +1,6 @@
 name:                adl-compiler
 version:             0.1.0.0
-synopsis:            A compiler for the Actor Definition Language (ADL)
+synopsis:            A compiler for the Algebraic Data Language (ADL)
 -- description:         
 license:             GPL-2
 license-file:        ../../LICENSE
