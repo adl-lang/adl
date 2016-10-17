@@ -30,5 +30,4 @@ public class TestRecursiveTypes {
   public void testUnionRecursionJson(){
     JsonBinding<List<String>> jbinding = List.jsonBinding(JsonBindings.STRING);
   }
-
 };
