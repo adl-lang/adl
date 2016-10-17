@@ -6,9 +6,187 @@
 namespace ADL {
 namespace test5 {
 
+template <class T>
+struct Cell;
+
 struct S1;
 
 struct U3;
+
+template <class T>
+class List
+{
+public:
+    List();
+    static List<T> mk_null_();
+    static List<T> mk_cell( const Cell<T>  & v );
+    
+    List( const List<T> & );
+    ~List();
+    List<T> & operator=( const List<T> & );
+    
+    enum DiscType
+    {
+        NULL_,
+        CELL
+    };
+    
+    DiscType d() const;
+    Cell<T>  & cell() const;
+    
+    void set_null_();
+    const Cell<T>  & set_cell(const Cell<T>  & );
+    
+private:
+    List( DiscType d, void * v);
+    
+    DiscType d_;
+    void *p_;
+    
+    static void free( DiscType d, void *v );
+    static void *copy( DiscType d, void *v );
+};
+
+template <class T>
+bool operator<( const List<T> &a, const List<T> &b );
+template <class T>
+bool operator==( const List<T> &a, const List<T> &b );
+
+template <class T>
+typename List<T>::DiscType List<T>::d() const
+{
+    return d_;
+}
+
+template <class T>
+inline Cell<T>  & List<T>::cell() const
+{
+    if( d_ == CELL )
+    {
+        return *(Cell<T>  *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T>
+List<T>::List()
+    : d_(NULL_), p_(0)
+{
+}
+
+template <class T>
+List<T> List<T>::mk_null_()
+{
+    return List<T>( NULL_, 0 );
+}
+
+template <class T>
+List<T> List<T>::mk_cell( const Cell<T>  & v )
+{
+    return List<T>( CELL, new Cell<T> (v) );
+}
+
+template <class T>
+List<T>::List( const List<T> & v )
+    : d_(v.d_), p_(copy(v.d_,v.p_))
+{
+}
+
+template <class T>
+List<T>::~List()
+{
+    free(d_,p_);
+}
+
+template <class T>
+List<T> & List<T>::operator=( const List<T> & o )
+{
+    free(d_,p_);
+    d_ = o.d_;
+    p_ = copy( o.d_, o.p_ );
+    return *this;
+}
+
+template <class T>
+void List<T>::set_null_()
+{
+    if( d_ != NULL_ )
+    {
+        free(d_,p_);
+        d_ = NULL_;
+        p_ = 0;
+    }
+}
+
+template <class T>
+const Cell<T>  & List<T>::set_cell(const Cell<T>  &v)
+{
+    if( d_ == CELL )
+    {
+        *(Cell<T>  *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = CELL;
+        p_ = new Cell<T> (v);
+    }
+    return *(Cell<T>  *)p_;
+}
+
+template <class T>
+List<T>::List(DiscType d, void *p)
+    : d_(d), p_(p)
+{
+}
+
+template <class T>
+void List<T>::free(DiscType d, void *p)
+{
+    switch( d )
+    {
+        case NULL_: return;
+        case CELL: delete (Cell<T>  *)p; return;
+    }
+}
+
+template <class T>
+void * List<T>::copy( DiscType d, void *p )
+{
+    switch( d )
+    {
+        case NULL_: return 0;
+        case CELL: return new Cell<T> (*(Cell<T>  *)p);
+    }
+    return 0;
+}
+
+template <class T>
+bool
+operator<( const List<T> &a, const List<T> &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case List<T>::NULL_: return false;
+        case List<T>::CELL: return a.cell() < b.cell();
+    }
+    return false;
+}
+
+template <class T>
+bool
+operator==( const List<T> &a, const List<T> &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case List<T>::NULL_: return true;
+        case List<T>::CELL: return a.cell() == b.cell();
+    }
+    return false;
+}
 
 struct S1
 {
@@ -594,9 +772,131 @@ operator==( const U9<T> &a, const U9<T> &b )
     return false;
 }
 
+template <class T>
+struct Cell
+{
+    Cell();
+    
+    Cell(
+        const T & head,
+        const List<T>  & tail
+        );
+    
+    T head;
+    List<T>  tail;
+};
+
+template <class T>
+bool operator<( const Cell<T> &a, const Cell<T> &b );
+template <class T>
+bool operator==( const Cell<T> &a, const Cell<T> &b );
+
+template <class T>
+Cell<T>::Cell()
+{
+}
+
+template <class T>
+Cell<T>::Cell(
+    const T & head_,
+    const List<T>  & tail_
+    )
+    : head(head_)
+    , tail(tail_)
+{
+}
+
+template <class T>
+bool
+operator<( const Cell<T> &a, const Cell<T> &b )
+{
+    if( a.head < b.head ) return true;
+    if( b.head < a.head ) return false;
+    if( a.tail < b.tail ) return true;
+    if( b.tail < a.tail ) return false;
+    return false;
+}
+
+template <class T>
+bool
+operator==( const Cell<T> &a, const Cell<T> &b )
+{
+    return
+        a.head == b.head &&
+        a.tail == b.tail ;
+}
+
 }}; // ADL::test5
 
 namespace ADL {
+
+template <class T>
+struct Serialisable<ADL::test5::List<T>>
+{
+    static typename Serialiser<ADL::test5::List<T>>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <class T>
+typename Serialiser<ADL::test5::List<T>>::Ptr
+Serialisable<ADL::test5::List<T>>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test5::List<T> _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : sf_(sf)
+            {}
+        
+        SerialiserFlags sf_;
+        mutable typename Serialiser<Void>::Ptr null_;
+        mutable typename Serialiser<ADL::test5::Cell<T> >::Ptr cell_;
+        
+        typename Serialiser<Void>::Ptr null_s() const
+        {
+            if( !null_ )
+                null_ = Serialisable<Void>::serialiser(sf_);
+            return null_;
+        }
+        
+        typename Serialiser<ADL::test5::Cell<T> >::Ptr cell_s() const
+        {
+            if( !cell_ )
+                cell_ = Serialisable<ADL::test5::Cell<T> >::serialiser(sf_);
+            return cell_;
+        }
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test5::List<T>::NULL_: writeField( json, null_s(), "null", Void() ); break;
+                case ADL::test5::List<T>::CELL: writeField( json, cell_s(), "cell", v.cell() ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                if( matchField0( "null", json ) )
+                {
+                    null_s()->fromJson( json );
+                    v.set_null_();
+                }
+                else if( matchField0( "cell", json ) )
+                    v.set_cell(cell_s()->fromJson( json ));
+                else
+                    throw json_parse_failure();
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+}
 
 template <>
 struct Serialisable<ADL::test5::S1>
@@ -716,6 +1016,52 @@ Serialisable<ADL::test5::U9<T>>::serialiser( const SerialiserFlags &sf )
     
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
+
+template <class T>
+struct Serialisable<ADL::test5::Cell<T>>
+{
+    static typename Serialiser<ADL::test5::Cell<T>>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <class T>
+typename Serialiser<ADL::test5::Cell<T>>::Ptr
+Serialisable<ADL::test5::Cell<T>>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test5::Cell<T> _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : head_s( Serialisable<T>::serialiser(sf) )
+            , tail_s( Serialisable<ADL::test5::List<T> >::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<T>::Ptr head_s;
+        typename Serialiser<ADL::test5::List<T> >::Ptr tail_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<T>( json, head_s, "head", v.head );
+            writeField<ADL::test5::List<T> >( json, tail_s, "tail", v.tail );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( head_s, v.head, "head", json ) ||
+                readField( tail_s, v.tail, "tail", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
 
 }; // ADL
 #endif // TEST5_H

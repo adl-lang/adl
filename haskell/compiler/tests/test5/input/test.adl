@@ -54,4 +54,17 @@ module test5
        Int16 v2;
    };
 
+   // A recursive type
+
+   union List<T>
+   {
+       Void null;
+       Cell<T> cell;
+   };
+
+   struct Cell<T>
+   {
+        T head;
+        List<T> tail;
+   };
 };

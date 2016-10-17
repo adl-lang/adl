@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Test5(
+    Cell(..),
+    List(..),
     S1(..),
     U1(..),
     U2(..),
@@ -20,6 +22,63 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
 import qualified Data.Text as T
 import qualified Prelude
+
+data Cell t = Cell
+    { cell_head :: t
+    , cell_tail :: (List t)
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance (ADLValue t) => ADLValue (Cell t) where
+    atype _ = T.concat
+        [ "test5.Cell"
+        , "<", atype (Prelude.undefined ::t)
+        , ">" ]
+    
+    defaultv = Cell
+        defaultv
+        defaultv
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            head_js = jsonSerialiser jf
+            tail_js = jsonSerialiser jf
+            
+            to v = JSON.Object ( HM.fromList
+                [ ("head",aToJSON head_js (cell_head v))
+                , ("tail",aToJSON tail_js (cell_tail v))
+                ] )
+            
+            from (JSON.Object hm) = Cell 
+                <$> fieldFromJSON head_js "head" defaultv hm
+                <*> fieldFromJSON tail_js "tail" defaultv hm
+            from _ = Prelude.Nothing
+
+data List t
+    = List_null
+    | List_cell (Cell t)
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance (ADLValue t) => ADLValue (List t) where
+    atype _ = T.concat
+        [ "test5.List"
+        , "<", atype (Prelude.undefined ::t)
+        , ">" ]
+    
+    defaultv = List_null
+    
+    jsonSerialiser jf = JSONSerialiser to from
+        where
+            cell_js = jsonSerialiser jf
+            
+            to List_null = JSON.Object (HM.singleton "null" JSON.Null)
+            to (List_cell v) = JSON.Object (HM.singleton "cell" (aToJSON cell_js v))
+            
+            from o = do
+                (key, v) <- splitUnion o
+                case key of
+                    "null" -> Prelude.Just List_null
+                    "cell" -> Prelude.fmap List_cell (aFromJSON cell_js v)
 
 data S1 = S1
     { s1_f :: Data.Int.Int16
