@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -90,26 +91,26 @@ public class B<T> {
 
   public static <T> Factory<B<T>> factory(Factory<T> factoryT) {
     return new Factory<B<T>>() {
-      final Factory<T> f_t = factoryT;
-      final Factory<String> f_string = Factories.STRING;
-      final Factory<ArrayList<T>> f_tvec = Factories.arrayList(factoryT);
-      final Factory<XY<T>> f_xy = XY.factory(factoryT);
+      final Lazy<Factory<T>> f_t = new Lazy<>(() -> factoryT);
+      final Lazy<Factory<String>> f_string = new Lazy<>(() -> Factories.STRING);
+      final Lazy<Factory<ArrayList<T>>> f_tvec = new Lazy<>(() -> Factories.arrayList(factoryT));
+      final Lazy<Factory<XY<T>>> f_xy = new Lazy<>(() -> XY.factory(factoryT));
 
       public B<T> create() {
         return new B<T>(
-          f_t.create(),
-          f_string.create(),
-          f_tvec.create(),
-          f_xy.create()
+          f_t.get().create(),
+          f_string.get().create(),
+          f_tvec.get().create(),
+          f_xy.get().create()
           );
       }
 
       public B<T> create(B<T> other) {
         return new B<T>(
-          f_t.create(other.getF_t()),
+          f_t.get().create(other.getF_t()),
           other.getF_string(),
-          f_tvec.create(other.getF_tvec()),
-          f_xy.create(other.getF_xy())
+          f_tvec.get().create(other.getF_tvec()),
+          f_xy.get().create(other.getF_xy())
           );
       }
     };
@@ -118,10 +119,10 @@ public class B<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<B<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<T> f_t = bindingT;
-    final JsonBinding<String> f_string = JsonBindings.STRING;
-    final JsonBinding<ArrayList<T>> f_tvec = JsonBindings.arrayList(bindingT);
-    final JsonBinding<XY<T>> f_xy = XY.jsonBinding(bindingT);
+    final Lazy<JsonBinding<T>> f_t = new Lazy<>(() -> bindingT);
+    final Lazy<JsonBinding<String>> f_string = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<ArrayList<T>>> f_tvec = new Lazy<>(() -> JsonBindings.arrayList(bindingT));
+    final Lazy<JsonBinding<XY<T>>> f_xy = new Lazy<>(() -> XY.jsonBinding(bindingT));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<B<T>> _factory = factory(bindingT.factory());
 
@@ -132,20 +133,20 @@ public class B<T> {
 
       public JsonElement toJson(B<T> _value) {
         JsonObject _result = new JsonObject();
-        _result.add("f_t", f_t.toJson(_value.f_t));
-        _result.add("f_string", f_string.toJson(_value.f_string));
-        _result.add("f_tvec", f_tvec.toJson(_value.f_tvec));
-        _result.add("f_xy", f_xy.toJson(_value.f_xy));
+        _result.add("f_t", f_t.get().toJson(_value.f_t));
+        _result.add("f_string", f_string.get().toJson(_value.f_string));
+        _result.add("f_tvec", f_tvec.get().toJson(_value.f_tvec));
+        _result.add("f_xy", f_xy.get().toJson(_value.f_xy));
         return _result;
       }
 
       public B<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new B<T>(
-          _obj.has("f_t") ? f_t.fromJson(_obj.get("f_t")) : factoryT.create(),
-          _obj.has("f_string") ? f_string.fromJson(_obj.get("f_string")) : "",
-          _obj.has("f_tvec") ? f_tvec.fromJson(_obj.get("f_tvec")) : new ArrayList<T>(),
-          _obj.has("f_xy") ? f_xy.fromJson(_obj.get("f_xy")) : XY.factory(factoryT).create()
+          _obj.has("f_t") ? f_t.get().fromJson(_obj.get("f_t")) : factoryT.create(),
+          _obj.has("f_string") ? f_string.get().fromJson(_obj.get("f_string")) : "",
+          _obj.has("f_tvec") ? f_tvec.get().fromJson(_obj.get("f_tvec")) : new ArrayList<T>(),
+          _obj.has("f_xy") ? f_xy.get().fromJson(_obj.get("f_xy")) : XY.factory(factoryT).create()
         );
       }
     };

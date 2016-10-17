@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Objects;
 
 public class ScopedName {
@@ -85,8 +86,8 @@ public class ScopedName {
   /* Json serialization */
 
   public static JsonBinding<ScopedName> jsonBinding() {
-    final JsonBinding<String> moduleName = JsonBindings.STRING;
-    final JsonBinding<String> name = JsonBindings.STRING;
+    final Lazy<JsonBinding<String>> moduleName = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
     final Factory<ScopedName> _factory = FACTORY;
 
     return new JsonBinding<ScopedName>() {
@@ -96,16 +97,16 @@ public class ScopedName {
 
       public JsonElement toJson(ScopedName _value) {
         JsonObject _result = new JsonObject();
-        _result.add("moduleName", moduleName.toJson(_value.moduleName));
-        _result.add("name", name.toJson(_value.name));
+        _result.add("moduleName", moduleName.get().toJson(_value.moduleName));
+        _result.add("name", name.get().toJson(_value.name));
         return _result;
       }
 
       public ScopedName fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new ScopedName(
-          _obj.has("moduleName") ? moduleName.fromJson(_obj.get("moduleName")) : "",
-          _obj.has("name") ? name.fromJson(_obj.get("name")) : ""
+          _obj.has("moduleName") ? moduleName.get().fromJson(_obj.get("moduleName")) : "",
+          _obj.has("name") ? name.get().fromJson(_obj.get("name")) : ""
         );
       }
     };

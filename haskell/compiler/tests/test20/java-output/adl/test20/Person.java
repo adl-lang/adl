@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Objects;
 
 public class Person {
@@ -113,10 +114,10 @@ public class Person {
   /* Json serialization */
 
   public static JsonBinding<Person> jsonBinding() {
-    final JsonBinding<String> firstName = JsonBindings.STRING;
-    final JsonBinding<String> lastName = JsonBindings.STRING;
-    final JsonBinding<Short> age = JsonBindings.SHORT;
-    final JsonBinding<Role> role = Role.jsonBinding();
+    final Lazy<JsonBinding<String>> firstName = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<String>> lastName = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<Short>> age = new Lazy<>(() -> JsonBindings.SHORT);
+    final Lazy<JsonBinding<Role>> role = new Lazy<>(() -> Role.jsonBinding());
     final Factory<Person> _factory = FACTORY;
 
     return new JsonBinding<Person>() {
@@ -126,20 +127,20 @@ public class Person {
 
       public JsonElement toJson(Person _value) {
         JsonObject _result = new JsonObject();
-        _result.add("fn", firstName.toJson(_value.firstName));
-        _result.add("ln", lastName.toJson(_value.lastName));
-        _result.add("age", age.toJson(_value.age));
-        _result.add("role", role.toJson(_value.role));
+        _result.add("fn", firstName.get().toJson(_value.firstName));
+        _result.add("ln", lastName.get().toJson(_value.lastName));
+        _result.add("age", age.get().toJson(_value.age));
+        _result.add("role", role.get().toJson(_value.role));
         return _result;
       }
 
       public Person fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Person(
-          _obj.has("fn") ? firstName.fromJson(_obj.get("fn")) : "",
-          _obj.has("ln") ? lastName.fromJson(_obj.get("ln")) : "",
-          _obj.has("age") ? age.fromJson(_obj.get("age")) : (short)0,
-          _obj.has("role") ? role.fromJson(_obj.get("role")) : new Role()
+          _obj.has("fn") ? firstName.get().fromJson(_obj.get("fn")) : "",
+          _obj.has("ln") ? lastName.get().fromJson(_obj.get("ln")) : "",
+          _obj.has("age") ? age.get().fromJson(_obj.get("age")) : (short)0,
+          _obj.has("role") ? role.get().fromJson(_obj.get("role")) : new Role()
         );
       }
     };

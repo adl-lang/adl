@@ -267,11 +267,11 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
               )
             )
 
-      let factoryg =
+      let factoryg lazyC =
             cblock (template "public static $2 $3<$1$2> factory($4)" [className,typeArgs,factoryInterface,factoryArgs]) (
               cblock1 (template "return new $1<$2$3>()" [factoryInterface,className,typeArgs]) (
-                mconcat [ctemplate "final $1<$2> $3 = $4;"
-                                   [factoryInterface,fd_boxedTypeExprStr fd,fd_varName fd,fd_factoryExprStr fd]
+                mconcat [ctemplate "final $1<$2<$3>> $4 = new $1<>(() -> $5);"
+                                   [lazyC,factoryInterface,fd_boxedTypeExprStr fd,fd_varName fd,fd_factoryExprStr fd]
                         | fd <- fieldDetails]
                 <>
                 cline ""
@@ -294,17 +294,22 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
 
           factoryArgs = commaSep [template "$1<$2> $3" [factoryInterface,arg,factoryTypeArg arg] | arg <- s_typeParams struct]
           ctor1Args = [case f_default (fd_field fd) of
-                        Nothing -> template "$1.create()" [fd_varName fd]
+                        Nothing -> template "$1.get().create()" [fd_varName fd]
                         (Just _) -> fd_defValue fd
                       | fd <-fieldDetails]
           ctor2Args = [if immutableType (f_type (fd_field fd))
                        then template "other.$1" [fd_accessExpr fd]
-                       else template "$1.create(other.$2)" [fd_varName fd,fd_accessExpr fd]
+                       else template "$1.get().create(other.$2)" [fd_varName fd,fd_accessExpr fd]
                       | fd <- fieldDetails]
 
       addMethod (cline "/* Factory for construction of generic values */")
 
-      addMethod (if isGeneric then factoryg else factory)
+      if isGeneric
+        then do
+          lazyC <- addImport (javaClass (cgp_runtimePackage codeProfile) "Lazy")
+          addMethod (factoryg lazyC)
+        else do
+          addMethod factory
 
 data UnionType = AllVoids | NoVoids | Mixed
 
@@ -516,17 +521,17 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
               )
             )
 
-      let factoryg =
+      let factoryg lazyC =
             cblock (template "public static$2 $3<$1$2> factory($4)" [className,leadSpace typeArgs,factoryInterface,factoryArgs]) (
               cblock1 (template "return new Factory<$1$2>()" [className,typeArgs]) (
-                mconcat [ctemplate "final Factory<$1> $2 = $3;"
-                                   [fd_boxedTypeExprStr fd,fd_varName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
+                mconcat [ctemplate "final $1<Factory<$2>> $3 = new $1<>(() -> $4);"
+                                   [lazyC,fd_boxedTypeExprStr fd,fd_varName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
                 <>
                 cline ""
                 <>
                 cblock (template "public $1$2 create()" [className,typeArgs]) (
                   let val = case f_default (fd_field fieldDetail0) of
-                        Nothing -> template "$1.create()" [fd_varName fieldDetail0]
+                        Nothing -> template "$1.get().create()" [fd_varName fieldDetail0]
                         (Just _) -> fd_defValue fieldDetail0
                   in ctemplate "return new $1$2(Disc.$3,$4);" [className,typeArgs,discriminatorName fieldDetail0,val]
                 )
@@ -545,7 +550,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                           , discVar
                           , if immutableType (f_type (fd_field fd))
                               then template "other.$1" [valueVar]
-                              else template "$1.create($2)" [fd_varName fd,typecast fd ("other." <>valueVar)]
+                              else template "$1.get().create($2)" [fd_varName fd,typecast fd ("other." <>valueVar)]
                           ]
                         )
                       | fd <- fieldDetails]
@@ -559,7 +564,12 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
           factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- u_typeParams union]
 
       addMethod (cline "/* Factory for construction of generic values */")
-      addMethod (if isGeneric then factoryg else factory)
+      if isGeneric
+        then do
+          lazyC <- addImport (javaClass (cgp_runtimePackage codeProfile) "Lazy")
+          addMethod (factoryg lazyC)
+        else do
+          addMethod factory
 
       -- Json
       when (cgp_json codeProfile) $ do

@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -54,17 +55,17 @@ public class Set<T> {
 
   public static <T> Factory<Set<T>> factory(Factory<T> factoryT) {
     return new Factory<Set<T>>() {
-      final Factory<ArrayList<T>> value = Factories.arrayList(factoryT);
+      final Lazy<Factory<ArrayList<T>>> value = new Lazy<>(() -> Factories.arrayList(factoryT));
 
       public Set<T> create() {
         return new Set<T>(
-          value.create()
+          value.get().create()
           );
       }
 
       public Set<T> create(Set<T> other) {
         return new Set<T>(
-          value.create(other.getValue())
+          value.get().create(other.getValue())
           );
       }
     };

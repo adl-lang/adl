@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -224,13 +225,13 @@ public class X2 {
   /* Json serialization */
 
   public static JsonBinding<X2> jsonBinding() {
-    final JsonBinding<Integer> f1 = JsonBindings.INTEGER;
-    final JsonBinding<Integer> f2 = JsonBindings.INTEGER;
-    final JsonBinding<Pair<String, Integer>> f3 = Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER);
-    final JsonBinding<Pair<String, String>> f4 = Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING);
-    final JsonBinding<ArrayList<Integer>> f5 = JsonBindings.arrayList(JsonBindings.INTEGER);
-    final JsonBinding<ArrayList<Pair<String, Integer>>> f6 = JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
-    final JsonBinding<ArrayList<Pair<String, String>>> f7 = JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING));
+    final Lazy<JsonBinding<Integer>> f1 = new Lazy<>(() -> JsonBindings.INTEGER);
+    final Lazy<JsonBinding<Integer>> f2 = new Lazy<>(() -> JsonBindings.INTEGER);
+    final Lazy<JsonBinding<Pair<String, Integer>>> f3 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
+    final Lazy<JsonBinding<Pair<String, String>>> f4 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING));
+    final Lazy<JsonBinding<ArrayList<Integer>>> f5 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INTEGER));
+    final Lazy<JsonBinding<ArrayList<Pair<String, Integer>>>> f6 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER)));
+    final Lazy<JsonBinding<ArrayList<Pair<String, String>>>> f7 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING)));
     final Factory<X2> _factory = FACTORY;
 
     return new JsonBinding<X2>() {
@@ -242,25 +243,25 @@ public class X2 {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case F1:
-            _result.add("f1", f1.toJson(_value.getF1()));
+            _result.add("f1", f1.get().toJson(_value.getF1()));
             break;
           case F2:
-            _result.add("f2", f2.toJson(_value.getF2()));
+            _result.add("f2", f2.get().toJson(_value.getF2()));
             break;
           case F3:
-            _result.add("f3", f3.toJson(_value.getF3()));
+            _result.add("f3", f3.get().toJson(_value.getF3()));
             break;
           case F4:
-            _result.add("f4", f4.toJson(_value.getF4()));
+            _result.add("f4", f4.get().toJson(_value.getF4()));
             break;
           case F5:
-            _result.add("f5", f5.toJson(_value.getF5()));
+            _result.add("f5", f5.get().toJson(_value.getF5()));
             break;
           case F6:
-            _result.add("f6", f6.toJson(_value.getF6()));
+            _result.add("f6", f6.get().toJson(_value.getF6()));
             break;
           case F7:
-            _result.add("f7", f7.toJson(_value.getF7()));
+            _result.add("f7", f7.get().toJson(_value.getF7()));
             break;
         }
         return _result;
@@ -270,25 +271,25 @@ public class X2 {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("f1")) {
-            return X2.f1(f1.fromJson(_v.getValue()));
+            return X2.f1(f1.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("f2")) {
-            return X2.f2(f2.fromJson(_v.getValue()));
+            return X2.f2(f2.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("f3")) {
-            return X2.f3(f3.fromJson(_v.getValue()));
+            return X2.f3(f3.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("f4")) {
-            return X2.f4(f4.fromJson(_v.getValue()));
+            return X2.f4(f4.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("f5")) {
-            return X2.f5(f5.fromJson(_v.getValue()));
+            return X2.f5(f5.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("f6")) {
-            return X2.f6(f6.fromJson(_v.getValue()));
+            return X2.f6(f6.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("f7")) {
-            return X2.f7(f7.fromJson(_v.getValue()));
+            return X2.f7(f7.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

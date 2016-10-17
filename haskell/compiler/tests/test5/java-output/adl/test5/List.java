@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -101,11 +102,11 @@ public class List<T> {
 
   public static <T> Factory<List <T>> factory(Factory<T> factoryT) {
     return new Factory<List<T>>() {
-      final Factory<Void> null_ = Factories.VOID;
-      final Factory<Cell<T>> cell = Cell.factory(factoryT);
+      final Lazy<Factory<Void>> null_ = new Lazy<>(() -> Factories.VOID);
+      final Lazy<Factory<Cell<T>>> cell = new Lazy<>(() -> Cell.factory(factoryT));
 
       public List<T> create() {
-        return new List<T>(Disc.NULL_,null_.create());
+        return new List<T>(Disc.NULL_,null_.get().create());
       }
 
       public List<T> create(List<T> other) {
@@ -113,7 +114,7 @@ public class List<T> {
           case NULL_:
             return new List<T>(other.disc,other.value);
           case CELL:
-            return new List<T>(other.disc,cell.create(List.<Cell<T>>cast(other.value)));
+            return new List<T>(other.disc,cell.get().create(List.<Cell<T>>cast(other.value)));
         }
         throw new IllegalArgumentException();
       }
@@ -123,8 +124,8 @@ public class List<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<List<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<Void> null_ = JsonBindings.VOID;
-    final JsonBinding<Cell<T>> cell = Cell.jsonBinding(bindingT);
+    final Lazy<JsonBinding<Void>> null_ = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<Cell<T>>> cell = new Lazy<>(() -> Cell.jsonBinding(bindingT));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<List<T>> _factory = factory(bindingT.factory());
 
@@ -139,7 +140,7 @@ public class List<T> {
           case NULL_:
             _result.add("null", null);
           case CELL:
-            _result.add("cell", cell.toJson(_value.getCell()));
+            _result.add("cell", cell.get().toJson(_value.getCell()));
             break;
         }
         return _result;
@@ -152,7 +153,7 @@ public class List<T> {
             return List.<T>null_();
           }
           else if (_v.getKey().equals("cell")) {
-            return List.<T>cell(cell.fromJson(_v.getValue()));
+            return List.<T>cell(cell.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

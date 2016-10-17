@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Objects;
 
 public class S1 {
@@ -71,7 +72,7 @@ public class S1 {
   /* Json serialization */
 
   public static JsonBinding<S1> jsonBinding() {
-    final JsonBinding<Short> f = JsonBindings.SHORT;
+    final Lazy<JsonBinding<Short>> f = new Lazy<>(() -> JsonBindings.SHORT);
     final Factory<S1> _factory = FACTORY;
 
     return new JsonBinding<S1>() {
@@ -81,14 +82,14 @@ public class S1 {
 
       public JsonElement toJson(S1 _value) {
         JsonObject _result = new JsonObject();
-        _result.add("f", f.toJson(_value.f));
+        _result.add("f", f.get().toJson(_value.f));
         return _result;
       }
 
       public S1 fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new S1(
-          _obj.has("f") ? f.fromJson(_obj.get("f")) : (short)100
+          _obj.has("f") ? f.get().fromJson(_obj.get("f")) : (short)100
         );
       }
     };

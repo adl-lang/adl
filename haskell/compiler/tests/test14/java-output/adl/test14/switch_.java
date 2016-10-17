@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 
 public class switch_ {
 
@@ -126,11 +127,11 @@ public class switch_ {
   /* Json serialization */
 
   public static JsonBinding<switch_> jsonBinding() {
-    final JsonBinding<Double> double_ = JsonBindings.DOUBLE;
-    final JsonBinding<Integer> int_ = JsonBindings.INTEGER;
-    final JsonBinding<String> string = JsonBindings.STRING;
-    final JsonBinding<Boolean> for_ = JsonBindings.BOOLEAN;
-    final JsonBinding<String> Objects = JsonBindings.STRING;
+    final Lazy<JsonBinding<Double>> double_ = new Lazy<>(() -> JsonBindings.DOUBLE);
+    final Lazy<JsonBinding<Integer>> int_ = new Lazy<>(() -> JsonBindings.INTEGER);
+    final Lazy<JsonBinding<String>> string = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<Boolean>> for_ = new Lazy<>(() -> JsonBindings.BOOLEAN);
+    final Lazy<JsonBinding<String>> Objects = new Lazy<>(() -> JsonBindings.STRING);
     final Factory<switch_> _factory = FACTORY;
 
     return new JsonBinding<switch_>() {
@@ -140,22 +141,22 @@ public class switch_ {
 
       public JsonElement toJson(switch_ _value) {
         JsonObject _result = new JsonObject();
-        _result.add("double", double_.toJson(_value.double_));
-        _result.add("int", int_.toJson(_value.int_));
-        _result.add("string", string.toJson(_value.string));
-        _result.add("for", for_.toJson(_value.for_));
-        _result.add("Objects", Objects.toJson(_value.Objects));
+        _result.add("double", double_.get().toJson(_value.double_));
+        _result.add("int", int_.get().toJson(_value.int_));
+        _result.add("string", string.get().toJson(_value.string));
+        _result.add("for", for_.get().toJson(_value.for_));
+        _result.add("Objects", Objects.get().toJson(_value.Objects));
         return _result;
       }
 
       public switch_ fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new switch_(
-          _obj.has("double") ? double_.fromJson(_obj.get("double")) : 0.0,
-          _obj.has("int") ? int_.fromJson(_obj.get("int")) : 0,
-          _obj.has("string") ? string.fromJson(_obj.get("string")) : "",
-          _obj.has("for") ? for_.fromJson(_obj.get("for")) : false,
-          _obj.has("Objects") ? Objects.fromJson(_obj.get("Objects")) : ""
+          _obj.has("double") ? double_.get().fromJson(_obj.get("double")) : 0.0,
+          _obj.has("int") ? int_.get().fromJson(_obj.get("int")) : 0,
+          _obj.has("string") ? string.get().fromJson(_obj.get("string")) : "",
+          _obj.has("for") ? for_.get().fromJson(_obj.get("for")) : false,
+          _obj.has("Objects") ? Objects.get().fromJson(_obj.get("Objects")) : ""
         );
       }
     };

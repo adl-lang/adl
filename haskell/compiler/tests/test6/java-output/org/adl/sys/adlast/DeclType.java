@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -156,10 +157,10 @@ public class DeclType {
   /* Json serialization */
 
   public static JsonBinding<DeclType> jsonBinding() {
-    final JsonBinding<Struct> struct_ = Struct.jsonBinding();
-    final JsonBinding<Union> union_ = Union.jsonBinding();
-    final JsonBinding<TypeDef> type_ = TypeDef.jsonBinding();
-    final JsonBinding<NewType> newtype_ = NewType.jsonBinding();
+    final Lazy<JsonBinding<Struct>> struct_ = new Lazy<>(() -> Struct.jsonBinding());
+    final Lazy<JsonBinding<Union>> union_ = new Lazy<>(() -> Union.jsonBinding());
+    final Lazy<JsonBinding<TypeDef>> type_ = new Lazy<>(() -> TypeDef.jsonBinding());
+    final Lazy<JsonBinding<NewType>> newtype_ = new Lazy<>(() -> NewType.jsonBinding());
     final Factory<DeclType> _factory = FACTORY;
 
     return new JsonBinding<DeclType>() {
@@ -171,16 +172,16 @@ public class DeclType {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case STRUCT_:
-            _result.add("struct_", struct_.toJson(_value.getStruct_()));
+            _result.add("struct_", struct_.get().toJson(_value.getStruct_()));
             break;
           case UNION_:
-            _result.add("union_", union_.toJson(_value.getUnion_()));
+            _result.add("union_", union_.get().toJson(_value.getUnion_()));
             break;
           case TYPE_:
-            _result.add("type_", type_.toJson(_value.getType_()));
+            _result.add("type_", type_.get().toJson(_value.getType_()));
             break;
           case NEWTYPE_:
-            _result.add("newtype_", newtype_.toJson(_value.getNewtype_()));
+            _result.add("newtype_", newtype_.get().toJson(_value.getNewtype_()));
             break;
         }
         return _result;
@@ -190,16 +191,16 @@ public class DeclType {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("struct_")) {
-            return DeclType.struct_(struct_.fromJson(_v.getValue()));
+            return DeclType.struct_(struct_.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("union_")) {
-            return DeclType.union_(union_.fromJson(_v.getValue()));
+            return DeclType.union_(union_.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("type_")) {
-            return DeclType.type_(type_.fromJson(_v.getValue()));
+            return DeclType.type_(type_.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("newtype_")) {
-            return DeclType.newtype_(newtype_.fromJson(_v.getValue()));
+            return DeclType.newtype_(newtype_.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

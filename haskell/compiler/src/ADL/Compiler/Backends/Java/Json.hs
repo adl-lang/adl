@@ -28,6 +28,7 @@ generateStructJson cgp decl struct fieldDetails = do
       className = unreserveWord (d_name decl) <> typeArgs
 
   factoryI <- addImport (javaClass (cgp_runtimePackage cgp) "Factory")
+  lazyC <- addImport (javaClass (cgp_runtimePackage cgp) "Lazy")
   jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonObjectI <- addImport "com.google.gson.JsonObject"
@@ -38,7 +39,7 @@ generateStructJson cgp decl struct fieldDetails = do
   let factory =
         cblock (template "public static$1 $2<$3> jsonBinding($4)" [typeArgs,jsonBindingI,className,bindingArgs]) (
               clineN
-                [ template "final $1<$2> $3 = $4;" [jsonBindingI,fd_boxedTypeExprStr fd,fd_varName fd,binding]
+                [ template "final $1<$2<$3>> $4 = new $1<>(() -> $5);" [lazyC,jsonBindingI,fd_boxedTypeExprStr fd,fd_varName fd,binding]
                 | (fd,binding) <- zip fieldDetails jsonBindings]
               <>
               clineN
@@ -62,7 +63,7 @@ generateStructJson cgp decl struct fieldDetails = do
                   ctemplate "$1 _result = new $1();" [jsonObjectI]
                   <>
                   clineN
-                    [ template "_result.add(\"$1\", $2.toJson(_value.$3));" [fd_serializedName fd,fd_varName fd,fd_memberVarName fd]
+                    [ template "_result.add(\"$1\", $2.get().toJson(_value.$3));" [fd_serializedName fd,fd_varName fd,fd_memberVarName fd]
                     | fd <- fieldDetails]
                   <>
                   cline "return _result;"
@@ -78,7 +79,7 @@ generateStructJson cgp decl struct fieldDetails = do
                     indent (
                       let terminators = replicate (length fieldDetails-1) "," <> [""] in
                       clineN
-                      [ template "_obj.has(\"$1\") ? $2.fromJson(_obj.get(\"$1\")) : $3$4"
+                      [ template "_obj.has(\"$1\") ? $2.get().fromJson(_obj.get(\"$1\")) : $3$4"
                                  [fd_serializedName fd,fd_varName fd,fd_defValue fd,terminator]
                       | (fd,terminator) <- zip fieldDetails terminators]
                       )
@@ -149,6 +150,7 @@ generateUnionJson cgp decl union fieldDetails = do
       className = className0 <> typeArgs
 
   factoryI <- addImport (javaClass (cgp_runtimePackage cgp) "Factory")
+  lazyC <- addImport (javaClass (cgp_runtimePackage cgp) "Lazy")
   jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonObjectI <- addImport "com.google.gson.JsonObject"
@@ -160,7 +162,7 @@ generateUnionJson cgp decl union fieldDetails = do
   let factory =
         cblock (template "public static$1 $2<$3> jsonBinding($4)" [typeArgs,jsonBindingI,className,bindingArgs]) (
               clineN
-                [ template "final $1<$2> $3 = $4;" [jsonBindingI,fd_boxedTypeExprStr fd,fd_varName fd,binding]
+                [ template "final $1<$2<$3>> $4 = new $1<>(() -> $5);" [lazyC,jsonBindingI,fd_boxedTypeExprStr fd,fd_varName fd,binding]
                 | (fd,binding) <- zip fieldDetails jsonBindings]
               <>
               clineN
@@ -190,7 +192,7 @@ generateUnionJson cgp decl union fieldDetails = do
                        indent (
                          if isVoidType (f_type (fd_field fd))
                          then ctemplate "_result.add(\"$1\", null);" [fd_serializedName fd]
-                         else ctemplate "_result.add(\"$1\", $2.toJson(_value.$3));" [fd_serializedName fd,fd_varName fd,fd_accessExpr fd]
+                         else ctemplate "_result.add(\"$1\", $2.get().toJson(_value.$3));" [fd_serializedName fd,fd_varName fd,fd_accessExpr fd]
                          <>
                          cline "break;"
                          )
@@ -209,7 +211,7 @@ generateUnionJson cgp decl union fieldDetails = do
                     let returnStatements = [
                           if isVoidType (f_type (fd_field fd))
                           then ctemplate "return $1.$2$3();" [className0,typeArgs,fd_unionCtorName fd]
-                          else ctemplate "return $1.$2$3($3.fromJson(_v.getValue()));" [className0,typeArgs,fd_unionCtorName fd]
+                          else ctemplate "return $1.$2$3($4.get().fromJson(_v.getValue()));" [className0,typeArgs,fd_unionCtorName fd,fd_varName fd]
                           | fd <- fieldDetails]
                     in ctemplate "if (_v.getKey().equals(\"$1\")) {" [fd_serializedName (head fieldDetails)]
                        <>

@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -117,9 +118,9 @@ public class Role {
   /* Json serialization */
 
   public static JsonBinding<Role> jsonBinding() {
-    final JsonBinding<Void> underling = JsonBindings.VOID;
-    final JsonBinding<Void> boss = JsonBindings.VOID;
-    final JsonBinding<Void> superBoss = JsonBindings.VOID;
+    final Lazy<JsonBinding<Void>> underling = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<Void>> boss = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<Void>> superBoss = new Lazy<>(() -> JsonBindings.VOID);
     final Factory<Role> _factory = FACTORY;
 
     return new JsonBinding<Role>() {

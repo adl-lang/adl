@@ -7,6 +7,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -284,26 +285,26 @@ public class S<T> {
 
   public static <T> Factory<S<T>> factory(Factory<T> factoryT) {
     return new Factory<S<T>>() {
-      final Factory<Void> f_void = Factories.VOID;
-      final Factory<Boolean> f_bool = Factories.BOOLEAN;
-      final Factory<Byte> f_int8 = Factories.BYTE;
-      final Factory<Short> f_int16 = Factories.SHORT;
-      final Factory<Integer> f_int32 = Factories.INTEGER;
-      final Factory<Long> f_int64 = Factories.LONG;
-      final Factory<Byte> f_word8 = Factories.BYTE;
-      final Factory<Short> f_word16 = Factories.SHORT;
-      final Factory<Integer> f_word32 = Factories.INTEGER;
-      final Factory<Long> f_word64 = Factories.LONG;
-      final Factory<Float> f_float = Factories.FLOAT;
-      final Factory<Double> f_double = Factories.DOUBLE;
-      final Factory<ByteArray> f_bytes = Factories.BYTE_ARRAY;
-      final Factory<String> f_string = Factories.STRING;
-      final Factory<ArrayList<String>> f_vstring = Factories.arrayList(Factories.STRING);
-      final Factory<A> f_a = A.FACTORY;
-      final Factory<U> f_u = U.FACTORY;
-      final Factory<T> f_t = factoryT;
-      final Factory<B<Short>> f_bint16 = B.factory(Factories.SHORT);
-      final Factory<HashMap<String, Integer>> f_smap = Factories.stringMap(Factories.INTEGER);
+      final Lazy<Factory<Void>> f_void = new Lazy<>(() -> Factories.VOID);
+      final Lazy<Factory<Boolean>> f_bool = new Lazy<>(() -> Factories.BOOLEAN);
+      final Lazy<Factory<Byte>> f_int8 = new Lazy<>(() -> Factories.BYTE);
+      final Lazy<Factory<Short>> f_int16 = new Lazy<>(() -> Factories.SHORT);
+      final Lazy<Factory<Integer>> f_int32 = new Lazy<>(() -> Factories.INTEGER);
+      final Lazy<Factory<Long>> f_int64 = new Lazy<>(() -> Factories.LONG);
+      final Lazy<Factory<Byte>> f_word8 = new Lazy<>(() -> Factories.BYTE);
+      final Lazy<Factory<Short>> f_word16 = new Lazy<>(() -> Factories.SHORT);
+      final Lazy<Factory<Integer>> f_word32 = new Lazy<>(() -> Factories.INTEGER);
+      final Lazy<Factory<Long>> f_word64 = new Lazy<>(() -> Factories.LONG);
+      final Lazy<Factory<Float>> f_float = new Lazy<>(() -> Factories.FLOAT);
+      final Lazy<Factory<Double>> f_double = new Lazy<>(() -> Factories.DOUBLE);
+      final Lazy<Factory<ByteArray>> f_bytes = new Lazy<>(() -> Factories.BYTE_ARRAY);
+      final Lazy<Factory<String>> f_string = new Lazy<>(() -> Factories.STRING);
+      final Lazy<Factory<ArrayList<String>>> f_vstring = new Lazy<>(() -> Factories.arrayList(Factories.STRING));
+      final Lazy<Factory<A>> f_a = new Lazy<>(() -> A.FACTORY);
+      final Lazy<Factory<U>> f_u = new Lazy<>(() -> U.FACTORY);
+      final Lazy<Factory<T>> f_t = new Lazy<>(() -> factoryT);
+      final Lazy<Factory<B<Short>>> f_bint16 = new Lazy<>(() -> B.factory(Factories.SHORT));
+      final Lazy<Factory<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> Factories.stringMap(Factories.INTEGER));
 
       public S<T> create() {
         return new S<T>(
@@ -324,7 +325,7 @@ public class S<T> {
           Factories.arrayList("xy", "ab"),
           new A((short)0, "xyz", true),
           U.f_int((short)45),
-          f_t.create(),
+          f_t.get().create(),
           new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
           Factories.stringMap("a", 45, "b", 47)
           );
@@ -344,14 +345,14 @@ public class S<T> {
           other.getF_word64(),
           other.getF_float(),
           other.getF_double(),
-          f_bytes.create(other.getF_bytes()),
+          f_bytes.get().create(other.getF_bytes()),
           other.getF_string(),
-          f_vstring.create(other.getF_vstring()),
-          f_a.create(other.getF_a()),
-          f_u.create(other.getF_u()),
-          f_t.create(other.getF_t()),
-          f_bint16.create(other.getF_bint16()),
-          f_smap.create(other.getF_smap())
+          f_vstring.get().create(other.getF_vstring()),
+          f_a.get().create(other.getF_a()),
+          f_u.get().create(other.getF_u()),
+          f_t.get().create(other.getF_t()),
+          f_bint16.get().create(other.getF_bint16()),
+          f_smap.get().create(other.getF_smap())
           );
       }
     };
@@ -360,26 +361,26 @@ public class S<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<S<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<Void> f_void = JsonBindings.VOID;
-    final JsonBinding<Boolean> f_bool = JsonBindings.BOOLEAN;
-    final JsonBinding<Byte> f_int8 = JsonBindings.BYTE;
-    final JsonBinding<Short> f_int16 = JsonBindings.SHORT;
-    final JsonBinding<Integer> f_int32 = JsonBindings.INTEGER;
-    final JsonBinding<Long> f_int64 = JsonBindings.LONG;
-    final JsonBinding<Byte> f_word8 = JsonBindings.BYTE;
-    final JsonBinding<Short> f_word16 = JsonBindings.SHORT;
-    final JsonBinding<Integer> f_word32 = JsonBindings.INTEGER;
-    final JsonBinding<Long> f_word64 = JsonBindings.LONG;
-    final JsonBinding<Float> f_float = JsonBindings.FLOAT;
-    final JsonBinding<Double> f_double = JsonBindings.DOUBLE;
-    final JsonBinding<ByteArray> f_bytes = JsonBindings.BYTE_ARRAY;
-    final JsonBinding<String> f_string = JsonBindings.STRING;
-    final JsonBinding<ArrayList<String>> f_vstring = JsonBindings.arrayList(JsonBindings.STRING);
-    final JsonBinding<A> f_a = A.jsonBinding();
-    final JsonBinding<U> f_u = U.jsonBinding();
-    final JsonBinding<T> f_t = bindingT;
-    final JsonBinding<B<Short>> f_bint16 = B.jsonBinding(JsonBindings.SHORT);
-    final JsonBinding<HashMap<String, Integer>> f_smap = JsonBindings.stringMap(JsonBindings.INTEGER);
+    final Lazy<JsonBinding<Void>> f_void = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<Boolean>> f_bool = new Lazy<>(() -> JsonBindings.BOOLEAN);
+    final Lazy<JsonBinding<Byte>> f_int8 = new Lazy<>(() -> JsonBindings.BYTE);
+    final Lazy<JsonBinding<Short>> f_int16 = new Lazy<>(() -> JsonBindings.SHORT);
+    final Lazy<JsonBinding<Integer>> f_int32 = new Lazy<>(() -> JsonBindings.INTEGER);
+    final Lazy<JsonBinding<Long>> f_int64 = new Lazy<>(() -> JsonBindings.LONG);
+    final Lazy<JsonBinding<Byte>> f_word8 = new Lazy<>(() -> JsonBindings.BYTE);
+    final Lazy<JsonBinding<Short>> f_word16 = new Lazy<>(() -> JsonBindings.SHORT);
+    final Lazy<JsonBinding<Integer>> f_word32 = new Lazy<>(() -> JsonBindings.INTEGER);
+    final Lazy<JsonBinding<Long>> f_word64 = new Lazy<>(() -> JsonBindings.LONG);
+    final Lazy<JsonBinding<Float>> f_float = new Lazy<>(() -> JsonBindings.FLOAT);
+    final Lazy<JsonBinding<Double>> f_double = new Lazy<>(() -> JsonBindings.DOUBLE);
+    final Lazy<JsonBinding<ByteArray>> f_bytes = new Lazy<>(() -> JsonBindings.BYTE_ARRAY);
+    final Lazy<JsonBinding<String>> f_string = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<ArrayList<String>>> f_vstring = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
+    final Lazy<JsonBinding<A>> f_a = new Lazy<>(() -> A.jsonBinding());
+    final Lazy<JsonBinding<U>> f_u = new Lazy<>(() -> U.jsonBinding());
+    final Lazy<JsonBinding<T>> f_t = new Lazy<>(() -> bindingT);
+    final Lazy<JsonBinding<B<Short>>> f_bint16 = new Lazy<>(() -> B.jsonBinding(JsonBindings.SHORT));
+    final Lazy<JsonBinding<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.INTEGER));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<S<T>> _factory = factory(bindingT.factory());
 
@@ -390,52 +391,52 @@ public class S<T> {
 
       public JsonElement toJson(S<T> _value) {
         JsonObject _result = new JsonObject();
-        _result.add("f_void", f_void.toJson(_value.f_void));
-        _result.add("f_bool", f_bool.toJson(_value.f_bool));
-        _result.add("f_int8", f_int8.toJson(_value.f_int8));
-        _result.add("f_int16", f_int16.toJson(_value.f_int16));
-        _result.add("f_int32", f_int32.toJson(_value.f_int32));
-        _result.add("f_int64", f_int64.toJson(_value.f_int64));
-        _result.add("f_word8", f_word8.toJson(_value.f_word8));
-        _result.add("f_word16", f_word16.toJson(_value.f_word16));
-        _result.add("f_word32", f_word32.toJson(_value.f_word32));
-        _result.add("f_word64", f_word64.toJson(_value.f_word64));
-        _result.add("f_float", f_float.toJson(_value.f_float));
-        _result.add("f_double", f_double.toJson(_value.f_double));
-        _result.add("f_bytes", f_bytes.toJson(_value.f_bytes));
-        _result.add("f_string", f_string.toJson(_value.f_string));
-        _result.add("f_vstring", f_vstring.toJson(_value.f_vstring));
-        _result.add("f_a", f_a.toJson(_value.f_a));
-        _result.add("f_u", f_u.toJson(_value.f_u));
-        _result.add("f_t", f_t.toJson(_value.f_t));
-        _result.add("f_bint16", f_bint16.toJson(_value.f_bint16));
-        _result.add("f_smap", f_smap.toJson(_value.f_smap));
+        _result.add("f_void", f_void.get().toJson(_value.f_void));
+        _result.add("f_bool", f_bool.get().toJson(_value.f_bool));
+        _result.add("f_int8", f_int8.get().toJson(_value.f_int8));
+        _result.add("f_int16", f_int16.get().toJson(_value.f_int16));
+        _result.add("f_int32", f_int32.get().toJson(_value.f_int32));
+        _result.add("f_int64", f_int64.get().toJson(_value.f_int64));
+        _result.add("f_word8", f_word8.get().toJson(_value.f_word8));
+        _result.add("f_word16", f_word16.get().toJson(_value.f_word16));
+        _result.add("f_word32", f_word32.get().toJson(_value.f_word32));
+        _result.add("f_word64", f_word64.get().toJson(_value.f_word64));
+        _result.add("f_float", f_float.get().toJson(_value.f_float));
+        _result.add("f_double", f_double.get().toJson(_value.f_double));
+        _result.add("f_bytes", f_bytes.get().toJson(_value.f_bytes));
+        _result.add("f_string", f_string.get().toJson(_value.f_string));
+        _result.add("f_vstring", f_vstring.get().toJson(_value.f_vstring));
+        _result.add("f_a", f_a.get().toJson(_value.f_a));
+        _result.add("f_u", f_u.get().toJson(_value.f_u));
+        _result.add("f_t", f_t.get().toJson(_value.f_t));
+        _result.add("f_bint16", f_bint16.get().toJson(_value.f_bint16));
+        _result.add("f_smap", f_smap.get().toJson(_value.f_smap));
         return _result;
       }
 
       public S<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new S<T>(
-          _obj.has("f_void") ? f_void.fromJson(_obj.get("f_void")) : null,
-          _obj.has("f_bool") ? f_bool.fromJson(_obj.get("f_bool")) : true,
-          _obj.has("f_int8") ? f_int8.fromJson(_obj.get("f_int8")) : (byte)-5,
-          _obj.has("f_int16") ? f_int16.fromJson(_obj.get("f_int16")) : (short)-10000,
-          _obj.has("f_int32") ? f_int32.fromJson(_obj.get("f_int32")) : 56,
-          _obj.has("f_int64") ? f_int64.fromJson(_obj.get("f_int64")) : 40000L,
-          _obj.has("f_word8") ? f_word8.fromJson(_obj.get("f_word8")) : (byte)32,
-          _obj.has("f_word16") ? f_word16.fromJson(_obj.get("f_word16")) : (short)50000,
-          _obj.has("f_word32") ? f_word32.fromJson(_obj.get("f_word32")) : 124456,
-          _obj.has("f_word64") ? f_word64.fromJson(_obj.get("f_word64")) : 2344L,
-          _obj.has("f_float") ? f_float.fromJson(_obj.get("f_float")) : 0.5F,
-          _obj.has("f_double") ? f_double.fromJson(_obj.get("f_double")) : 0.45,
-          _obj.has("f_bytes") ? f_bytes.fromJson(_obj.get("f_bytes")) : new ByteArray("hello".getBytes()),
-          _obj.has("f_string") ? f_string.fromJson(_obj.get("f_string")) : "abcd",
-          _obj.has("f_vstring") ? f_vstring.fromJson(_obj.get("f_vstring")) : Factories.arrayList("xy", "ab"),
-          _obj.has("f_a") ? f_a.fromJson(_obj.get("f_a")) : new A((short)0, "xyz", true),
-          _obj.has("f_u") ? f_u.fromJson(_obj.get("f_u")) : U.f_int((short)45),
-          _obj.has("f_t") ? f_t.fromJson(_obj.get("f_t")) : factoryT.create(),
-          _obj.has("f_bint16") ? f_bint16.fromJson(_obj.get("f_bint16")) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
-          _obj.has("f_smap") ? f_smap.fromJson(_obj.get("f_smap")) : Factories.stringMap("a", 45, "b", 47)
+          _obj.has("f_void") ? f_void.get().fromJson(_obj.get("f_void")) : null,
+          _obj.has("f_bool") ? f_bool.get().fromJson(_obj.get("f_bool")) : true,
+          _obj.has("f_int8") ? f_int8.get().fromJson(_obj.get("f_int8")) : (byte)-5,
+          _obj.has("f_int16") ? f_int16.get().fromJson(_obj.get("f_int16")) : (short)-10000,
+          _obj.has("f_int32") ? f_int32.get().fromJson(_obj.get("f_int32")) : 56,
+          _obj.has("f_int64") ? f_int64.get().fromJson(_obj.get("f_int64")) : 40000L,
+          _obj.has("f_word8") ? f_word8.get().fromJson(_obj.get("f_word8")) : (byte)32,
+          _obj.has("f_word16") ? f_word16.get().fromJson(_obj.get("f_word16")) : (short)50000,
+          _obj.has("f_word32") ? f_word32.get().fromJson(_obj.get("f_word32")) : 124456,
+          _obj.has("f_word64") ? f_word64.get().fromJson(_obj.get("f_word64")) : 2344L,
+          _obj.has("f_float") ? f_float.get().fromJson(_obj.get("f_float")) : 0.5F,
+          _obj.has("f_double") ? f_double.get().fromJson(_obj.get("f_double")) : 0.45,
+          _obj.has("f_bytes") ? f_bytes.get().fromJson(_obj.get("f_bytes")) : new ByteArray("hello".getBytes()),
+          _obj.has("f_string") ? f_string.get().fromJson(_obj.get("f_string")) : "abcd",
+          _obj.has("f_vstring") ? f_vstring.get().fromJson(_obj.get("f_vstring")) : Factories.arrayList("xy", "ab"),
+          _obj.has("f_a") ? f_a.get().fromJson(_obj.get("f_a")) : new A((short)0, "xyz", true),
+          _obj.has("f_u") ? f_u.get().fromJson(_obj.get("f_u")) : U.f_int((short)45),
+          _obj.has("f_t") ? f_t.get().fromJson(_obj.get("f_t")) : factoryT.create(),
+          _obj.has("f_bint16") ? f_bint16.get().fromJson(_obj.get("f_bint16")) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
+          _obj.has("f_smap") ? f_smap.get().fromJson(_obj.get("f_smap")) : Factories.stringMap("a", 45, "b", 47)
         );
       }
     };

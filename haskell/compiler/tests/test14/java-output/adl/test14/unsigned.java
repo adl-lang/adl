@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -91,7 +92,7 @@ public class unsigned {
   /* Json serialization */
 
   public static JsonBinding<unsigned> jsonBinding() {
-    final JsonBinding<Void> null_ = JsonBindings.VOID;
+    final Lazy<JsonBinding<Void>> null_ = new Lazy<>(() -> JsonBindings.VOID);
     final Factory<unsigned> _factory = FACTORY;
 
     return new JsonBinding<unsigned>() {

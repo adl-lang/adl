@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -96,17 +97,17 @@ public class Error<T> {
 
   public static <T> Factory<Error <T>> factory(Factory<T> factoryT) {
     return new Factory<Error<T>>() {
-      final Factory<T> value = factoryT;
-      final Factory<String> error = Factories.STRING;
+      final Lazy<Factory<T>> value = new Lazy<>(() -> factoryT);
+      final Lazy<Factory<String>> error = new Lazy<>(() -> Factories.STRING);
 
       public Error<T> create() {
-        return new Error<T>(Disc.VALUE,value.create());
+        return new Error<T>(Disc.VALUE,value.get().create());
       }
 
       public Error<T> create(Error<T> other) {
         switch (other.disc) {
           case VALUE:
-            return new Error<T>(other.disc,value.create(Error.<T>cast(other.value)));
+            return new Error<T>(other.disc,value.get().create(Error.<T>cast(other.value)));
           case ERROR:
             return new Error<T>(other.disc,other.value);
         }
@@ -118,8 +119,8 @@ public class Error<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<Error<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<T> value = bindingT;
-    final JsonBinding<String> error = JsonBindings.STRING;
+    final Lazy<JsonBinding<T>> value = new Lazy<>(() -> bindingT);
+    final Lazy<JsonBinding<String>> error = new Lazy<>(() -> JsonBindings.STRING);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<Error<T>> _factory = factory(bindingT.factory());
 
@@ -132,10 +133,10 @@ public class Error<T> {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case VALUE:
-            _result.add("value", value.toJson(_value.getValue()));
+            _result.add("value", value.get().toJson(_value.getValue()));
             break;
           case ERROR:
-            _result.add("error", error.toJson(_value.getError()));
+            _result.add("error", error.get().toJson(_value.getError()));
             break;
         }
         return _result;
@@ -145,10 +146,10 @@ public class Error<T> {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("value")) {
-            return Error.<T>value(value.fromJson(_v.getValue()));
+            return Error.<T>value(value.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("error")) {
-            return Error.<T>error(error.fromJson(_v.getValue()));
+            return Error.<T>error(error.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

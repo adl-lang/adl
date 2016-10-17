@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -98,7 +99,7 @@ public class U3 {
   /* Json serialization */
 
   public static JsonBinding<U3> jsonBinding() {
-    final JsonBinding<Short> v = JsonBindings.SHORT;
+    final Lazy<JsonBinding<Short>> v = new Lazy<>(() -> JsonBindings.SHORT);
     final Factory<U3> _factory = FACTORY;
 
     return new JsonBinding<U3>() {
@@ -110,7 +111,7 @@ public class U3 {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case V:
-            _result.add("v", v.toJson(_value.getV()));
+            _result.add("v", v.get().toJson(_value.getV()));
             break;
         }
         return _result;
@@ -120,7 +121,7 @@ public class U3 {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("v")) {
-            return U3.v(v.fromJson(_v.getValue()));
+            return U3.v(v.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

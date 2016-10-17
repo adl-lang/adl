@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import org.adl.runtime.OptionalHelpers;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -102,9 +103,9 @@ public class NewType {
   /* Json serialization */
 
   public static JsonBinding<NewType> jsonBinding() {
-    final JsonBinding<ArrayList<String>> typeParams = JsonBindings.arrayList(JsonBindings.STRING);
-    final JsonBinding<TypeExpr> typeExpr = TypeExpr.jsonBinding();
-    final JsonBinding<Optional<Literal>> default_ = OptionalHelpers.jsonBinding(Literal.jsonBinding());
+    final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
+    final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
+    final Lazy<JsonBinding<Optional<Literal>>> default_ = new Lazy<>(() -> OptionalHelpers.jsonBinding(Literal.jsonBinding()));
     final Factory<NewType> _factory = FACTORY;
 
     return new JsonBinding<NewType>() {
@@ -114,18 +115,18 @@ public class NewType {
 
       public JsonElement toJson(NewType _value) {
         JsonObject _result = new JsonObject();
-        _result.add("typeParams", typeParams.toJson(_value.typeParams));
-        _result.add("typeExpr", typeExpr.toJson(_value.typeExpr));
-        _result.add("default", default_.toJson(_value.default_));
+        _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
+        _result.add("typeExpr", typeExpr.get().toJson(_value.typeExpr));
+        _result.add("default", default_.get().toJson(_value.default_));
         return _result;
       }
 
       public NewType fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new NewType(
-          _obj.has("typeParams") ? typeParams.fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
-          _obj.has("typeExpr") ? typeExpr.fromJson(_obj.get("typeExpr")) : new TypeExpr(),
-          _obj.has("default") ? default_.fromJson(_obj.get("default")) : OptionalHelpers.factory(Literal.FACTORY).create()
+          _obj.has("typeParams") ? typeParams.get().fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
+          _obj.has("typeExpr") ? typeExpr.get().fromJson(_obj.get("typeExpr")) : new TypeExpr(),
+          _obj.has("default") ? default_.get().fromJson(_obj.get("default")) : OptionalHelpers.factory(Literal.FACTORY).create()
         );
       }
     };

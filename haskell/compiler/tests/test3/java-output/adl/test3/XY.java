@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.Lazy;
 import java.util.Objects;
 
 public class XY<T> {
@@ -63,20 +64,20 @@ public class XY<T> {
 
   public static <T> Factory<XY<T>> factory(Factory<T> factoryT) {
     return new Factory<XY<T>>() {
-      final Factory<T> x = factoryT;
-      final Factory<T> y = factoryT;
+      final Lazy<Factory<T>> x = new Lazy<>(() -> factoryT);
+      final Lazy<Factory<T>> y = new Lazy<>(() -> factoryT);
 
       public XY<T> create() {
         return new XY<T>(
-          x.create(),
-          y.create()
+          x.get().create(),
+          y.get().create()
           );
       }
 
       public XY<T> create(XY<T> other) {
         return new XY<T>(
-          x.create(other.getX()),
-          y.create(other.getY())
+          x.get().create(other.getX()),
+          y.get().create(other.getY())
           );
       }
     };
@@ -85,8 +86,8 @@ public class XY<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<XY<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<T> x = bindingT;
-    final JsonBinding<T> y = bindingT;
+    final Lazy<JsonBinding<T>> x = new Lazy<>(() -> bindingT);
+    final Lazy<JsonBinding<T>> y = new Lazy<>(() -> bindingT);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<XY<T>> _factory = factory(bindingT.factory());
 
@@ -97,16 +98,16 @@ public class XY<T> {
 
       public JsonElement toJson(XY<T> _value) {
         JsonObject _result = new JsonObject();
-        _result.add("x", x.toJson(_value.x));
-        _result.add("y", y.toJson(_value.y));
+        _result.add("x", x.get().toJson(_value.x));
+        _result.add("y", y.get().toJson(_value.y));
         return _result;
       }
 
       public XY<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new XY<T>(
-          _obj.has("x") ? x.fromJson(_obj.get("x")) : factoryT.create(),
-          _obj.has("y") ? y.fromJson(_obj.get("y")) : factoryT.create()
+          _obj.has("x") ? x.get().fromJson(_obj.get("x")) : factoryT.create(),
+          _obj.has("y") ? y.get().fromJson(_obj.get("y")) : factoryT.create()
         );
       }
     };

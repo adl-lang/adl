@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -101,11 +102,11 @@ public class Maybe<T> {
 
   public static <T> Factory<Maybe <T>> factory(Factory<T> factoryT) {
     return new Factory<Maybe<T>>() {
-      final Factory<Void> nothing = Factories.VOID;
-      final Factory<T> just = factoryT;
+      final Lazy<Factory<Void>> nothing = new Lazy<>(() -> Factories.VOID);
+      final Lazy<Factory<T>> just = new Lazy<>(() -> factoryT);
 
       public Maybe<T> create() {
-        return new Maybe<T>(Disc.NOTHING,nothing.create());
+        return new Maybe<T>(Disc.NOTHING,nothing.get().create());
       }
 
       public Maybe<T> create(Maybe<T> other) {
@@ -113,7 +114,7 @@ public class Maybe<T> {
           case NOTHING:
             return new Maybe<T>(other.disc,other.value);
           case JUST:
-            return new Maybe<T>(other.disc,just.create(Maybe.<T>cast(other.value)));
+            return new Maybe<T>(other.disc,just.get().create(Maybe.<T>cast(other.value)));
         }
         throw new IllegalArgumentException();
       }
@@ -123,8 +124,8 @@ public class Maybe<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<Maybe<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<Void> nothing = JsonBindings.VOID;
-    final JsonBinding<T> just = bindingT;
+    final Lazy<JsonBinding<Void>> nothing = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<T>> just = new Lazy<>(() -> bindingT);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<Maybe<T>> _factory = factory(bindingT.factory());
 
@@ -139,7 +140,7 @@ public class Maybe<T> {
           case NOTHING:
             _result.add("nothing", null);
           case JUST:
-            _result.add("just", just.toJson(_value.getJust()));
+            _result.add("just", just.get().toJson(_value.getJust()));
             break;
         }
         return _result;
@@ -152,7 +153,7 @@ public class Maybe<T> {
             return Maybe.<T>nothing();
           }
           else if (_v.getKey().equals("just")) {
-            return Maybe.<T>just(just.fromJson(_v.getValue()));
+            return Maybe.<T>just(just.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

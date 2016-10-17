@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -96,7 +97,7 @@ public class U7 {
   /* Json serialization */
 
   public static JsonBinding<U7> jsonBinding() {
-    final JsonBinding<U3> v = U3.jsonBinding();
+    final Lazy<JsonBinding<U3>> v = new Lazy<>(() -> U3.jsonBinding());
     final Factory<U7> _factory = FACTORY;
 
     return new JsonBinding<U7>() {
@@ -108,7 +109,7 @@ public class U7 {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case V:
-            _result.add("v", v.toJson(_value.getV()));
+            _result.add("v", v.get().toJson(_value.getV()));
             break;
         }
         return _result;
@@ -118,7 +119,7 @@ public class U7 {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("v")) {
-            return U7.v(v.fromJson(_v.getValue()));
+            return U7.v(v.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

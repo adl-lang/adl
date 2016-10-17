@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.Lazy;
 import java.util.Objects;
 
 public class Cell<T> {
@@ -63,20 +64,20 @@ public class Cell<T> {
 
   public static <T> Factory<Cell<T>> factory(Factory<T> factoryT) {
     return new Factory<Cell<T>>() {
-      final Factory<T> head = factoryT;
-      final Factory<List<T>> tail = List.factory(factoryT);
+      final Lazy<Factory<T>> head = new Lazy<>(() -> factoryT);
+      final Lazy<Factory<List<T>>> tail = new Lazy<>(() -> List.factory(factoryT));
 
       public Cell<T> create() {
         return new Cell<T>(
-          head.create(),
-          tail.create()
+          head.get().create(),
+          tail.get().create()
           );
       }
 
       public Cell<T> create(Cell<T> other) {
         return new Cell<T>(
-          head.create(other.getHead()),
-          tail.create(other.getTail())
+          head.get().create(other.getHead()),
+          tail.get().create(other.getTail())
           );
       }
     };
@@ -85,8 +86,8 @@ public class Cell<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<Cell<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<T> head = bindingT;
-    final JsonBinding<List<T>> tail = List.jsonBinding(bindingT);
+    final Lazy<JsonBinding<T>> head = new Lazy<>(() -> bindingT);
+    final Lazy<JsonBinding<List<T>>> tail = new Lazy<>(() -> List.jsonBinding(bindingT));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<Cell<T>> _factory = factory(bindingT.factory());
 
@@ -97,16 +98,16 @@ public class Cell<T> {
 
       public JsonElement toJson(Cell<T> _value) {
         JsonObject _result = new JsonObject();
-        _result.add("head", head.toJson(_value.head));
-        _result.add("tail", tail.toJson(_value.tail));
+        _result.add("head", head.get().toJson(_value.head));
+        _result.add("tail", tail.get().toJson(_value.tail));
         return _result;
       }
 
       public Cell<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Cell<T>(
-          _obj.has("head") ? head.fromJson(_obj.get("head")) : factoryT.create(),
-          _obj.has("tail") ? tail.fromJson(_obj.get("tail")) : List.factory(factoryT).create()
+          _obj.has("head") ? head.get().fromJson(_obj.get("head")) : factoryT.create(),
+          _obj.has("tail") ? tail.get().fromJson(_obj.get("tail")) : List.factory(factoryT).create()
         );
       }
     };

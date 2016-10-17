@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -86,8 +87,8 @@ public class TypeDef {
   /* Json serialization */
 
   public static JsonBinding<TypeDef> jsonBinding() {
-    final JsonBinding<ArrayList<String>> typeParams = JsonBindings.arrayList(JsonBindings.STRING);
-    final JsonBinding<TypeExpr> typeExpr = TypeExpr.jsonBinding();
+    final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
+    final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
     final Factory<TypeDef> _factory = FACTORY;
 
     return new JsonBinding<TypeDef>() {
@@ -97,16 +98,16 @@ public class TypeDef {
 
       public JsonElement toJson(TypeDef _value) {
         JsonObject _result = new JsonObject();
-        _result.add("typeParams", typeParams.toJson(_value.typeParams));
-        _result.add("typeExpr", typeExpr.toJson(_value.typeExpr));
+        _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
+        _result.add("typeExpr", typeExpr.get().toJson(_value.typeExpr));
         return _result;
       }
 
       public TypeDef fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new TypeDef(
-          _obj.has("typeParams") ? typeParams.fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
-          _obj.has("typeExpr") ? typeExpr.fromJson(_obj.get("typeExpr")) : new TypeExpr()
+          _obj.has("typeParams") ? typeParams.get().fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
+          _obj.has("typeExpr") ? typeExpr.get().fromJson(_obj.get("typeExpr")) : new TypeExpr()
         );
       }
     };

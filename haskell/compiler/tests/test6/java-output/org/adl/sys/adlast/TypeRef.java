@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -138,9 +139,9 @@ public class TypeRef {
   /* Json serialization */
 
   public static JsonBinding<TypeRef> jsonBinding() {
-    final JsonBinding<String> primitive = JsonBindings.STRING;
-    final JsonBinding<String> typeParam = JsonBindings.STRING;
-    final JsonBinding<ScopedName> reference = ScopedName.jsonBinding();
+    final Lazy<JsonBinding<String>> primitive = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<String>> typeParam = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<ScopedName>> reference = new Lazy<>(() -> ScopedName.jsonBinding());
     final Factory<TypeRef> _factory = FACTORY;
 
     return new JsonBinding<TypeRef>() {
@@ -152,13 +153,13 @@ public class TypeRef {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case PRIMITIVE:
-            _result.add("primitive", primitive.toJson(_value.getPrimitive()));
+            _result.add("primitive", primitive.get().toJson(_value.getPrimitive()));
             break;
           case TYPEPARAM:
-            _result.add("typeParam", typeParam.toJson(_value.getTypeParam()));
+            _result.add("typeParam", typeParam.get().toJson(_value.getTypeParam()));
             break;
           case REFERENCE:
-            _result.add("reference", reference.toJson(_value.getReference()));
+            _result.add("reference", reference.get().toJson(_value.getReference()));
             break;
         }
         return _result;
@@ -168,13 +169,13 @@ public class TypeRef {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("primitive")) {
-            return TypeRef.primitive(primitive.fromJson(_v.getValue()));
+            return TypeRef.primitive(primitive.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("typeParam")) {
-            return TypeRef.typeParam(typeParam.fromJson(_v.getValue()));
+            return TypeRef.typeParam(typeParam.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("reference")) {
-            return TypeRef.reference(reference.fromJson(_v.getValue()));
+            return TypeRef.reference(reference.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

@@ -7,6 +7,7 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -102,9 +103,9 @@ public class Module {
   /* Json serialization */
 
   public static JsonBinding<Module> jsonBinding() {
-    final JsonBinding<String> name = JsonBindings.STRING;
-    final JsonBinding<ArrayList<Import>> imports = JsonBindings.arrayList(Import.jsonBinding());
-    final JsonBinding<HashMap<String, Decl>> decls = HashMapHelpers.jsonBinding(JsonBindings.STRING, Decl.jsonBinding());
+    final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<ArrayList<Import>>> imports = new Lazy<>(() -> JsonBindings.arrayList(Import.jsonBinding()));
+    final Lazy<JsonBinding<HashMap<String, Decl>>> decls = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, Decl.jsonBinding()));
     final Factory<Module> _factory = FACTORY;
 
     return new JsonBinding<Module>() {
@@ -114,18 +115,18 @@ public class Module {
 
       public JsonElement toJson(Module _value) {
         JsonObject _result = new JsonObject();
-        _result.add("name", name.toJson(_value.name));
-        _result.add("imports", imports.toJson(_value.imports));
-        _result.add("decls", decls.toJson(_value.decls));
+        _result.add("name", name.get().toJson(_value.name));
+        _result.add("imports", imports.get().toJson(_value.imports));
+        _result.add("decls", decls.get().toJson(_value.decls));
         return _result;
       }
 
       public Module fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Module(
-          _obj.has("name") ? name.fromJson(_obj.get("name")) : "",
-          _obj.has("imports") ? imports.fromJson(_obj.get("imports")) : new ArrayList<Import>(),
-          _obj.has("decls") ? decls.fromJson(_obj.get("decls")) : HashMapHelpers.factory(Factories.STRING, Decl.FACTORY).create()
+          _obj.has("name") ? name.get().fromJson(_obj.get("name")) : "",
+          _obj.has("imports") ? imports.get().fromJson(_obj.get("imports")) : new ArrayList<Import>(),
+          _obj.has("decls") ? decls.get().fromJson(_obj.get("decls")) : HashMapHelpers.factory(Factories.STRING, Decl.FACTORY).create()
         );
       }
     };

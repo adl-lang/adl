@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import org.adl.runtime.OptionalHelpers;
 import java.util.Objects;
 import java.util.Optional;
@@ -101,9 +102,9 @@ public class Decl {
   /* Json serialization */
 
   public static JsonBinding<Decl> jsonBinding() {
-    final JsonBinding<String> name = JsonBindings.STRING;
-    final JsonBinding<Optional<Integer>> version = OptionalHelpers.jsonBinding(JsonBindings.INTEGER);
-    final JsonBinding<DeclType> type_ = DeclType.jsonBinding();
+    final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<Optional<Integer>>> version = new Lazy<>(() -> OptionalHelpers.jsonBinding(JsonBindings.INTEGER));
+    final Lazy<JsonBinding<DeclType>> type_ = new Lazy<>(() -> DeclType.jsonBinding());
     final Factory<Decl> _factory = FACTORY;
 
     return new JsonBinding<Decl>() {
@@ -113,18 +114,18 @@ public class Decl {
 
       public JsonElement toJson(Decl _value) {
         JsonObject _result = new JsonObject();
-        _result.add("name", name.toJson(_value.name));
-        _result.add("version", version.toJson(_value.version));
-        _result.add("type_", type_.toJson(_value.type_));
+        _result.add("name", name.get().toJson(_value.name));
+        _result.add("version", version.get().toJson(_value.version));
+        _result.add("type_", type_.get().toJson(_value.type_));
         return _result;
       }
 
       public Decl fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Decl(
-          _obj.has("name") ? name.fromJson(_obj.get("name")) : "",
-          _obj.has("version") ? version.fromJson(_obj.get("version")) : OptionalHelpers.factory(Factories.INTEGER).create(),
-          _obj.has("type_") ? type_.fromJson(_obj.get("type_")) : new DeclType()
+          _obj.has("name") ? name.get().fromJson(_obj.get("name")) : "",
+          _obj.has("version") ? version.get().fromJson(_obj.get("version")) : OptionalHelpers.factory(Factories.INTEGER).create(),
+          _obj.has("type_") ? type_.get().fromJson(_obj.get("type_")) : new DeclType()
         );
       }
     };

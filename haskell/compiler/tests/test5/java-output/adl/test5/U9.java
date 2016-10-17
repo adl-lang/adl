@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -96,17 +97,17 @@ public class U9<T> {
 
   public static <T> Factory<U9 <T>> factory(Factory<T> factoryT) {
     return new Factory<U9<T>>() {
-      final Factory<T> v1 = factoryT;
-      final Factory<Short> v2 = Factories.SHORT;
+      final Lazy<Factory<T>> v1 = new Lazy<>(() -> factoryT);
+      final Lazy<Factory<Short>> v2 = new Lazy<>(() -> Factories.SHORT);
 
       public U9<T> create() {
-        return new U9<T>(Disc.V1,v1.create());
+        return new U9<T>(Disc.V1,v1.get().create());
       }
 
       public U9<T> create(U9<T> other) {
         switch (other.disc) {
           case V1:
-            return new U9<T>(other.disc,v1.create(U9.<T>cast(other.value)));
+            return new U9<T>(other.disc,v1.get().create(U9.<T>cast(other.value)));
           case V2:
             return new U9<T>(other.disc,other.value);
         }
@@ -118,8 +119,8 @@ public class U9<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<U9<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<T> v1 = bindingT;
-    final JsonBinding<Short> v2 = JsonBindings.SHORT;
+    final Lazy<JsonBinding<T>> v1 = new Lazy<>(() -> bindingT);
+    final Lazy<JsonBinding<Short>> v2 = new Lazy<>(() -> JsonBindings.SHORT);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<U9<T>> _factory = factory(bindingT.factory());
 
@@ -132,10 +133,10 @@ public class U9<T> {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case V1:
-            _result.add("v1", v1.toJson(_value.getV1()));
+            _result.add("v1", v1.get().toJson(_value.getV1()));
             break;
           case V2:
-            _result.add("v2", v2.toJson(_value.getV2()));
+            _result.add("v2", v2.get().toJson(_value.getV2()));
             break;
         }
         return _result;
@@ -145,10 +146,10 @@ public class U9<T> {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("v1")) {
-            return U9.<T>v1(v1.fromJson(_v.getValue()));
+            return U9.<T>v1(v1.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("v2")) {
-            return U9.<T>v2(v2.fromJson(_v.getValue()));
+            return U9.<T>v2(v2.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

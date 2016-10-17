@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -93,17 +94,17 @@ public class S3<T> {
 
   public static <T> Factory<S3<T>> factory(Factory<T> factoryT) {
     return new Factory<S3<T>>() {
-      final Factory<String> f1 = Factories.STRING;
-      final Factory<Double> f2 = Factories.DOUBLE;
-      final Factory<T> f3 = factoryT;
-      final Factory<ArrayList<T>> f4 = Factories.arrayList(factoryT);
+      final Lazy<Factory<String>> f1 = new Lazy<>(() -> Factories.STRING);
+      final Lazy<Factory<Double>> f2 = new Lazy<>(() -> Factories.DOUBLE);
+      final Lazy<Factory<T>> f3 = new Lazy<>(() -> factoryT);
+      final Lazy<Factory<ArrayList<T>>> f4 = new Lazy<>(() -> Factories.arrayList(factoryT));
 
       public S3<T> create() {
         return new S3<T>(
-          f1.create(),
-          f2.create(),
-          f3.create(),
-          f4.create()
+          f1.get().create(),
+          f2.get().create(),
+          f3.get().create(),
+          f4.get().create()
           );
       }
 
@@ -111,8 +112,8 @@ public class S3<T> {
         return new S3<T>(
           other.getF1(),
           other.getF2(),
-          f3.create(other.getF3()),
-          f4.create(other.getF4())
+          f3.get().create(other.getF3()),
+          f4.get().create(other.getF4())
           );
       }
     };
@@ -121,10 +122,10 @@ public class S3<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<S3<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<String> f1 = JsonBindings.STRING;
-    final JsonBinding<Double> f2 = JsonBindings.DOUBLE;
-    final JsonBinding<T> f3 = bindingT;
-    final JsonBinding<ArrayList<T>> f4 = JsonBindings.arrayList(bindingT);
+    final Lazy<JsonBinding<String>> f1 = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<Double>> f2 = new Lazy<>(() -> JsonBindings.DOUBLE);
+    final Lazy<JsonBinding<T>> f3 = new Lazy<>(() -> bindingT);
+    final Lazy<JsonBinding<ArrayList<T>>> f4 = new Lazy<>(() -> JsonBindings.arrayList(bindingT));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<S3<T>> _factory = factory(bindingT.factory());
 
@@ -135,20 +136,20 @@ public class S3<T> {
 
       public JsonElement toJson(S3<T> _value) {
         JsonObject _result = new JsonObject();
-        _result.add("f1", f1.toJson(_value.f1));
-        _result.add("f2", f2.toJson(_value.f2));
-        _result.add("f3", f3.toJson(_value.f3));
-        _result.add("f4", f4.toJson(_value.f4));
+        _result.add("f1", f1.get().toJson(_value.f1));
+        _result.add("f2", f2.get().toJson(_value.f2));
+        _result.add("f3", f3.get().toJson(_value.f3));
+        _result.add("f4", f4.get().toJson(_value.f4));
         return _result;
       }
 
       public S3<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new S3<T>(
-          _obj.has("f1") ? f1.fromJson(_obj.get("f1")) : "",
-          _obj.has("f2") ? f2.fromJson(_obj.get("f2")) : 0.0,
-          _obj.has("f3") ? f3.fromJson(_obj.get("f3")) : factoryT.create(),
-          _obj.has("f4") ? f4.fromJson(_obj.get("f4")) : new ArrayList<T>()
+          _obj.has("f1") ? f1.get().fromJson(_obj.get("f1")) : "",
+          _obj.has("f2") ? f2.get().fromJson(_obj.get("f2")) : 0.0,
+          _obj.has("f3") ? f3.get().fromJson(_obj.get("f3")) : factoryT.create(),
+          _obj.has("f4") ? f4.get().fromJson(_obj.get("f4")) : new ArrayList<T>()
         );
       }
     };

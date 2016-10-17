@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -94,19 +95,19 @@ public class Either<T1, T2> {
 
   public static <T1, T2> Factory<Either <T1, T2>> factory(Factory<T1> factoryT1, Factory<T2> factoryT2) {
     return new Factory<Either<T1, T2>>() {
-      final Factory<T1> left = factoryT1;
-      final Factory<T2> right = factoryT2;
+      final Lazy<Factory<T1>> left = new Lazy<>(() -> factoryT1);
+      final Lazy<Factory<T2>> right = new Lazy<>(() -> factoryT2);
 
       public Either<T1, T2> create() {
-        return new Either<T1, T2>(Disc.LEFT,left.create());
+        return new Either<T1, T2>(Disc.LEFT,left.get().create());
       }
 
       public Either<T1, T2> create(Either<T1, T2> other) {
         switch (other.disc) {
           case LEFT:
-            return new Either<T1, T2>(other.disc,left.create(Either.<T1>cast(other.value)));
+            return new Either<T1, T2>(other.disc,left.get().create(Either.<T1>cast(other.value)));
           case RIGHT:
-            return new Either<T1, T2>(other.disc,right.create(Either.<T2>cast(other.value)));
+            return new Either<T1, T2>(other.disc,right.get().create(Either.<T2>cast(other.value)));
         }
         throw new IllegalArgumentException();
       }
@@ -116,8 +117,8 @@ public class Either<T1, T2> {
   /* Json serialization */
 
   public static<T1, T2> JsonBinding<Either<T1, T2>> jsonBinding(JsonBinding<T1> bindingT1, JsonBinding<T2> bindingT2) {
-    final JsonBinding<T1> left = bindingT1;
-    final JsonBinding<T2> right = bindingT2;
+    final Lazy<JsonBinding<T1>> left = new Lazy<>(() -> bindingT1);
+    final Lazy<JsonBinding<T2>> right = new Lazy<>(() -> bindingT2);
     final Factory<T1> factoryT1 = bindingT1.factory();
     final Factory<T2> factoryT2 = bindingT2.factory();
     final Factory<Either<T1, T2>> _factory = factory(bindingT1.factory(), bindingT2.factory());
@@ -131,10 +132,10 @@ public class Either<T1, T2> {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case LEFT:
-            _result.add("left", left.toJson(_value.getLeft()));
+            _result.add("left", left.get().toJson(_value.getLeft()));
             break;
           case RIGHT:
-            _result.add("right", right.toJson(_value.getRight()));
+            _result.add("right", right.get().toJson(_value.getRight()));
             break;
         }
         return _result;
@@ -144,10 +145,10 @@ public class Either<T1, T2> {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("left")) {
-            return Either.<T1, T2>left(left.fromJson(_v.getValue()));
+            return Either.<T1, T2>left(left.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("right")) {
-            return Either.<T1, T2>right(right.fromJson(_v.getValue()));
+            return Either.<T1, T2>right(right.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

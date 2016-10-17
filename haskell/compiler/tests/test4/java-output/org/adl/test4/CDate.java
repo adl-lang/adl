@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Objects;
 
 public class CDate {
@@ -99,9 +100,9 @@ public class CDate {
   /* Json serialization */
 
   public static JsonBinding<CDate> jsonBinding() {
-    final JsonBinding<Short> year = JsonBindings.SHORT;
-    final JsonBinding<Short> month = JsonBindings.SHORT;
-    final JsonBinding<Short> day = JsonBindings.SHORT;
+    final Lazy<JsonBinding<Short>> year = new Lazy<>(() -> JsonBindings.SHORT);
+    final Lazy<JsonBinding<Short>> month = new Lazy<>(() -> JsonBindings.SHORT);
+    final Lazy<JsonBinding<Short>> day = new Lazy<>(() -> JsonBindings.SHORT);
     final Factory<CDate> _factory = FACTORY;
 
     return new JsonBinding<CDate>() {
@@ -111,18 +112,18 @@ public class CDate {
 
       public JsonElement toJson(CDate _value) {
         JsonObject _result = new JsonObject();
-        _result.add("year", year.toJson(_value.year));
-        _result.add("month", month.toJson(_value.month));
-        _result.add("day", day.toJson(_value.day));
+        _result.add("year", year.get().toJson(_value.year));
+        _result.add("month", month.get().toJson(_value.month));
+        _result.add("day", day.get().toJson(_value.day));
         return _result;
       }
 
       public CDate fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new CDate(
-          _obj.has("year") ? year.fromJson(_obj.get("year")) : (short)0,
-          _obj.has("month") ? month.fromJson(_obj.get("month")) : (short)0,
-          _obj.has("day") ? day.fromJson(_obj.get("day")) : (short)0
+          _obj.has("year") ? year.get().fromJson(_obj.get("year")) : (short)0,
+          _obj.has("month") ? month.get().fromJson(_obj.get("month")) : (short)0,
+          _obj.has("day") ? day.get().fromJson(_obj.get("day")) : (short)0
         );
       }
     };

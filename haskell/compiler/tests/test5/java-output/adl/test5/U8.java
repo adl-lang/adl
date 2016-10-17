@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -118,8 +119,8 @@ public class U8 {
   /* Json serialization */
 
   public static JsonBinding<U8> jsonBinding() {
-    final JsonBinding<S1> v1 = S1.jsonBinding();
-    final JsonBinding<Short> v2 = JsonBindings.SHORT;
+    final Lazy<JsonBinding<S1>> v1 = new Lazy<>(() -> S1.jsonBinding());
+    final Lazy<JsonBinding<Short>> v2 = new Lazy<>(() -> JsonBindings.SHORT);
     final Factory<U8> _factory = FACTORY;
 
     return new JsonBinding<U8>() {
@@ -131,10 +132,10 @@ public class U8 {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case V1:
-            _result.add("v1", v1.toJson(_value.getV1()));
+            _result.add("v1", v1.get().toJson(_value.getV1()));
             break;
           case V2:
-            _result.add("v2", v2.toJson(_value.getV2()));
+            _result.add("v2", v2.get().toJson(_value.getV2()));
             break;
         }
         return _result;
@@ -144,10 +145,10 @@ public class U8 {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("v1")) {
-            return U8.v1(v1.fromJson(_v.getValue()));
+            return U8.v1(v1.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("v2")) {
-            return U8.v2(v2.fromJson(_v.getValue()));
+            return U8.v2(v2.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

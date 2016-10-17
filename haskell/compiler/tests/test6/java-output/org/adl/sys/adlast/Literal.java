@@ -7,6 +7,7 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -251,13 +252,13 @@ public class Literal {
   /* Json serialization */
 
   public static JsonBinding<Literal> jsonBinding() {
-    final JsonBinding<Void> null_ = JsonBindings.VOID;
-    final JsonBinding<Long> integer = JsonBindings.LONG;
-    final JsonBinding<Double> double_ = JsonBindings.DOUBLE;
-    final JsonBinding<String> string = JsonBindings.STRING;
-    final JsonBinding<Boolean> boolean_ = JsonBindings.BOOLEAN;
-    final JsonBinding<ArrayList<Literal>> array = JsonBindings.arrayList(org.adl.sys.adlast.Literal.jsonBinding());
-    final JsonBinding<HashMap<String, Literal>> object = HashMapHelpers.jsonBinding(JsonBindings.STRING, org.adl.sys.adlast.Literal.jsonBinding());
+    final Lazy<JsonBinding<Void>> null_ = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<Long>> integer = new Lazy<>(() -> JsonBindings.LONG);
+    final Lazy<JsonBinding<Double>> double_ = new Lazy<>(() -> JsonBindings.DOUBLE);
+    final Lazy<JsonBinding<String>> string = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<Boolean>> boolean_ = new Lazy<>(() -> JsonBindings.BOOLEAN);
+    final Lazy<JsonBinding<ArrayList<Literal>>> array = new Lazy<>(() -> JsonBindings.arrayList(org.adl.sys.adlast.Literal.jsonBinding()));
+    final Lazy<JsonBinding<HashMap<String, Literal>>> object = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, org.adl.sys.adlast.Literal.jsonBinding()));
     final Factory<Literal> _factory = FACTORY;
 
     return new JsonBinding<Literal>() {
@@ -271,22 +272,22 @@ public class Literal {
           case NULL_:
             _result.add("null", null);
           case INTEGER:
-            _result.add("integer", integer.toJson(_value.getInteger()));
+            _result.add("integer", integer.get().toJson(_value.getInteger()));
             break;
           case DOUBLE_:
-            _result.add("double", double_.toJson(_value.getDouble()));
+            _result.add("double", double_.get().toJson(_value.getDouble()));
             break;
           case STRING:
-            _result.add("string", string.toJson(_value.getString()));
+            _result.add("string", string.get().toJson(_value.getString()));
             break;
           case BOOLEAN_:
-            _result.add("boolean", boolean_.toJson(_value.getBoolean()));
+            _result.add("boolean", boolean_.get().toJson(_value.getBoolean()));
             break;
           case ARRAY:
-            _result.add("array", array.toJson(_value.getArray()));
+            _result.add("array", array.get().toJson(_value.getArray()));
             break;
           case OBJECT:
-            _result.add("object", object.toJson(_value.getObject()));
+            _result.add("object", object.get().toJson(_value.getObject()));
             break;
         }
         return _result;
@@ -299,22 +300,22 @@ public class Literal {
             return Literal.null_();
           }
           else if (_v.getKey().equals("integer")) {
-            return Literal.integer(integer.fromJson(_v.getValue()));
+            return Literal.integer(integer.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("double")) {
-            return Literal.double_(double_.fromJson(_v.getValue()));
+            return Literal.double_(double_.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("string")) {
-            return Literal.string(string.fromJson(_v.getValue()));
+            return Literal.string(string.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("boolean")) {
-            return Literal.boolean_(boolean_.fromJson(_v.getValue()));
+            return Literal.boolean_(boolean_.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("array")) {
-            return Literal.array(array.fromJson(_v.getValue()));
+            return Literal.array(array.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("object")) {
-            return Literal.object(object.fromJson(_v.getValue()));
+            return Literal.object(object.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

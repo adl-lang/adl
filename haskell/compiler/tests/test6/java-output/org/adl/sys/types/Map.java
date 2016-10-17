@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -54,17 +55,17 @@ public class Map<K, V> {
 
   public static <K, V> Factory<Map<K, V>> factory(Factory<K> factoryK, Factory<V> factoryV) {
     return new Factory<Map<K, V>>() {
-      final Factory<ArrayList<Pair<K, V>>> value = Factories.arrayList(Pair.factory(factoryK, factoryV));
+      final Lazy<Factory<ArrayList<Pair<K, V>>>> value = new Lazy<>(() -> Factories.arrayList(Pair.factory(factoryK, factoryV)));
 
       public Map<K, V> create() {
         return new Map<K, V>(
-          value.create()
+          value.get().create()
           );
       }
 
       public Map<K, V> create(Map<K, V> other) {
         return new Map<K, V>(
-          value.create(other.getValue())
+          value.get().create(other.getValue())
           );
       }
     };

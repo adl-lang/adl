@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
@@ -118,8 +119,8 @@ public class Import {
   /* Json serialization */
 
   public static JsonBinding<Import> jsonBinding() {
-    final JsonBinding<String> moduleName = JsonBindings.STRING;
-    final JsonBinding<ScopedName> scopedName = ScopedName.jsonBinding();
+    final Lazy<JsonBinding<String>> moduleName = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<ScopedName>> scopedName = new Lazy<>(() -> ScopedName.jsonBinding());
     final Factory<Import> _factory = FACTORY;
 
     return new JsonBinding<Import>() {
@@ -131,10 +132,10 @@ public class Import {
         JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case MODULENAME:
-            _result.add("moduleName", moduleName.toJson(_value.getModuleName()));
+            _result.add("moduleName", moduleName.get().toJson(_value.getModuleName()));
             break;
           case SCOPEDNAME:
-            _result.add("scopedName", scopedName.toJson(_value.getScopedName()));
+            _result.add("scopedName", scopedName.get().toJson(_value.getScopedName()));
             break;
         }
         return _result;
@@ -144,10 +145,10 @@ public class Import {
         JsonObject _obj = _json.getAsJsonObject();
         for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
           if (_v.getKey().equals("moduleName")) {
-            return Import.moduleName(moduleName.fromJson(_v.getValue()));
+            return Import.moduleName(moduleName.get().fromJson(_v.getValue()));
           }
           else if (_v.getKey().equals("scopedName")) {
-            return Import.scopedName(scopedName.fromJson(_v.getValue()));
+            return Import.scopedName(scopedName.get().fromJson(_v.getValue()));
           }
         }
         throw new IllegalStateException();

@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.Objects;
 
 public class A {
@@ -99,9 +100,9 @@ public class A {
   /* Json serialization */
 
   public static JsonBinding<A> jsonBinding() {
-    final JsonBinding<Short> f_int = JsonBindings.SHORT;
-    final JsonBinding<String> f_string = JsonBindings.STRING;
-    final JsonBinding<Boolean> f_bool = JsonBindings.BOOLEAN;
+    final Lazy<JsonBinding<Short>> f_int = new Lazy<>(() -> JsonBindings.SHORT);
+    final Lazy<JsonBinding<String>> f_string = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<Boolean>> f_bool = new Lazy<>(() -> JsonBindings.BOOLEAN);
     final Factory<A> _factory = FACTORY;
 
     return new JsonBinding<A>() {
@@ -111,18 +112,18 @@ public class A {
 
       public JsonElement toJson(A _value) {
         JsonObject _result = new JsonObject();
-        _result.add("f_int", f_int.toJson(_value.f_int));
-        _result.add("f_string", f_string.toJson(_value.f_string));
-        _result.add("f_bool", f_bool.toJson(_value.f_bool));
+        _result.add("f_int", f_int.get().toJson(_value.f_int));
+        _result.add("f_string", f_string.get().toJson(_value.f_string));
+        _result.add("f_bool", f_bool.get().toJson(_value.f_bool));
         return _result;
       }
 
       public A fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new A(
-          _obj.has("f_int") ? f_int.fromJson(_obj.get("f_int")) : (short)0,
-          _obj.has("f_string") ? f_string.fromJson(_obj.get("f_string")) : "",
-          _obj.has("f_bool") ? f_bool.fromJson(_obj.get("f_bool")) : false
+          _obj.has("f_int") ? f_int.get().fromJson(_obj.get("f_int")) : (short)0,
+          _obj.has("f_string") ? f_string.get().fromJson(_obj.get("f_string")) : "",
+          _obj.has("f_bool") ? f_bool.get().fromJson(_obj.get("f_bool")) : false
         );
       }
     };

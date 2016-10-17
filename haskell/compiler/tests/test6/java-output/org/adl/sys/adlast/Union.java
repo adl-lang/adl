@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -86,8 +87,8 @@ public class Union {
   /* Json serialization */
 
   public static JsonBinding<Union> jsonBinding() {
-    final JsonBinding<ArrayList<String>> typeParams = JsonBindings.arrayList(JsonBindings.STRING);
-    final JsonBinding<ArrayList<Field>> fields = JsonBindings.arrayList(Field.jsonBinding());
+    final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
+    final Lazy<JsonBinding<ArrayList<Field>>> fields = new Lazy<>(() -> JsonBindings.arrayList(Field.jsonBinding()));
     final Factory<Union> _factory = FACTORY;
 
     return new JsonBinding<Union>() {
@@ -97,16 +98,16 @@ public class Union {
 
       public JsonElement toJson(Union _value) {
         JsonObject _result = new JsonObject();
-        _result.add("typeParams", typeParams.toJson(_value.typeParams));
-        _result.add("fields", fields.toJson(_value.fields));
+        _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
+        _result.add("fields", fields.get().toJson(_value.fields));
         return _result;
       }
 
       public Union fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Union(
-          _obj.has("typeParams") ? typeParams.fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
-          _obj.has("fields") ? fields.fromJson(_obj.get("fields")) : new ArrayList<Field>()
+          _obj.has("typeParams") ? typeParams.get().fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
+          _obj.has("fields") ? fields.get().fromJson(_obj.get("fields")) : new ArrayList<Field>()
         );
       }
     };

@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -103,9 +104,9 @@ public class S2 {
   /* Json serialization */
 
   public static JsonBinding<S2> jsonBinding() {
-    final JsonBinding<String> f1 = JsonBindings.STRING;
-    final JsonBinding<Double> f2 = JsonBindings.DOUBLE;
-    final JsonBinding<ArrayList<Integer>> f3 = JsonBindings.arrayList(JsonBindings.INTEGER);
+    final Lazy<JsonBinding<String>> f1 = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<Double>> f2 = new Lazy<>(() -> JsonBindings.DOUBLE);
+    final Lazy<JsonBinding<ArrayList<Integer>>> f3 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INTEGER));
     final Factory<S2> _factory = FACTORY;
 
     return new JsonBinding<S2>() {
@@ -115,18 +116,18 @@ public class S2 {
 
       public JsonElement toJson(S2 _value) {
         JsonObject _result = new JsonObject();
-        _result.add("f1", f1.toJson(_value.f1));
-        _result.add("f2", f2.toJson(_value.f2));
-        _result.add("f3", f3.toJson(_value.f3));
+        _result.add("f1", f1.get().toJson(_value.f1));
+        _result.add("f2", f2.get().toJson(_value.f2));
+        _result.add("f3", f3.get().toJson(_value.f3));
         return _result;
       }
 
       public S2 fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new S2(
-          _obj.has("f1") ? f1.fromJson(_obj.get("f1")) : "",
-          _obj.has("f2") ? f2.fromJson(_obj.get("f2")) : 0.0,
-          _obj.has("f3") ? f3.fromJson(_obj.get("f3")) : new ArrayList<Integer>()
+          _obj.has("f1") ? f1.get().fromJson(_obj.get("f1")) : "",
+          _obj.has("f2") ? f2.get().fromJson(_obj.get("f2")) : 0.0,
+          _obj.has("f3") ? f3.get().fromJson(_obj.get("f3")) : new ArrayList<Integer>()
         );
       }
     };

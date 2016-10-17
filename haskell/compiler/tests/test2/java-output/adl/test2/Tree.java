@@ -6,6 +6,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -66,20 +67,20 @@ public class Tree<T> {
 
   public static <T> Factory<Tree<T>> factory(Factory<T> factoryT) {
     return new Factory<Tree<T>>() {
-      final Factory<T> value = factoryT;
-      final Factory<ArrayList<Tree<T>>> children = Factories.arrayList(Tree.factory(factoryT));
+      final Lazy<Factory<T>> value = new Lazy<>(() -> factoryT);
+      final Lazy<Factory<ArrayList<Tree<T>>>> children = new Lazy<>(() -> Factories.arrayList(Tree.factory(factoryT)));
 
       public Tree<T> create() {
         return new Tree<T>(
-          value.create(),
-          children.create()
+          value.get().create(),
+          children.get().create()
           );
       }
 
       public Tree<T> create(Tree<T> other) {
         return new Tree<T>(
-          value.create(other.getValue()),
-          children.create(other.getChildren())
+          value.get().create(other.getValue()),
+          children.get().create(other.getChildren())
           );
       }
     };
@@ -88,8 +89,8 @@ public class Tree<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<Tree<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final JsonBinding<T> value = bindingT;
-    final JsonBinding<ArrayList<Tree<T>>> children = JsonBindings.arrayList(adl.test2.Tree.jsonBinding(bindingT));
+    final Lazy<JsonBinding<T>> value = new Lazy<>(() -> bindingT);
+    final Lazy<JsonBinding<ArrayList<Tree<T>>>> children = new Lazy<>(() -> JsonBindings.arrayList(adl.test2.Tree.jsonBinding(bindingT)));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<Tree<T>> _factory = factory(bindingT.factory());
 
@@ -100,16 +101,16 @@ public class Tree<T> {
 
       public JsonElement toJson(Tree<T> _value) {
         JsonObject _result = new JsonObject();
-        _result.add("value", value.toJson(_value.value));
-        _result.add("children", children.toJson(_value.children));
+        _result.add("value", value.get().toJson(_value.value));
+        _result.add("children", children.get().toJson(_value.children));
         return _result;
       }
 
       public Tree<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Tree<T>(
-          _obj.has("value") ? value.fromJson(_obj.get("value")) : factoryT.create(),
-          _obj.has("children") ? children.fromJson(_obj.get("children")) : new ArrayList<Tree<T>>()
+          _obj.has("value") ? value.get().fromJson(_obj.get("value")) : factoryT.create(),
+          _obj.has("children") ? children.get().fromJson(_obj.get("children")) : new ArrayList<Tree<T>>()
         );
       }
     };

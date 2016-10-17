@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.Lazy;
 import java.util.Objects;
 
 public class Pair<A, B> {
@@ -63,20 +64,20 @@ public class Pair<A, B> {
 
   public static <A, B> Factory<Pair<A, B>> factory(Factory<A> factoryA, Factory<B> factoryB) {
     return new Factory<Pair<A, B>>() {
-      final Factory<A> v1 = factoryA;
-      final Factory<B> v2 = factoryB;
+      final Lazy<Factory<A>> v1 = new Lazy<>(() -> factoryA);
+      final Lazy<Factory<B>> v2 = new Lazy<>(() -> factoryB);
 
       public Pair<A, B> create() {
         return new Pair<A, B>(
-          v1.create(),
-          v2.create()
+          v1.get().create(),
+          v2.get().create()
           );
       }
 
       public Pair<A, B> create(Pair<A, B> other) {
         return new Pair<A, B>(
-          v1.create(other.getV1()),
-          v2.create(other.getV2())
+          v1.get().create(other.getV1()),
+          v2.get().create(other.getV2())
           );
       }
     };
@@ -85,8 +86,8 @@ public class Pair<A, B> {
   /* Json serialization */
 
   public static<A, B> JsonBinding<Pair<A, B>> jsonBinding(JsonBinding<A> bindingA, JsonBinding<B> bindingB) {
-    final JsonBinding<A> v1 = bindingA;
-    final JsonBinding<B> v2 = bindingB;
+    final Lazy<JsonBinding<A>> v1 = new Lazy<>(() -> bindingA);
+    final Lazy<JsonBinding<B>> v2 = new Lazy<>(() -> bindingB);
     final Factory<A> factoryA = bindingA.factory();
     final Factory<B> factoryB = bindingB.factory();
     final Factory<Pair<A, B>> _factory = factory(bindingA.factory(), bindingB.factory());
@@ -98,16 +99,16 @@ public class Pair<A, B> {
 
       public JsonElement toJson(Pair<A, B> _value) {
         JsonObject _result = new JsonObject();
-        _result.add("v1", v1.toJson(_value.v1));
-        _result.add("v2", v2.toJson(_value.v2));
+        _result.add("v1", v1.get().toJson(_value.v1));
+        _result.add("v2", v2.get().toJson(_value.v2));
         return _result;
       }
 
       public Pair<A, B> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Pair<A, B>(
-          _obj.has("v1") ? v1.fromJson(_obj.get("v1")) : factoryA.create(),
-          _obj.has("v2") ? v2.fromJson(_obj.get("v2")) : factoryB.create()
+          _obj.has("v1") ? v1.get().fromJson(_obj.get("v1")) : factoryA.create(),
+          _obj.has("v2") ? v2.get().fromJson(_obj.get("v2")) : factoryB.create()
         );
       }
     };
