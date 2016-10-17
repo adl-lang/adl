@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Sys.Adlast(
+    Annotations,
     Decl(..),
     DeclType(..),
     DeclVersions,
@@ -29,10 +30,13 @@ import qualified Data.Text as T
 import qualified Data.Word
 import qualified Prelude
 
+type Annotations = (ADL.Sys.Types.Map ScopedName Literal)
+
 data Decl = Decl
     { decl_name :: Ident
     , decl_version :: (ADL.Sys.Types.Maybe Data.Word.Word32)
     , decl_type_ :: DeclType
+    , decl_annotations :: Annotations
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -43,23 +47,27 @@ instance ADLValue Decl where
         defaultv
         defaultv
         defaultv
+        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
             name_js = jsonSerialiser jf
             version_js = jsonSerialiser jf
             type__js = jsonSerialiser jf
+            annotations_js = jsonSerialiser jf
             
             to v = JSON.Object ( HM.fromList
                 [ ("name",aToJSON name_js (decl_name v))
                 , ("version",aToJSON version_js (decl_version v))
                 , ("type_",aToJSON type__js (decl_type_ v))
+                , ("annotations",aToJSON annotations_js (decl_annotations v))
                 ] )
             
             from (JSON.Object hm) = Decl 
                 <$> fieldFromJSON name_js "name" defaultv hm
                 <*> fieldFromJSON version_js "version" defaultv hm
                 <*> fieldFromJSON type__js "type_" defaultv hm
+                <*> fieldFromJSON annotations_js "annotations" defaultv hm
             from _ = Prelude.Nothing
 
 data DeclType
@@ -100,6 +108,7 @@ data Field = Field
     { field_name :: Ident
     , field_typeExpr :: TypeExpr
     , field_default :: (ADL.Sys.Types.Maybe Literal)
+    , field_annotations :: Annotations
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -110,23 +119,27 @@ instance ADLValue Field where
         defaultv
         defaultv
         defaultv
+        defaultv
     
     jsonSerialiser jf = JSONSerialiser to from
         where
             name_js = jsonSerialiser jf
             typeExpr_js = jsonSerialiser jf
             default_js = jsonSerialiser jf
+            annotations_js = jsonSerialiser jf
             
             to v = JSON.Object ( HM.fromList
                 [ ("name",aToJSON name_js (field_name v))
                 , ("typeExpr",aToJSON typeExpr_js (field_typeExpr v))
                 , ("default",aToJSON default_js (field_default v))
+                , ("annotations",aToJSON annotations_js (field_annotations v))
                 ] )
             
             from (JSON.Object hm) = Field 
                 <$> fieldFromJSON name_js "name" defaultv hm
                 <*> fieldFromJSON typeExpr_js "typeExpr" defaultv hm
                 <*> fieldFromJSON default_js "default" defaultv hm
+                <*> fieldFromJSON annotations_js "annotations" defaultv hm
             from _ = Prelude.Nothing
 
 type Ident = T.Text

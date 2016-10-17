@@ -3,11 +3,23 @@
         {
             "v1": "A",
             "v2": {
+                "annotations": [
+                    {
+                        "v1": {
+                            "moduleName": "",
+                            "name": "Doc"
+                        },
+                        "v2": {
+                            "string": "A monomorphic struct\n"
+                        }
+                    }
+                ],
                 "name": "A",
                 "type_": {
                     "struct_": {
                         "fields": [
                             {
+                                "annotations": [],
                                 "default": {
                                     "nothing": null
                                 },
@@ -20,6 +32,7 @@
                                 }
                             },
                             {
+                                "annotations": [],
                                 "default": {
                                     "nothing": null
                                 },
@@ -43,11 +56,23 @@
         {
             "v1": "B",
             "v2": {
+                "annotations": [
+                    {
+                        "v1": {
+                            "moduleName": "",
+                            "name": "Doc"
+                        },
+                        "v2": {
+                            "string": "A polymorphic union\n"
+                        }
+                    }
+                ],
                 "name": "B",
                 "type_": {
                     "union_": {
                         "fields": [
                             {
+                                "annotations": [],
                                 "default": {
                                     "nothing": null
                                 },
@@ -60,6 +85,7 @@
                                 }
                             },
                             {
+                                "annotations": [],
                                 "default": {
                                     "nothing": null
                                 },
@@ -85,6 +111,7 @@
         {
             "v1": "X",
             "v2": {
+                "annotations": [],
                 "name": "X",
                 "type_": {
                     "type_": {
@@ -122,6 +149,7 @@
         {
             "v1": "Y",
             "v2": {
+                "annotations": [],
                 "name": "Y",
                 "type_": {
                     "newtype_": {

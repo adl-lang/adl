@@ -399,24 +399,6 @@ struct Union_
 bool operator<( const Union_ &a, const Union_ &b );
 bool operator==( const Union_ &a, const Union_ &b );
 
-struct Decl
-{
-    Decl();
-    
-    Decl(
-        const Ident & name,
-        const ADL::sys::types::Maybe<uint32_t>  & version,
-        const DeclType_ & type_
-        );
-    
-    Ident name;
-    ADL::sys::types::Maybe<uint32_t>  version;
-    DeclType_ type_;
-};
-
-bool operator<( const Decl &a, const Decl &b );
-bool operator==( const Decl &a, const Decl &b );
-
 struct ScopedName
 {
     ScopedName();
@@ -449,41 +431,7 @@ struct TypeExpr
 bool operator<( const TypeExpr &a, const TypeExpr &b );
 bool operator==( const TypeExpr &a, const TypeExpr &b );
 
-struct Field
-{
-    Field();
-    
-    Field(
-        const Ident & name,
-        const TypeExpr & typeExpr,
-        const ADL::sys::types::Maybe<Literal>  & default_
-        );
-    
-    Ident name;
-    TypeExpr typeExpr;
-    ADL::sys::types::Maybe<Literal>  default_;
-};
-
-bool operator<( const Field &a, const Field &b );
-bool operator==( const Field &a, const Field &b );
-
-struct Module
-{
-    Module();
-    
-    Module(
-        const ModuleName & name,
-        const std::vector<Import>  & imports,
-        const std::map<Ident,Decl>  & decls
-        );
-    
-    ModuleName name;
-    std::vector<Import>  imports;
-    std::map<Ident,Decl>  decls;
-};
-
-bool operator<( const Module &a, const Module &b );
-bool operator==( const Module &a, const Module &b );
+using Annotations = std::map<ScopedName,Literal> ;
 
 struct NewType
 {
@@ -518,6 +466,64 @@ struct TypeDef_
 
 bool operator<( const TypeDef_ &a, const TypeDef_ &b );
 bool operator==( const TypeDef_ &a, const TypeDef_ &b );
+
+struct Decl
+{
+    Decl();
+    
+    Decl(
+        const Ident & name,
+        const ADL::sys::types::Maybe<uint32_t>  & version,
+        const DeclType_ & type_,
+        const Annotations & annotations
+        );
+    
+    Ident name;
+    ADL::sys::types::Maybe<uint32_t>  version;
+    DeclType_ type_;
+    Annotations annotations;
+};
+
+bool operator<( const Decl &a, const Decl &b );
+bool operator==( const Decl &a, const Decl &b );
+
+struct Field
+{
+    Field();
+    
+    Field(
+        const Ident & name,
+        const TypeExpr & typeExpr,
+        const ADL::sys::types::Maybe<Literal>  & default_,
+        const Annotations & annotations
+        );
+    
+    Ident name;
+    TypeExpr typeExpr;
+    ADL::sys::types::Maybe<Literal>  default_;
+    Annotations annotations;
+};
+
+bool operator<( const Field &a, const Field &b );
+bool operator==( const Field &a, const Field &b );
+
+struct Module
+{
+    Module();
+    
+    Module(
+        const ModuleName & name,
+        const std::vector<Import>  & imports,
+        const std::map<Ident,Decl>  & decls
+        );
+    
+    ModuleName name;
+    std::vector<Import>  imports;
+    std::map<Ident,Decl>  decls;
+};
+
+bool operator<( const Module &a, const Module &b );
+bool operator==( const Module &a, const Module &b );
 
 }}}; // ADL::sys::adlast
 
@@ -560,12 +566,6 @@ struct Serialisable<ADL::sys::adlast::Union_>
 };
 
 template <>
-struct Serialisable<ADL::sys::adlast::Decl>
-{
-    static Serialiser<ADL::sys::adlast::Decl>::Ptr serialiser(const SerialiserFlags &);
-};
-
-template <>
 struct Serialisable<ADL::sys::adlast::ScopedName>
 {
     static Serialiser<ADL::sys::adlast::ScopedName>::Ptr serialiser(const SerialiserFlags &);
@@ -578,18 +578,6 @@ struct Serialisable<ADL::sys::adlast::TypeExpr>
 };
 
 template <>
-struct Serialisable<ADL::sys::adlast::Field>
-{
-    static Serialiser<ADL::sys::adlast::Field>::Ptr serialiser(const SerialiserFlags &);
-};
-
-template <>
-struct Serialisable<ADL::sys::adlast::Module>
-{
-    static Serialiser<ADL::sys::adlast::Module>::Ptr serialiser(const SerialiserFlags &);
-};
-
-template <>
 struct Serialisable<ADL::sys::adlast::NewType>
 {
     static Serialiser<ADL::sys::adlast::NewType>::Ptr serialiser(const SerialiserFlags &);
@@ -599,6 +587,24 @@ template <>
 struct Serialisable<ADL::sys::adlast::TypeDef_>
 {
     static Serialiser<ADL::sys::adlast::TypeDef_>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::sys::adlast::Decl>
+{
+    static Serialiser<ADL::sys::adlast::Decl>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::sys::adlast::Field>
+{
+    static Serialiser<ADL::sys::adlast::Field>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::sys::adlast::Module>
+{
+    static Serialiser<ADL::sys::adlast::Module>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL

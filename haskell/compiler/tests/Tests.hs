@@ -213,7 +213,7 @@ runTests = do
 
   describe "adlc ast backend" $ do
     it "generates expected json serialisation for each type of decl" $ do
-      runAstBackend1 "test15/input/test.adl"
+      collectResults (runAstBackend1 "test15/input/test.adl")
         `shouldReturn` MatchOutput
     
   describe "adlc cpp backend" $ do

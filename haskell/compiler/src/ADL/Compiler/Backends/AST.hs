@@ -50,7 +50,7 @@ scopedNameToA2 :: ScopedName -> A2.ScopedName
 scopedNameToA2 sn =A2.ScopedName (moduleNameToA2 (sn_moduleName sn))  (sn_name sn)
 
 declToA2 :: Decl ResolvedType -> A2.Decl
-declToA2 d = A2.Decl (d_name d) (fmap fromIntegral (d_version d)) (declTypeToA2 (d_type d))
+declToA2 d = A2.Decl (d_name d) (fmap fromIntegral (d_version d)) (declTypeToA2 (d_type d)) (annotationsToA2 (d_annotations d))
 
 declTypeToA2 :: DeclType ResolvedType -> A2.DeclType
 declTypeToA2 (Decl_Struct s) = A2.DeclType_struct_ (A2.Struct (s_typeParams s) (map fieldToA2 (s_fields s)))
@@ -59,7 +59,7 @@ declTypeToA2 (Decl_Typedef t) = A2.DeclType_type_ (A2.TypeDef (t_typeParams t) (
 declTypeToA2 (Decl_Newtype n) = A2.DeclType_newtype_ (A2.NewType (n_typeParams n) (typeExprToA2 (n_typeExpr n)) (fmap literalToA2 (n_default n)))
 
 fieldToA2 :: Field ResolvedType -> A2.Field
-fieldToA2 f = A2.Field (f_name f) (typeExprToA2 (f_type f)) (fmap literalToA2 (f_default f))
+fieldToA2 f = A2.Field (f_name f) (typeExprToA2 (f_type f)) (fmap literalToA2 (f_default f)) (annotationsToA2 (f_annotations f))
 
 typeExprToA2 :: TypeExpr ResolvedType -> A2.TypeExpr
 typeExprToA2 (TypeExpr rt rts) = A2.TypeExpr (typeRefToA2 rt) (map typeExprToA2 rts)
@@ -78,6 +78,9 @@ literalToA2 (JSON.String s) = A2.Literal_string s
 literalToA2 (JSON.Bool b) = A2.Literal_boolean b
 literalToA2 (JSON.Array vs) = A2.Literal_array (fmap literalToA2 (V.toList vs))
 literalToA2 (JSON.Object hm) = A2.Literal_object (Map.fromList (fmap (\(k,v) -> (k,literalToA2 v)) (HM.toList hm)))
+
+annotationsToA2 :: Map.Map ScopedName JSON.Value -> Map.Map A2.ScopedName A2.Literal
+annotationsToA2 = Map.fromList . map (\(k,v) -> (scopedNameToA2 k,literalToA2 v)) . Map.toList
 
 writeModuleFile :: (FilePath -> LBS.ByteString -> IO ()) ->
                    Module ResolvedType ->

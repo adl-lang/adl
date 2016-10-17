@@ -701,42 +701,6 @@ operator==( const Union_ &a, const Union_ &b )
         a.fields == b.fields ;
 }
 
-Decl::Decl()
-{
-}
-
-Decl::Decl(
-    const Ident & name_,
-    const ADL::sys::types::Maybe<uint32_t>  & version_,
-    const DeclType_ & type__
-    )
-    : name(name_)
-    , version(version_)
-    , type_(type__)
-{
-}
-
-bool
-operator<( const Decl &a, const Decl &b )
-{
-    if( a.name < b.name ) return true;
-    if( b.name < a.name ) return false;
-    if( a.version < b.version ) return true;
-    if( b.version < a.version ) return false;
-    if( a.type_ < b.type_ ) return true;
-    if( b.type_ < a.type_ ) return false;
-    return false;
-}
-
-bool
-operator==( const Decl &a, const Decl &b )
-{
-    return
-        a.name == b.name &&
-        a.version == b.version &&
-        a.type_ == b.type_ ;
-}
-
 ScopedName::ScopedName()
 {
 }
@@ -797,78 +761,6 @@ operator==( const TypeExpr &a, const TypeExpr &b )
     return
         a.typeRef == b.typeRef &&
         a.parameters == b.parameters ;
-}
-
-Field::Field()
-{
-}
-
-Field::Field(
-    const Ident & name_,
-    const TypeExpr & typeExpr_,
-    const ADL::sys::types::Maybe<Literal>  & default__
-    )
-    : name(name_)
-    , typeExpr(typeExpr_)
-    , default_(default__)
-{
-}
-
-bool
-operator<( const Field &a, const Field &b )
-{
-    if( a.name < b.name ) return true;
-    if( b.name < a.name ) return false;
-    if( a.typeExpr < b.typeExpr ) return true;
-    if( b.typeExpr < a.typeExpr ) return false;
-    if( a.default_ < b.default_ ) return true;
-    if( b.default_ < a.default_ ) return false;
-    return false;
-}
-
-bool
-operator==( const Field &a, const Field &b )
-{
-    return
-        a.name == b.name &&
-        a.typeExpr == b.typeExpr &&
-        a.default_ == b.default_ ;
-}
-
-Module::Module()
-{
-}
-
-Module::Module(
-    const ModuleName & name_,
-    const std::vector<Import>  & imports_,
-    const std::map<Ident,Decl>  & decls_
-    )
-    : name(name_)
-    , imports(imports_)
-    , decls(decls_)
-{
-}
-
-bool
-operator<( const Module &a, const Module &b )
-{
-    if( a.name < b.name ) return true;
-    if( b.name < a.name ) return false;
-    if( a.imports < b.imports ) return true;
-    if( b.imports < a.imports ) return false;
-    if( a.decls < b.decls ) return true;
-    if( b.decls < a.decls ) return false;
-    return false;
-}
-
-bool
-operator==( const Module &a, const Module &b )
-{
-    return
-        a.name == b.name &&
-        a.imports == b.imports &&
-        a.decls == b.decls ;
 }
 
 NewType::NewType()
@@ -936,6 +828,124 @@ operator==( const TypeDef_ &a, const TypeDef_ &b )
     return
         a.typeParams == b.typeParams &&
         a.typeExpr == b.typeExpr ;
+}
+
+Decl::Decl()
+{
+}
+
+Decl::Decl(
+    const Ident & name_,
+    const ADL::sys::types::Maybe<uint32_t>  & version_,
+    const DeclType_ & type__,
+    const Annotations & annotations_
+    )
+    : name(name_)
+    , version(version_)
+    , type_(type__)
+    , annotations(annotations_)
+{
+}
+
+bool
+operator<( const Decl &a, const Decl &b )
+{
+    if( a.name < b.name ) return true;
+    if( b.name < a.name ) return false;
+    if( a.version < b.version ) return true;
+    if( b.version < a.version ) return false;
+    if( a.type_ < b.type_ ) return true;
+    if( b.type_ < a.type_ ) return false;
+    if( a.annotations < b.annotations ) return true;
+    if( b.annotations < a.annotations ) return false;
+    return false;
+}
+
+bool
+operator==( const Decl &a, const Decl &b )
+{
+    return
+        a.name == b.name &&
+        a.version == b.version &&
+        a.type_ == b.type_ &&
+        a.annotations == b.annotations ;
+}
+
+Field::Field()
+{
+}
+
+Field::Field(
+    const Ident & name_,
+    const TypeExpr & typeExpr_,
+    const ADL::sys::types::Maybe<Literal>  & default__,
+    const Annotations & annotations_
+    )
+    : name(name_)
+    , typeExpr(typeExpr_)
+    , default_(default__)
+    , annotations(annotations_)
+{
+}
+
+bool
+operator<( const Field &a, const Field &b )
+{
+    if( a.name < b.name ) return true;
+    if( b.name < a.name ) return false;
+    if( a.typeExpr < b.typeExpr ) return true;
+    if( b.typeExpr < a.typeExpr ) return false;
+    if( a.default_ < b.default_ ) return true;
+    if( b.default_ < a.default_ ) return false;
+    if( a.annotations < b.annotations ) return true;
+    if( b.annotations < a.annotations ) return false;
+    return false;
+}
+
+bool
+operator==( const Field &a, const Field &b )
+{
+    return
+        a.name == b.name &&
+        a.typeExpr == b.typeExpr &&
+        a.default_ == b.default_ &&
+        a.annotations == b.annotations ;
+}
+
+Module::Module()
+{
+}
+
+Module::Module(
+    const ModuleName & name_,
+    const std::vector<Import>  & imports_,
+    const std::map<Ident,Decl>  & decls_
+    )
+    : name(name_)
+    , imports(imports_)
+    , decls(decls_)
+{
+}
+
+bool
+operator<( const Module &a, const Module &b )
+{
+    if( a.name < b.name ) return true;
+    if( b.name < a.name ) return false;
+    if( a.imports < b.imports ) return true;
+    if( b.imports < a.imports ) return false;
+    if( a.decls < b.decls ) return true;
+    if( b.decls < a.decls ) return false;
+    return false;
+}
+
+bool
+operator==( const Module &a, const Module &b )
+{
+    return
+        a.name == b.name &&
+        a.imports == b.imports &&
+        a.decls == b.decls ;
 }
 
 }}}; // ADL::sys::adlast
@@ -1343,49 +1353,6 @@ Serialisable<ADL::sys::adlast::Union_>::serialiser( const SerialiserFlags &sf )
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
-typename Serialiser<ADL::sys::adlast::Decl>::Ptr
-Serialisable<ADL::sys::adlast::Decl>::serialiser( const SerialiserFlags &sf )
-{
-    typedef ADL::sys::adlast::Decl _T;
-    
-    struct S_ : public Serialiser<_T>
-    {
-        S_( const SerialiserFlags & sf )
-            : name_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
-            , version_s( Serialisable<ADL::sys::types::Maybe<uint32_t> >::serialiser(sf) )
-            , type__s( Serialisable<ADL::sys::adlast::DeclType_>::serialiser(sf) )
-            {}
-        
-        
-        typename Serialiser<ADL::sys::adlast::Ident>::Ptr name_s;
-        typename Serialiser<ADL::sys::types::Maybe<uint32_t> >::Ptr version_s;
-        typename Serialiser<ADL::sys::adlast::DeclType_>::Ptr type__s;
-        
-        void toJson( JsonWriter &json, const _T & v ) const
-        {
-            json.startObject();
-            writeField<ADL::sys::adlast::Ident>( json, name_s, "name", v.name );
-            writeField<ADL::sys::types::Maybe<uint32_t> >( json, version_s, "version", v.version );
-            writeField<ADL::sys::adlast::DeclType_>( json, type__s, "type_", v.type_ );
-            json.endObject();
-        }
-        
-        void fromJson( _T &v, JsonReader &json ) const
-        {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
-            {
-                readField( name_s, v.name, "name", json ) ||
-                readField( version_s, v.version, "version", json ) ||
-                readField( type__s, v.type_, "type_", json ) ||
-                ignoreField( json );
-            }
-        }
-    };
-    
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
-};
-
 typename Serialiser<ADL::sys::adlast::ScopedName>::Ptr
 Serialisable<ADL::sys::adlast::ScopedName>::serialiser( const SerialiserFlags &sf )
 {
@@ -1456,92 +1423,6 @@ Serialisable<ADL::sys::adlast::TypeExpr>::serialiser( const SerialiserFlags &sf 
             {
                 readField( typeRef_s, v.typeRef, "typeRef", json ) ||
                 readField( parameters_s, v.parameters, "parameters", json ) ||
-                ignoreField( json );
-            }
-        }
-    };
-    
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
-};
-
-typename Serialiser<ADL::sys::adlast::Field>::Ptr
-Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
-{
-    typedef ADL::sys::adlast::Field _T;
-    
-    struct S_ : public Serialiser<_T>
-    {
-        S_( const SerialiserFlags & sf )
-            : name_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
-            , typeExpr_s( Serialisable<ADL::sys::adlast::TypeExpr>::serialiser(sf) )
-            , default__s( Serialisable<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::serialiser(sf) )
-            {}
-        
-        
-        typename Serialiser<ADL::sys::adlast::Ident>::Ptr name_s;
-        typename Serialiser<ADL::sys::adlast::TypeExpr>::Ptr typeExpr_s;
-        typename Serialiser<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::Ptr default__s;
-        
-        void toJson( JsonWriter &json, const _T & v ) const
-        {
-            json.startObject();
-            writeField<ADL::sys::adlast::Ident>( json, name_s, "name", v.name );
-            writeField<ADL::sys::adlast::TypeExpr>( json, typeExpr_s, "typeExpr", v.typeExpr );
-            writeField<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >( json, default__s, "default", v.default_ );
-            json.endObject();
-        }
-        
-        void fromJson( _T &v, JsonReader &json ) const
-        {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
-            {
-                readField( name_s, v.name, "name", json ) ||
-                readField( typeExpr_s, v.typeExpr, "typeExpr", json ) ||
-                readField( default__s, v.default_, "default", json ) ||
-                ignoreField( json );
-            }
-        }
-    };
-    
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
-};
-
-typename Serialiser<ADL::sys::adlast::Module>::Ptr
-Serialisable<ADL::sys::adlast::Module>::serialiser( const SerialiserFlags &sf )
-{
-    typedef ADL::sys::adlast::Module _T;
-    
-    struct S_ : public Serialiser<_T>
-    {
-        S_( const SerialiserFlags & sf )
-            : name_s( Serialisable<ADL::sys::adlast::ModuleName>::serialiser(sf) )
-            , imports_s( Serialisable<std::vector<ADL::sys::adlast::Import> >::serialiser(sf) )
-            , decls_s( Serialisable<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >::serialiser(sf) )
-            {}
-        
-        
-        typename Serialiser<ADL::sys::adlast::ModuleName>::Ptr name_s;
-        typename Serialiser<std::vector<ADL::sys::adlast::Import> >::Ptr imports_s;
-        typename Serialiser<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >::Ptr decls_s;
-        
-        void toJson( JsonWriter &json, const _T & v ) const
-        {
-            json.startObject();
-            writeField<ADL::sys::adlast::ModuleName>( json, name_s, "name", v.name );
-            writeField<std::vector<ADL::sys::adlast::Import> >( json, imports_s, "imports", v.imports );
-            writeField<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >( json, decls_s, "decls", v.decls );
-            json.endObject();
-        }
-        
-        void fromJson( _T &v, JsonReader &json ) const
-        {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
-            {
-                readField( name_s, v.name, "name", json ) ||
-                readField( imports_s, v.imports, "imports", json ) ||
-                readField( decls_s, v.decls, "decls", json ) ||
                 ignoreField( json );
             }
         }
@@ -1624,6 +1505,143 @@ Serialisable<ADL::sys::adlast::TypeDef_>::serialiser( const SerialiserFlags &sf 
             {
                 readField( typeParams_s, v.typeParams, "typeParams", json ) ||
                 readField( typeExpr_s, v.typeExpr, "typeExpr", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
+
+typename Serialiser<ADL::sys::adlast::Decl>::Ptr
+Serialisable<ADL::sys::adlast::Decl>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::sys::adlast::Decl _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : name_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
+            , version_s( Serialisable<ADL::sys::types::Maybe<uint32_t> >::serialiser(sf) )
+            , type__s( Serialisable<ADL::sys::adlast::DeclType_>::serialiser(sf) )
+            , annotations_s( Serialisable<ADL::sys::adlast::Annotations>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<ADL::sys::adlast::Ident>::Ptr name_s;
+        typename Serialiser<ADL::sys::types::Maybe<uint32_t> >::Ptr version_s;
+        typename Serialiser<ADL::sys::adlast::DeclType_>::Ptr type__s;
+        typename Serialiser<ADL::sys::adlast::Annotations>::Ptr annotations_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<ADL::sys::adlast::Ident>( json, name_s, "name", v.name );
+            writeField<ADL::sys::types::Maybe<uint32_t> >( json, version_s, "version", v.version );
+            writeField<ADL::sys::adlast::DeclType_>( json, type__s, "type_", v.type_ );
+            writeField<ADL::sys::adlast::Annotations>( json, annotations_s, "annotations", v.annotations );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( name_s, v.name, "name", json ) ||
+                readField( version_s, v.version, "version", json ) ||
+                readField( type__s, v.type_, "type_", json ) ||
+                readField( annotations_s, v.annotations, "annotations", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
+
+typename Serialiser<ADL::sys::adlast::Field>::Ptr
+Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::sys::adlast::Field _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : name_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
+            , typeExpr_s( Serialisable<ADL::sys::adlast::TypeExpr>::serialiser(sf) )
+            , default__s( Serialisable<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::serialiser(sf) )
+            , annotations_s( Serialisable<ADL::sys::adlast::Annotations>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<ADL::sys::adlast::Ident>::Ptr name_s;
+        typename Serialiser<ADL::sys::adlast::TypeExpr>::Ptr typeExpr_s;
+        typename Serialiser<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::Ptr default__s;
+        typename Serialiser<ADL::sys::adlast::Annotations>::Ptr annotations_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<ADL::sys::adlast::Ident>( json, name_s, "name", v.name );
+            writeField<ADL::sys::adlast::TypeExpr>( json, typeExpr_s, "typeExpr", v.typeExpr );
+            writeField<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >( json, default__s, "default", v.default_ );
+            writeField<ADL::sys::adlast::Annotations>( json, annotations_s, "annotations", v.annotations );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( name_s, v.name, "name", json ) ||
+                readField( typeExpr_s, v.typeExpr, "typeExpr", json ) ||
+                readField( default__s, v.default_, "default", json ) ||
+                readField( annotations_s, v.annotations, "annotations", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
+
+typename Serialiser<ADL::sys::adlast::Module>::Ptr
+Serialisable<ADL::sys::adlast::Module>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::sys::adlast::Module _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : name_s( Serialisable<ADL::sys::adlast::ModuleName>::serialiser(sf) )
+            , imports_s( Serialisable<std::vector<ADL::sys::adlast::Import> >::serialiser(sf) )
+            , decls_s( Serialisable<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<ADL::sys::adlast::ModuleName>::Ptr name_s;
+        typename Serialiser<std::vector<ADL::sys::adlast::Import> >::Ptr imports_s;
+        typename Serialiser<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >::Ptr decls_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<ADL::sys::adlast::ModuleName>( json, name_s, "name", v.name );
+            writeField<std::vector<ADL::sys::adlast::Import> >( json, imports_s, "imports", v.imports );
+            writeField<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >( json, decls_s, "decls", v.decls );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( name_s, v.name, "name", json ) ||
+                readField( imports_s, v.imports, "imports", json ) ||
+                readField( decls_s, v.decls, "decls", json ) ||
                 ignoreField( json );
             }
         }
