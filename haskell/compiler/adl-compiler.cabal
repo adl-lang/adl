@@ -2,7 +2,7 @@ name:                adl-compiler
 version:             0.1.0.0
 synopsis:            A compiler for the Algebraic Data Language (ADL)
 -- description:         
-license:             GPL-2
+license:             BSD3
 license-file:        ../../LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
