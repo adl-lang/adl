@@ -149,9 +149,9 @@ stdsrc = "../../../adl/stdlib"
 
 stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
 stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/rpc.adl", "sys/sinkimpl.adl", "sys/adlast.adl"]
-stdHsCustomTypes = ["../../compiler/config/hs-custom-types.json"]
-stdCppCustomTypes = ["../../compiler/config/cpp-custom-types.json"]
-stdJavaCustomTypes = ["../../compiler/config/java-custom-types.json"]
+stdHsCustomTypes = ["../../compiler/lib/adl/sys/types/hs-custom-types.json"]
+stdCppCustomTypes = ["../../compiler/lib/adl/sys/types/cpp-custom-types.json"]
+stdJavaCustomTypes = ["../../compiler/lib/adl/sys/types/java-custom-types.json"]
 
 runTests :: IO ()
 runTests = do

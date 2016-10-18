@@ -90,7 +90,7 @@ javaMaxLineLength ufn =
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      systemAdlDir <- liftIO $ getSystemAdlDir
+      systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
       V.verify (mkFlags opts systemAdlDir) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
@@ -105,7 +105,7 @@ runVerify args0 =
 runAst args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      systemAdlDir <- liftIO $ getSystemAdlDir
+      systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
       A.generate (mkFlags opts systemAdlDir) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
@@ -133,13 +133,12 @@ runHaskell args0 =
     header = "Usage: adl haskell [OPTION...] files..."
 
     mkFlags opts = do
-      stdCustomTypes <- liftIO $ getStdlibCustomTypesHs
-      systemAdlDir <- liftIO $ getSystemAdlDir
+      libDir <- liftIO $ getLibDir
       let (flags1,out1) = (foldl (.) id opts) (flags0,out0)
           flags0 = H.HaskellFlags {
-            hf_searchPath=[systemAdlDir],
+            hf_searchPath=[systemAdlDir libDir],
             hf_modulePrefix="ADL.Generated",
-            hf_customTypeFiles=[stdCustomTypes],
+            hf_customTypeFiles=[stdlibCustomTypesHs libDir],
             hf_fileWriter= \_ _ -> return ()
           }
           out0 = OutputArgs {
@@ -170,13 +169,12 @@ runCpp args0 =
     header = "Usage: adl cpp [OPTION...] files..."
 
     mkFlags opts = do
-      stdCustomTypes <- liftIO $ getStdlibCustomTypesCpp
-      systemAdlDir <- liftIO $ getSystemAdlDir
+      libDir <- liftIO $ getLibDir
       let (flags1,out) = (foldl (.) id opts) (flags0,out0)
           flags0 = C.CppFlags {
-            cf_searchPath=[systemAdlDir],
+            cf_searchPath=[systemAdlDir libDir],
             cf_incFilePrefix="",
-            cf_customTypeFiles= [stdCustomTypes],
+            cf_customTypeFiles= [stdlibCustomTypesCpp libDir],
             cf_fileWriter= \_ _ -> return ()
           }
           out0 = OutputArgs {
@@ -204,12 +202,12 @@ runJava args0 =
     header = "Usage: adl java [OPTION...] files..."
 
     mkFlags opts = do
-      stdCustomTypes <- liftIO $ getStdlibCustomTypesJava
-      systemAdlDir <- liftIO $ getSystemAdlDir
+      libDir <- liftIO $ getLibDir
       let (flags1,out) = (foldl (.) id opts) (flags0,out0)
           flags0 = J.JavaFlags {
-            jf_searchPath=[systemAdlDir],
-            jf_customTypeFiles=[stdCustomTypes],
+            jf_libDir=libDir,
+            jf_searchPath=[systemAdlDir libDir],
+            jf_customTypeFiles=[stdlibCustomTypesJava libDir],
             jf_package = "adl",
             jf_fileWriter= \_ _ -> return (),
             jf_includeRuntime = False,

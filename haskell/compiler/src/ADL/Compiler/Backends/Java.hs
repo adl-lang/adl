@@ -37,7 +37,7 @@ import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Java.Parcelable
 import ADL.Compiler.Backends.Java.Json
 import ADL.Compiler.EIO
-import ADL.Compiler.DataFiles(getJavaRuntimeDir)
+import ADL.Compiler.DataFiles
 import ADL.Compiler.Primitive
 import ADL.Compiler.Processing
 import ADL.Core.Value
@@ -582,7 +582,6 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
 
 generateRuntime :: JavaFlags -> Set.Set JavaClass -> IO ()
 generateRuntime jf imports = do
-    runtimedir <-  getJavaRuntimeDir
     files <- dirContents runtimedir
     for_ files $ \inpath -> do
       let cls = javaClass rtpackage (T.pack (dropExtensions (takeFileName inpath)))
@@ -595,6 +594,7 @@ generateRuntime jf imports = do
         content <- LBS.readFile (runtimedir </> inpath)
         jf_fileWriter jf (javaClassFilePath cls) (adjustContent content)
   where
+    runtimedir =  javaRuntimeDir (jf_libDir jf)
     rtpackage = cgp_runtimePackage (jf_codeGenProfile jf)
     
     adjustContent :: LBS.ByteString -> LBS.ByteString

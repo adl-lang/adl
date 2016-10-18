@@ -34,6 +34,8 @@ import ADL.Core.Value
 import ADL.Utils.Format
 
 data JavaFlags = JavaFlags {
+  jf_libDir :: FilePath,
+  
   -- directories where we look for ADL files
   jf_searchPath :: [FilePath],
 
