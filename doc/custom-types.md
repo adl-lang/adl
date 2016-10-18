@@ -108,14 +108,13 @@ for use in the implementation of our custom type.
 Custom type mappings are used in the ADL standard library. The
 following custom mappings are in place:
 
-| ADL Type     | Haskell Type   | C++ Type  |
-|--------------|----------------|-----------|
-| Pair<T1,T2>  | (,)            | std::pair |
-| Map<K,V>     | Data.Map.Map   | std::set  |
-| Set<V>       | Data.Set.Set   | std::map  |
-| Maybe<T>     | prelude.Maybe  |           |
-| Either<T1,T> | prelude.Either |           |
-
+| ADL Type     | Haskell Type   | C++ Type  | Java Type          |
+|--------------|----------------|-----------|--------------------|
+| Pair<T1,T2>  | (,)            | std::pair |                    |
+| Map<K,V>     | Data.Map.Map   | std::set  | java.util.HashMap  |
+| Set<V>       | Data.Set.Set   | std::map  | java.util.HashSet  |
+| Maybe<T>     | prelude.Maybe  |           | java.util.Optional |
+| Either<T1,T> | prelude.Either |           |                    |
 
 
 [1]: http://hackage.haskell.org/package/time-1.1.2.1/docs/Data-Time-Calendar.html#t%3ADay
