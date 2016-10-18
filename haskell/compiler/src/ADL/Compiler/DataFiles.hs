@@ -1,6 +1,9 @@
 module ADL.Compiler.DataFiles(
-  getDataFileName,
-  getDataFileDir
+  getJavaRuntimeDir,
+  getSystemAdlDir,
+  getStdlibCustomTypesHs,
+  getStdlibCustomTypesCpp,
+  getStdlibCustomTypesJava
   ) where
 
 import System.FilePath
@@ -19,3 +22,17 @@ getDataFileDir = do
   ref <- P.getDataFileName "config/hs-custom-types.json"
   return (takeDirectory (takeDirectory ref))
 
+getJavaRuntimeDir :: IO FilePath
+getJavaRuntimeDir = (</>"runtime/java") <$> getDataFileDir
+
+getSystemAdlDir :: IO FilePath
+getSystemAdlDir = (</>"adl") <$> getDataFileDir
+
+getStdlibCustomTypesHs :: IO FilePath
+getStdlibCustomTypesHs = getDataFileName "config/hs-custom-types.json"
+
+getStdlibCustomTypesCpp :: IO FilePath
+getStdlibCustomTypesCpp = getDataFileName "config/cpp-custom-types.json"
+
+getStdlibCustomTypesJava :: IO FilePath
+getStdlibCustomTypesJava = getDataFileName "config/java-custom-types.json"

@@ -14,6 +14,8 @@ cabal-version:       >=1.8
 data-files:          adl/adlc/config/haskell.adl
                      adl/adlc/config/cpp.adl
                      adl/adlc/config/java.adl
+                     adl/sys/types.adl
+                     adl/sys/adlast.adl
                      config/hs-custom-types.json
                      config/cpp-custom-types.json
                      config/java-custom-types.json
