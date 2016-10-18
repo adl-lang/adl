@@ -7,13 +7,9 @@ After checking out the git repository (as `$REPO`), run the following:
 
 ```
 cd $REPO/haskell
-stack build
-stack install
+stack build ./compiler-bootstrap
+stack install ./compiler
 ```
-
-(You may need to run the `stack build` step twice, there appears to be
-a glitch in the cabal dependencies where the bootstrap compiler isn't
-always built sufficiently early.)
 
 Then, you should be able to run the compiler installed into your home
 directory:
