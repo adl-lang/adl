@@ -34,7 +34,8 @@ executable adlc
   build-depends:       base, text, containers, bytestring,
                        parsec, mtl, transformers,
                        filepath, directory, unordered-containers, vector, base64-bytestring,
-                       attoparsec, aeson, scientific, adl-utils, adl-compiler-lib, adl-runtime, aeson-pretty
+                       attoparsec, aeson, scientific, adl-utils, adl-compiler-lib, adl-runtime, aeson-pretty,
+                       executable-path
   other-modules:       ADL.Compiler.Backends.AST
                      , ADL.Compiler.Backends.Cpp
                      , ADL.Compiler.Backends.Java

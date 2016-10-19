@@ -7,16 +7,34 @@ module ADL.Compiler.DataFiles(
   stdlibCustomTypesJava
   ) where
 
-import System.FilePath
 import qualified Paths_adl_compiler as P
 
+import System.Directory(doesFileExist,doesDirectoryExist)
+import System.Environment.Executable(getExecutablePath)
+import System.Environment(lookupEnv)
+import System.FilePath
 
 getLibDir :: IO FilePath
 getLibDir = do
-  -- If we are falling back on cabal data files,
-  -- cheat and use path relative to a file we know exists
-  ref <- P.getDataFileName "lib/adl/sys/types.adl"
-  return (takeDirectory (takeDirectory (takeDirectory ref)))
+  -- First we check for an ADL_ROOT environment variable, which
+  -- must point to a directory containing the lib directory.
+  ms <- lookupEnv "ADL_ROOT"
+  case ms of
+    (Just adlRoot) -> return (adlRoot </> "lib")
+    Nothing -> do
+      -- Next try a path relative to the binary
+      exePath <- getExecutablePath
+      let adlRoot = takeDirectory (takeDirectory exePath)
+      exists <- doesDirectoryExist (adlRoot </> "lib/adl")
+      if exists
+         then return (adlRoot </> "lib")
+         else do
+          -- Fall back on cabal installed files in the source tree
+          ref <- P.getDataFileName "lib/adl/sys/types.adl"
+          exists <- doesFileExist ref
+          if exists
+             then return (takeDirectory (takeDirectory (takeDirectory ref)))
+             else error "Unable to find lib directory"
 
 javaRuntimeDir :: FilePath -> FilePath
 javaRuntimeDir libdir = libdir </> "java/runtime"
