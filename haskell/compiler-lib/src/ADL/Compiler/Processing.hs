@@ -506,7 +506,7 @@ loadAndCheckModule moduleFinder modulePath = do
     resolve1 m ns = do
         checkUndefined1 m ns
         let rm = resolveModule m ns
-            mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (fmap (fmap (fullyScopedType (m_name m))) (m_decls rm))
+            mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (fmap (mapDecl (fullyScopedType (m_name m))) (m_decls rm))
             ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
         checkTypeCtorApps1 rm
         checkDefaultOverrides1 rm
@@ -599,5 +599,5 @@ fullyScopedName mname (ScopedName (ModuleName []) n) = ScopedName mname n
 fullyScopedName _ sn = sn
 
 fullyScopedType :: ModuleName -> ResolvedTypeT c -> ResolvedTypeT c
-fullyScopedType mname (RT_Named (sn,decl,c)) = RT_Named (fullyScopedName mname sn,fmap (fullyScopedType mname) decl,c)
+fullyScopedType mname (RT_Named (sn,decl,c)) = RT_Named (fullyScopedName mname sn,mapDecl (fullyScopedType mname) decl,c)
 fullyScopedType _ rt = rt

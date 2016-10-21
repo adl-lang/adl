@@ -127,10 +127,10 @@ loadCustomTypes fps = mconcat <$> sequence [loadFile fp | fp <- fps]
 type CResolvedType = ResolvedTypeT (Maybe CustomType)
 
 associateCustomTypes :: ModuleName -> CustomTypeMap -> Module ResolvedType -> Module CResolvedType
-associateCustomTypes moduleName customTypes mod = fmap assocf mod
+associateCustomTypes moduleName customTypes mod = mapModule assocf mod
   where 
     assocf :: ResolvedType -> CResolvedType
-    assocf (RT_Named (sn,decl,()))  = RT_Named (sn,fmap assocf decl,Map.lookup (fullyScope sn) customTypes)
+    assocf (RT_Named (sn,decl,()))  = RT_Named (sn,mapDecl assocf decl,Map.lookup (fullyScope sn) customTypes)
     assocf (RT_Param i) = RT_Param i
     assocf (RT_Primitive pt) = RT_Primitive pt
 

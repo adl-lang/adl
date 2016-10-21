@@ -128,49 +128,36 @@ instance Foldable Decl where
 instance Foldable Module where
     foldMap f Module{m_decls=ds} = (foldMap.foldMap) f ds
 
-instance Functor TypeExpr where
-    fmap f (TypeExpr t ts) = TypeExpr (f t) (fmap (fmap f) ts)
-instance Functor Field where
-    fmap f field@Field{f_type=t} = field{f_type=fmap f t}
-instance Functor Struct where
-    fmap f struct@Struct{s_fields=fs} = struct{s_fields=fmap (fmap f) fs}
-instance Functor Union where
-    fmap f union@Union{u_fields=fs} = union{u_fields=fmap (fmap f) fs}
-instance Functor Typedef where
-    fmap f typedef@Typedef{t_typeExpr=t} = typedef{t_typeExpr=fmap f t}
-instance Functor Newtype where
-    fmap f ntype@Newtype{n_typeExpr=t} = ntype{n_typeExpr=fmap f t}
-instance Functor DeclType where
-    fmap f (Decl_Struct s) = Decl_Struct (fmap f s)
-    fmap f (Decl_Union u) = Decl_Union (fmap f u)
-    fmap f (Decl_Typedef t) = Decl_Typedef (fmap f t)
-    fmap f (Decl_Newtype n) = Decl_Newtype (fmap f n)
-instance Functor Decl where
-    fmap f decl@Decl{d_type=d} = decl{d_type=fmap f d}
-instance Functor Module where
-    fmap f mod@Module{m_decls=ds} = mod{m_decls=(fmap.fmap) f ds}
+mapTypeExpr :: (a -> b) -> TypeExpr a -> TypeExpr b
+mapTypeExpr f (TypeExpr t ts) = TypeExpr (f t) (fmap (mapTypeExpr f) ts)
 
-instance Traversable TypeExpr where
-  traverse f (TypeExpr t ts) = TypeExpr <$> (f t) <*> traverse (traverse f) ts
-instance Traversable Field where
-    traverse f field = (\te->field{f_type=te}) <$> traverse f (f_type field)
-instance Traversable Struct where
-    traverse f struct = (\fs->struct{s_fields=fs}) <$> traverse (traverse f) (s_fields struct)
-instance Traversable Union where
-    traverse f union = (\fs->union{u_fields=fs}) <$> traverse (traverse f) (u_fields union)
-instance Traversable Typedef where
-    traverse f typedef = (\te->typedef{t_typeExpr=te}) <$> traverse f (t_typeExpr typedef)
-instance Traversable Newtype where
-    traverse f ntype = (\te->ntype{n_typeExpr=te}) <$> traverse f (n_typeExpr ntype)
-instance Traversable DeclType where
-    traverse f (Decl_Struct s) = Decl_Struct <$> traverse f s
-    traverse f (Decl_Union u) = Decl_Union <$> traverse f u
-    traverse f (Decl_Typedef t) = Decl_Typedef <$> traverse f t
-    traverse f (Decl_Newtype n) = Decl_Newtype <$> traverse f n
-instance Traversable Decl where
-    traverse f decl = (\dtype -> decl{d_type=dtype}) <$> traverse f (d_type decl)
-instance Traversable Module where
-    traverse f mod = (\decls -> mod{m_decls=decls}) <$> traverse (traverse f) (m_decls mod)
+mapField :: (a -> b) -> Field a -> Field b
+mapField f field@Field{f_type=t} = field{f_type=mapTypeExpr f t}
+
+mapStruct :: (a -> b) -> Struct a -> Struct b
+mapStruct f struct@Struct{s_fields=fs} = struct{s_fields=fmap (mapField f) fs}
+
+mapUnion :: (a -> b) -> Union a -> Union b
+mapUnion f union@Union{u_fields=fs} = union{u_fields=fmap (mapField f) fs}
+
+mapTypedef :: (a -> b) -> Typedef a -> Typedef b
+mapTypedef f typedef@Typedef{t_typeExpr=t} = typedef{t_typeExpr=mapTypeExpr f t}
+
+mapNewtype :: (a -> b) -> Newtype a -> Newtype b
+mapNewtype f ntype@Newtype{n_typeExpr=t} = ntype{n_typeExpr=mapTypeExpr f t}
+
+mapDeclType :: (a -> b) -> DeclType a -> DeclType b
+mapDeclType f (Decl_Struct s) = Decl_Struct (mapStruct f s)
+mapDeclType f (Decl_Union u) = Decl_Union (mapUnion f u)
+mapDeclType f (Decl_Typedef t) = Decl_Typedef (mapTypedef f t)
+mapDeclType f (Decl_Newtype n) = Decl_Newtype (mapNewtype f n)
+
+mapDecl :: (a -> b) -> Decl a -> Decl b
+mapDecl f decl@Decl{d_type=d} = decl{d_type=mapDeclType f d}
+
+mapModule :: (a -> b) -> Module a -> Module b
+mapModule f mod@Module{m_decls=ds} = mod{m_decls=(fmap.mapDecl) f ds}
+
 
 getReferencedModules :: Module ScopedName -> Set.Set ModuleName
 getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` foldMap ref m
