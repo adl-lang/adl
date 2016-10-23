@@ -51,8 +51,13 @@ in any of the target languages. For example, this command
 adlc java --json picture.adl
 ```
 
-will generate [these data model classes][exampleout] and include java
-serialization code.
+will generate [these java classes][examplejava] (which include json
+serialization functions). The command to generate the corresponding
+[haskell types][examplehaskell] is 
+
+```
+adlc haskell picture.adl
+```
 
 # More information
 
@@ -73,7 +78,9 @@ Using the (experimental) `Sink` communications primitive, A variety of
 [application level communication protocols][5] can be defined in the
 ADL language.
 
-[exampleout]:../haskell/compiler/tests/demo1/java-output/adl/picture/
+
+[examplejava]:../haskell/compiler/tests/demo1/java-output/adl/picture/
+[examplehaskell]:../haskell/compiler/tests/demo1/hs-output/ADL/Picture.hs
 [1]:language.md
 [2]:compiler.md
 [3]:install.md

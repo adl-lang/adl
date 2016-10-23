@@ -211,6 +211,9 @@ runTests = do
     it "Correctly uses specified serialisation field names" $ do
       collectResults (runHaskellBackend1 "test20/input/test.adl")
         `shouldReturn` MatchOutput
+    it "Generates the correct code for the picture demo" $ do
+      collectResults (runHaskellBackend1 "demo1/input/picture.adl")
+        `shouldReturn` MatchOutput
 
   describe "adlc ast backend" $ do
     it "generates expected json serialisation for each type of decl" $ do
