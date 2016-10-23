@@ -17,45 +17,6 @@ variety of object oriented and functional programming languages.  The
 syntax of ADL is straightforward, and will be familiar to java and c++
 developers.
 
-# Example
-
-Here is a tiny ADL example:
-
-```
-module picture
-{
-    union Picture
-    {
-        Circle circle;
-        Rectangle rectangle;
-        Vector<Picture> composed;
-        TranslatedPicture translated;
-    };
-
-    struct Circle
-    {
-        Double radius;
-    };
-
-    struct Rectangle
-    {
-        Double width;
-        Double height;
-    };
-
-    struct TranslatedPicture
-    {
-        Double xoffset;
-        Double yoffset;
-        Picture picture;
-    };
-};
-
-```
-
-This specifies a data type representing a Picture. In this example a
-picture composes Rectangles and Circles, with arbitrary translations.
-
 # Modules
 
 The ADL namespace is managed through modules - all definitions exist
