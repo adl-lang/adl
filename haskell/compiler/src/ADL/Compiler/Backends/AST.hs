@@ -79,8 +79,8 @@ literalToA2 (JSON.Bool b) = A2.Literal_boolean b
 literalToA2 (JSON.Array vs) = A2.Literal_array (fmap literalToA2 (V.toList vs))
 literalToA2 (JSON.Object hm) = A2.Literal_object (Map.fromList (fmap (\(k,v) -> (k,literalToA2 v)) (HM.toList hm)))
 
-annotationsToA2 :: Map.Map ScopedName JSON.Value -> Map.Map A2.ScopedName A2.Literal
-annotationsToA2 = Map.fromList . map (\(k,v) -> (scopedNameToA2 k,literalToA2 v)) . Map.toList
+annotationsToA2 :: Map.Map ScopedName (ResolvedType,JSON.Value) -> Map.Map A2.ScopedName A2.Literal
+annotationsToA2 = Map.fromList . map (\(k,(_,v)) -> (scopedNameToA2 k,literalToA2 v)) . Map.toList
 
 writeModuleFile :: (FilePath -> LBS.ByteString -> IO ()) ->
                    Module ResolvedType ->

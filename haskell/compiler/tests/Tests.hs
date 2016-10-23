@@ -49,10 +49,10 @@ processCompilerOutput epath tempDir (Right ()) = do
       cwd <- getCurrentDirectory
       return (OutputDiff (cwd </> epath) tempDir diffs)
 
-runVerifyBackend :: FilePath -> [FilePath] -> IO CodeGenResult
+runVerifyBackend :: [FilePath] -> [FilePath] -> IO CodeGenResult
 runVerifyBackend ipath mpaths = do
   let flags =  V.VerifyFlags {
-    V.vf_searchPath = [ipath]
+    V.vf_searchPath = ipath
     }
   er <- unEIO $ V.verify flags mpaths
   case er of
@@ -60,7 +60,7 @@ runVerifyBackend ipath mpaths = do
    (Right ()) -> return MatchOutput
 
 runVerifyBackend1 :: FilePath -> IO CodeGenResult
-runVerifyBackend1 mpath = runVerifyBackend (takeDirectory mpath) [mpath]
+runVerifyBackend1 mpath = runVerifyBackend [stdsrc,takeDirectory mpath] [mpath]
 
 runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
 runHaskellBackend ipaths mpaths epath customTypeFiles = do
@@ -76,7 +76,7 @@ runHaskellBackend ipaths mpaths epath customTypeFiles = do
   processCompilerOutput epath tempDir er
 
 runHaskellBackend1 :: FilePath-> IO CodeGenResult
-runHaskellBackend1 mpath = runHaskellBackend [ipath] [mpath] epath []
+runHaskellBackend1 mpath = runHaskellBackend [ipath,stdsrc] [mpath] epath []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "hs-output"
@@ -95,24 +95,24 @@ runCppBackend ipaths mpaths epath iprefix customTypeFiles = do
   processCompilerOutput epath tempDir er
 
 runCppBackend1 :: FilePath-> IO CodeGenResult
-runCppBackend1 mpath = runCppBackend [ipath] [mpath] epath "" []
+runCppBackend1 mpath = runCppBackend [ipath,stdsrc] [mpath] epath "" []
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "cpp-output"
 
-runAstBackend :: FilePath -> [FilePath] -> FilePath -> IO CodeGenResult
+runAstBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
 runAstBackend ipath mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let flags = AST.Flags {
-    AST.af_searchPath = [ipath],
+    AST.af_searchPath = ipath,
     AST.af_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
     }
   er <- unEIO $ AST.generate flags mpaths
   processCompilerOutput epath tempDir er
 
 runAstBackend1 :: FilePath-> IO CodeGenResult
-runAstBackend1 mpath = runAstBackend ipath [mpath] epath
+runAstBackend1 mpath = runAstBackend [ipath,stdsrc] [mpath] epath
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "ast-output"
@@ -123,6 +123,7 @@ runJavaBackend ipaths mpaths epath updateflags = do
   tempDir <- createTempDirectory tdir "adl.test."
   let flags = J.JavaFlags {
     J.jf_searchPath = ipaths,
+    J.jf_libDir = "LIBDIR",
     J.jf_customTypeFiles = [],
     J.jf_package = J.javaPackage "adl",
     J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir),
@@ -139,7 +140,7 @@ withJavaOutputPackage :: T.Text -> J.JavaFlags -> J.JavaFlags
 withJavaOutputPackage package flags = flags{J.jf_package=J.javaPackage package}
 
 runJavaBackend1 :: FilePath -> IO CodeGenResult
-runJavaBackend1 mpath = runJavaBackend [ipath] [mpath] epath id
+runJavaBackend1 mpath = runJavaBackend [ipath,stdsrc] [mpath] epath id
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "java-output"
@@ -215,6 +216,9 @@ runTests = do
     it "generates expected json serialisation for each type of decl" $ do
       collectResults (runAstBackend1 "test15/input/test.adl")
         `shouldReturn` MatchOutput
+    it "generates expected json serialisation for custom annotation types" $ do
+      collectResults (runAstBackend1 "test21/input/test.adl")
+        `shouldReturn` MatchOutput
     
   describe "adlc cpp backend" $ do
     it "generates expected code for an empty module" $ do
@@ -242,7 +246,7 @@ runTests = do
       collectResults (runCppBackend1 "test14/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      collectResults (runCppBackend ["test16/input"] ["test16/input/test.adl"] "test16/cpp-output" "adl" [])
+      collectResults (runCppBackend ["test16/input",stdsrc] ["test16/input/test.adl"] "test16/cpp-output" "adl" [])
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation when necessary" $ do
       collectResults (runCppBackend1 "test17/input/test.adl")
@@ -281,7 +285,7 @@ runTests = do
       collectResults (runJavaBackend1 "test14/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      collectResults (runJavaBackend ["test16/input"] ["test16/input/test.adl","test16/input/test2.adl"] "test16/java-output" id)
+      collectResults (runJavaBackend ["test16/input",stdsrc] ["test16/input/test.adl","test16/input/test2.adl"] "test16/java-output" id)
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation" $ do
       collectResults (runJavaBackend1 "test17/input/test.adl")

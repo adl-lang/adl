@@ -71,7 +71,16 @@ loadModule fpath0 findm mm = do
         hasVersion _ = True
 
     parseAndCheckFile :: FilePath -> EIO T.Text (Module ScopedName)
-    parseAndCheckFile f = parseFile f >>= checkDeclarations                        
+    parseAndCheckFile f = do
+      m <- addDefaultImports <$> parseFile f
+      checkDeclarations m
+
+    addDefaultImports :: Module0 ScopedName -> Module0 ScopedName
+    addDefaultImports m = m{m0_imports=extraImports<>m0_imports m}
+      where
+        extraImports | m0_name m `elem` defModules = []
+                     | otherwise = map Import_Module defModules
+        defModules = [ModuleName ["sys","annotations"]]
 
     addDeps :: SModule -> SModuleMap -> EIO T.Text SModuleMap
     addDeps m mm = do
@@ -200,21 +209,27 @@ instance Format UndefinedName where
   formatText (UndefinedName sn) = T.intercalate " " ["undefined type", formatText sn]
 
 undefinedNames :: Module ScopedName -> NameScope -> [UndefinedName]
-undefinedNames m ns = foldMap checkDecl (m_decls m)
+undefinedNames m ns0 = foldMap checkDecl (m_decls m)
     where
-      ns' = namescopeForModule m ns
+      ns = namescopeForModule m ns0
+
+      checkDeclType :: (DeclType ScopedName) -> [UndefinedName]
+      checkDeclType (Decl_Struct s) = checkFields (withTypeParams (s_typeParams s)) (s_fields s)
+      checkDeclType (Decl_Union u) = checkFields  (withTypeParams (u_typeParams u)) (u_fields u)
+      checkDeclType (Decl_Typedef t) = checkTypeExpr (withTypeParams (t_typeParams t)) (t_typeExpr t)
+      checkDeclType (Decl_Newtype n) = checkTypeExpr (withTypeParams (n_typeParams n)) (n_typeExpr n)
 
       checkDecl :: (Decl ScopedName) -> [UndefinedName]
-      checkDecl Decl{d_type=Decl_Struct s} = checkFields (withTypeParams (s_typeParams s)) (s_fields s)
-      checkDecl Decl{d_type=Decl_Union u} = checkFields  (withTypeParams (u_typeParams u)) (u_fields u)
-      checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (withTypeParams (t_typeParams t)) (t_typeExpr t)
-      checkDecl Decl{d_type=Decl_Newtype n} = checkTypeExpr (withTypeParams (n_typeParams n)) (n_typeExpr n)
+      checkDecl decl = checkDeclType (d_type decl) <> checkAnnotations (d_annotations decl)
 
       withTypeParams :: [Ident] -> NameScope
-      withTypeParams ids = ns'{ns_typeParams=Set.fromList ids}
+      withTypeParams ids = ns{ns_typeParams=Set.fromList ids}
+
+      checkField  :: NameScope -> Field ScopedName -> [UndefinedName]
+      checkField ns field = checkTypeExpr ns (f_type field) <> checkAnnotations (f_annotations field)
 
       checkFields :: NameScope -> [Field ScopedName] -> [UndefinedName]
-      checkFields ns fs = foldMap (checkTypeExpr ns.f_type) fs
+      checkFields ns fs = foldMap (checkField ns) fs
 
       checkTypeExpr :: NameScope -> TypeExpr ScopedName -> [UndefinedName]
       checkTypeExpr ns (TypeExpr t args) = checkScopedName ns t `mappend` foldMap (checkTypeExpr ns) args
@@ -224,33 +239,47 @@ undefinedNames m ns = foldMap checkDecl (m_decls m)
           LR_NotFound -> [UndefinedName sn]
           _ -> []
 
+      checkAnnotations :: Annotations ScopedName -> [UndefinedName]
+      checkAnnotations as = concat [ checkScopedName ns n | (n,(_,_)) <- (Map.toList as)]
+
 -- Resolve all type references in a module. This assumes that all types
 -- are resolvable, ie there are no undefined names
 resolveModule :: Module ScopedName -> NameScope -> Module ResolvedType
-resolveModule m ns = m{m_decls=Map.map (resolveDecl ns') (m_decls m)}
+resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m)}
   where
-    ns' = namescopeForModule m ns
+    ns = namescopeForModule m ns0
 
-    resolveDecl :: NameScope -> Decl ScopedName -> Decl ResolvedType
-
-    resolveDecl ns d@Decl{d_type=Decl_Struct s} = d{d_type=Decl_Struct (s{s_fields=fields'})}
+    resolveDeclType :: NameScope -> DeclType ScopedName -> DeclType ResolvedType
+    resolveDeclType ns (Decl_Struct s) = Decl_Struct (s{s_fields=fields'})
       where
         fields' = resolveFields (withTypeParams ns (s_typeParams s)) (s_fields s)
-
-    resolveDecl ns d@Decl{d_type=Decl_Union u} = d{d_type=Decl_Union (u{u_fields=fields'})}
+    resolveDeclType ns (Decl_Union u) = Decl_Union (u{u_fields=fields'})
       where
         fields' = resolveFields (withTypeParams ns (u_typeParams u)) (u_fields u)
-                                                
-    resolveDecl ns d@Decl{d_type=Decl_Typedef t} = d{d_type=Decl_Typedef (t{t_typeExpr=expr'})}
+    resolveDeclType ns (Decl_Typedef t) = Decl_Typedef (t{t_typeExpr=expr'})
       where
         expr' = resolveTypeExpr (withTypeParams ns (t_typeParams t)) (t_typeExpr t)
-
-    resolveDecl ns d@Decl{d_type=Decl_Newtype n} = d{d_type=Decl_Newtype (n{n_typeExpr=expr'})}
+    resolveDeclType ns (Decl_Newtype n) = Decl_Newtype (n{n_typeExpr=expr'})
       where
         expr' = resolveTypeExpr (withTypeParams ns (n_typeParams n)) (n_typeExpr n)
 
+    resolveDecl :: NameScope -> Decl ScopedName -> Decl ResolvedType
+    resolveDecl ns decl = decl
+      { d_annotations=resolveAnnotations ns (d_annotations decl)
+      , d_type=resolveDeclType ns (d_type decl)
+      }
+
+    resolveAnnotations :: NameScope -> Annotations ScopedName -> Annotations ResolvedType
+    resolveAnnotations ns as = fmap (\(n,jv) -> (resolveName ns n,jv)) as
+
+    resolveField :: NameScope -> Field ScopedName -> Field ResolvedType
+    resolveField ns field = field
+      { f_type=resolveTypeExpr ns (f_type field)
+      , f_annotations=resolveAnnotations ns (f_annotations field)
+      }
+
     resolveFields :: NameScope -> [Field ScopedName] -> [Field ResolvedType]
-    resolveFields ns fields = [f{f_type=resolveTypeExpr ns (f_type f)} | f <- fields]
+    resolveFields ns fields = map (resolveField ns) fields
 
     resolveTypeExpr :: NameScope -> TypeExpr ScopedName -> TypeExpr ResolvedType
     resolveTypeExpr ns (TypeExpr t args) = TypeExpr (resolveName ns t) (map (resolveTypeExpr ns) args)
@@ -309,19 +338,19 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
       declTypeArgCount (Decl_Newtype n) = length (n_typeParams n)
 
 
-newtype DefaultOverrideError = DefaultOverrideError T.Text
+newtype GeneralError = GeneralError T.Text
 
-instance Format DefaultOverrideError where
-  formatText (DefaultOverrideError t) = t
+instance Format GeneralError where
+  formatText (GeneralError t) = t
 
 -- | Check that:
 --     * there are no default overrides for parameterised types
 --     * the JSON literal for each default override has the appropriate type
 --
-checkDefaultOverrides :: RModule -> [DefaultOverrideError]
+checkDefaultOverrides :: RModule -> [GeneralError]
 checkDefaultOverrides m = execWriter checkModule
   where
-    checkModule :: Writer [DefaultOverrideError] ()
+    checkModule :: Writer [GeneralError] ()
     checkModule = do
       forM_ (Map.elems (m_decls m)) $ \decl -> do
         case decl of
@@ -330,16 +359,37 @@ checkDefaultOverrides m = execWriter checkModule
           Decl{d_name=n,d_type=Decl_Newtype nt} -> checkType n (n_typeParams nt) (n_typeExpr nt) (n_default nt)
           _ -> return ()
 
-    checkFields :: Ident -> [Ident] -> [Field ResolvedType] -> Writer [DefaultOverrideError] ()
+    checkFields :: Ident -> [Ident] -> [Field ResolvedType] -> Writer [GeneralError] ()
     checkFields n tparams fields = forM_ fields $ \f -> do
       checkType (template "field $1 of $2" [f_name f,n]) tparams (f_type f) (f_default f)
 
-    checkType :: T.Text -> [Ident] -> TypeExpr ResolvedType -> Maybe JSON.Value -> Writer [DefaultOverrideError] ()
+    checkType :: T.Text -> [Ident] -> TypeExpr ResolvedType -> Maybe JSON.Value -> Writer [GeneralError] ()
     checkType _ _ _ Nothing = return ()
     checkType n tparams te (Just jv) = case literalForTypeExpr te jv of
       Right _ -> return ()
-      Left err -> tell [DefaultOverrideError (template "Invalid override of $1: $2" [n,err])]
+      Left err -> tell [GeneralError (template "Invalid override of $1: $2" [n,err])]
 
+checkModuleAnnotations :: RModule -> [GeneralError]
+checkModuleAnnotations m = execWriter checkModule
+  where
+    checkModule :: Writer [GeneralError] ()
+    checkModule = do
+      forM_ (Map.elems (m_decls m)) $ \decl -> do
+        checkAnnotations (d_name decl) (d_annotations decl)
+        case decl of
+          Decl{d_name=n,d_type=Decl_Struct s} -> checkFields n (s_fields s)
+          Decl{d_name=n,d_type=Decl_Union u} -> checkFields n (u_fields u)
+          _ -> return ()
+
+    checkFields :: Ident -> [Field ResolvedType] -> Writer [GeneralError] ()
+    checkFields n fields = forM_ fields $ \f -> do
+      checkAnnotations (template "field $1 of $2" [f_name f,n]) (f_annotations f)
+
+    checkAnnotations :: T.Text -> Annotations ResolvedType -> Writer [GeneralError] ()
+    checkAnnotations n as = forM_ (Map.toList as) $ \(sn,(rt,jv)) -> do
+      case literalForTypeExpr (TypeExpr rt []) jv of
+        Right _ -> return ()
+        Left err -> tell [GeneralError (template "Invalid literal for annotation $1 of $2: $3" [formatText sn,n,err])]
 
 -- | Represent the construction of a literal value in a
 -- language independent way
@@ -458,7 +508,6 @@ loadAndCheckModule :: ModuleFinder -> FilePath -> EIOT RModule
 loadAndCheckModule moduleFinder modulePath = do
     (m,mm) <- loadModule1
     mapM_ checkModuleForDuplicates (m:Map.elems mm)
-    mapM_ checkModuleAnnotations (m:Map.elems mm)
     case sortByDeps (Map.elems mm) of
       Nothing -> eioError "Mutually dependent modules are not allowed"
       (Just mmSorted) -> do  
@@ -471,30 +520,7 @@ loadAndCheckModule moduleFinder modulePath = do
     loadModule1 = loadModule modulePath moduleFinder Map.empty
 
     checkModuleForDuplicates :: SModule -> EIOT ()
-    checkModuleForDuplicates m = case dups of
-        [] -> return ()
-        _ -> eioError (moduleErrorMessage m (map formatText dups))
-      where
-        dups = checkDuplicates m
-
-    checkModuleAnnotations :: SModule -> EIOT ()
-    checkModuleAnnotations m = mapM_ checkDecl (m_decls m)
-      where
-        checkDecl d = do
-          checkAnns (d_annotations d)
-          case d_type d of
-            (Decl_Struct s) -> mapM_ (checkAnns . f_annotations) (s_fields s)
-            (Decl_Union u) -> mapM_ (checkAnns . f_annotations) (u_fields u)
-            _ -> return ()
-        checkAnns annotations = mapM_ checkAnn (Map.toList annotations)
-
-        -- For now we only support docstrings
-        checkAnn :: (ScopedName,JSON.Value) -> EIOT ()
-        checkAnn (ScopedName (ModuleName []) "Doc",JSON.String _) = return ()
-        checkAnn (sn,_) = eioError (moduleErrorMessage m ["Illegal annotation " <> formatText sn])
-
-    checkModuleForTypeParamApp :: SModule -> EIOT ()
-    checkModuleForTypeParamApp m = return ()
+    checkModuleForDuplicates m = failOnErrors m (checkDuplicates m)
 
     resolveN :: [SModule] -> NameScope -> EIOT NameScope
     resolveN [] ns = return ns
@@ -504,32 +530,23 @@ loadAndCheckModule moduleFinder modulePath = do
     
     resolve1 :: SModule -> NameScope -> EIOT (NameScope,RModule)
     resolve1 m ns = do
-        checkUndefined1 m ns
+        failOnErrors m (undefinedNames m ns)
         let rm = resolveModule m ns
-            mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (fmap (mapDecl (fullyScopedType (m_name m))) (m_decls rm))
+        failOnErrors rm (checkTypeCtorApps rm)
+        failOnErrors rm (checkDefaultOverrides rm)
+        failOnErrors rm (checkModuleAnnotations rm)
+
+        let mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (fmap (mapDecl (fullyScopedType (m_name m))) (m_decls rm))
             ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
-        checkTypeCtorApps1 rm
-        checkDefaultOverrides1 rm
         return (ns', rm)
-    
-    checkUndefined1 :: SModule -> NameScope -> EIOT ()
-    checkUndefined1 m ns = case undefinedNames m ns of
-        [] -> return ()
-        udefs -> eioError (moduleErrorMessage m (map formatText udefs))
 
-    checkTypeCtorApps1 :: RModule -> EIOT ()
-    checkTypeCtorApps1 m = case checkTypeCtorApps m of
-        [] -> return ()      
-        errs -> eioError (moduleErrorMessage m (map formatText errs))
+    failOnErrors :: Format a => Module b -> [a] -> EIOT ()
+    failOnErrors _ [] = return ()
+    failOnErrors m errs = eioError mesg
+      where
+        mesg = T.intercalate " " ["In module",formatText(m_name m),":\n"] `T.append`
+               T.intercalate "\n  " (map formatText errs)
 
-    checkDefaultOverrides1 :: RModule -> EIOT ()
-    checkDefaultOverrides1 m = case checkDefaultOverrides m of
-        [] -> return ()      
-        errs -> eioError (moduleErrorMessage m (map formatText errs))
-
-    moduleErrorMessage m ss = T.intercalate " " ["In module",formatText(m_name m),":\n"] `T.append`
-                              T.intercalate "\n  " ss
-          
     emptyNameScope = NameScope Map.empty Map.empty Map.empty Set.empty
 
 sortByDeps :: [SModule] -> Maybe [SModule]

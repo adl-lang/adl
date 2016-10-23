@@ -181,6 +181,10 @@
             }
         }
     ],
-    "imports": [],
+    "imports": [
+        {
+            "moduleName": "sys.annotations"
+        }
+    ],
     "name": "test"
 }

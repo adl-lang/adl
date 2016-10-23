@@ -1,0 +1,213 @@
+{
+    "decls": [
+        {
+            "v1": "Ann1",
+            "v2": {
+                "annotations": [],
+                "name": "Ann1",
+                "type_": {
+                    "type_": {
+                        "typeExpr": {
+                            "parameters": [],
+                            "typeRef": {
+                                "primitive": "Int32"
+                            }
+                        },
+                        "typeParams": []
+                    }
+                },
+                "version": {
+                    "nothing": null
+                }
+            }
+        },
+        {
+            "v1": "Ann2",
+            "v2": {
+                "annotations": [],
+                "name": "Ann2",
+                "type_": {
+                    "type_": {
+                        "typeExpr": {
+                            "parameters": [],
+                            "typeRef": {
+                                "primitive": "String"
+                            }
+                        },
+                        "typeParams": []
+                    }
+                },
+                "version": {
+                    "nothing": null
+                }
+            }
+        },
+        {
+            "v1": "Ann3",
+            "v2": {
+                "annotations": [],
+                "name": "Ann3",
+                "type_": {
+                    "struct_": {
+                        "fields": [
+                            {
+                                "annotations": [],
+                                "default": {
+                                    "nothing": null
+                                },
+                                "name": "f1",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "String"
+                                    }
+                                }
+                            },
+                            {
+                                "annotations": [],
+                                "default": {
+                                    "nothing": null
+                                },
+                                "name": "f2",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "String"
+                                    }
+                                }
+                            }
+                        ],
+                        "typeParams": []
+                    }
+                },
+                "version": {
+                    "nothing": null
+                }
+            }
+        },
+        {
+            "v1": "MyStruct",
+            "v2": {
+                "annotations": [
+                    {
+                        "v1": {
+                            "moduleName": "",
+                            "name": "Ann1"
+                        },
+                        "v2": {
+                            "integer": 42
+                        }
+                    },
+                    {
+                        "v1": {
+                            "moduleName": "",
+                            "name": "Ann2"
+                        },
+                        "v2": {
+                            "string": "asdfa"
+                        }
+                    }
+                ],
+                "name": "MyStruct",
+                "type_": {
+                    "struct_": {
+                        "fields": [
+                            {
+                                "annotations": [
+                                    {
+                                        "v1": {
+                                            "moduleName": "",
+                                            "name": "Doc"
+                                        },
+                                        "v2": {
+                                            "string": "The X coordinate\n"
+                                        }
+                                    }
+                                ],
+                                "default": {
+                                    "nothing": null
+                                },
+                                "name": "x",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "Int32"
+                                    }
+                                }
+                            },
+                            {
+                                "annotations": [
+                                    {
+                                        "v1": {
+                                            "moduleName": "",
+                                            "name": "Doc"
+                                        },
+                                        "v2": {
+                                            "string": "The Y coordinate\n"
+                                        }
+                                    }
+                                ],
+                                "default": {
+                                    "nothing": null
+                                },
+                                "name": "y",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "Int32"
+                                    }
+                                }
+                            },
+                            {
+                                "annotations": [
+                                    {
+                                        "v1": {
+                                            "moduleName": "",
+                                            "name": "Ann3"
+                                        },
+                                        "v2": {
+                                            "object": [
+                                                {
+                                                    "v1": "f1",
+                                                    "v2": {
+                                                        "string": "a"
+                                                    }
+                                                },
+                                                {
+                                                    "v1": "f2",
+                                                    "v2": {
+                                                        "string": "b"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "default": {
+                                    "nothing": null
+                                },
+                                "name": "name",
+                                "typeExpr": {
+                                    "parameters": [],
+                                    "typeRef": {
+                                        "primitive": "String"
+                                    }
+                                }
+                            }
+                        ],
+                        "typeParams": []
+                    }
+                },
+                "version": {
+                    "nothing": null
+                }
+            }
+        }
+    ],
+    "imports": [
+        {
+            "moduleName": "sys.annotations"
+        }
+    ],
+    "name": "test"
+}

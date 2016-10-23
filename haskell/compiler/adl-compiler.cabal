@@ -13,6 +13,7 @@ cabal-version:       >=1.8
 
 data-files:          lib/adl/sys/adlast.adl
                      lib/adl/sys/types.adl
+                     lib/adl/sys/annotations.adl
                      lib/adl/sys/types/hs-custom-types.json
                      lib/adl/sys/types/cpp-custom-types.json
                      lib/adl/sys/types/java-custom-types.json

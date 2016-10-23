@@ -95,7 +95,7 @@ field = do
     let serializedNameAttr = ScopedName (ModuleName []) "SerializedName"
     (anns,serializedName) <- case Map.lookup serializedNameAttr anns0 of
           Nothing -> return (anns0,n)
-          (Just (JSON.String s)) -> return (Map.delete serializedNameAttr anns0,s)
+          (Just (_,JSON.String s)) -> return (Map.delete serializedNameAttr anns0,s)
           _ -> fail "need a String value for SerializedName attribute"
     return (Field n serializedName te mdefault anns)
 
@@ -142,20 +142,18 @@ newtype_ = do
     mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
     return (n,mv,Newtype tparams te mdefault)
 
-annotation1 :: P.Parser (ScopedName,JSON.Value)
-annotation1 = do
-  token "@"
-  n <- scopedName
-  jv <- jsonValue
-  return (n,jv)
-
-annotation2 :: P.Parser (ScopedName,JSON.Value)
-annotation2  = do
-  ds <- docstring
-  return (ScopedName (ModuleName []) "Doc",JSON.String ds)
-
-annotations :: P.Parser Annotations
-annotations = Map.fromList <$> many (annotation1 <|> annotation2)
+annotations :: P.Parser (Annotations ScopedName)
+annotations = Map.fromList <$> many (ann1 <|> ann2)
+  where
+    ann1 = do
+      token "@"
+      n <- scopedName
+      jv <- jsonValue
+      return (n,(n,jv))
+    ann2  = do
+      ds <- docstring
+      let sn = ScopedName (ModuleName []) "Doc"
+      return (sn,(sn,JSON.String ds))
 
 decl :: P.Parser (Decl ScopedName)
 decl =  do

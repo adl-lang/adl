@@ -15,7 +15,7 @@ import ADL.Utils.Format
 
 type Ident = T.Text
 
-type Annotations = Map.Map ScopedName JSON.Value
+type Annotations t = Map.Map ScopedName (t,JSON.Value)
 
 newtype ModuleName = ModuleName { unModuleName :: [Ident] }
   deriving (Eq,Ord,Show)
@@ -37,7 +37,7 @@ data Field t = Field {
   f_serializedName :: Ident,
   f_type :: TypeExpr t,
   f_default :: (Maybe JSON.Value),
-  f_annotations :: Annotations
+  f_annotations :: Annotations t
   } deriving (Show)
 
 data Struct t = Struct {
@@ -76,7 +76,7 @@ type MVersion = Maybe Version
 data Decl t = Decl {
   d_name :: Ident,
   d_version :: MVersion,
-  d_annotations :: Annotations,
+  d_annotations :: Annotations t,
   d_type :: DeclType t
   }
   deriving (Show)
@@ -128,11 +128,17 @@ instance Foldable Decl where
 instance Foldable Module where
     foldMap f Module{m_decls=ds} = (foldMap.foldMap) f ds
 
+mapAnnotations :: (a -> b) -> Annotations a -> Annotations b
+mapAnnotations f = fmap (\(a,v) -> (f a,v))
+  
 mapTypeExpr :: (a -> b) -> TypeExpr a -> TypeExpr b
 mapTypeExpr f (TypeExpr t ts) = TypeExpr (f t) (fmap (mapTypeExpr f) ts)
 
 mapField :: (a -> b) -> Field a -> Field b
-mapField f field@Field{f_type=t} = field{f_type=mapTypeExpr f t}
+mapField f field@Field{f_type=t,f_annotations=as} = field
+   { f_type=mapTypeExpr f t
+   , f_annotations=mapAnnotations f as
+   }
 
 mapStruct :: (a -> b) -> Struct a -> Struct b
 mapStruct f struct@Struct{s_fields=fs} = struct{s_fields=fmap (mapField f) fs}
@@ -153,7 +159,10 @@ mapDeclType f (Decl_Typedef t) = Decl_Typedef (mapTypedef f t)
 mapDeclType f (Decl_Newtype n) = Decl_Newtype (mapNewtype f n)
 
 mapDecl :: (a -> b) -> Decl a -> Decl b
-mapDecl f decl@Decl{d_type=d} = decl{d_type=mapDeclType f d}
+mapDecl f decl@Decl{d_type=d,d_annotations=as} = decl
+  { d_type=mapDeclType f d
+  , d_annotations=mapAnnotations f as
+  }
 
 mapModule :: (a -> b) -> Module a -> Module b
 mapModule f mod@Module{m_decls=ds} = mod{m_decls=(fmap.mapDecl) f ds}

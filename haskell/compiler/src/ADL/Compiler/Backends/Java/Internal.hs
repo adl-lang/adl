@@ -554,9 +554,9 @@ needsSuppressedCheckInCast (TypeExpr _ []) = False
 needsSuppressedCheckInCast _ = True
 
 
-generateDocString :: Annotations -> Code
+generateDocString :: Annotations a -> Code
 generateDocString annotations = case Map.lookup (ScopedName (ModuleName []) "Doc") annotations of
-   (Just (JSON.String text)) -> docStringComment text
+   (Just (_,JSON.String text)) -> docStringComment text
    _ -> mempty
 
 docStringComment :: T.Text -> Code

@@ -1,0 +1,27 @@
+module test
+{
+    // Some annotation types;
+
+    type Ann1 = Int32;
+    type Ann2 = String;
+
+    struct Ann3
+    {
+        String f1;
+        String f2;
+    };
+
+    @Ann1 42
+    @Ann2 "asdfa"
+    struct MyStruct
+    {
+        /// The X coordinate
+        Int32 x;
+
+        /// The Y coordinate
+        Int32 y;
+
+        @Ann3 {"f1": "a", "f2": "b"}
+        String name;        
+    };
+};          
