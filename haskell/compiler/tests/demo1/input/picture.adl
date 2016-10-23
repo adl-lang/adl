@@ -1,0 +1,28 @@
+module picture
+{
+    union Picture
+    {
+        Circle circle;
+        Rectangle rectangle;
+        Vector<Picture> composed;
+        Translated<Picture> translated;
+    };
+
+    struct Circle
+    {
+        Double radius;
+    };
+
+    struct Rectangle
+    {
+        Double width;
+        Double height;
+    };
+
+    struct Translated<T>
+    {
+        Double xoffset;
+        Double yoffset;
+        T object;
+    };
+};

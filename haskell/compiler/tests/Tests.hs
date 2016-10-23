@@ -293,7 +293,9 @@ runTests = do
     it "Correctly uses specified serialisation field names" $ do
       collectResults (runJavaBackend1 "test20/input/test.adl")
         `shouldReturn` MatchOutput
-
+    it "Generates the correct code for the picture demo" $ do
+      collectResults (runJavaBackend1 "demo1/input/picture.adl")
+        `shouldReturn` MatchOutput
     
   where
     collectResults1 resultvar test = do
