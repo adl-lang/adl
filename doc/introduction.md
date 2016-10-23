@@ -5,8 +5,6 @@ a domain specific language (DSL) for describing algrebraic data types,
 code generators for several target languages, and runtimes for these
 languages.
 
-# An Example
-
 # Example
 
 Here is a tiny ADL example:
