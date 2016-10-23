@@ -57,8 +57,7 @@ serialization code.
 # More information
 
 The [ADL domain specific language][1] is the core of the system, and
-provides a fully typed specification for data values, independent of
-the code implementing these services.
+provides a fully typed specification for data.
 
 The [ADL compiler][2] is used to generate code from ADL source for a
 variety of target languages. Currently the the compiler is built from
