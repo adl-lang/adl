@@ -74,6 +74,9 @@ application logic. The ADL compiler addresses this by supporting code
 generation in terms of the application logics own types. This feature
 is called [custom type mappings][4].
 
+Currently, json serialization is supported, with a [strict mapping][5]
+defined between ADL types and json values.
+
 Using the (experimental) `Sink` communications primitive, A variety of
 [application level communication protocols][5] can be defined in the
 ADL language.
@@ -85,4 +88,5 @@ ADL language.
 [2]:compiler.md
 [3]:install.md
 [4]:custom-types.md
-[5]:protocols.md
+[5]:serialization.md
+[6]:protocols.md

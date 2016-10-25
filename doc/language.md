@@ -59,6 +59,7 @@ ADL supports the following primitive types:
 | Float,Double                 | floating point values                                  | 0         |
 | String                       | A unicode text string                                  | ""        |
 | `Vector<T>`                  | A vector/array of type T                               | []        |
+| `StringMap<T>`                | A map with string keys and values of type T           | {}        |
 | `Sink<T>`                    | A communications endpoint accepting messages of type T | null sink |
 
 The null sink drops all messages that are sent to it.
@@ -165,7 +166,8 @@ All ADL defined types have a default value:
 
 In addition, it is possible to override the default values for some
 type definitions, by providing literal values in appropriate places in
-the ADL definitions. A literal value is specified in JSON form.
+the ADL definitions. A literal value is specified in JSON form, structured
+according to the json [serialization specification][serialization.md].
 
 ## struct default overrides
 
