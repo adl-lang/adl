@@ -7,10 +7,9 @@ consistent. Hence, ADL is a formal specification for serialized data.
 Currently json serialization is implemented, as this gives best
 interoperability with browser based code.  It is envisaged that in
 future binary serialization will allow be supported. Note also that
-json serialisation is also format used for literals in the ADL
-language itself.
+json is also the format used for literals in the ADL language itself.
 
-Each ADL primitive and declaration type is serialized as specified in
+Each ADL primitive and declaration is serialized as specified in
 the rules below. The serialization for any ADL type can hence be
 determined by the repeated application of these rules.
 
@@ -35,7 +34,8 @@ determined by the repeated application of these rules.
 64 bit values. The [json specification][jsonspec] doesn't specify a
 precision for numbers, but javascript implementations typically
 represent all numbers as a double, which lacks the precision to
-represent all Int32 values.
+represent all Int64 values.
+[jsonspec]:http://www.json.org/
 
 ## Declarations
 
@@ -123,7 +123,7 @@ union Maybe<T>
 The following would be valid json values for a type `Maybe<Vector<String>>`:
 
 ```
-{ "nothing" : nullify }
+{ "nothing" : null }
 
 { "just" : ["Sydney","Melbourne","Darwin"] }
 ```
