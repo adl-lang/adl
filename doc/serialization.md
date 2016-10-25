@@ -63,11 +63,14 @@ would allow the json value:
 }
 ```
 
+On deserialization, field are allowed to be missing. Missing fields
+are populated with their default values.
+
 ### Unions
 
-An ADL `union` is a sum type - only one field can be active at any
+An ADL `union` is a sum type - only one discriminator can be active at any
 time. The json serialisation is thus an object with a single name /value
-pair: the name of the active field, and it's serialized value.
+pair: the name of the active discriminator, and it's serialized value.
 
 Hence
 
@@ -79,7 +82,7 @@ union F
 }
 ```
 
-could have have either field active, (but not both),  eg
+could have have either discriminator active, (but not both),  eg
 
 ```
 { "field1" : 42 }
@@ -93,7 +96,7 @@ or
 
 ### Newtypes
 
-An ADL `newtype` has exactly the same serialisation as the
+An ADL `newtype` has exactly the same serialization as the
 underlying type ie:
 
 ```
@@ -144,3 +147,15 @@ struct Point
 ```
 
 would allow the json value `{ "x" : 5, "y" : 7 }`.
+
+## Backwards Compatibility
+
+The json serialization scheme permits limited backwards compatibility. Fields can be added to structs
+provided the default value for those fields ensures compatibility. Discriminators may also be added to unions,
+provided that the default descriminator is not changed.
+
+
+
+
+
+
