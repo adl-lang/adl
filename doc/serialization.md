@@ -128,7 +128,7 @@ The following would be valid json values for a type `Maybe<Vector<String>>`:
 { "just" : ["Sydney","Melbourne","Darwin"] }
 ```
 
-Custom Field Names
+### Custom Field Names
 
 The field names in structs and unions can be annotated with `SerializedName` to set the json field
 name to differ from the name in the generated code. Hence
