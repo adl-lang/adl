@@ -1,7 +1,7 @@
 # Introduction
 
-ADL is a framework for building multi language systems. It consists of
-a domain specific language (DSL) for describing algrebraic data types,
+ADL (Algebraic Data Language) is a framework for building multi language systems. It consists of
+a domain specific language (DSL) for describing algebraic data types,
 code generators for several target languages, and runtimes for these
 languages.
 
