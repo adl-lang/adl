@@ -62,12 +62,12 @@ instance ADLValue Picture where
             to (Picture_translated v) = JSON.Object (HM.singleton "translated" (aToJSON translated_js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "circle" -> Prelude.fmap Picture_circle (aFromJSON circle_js v)
-                    "rectangle" -> Prelude.fmap Picture_rectangle (aFromJSON rectangle_js v)
-                    "composed" -> Prelude.fmap Picture_composed (aFromJSON composed_js v)
-                    "translated" -> Prelude.fmap Picture_translated (aFromJSON translated_js v)
+                u <- splitUnion o
+                case u of
+                    ("circle",Prelude.Just v) -> Prelude.fmap Picture_circle (aFromJSON circle_js v)
+                    ("rectangle",Prelude.Just v) -> Prelude.fmap Picture_rectangle (aFromJSON rectangle_js v)
+                    ("composed",Prelude.Just v) -> Prelude.fmap Picture_composed (aFromJSON composed_js v)
+                    ("translated",Prelude.Just v) -> Prelude.fmap Picture_translated (aFromJSON translated_js v)
 
 data Rectangle = Rectangle
     { rectangle_width :: Prelude.Double

@@ -84,11 +84,11 @@ instance ADLValue TransportAddr where
             to (TransportAddr_arrayv v) = JSON.Object (HM.singleton "arrayv" (aToJSON arrayv_js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "stringv" -> Prelude.fmap TransportAddr_stringv (aFromJSON stringv_js v)
-                    "intv" -> Prelude.fmap TransportAddr_intv (aFromJSON intv_js v)
-                    "arrayv" -> Prelude.fmap TransportAddr_arrayv (aFromJSON arrayv_js v)
+                u <- splitUnion o
+                case u of
+                    ("stringv",Prelude.Just v) -> Prelude.fmap TransportAddr_stringv (aFromJSON stringv_js v)
+                    ("intv",Prelude.Just v) -> Prelude.fmap TransportAddr_intv (aFromJSON intv_js v)
+                    ("arrayv",Prelude.Just v) -> Prelude.fmap TransportAddr_arrayv (aFromJSON arrayv_js v)
 
 newtype TransportName = TransportName { unTransportName :: T.Text }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)

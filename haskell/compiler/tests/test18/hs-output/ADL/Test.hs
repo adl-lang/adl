@@ -33,10 +33,10 @@ instance ADLValue X1 where
             to (X1_f2 v) = JSON.Object (HM.singleton "f2" (aToJSON f2_js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "f1" -> Prelude.fmap X1_f1 (aFromJSON f1_js v)
-                    "f2" -> Prelude.fmap X1_f2 (aFromJSON f2_js v)
+                u <- splitUnion o
+                case u of
+                    ("f1",Prelude.Just v) -> Prelude.fmap X1_f1 (aFromJSON f1_js v)
+                    ("f2",Prelude.Just v) -> Prelude.fmap X1_f2 (aFromJSON f2_js v)
 
 data X2 = X2
     { x2_f1 :: Prelude.Double
@@ -85,10 +85,10 @@ instance ADLValue Y1 where
             to (Y1_f2 v) = JSON.Object (HM.singleton "f2" (aToJSON f2_js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "f1" -> Prelude.fmap Y1_f1 (aFromJSON f1_js v)
-                    "f2" -> Prelude.fmap Y1_f2 (aFromJSON f2_js v)
+                u <- splitUnion o
+                case u of
+                    ("f1",Prelude.Just v) -> Prelude.fmap Y1_f1 (aFromJSON f1_js v)
+                    ("f2",Prelude.Just v) -> Prelude.fmap Y1_f2 (aFromJSON f2_js v)
 
 data Y2 = Y2
     { y2_f1 :: T.Text

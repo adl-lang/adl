@@ -52,10 +52,12 @@ unionFromJSON umap (JSON.Object hm) = decodeField (HM.toList hm)
         Just js -> aFromJSON js v
 unionFromJSON _ _ = Nothing
 
-splitUnion :: JSON.Value -> Maybe (T.Text,JSON.Value)
+splitUnion :: JSON.Value -> Maybe (T.Text,Maybe JSON.Value)
+splitUnion (JSON.String k) = Just (k,Nothing)
 splitUnion (JSON.Object hm) = case HM.toList hm of
-  [(k,v)] -> Just (k,v)
+  [(k,v)] -> Just (k,Just v)
   _ -> Nothing
+splitUnion _ = Nothing
   
 -- Write an ADL value to a JSON file. The value will be wrapped in a JSON object if
 -- required to create a valid JSON document.

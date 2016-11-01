@@ -26,10 +26,10 @@ instance (ADLValue t) => ADLValue (Maybe t) where
         Nothing -> HM.singleton "nothing" JSON.Null
         (Just v) -> HM.singleton "just" (aToJSON js v)
       from o = do
-        (key, v) <- splitUnion o
-        case key of
-          "nothing" -> return Nothing
-          "just" -> fmap Just (aFromJSON js v)
+        u <- splitUnion o
+        case u of
+          ("nothing",Nothing) -> return Nothing
+          ("just",Just v) -> fmap Just (aFromJSON js v)
 
 
 instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
@@ -49,10 +49,10 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
         (Left v) -> HM.singleton "left" (aToJSON js1 v)
         (Right v) -> HM.singleton "right" (aToJSON js2 v)
       from o = do
-        (key, v) <- splitUnion o
-        case key of
-          "left" -> fmap Left (aFromJSON js1 v)
-          "right" -> fmap Right (aFromJSON js2 v)
+        u <- splitUnion o
+        case u of
+          ("left", Just v) -> fmap Left (aFromJSON js1 v)
+          ("right", Just v) -> fmap Right (aFromJSON js2 v)
 
 instance forall t1 t2 . (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
   atype _ = T.concat

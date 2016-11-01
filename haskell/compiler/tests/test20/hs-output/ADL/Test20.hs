@@ -65,13 +65,13 @@ instance ADLValue Role where
     jsonSerialiser jf = JSONSerialiser to from
         where
             
-            to Role_underling = JSON.Object (HM.singleton "u" JSON.Null)
-            to Role_boss = JSON.Object (HM.singleton "b" JSON.Null)
-            to Role_superBoss = JSON.Object (HM.singleton "sb" JSON.Null)
+            to Role_underling = JSON.String "u"
+            to Role_boss = JSON.String "b"
+            to Role_superBoss = JSON.String "sb"
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "u" -> Prelude.Just Role_underling
-                    "b" -> Prelude.Just Role_boss
-                    "sb" -> Prelude.Just Role_superBoss
+                u <- splitUnion o
+                case u of
+                    ("u",Prelude.Nothing) -> Prelude.Just Role_underling
+                    ("b",Prelude.Nothing) -> Prelude.Just Role_boss
+                    ("sb",Prelude.Nothing) -> Prelude.Just Role_superBoss

@@ -233,10 +233,10 @@ instance ADLValue U where
             to (U_f_string v) = JSON.Object (HM.singleton "f_string" (aToJSON f_string_js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "f_int" -> Prelude.fmap U_f_int (aFromJSON f_int_js v)
-                    "f_string" -> Prelude.fmap U_f_string (aFromJSON f_string_js v)
+                u <- splitUnion o
+                case u of
+                    ("f_int",Prelude.Just v) -> Prelude.fmap U_f_int (aFromJSON f_int_js v)
+                    ("f_string",Prelude.Just v) -> Prelude.fmap U_f_string (aFromJSON f_string_js v)
 
 data XY t = XY
     { xY_x :: t

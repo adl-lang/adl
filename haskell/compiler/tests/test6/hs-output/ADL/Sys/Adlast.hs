@@ -95,12 +95,12 @@ instance ADLValue DeclType where
             to (DeclType_newtype_ v) = JSON.Object (HM.singleton "newtype_" (aToJSON newtype__js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "struct_" -> Prelude.fmap DeclType_struct_ (aFromJSON struct__js v)
-                    "union_" -> Prelude.fmap DeclType_union_ (aFromJSON union__js v)
-                    "type_" -> Prelude.fmap DeclType_type_ (aFromJSON type__js v)
-                    "newtype_" -> Prelude.fmap DeclType_newtype_ (aFromJSON newtype__js v)
+                u <- splitUnion o
+                case u of
+                    ("struct_",Prelude.Just v) -> Prelude.fmap DeclType_struct_ (aFromJSON struct__js v)
+                    ("union_",Prelude.Just v) -> Prelude.fmap DeclType_union_ (aFromJSON union__js v)
+                    ("type_",Prelude.Just v) -> Prelude.fmap DeclType_type_ (aFromJSON type__js v)
+                    ("newtype_",Prelude.Just v) -> Prelude.fmap DeclType_newtype_ (aFromJSON newtype__js v)
 
 type DeclVersions = [Decl]
 
@@ -163,10 +163,10 @@ instance ADLValue Import where
             to (Import_scopedName v) = JSON.Object (HM.singleton "scopedName" (aToJSON scopedName_js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "moduleName" -> Prelude.fmap Import_moduleName (aFromJSON moduleName_js v)
-                    "scopedName" -> Prelude.fmap Import_scopedName (aFromJSON scopedName_js v)
+                u <- splitUnion o
+                case u of
+                    ("moduleName",Prelude.Just v) -> Prelude.fmap Import_moduleName (aFromJSON moduleName_js v)
+                    ("scopedName",Prelude.Just v) -> Prelude.fmap Import_scopedName (aFromJSON scopedName_js v)
 
 data Literal
     = Literal_null
@@ -192,7 +192,7 @@ instance ADLValue Literal where
             array_js = jsonSerialiser jf
             object_js = jsonSerialiser jf
             
-            to Literal_null = JSON.Object (HM.singleton "null" JSON.Null)
+            to Literal_null = JSON.String "null"
             to (Literal_integer v) = JSON.Object (HM.singleton "integer" (aToJSON integer_js v))
             to (Literal_double v) = JSON.Object (HM.singleton "double" (aToJSON double_js v))
             to (Literal_string v) = JSON.Object (HM.singleton "string" (aToJSON string_js v))
@@ -201,15 +201,15 @@ instance ADLValue Literal where
             to (Literal_object v) = JSON.Object (HM.singleton "object" (aToJSON object_js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "null" -> Prelude.Just Literal_null
-                    "integer" -> Prelude.fmap Literal_integer (aFromJSON integer_js v)
-                    "double" -> Prelude.fmap Literal_double (aFromJSON double_js v)
-                    "string" -> Prelude.fmap Literal_string (aFromJSON string_js v)
-                    "boolean" -> Prelude.fmap Literal_boolean (aFromJSON boolean_js v)
-                    "array" -> Prelude.fmap Literal_array (aFromJSON array_js v)
-                    "object" -> Prelude.fmap Literal_object (aFromJSON object_js v)
+                u <- splitUnion o
+                case u of
+                    ("null",Prelude.Nothing) -> Prelude.Just Literal_null
+                    ("integer",Prelude.Just v) -> Prelude.fmap Literal_integer (aFromJSON integer_js v)
+                    ("double",Prelude.Just v) -> Prelude.fmap Literal_double (aFromJSON double_js v)
+                    ("string",Prelude.Just v) -> Prelude.fmap Literal_string (aFromJSON string_js v)
+                    ("boolean",Prelude.Just v) -> Prelude.fmap Literal_boolean (aFromJSON boolean_js v)
+                    ("array",Prelude.Just v) -> Prelude.fmap Literal_array (aFromJSON array_js v)
+                    ("object",Prelude.Just v) -> Prelude.fmap Literal_object (aFromJSON object_js v)
 
 data Module = Module
     { module_name :: ModuleName
@@ -413,11 +413,11 @@ instance ADLValue TypeRef where
             to (TypeRef_reference v) = JSON.Object (HM.singleton "reference" (aToJSON reference_js v))
             
             from o = do
-                (key, v) <- splitUnion o
-                case key of
-                    "primitive" -> Prelude.fmap TypeRef_primitive (aFromJSON primitive_js v)
-                    "typeParam" -> Prelude.fmap TypeRef_typeParam (aFromJSON typeParam_js v)
-                    "reference" -> Prelude.fmap TypeRef_reference (aFromJSON reference_js v)
+                u <- splitUnion o
+                case u of
+                    ("primitive",Prelude.Just v) -> Prelude.fmap TypeRef_primitive (aFromJSON primitive_js v)
+                    ("typeParam",Prelude.Just v) -> Prelude.fmap TypeRef_typeParam (aFromJSON typeParam_js v)
+                    ("reference",Prelude.Just v) -> Prelude.fmap TypeRef_reference (aFromJSON reference_js v)
 
 data Union = Union
     { union_typeParams :: [Ident]
