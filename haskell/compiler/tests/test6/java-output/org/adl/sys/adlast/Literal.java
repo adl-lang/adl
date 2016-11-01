@@ -2,6 +2,7 @@ package org.adl.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
@@ -267,56 +268,47 @@ public class Literal {
       }
 
       public JsonElement toJson(Literal _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case NULL_:
-            _result.add("null", null);
+            return JsonBindings.unionToJson("null", null, null);
           case INTEGER:
-            _result.add("integer", integer.get().toJson(_value.getInteger()));
-            break;
+            return JsonBindings.unionToJson("integer", _value.getInteger(), integer.get());
           case DOUBLE_:
-            _result.add("double", double_.get().toJson(_value.getDouble()));
-            break;
+            return JsonBindings.unionToJson("double", _value.getDouble(), double_.get());
           case STRING:
-            _result.add("string", string.get().toJson(_value.getString()));
-            break;
+            return JsonBindings.unionToJson("string", _value.getString(), string.get());
           case BOOLEAN_:
-            _result.add("boolean", boolean_.get().toJson(_value.getBoolean()));
-            break;
+            return JsonBindings.unionToJson("boolean", _value.getBoolean(), boolean_.get());
           case ARRAY:
-            _result.add("array", array.get().toJson(_value.getArray()));
-            break;
+            return JsonBindings.unionToJson("array", _value.getArray(), array.get());
           case OBJECT:
-            _result.add("object", object.get().toJson(_value.getObject()));
-            break;
+            return JsonBindings.unionToJson("object", _value.getObject(), object.get());
         }
-        return _result;
+        return null;
       }
 
       public Literal fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("null")) {
-            return Literal.null_();
-          }
-          else if (_v.getKey().equals("integer")) {
-            return Literal.integer(integer.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("double")) {
-            return Literal.double_(double_.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("string")) {
-            return Literal.string(string.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("boolean")) {
-            return Literal.boolean_(boolean_.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("array")) {
-            return Literal.array(array.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("object")) {
-            return Literal.object(object.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("null")) {
+          return Literal.null_();
+        }
+        else if (_key.equals("integer")) {
+          return Literal.integer(JsonBindings.unionValueFromJson(_json, integer.get()));
+        }
+        else if (_key.equals("double")) {
+          return Literal.double_(JsonBindings.unionValueFromJson(_json, double_.get()));
+        }
+        else if (_key.equals("string")) {
+          return Literal.string(JsonBindings.unionValueFromJson(_json, string.get()));
+        }
+        else if (_key.equals("boolean")) {
+          return Literal.boolean_(JsonBindings.unionValueFromJson(_json, boolean_.get()));
+        }
+        else if (_key.equals("array")) {
+          return Literal.array(JsonBindings.unionValueFromJson(_json, array.get()));
+        }
+        else if (_key.equals("object")) {
+          return Literal.object(JsonBindings.unionValueFromJson(_json, object.get()));
         }
         throw new IllegalStateException();
       }

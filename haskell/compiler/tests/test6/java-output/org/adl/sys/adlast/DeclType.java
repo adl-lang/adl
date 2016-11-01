@@ -2,8 +2,10 @@ package org.adl.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
@@ -169,39 +171,32 @@ public class DeclType {
       }
 
       public JsonElement toJson(DeclType _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case STRUCT_:
-            _result.add("struct_", struct_.get().toJson(_value.getStruct_()));
-            break;
+            return JsonBindings.unionToJson("struct_", _value.getStruct_(), struct_.get());
           case UNION_:
-            _result.add("union_", union_.get().toJson(_value.getUnion_()));
-            break;
+            return JsonBindings.unionToJson("union_", _value.getUnion_(), union_.get());
           case TYPE_:
-            _result.add("type_", type_.get().toJson(_value.getType_()));
-            break;
+            return JsonBindings.unionToJson("type_", _value.getType_(), type_.get());
           case NEWTYPE_:
-            _result.add("newtype_", newtype_.get().toJson(_value.getNewtype_()));
-            break;
+            return JsonBindings.unionToJson("newtype_", _value.getNewtype_(), newtype_.get());
         }
-        return _result;
+        return null;
       }
 
       public DeclType fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("struct_")) {
-            return DeclType.struct_(struct_.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("union_")) {
-            return DeclType.union_(union_.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("type_")) {
-            return DeclType.type_(type_.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("newtype_")) {
-            return DeclType.newtype_(newtype_.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("struct_")) {
+          return DeclType.struct_(JsonBindings.unionValueFromJson(_json, struct_.get()));
+        }
+        else if (_key.equals("union_")) {
+          return DeclType.union_(JsonBindings.unionValueFromJson(_json, union_.get()));
+        }
+        else if (_key.equals("type_")) {
+          return DeclType.type_(JsonBindings.unionValueFromJson(_json, type_.get()));
+        }
+        else if (_key.equals("newtype_")) {
+          return DeclType.newtype_(JsonBindings.unionValueFromJson(_json, newtype_.get()));
         }
         throw new IllegalStateException();
       }

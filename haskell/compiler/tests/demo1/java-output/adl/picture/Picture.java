@@ -2,6 +2,7 @@ package adl.picture;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -177,39 +178,32 @@ public class Picture {
       }
 
       public JsonElement toJson(Picture _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case CIRCLE:
-            _result.add("circle", circle.get().toJson(_value.getCircle()));
-            break;
+            return JsonBindings.unionToJson("circle", _value.getCircle(), circle.get());
           case RECTANGLE:
-            _result.add("rectangle", rectangle.get().toJson(_value.getRectangle()));
-            break;
+            return JsonBindings.unionToJson("rectangle", _value.getRectangle(), rectangle.get());
           case COMPOSED:
-            _result.add("composed", composed.get().toJson(_value.getComposed()));
-            break;
+            return JsonBindings.unionToJson("composed", _value.getComposed(), composed.get());
           case TRANSLATED:
-            _result.add("translated", translated.get().toJson(_value.getTranslated()));
-            break;
+            return JsonBindings.unionToJson("translated", _value.getTranslated(), translated.get());
         }
-        return _result;
+        return null;
       }
 
       public Picture fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("circle")) {
-            return Picture.circle(circle.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("rectangle")) {
-            return Picture.rectangle(rectangle.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("composed")) {
-            return Picture.composed(composed.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("translated")) {
-            return Picture.translated(translated.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("circle")) {
+          return Picture.circle(JsonBindings.unionValueFromJson(_json, circle.get()));
+        }
+        else if (_key.equals("rectangle")) {
+          return Picture.rectangle(JsonBindings.unionValueFromJson(_json, rectangle.get()));
+        }
+        else if (_key.equals("composed")) {
+          return Picture.composed(JsonBindings.unionValueFromJson(_json, composed.get()));
+        }
+        else if (_key.equals("translated")) {
+          return Picture.translated(JsonBindings.unionValueFromJson(_json, translated.get()));
         }
         throw new IllegalStateException();
       }

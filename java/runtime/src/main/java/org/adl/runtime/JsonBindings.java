@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *  helper implementations for GSON based serialisation.
@@ -181,5 +182,45 @@ public class JsonBindings
         return result;
       }
     };
+  }
+
+  public static <T> JsonElement unionToJson(String name, T value, JsonBinding<T> jsonBinding) {
+    if(value == null) {
+      return new JsonPrimitive(name);
+    } else {
+      JsonObject result = new JsonObject();
+      result.add(name, jsonBinding.toJson(value));
+      return result;
+    }
+  }
+
+  public static String unionNameFromJson(JsonElement json) {
+    if(json.isJsonObject()) {
+      Set<Map.Entry<String,JsonElement>> entries = json.getAsJsonObject().entrySet();
+      if (entries.size() != 1) {
+        throw new IllegalStateException();
+      }
+      for (Map.Entry<String,JsonElement> v : entries) {
+        return v.getKey();
+      }
+      throw new IllegalStateException();
+    } else {
+      return json.getAsString();
+    }
+  }
+
+  public static <T> T unionValueFromJson(JsonElement json, JsonBinding<T> jsonBinding) {
+    if(json.isJsonObject()) {
+      Set<Map.Entry<String,JsonElement>> entries = json.getAsJsonObject().entrySet();
+      if (entries.size() != 1) {
+        throw new IllegalStateException();
+      }
+      for (Map.Entry<String,JsonElement> v : entries) {
+        return jsonBinding.fromJson(v.getValue());
+      }
+      throw new IllegalStateException();
+    } else {
+      return null;
+    }
   }
 };

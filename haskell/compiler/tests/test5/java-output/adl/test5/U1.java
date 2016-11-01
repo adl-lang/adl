@@ -2,6 +2,7 @@ package adl.test5;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -101,20 +102,17 @@ public class U1 {
       }
 
       public JsonElement toJson(U1 _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case V:
-            _result.add("v", null);
+            return JsonBindings.unionToJson("v", null, null);
         }
-        return _result;
+        return null;
       }
 
       public U1 fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("v")) {
-            return U1.v();
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("v")) {
+          return U1.v();
         }
         throw new IllegalStateException();
       }

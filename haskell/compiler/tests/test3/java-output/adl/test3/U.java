@@ -2,6 +2,7 @@ package adl.test3;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -129,27 +130,22 @@ public class U {
       }
 
       public JsonElement toJson(U _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case F_INT:
-            _result.add("f_int", f_int.get().toJson(_value.getF_int()));
-            break;
+            return JsonBindings.unionToJson("f_int", _value.getF_int(), f_int.get());
           case F_STRING:
-            _result.add("f_string", f_string.get().toJson(_value.getF_string()));
-            break;
+            return JsonBindings.unionToJson("f_string", _value.getF_string(), f_string.get());
         }
-        return _result;
+        return null;
       }
 
       public U fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("f_int")) {
-            return U.f_int(f_int.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("f_string")) {
-            return U.f_string(f_string.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("f_int")) {
+          return U.f_int(JsonBindings.unionValueFromJson(_json, f_int.get()));
+        }
+        else if (_key.equals("f_string")) {
+          return U.f_string(JsonBindings.unionValueFromJson(_json, f_string.get()));
         }
         throw new IllegalStateException();
       }

@@ -2,8 +2,10 @@ package org.adl.sys.types;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
@@ -129,27 +131,22 @@ public class Either<T1, T2> {
       }
 
       public JsonElement toJson(Either<T1, T2> _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case LEFT:
-            _result.add("left", left.get().toJson(_value.getLeft()));
-            break;
+            return JsonBindings.unionToJson("left", _value.getLeft(), left.get());
           case RIGHT:
-            _result.add("right", right.get().toJson(_value.getRight()));
-            break;
+            return JsonBindings.unionToJson("right", _value.getRight(), right.get());
         }
-        return _result;
+        return null;
       }
 
       public Either<T1, T2> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("left")) {
-            return Either.<T1, T2>left(left.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("right")) {
-            return Either.<T1, T2>right(right.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("left")) {
+          return Either.<T1, T2>left(JsonBindings.unionValueFromJson(_json, left.get()));
+        }
+        else if (_key.equals("right")) {
+          return Either.<T1, T2>right(JsonBindings.unionValueFromJson(_json, right.get()));
         }
         throw new IllegalStateException();
       }

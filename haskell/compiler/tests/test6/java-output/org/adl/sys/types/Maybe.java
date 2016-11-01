@@ -2,6 +2,7 @@ package org.adl.sys.types;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -135,26 +136,22 @@ public class Maybe<T> {
       }
 
       public JsonElement toJson(Maybe<T> _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case NOTHING:
-            _result.add("nothing", null);
+            return JsonBindings.unionToJson("nothing", null, null);
           case JUST:
-            _result.add("just", just.get().toJson(_value.getJust()));
-            break;
+            return JsonBindings.unionToJson("just", _value.getJust(), just.get());
         }
-        return _result;
+        return null;
       }
 
       public Maybe<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("nothing")) {
-            return Maybe.<T>nothing();
-          }
-          else if (_v.getKey().equals("just")) {
-            return Maybe.<T>just(just.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("nothing")) {
+          return Maybe.<T>nothing();
+        }
+        else if (_key.equals("just")) {
+          return Maybe.<T>just(JsonBindings.unionValueFromJson(_json, just.get()));
         }
         throw new IllegalStateException();
       }

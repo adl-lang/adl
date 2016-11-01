@@ -2,6 +2,7 @@ package org.adl.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -129,27 +130,22 @@ public class Import {
       }
 
       public JsonElement toJson(Import _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case MODULENAME:
-            _result.add("moduleName", moduleName.get().toJson(_value.getModuleName()));
-            break;
+            return JsonBindings.unionToJson("moduleName", _value.getModuleName(), moduleName.get());
           case SCOPEDNAME:
-            _result.add("scopedName", scopedName.get().toJson(_value.getScopedName()));
-            break;
+            return JsonBindings.unionToJson("scopedName", _value.getScopedName(), scopedName.get());
         }
-        return _result;
+        return null;
       }
 
       public Import fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("moduleName")) {
-            return Import.moduleName(moduleName.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("scopedName")) {
-            return Import.scopedName(scopedName.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("moduleName")) {
+          return Import.moduleName(JsonBindings.unionValueFromJson(_json, moduleName.get()));
+        }
+        else if (_key.equals("scopedName")) {
+          return Import.scopedName(JsonBindings.unionValueFromJson(_json, scopedName.get()));
         }
         throw new IllegalStateException();
       }

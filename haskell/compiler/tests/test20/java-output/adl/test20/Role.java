@@ -2,6 +2,7 @@ package adl.test20;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -129,30 +130,27 @@ public class Role {
       }
 
       public JsonElement toJson(Role _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case UNDERLING:
-            _result.add("u", null);
+            return JsonBindings.unionToJson("u", null, null);
           case BOSS:
-            _result.add("b", null);
+            return JsonBindings.unionToJson("b", null, null);
           case SUPERBOSS:
-            _result.add("sb", null);
+            return JsonBindings.unionToJson("sb", null, null);
         }
-        return _result;
+        return null;
       }
 
       public Role fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("u")) {
-            return Role.underling();
-          }
-          else if (_v.getKey().equals("b")) {
-            return Role.boss();
-          }
-          else if (_v.getKey().equals("sb")) {
-            return Role.superBoss();
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("u")) {
+          return Role.underling();
+        }
+        else if (_key.equals("b")) {
+          return Role.boss();
+        }
+        else if (_key.equals("sb")) {
+          return Role.superBoss();
         }
         throw new IllegalStateException();
       }

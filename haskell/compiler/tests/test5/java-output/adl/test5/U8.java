@@ -2,6 +2,7 @@ package adl.test5;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -129,27 +130,22 @@ public class U8 {
       }
 
       public JsonElement toJson(U8 _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case V1:
-            _result.add("v1", v1.get().toJson(_value.getV1()));
-            break;
+            return JsonBindings.unionToJson("v1", _value.getV1(), v1.get());
           case V2:
-            _result.add("v2", v2.get().toJson(_value.getV2()));
-            break;
+            return JsonBindings.unionToJson("v2", _value.getV2(), v2.get());
         }
-        return _result;
+        return null;
       }
 
       public U8 fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("v1")) {
-            return U8.v1(v1.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("v2")) {
-            return U8.v2(v2.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("v1")) {
+          return U8.v1(JsonBindings.unionValueFromJson(_json, v1.get()));
+        }
+        else if (_key.equals("v2")) {
+          return U8.v2(JsonBindings.unionValueFromJson(_json, v2.get()));
         }
         throw new IllegalStateException();
       }

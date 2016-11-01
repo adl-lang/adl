@@ -2,6 +2,7 @@ package org.adl.sys.types;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -130,27 +131,22 @@ public class Error<T> {
       }
 
       public JsonElement toJson(Error<T> _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case VALUE:
-            _result.add("value", value.get().toJson(_value.getValue()));
-            break;
+            return JsonBindings.unionToJson("value", _value.getValue(), value.get());
           case ERROR:
-            _result.add("error", error.get().toJson(_value.getError()));
-            break;
+            return JsonBindings.unionToJson("error", _value.getError(), error.get());
         }
-        return _result;
+        return null;
       }
 
       public Error<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("value")) {
-            return Error.<T>value(value.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("error")) {
-            return Error.<T>error(error.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("value")) {
+          return Error.<T>value(JsonBindings.unionValueFromJson(_json, value.get()));
+        }
+        else if (_key.equals("error")) {
+          return Error.<T>error(JsonBindings.unionValueFromJson(_json, error.get()));
         }
         throw new IllegalStateException();
       }

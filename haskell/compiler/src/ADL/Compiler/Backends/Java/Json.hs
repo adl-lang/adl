@@ -152,8 +152,10 @@ generateUnionJson cgp decl union fieldDetails = do
   factoryI <- addImport (javaClass (cgp_runtimePackage cgp) "Factory")
   lazyC <- addImport (javaClass (cgp_runtimePackage cgp) "Lazy")
   jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
+  jsonBindingsI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBindings")
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonObjectI <- addImport "com.google.gson.JsonObject"
+  jsonPrimitiveI <- addImport "com.google.gson.JsonPrimitive"
   mapI <- addImport "java.util.Map"
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
   
@@ -183,50 +185,46 @@ generateUnionJson cgp decl union fieldDetails = do
                 cline ""
                 <>
                 cblock (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
-                  ctemplate "$1 _result = new $1();" [jsonObjectI]
-                  <>
                   cblock "switch (_value.getDisc())" (
                     mconcat [
                        ctemplate "case $1:" [discriminatorName fd]
                        <>
                        indent (
                          if isVoidType (f_type (fd_field fd))
-                         then ctemplate "_result.add(\"$1\", null);" [fd_serializedName fd]
-                         else ctemplate "_result.add(\"$1\", $2.get().toJson(_value.$3));" [fd_serializedName fd,fd_varName fd,fd_accessExpr fd]
-                         <>
-                         cline "break;"
-                         )
-                       | fd <- fieldDetails]
-                    )
+                         then ctemplate "return $1.unionToJson(\"$2\", null, null);"
+                                        [jsonBindingsI, fd_serializedName fd]
+                         else ctemplate "return $1.unionToJson(\"$2\", _value.$3, $4.get());"
+                                        [jsonBindingsI, fd_serializedName fd, fd_accessExpr fd, fd_varName fd]
+                       )
+                       | fd <- fieldDetails ]
+                  )
                   <>
-                  cline "return _result;"
+                  cline "return null;"
                   )
                 <>
                 cline ""
                 <>
                 cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
-                  ctemplate "$1 _obj = _json.getAsJsonObject();" [jsonObjectI]
+                  ctemplate "String _key = $1.unionNameFromJson(_json);" [jsonBindingsI]
                   <>
-                  cblock (template "for ($1.Entry<String,JsonElement> _v : _obj.entrySet())" [mapI]) (
-                    let returnStatements = [
-                          if isVoidType (f_type (fd_field fd))
-                          then ctemplate "return $1.$2$3();" [className0,typeArgs,fd_unionCtorName fd]
-                          else ctemplate "return $1.$2$3($4.get().fromJson(_v.getValue()));" [className0,typeArgs,fd_unionCtorName fd,fd_varName fd]
-                          | fd <- fieldDetails]
-                    in ctemplate "if (_v.getKey().equals(\"$1\")) {" [fd_serializedName (head fieldDetails)]
+                  let returnStatements = [
+                        if isVoidType (f_type (fd_field fd))
+                        then ctemplate "return $1.$2$3();" [className0,typeArgs,fd_unionCtorName fd]
+                        else ctemplate "return $1.$2$3($4.unionValueFromJson(_json, $5.get()));" [className0,typeArgs,fd_unionCtorName fd, jsonBindingsI, fd_varName fd]
+                        | fd <- fieldDetails]
+                  in ctemplate "if (_key.equals(\"$1\")) {" [fd_serializedName (head fieldDetails)]
                        <>
                        indent (head returnStatements)
                        <>
                        mconcat [
                          cline "}"
                          <>
-                         ctemplate "else if (_v.getKey().equals(\"$1\")) {" [fd_serializedName fd]
+                         ctemplate "else if (_key.equals(\"$1\")) {" [fd_serializedName fd]
                          <>
                          indent returnCase
                          | (fd,returnCase) <- zip (tail fieldDetails) (tail returnStatements)]
                        <>
                        cline "}"
-                    )
                   <>
                   cline "throw new IllegalStateException();"
                   )

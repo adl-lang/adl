@@ -2,6 +2,7 @@ package adl.test17;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -240,57 +241,47 @@ public class X2 {
       }
 
       public JsonElement toJson(X2 _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case F1:
-            _result.add("f1", f1.get().toJson(_value.getF1()));
-            break;
+            return JsonBindings.unionToJson("f1", _value.getF1(), f1.get());
           case F2:
-            _result.add("f2", f2.get().toJson(_value.getF2()));
-            break;
+            return JsonBindings.unionToJson("f2", _value.getF2(), f2.get());
           case F3:
-            _result.add("f3", f3.get().toJson(_value.getF3()));
-            break;
+            return JsonBindings.unionToJson("f3", _value.getF3(), f3.get());
           case F4:
-            _result.add("f4", f4.get().toJson(_value.getF4()));
-            break;
+            return JsonBindings.unionToJson("f4", _value.getF4(), f4.get());
           case F5:
-            _result.add("f5", f5.get().toJson(_value.getF5()));
-            break;
+            return JsonBindings.unionToJson("f5", _value.getF5(), f5.get());
           case F6:
-            _result.add("f6", f6.get().toJson(_value.getF6()));
-            break;
+            return JsonBindings.unionToJson("f6", _value.getF6(), f6.get());
           case F7:
-            _result.add("f7", f7.get().toJson(_value.getF7()));
-            break;
+            return JsonBindings.unionToJson("f7", _value.getF7(), f7.get());
         }
-        return _result;
+        return null;
       }
 
       public X2 fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("f1")) {
-            return X2.f1(f1.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("f2")) {
-            return X2.f2(f2.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("f3")) {
-            return X2.f3(f3.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("f4")) {
-            return X2.f4(f4.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("f5")) {
-            return X2.f5(f5.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("f6")) {
-            return X2.f6(f6.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("f7")) {
-            return X2.f7(f7.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("f1")) {
+          return X2.f1(JsonBindings.unionValueFromJson(_json, f1.get()));
+        }
+        else if (_key.equals("f2")) {
+          return X2.f2(JsonBindings.unionValueFromJson(_json, f2.get()));
+        }
+        else if (_key.equals("f3")) {
+          return X2.f3(JsonBindings.unionValueFromJson(_json, f3.get()));
+        }
+        else if (_key.equals("f4")) {
+          return X2.f4(JsonBindings.unionValueFromJson(_json, f4.get()));
+        }
+        else if (_key.equals("f5")) {
+          return X2.f5(JsonBindings.unionValueFromJson(_json, f5.get()));
+        }
+        else if (_key.equals("f6")) {
+          return X2.f6(JsonBindings.unionValueFromJson(_json, f6.get()));
+        }
+        else if (_key.equals("f7")) {
+          return X2.f7(JsonBindings.unionValueFromJson(_json, f7.get()));
         }
         throw new IllegalStateException();
       }

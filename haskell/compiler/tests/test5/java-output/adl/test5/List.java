@@ -2,6 +2,7 @@ package adl.test5;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -135,26 +136,22 @@ public class List<T> {
       }
 
       public JsonElement toJson(List<T> _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case NULL_:
-            _result.add("null", null);
+            return JsonBindings.unionToJson("null", null, null);
           case CELL:
-            _result.add("cell", cell.get().toJson(_value.getCell()));
-            break;
+            return JsonBindings.unionToJson("cell", _value.getCell(), cell.get());
         }
-        return _result;
+        return null;
       }
 
       public List<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("null")) {
-            return List.<T>null_();
-          }
-          else if (_v.getKey().equals("cell")) {
-            return List.<T>cell(cell.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("null")) {
+          return List.<T>null_();
+        }
+        else if (_key.equals("cell")) {
+          return List.<T>cell(JsonBindings.unionValueFromJson(_json, cell.get()));
         }
         throw new IllegalStateException();
       }

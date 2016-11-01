@@ -2,6 +2,7 @@ package org.adl.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -150,33 +151,27 @@ public class TypeRef {
       }
 
       public JsonElement toJson(TypeRef _value) {
-        JsonObject _result = new JsonObject();
         switch (_value.getDisc()) {
           case PRIMITIVE:
-            _result.add("primitive", primitive.get().toJson(_value.getPrimitive()));
-            break;
+            return JsonBindings.unionToJson("primitive", _value.getPrimitive(), primitive.get());
           case TYPEPARAM:
-            _result.add("typeParam", typeParam.get().toJson(_value.getTypeParam()));
-            break;
+            return JsonBindings.unionToJson("typeParam", _value.getTypeParam(), typeParam.get());
           case REFERENCE:
-            _result.add("reference", reference.get().toJson(_value.getReference()));
-            break;
+            return JsonBindings.unionToJson("reference", _value.getReference(), reference.get());
         }
-        return _result;
+        return null;
       }
 
       public TypeRef fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
-        for (Map.Entry<String,JsonElement> _v : _obj.entrySet()) {
-          if (_v.getKey().equals("primitive")) {
-            return TypeRef.primitive(primitive.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("typeParam")) {
-            return TypeRef.typeParam(typeParam.get().fromJson(_v.getValue()));
-          }
-          else if (_v.getKey().equals("reference")) {
-            return TypeRef.reference(reference.get().fromJson(_v.getValue()));
-          }
+        String _key = JsonBindings.unionNameFromJson(_json);
+        if (_key.equals("primitive")) {
+          return TypeRef.primitive(JsonBindings.unionValueFromJson(_json, primitive.get()));
+        }
+        else if (_key.equals("typeParam")) {
+          return TypeRef.typeParam(JsonBindings.unionValueFromJson(_json, typeParam.get()));
+        }
+        else if (_key.equals("reference")) {
+          return TypeRef.reference(JsonBindings.unionValueFromJson(_json, reference.get()));
         }
         throw new IllegalStateException();
       }
