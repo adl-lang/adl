@@ -1012,20 +1012,27 @@ Serialisable<ADL::sys::adlast::DeclType_>::serialiser( const SerialiserFlags &sf
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "struct_", json ) )
-                    v.set_struct_(struct__s()->fromJson( json ));
-                else if( matchField0( "union_", json ) )
-                    v.set_union_(union__s()->fromJson( json ));
-                else if( matchField0( "type_", json ) )
-                    v.set_type_(type__s()->fromJson( json ));
-                else if( matchField0( "newtype_", json ) )
-                    v.set_newtype_(newtype__s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "struct_", json ) )
+                        v.set_struct_(struct__s()->fromJson( json ));
+                    else if( matchField0( "union_", json ) )
+                        v.set_union_(union__s()->fromJson( json ));
+                    else if( matchField0( "type_", json ) )
+                        v.set_type_(type__s()->fromJson( json ));
+                    else if( matchField0( "newtype_", json ) )
+                        v.set_newtype_(newtype__s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -1074,16 +1081,23 @@ Serialisable<ADL::sys::adlast::Import>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "moduleName", json ) )
-                    v.set_moduleName(moduleName_s()->fromJson( json ));
-                else if( matchField0( "scopedName", json ) )
-                    v.set_scopedName(scopedName_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "moduleName", json ) )
+                        v.set_moduleName(moduleName_s()->fromJson( json ));
+                    else if( matchField0( "scopedName", json ) )
+                        v.set_scopedName(scopedName_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -1164,7 +1178,7 @@ Serialisable<ADL::sys::adlast::Literal>::serialiser( const SerialiserFlags &sf )
             json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::adlast::Literal::NULL_: writeField( json, null_s(), "null", Void() ); break;
+                case ADL::sys::adlast::Literal::NULL_: json.stringV( "null" ); break;
                 case ADL::sys::adlast::Literal::INTEGER: writeField( json, integer_s(), "integer", v.integer() ); break;
                 case ADL::sys::adlast::Literal::DOUBLE_: writeField( json, double_s(), "double", v.double_() ); break;
                 case ADL::sys::adlast::Literal::STRING: writeField( json, string_s(), "string", v.string() ); break;
@@ -1177,29 +1191,40 @@ Serialisable<ADL::sys::adlast::Literal>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::STRING )
             {
-                if( matchField0( "null", json ) )
-                {
-                    null_s()->fromJson( json );
+                if( json.stringV() == "null" )
                     v.set_null_();
-                }
-                else if( matchField0( "integer", json ) )
-                    v.set_integer(integer_s()->fromJson( json ));
-                else if( matchField0( "double", json ) )
-                    v.set_double_(double_s()->fromJson( json ));
-                else if( matchField0( "string", json ) )
-                    v.set_string(string_s()->fromJson( json ));
-                else if( matchField0( "boolean", json ) )
-                    v.set_boolean(boolean_s()->fromJson( json ));
-                else if( matchField0( "array", json ) )
-                    v.set_array(array_s()->fromJson( json ));
-                else if( matchField0( "object", json ) )
-                    v.set_object(object_s()->fromJson( json ));
                 else
                     throw json_parse_failure();
+                json.next();
+                return;
             }
+            if( json.type() == JsonReader::START_OBJECT )
+            {
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
+                    throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "integer", json ) )
+                        v.set_integer(integer_s()->fromJson( json ));
+                    else if( matchField0( "double", json ) )
+                        v.set_double_(double_s()->fromJson( json ));
+                    else if( matchField0( "string", json ) )
+                        v.set_string(string_s()->fromJson( json ));
+                    else if( matchField0( "boolean", json ) )
+                        v.set_boolean(boolean_s()->fromJson( json ));
+                    else if( matchField0( "array", json ) )
+                        v.set_array(array_s()->fromJson( json ));
+                    else if( matchField0( "object", json ) )
+                        v.set_object(object_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
+            }
+            throw json_parse_failure();
         }
     };
     
@@ -1296,18 +1321,25 @@ Serialisable<ADL::sys::adlast::TypeRef>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "primitive", json ) )
-                    v.set_primitive(primitive_s()->fromJson( json ));
-                else if( matchField0( "typeParam", json ) )
-                    v.set_typeParam(typeParam_s()->fromJson( json ));
-                else if( matchField0( "reference", json ) )
-                    v.set_reference(reference_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "primitive", json ) )
+                        v.set_primitive(primitive_s()->fromJson( json ));
+                    else if( matchField0( "typeParam", json ) )
+                        v.set_typeParam(typeParam_s()->fromJson( json ));
+                    else if( matchField0( "reference", json ) )
+                        v.set_reference(reference_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     

@@ -212,36 +212,29 @@ Serialisable<ADL::test20::Role>::serialiser( const SerialiserFlags &sf )
             json.startObject();
             switch( v.d() )
             {
-                case ADL::test20::Role::UNDERLING: writeField( json, underling_s(), "u", Void() ); break;
-                case ADL::test20::Role::BOSS: writeField( json, boss_s(), "b", Void() ); break;
-                case ADL::test20::Role::SUPERBOSS: writeField( json, superBoss_s(), "sb", Void() ); break;
+                case ADL::test20::Role::UNDERLING: json.stringV( "u" ); break;
+                case ADL::test20::Role::BOSS: json.stringV( "b" ); break;
+                case ADL::test20::Role::SUPERBOSS: json.stringV( "sb" ); break;
             }
             json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::STRING )
             {
-                if( matchField0( "underling", json ) )
-                {
-                    underling_s()->fromJson( json );
+                if( json.stringV() == "u" )
                     v.set_underling();
-                }
-                else if( matchField0( "boss", json ) )
-                {
-                    boss_s()->fromJson( json );
+                else if( json.stringV() == "b" )
                     v.set_boss();
-                }
-                else if( matchField0( "superBoss", json ) )
-                {
-                    superBoss_s()->fromJson( json );
+                else if( json.stringV() == "sb" )
                     v.set_superBoss();
-                }
                 else
                     throw json_parse_failure();
+                json.next();
+                return;
             }
+            throw json_parse_failure();
         }
     };
     

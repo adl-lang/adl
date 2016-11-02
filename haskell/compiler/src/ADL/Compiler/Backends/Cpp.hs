@@ -835,29 +835,42 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
               wl "switch( v.d() )"
               cblock $ do
                 forM_ fds $ \fd -> do
-                   let v | fd_isVoidType fd = "Void()"
-                         | otherwise = template "v.$1()" [fd_unionAccessorName fd]
-
-                   wt "case $1::$2: writeField( json, $3_s(), \"$4\", $5 ); break;"
-                     [scopedctnameP,fd_unionDiscName fd, f_name (fd_field fd), fd_serializedName fd,v]
+                  if fd_isVoidType fd
+                    then wt "case $1::$2: json.stringV( \"$3\" ); break;" [scopedctnameP,fd_unionDiscName fd,fd_serializedName fd]
+                    else wt "case $1::$2: writeField( json, $3_s(), \"$4\", v.$5() ); break;"
+                           [scopedctnameP,fd_unionDiscName fd, f_name (fd_field fd), fd_serializedName fd,fd_unionAccessorName fd]
+                   
               wl "json.endObject();"
               return ()
             wl ""
+            let (voidfds,nonvoidfds) = L.partition fd_isVoidType fds
             wl "void fromJson( _T &v, JsonReader &json ) const"
             cblock $ do
-              wl "match( json, JsonReader::START_OBJECT );"
-              wl "while( !match0( json, JsonReader::END_OBJECT ) )"
-              cblock $ do
-                forM_ (addMarker "if" "else if" "else if" fds) $ \(ifcmd,fd) -> do
-                  wt "$1( matchField0( \"$2\", json ) )" [ifcmd,f_name (fd_field fd)]
-                  if fd_isVoidType fd
-                    then cblock $ do
-                      wt "$1_s()->fromJson( json );" [f_name (fd_field fd)]
-                      wt "v.$1();" [fd_unionSetterName fd]
-                    else indent $ do
-                      wt "v.$1($2_s()->fromJson( json ));" [fd_unionSetterName fd,f_name (fd_field fd)]
-                wl "else"
-                indent $ wl "throw json_parse_failure();"
+              when (not (null voidfds)) $ do
+                wl "if( json.type() == JsonReader::STRING )"
+                cblock $ do
+                  forM_ (addMarker "if" "else if" "else if" voidfds) $ \(ifcmd,fd) -> do
+                    wt "$1( json.stringV() == \"$2\" )" [ifcmd,fd_serializedName fd]
+                    indent $ wt "v.$1();" [fd_unionSetterName fd]
+                  wl "else"
+                  indent $ wl "throw json_parse_failure();"
+                  wl "json.next();"
+                  wl "return;"
+              when (not (null nonvoidfds)) $ do
+                wl "if( json.type() == JsonReader::START_OBJECT )"
+                cblock $ do
+                  wl "match( json, JsonReader::START_OBJECT );"
+                  wl "if( json.type() == JsonReader::END_OBJECT )"
+                  indent $ wl "throw json_parse_failure();"
+                  wl "while( !match0( json, JsonReader::END_OBJECT ) )"
+                  cblock $ do
+                    forM_ (addMarker "if" "else if" "else if" nonvoidfds) $ \(ifcmd,fd) -> do
+                      wt "$1( matchField0( \"$2\", json ) )" [ifcmd,fd_serializedName fd]
+                      indent $ wt "v.$1($2_s()->fromJson( json ));" [fd_unionSetterName fd,f_name (fd_field fd)]
+                    wl "else"
+                    indent $ wl "throw json_parse_failure();"
+                  wl "return;"
+              wl "throw json_parse_failure();"
         wl ""
         wl "return typename Serialiser<_T>::Ptr( new S_(sf) );"
 

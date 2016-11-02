@@ -383,26 +383,33 @@ Serialisable<ADL::test17::X2>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "f1", json ) )
-                    v.set_f1(f1_s()->fromJson( json ));
-                else if( matchField0( "f2", json ) )
-                    v.set_f2(f2_s()->fromJson( json ));
-                else if( matchField0( "f3", json ) )
-                    v.set_f3(f3_s()->fromJson( json ));
-                else if( matchField0( "f4", json ) )
-                    v.set_f4(f4_s()->fromJson( json ));
-                else if( matchField0( "f5", json ) )
-                    v.set_f5(f5_s()->fromJson( json ));
-                else if( matchField0( "f6", json ) )
-                    v.set_f6(f6_s()->fromJson( json ));
-                else if( matchField0( "f7", json ) )
-                    v.set_f7(f7_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "f1", json ) )
+                        v.set_f1(f1_s()->fromJson( json ));
+                    else if( matchField0( "f2", json ) )
+                        v.set_f2(f2_s()->fromJson( json ));
+                    else if( matchField0( "f3", json ) )
+                        v.set_f3(f3_s()->fromJson( json ));
+                    else if( matchField0( "f4", json ) )
+                        v.set_f4(f4_s()->fromJson( json ));
+                    else if( matchField0( "f5", json ) )
+                        v.set_f5(f5_s()->fromJson( json ));
+                    else if( matchField0( "f6", json ) )
+                        v.set_f6(f6_s()->fromJson( json ));
+                    else if( matchField0( "f7", json ) )
+                        v.set_f7(f7_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     

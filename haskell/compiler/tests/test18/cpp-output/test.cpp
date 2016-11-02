@@ -336,16 +336,23 @@ Serialisable<ADL::test::X1>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "f1", json ) )
-                    v.set_f1(f1_s()->fromJson( json ));
-                else if( matchField0( "f2", json ) )
-                    v.set_f2(f2_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "f1", json ) )
+                        v.set_f1(f1_s()->fromJson( json ));
+                    else if( matchField0( "f2", json ) )
+                        v.set_f2(f2_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -433,16 +440,23 @@ Serialisable<ADL::test::Y1>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "f1", json ) )
-                    v.set_f1(f1_s()->fromJson( json ));
-                else if( matchField0( "f2", json ) )
-                    v.set_f2(f2_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "f1", json ) )
+                        v.set_f1(f1_s()->fromJson( json ));
+                    else if( matchField0( "f2", json ) )
+                        v.set_f2(f2_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     

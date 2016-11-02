@@ -818,24 +818,23 @@ Serialisable<ADL::test5::U1>::serialiser( const SerialiserFlags &sf )
             json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U1::V: writeField( json, v_s(), "v", Void() ); break;
+                case ADL::test5::U1::V: json.stringV( "v" ); break;
             }
             json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::STRING )
             {
-                if( matchField0( "v", json ) )
-                {
-                    v_s()->fromJson( json );
+                if( json.stringV() == "v" )
                     v.set_v();
-                }
                 else
                     throw json_parse_failure();
+                json.next();
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -875,14 +874,21 @@ Serialisable<ADL::test5::U2>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "v", json ) )
-                    v.set_v(v_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "v", json ) )
+                        v.set_v(v_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -922,14 +928,21 @@ Serialisable<ADL::test5::U3>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "v", json ) )
-                    v.set_v(v_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "v", json ) )
+                        v.set_v(v_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -969,14 +982,21 @@ Serialisable<ADL::test5::U4>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "v", json ) )
-                    v.set_v(v_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "v", json ) )
+                        v.set_v(v_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -1016,14 +1036,21 @@ Serialisable<ADL::test5::U5>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "v", json ) )
-                    v.set_v(v_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "v", json ) )
+                        v.set_v(v_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -1063,14 +1090,21 @@ Serialisable<ADL::test5::U6>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "v", json ) )
-                    v.set_v(v_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "v", json ) )
+                        v.set_v(v_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -1110,14 +1144,21 @@ Serialisable<ADL::test5::U7>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "v", json ) )
-                    v.set_v(v_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "v", json ) )
+                        v.set_v(v_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
@@ -1166,16 +1207,23 @@ Serialisable<ADL::test5::U8>::serialiser( const SerialiserFlags &sf )
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "v1", json ) )
-                    v.set_v1(v1_s()->fromJson( json ));
-                else if( matchField0( "v2", json ) )
-                    v.set_v2(v2_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "v1", json ) )
+                        v.set_v1(v1_s()->fromJson( json ));
+                    else if( matchField0( "v2", json ) )
+                        v.set_v2(v2_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     

@@ -216,24 +216,23 @@ Serialisable<ADL::test14::unsigned_>::serialiser( const SerialiserFlags &sf )
             json.startObject();
             switch( v.d() )
             {
-                case ADL::test14::unsigned_::NULL_: writeField( json, null_s(), "null", Void() ); break;
+                case ADL::test14::unsigned_::NULL_: json.stringV( "null" ); break;
             }
             json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::STRING )
             {
-                if( matchField0( "null", json ) )
-                {
-                    null_s()->fromJson( json );
+                if( json.stringV() == "null" )
                     v.set_null_();
-                }
                 else
                     throw json_parse_failure();
+                json.next();
+                return;
             }
+            throw json_parse_failure();
         }
     };
     

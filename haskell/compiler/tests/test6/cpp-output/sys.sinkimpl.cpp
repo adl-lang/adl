@@ -234,18 +234,25 @@ Serialisable<ADL::sys::sinkimpl::TransportAddr>::serialiser( const SerialiserFla
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "stringv", json ) )
-                    v.set_stringv(stringv_s()->fromJson( json ));
-                else if( matchField0( "intv", json ) )
-                    v.set_intv(intv_s()->fromJson( json ));
-                else if( matchField0( "arrayv", json ) )
-                    v.set_arrayv(arrayv_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "stringv", json ) )
+                        v.set_stringv(stringv_s()->fromJson( json ));
+                    else if( matchField0( "intv", json ) )
+                        v.set_intv(intv_s()->fromJson( json ));
+                    else if( matchField0( "arrayv", json ) )
+                        v.set_arrayv(arrayv_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
