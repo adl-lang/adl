@@ -1108,9 +1108,6 @@ writeModuleFile mNamespace mIncFile mFile customTypes fileWriter m = do
   liftIO $ fileWriter (mFile (m_name m) ++ ".cpp") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" cppfileLines)))
 
 data CppFlags = CppFlags {
-  -- directories where we look for ADL files
-  cf_searchPath :: [FilePath],
-
   -- all include files will be generated and referenced
   -- with this path prefix
   cf_incFilePrefix :: FilePath,
@@ -1156,15 +1153,15 @@ incFileGenerator prefix mn = prefix </> T.unpack (T.intercalate "." (unModuleNam
 fileGenerator :: ModuleName -> FilePath
 fileGenerator mn = T.unpack (T.intercalate "." (unModuleName mn))
 
-generate :: CppFlags -> [FilePath] -> EIOT ()
-generate cf modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-  rm <- loadAndCheckModule (moduleFinder (cf_searchPath cf)) modulePath
+generate :: AdlFlags -> CppFlags -> FileWriter -> [FilePath] -> EIOT ()
+generate af cf fileWriter modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
+  rm <- loadAndCheckModule af modulePath
   customTypes <- getCustomTypes (cf_customTypeFiles cf)
   writeModuleFile namespaceGenerator
                   (incFileGenerator (cf_incFilePrefix cf))
                   fileGenerator
                   customTypes
-                  (cf_fileWriter cf)
+                  fileWriter
                   rm
 
 ----------------------------------------------------------------------

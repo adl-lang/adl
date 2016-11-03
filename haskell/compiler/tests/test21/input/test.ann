@@ -1,0 +1,4 @@
+module test
+{
+    annotation MyStruct::name Ann3 {"f1": "a", "f2": "b"};
+};

@@ -614,22 +614,16 @@ fileMapper (HaskellModule t) = addExtension (joinPath ps) "hs"
 ----------------------------------------------------------------------
 
 data HaskellFlags = HaskellFlags {
-  -- directories where we look for ADL files
-  hf_searchPath :: [FilePath],
-
   hf_modulePrefix :: String,
-
-  hf_customTypeFiles :: [FilePath],
-
-  hf_fileWriter :: FilePath -> LBS.ByteString -> IO ()
+  hf_customTypeFiles :: [FilePath]
 }
 
-generate :: HaskellFlags -> ([FilePath] -> EIOT CustomTypeMap) -> [FilePath] -> EIOT ()
-generate hf getCustomTypes modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
-  rm <- loadAndCheckModule (moduleFinder (hf_searchPath hf)) modulePath
+generate :: AdlFlags -> HaskellFlags -> FileWriter -> ([FilePath] -> EIOT CustomTypeMap) -> [FilePath] -> EIOT ()
+generate af hf fileWriter getCustomTypes modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
+  rm <- loadAndCheckModule af modulePath
   hctypes <- getCustomTypes (hf_customTypeFiles hf)
   writeModuleFile (moduleMapper (hf_modulePrefix hf))
                   fileMapper
                   hctypes
-                  (hf_fileWriter hf)
+                  fileWriter
                   rm

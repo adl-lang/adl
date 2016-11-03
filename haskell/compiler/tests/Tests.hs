@@ -17,6 +17,7 @@ import HaskellCustomTypes
 
 import ADL.Compiler.EIO
 import ADL.Compiler.Utils
+import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
 
 import qualified ADL.Compiler.Backends.Verify as V
 import qualified ADL.Compiler.Backends.Haskell as H
@@ -51,10 +52,8 @@ processCompilerOutput epath tempDir (Right ()) = do
 
 runVerifyBackend :: [FilePath] -> [FilePath] -> IO CodeGenResult
 runVerifyBackend ipath mpaths = do
-  let flags =  V.VerifyFlags {
-    V.vf_searchPath = ipath
-    }
-  er <- unEIO $ V.verify flags mpaths
+  let af =  defaultAdlFlags{af_searchPath=ipath}
+  er <- unEIO $ V.verify af mpaths
   case er of
    (Left err) -> return (CompilerFailed err)
    (Right ()) -> return MatchOutput
@@ -66,13 +65,13 @@ runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> [FilePath] -> IO Co
 runHaskellBackend ipaths mpaths epath customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let flags =  H.HaskellFlags {
-    H.hf_searchPath = ipaths,
-    H.hf_modulePrefix = "ADL",
-    H.hf_customTypeFiles = customTypeFiles,
-    H.hf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
-    }
-  er <- unEIO $ H.generate flags getCustomTypes mpaths
+  let af =  defaultAdlFlags{af_searchPath=ipaths}
+      hf =  H.HaskellFlags {
+        H.hf_modulePrefix = "ADL",
+        H.hf_customTypeFiles = customTypeFiles
+        }
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+  er <- unEIO $ H.generate af hf fileWriter getCustomTypes mpaths
   processCompilerOutput epath tempDir er
 
 runHaskellBackend1 :: FilePath-> IO CodeGenResult
@@ -85,13 +84,13 @@ runCppBackend :: [FilePath] -> [FilePath] -> FilePath -> FilePath -> [FilePath] 
 runCppBackend ipaths mpaths epath iprefix customTypeFiles = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let flags = CPP.CppFlags {
-    CPP.cf_searchPath = ipaths,
-    CPP.cf_customTypeFiles = customTypeFiles,
-    CPP.cf_incFilePrefix = iprefix,
-    CPP.cf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
-    }
-  er <- unEIO $ CPP.generate flags mpaths
+  let af =  defaultAdlFlags{af_searchPath=ipaths}
+      cf = CPP.CppFlags {
+        CPP.cf_customTypeFiles = customTypeFiles,
+        CPP.cf_incFilePrefix = iprefix
+        }
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+  er <- unEIO $ CPP.generate af cf fileWriter mpaths
   processCompilerOutput epath tempDir er
 
 runCppBackend1 :: FilePath-> IO CodeGenResult
@@ -104,11 +103,9 @@ runAstBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
 runAstBackend ipath mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let flags = AST.Flags {
-    AST.af_searchPath = ipath,
-    AST.af_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
-    }
-  er <- unEIO $ AST.generate flags mpaths
+  let af = defaultAdlFlags{af_searchPath=ipath,af_mergeFileExtensions=[".ann"]}
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+  er <- unEIO $ AST.generate af fileWriter mpaths
   processCompilerOutput epath tempDir er
 
 runAstBackend1 :: FilePath-> IO CodeGenResult
@@ -121,16 +118,16 @@ runJavaBackend :: [FilePath] -> [FilePath] -> FilePath -> (J.JavaFlags -> J.Java
 runJavaBackend ipaths mpaths epath updateflags = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let flags = J.JavaFlags {
-    J.jf_searchPath = ipaths,
-    J.jf_libDir = "LIBDIR",
-    J.jf_customTypeFiles = [],
-    J.jf_package = J.javaPackage "adl",
-    J.jf_fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir),
-    J.jf_includeRuntime = False,
-    J.jf_codeGenProfile = J.defaultCodeGenProfile {J.cgp_json=True}
-    }
-  er <- unEIO $ J.generate (updateflags flags) mpaths
+  let af = defaultAdlFlags{af_searchPath=ipaths}
+      jf = J.JavaFlags {
+        J.jf_libDir = "LIBDIR",
+        J.jf_customTypeFiles = [],
+        J.jf_package = J.javaPackage "adl",
+        J.jf_includeRuntime = False,
+        J.jf_codeGenProfile = J.defaultCodeGenProfile {J.cgp_json=True}
+        }
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+  er <- unEIO $ J.generate af (updateflags jf) fileWriter mpaths
   processCompilerOutput epath tempDir er 
 
 withJavaCustomTypeFiles :: [FilePath] -> J.JavaFlags -> J.JavaFlags

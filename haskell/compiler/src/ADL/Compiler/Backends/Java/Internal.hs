@@ -36,15 +36,11 @@ import ADL.Utils.Format
 data JavaFlags = JavaFlags {
   jf_libDir :: FilePath,
   
-  -- directories where we look for ADL files
-  jf_searchPath :: [FilePath],
-
   -- Files containing custom type definitions
   jf_customTypeFiles :: [FilePath],
 
   -- The java package under which we hang the generated ADL
   jf_package :: JavaPackage,
-  jf_fileWriter :: FilePath -> LBS.ByteString -> IO (),
 
   -- Whether to include the runtime in the generated output
   jf_includeRuntime :: Bool,

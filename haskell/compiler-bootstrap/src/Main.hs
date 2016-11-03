@@ -12,6 +12,7 @@ import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
 import ADL.Compiler.Utils
+import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
 import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.Verify as V
 import BootstrapCustomTypes
@@ -38,29 +39,26 @@ runVerify args0 =
   where
     header = "Usage: adl verify [OPTION...] files..."
     
-    mkFlags opts = (foldl (.) id opts) (V.VerifyFlags [])
+    mkFlags opts = (foldl (.) id opts) defaultAdlFlags
 
     optDescs =
-      [ searchDirOption (\s vf-> vf{vf_searchPath=s:vf_searchPath vf})
+      [ searchDirOption (\s af-> af{af_searchPath=s:af_searchPath af})
       ]
 
 runHaskell args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      let (flags,out) = mkFlags opts
-          flags1 = flags{hf_fileWriter=writeOutputFile out}
-      H.generate flags1 getCustomTypes args
+      let (af,flags,out) = mkFlags opts
+      H.generate af flags (writeOutputFile out) getCustomTypes args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."
     
-    mkFlags opts = (foldl (.) id opts) (flags0,out0)
+    mkFlags opts = (foldl (.) id opts) (defaultAdlFlags,flags0,out0)
 
     flags0 = H.HaskellFlags {
-      hf_searchPath=[],
       hf_modulePrefix="ADL.Generated",
-      hf_customTypeFiles=[],
-      hf_fileWriter= \_ _ -> return ()
+      hf_customTypeFiles=[]
     }
     out0 = OutputArgs {
       oa_log = putStrLn,
@@ -69,12 +67,12 @@ runHaskell args0 =
     }
 
     optDescs =
-      [ searchDirOption (\s (hf,o)-> (hf{hf_searchPath=s:hf_searchPath hf},o))
+      [ searchDirOption (\s (af,hf,o)-> (af{af_searchPath=s:af_searchPath af},hf,o))
       , Option "" ["moduleprefix"]
-        (ReqArg (\s (hf,o)-> (hf{hf_modulePrefix=s},o)) "PREFIX")
+        (ReqArg (\s (af,hf,o)-> (af,hf{hf_modulePrefix=s},o)) "PREFIX")
         "Set module name prefix for generated code "
-      , outputDirOption (\s (hf,o)-> (hf,o{oa_outputPath=s}))
-      , noOverwriteOption (\(hf,o)-> (hf,o{oa_noOverwrite=True}))
+      , outputDirOption (\s (af,hf,o)-> (af,hf,o{oa_outputPath=s}))
+      , noOverwriteOption (\(af,hf,o)-> (af,hf,o{oa_noOverwrite=True}))
       ]
 
 usage = T.intercalate "\n"

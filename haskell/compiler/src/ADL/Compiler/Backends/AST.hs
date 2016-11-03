@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Compiler.Backends.AST(
-  Flags(..),
+  AstFlags(..),
   generate
   ) where
 
@@ -21,15 +21,14 @@ import ADL.Compiler.EIO
 import ADL.Compiler.AST
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
+import ADL.Compiler.Utils
 
 import ADL.Core.Value
 
 import qualified ADL.Sys.Adlast as A2
 
-data Flags = Flags {
-  -- directories where we look for ADL files
-  af_searchPath :: [FilePath],
-  af_fileWriter :: FilePath -> LBS.ByteString -> IO ()
+data AstFlags = AstFlags {
+  astf_fileWriter :: FilePath -> LBS.ByteString -> IO ()
   }
 
 moduleToA2 :: Module ResolvedType -> A2.Module
@@ -97,8 +96,8 @@ writeModuleFile fileWriter m = do
   
   liftIO $ fileWriter fpath (JSON.encodePretty' encodeDef v)
   
-generate :: Flags -> [FilePath] -> EIOT ()
-generate af modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-  rm <- loadAndCheckModule (moduleFinder (af_searchPath af)) modulePath
-  writeModuleFile (af_fileWriter af) rm
+generate :: AdlFlags -> FileWriter -> [FilePath] -> EIOT ()
+generate af fileWriter modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
+  rm <- loadAndCheckModule af modulePath
+  writeModuleFile fileWriter rm
 

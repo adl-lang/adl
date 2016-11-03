@@ -24,5 +24,4 @@ module test
     };
 
     annotation MyStruct Ann1 42;
-    annotation MyStruct::name Ann3 {"f1": "a", "f2": "b"};
 };          

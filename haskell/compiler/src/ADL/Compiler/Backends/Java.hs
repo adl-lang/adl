@@ -40,31 +40,33 @@ import ADL.Compiler.EIO
 import ADL.Compiler.DataFiles
 import ADL.Compiler.Primitive
 import ADL.Compiler.Processing
+import ADL.Compiler.Utils
 import ADL.Core.Value
 import ADL.Utils.FileDiff(dirContents)
 import ADL.Utils.Format
 
-generate :: JavaFlags -> [FilePath] -> EIOT ()
-generate jf modulePaths = catchAllExceptions  $ do
+generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
+generate af jf fileWriter modulePaths = catchAllExceptions  $ do
   customTypes <- loadCustomTypes (jf_customTypeFiles jf)
   let cgp = (jf_codeGenProfile jf)
   imports <- for modulePaths $ \modulePath -> do
-    m <- loadAndCheckModule (moduleFinder (jf_searchPath jf)) modulePath
-    generateModule jf
+    m <- loadAndCheckModule af modulePath
+    generateModule jf fileWriter
                    (const cgp)
                    customTypes
                    m
   when (jf_includeRuntime jf) $ liftIO $ do
-    generateRuntime jf (mconcat imports)
+    generateRuntime jf fileWriter (mconcat imports)
 
 -- | Generate and write the java code for a single ADL module
 -- The result value is the set of all java imports.
 generateModule :: JavaFlags ->
+                  FileWriter ->
                   (ScopedName -> CodeGenProfile) ->
                   CustomTypeMap ->
                   Module ResolvedType ->
                   EIO T.Text (Set.Set JavaClass)
-generateModule jf mCodeGetProfile customTypes m0 = do
+generateModule jf fileWriter mCodeGetProfile customTypes m0 = do
   let moduleName = m_name m
       m = ( associateCustomTypes moduleName customTypes
           . removeModuleTypedefs
@@ -84,7 +86,7 @@ generateModule jf mCodeGetProfile customTypes m0 = do
       (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
     let lines = codeText maxLineLength (classFileCode classFile)
         imports = Set.fromList ([javaClass pkg cls| (cls,Just pkg) <- Map.toList (cf_imports classFile)])
-    liftIO $ (jf_fileWriter jf) filePath (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
+    liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
     return imports
   return (mconcat imports)
 
@@ -580,8 +582,8 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
         generateUnionParcelable codeProfile decl union fieldDetails
 
 
-generateRuntime :: JavaFlags -> Set.Set JavaClass -> IO ()
-generateRuntime jf imports = do
+generateRuntime :: JavaFlags -> FileWriter -> Set.Set JavaClass -> IO ()
+generateRuntime jf fileWriter imports = do
     files <- dirContents runtimedir
     for_ files $ \inpath -> do
       let cls = javaClass rtpackage (T.pack (dropExtensions (takeFileName inpath)))
@@ -592,7 +594,7 @@ generateRuntime jf imports = do
             ]
       when (Set.member cls toGenerate) $ do
         content <- LBS.readFile (runtimedir </> inpath)
-        jf_fileWriter jf (javaClassFilePath cls) (adjustContent content)
+        fileWriter (javaClassFilePath cls) (adjustContent content)
   where
     runtimedir =  javaRuntimeDir (jf_libDir jf)
     rtpackage = cgp_runtimePackage (jf_codeGenProfile jf)

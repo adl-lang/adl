@@ -20,6 +20,7 @@ import ADL.Compiler.Backends.Cpp as C
 import ADL.Compiler.Backends.Java as J
 import ADL.Compiler.DataFiles
 import ADL.Compiler.Utils
+import ADL.Compiler.Processing(AdlFlags(..))
 import HaskellCustomTypes
 
 searchDirOption ufn =
@@ -87,154 +88,158 @@ javaMaxLineLength ufn =
     (ReqArg ufn "PACKAGE")
     "The maximum length of the generated code lines"
 
+getDefaultAdlFlags :: EIO T.Text (AdlFlags)
+getDefaultAdlFlags = do
+  systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
+  return (AdlFlags [systemAdlDir] [])
+
+defaultOutputArgs :: OutputArgs
+defaultOutputArgs = OutputArgs {
+  oa_log = putStrLn,
+  oa_noOverwrite = True,
+  oa_outputPath = "."
+  }
+
+-- Hold a set of flags for the adl frontend, a given backend
+-- and the output writer
+data Flags b = Flags {
+  f_adl :: AdlFlags,
+  f_output :: OutputArgs,
+  f_backend :: b
+  }
+
+updateAdlFlags :: (AdlFlags -> AdlFlags) -> Flags b -> Flags b
+updateAdlFlags fn flags = flags{f_adl=fn (f_adl flags)}
+
+updateOutputArgs :: (OutputArgs -> OutputArgs) -> Flags b -> Flags b
+updateOutputArgs fn flags = flags{f_output=fn (f_output flags)}
+
+updateBackendFlags :: (b -> b) -> Flags b -> Flags b
+updateBackendFlags fn flags = flags{f_backend=fn (f_backend flags)}
+
+addToSearchPath :: FilePath -> Flags b -> Flags b
+addToSearchPath path = updateAdlFlags (\af-> af{af_searchPath=path:af_searchPath af})
+
+setOutputDir :: FilePath -> Flags b -> Flags b
+setOutputDir dir = updateOutputArgs (\oa -> oa{oa_outputPath=dir})
+
+setNoOverwrite :: Flags b -> Flags b
+setNoOverwrite = updateOutputArgs (\oa-> oa{oa_noOverwrite=True})
+
+buildFlags :: b -> [Flags b -> Flags b] -> EIO T.Text (Flags b)
+buildFlags b0 opts = do
+  af0 <- getDefaultAdlFlags
+  return ((foldl (.) id opts) (Flags af0 defaultOutputArgs b0))
+
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
-      V.verify (mkFlags opts systemAdlDir) args
+      flags <- buildFlags () opts
+      V.verify (f_adl flags) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl verify [OPTION...] files..."
     
-    mkFlags opts systemAdlDir = (foldl (.) id opts) (V.VerifyFlags [systemAdlDir])
-
     optDescs =
-      [ searchDirOption (\s vf-> vf{vf_searchPath=s:vf_searchPath vf})
+      [ searchDirOption addToSearchPath
       ]
 
 runAst args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
-      A.generate (mkFlags opts systemAdlDir) args
+      flags <- buildFlags () opts
+      A.generate (f_adl flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl ast [OPTION...] files..."
     
-    mkFlags opts systemAdlDir = (foldl (.) id opts) (A.Flags [systemAdlDir] (writeOutputFile out0))
-                                        
-    out0 = OutputArgs {
-      oa_log = putStrLn,
-      oa_noOverwrite = True,
-      oa_outputPath = "."
-    }
-
     optDescs =
-      [ searchDirOption (\s f-> f{af_searchPath=s:af_searchPath f})
+      [ searchDirOption addToSearchPath
       ]
 
 runHaskell args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-        flags <- mkFlags opts
-        H.generate flags getCustomTypes args
+        libDir <- liftIO $ getLibDir
+        flags <- buildFlags (flags0 libDir) opts
+        H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomTypes args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."
 
-    mkFlags opts = do
-      libDir <- liftIO $ getLibDir
-      let (flags1,out1) = (foldl (.) id opts) (flags0,out0)
-          flags0 = H.HaskellFlags {
-            hf_searchPath=[systemAdlDir libDir],
-            hf_modulePrefix="ADL.Generated",
-            hf_customTypeFiles=[stdlibCustomTypesHs libDir],
-            hf_fileWriter= \_ _ -> return ()
-          }
-          out0 = OutputArgs {
-            oa_log = putStrLn,
-            oa_noOverwrite = True,
-            oa_outputPath = "."
-          }
-      return flags1{hf_fileWriter=writeOutputFile out1}
-
+    flags0 libDir = H.HaskellFlags {
+      hf_modulePrefix="ADL.Generated",
+      hf_customTypeFiles=[stdlibCustomTypesHs libDir]
+      }
 
     optDescs =
-      [ searchDirOption (\s (hf,o)-> (hf{hf_searchPath=s:hf_searchPath hf},o))
+      [ searchDirOption addToSearchPath
+      , outputDirOption setOutputDir
+      , noOverwriteOption setNoOverwrite
+      , customTypesOption (\s -> updateBackendFlags (\hf -> hf{hf_customTypeFiles=s:hf_customTypeFiles hf}))
       , Option "" ["moduleprefix"]
-        (ReqArg (\s (hf,o)-> (hf{hf_modulePrefix=s},o)) "PREFIX")
+        (ReqArg (\s -> updateBackendFlags (\hf -> hf{hf_modulePrefix=s})) "PREFIX")
         "Set module name prefix for generated code "
-      , customTypesOption (\s (hf,o)-> (hf{hf_customTypeFiles=s:hf_customTypeFiles hf},o))
-      , outputDirOption (\s (hf,o)-> (hf,o{oa_outputPath=s}))
-      , noOverwriteOption (\(hf,o)-> (hf,o{oa_noOverwrite=True}))
       ]
 
 runCpp args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-        flags <- mkFlags opts
-        C.generate flags args
+        libDir <- liftIO $ getLibDir
+        flags <- buildFlags (flags0 libDir) opts
+        C.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl cpp [OPTION...] files..."
 
-    mkFlags opts = do
-      libDir <- liftIO $ getLibDir
-      let (flags1,out) = (foldl (.) id opts) (flags0,out0)
-          flags0 = C.CppFlags {
-            cf_searchPath=[systemAdlDir libDir],
-            cf_incFilePrefix="",
-            cf_customTypeFiles= [stdlibCustomTypesCpp libDir],
-            cf_fileWriter= \_ _ -> return ()
-          }
-          out0 = OutputArgs {
-            oa_log = putStrLn,
-            oa_noOverwrite = True,
-            oa_outputPath = "."
-          }
-      return flags1{cf_fileWriter=writeOutputFile out}
+    flags0 libDir = C.CppFlags {
+      cf_incFilePrefix="",
+      cf_customTypeFiles= [stdlibCustomTypesCpp libDir],
+      cf_fileWriter= \_ _ -> return ()
+      }
 
     optDescs =
-      [ searchDirOption (\s (cf,o)-> (cf{cf_searchPath=s:cf_searchPath cf},o))
-      , customTypesOption (\s (cf,o)-> (cf{cf_customTypeFiles=s:cf_customTypeFiles cf},o))
-      , includePrefixOption (\s (cf,o)-> (cf{cf_incFilePrefix=s},o))
-      , outputDirOption (\s (cf,o)-> (cf,o{oa_outputPath=s}))
-      , noOverwriteOption (\(cf,o)-> (cf,o{oa_noOverwrite=True}))
+      [ searchDirOption addToSearchPath
+      , outputDirOption setOutputDir
+      , noOverwriteOption setNoOverwrite
+      , customTypesOption (\s -> updateBackendFlags (\cf -> cf{cf_customTypeFiles=s:cf_customTypeFiles cf}))
+      , includePrefixOption (\s -> updateBackendFlags (\cf -> cf{cf_incFilePrefix=s}))
       ]
 
 runJava args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-        flags <- mkFlags opts
-        J.generate flags args
+        libDir <- liftIO $ getLibDir
+        flags <- buildFlags (flags0 libDir) opts
+        J.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl java [OPTION...] files..."
 
-    mkFlags opts = do
-      libDir <- liftIO $ getLibDir
-      let (flags1,out) = (foldl (.) id opts) (flags0,out0)
-          flags0 = J.JavaFlags {
-            jf_libDir=libDir,
-            jf_searchPath=[systemAdlDir libDir],
-            jf_customTypeFiles=[stdlibCustomTypesJava libDir],
-            jf_package = "adl",
-            jf_fileWriter= \_ _ -> return (),
-            jf_includeRuntime = False,
-            jf_codeGenProfile = J.defaultCodeGenProfile
-          }
-          out0 = OutputArgs {
-            oa_log = putStrLn,
-            oa_noOverwrite = True,
-            oa_outputPath = "."
-          }
-
-      return flags1{jf_fileWriter=writeOutputFile out}
+    flags0 libDir = J.JavaFlags {
+      jf_libDir=libDir,
+      jf_customTypeFiles=[stdlibCustomTypesJava libDir],
+      jf_package = "adl",
+      jf_includeRuntime = False,
+      jf_codeGenProfile = J.defaultCodeGenProfile
+    }
 
     optDescs =
-      [ searchDirOption (\s (jf,o)-> (jf{jf_searchPath=s:jf_searchPath jf},o))
-      , outputDirOption (\s (jf,o)-> (jf,o{oa_outputPath=s}))
-      , customTypesOption (\s (jf,o)-> (jf{jf_customTypeFiles=s:jf_customTypeFiles jf},o))
-      , noOverwriteOption (\(jf,o)-> (jf,o{oa_noOverwrite=True}))
-      , javaPackageOption (\s (jf,o) -> (jf{jf_package=javaPackage (T.pack s)},o))
-      , javaRuntimePackageOption (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_runtimePackage=fromString s}},o))
-      , javaIncludeRuntimePackageOption (\(jf,o) ->(jf{jf_includeRuntime=True},o))
-      , javaGenerateParcelable (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_parcelable=True}},o))
-      , javaGenerateJson (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_json=True}},o))
-      , javaHungarianNaming (\(jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_hungarianNaming=True}},o))
-      , javaMaxLineLength (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_maxLineLength=read s}},o))
-      , javaHeaderComment (\s (jf,o) ->(jf{jf_codeGenProfile=(jf_codeGenProfile jf){cgp_header=T.pack s}},o))
+      [ searchDirOption addToSearchPath
+      , outputDirOption setOutputDir
+      , noOverwriteOption setNoOverwrite
+      , customTypesOption (\s -> updateBackendFlags (\jf-> jf{jf_customTypeFiles=s:jf_customTypeFiles jf}))
+      , javaPackageOption (\s -> updateBackendFlags (\jf -> jf{jf_package=javaPackage (T.pack s)}))
+      , javaIncludeRuntimePackageOption (updateBackendFlags (\jf ->jf{jf_includeRuntime=True}))
+      , javaRuntimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{cgp_runtimePackage=fromString s}))
+      , javaGenerateParcelable (updateCodeGenProfile (\cgp->cgp{cgp_parcelable=True}))
+      , javaGenerateJson (updateCodeGenProfile (\cgp->cgp{cgp_json=True}))
+      , javaHungarianNaming (updateCodeGenProfile (\cgp->cgp{cgp_hungarianNaming=True}))
+      , javaMaxLineLength (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_maxLineLength=read s})))
+      , javaHeaderComment (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_header=T.pack s})))
       ]
+
+    updateCodeGenProfile f = updateBackendFlags (\jf ->jf{jf_codeGenProfile=f (jf_codeGenProfile jf)})
 
 usage = T.intercalate "\n"
   [ "Usage: adl verify [OPTION..] <modulePath>..."

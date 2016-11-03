@@ -1,5 +1,6 @@
 module ADL.Compiler.Utils(
   OutputArgs(..),
+  FileWriter,
   writeOutputFile
   )where
 
@@ -15,9 +16,11 @@ data OutputArgs = OutputArgs {
   oa_log :: String -> IO (),
   oa_noOverwrite :: Bool,
   oa_outputPath :: FilePath
-  }                   
+  }
+
+type FileWriter = FilePath -> LBS.ByteString -> IO ()
   
-writeOutputFile :: OutputArgs -> FilePath -> LBS.ByteString -> IO ()
+writeOutputFile :: OutputArgs -> FileWriter
 writeOutputFile (oa@OutputArgs{oa_noOverwrite=False}) fpath0 t = do
   let fpath = oa_outputPath oa </> fpath0
   oa_log oa ("writing " ++ fpath ++ "...")
