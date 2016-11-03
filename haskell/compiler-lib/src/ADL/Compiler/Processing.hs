@@ -39,18 +39,39 @@ import ADL.Compiler.EIO
 type SModule = Module ScopedName
 type SModuleMap = Map.Map ModuleName SModule
 
+-- | Load and parse an adl file and all of its dependencies
 loadModule :: FilePath -> (ModuleName -> [FilePath]) -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
 loadModule fpath0 findm mm = do
     m0 <- parseAndCheckFile fpath0
     mm' <- addDeps m0 mm
     return (m0,mm')
   where
-    parseAndCheckFile :: FilePath -> EIO T.Text (Module ScopedName)
-    parseAndCheckFile f = do
-      m0 <- addDefaultImports <$> parseFile f
-      m <- mergeAnnotations' m0
-      checkDeclarations m
+    addDeps :: SModule -> SModuleMap -> EIO T.Text SModuleMap
+    addDeps m mm = foldM addDep mm (Set.toList (getReferencedModules m))
+      where
+        addDep mm mname = case Map.member mname mm of
+            True -> return mm
+            False -> do
+              m <- findModule mname (findm mname)
+              let mm' = Map.insert mname m mm
+              addDeps m mm'
 
+    findModule :: ModuleName -> [FilePath] -> EIO T.Text SModule
+    findModule mname [] = eioError (template "\"$1\":\nUnable to find module '$2'" [T.pack fpath0,formatText mname] )
+    findModule mname (fpath:fpaths) = do
+        em <-  liftIO $ try (unEIO (parseAndCheckFile fpath))
+        case em of
+            (Left (ioe::IOError)) -> findModule mname fpaths
+            (Right em) -> eioFromEither (return em)
+
+-- | Load and parse a single file, applying checks that can be
+-- done on that file alone.
+parseAndCheckFile :: FilePath -> EIO T.Text (Module ScopedName)
+parseAndCheckFile f = do
+    m0 <- addDefaultImports <$> parseFile f
+    m <- mergeAnnotations' m0
+    checkDeclarations m
+  where
     parseFile :: FilePath -> EIO T.Text (Module0 Decl0)
     parseFile fpath = mapError (T.pack .show ) $ eioFromEither $ P.fromFile P.moduleFile fpath
 
@@ -90,26 +111,6 @@ loadModule fpath0 findm mm = do
         extraImports | m0_name m `elem` defModules = []
                      | otherwise = map Import_Module defModules
         defModules = [ModuleName ["sys","annotations"]]
-
-    addDeps :: SModule -> SModuleMap -> EIO T.Text SModuleMap
-    addDeps m mm = do
-       foldM addDep mm (Set.toList (getReferencedModules m))
-
-    addDep :: SModuleMap -> ModuleName -> EIO T.Text SModuleMap
-    addDep mm mname = case Map.member mname mm of
-        True -> return mm
-        False -> do
-          m <- findModule mname (findm mname)
-          let mm' = Map.insert mname m mm
-          addDeps m mm'
-
-    findModule :: ModuleName -> [FilePath] -> EIO T.Text SModule
-    findModule mname [] = eioError (template "\"$1\":\nUnable to find module '$2'" [T.pack fpath0,formatText mname] )
-    findModule mname (fpath:fpaths) = do
-        em <-  liftIO $ try (unEIO (parseAndCheckFile fpath))
-        case em of
-            (Left (ioe::IOError)) -> findModule mname fpaths
-            (Right em) -> eioFromEither (return em)
 
 data Duplicate = D_Field T.Text Ident Ident
                | D_Param T.Text Ident Ident
