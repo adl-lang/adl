@@ -8,6 +8,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Writer
+import Control.Monad.Trans.State.Strict
 import Control.Exception
 import qualified Data.Traversable as T
 import System.FilePath(joinPath)
@@ -44,10 +45,16 @@ loadModule fpath0 findm mm = do
     mm' <- addDeps m0 mm
     return (m0,mm')
   where
-    parseFile :: FilePath -> EIO T.Text (Module0 ScopedName)
+    parseAndCheckFile :: FilePath -> EIO T.Text (Module ScopedName)
+    parseAndCheckFile f = do
+      m0 <- addDefaultImports <$> parseFile f
+      m <- mergeAnnotations' m0
+      checkDeclarations m
+
+    parseFile :: FilePath -> EIO T.Text (Module0 Decl0)
     parseFile fpath = mapError (T.pack .show ) $ eioFromEither $ P.fromFile P.moduleFile fpath
 
-    checkDeclarations :: Module0 ScopedName -> EIO T.Text SModule
+    checkDeclarations :: Module0 (Decl ScopedName) -> EIO T.Text SModule
     checkDeclarations (Module0 n i decls0) = do
       let declMap = foldr (\d -> Map.insertWith (++)  (d_name d) [d]) Map.empty decls0
       declMap' <- T.mapM checkDeclList declMap
@@ -70,12 +77,14 @@ loadModule fpath0 findm mm = do
         hasVersion Decl{d_version=Nothing} = False
         hasVersion _ = True
 
-    parseAndCheckFile :: FilePath -> EIO T.Text (Module ScopedName)
-    parseAndCheckFile f = do
-      m <- addDefaultImports <$> parseFile f
-      checkDeclarations m
+    mergeAnnotations' :: Module0 Decl0 -> EIO T.Text (Module0 (Decl ScopedName))
+    mergeAnnotations' m0 = do
+      let (m,unusedAnnotations) = mergeAnnotations m0
+      case unusedAnnotations of
+        [] -> return m
+        _ -> eioError (template "No declarations for annotation(s): $1" [T.intercalate "," unusedAnnotations])
 
-    addDefaultImports :: Module0 ScopedName -> Module0 ScopedName
+    addDefaultImports :: Module0 Decl0 -> Module0 Decl0
     addDefaultImports m = m{m0_imports=extraImports<>m0_imports m}
       where
         extraImports | m0_name m `elem` defModules = []
@@ -132,6 +141,71 @@ checkDuplicates m = structErrors ++ unionErrors ++ typedefErrors ++ newtypeError
     findDuplicates :: [Ident] -> [Ident]
     findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) (T.toCaseFold a) 1) Map.empty as),
                           n > (1::Int) ]
+
+type AnnotationMap = (Map.Map (Either Ident (Ident,Ident)) Annotation0)
+type MAState = State AnnotationMap
+
+-- | Generates a module where the the annotation declarations have been
+-- merged into the corresponding type declarations. Also returns the
+-- unmerged annotations.
+mergeAnnotations :: Module0 Decl0 -> (Module0 (Decl ScopedName), [T.Text])
+mergeAnnotations m0 = (m,unusedAnnotation)
+  where
+    (m,unusedMap) = runState (mergeModule m0) annotationMap
+    
+    annotationMap = Map.fromList [ (annKey a, a) | Decl0_Annotation a <- m0_decls m0]
+      where
+        annKey ann@Annotation0{a0_fieldName=Just fieldName} = Right (a0_declName ann,fieldName)
+        annKey ann = Left (a0_declName ann)
+
+    unusedAnnotation = map annText (Map.keys unusedMap)
+      where
+        annText (Left decl) = decl
+        annText (Right (decl,field)) = template "$1:$2" [decl,field]
+
+    mergeModule :: Module0 Decl0 -> MAState (Module0 (Decl ScopedName))
+    mergeModule m0 = do
+      decls' <-  mapM mergeDecl [d | Decl0_Decl d <- m0_decls m0]
+      return m0{m0_decls=decls'}
+
+    mergeDecl :: Decl ScopedName -> MAState (Decl ScopedName)
+    mergeDecl decl = do
+      mann <- pullAnnotation (Left (d_name decl))
+      decl1 <- case mann of
+        Nothing -> return decl
+        (Just ann) -> return decl{d_annotations=insertAnnotation ann (d_annotations decl)}
+      declType <- mergeDeclType (d_name decl1) (d_type decl1)
+      return decl1{d_type=declType}
+
+    mergeDeclType :: Ident -> DeclType ScopedName -> MAState (DeclType ScopedName)
+    mergeDeclType _ dtype@(Decl_Typedef _) = return dtype
+    mergeDeclType _ dtype@(Decl_Newtype _) = return dtype
+    mergeDeclType declName (Decl_Struct s) = do
+      fields' <- mapM (mergeField declName) (s_fields s)
+      return (Decl_Struct s{s_fields=fields'})
+    mergeDeclType declName (Decl_Union u) = do
+      fields' <- mapM (mergeField declName) (u_fields u)
+      return (Decl_Union u{u_fields=fields'})
+
+    mergeField :: Ident -> Field ScopedName -> MAState (Field ScopedName)
+    mergeField declName field  = do
+      mann <- pullAnnotation (Right (declName,f_name field))
+      case mann of
+        Nothing -> return field
+        (Just ann) -> return field{f_annotations=insertAnnotation ann (f_annotations field)}
+      
+    pullAnnotation :: (Either Ident (Ident,Ident)) -> MAState (Maybe Annotation0)
+    pullAnnotation key = do
+      map <- get
+      case Map.lookup key map of
+         Nothing -> return Nothing
+         (Just ann) -> do
+           put (Map.delete key map)
+           return (Just ann)
+           
+    insertAnnotation :: Annotation0 -> Annotations ScopedName -> Annotations ScopedName
+    insertAnnotation a0 = Map.insert (a0_annotationName a0) (a0_annotationName a0,a0_value a0)
+      
 
 data ResolvedTypeT c
   = RT_Named (ScopedName,Decl (ResolvedTypeT c),c)
@@ -618,3 +692,4 @@ fullyScopedName _ sn = sn
 fullyScopedType :: ModuleName -> ResolvedTypeT c -> ResolvedTypeT c
 fullyScopedType mname (RT_Named (sn,decl,c)) = RT_Named (fullyScopedName mname sn,mapDecl (fullyScopedType mname) decl,c)
 fullyScopedType _ rt = rt
+

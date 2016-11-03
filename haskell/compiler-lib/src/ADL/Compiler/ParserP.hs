@@ -169,6 +169,19 @@ decl =  do
     mkType as (n,mv,t) = Decl n mv as (Decl_Typedef t)
     mkNewtype as (n,mv,nt) = Decl n mv as (Decl_Newtype nt)
 
+annotation0 :: P.Parser Annotation0
+annotation0 = do
+  token "annotation"
+  declName <- name
+  fieldName <- P.optionMaybe (token "::" *> name)
+  annotationName <- scopedName
+  value <- jsonValue
+  return (Annotation0 declName fieldName annotationName value)
+
+decl0 :: P.Parser Decl0
+decl0 =  Decl0_Decl <$> decl
+      <|> Decl0_Annotation <$> annotation0
+
 importP :: P.Parser Import
 importP = token "import" *> (P.try importAll <|> import1 )
   where
@@ -179,11 +192,11 @@ importP = token "import" *> (P.try importAll <|> import1 )
 
     import1  = Import_ScopedName <$> scopedName
 
-moduleP :: P.Parser (Module0 ScopedName)
+moduleP :: P.Parser (Module0 Decl0)
 moduleP = token "module" *> (
     Module0 <$> ( moduleName <* ctoken '{' )
             <*> P.many (importP <* ctoken ';')
-            <*> P.many (decl <* ctoken ';')
+            <*> P.many (decl0 <* ctoken ';')
     ) <* ctoken '}'
 
 ----------------------------------------------------------------------
@@ -245,7 +258,7 @@ parseDouble = pread reads <* whiteSpace P.<?> "number"
 ----------------------------------------------------------------------
 
 
-moduleFile :: P.Parser (Module0 ScopedName)
+moduleFile :: P.Parser (Module0 Decl0)
 moduleFile = whiteSpace *> moduleP <* ctoken ';'
     
 

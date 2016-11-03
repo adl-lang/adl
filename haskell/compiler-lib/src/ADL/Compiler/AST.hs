@@ -81,6 +81,18 @@ data Decl t = Decl {
   }
   deriving (Show)
 
+data Decl0 = Decl0_Decl (Decl ScopedName)
+           | Decl0_Annotation Annotation0
+  deriving (Show)
+
+data Annotation0 = Annotation0 {
+  a0_declName :: Ident,
+  a0_fieldName :: Maybe Ident,
+  a0_annotationName :: ScopedName,
+  a0_value :: JSON.Value
+  }
+  deriving (Show)
+
 data Import = Import_Module ModuleName
             | Import_ScopedName ScopedName
   deriving (Show)
@@ -90,15 +102,18 @@ iModule (Import_Module m) = m
 iModule (Import_ScopedName sn) = sn_moduleName sn
 
 -- Module after we've parsed it.
-data Module0 t = Module0 {
+data Module0 d = Module0 {
   m0_name :: ModuleName,
   m0_imports :: [Import],
-  m0_decls :: [Decl t]
+  m0_decls :: [d]
   }  
   deriving (Show)
 
--- Module after we've checked for duplicate definitions
--- and for versioning consistency
+-- Module after we've:
+--    * merged the annotation declarations back into the corresponding type declarations
+--    * checked for duplicate definitions
+--    * checked for versioning consistency
+
 data Module t = Module {
   m_name :: ModuleName,
   m_imports :: [Import],
