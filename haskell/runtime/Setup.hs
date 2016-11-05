@@ -8,7 +8,7 @@ import System.Exit
 import Data.List(intercalate)
 
 generateHaskellFromADL pkg lbi = do
-  let adlstdlibdir = " ../../adl/stdlib"
+  let adlstdlibdir = "../compiler/lib/adl"
       odir = autogenModulesDir lbi
       adlFiles = map (combine adlstdlibdir)
         [ "sys/types.adl"

@@ -1,0 +1,16 @@
+module test4
+{
+
+import adlc.config.java.JavaCustomType;
+
+annotation Date JavaCustomType {
+  "javaname" : "java.time.LocalDate",
+  "helpers" : "helpers.DateHelpers"
+  };
+
+annotation CDate JavaCustomType {
+  "javaname" : "java.time.LocalDate",
+  "helpers" : "helpers.CDateHelpers"
+  };
+
+};

@@ -116,7 +116,7 @@
                                 "annotations": [
                                     {
                                         "v1": {
-                                            "moduleName": "",
+                                            "moduleName": "sys.annotations",
                                             "name": "Doc"
                                         },
                                         "v2": {
@@ -139,7 +139,7 @@
                                 "annotations": [
                                     {
                                         "v1": {
-                                            "moduleName": "",
+                                            "moduleName": "sys.annotations",
                                             "name": "Doc"
                                         },
                                         "v2": {

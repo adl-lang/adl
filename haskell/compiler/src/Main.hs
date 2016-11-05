@@ -20,7 +20,7 @@ import ADL.Compiler.Backends.Cpp as C
 import ADL.Compiler.Backends.Java as J
 import ADL.Compiler.DataFiles
 import ADL.Compiler.Utils
-import ADL.Compiler.Processing(AdlFlags(..))
+import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
 import HaskellCustomTypes
 
 searchDirOption ufn =
@@ -91,7 +91,10 @@ javaMaxLineLength ufn =
 getDefaultAdlFlags :: EIO T.Text (AdlFlags)
 getDefaultAdlFlags = do
   systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
-  return (AdlFlags [systemAdlDir] [])
+  return defaultAdlFlags
+     { af_searchPath=[systemAdlDir]
+     , af_log=putStrLn
+     }
 
 defaultOutputArgs :: OutputArgs
 defaultOutputArgs = OutputArgs {
@@ -126,15 +129,16 @@ setOutputDir dir = updateOutputArgs (\oa -> oa{oa_outputPath=dir})
 setNoOverwrite :: Flags b -> Flags b
 setNoOverwrite = updateOutputArgs (\oa-> oa{oa_noOverwrite=True})
 
-buildFlags :: b -> [Flags b -> Flags b] -> EIO T.Text (Flags b)
-buildFlags b0 opts = do
-  af0 <- getDefaultAdlFlags
-  return ((foldl (.) id opts) (Flags af0 defaultOutputArgs b0))
+-- | Combine an initial set of AdlFlags and appropriate backend
+-- flags with command line arguments.
+buildFlags :: AdlFlags -> b -> [Flags b -> Flags b] -> Flags b
+buildFlags af0 b0 opts = ((foldl (.) id opts) (Flags af0 defaultOutputArgs b0))
 
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      flags <- buildFlags () opts
+      af <- getDefaultAdlFlags
+      let flags = buildFlags af () opts
       V.verify (f_adl flags) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
@@ -147,7 +151,8 @@ runVerify args0 =
 runAst args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      flags <- buildFlags () opts
+      af <- getDefaultAdlFlags
+      let flags = buildFlags af () opts
       A.generate (f_adl flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
@@ -161,7 +166,8 @@ runHaskell args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
         libDir <- liftIO $ getLibDir
-        flags <- buildFlags (flags0 libDir) opts
+        af <- getDefaultAdlFlags
+        let flags = buildFlags af (flags0 libDir) opts
         H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomTypes args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
@@ -186,7 +192,8 @@ runCpp args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
         libDir <- liftIO $ getLibDir
-        flags <- buildFlags (flags0 libDir) opts
+        af <- getDefaultAdlFlags
+        let flags = buildFlags af (flags0 libDir) opts
         C.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
@@ -210,7 +217,8 @@ runJava args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
         libDir <- liftIO $ getLibDir
-        flags <- buildFlags (flags0 libDir) opts
+        af <- getDefaultAdlFlags
+        let flags = buildFlags af (flags0 libDir) opts
         J.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
@@ -218,7 +226,6 @@ runJava args0 =
 
     flags0 libDir = J.JavaFlags {
       jf_libDir=libDir,
-      jf_customTypeFiles=[stdlibCustomTypesJava libDir],
       jf_package = "adl",
       jf_includeRuntime = False,
       jf_codeGenProfile = J.defaultCodeGenProfile
@@ -228,7 +235,6 @@ runJava args0 =
       [ searchDirOption addToSearchPath
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
-      , customTypesOption (\s -> updateBackendFlags (\jf-> jf{jf_customTypeFiles=s:jf_customTypeFiles jf}))
       , javaPackageOption (\s -> updateBackendFlags (\jf -> jf{jf_package=javaPackage (T.pack s)}))
       , javaIncludeRuntimePackageOption (updateBackendFlags (\jf ->jf{jf_includeRuntime=True}))
       , javaRuntimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{cgp_runtimePackage=fromString s}))

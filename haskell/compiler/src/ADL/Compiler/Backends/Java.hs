@@ -47,13 +47,11 @@ import ADL.Utils.Format
 
 generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do
-  customTypes <- loadCustomTypes (jf_customTypeFiles jf)
   let cgp = (jf_codeGenProfile jf)
   imports <- for modulePaths $ \modulePath -> do
     m <- loadAndCheckModule af modulePath
     generateModule jf fileWriter
                    (const cgp)
-                   customTypes
                    m
   when (jf_includeRuntime jf) $ liftIO $ do
     generateRuntime jf fileWriter (mconcat imports)
@@ -63,12 +61,11 @@ generate af jf fileWriter modulePaths = catchAllExceptions  $ do
 generateModule :: JavaFlags ->
                   FileWriter ->
                   (ScopedName -> CodeGenProfile) ->
-                  CustomTypeMap ->
                   Module ResolvedType ->
                   EIO T.Text (Set.Set JavaClass)
-generateModule jf fileWriter mCodeGetProfile customTypes m0 = do
+generateModule jf fileWriter mCodeGetProfile m0 = do
   let moduleName = m_name m
-      m = ( associateCustomTypes moduleName customTypes
+      m = ( associateCustomTypes moduleName
           . removeModuleTypedefs
           . expandModuleTypedefs
           ) m0

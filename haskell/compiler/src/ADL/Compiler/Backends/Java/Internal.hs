@@ -14,7 +14,7 @@ import qualified ADL.Adlc.Config.Java as JC
 import qualified ADL.Compiler.ParserP as P
 
 import Control.Monad
-import Control.Monad.Trans
+
 import Control.Monad.Trans.State.Strict
 import qualified Data.Aeson as JSON
 import Data.Char(toUpper)
@@ -36,9 +36,6 @@ import ADL.Utils.Format
 data JavaFlags = JavaFlags {
   jf_libDir :: FilePath,
   
-  -- Files containing custom type definitions
-  jf_customTypeFiles :: [FilePath],
-
   -- The java package under which we hang the generated ADL
   jf_package :: JavaPackage,
 
@@ -93,45 +90,37 @@ data CustomType = CustomType {
   ct_helpers :: ScopedName
   } deriving (Show)
 
-type CustomTypeMap = Map.Map ScopedName CustomType
-
-loadCustomTypes :: [FilePath] -> EIOT CustomTypeMap
-loadCustomTypes fps = mconcat <$> sequence [loadFile fp | fp <- fps]
-  where
-    loadFile :: FilePath -> EIOT CustomTypeMap
-    loadFile fp = do
-      mv <- liftIO $ aFromJSONFile (jsonSerialiser jsflags) fp
-      case mv of
-        Nothing -> eioError (template "Unable to read java custom types from  $1" [T.pack fp])
-        Just v -> mconcat <$> sequence [convert c | c <- (JC.config_customTypes v)]
-    jsflags = JSONFlags True
-
-    convert :: JC.CustomType -> EIOT CustomTypeMap
-    convert jct = do
-      adlname <- scopedName (JC.customType_adlname jct)
-      javaname <- scopedName (JC.customType_javaname jct)
-      helpers <- scopedName (JC.customType_helpers jct)
-      return (Map.singleton adlname (CustomType javaname helpers))
-
-    scopedName :: T.Text -> EIOT ScopedName
-    scopedName t = case P.parse P.scopedName "" t of
-          (Right sn) -> return sn
-          _ -> eioError (template "Unable to parse scoped name '$1'" [t])
-
 -- A variant of ResolvedType that carries associated custom
 -- type information.
 type CResolvedType = ResolvedTypeT (Maybe CustomType)
 
-associateCustomTypes :: ModuleName -> CustomTypeMap -> Module ResolvedType -> Module CResolvedType
-associateCustomTypes moduleName customTypes mod = mapModule assocf mod
+associateCustomTypes :: ModuleName -> Module ResolvedType -> Module CResolvedType
+associateCustomTypes moduleName mod = mapModule assocf mod
   where 
     assocf :: ResolvedType -> CResolvedType
-    assocf (RT_Named (sn,decl,()))  = RT_Named (sn,mapDecl assocf decl,Map.lookup (fullyScope sn) customTypes)
+    assocf (RT_Named (sn,decl,()))  = RT_Named (sn,mapDecl assocf decl,getCustomType decl)
     assocf (RT_Param i) = RT_Param i
     assocf (RT_Primitive pt) = RT_Primitive pt
 
-    fullyScope (ScopedName (ModuleName []) n) = ScopedName moduleName n
-    fullyScope sn = sn
+    getCustomType decl = case Map.lookup javaCustomType (d_annotations decl) of
+      Nothing -> Nothing
+      Just (_,json) -> Just (convertCustomType json)
+
+    convertCustomType :: JSON.Value -> CustomType
+    convertCustomType jv = case aFromJSON (jsonSerialiser (JSONFlags True)) jv of
+      Nothing -> error "BUG: failed to parse java custom type"
+      (Just jct) -> CustomType {
+        ct_scopedName = scopedName (JC.javaCustomType_javaname jct),
+        ct_helpers = scopedName (JC.javaCustomType_helpers jct)
+        }
+
+    javaCustomType = scopedName "adlc.config.java.JavaCustomType"
+    javaCustomType1 = scopedName "JavaCustomType"
+    
+    scopedName :: T.Text -> ScopedName
+    scopedName t = case P.parse P.scopedName "" t of
+          (Right sn) -> sn
+          _ -> error "failed to parse scoped name in java custom type"
 
 data CodeGenProfile = CodeGenProfile {
   cgp_header :: T.Text,
@@ -551,7 +540,7 @@ needsSuppressedCheckInCast _ = True
 
 
 generateDocString :: Annotations a -> Code
-generateDocString annotations = case Map.lookup (ScopedName (ModuleName []) "Doc") annotations of
+generateDocString annotations = case Map.lookup (ScopedName (ModuleName ["sys","annotations"]) "Doc") annotations of
    (Just (_,JSON.String text)) -> docStringComment text
    _ -> mempty
 

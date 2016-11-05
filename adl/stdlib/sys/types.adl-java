@@ -1,0 +1,22 @@
+module sys.types
+{
+
+import adlc.config.java.JavaCustomType;
+
+annotation Set JavaCustomType {
+  "javaname" : "java.util.HashSet",
+  "helpers" : "org.adl.runtime.HashSetHelpers"
+  };
+
+annotation Map JavaCustomType {
+  "javaname" : "java.util.HashMap",
+  "helpers" : "org.adl.runtime.HashMapHelpers"
+  };
+
+annotation Maybe JavaCustomType {
+  "javaname" : "java.util.Optional",
+  "helpers" : "org.adl.runtime.OptionalHelpers"
+  };
+
+};
+

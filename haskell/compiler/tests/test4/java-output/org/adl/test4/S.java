@@ -2,6 +2,8 @@ package org.adl.test4;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import helpers.CDateHelpers;
+import helpers.DateHelpers;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
@@ -11,6 +13,7 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import org.adl.runtime.OptionalHelpers;
 import org.adl.sys.types.Pair;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
@@ -20,10 +23,10 @@ public class S {
 
   /* Members */
 
-  private Date v1;
-  private Date v2;
-  private CDate v3;
-  private CDate v4;
+  private LocalDate v1;
+  private LocalDate v2;
+  private LocalDate v3;
+  private LocalDate v4;
   private Optional<String> v5;
   private Optional<String> v5a;
   private Optional<String> v5b;
@@ -35,7 +38,7 @@ public class S {
 
   /* Constructors */
 
-  public S(Date v1, Date v2, CDate v3, CDate v4, Optional<String> v5, Optional<String> v5a, Optional<String> v5b, Pair<String, Integer> v6, HashSet<Integer> v7, HashSet<Integer> v7a, HashMap<String, Integer> v8, HashMap<String, Integer> v8a) {
+  public S(LocalDate v1, LocalDate v2, LocalDate v3, LocalDate v4, Optional<String> v5, Optional<String> v5a, Optional<String> v5b, Pair<String, Integer> v6, HashSet<Integer> v7, HashSet<Integer> v7a, HashMap<String, Integer> v8, HashMap<String, Integer> v8a) {
     this.v1 = Objects.requireNonNull(v1);
     this.v2 = Objects.requireNonNull(v2);
     this.v3 = Objects.requireNonNull(v3);
@@ -51,10 +54,10 @@ public class S {
   }
 
   public S() {
-    this.v1 = new Date();
-    this.v2 = new Date("2000-01-01");
-    this.v3 = new CDate();
-    this.v4 = new CDate((short)2000, (short)1, (short)1);
+    this.v1 = DateHelpers.FACTORY.create();
+    this.v2 = DateHelpers.create("2000-01-01");
+    this.v3 = CDateHelpers.FACTORY.create();
+    this.v4 = CDateHelpers.create((short)2000, (short)1, (short)1);
     this.v5 = OptionalHelpers.factory(Factories.STRING).create();
     this.v5a = OptionalHelpers.nothing(null);
     this.v5b = OptionalHelpers.just("hello");
@@ -66,10 +69,10 @@ public class S {
   }
 
   public S(S other) {
-    this.v1 = Date.FACTORY.create(other.v1);
-    this.v2 = Date.FACTORY.create(other.v2);
-    this.v3 = CDate.FACTORY.create(other.v3);
-    this.v4 = CDate.FACTORY.create(other.v4);
+    this.v1 = DateHelpers.FACTORY.create(other.v1);
+    this.v2 = DateHelpers.FACTORY.create(other.v2);
+    this.v3 = CDateHelpers.FACTORY.create(other.v3);
+    this.v4 = CDateHelpers.FACTORY.create(other.v4);
     this.v5 = OptionalHelpers.factory(Factories.STRING).create(other.v5);
     this.v5a = OptionalHelpers.factory(Factories.STRING).create(other.v5a);
     this.v5b = OptionalHelpers.factory(Factories.STRING).create(other.v5b);
@@ -82,35 +85,35 @@ public class S {
 
   /* Accessors and mutators */
 
-  public Date getV1() {
+  public LocalDate getV1() {
     return v1;
   }
 
-  public void setV1(Date v1) {
+  public void setV1(LocalDate v1) {
     this.v1 = Objects.requireNonNull(v1);
   }
 
-  public Date getV2() {
+  public LocalDate getV2() {
     return v2;
   }
 
-  public void setV2(Date v2) {
+  public void setV2(LocalDate v2) {
     this.v2 = Objects.requireNonNull(v2);
   }
 
-  public CDate getV3() {
+  public LocalDate getV3() {
     return v3;
   }
 
-  public void setV3(CDate v3) {
+  public void setV3(LocalDate v3) {
     this.v3 = Objects.requireNonNull(v3);
   }
 
-  public CDate getV4() {
+  public LocalDate getV4() {
     return v4;
   }
 
-  public void setV4(CDate v4) {
+  public void setV4(LocalDate v4) {
     this.v4 = Objects.requireNonNull(v4);
   }
 
@@ -233,10 +236,10 @@ public class S {
   /* Json serialization */
 
   public static JsonBinding<S> jsonBinding() {
-    final Lazy<JsonBinding<Date>> v1 = new Lazy<>(() -> Date.jsonBinding());
-    final Lazy<JsonBinding<Date>> v2 = new Lazy<>(() -> Date.jsonBinding());
-    final Lazy<JsonBinding<CDate>> v3 = new Lazy<>(() -> CDate.jsonBinding());
-    final Lazy<JsonBinding<CDate>> v4 = new Lazy<>(() -> CDate.jsonBinding());
+    final Lazy<JsonBinding<LocalDate>> v1 = new Lazy<>(() -> DateHelpers.jsonBinding());
+    final Lazy<JsonBinding<LocalDate>> v2 = new Lazy<>(() -> DateHelpers.jsonBinding());
+    final Lazy<JsonBinding<LocalDate>> v3 = new Lazy<>(() -> CDateHelpers.jsonBinding());
+    final Lazy<JsonBinding<LocalDate>> v4 = new Lazy<>(() -> CDateHelpers.jsonBinding());
     final Lazy<JsonBinding<Optional<String>>> v5 = new Lazy<>(() -> OptionalHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> v5a = new Lazy<>(() -> OptionalHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> v5b = new Lazy<>(() -> OptionalHelpers.jsonBinding(JsonBindings.STRING));
@@ -272,10 +275,10 @@ public class S {
       public S fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new S(
-          _obj.has("v1") ? v1.get().fromJson(_obj.get("v1")) : new Date(),
-          _obj.has("v2") ? v2.get().fromJson(_obj.get("v2")) : new Date("2000-01-01"),
-          _obj.has("v3") ? v3.get().fromJson(_obj.get("v3")) : new CDate(),
-          _obj.has("v4") ? v4.get().fromJson(_obj.get("v4")) : new CDate((short)2000, (short)1, (short)1),
+          _obj.has("v1") ? v1.get().fromJson(_obj.get("v1")) : DateHelpers.FACTORY.create(),
+          _obj.has("v2") ? v2.get().fromJson(_obj.get("v2")) : DateHelpers.create("2000-01-01"),
+          _obj.has("v3") ? v3.get().fromJson(_obj.get("v3")) : CDateHelpers.FACTORY.create(),
+          _obj.has("v4") ? v4.get().fromJson(_obj.get("v4")) : CDateHelpers.create((short)2000, (short)1, (short)1),
           _obj.has("v5") ? v5.get().fromJson(_obj.get("v5")) : OptionalHelpers.factory(Factories.STRING).create(),
           _obj.has("v5a") ? v5a.get().fromJson(_obj.get("v5a")) : OptionalHelpers.nothing(null),
           _obj.has("v5b") ? v5b.get().fromJson(_obj.get("v5b")) : OptionalHelpers.just("hello"),

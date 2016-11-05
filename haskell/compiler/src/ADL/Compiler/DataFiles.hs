@@ -3,8 +3,7 @@ module ADL.Compiler.DataFiles(
   javaRuntimeDir,
   systemAdlDir,
   stdlibCustomTypesHs,
-  stdlibCustomTypesCpp,
-  stdlibCustomTypesJava
+  stdlibCustomTypesCpp
   ) where
 
 import qualified Paths_adl_compiler as P
@@ -47,6 +46,3 @@ stdlibCustomTypesHs libdir = libdir </> "adl/sys/types/hs-custom-types.json"
 
 stdlibCustomTypesCpp :: FilePath -> FilePath
 stdlibCustomTypesCpp libdir = libdir </> "adl/sys/types/cpp-custom-types.json"
-
-stdlibCustomTypesJava :: FilePath -> FilePath
-stdlibCustomTypesJava libdir = libdir </> "adl/sys/types/java-custom-types.json"

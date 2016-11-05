@@ -121,7 +121,6 @@ runJavaBackend ipaths mpaths epath updateflags = do
   let af = defaultAdlFlags{af_searchPath=ipaths}
       jf = J.JavaFlags {
         J.jf_libDir = "LIBDIR",
-        J.jf_customTypeFiles = [],
         J.jf_package = J.javaPackage "adl",
         J.jf_includeRuntime = False,
         J.jf_codeGenProfile = J.defaultCodeGenProfile {J.cgp_json=True}
@@ -129,9 +128,6 @@ runJavaBackend ipaths mpaths epath updateflags = do
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ J.generate af (updateflags jf) fileWriter mpaths
   processCompilerOutput epath tempDir er 
-
-withJavaCustomTypeFiles :: [FilePath] -> J.JavaFlags -> J.JavaFlags
-withJavaCustomTypeFiles files flags = flags{J.jf_customTypeFiles=files}
 
 withJavaOutputPackage :: T.Text -> J.JavaFlags -> J.JavaFlags
 withJavaOutputPackage package flags = flags{J.jf_package=J.javaPackage package}
@@ -143,13 +139,12 @@ runJavaBackend1 mpath = runJavaBackend [ipath,stdsrc] [mpath] epath id
     epath = (takeDirectory ipath) </> "java-output"
 
 stdsrc :: FilePath
-stdsrc = "../../../adl/stdlib"
+stdsrc = "../../../haskell/compiler/lib/adl"
 
 stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
 stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/rpc.adl", "sys/sinkimpl.adl", "sys/adlast.adl"]
 stdHsCustomTypes = ["../../compiler/lib/adl/sys/types/hs-custom-types.json"]
 stdCppCustomTypes = ["../../compiler/lib/adl/sys/types/cpp-custom-types.json"]
-stdJavaCustomTypes = ["../../compiler/lib/adl/sys/types/java-custom-types.json"]
 
 runTests :: IO ()
 runTests = do
@@ -269,8 +264,7 @@ runTests = do
       collectResults (runJavaBackend 
           ["test4/input",stdsrc] ["test4/input/test.adl"]
           "test4/java-output"
-          (withJavaCustomTypeFiles (["test4/input/java-custom-types.json"]++stdJavaCustomTypes)
-          .withJavaOutputPackage "org.adl")
+          (withJavaOutputPackage "org.adl")
           )
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
@@ -278,8 +272,7 @@ runTests = do
         `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
       collectResults (runJavaBackend [stdsrc] (map (combine stdsrc) ["sys/types.adl","sys/adlast.adl"]) "test6/java-output"
-                      (withJavaCustomTypeFiles stdJavaCustomTypes
-                      .withJavaOutputPackage "org.adl"))
+                      (withJavaOutputPackage "org.adl"))
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do
       collectResults (runJavaBackend1 "test14/input/test.adl")

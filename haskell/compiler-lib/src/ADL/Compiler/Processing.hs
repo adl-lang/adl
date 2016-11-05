@@ -23,6 +23,7 @@ import Data.Maybe(catMaybes)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Text.Parsec as P
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
@@ -48,8 +49,8 @@ type ModuleFinder = ModuleName -> [FilePath]
 type FileSetGenerator = FilePath -> [FilePath]
 
 -- | Load and parse an adl file and all of its dependencies
-loadModule :: FilePath -> ModuleFinder -> FileSetGenerator -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
-loadModule fpath0 findm filesetfn mm = do
+loadModule :: (String -> IO ()) -> FilePath -> ModuleFinder -> FileSetGenerator -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
+loadModule log fpath0 findm filesetfn mm = do
     m0 <- parseAndCheckFileSet fpath0 
     mm' <- addDeps m0 mm
     return (m0,mm')
@@ -75,14 +76,14 @@ loadModule fpath0 findm filesetfn mm = do
     parseAndCheckFileSet :: FilePath -> EIO T.Text (Module ScopedName)
     parseAndCheckFileSet path = do
       extraFiles <- liftIO (filterM doesFileExist (filesetfn path))
-      parseAndCheckFile path extraFiles
+      parseAndCheckFile log path extraFiles
 
 -- | Load and parse a single file, applying checks that can be
 -- done on that file alone. Extra files can be specified, that must
 -- exist and be for the same ADL module. They will be merged into the
 -- resulting module.
-parseAndCheckFile :: FilePath -> [FilePath] -> EIO T.Text (Module ScopedName)
-parseAndCheckFile file extraFiles = do
+parseAndCheckFile :: (String -> IO ()) -> FilePath -> [FilePath] -> EIO T.Text (Module ScopedName)
+parseAndCheckFile log file extraFiles = do
     m0 <- parseFile file
     m0Extras <- mapM parseFile extraFiles
     m1 <- addDefaultImports <$> mergeModules m0 m0Extras
@@ -90,7 +91,9 @@ parseAndCheckFile file extraFiles = do
     checkDeclarations m
   where
     parseFile :: FilePath -> EIO T.Text (Module0 Decl0)
-    parseFile fpath = mapError (T.pack .show ) $ eioFromEither $ P.fromFile P.moduleFile fpath
+    parseFile fpath = do
+      liftIO (log ("Reading " <> fpath <> "..."))
+      mapError (T.pack .show ) $ eioFromEither $ P.fromFile P.moduleFile fpath
 
     mergeModules :: Module0 Decl0 -> [Module0 Decl0] -> EIO T.Text (Module0 Decl0)
     mergeModules m extrams = case (filter (\em ->m0_name em /= (m0_name m))) extrams of
@@ -371,7 +374,15 @@ resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m)}
       }
 
     resolveAnnotations :: NameScope -> Annotations ScopedName -> Annotations ResolvedType
-    resolveAnnotations ns as = fmap (\(n,jv) -> (resolveName ns n,jv)) as
+    resolveAnnotations nscope = Map.fromList . map resolve1 . Map.elems
+       where
+         resolve1 :: (ScopedName,JSON.Value) -> (ScopedName,(ResolvedType,JSON.Value))
+         resolve1 (sn,jv) = (sn',(rt,jv))
+           where
+             rt = resolveName nscope sn
+             sn' = case rt of 
+                 RT_Named (sn',_,_) -> sn'
+                 _ -> error "BUG: Unabled to resolve annotation to a declaration"
 
     resolveField :: NameScope -> Field ScopedName -> Field ResolvedType
     resolveField ns field = field
@@ -610,18 +621,23 @@ fileSetGenerator extensions path = map (\ext -> replaceExtension path ext) exten
 
 data AdlFlags = AdlFlags {
   af_searchPath :: [FilePath],
-  af_mergeFileExtensions :: [String]
+  af_mergeFileExtensions :: [String],
+  af_log :: String -> IO ()
 }
 
 defaultAdlFlags :: AdlFlags
-defaultAdlFlags = AdlFlags [] []
-
+defaultAdlFlags = AdlFlags
+  { af_searchPath = []
+  , af_log = const (return ())
+  , af_mergeFileExtensions = ["adl-java"]
+  }
+  
 loadAndCheckModule :: AdlFlags -> FilePath -> EIOT RModule
 loadAndCheckModule af modulePath = do
     (m,mm) <- loadModule1
     mapM_ checkModuleForDuplicates (m:Map.elems mm)
     case sortByDeps (Map.elems mm) of
-      Nothing -> eioError "Mutually dependent modules are not allowed"
+      Nothing -> eioError (template "Mutually dependent modules are not allowed: $1" [T.intercalate ", " (map formatText (Map.keys mm))])
       (Just mmSorted) -> do  
         ns <- resolveN mmSorted emptyNameScope
         (_,rm) <- resolve1 m ns
@@ -629,7 +645,7 @@ loadAndCheckModule af modulePath = do
 
   where
     loadModule1 :: EIOT (SModule, SModuleMap)
-    loadModule1 = loadModule modulePath (moduleFinder (af_searchPath af)) (fileSetGenerator (af_mergeFileExtensions af)) Map.empty
+    loadModule1 = loadModule (af_log af) modulePath (moduleFinder (af_searchPath af)) (fileSetGenerator (af_mergeFileExtensions af)) Map.empty
 
     checkModuleForDuplicates :: SModule -> EIOT ()
     checkModuleForDuplicates m = failOnErrors m (checkDuplicates m)
