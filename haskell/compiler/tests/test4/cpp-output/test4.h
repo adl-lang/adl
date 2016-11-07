@@ -1,5 +1,6 @@
 #ifndef TEST4_H
 #define TEST4_H
+#include "Date.h"
 #include <adl/adl.h>
 #include <map>
 #include <set>
@@ -29,18 +30,21 @@ struct CDate
 bool operator<( const CDate &a, const CDate &b );
 bool operator==( const CDate &a, const CDate &b );
 
-struct Date
+// Date generated as DateO due to custom definition
+
+
+struct DateO
 {
-    Date() : value("1900-01-01") {}
-    explicit Date(const std::string & v) : value(v) {}
+    DateO() : value("1900-01-01") {}
+    explicit DateO(const std::string & v) : value(v) {}
     
     std::string value;
 };
 
 inline
-bool operator<( const Date &a, const Date &b ) { return a.value < b.value; }
+bool operator<( const DateO &a, const DateO &b ) { return a.value < b.value; }
 inline
-bool operator==( const Date &a, const Date &b ) { return a.value == b.value; }
+bool operator==( const DateO &a, const DateO &b ) { return a.value == b.value; }
 
 struct S
 {
@@ -89,18 +93,18 @@ struct Serialisable<ADL::test4::CDate>
 };
 
 template <>
-struct Serialisable<ADL::test4::Date>
+struct Serialisable<ADL::test4::DateO>
 {
-    struct S : public Serialiser<ADL::test4::Date>
+    struct S : public Serialiser<ADL::test4::DateO>
     {
         S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test4::Date & v ) const
+        void toJson( JsonWriter &json, const ADL::test4::DateO & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test4::Date &v, JsonReader &json ) const
+        void fromJson( ADL::test4::DateO &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -108,9 +112,9 @@ struct Serialisable<ADL::test4::Date>
         typename Serialiser<std::string>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test4::Date>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test4::DateO>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test4::Date>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
+        return typename Serialiser<ADL::test4::DateO>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
 };
 

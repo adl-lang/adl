@@ -8,6 +8,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
 import Data.Maybe (isJust)
+import Data.Monoid
 import Data.Ord (comparing)
 
 import System.FilePath(joinPath,takeDirectory,(</>))
@@ -83,7 +84,6 @@ data MState = MState {
    ms_name :: ModuleName,
    ms_moduleMapper :: ModuleName -> CppNamespace,
    ms_incFileMapper :: ModuleName -> FilePath,
-   ms_customTypes :: Map.Map ScopedName CustomType,
    ms_incFileUserModule :: FState,
    ms_incFileSerialisation :: FState,
    ms_cppFileUserModule :: FState,
@@ -97,6 +97,15 @@ data CustomType = CustomType {
    ct_declarationCode :: [T.Text],
    ct_serialisationCode :: [T.Text]
 }
+
+-- A variant of the AST that carries custom type
+-- information.
+
+type CResolvedType = ResolvedTypeT (Maybe CustomType)
+type CModule = Module (Maybe CustomType) CResolvedType
+type CTypeExpr = TypeExpr CResolvedType
+type CDecl = Decl (Maybe CustomType) CResolvedType
+
 
 data BState = BState {
   bs_indent :: T.Text,
@@ -140,8 +149,6 @@ write fr cw = do
   where
     (a,bs) = runState cw (BState "" [])
 
-type CustomTypeMap = Map.Map ScopedName CustomType
-
 type Gen = State MState
 
 -- Selector function to control which file is being updated.
@@ -162,27 +169,27 @@ includeStd fr i = include0 fr (IncFilePath i False)
 include0 :: FileRef -> IncFilePath -> Gen ()
 include0 fl i = modify (fl $ \fs -> fs{fs_includes=Set.insert i (fs_includes fs)})
 
-type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
+type TypeBindingMap = Map.Map Ident (TypeExpr CResolvedType)
 
 -- Returns the c++ typer expression corresponding to the
 -- given ADL type expression
-cTypeExpr :: Bool -> TypeExpr ResolvedType -> Gen T.Text
+cTypeExpr :: Bool -> TypeExpr CResolvedType -> Gen T.Text
 cTypeExpr scopeLocalNames te = cTypeExprB scopeLocalNames Map.empty te
 
-cTypeExprB :: Bool -> TypeBindingMap -> TypeExpr ResolvedType -> Gen T.Text
+cTypeExprB :: Bool -> TypeBindingMap -> TypeExpr CResolvedType -> Gen T.Text
 cTypeExprB scopeLocalNames m (TypeExpr c args) = do
   targs <- mapM (cTypeExprB scopeLocalNames m) args
   cTypeExprB1 scopeLocalNames m c targs
 
-cTypeExprB1 :: Bool -> TypeBindingMap -> ResolvedType -> [T.Text] -> Gen T.Text
-cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_)) targs = do
+cTypeExprB1 :: Bool -> TypeBindingMap -> CResolvedType -> [T.Text] -> Gen T.Text
+cTypeExprB1 scopeLocalNames _ (RT_Named (sn,decl)) targs = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
         _ -> False
       fullyScopedName = if isLocalName then sn{sn_moduleName=ms_name ms} else sn
 
-  ctype <- case Map.lookup fullyScopedName (ms_customTypes ms) of
+  ctype <- case d_customType decl of
     (Just ct) -> do
       -- custom type
       mapM_ (include0 ifile) (Set.toList $ ct_includes ct)
@@ -336,7 +343,7 @@ cUnionDiscName :: Ident -> Ident
 cUnionDiscName n = T.toUpper (cUnionAccessorName n)
 
 -- Return an expression to construct a serialiser for a given type
-cSerializerExpr :: TypeExpr ResolvedType -> Gen T.Text
+cSerializerExpr :: TypeExpr CResolvedType -> Gen T.Text
 cSerializerExpr (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   t <- cTypeExpr True te
   return (template "stringMapSerialiser<$1>" [t])
@@ -398,11 +405,11 @@ declareSerialisation tparams ms ctnameP = do
       dblock $ wt "static typename Serialiser<$1>::Ptr serialiser(const SerialiserFlags &);" [ctnameP1]
 
 data FieldDetails = FieldDetails {
-  fd_field :: Field ResolvedType,
+  fd_field :: Field CResolvedType,
   fd_fieldName :: Ident,
   fd_typeExpr :: T.Text,
   fd_scopedTypeExpr :: T.Text,
-  fd_defValue :: Literal (TypeExprRT ()),
+  fd_defValue :: Literal CTypeExpr,
   fd_defLValue :: T.Text,
   fd_defPValue :: T.Text,
   fd_isVoidType :: Bool,
@@ -414,7 +421,7 @@ data FieldDetails = FieldDetails {
   fd_serializerExpr :: T.Text
   }
 
-genFieldDetails :: Field ResolvedType -> Gen FieldDetails
+genFieldDetails :: Field CResolvedType -> Gen FieldDetails
 genFieldDetails f = do
   let te = f_type f
   t <- cTypeExpr False te
@@ -451,13 +458,13 @@ generateFwdDecl1 dn tparams = do
     genTemplate tparams
     wt "struct $1;" [cTypeName dn]
   
-generateFwdDecl :: Ident -> RDecl -> Gen ()
+generateFwdDecl :: Ident -> CDecl -> Gen ()
 generateFwdDecl dn (Decl{d_type=(Decl_Struct s)}) = generateFwdDecl1 dn (s_typeParams s)
 generateFwdDecl dn (Decl{d_type=(Decl_Union u)}) = generateFwdDecl1 dn (u_typeParams u)
 generateFwdDecl dn (Decl{d_type=(Decl_Newtype n)}) = generateFwdDecl1 dn (n_typeParams n)
 generateFwdDecl _ (Decl{d_type=(Decl_Typedef _)}) = error "BUG: Unexpected fwd declaration of typedef"
 
-generateDecl :: Ident -> RDecl -> Gen ()
+generateDecl :: Ident -> CDecl -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
   fds <- mapM genFieldDetails (s_fields s)
@@ -945,6 +952,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
     genTemplate (t_typeParams t)
     wt "using $1 = $2;" [cTypeName dn, te]
 
+-- In C++ we either need just the name in scope to use a type (eg for a pointer)
+-- or we need the whole type definition (eg to contain a value)
 data TypeRefType a = NameOnly a | FullDecl a
    deriving (Eq,Ord,Show)                
 
@@ -952,14 +961,11 @@ nameOnly :: TypeRefType a -> TypeRefType a
 nameOnly (FullDecl a) = (NameOnly a)
 nameOnly t = t
 
-ignoreNameOnly :: Ord a => Set.Set (TypeRefType a) -> Set.Set a
-ignoreNameOnly ts = Set.fromList [ a | (FullDecl a) <- Set.toList ts]
-
-localTypes :: TypeExpr ResolvedType -> Set.Set (TypeRefType Ident)
+localTypes :: TypeExpr CResolvedType -> Set.Set (TypeRefType Ident)
 localTypes (TypeExpr (RT_Primitive P_Vector) [te]) = Set.map nameOnly (localTypes te)
 localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
 
-localTypes1 :: ResolvedType -> Set.Set (TypeRefType Ident)
+localTypes1 :: CResolvedType -> Set.Set (TypeRefType Ident)
 localTypes1 (RT_Named (sn,_)) = case sn_moduleName sn of
     ModuleName [] -> Set.singleton (FullDecl (sn_name sn))
     -- FIXME: need to either check if fully scoped name matches current module here,
@@ -969,16 +975,20 @@ localTypes1 (RT_Named (sn,_)) = case sn_moduleName sn of
 localTypes1 (RT_Param _) = Set.empty
 localTypes1 (RT_Primitive _) = Set.empty
 
-referencedLocalTypes :: RDecl -> Set.Set (TypeRefType Ident)
+referencedLocalTypes :: CDecl -> Set.Set (TypeRefType Ident)
 referencedLocalTypes d = Set.difference (rtypes d) selfrefs
   where
-    selfrefs = Set.fromList [NameOnly (d_name d), FullDecl (d_name d)]
     rtypes (Decl{d_type=(Decl_Struct s)}) = Set.unions [ localTypes (f_type f) | f <- s_fields s]
     rtypes (Decl{d_type=(Decl_Union u)}) = Set.map nameOnly (Set.unions [ localTypes (f_type f) | f <- u_fields u])
     rtypes (Decl{d_type=(Decl_Typedef t)}) = localTypes (t_typeExpr t)
     rtypes (Decl{d_type=(Decl_Newtype n)}) = localTypes (n_typeExpr n)
+
+    selfrefs = Set.fromList [NameOnly (d_name d), FullDecl (d_name d)]
+
+ignoreNameOnly :: Ord a => Set.Set (TypeRefType a) -> Set.Set a
+ignoreNameOnly ts = Set.fromList [ a | (FullDecl a) <- Set.toList ts]
     
-generateCustomType :: Ident -> RDecl -> CustomType -> Gen ()
+generateCustomType :: Ident -> CDecl -> CustomType -> Gen ()
 generateCustomType n d ct = do
   ms <- get
   mapM_ (include0 ifile) (Set.toList (ct_includes ct))
@@ -1009,51 +1019,49 @@ generateCustomType n d ct = do
 -- unions and vectors only need forward references, and we make use of this
 -- to determine code generation order for mutually recursive types. But we
 -- can usefully generate a forward reference to a typedef.
-expandUVTypedefs :: RModule -> RModule
+expandUVTypedefs :: CModule -> CModule
 expandUVTypedefs m = m{m_decls=decls}
   where
     decls = Map.map (\d->d{d_type=expand1 (d_type d)}) (m_decls m)
-    expand1 :: DeclType ResolvedType -> DeclType ResolvedType
+    expand1 :: DeclType CResolvedType -> DeclType CResolvedType
     expand1 (Decl_Struct s) = Decl_Struct s{s_fields=map expandSField (s_fields s)}
     expand1 (Decl_Union u) = Decl_Union u{u_fields=map expandUField (u_fields u)}
     expand1 (Decl_Typedef t) = Decl_Typedef t{t_typeExpr=expandVectors (t_typeExpr t)}
     expand1 (Decl_Newtype n) = Decl_Newtype n{n_typeExpr=expandVectors (n_typeExpr n)}
 
-    expandSField :: Field ResolvedType -> Field ResolvedType
+    expandSField :: Field CResolvedType -> Field CResolvedType
     expandSField f = f{f_type=expandVectors (f_type f)}
 
-    expandUField :: Field ResolvedType -> Field ResolvedType
+    expandUField :: Field CResolvedType -> Field CResolvedType
     expandUField f = f{f_type=expandAll (f_type f)}
 
     -- expand all typedefs present in the given expression
-    expandAll :: TypeExpr ResolvedType -> TypeExpr ResolvedType
+    expandAll :: TypeExpr CResolvedType -> TypeExpr CResolvedType
     expandAll = expandTypedefs
 
     -- expand only typedefs within Vector<> applications
-    expandVectors :: TypeExpr ResolvedType -> TypeExpr ResolvedType
+    expandVectors :: TypeExpr CResolvedType -> TypeExpr CResolvedType
     expandVectors te@(TypeExpr (RT_Primitive P_Vector) _) = expandAll te
     expandVectors (TypeExpr rt tes) = TypeExpr rt (map expandVectors tes)
 
-generateModule :: RModule -> Gen ()
+generateModule :: CModule -> Gen ()
 generateModule m0 = do
    ms <- get
    let mname = ms_name ms
 
        m = expandUVTypedefs m0
 
-       getCustomType n = Map.lookup (ScopedName mname n) (ms_customTypes ms)
+       moduleCustomTypes = Set.fromList [n | (n,decl) <- Map.toList (m_decls m), Map.member cppCustomType (d_annotations decl)]
 
        makeCustomTypeFullRef :: TypeRefType Ident -> TypeRefType Ident
-       makeCustomTypeFullRef r@(NameOnly n) = case getCustomType n of
-         Nothing -> r
-         (Just _) -> (FullDecl n)
+       makeCustomTypeFullRef r@(NameOnly n) = if Set.member n moduleCustomTypes then (FullDecl n) else r
        makeCustomTypeFullRef r = r
 
        referencedLocalTypes' = Set.map makeCustomTypeFullRef . referencedLocalTypes
 
        -- generate the types for which we want forward references
        allRefs = (Set.unions . map referencedLocalTypes' . Map.elems . m_decls) m
-       fwdRefs = [ n | (NameOnly n) <- (Set.toList . Set.unions . map referencedLocalTypes' . Map.elems . m_decls)  m]
+       fwdRefs = [ n | (NameOnly n) <- Set.toList allRefs]
 
        genFwdDecl n = case Map.lookup n (m_decls m) of
            (Just d) -> generateFwdDecl (d_name d) d
@@ -1064,7 +1072,7 @@ generateModule m0 = do
          Nothing -> error "BUG: Unable to sort decls into compilable order (possible infinite type??)"
          Just decls -> decls
 
-       genDecl (n,d) = case getCustomType n of
+       genDecl (n,d) = case d_customType d of
          (Just ct) -> generateCustomType n d ct
          Nothing -> generateDecl (d_name d) d
 
@@ -1083,14 +1091,13 @@ generateModule m0 = do
 writeModuleFile :: (ModuleName -> CppNamespace) ->
                    (ModuleName -> FilePath) ->
                    (ModuleName -> FilePath) ->
-                   CustomTypeMap -> 
                    (FilePath -> LBS.ByteString -> IO ()) ->
-                   RModule ->
+                   CModule ->
                    EIO a ()
-writeModuleFile mNamespace mIncFile mFile customTypes fileWriter m = do
+writeModuleFile mNamespace mIncFile mFile fileWriter m = do
   let fs0 = FState Set.empty  [] (mNamespace (m_name m))
       fs1 = FState Set.empty  [] (CppNamespace ["ADL"])
-      s0 = MState (m_name m) mNamespace mIncFile customTypes fs0 fs1 fs0 fs1
+      s0 = MState (m_name m) mNamespace mIncFile fs0 fs1 fs0 fs1
       s1 = execState (generateModule m) s0
       guard_name = (T.append (T.intercalate "_" (map T.toUpper (unModuleName (m_name m)))) "_H" )
 
@@ -1112,37 +1119,39 @@ data CppFlags = CppFlags {
   -- with this path prefix
   cf_incFilePrefix :: FilePath,
 
-  -- Files containing custom type definitions
-  cf_customTypeFiles :: [FilePath],
-
   cf_fileWriter :: FilePath -> LBS.ByteString -> IO ()
   }
 
-getCustomTypes :: [FilePath] -> EIOT CustomTypeMap
-getCustomTypes fps = fmap Map.unions (mapM get0 fps)
+
+cppCustomType :: ScopedName
+cppCustomType = ScopedName (ModuleName ["adlc","config","cpp"]) "CppCustomType"
+
+
+getCustomType :: ScopedName -> RDecl -> Maybe CustomType
+getCustomType scopedName decl = case Map.lookup cppCustomType (d_annotations decl) of
+  Nothing -> Nothing
+  Just (_,json) -> Just (convertCustomType json)
   where
-    get0 :: FilePath -> EIOT CustomTypeMap
-    get0 fp = do
-      mv <- liftIO $ aFromJSONFile (jsonSerialiser jsflags) fp
-      case mv of
-        Nothing -> eioError (template "Unable to read haskell custom types from  $1" [T.pack fp])
-        Just v -> convert (CC.config_customTypes v)
-    jsflags = JSONFlags True
+    convertCustomType :: JSON.Value -> CustomType
+    convertCustomType jv = case aFromJSON (jsonSerialiser (JSONFlags True)) jv of
+      Nothing -> error "BUG: failed to parse java custom type"
+      (Just cct) -> CustomType
+        { ct_name = CC.cppCustomType_cppname cct
+        , ct_includes = Set.fromList (map mkInc (CC.cppCustomType_cppincludes cct))
+        , ct_generateOrigADLType = convertOrigType (CC.cppCustomType_generateOrigADLType cct)
+        , ct_declarationCode = CC.cppCustomType_declarationCode cct
+        , ct_serialisationCode = CC.cppCustomType_serialisationCode cct
+        }
+      where 
+        parseScopedName :: T.Text -> ScopedName
+        parseScopedName t = case P.parse P.scopedName "" t of
+          (Right sn) -> sn
+          _ -> error ("failed to parse scoped name '" <> T.unpack t <> "' in java custom type for " <> T.unpack (formatText scopedName))
 
-    convert :: [CC.CustomType] -> EIOT CustomTypeMap
-    convert cs = fmap Map.fromList (mapM convert1 cs)
-
-    convert1 :: CC.CustomType -> EIOT (ScopedName,CustomType)
-    convert1 c = do
-        sn <- case P.parse P.scopedName "" adlname of
-          (Right sn) -> return sn
-          _ -> eioError (template "Unable to parse adl name $1" [adlname])
-        let ct = CustomType (CC.customType_cppname c) includes (CC.customType_generateOrigADLType c) (CC.customType_declarationCode c) (CC.customType_serialisationCode c)
-        return (sn,ct)
-      where
-        adlname = CC.customType_adlname c
-        includes = Set.fromList (map mkInc (CC.customType_cppincludes c))
         mkInc i = IncFilePath (T.unpack (CC.include_name i)) (not (CC.include_system i))
+
+        convertOrigType ot | ot == "" = Nothing
+                           | otherwise = Just ot
 
 namespaceGenerator :: ModuleName -> CppNamespace
 namespaceGenerator mn = CppNamespace ("ADL":unModuleName mn)
@@ -1155,18 +1164,17 @@ fileGenerator mn = T.unpack (T.intercalate "." (unModuleName mn))
 
 generate :: AdlFlags -> CppFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af cf fileWriter modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-  rm <- loadAndCheckModule af modulePath
-  customTypes <- getCustomTypes (cf_customTypeFiles cf)
+  m0 <- loadAndCheckModule af modulePath
+  let m = associateCustomTypes getCustomType (m_name m0) m0
   writeModuleFile namespaceGenerator
                   (incFileGenerator (cf_incFilePrefix cf))
                   fileGenerator
-                  customTypes
                   fileWriter
-                  rm
+                  m
 
 ----------------------------------------------------------------------
 
-literalLValue :: (Literal (TypeExprRT ())) -> Gen T.Text
+literalLValue :: (Literal CTypeExpr) -> Gen T.Text
 literalLValue (LDefault te@(TypeExpr (RT_Primitive pt) [])) = do
   case cPrimitiveDefault pt of
    (Just t) -> return t
@@ -1197,7 +1205,7 @@ literalLValue (LStringMap (TypeExpr _ [te]) map) = do
   return (template "MapBuilder<std::string,$1>()$2.result()" [t, T.intercalate "" adds])
 literalLValue (LPrimitive pt jv) = return (cPrimitiveLiteral pt jv)
 
-literalPValue :: (Literal (TypeExprRT ())) -> Gen T.Text
+literalPValue :: (Literal CTypeExpr) -> Gen T.Text
 literalPValue (LDefault te@(TypeExpr (RT_Primitive pt) [])) = do
   t <- cTypeExpr False te
   case cPrimitiveDefault pt of
@@ -1218,7 +1226,7 @@ literalPValue (LPrimitive pt jv) = do
   t <- cPrimitiveType pt []
   return (template "$1($2)" [t, cPrimitiveLiteral pt jv])
 
-literalNeedsInit :: Literal (TypeExprRT ()) -> Bool
+literalNeedsInit :: Literal CTypeExpr -> Bool
 literalNeedsInit (LDefault (TypeExpr (RT_Primitive pt) _)) = isJust (cPrimitiveDefault pt)
 literalNeedsInit (LDefault _)  = False
 literalNeedsInit _  = True

@@ -634,7 +634,7 @@ defaultAdlFlags :: AdlFlags
 defaultAdlFlags = AdlFlags
   { af_searchPath = []
   , af_log = const (return ())
-  , af_mergeFileExtensions = ["adl-hs", "adl-java"]
+  , af_mergeFileExtensions = ["adl-hs", "adl-java", "adl-cpp"]
   }
   
 loadAndCheckModule :: AdlFlags -> FilePath -> EIOT RModule
@@ -725,10 +725,10 @@ removeModuleTypedefs mod@Module{m_decls=ds} = mod{m_decls=Map.filter (not . isTy
     isTypedef _ = False
   
 -- | eliminate the typedefs from an expression through substitution
-expandTypedefs :: TypeExpr ResolvedType -> TypeExpr ResolvedType
+expandTypedefs :: TypeExpr (ResolvedTypeT c) -> TypeExpr (ResolvedTypeT c)
 expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
   where
-    typeExpr :: ResolvedType -> [TypeExpr ResolvedType] -> TypeExpr ResolvedType
+    typeExpr :: ResolvedTypeT c -> [TypeExpr (ResolvedTypeT c)] -> TypeExpr (ResolvedTypeT c)
     typeExpr (RT_Named (_,Decl{d_type=Decl_Typedef t})) ts =
       case substTypeParams (Map.fromList (zip (t_typeParams t) ts)) (t_typeExpr t) of
         Left err -> error ("BUG: " ++ T.unpack err)

@@ -1,0 +1,14 @@
+module test4
+{
+
+import adlc.config.cpp.CppCustomType;
+
+annotation Date CppCustomType {
+  "cppname" : "Date",
+  "cppincludes" : [
+      { "name" : "Date.h", "system" : false }
+   ],
+  "generateOrigADLType" : "DateO"
+};
+
+};

@@ -79,13 +79,12 @@ runHaskellBackend1 mpath = runHaskellBackend [ipath,stdsrc] [mpath] epath
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "hs-output"
 
-runCppBackend :: [FilePath] -> [FilePath] -> FilePath -> FilePath -> [FilePath] -> IO CodeGenResult
-runCppBackend ipaths mpaths epath iprefix customTypeFiles = do
+runCppBackend :: [FilePath] -> [FilePath] -> FilePath -> FilePath -> IO CodeGenResult
+runCppBackend ipaths mpaths epath iprefix = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let af =  defaultAdlFlags{af_searchPath=ipaths}
       cf = CPP.CppFlags {
-        CPP.cf_customTypeFiles = customTypeFiles,
         CPP.cf_incFilePrefix = iprefix
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
@@ -93,7 +92,7 @@ runCppBackend ipaths mpaths epath iprefix customTypeFiles = do
   processCompilerOutput epath tempDir er
 
 runCppBackend1 :: FilePath-> IO CodeGenResult
-runCppBackend1 mpath = runCppBackend [ipath,stdsrc] [mpath] epath "" []
+runCppBackend1 mpath = runCppBackend [ipath,stdsrc] [mpath] epath ""
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "cpp-output"
@@ -225,13 +224,13 @@ runTests = do
       collectResults (runCppBackend1 "test3/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runCppBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/cpp-output" "" (stdCppCustomTypes ++ ["test4/input/cpp-custom-types.json"]))
+      collectResults (runCppBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/cpp-output" "")
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       collectResults (runCppBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      collectResults (runCppBackend [stdsrc] stdfiles "test6/cpp-output" "" stdCppCustomTypes)
+      collectResults (runCppBackend [stdsrc] stdfiles "test6/cpp-output" "")
         `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       collectResults (runCppBackend1 "test7/input/test.adl")
@@ -240,7 +239,7 @@ runTests = do
       collectResults (runCppBackend1 "test14/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      collectResults (runCppBackend ["test16/input",stdsrc] ["test16/input/test.adl"] "test16/cpp-output" "adl" [])
+      collectResults (runCppBackend ["test16/input",stdsrc] ["test16/input/test.adl"] "test16/cpp-output" "adl")
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation when necessary" $ do
       collectResults (runCppBackend1 "test17/input/test.adl")

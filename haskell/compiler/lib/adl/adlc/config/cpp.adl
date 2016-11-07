@@ -1,12 +1,7 @@
 module adlc.config.cpp {
 
-import sys.types.*;
-
-struct CustomType
+struct CppCustomType
 {
-    // The qualifed name of the ADL type
-    String adlname;
-
     // The fully scoped c++ name of the type to be used    
     String cppname;
 
@@ -22,18 +17,13 @@ struct CustomType
 
     // If true the code for the original ADL type will be emitted,
     // but with the supplied name.
-    Maybe<String> generateOrigADLType;
+    String generateOrigADLType;
 };
 
 struct Include
 {
     String name;
     Bool system;
-};
-
-struct Config
-{
-    Vector<CustomType> customTypes;
 };
 
 };

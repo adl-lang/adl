@@ -1,0 +1,153 @@
+module sys.types
+{
+
+import adlc.config.cpp.CppCustomType;
+
+annotation Set CppCustomType {
+    "cppname" : "std::set",
+    "cppincludes" : [
+        {"name" : "set", "system" : true }
+    ],
+    "declarationCode" : [
+        "template <class A>",
+        "using Set = std::set<A>;"
+     ],
+    "serialisationCode" : [
+        "template <class A>",
+        "struct Serialisable<std::set<A>>",
+        "{",
+        "    typedef std::set<A> S;",
+        "",
+        "    static typename Serialiser<S>::Ptr serialiser(const SerialiserFlags &sf)",
+        "    {",
+        "        struct S : public Serialiser<S>",
+        "        {",
+        "            S( const SerialiserFlags &sf )",
+        "                : s( Serialisable<A>::serialiser(sf) )",
+        "                {}",
+        "",
+        "            typename Serialiser<A>::Ptr s;",
+        "",
+        "            void toJson( JsonWriter &json, const S & v ) const",
+        "            {",
+        "                json.startArray();",
+        "                for( typename std::set<A>::const_iterator i = v.begin(); i != v.end(); i++ )",
+        "                    s->toJson( json, *i );",
+        "                json.endArray();",
+        "            }",
+        "",
+        "            void fromJson( S &v, JsonReader &json ) const",
+        "            {",
+        "                match( json, JsonReader::START_ARRAY );",
+        "                while( !match0( json, JsonReader::END_ARRAY ) )",
+        "                    v.insert( s->fromJson(json) );",
+        "            }",
+        "        };",
+        "",
+        "        return typename Serialiser<S>::Ptr( new S(sf) );",
+        "    }",
+        "};"
+        ]
+};
+
+annotation Map CppCustomType {
+    "cppname" : "std::map",
+    "cppincludes" : [
+        {"name" : "map", "system" : true }
+    ],
+    "declarationCode" : [
+        "template <class K, class V>",
+        "using Map = std::map<K,V>;"
+     ],
+    "serialisationCode" : [
+        "template <class K,class V>",
+        "struct Serialisable<std::map<K,V>>",
+        "{",
+        "    typedef std::map<K,V> M;",
+        "",
+        "    static typename Serialiser<M>::Ptr serialiser(const SerialiserFlags &sf)",
+        "    {",
+        "        struct S : public Serialiser<M>",
+        "        {",
+        "            S( const SerialiserFlags &sf )",
+        "                : s( Serialisable<std::pair<K,V>>::serialiser(sf) )",
+        "                {}",
+        "",
+        "            typename Serialiser<std::pair<K,V>>::Ptr s;",
+        "",
+        "            void toJson( JsonWriter &json, const M & v ) const",
+        "            {",
+        "                json.startArray();",
+        "                for( typename std::map<K,V>::const_iterator i = v.begin(); i != v.end(); i++ )",
+        "                    s->toJson( json, *i );",
+        "                json.endArray();",
+        "            }",
+        "",
+        "            void fromJson( M &v, JsonReader &json ) const",
+        "            {",
+        "                std::pair<K,V> pv;",
+        "                s->fromJson( pv, json );",
+        "                v[pv.first] = pv.second;",
+        "            }",
+        "        };",
+        "",
+        "        return typename Serialiser<M>::Ptr (new S(sf));",
+        "    }",
+        "};"
+    ]
+};
+
+annotation Pair CppCustomType {
+    "cppname" : "std::pair",
+    "cppincludes" : [
+        {"name" : "utility", "system" : true }
+    ],
+    "declarationCode" : [
+        "template <class A, class B>",
+        "using Pair = std::pair<A,B>;"
+     ],
+    "serialisationCode" : [
+        "template <class A,class B>",
+        "struct Serialisable<std::pair<A,B>>",
+        "{",
+        "    typedef std::pair<A,B> P;",
+        "",
+        "    static typename Serialiser<P>::Ptr serialiser(const SerialiserFlags &sf)",
+        "    {",
+        "        struct S : public Serialiser<P>",
+        "        {",
+        "            S( const SerialiserFlags &sf )",
+        "                : v1_s( Serialisable<A>::serialiser(sf) )",
+        "                , v2_s( Serialisable<B>::serialiser(sf) )",
+        "                {}",
+        "",
+        "            typename Serialiser<A>::Ptr v1_s;",
+        "            typename Serialiser<B>::Ptr v2_s;",
+        "",
+        "            void toJson( JsonWriter &json, const P & v ) const",
+        "            {",
+        "                json.startObject();",
+        "                writeField<A>( json, v1_s, \"v1\", v.first );",
+        "                writeField<B>( json, v2_s, \"v2\", v.second );",
+        "                json.endObject();",
+        "            }",
+        "",
+        "            void fromJson( P &v, JsonReader &json ) const",
+        "            {",
+        "                match( json, JsonReader::START_OBJECT );",
+        "                while( !match0( json, JsonReader::END_OBJECT ) )",
+        "                {",
+        "                    readField<A>( v1_s, v.first, \"v1\", json ) ||",
+        "                        readField<B>( v2_s, v.second, \"v2\", json ) ||",
+        "                        ignoreField( json );",
+        "                }",
+        "            }",
+        "        };",
+        "",
+        "        return typename Serialiser<P>::Ptr( new S(sf) );",
+        "    }",
+        "};"
+    ]
+};
+
+};

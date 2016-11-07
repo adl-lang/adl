@@ -184,8 +184,8 @@ Serialisable<ADL::test4::S>::serialiser( const SerialiserFlags &sf )
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
-            : v1_s( Serialisable<ADL::test4::Date>::serialiser(sf) )
-            , v2_s( Serialisable<ADL::test4::Date>::serialiser(sf) )
+            : v1_s( Serialisable<Date>::serialiser(sf) )
+            , v2_s( Serialisable<Date>::serialiser(sf) )
             , v3_s( Serialisable<ADL::test4::CDate>::serialiser(sf) )
             , v4_s( Serialisable<ADL::test4::CDate>::serialiser(sf) )
             , v5_s( Serialisable<ADL::sys::types::Maybe<std::string> >::serialiser(sf) )
@@ -199,8 +199,8 @@ Serialisable<ADL::test4::S>::serialiser( const SerialiserFlags &sf )
             {}
         
         
-        typename Serialiser<ADL::test4::Date>::Ptr v1_s;
-        typename Serialiser<ADL::test4::Date>::Ptr v2_s;
+        typename Serialiser<Date>::Ptr v1_s;
+        typename Serialiser<Date>::Ptr v2_s;
         typename Serialiser<ADL::test4::CDate>::Ptr v3_s;
         typename Serialiser<ADL::test4::CDate>::Ptr v4_s;
         typename Serialiser<ADL::sys::types::Maybe<std::string> >::Ptr v5_s;
@@ -215,8 +215,8 @@ Serialisable<ADL::test4::S>::serialiser( const SerialiserFlags &sf )
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
-            writeField<ADL::test4::Date>( json, v1_s, "v1", v.v1 );
-            writeField<ADL::test4::Date>( json, v2_s, "v2", v.v2 );
+            writeField<Date>( json, v1_s, "v1", v.v1 );
+            writeField<Date>( json, v2_s, "v2", v.v2 );
             writeField<ADL::test4::CDate>( json, v3_s, "v3", v.v3 );
             writeField<ADL::test4::CDate>( json, v4_s, "v4", v.v4 );
             writeField<ADL::sys::types::Maybe<std::string> >( json, v5_s, "v5", v.v5 );

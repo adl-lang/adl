@@ -38,11 +38,6 @@ outputDirOption ufn =
     (ReqArg ufn "DIR")
     "Set the directory where generated code is written"
 
-customTypesOption ufn =
-  Option "" ["custom-types"]
-    (ReqArg ufn "FILE")
-    "Read custom type mapping from the specified file"
-
 noOverwriteOption ufn =
   Option "" ["no-overwrite"]
     (NoArg ufn)
@@ -199,7 +194,6 @@ runCpp args0 =
 
     flags0 libDir = C.CppFlags {
       cf_incFilePrefix="",
-      cf_customTypeFiles= [stdlibCustomTypesCpp libDir],
       cf_fileWriter= \_ _ -> return ()
       }
 
@@ -207,7 +201,6 @@ runCpp args0 =
       [ searchDirOption addToSearchPath
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
-      , customTypesOption (\s -> updateBackendFlags (\cf -> cf{cf_customTypeFiles=s:cf_customTypeFiles cf}))
       , includePrefixOption (\s -> updateBackendFlags (\cf -> cf{cf_incFilePrefix=s}))
       ]
 
