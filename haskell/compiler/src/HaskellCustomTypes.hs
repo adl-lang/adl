@@ -23,30 +23,11 @@ import ADL.Core.Value
 import ADL.Compiler.Processing
 import qualified ADL.Adlc.Config.Haskell as HC
 
-getCustomTypes :: RModule -> CustomTypeMap
-getCustomTypes rm = foldModule
+getCustomType :: ScopedName -> RDecl -> Maybe CustomType
+getCustomType scopedName decl = case Map.lookup haskellCustomType (d_annotations decl) of
+  Nothing -> Nothing
+  Just (_,json) -> Just (convertCustomType json)
   where
-    foldModule = Map.unions [foldDecl Set.empty (ScopedName (m_name rm) n) d | (n,d) <- Map.toList (m_decls rm)]
-      where
-        foldDecl inProgress declName decl = Map.union (foldAnnotations (d_annotations decl)) (foldDeclType (d_type decl))
-          where
-            foldAnnotations anns = case Map.lookup haskellCustomType anns of
-              Nothing -> Map.empty
-              Just (_,json) -> Map.singleton declName (convertCustomType json)
-              
-            foldDeclType (Decl_Struct s) = Map.unions (map (foldTypeExpr . f_type) (s_fields s))
-            foldDeclType (Decl_Union u) = Map.unions (map (foldTypeExpr . f_type) (u_fields u))
-            foldDeclType (Decl_Typedef t) = foldTypeExpr (t_typeExpr t)
-            foldDeclType (Decl_Newtype n) = foldTypeExpr (n_typeExpr n)
-
-            foldTypeExpr (TypeExpr t tes) = Map.unions (foldResolvedType t:map foldTypeExpr tes)
-
-            foldResolvedType (RT_Named (sn,decl))
-              = if Set.member sn inProgress
-                   then Map.empty
-                   else foldDecl (Set.insert sn inProgress) sn decl
-            foldResolvedType _ = Map.empty
-
     haskellCustomType = ScopedName (ModuleName ["adlc","config","haskell"]) "HaskellCustomType"
 
     convertCustomType :: JSON.Value -> CustomType

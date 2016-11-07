@@ -168,7 +168,7 @@ runHaskell args0 =
         libDir <- liftIO $ getLibDir
         af <- getDefaultAdlFlags
         let flags = buildFlags af (flags0 libDir) opts
-        H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomTypes args
+        H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomType args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."

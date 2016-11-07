@@ -70,7 +70,7 @@ runHaskellBackend ipaths mpaths epath = do
         H.hf_modulePrefix = "ADL"
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
-  er <- unEIO $ H.generate af hf fileWriter getCustomTypes mpaths
+  er <- unEIO $ H.generate af hf fileWriter getCustomType mpaths
   processCompilerOutput epath tempDir er
 
 runHaskellBackend1 :: FilePath-> IO CodeGenResult

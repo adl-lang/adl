@@ -3,7 +3,6 @@ module ADL.Compiler.Backends.Haskell(
   HaskellFlags(..),
   HaskellModule(..),
   CustomType(..),
-  CustomTypeMap,
   generate, 
   )where
 
@@ -58,12 +57,16 @@ data CustomType = CustomType {
    ct_generateOrigADLType :: Maybe Ident
 } deriving Show
 
-type CustomTypeMap = Map.Map ScopedName CustomType
+-- A variant of the AST that carries custom type
+-- information.
+
+type CResolvedType = ResolvedTypeT (Maybe CustomType)
+type CModule = Module (Maybe CustomType) CResolvedType
+type CDecl = Decl (Maybe CustomType) CResolvedType
 
 data MState = MState {
    ms_name :: ModuleName,
    ms_moduleMapper :: ModuleName -> HaskellModule,
-   ms_customTypes :: CustomTypeMap,
    ms_indent :: T.Text,
    ms_exports :: Set.Set T.Text,
    ms_imports :: Set.Set T.Text,
@@ -205,12 +208,12 @@ litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)
       (Left r) -> show n
       (Right i) -> show (i::Integer)
 
-type TypeBindingMap = Map.Map Ident (TypeExpr ResolvedType)
+type TypeBindingMap = Map.Map Ident (TypeExpr CResolvedType)
 
-hTypeExpr :: TypeExpr ResolvedType -> HGen T.Text
+hTypeExpr :: TypeExpr CResolvedType -> HGen T.Text
 hTypeExpr = hTypeExprB Map.empty
 
-hTypeExprB :: TypeBindingMap -> TypeExpr ResolvedType -> HGen T.Text
+hTypeExprB :: TypeBindingMap -> TypeExpr CResolvedType -> HGen T.Text
 hTypeExprB m (TypeExpr rt []) = hTypeExprB1 m rt
 hTypeExprB m (TypeExpr (RT_Primitive P_Vector) [te]) = do
   argt <- hTypeExprB m te
@@ -226,7 +229,7 @@ hTypeExprB m (TypeExpr c args) = do
   argst <- mapM (hTypeExprB m) args
   return (T.concat $ ["(", ct, " "] ++ L.intersperse " " argst ++ [")"])
 
-hTypeExprB1 :: TypeBindingMap -> ResolvedType -> HGen T.Text
+hTypeExprB1 :: TypeBindingMap -> CResolvedType -> HGen T.Text
 hTypeExprB1 m (RT_Named (sn,d)) = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
@@ -283,7 +286,7 @@ declareAType gname tvars = do
 
 derivingStdClasses = wl "deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)"
 
-generateDecl :: Ident -> RDecl -> HGen ()
+generateDecl :: Ident -> CDecl -> HGen ()
 
 generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
     addExport (template "$1(..)" [lname])
@@ -322,7 +325,7 @@ generateDecl lname d@(Decl{d_type=(Decl_Newtype n)}) = do
 commas :: [T.Text]
 commas = repeat ","
 
-generateStructDataType :: Ident -> ModuleName -> RDecl -> Struct ResolvedType -> HGen ()
+generateStructDataType :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateStructDataType lname mn d s = do
     wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
     indent $ do
@@ -334,13 +337,13 @@ generateStructDataType lname mn d s = do
         wl "}"
         derivingStdClasses
 
-generateNullStructDataType :: Ident -> ModuleName -> RDecl -> Struct ResolvedType -> HGen ()
+generateNullStructDataType :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateNullStructDataType lname mn d s = do
     wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
     indent derivingStdClasses
         
 
-generateStructADLInstance :: Ident -> ModuleName -> RDecl -> Struct ResolvedType -> HGen ()
+generateStructADLInstance :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateStructADLInstance lname mn d s = do
     wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
     indent $ do
@@ -370,7 +373,7 @@ generateStructADLInstance lname mn d s = do
                 wt "$1 fieldFromJSON $2_js \"$2\" defaultv hm" [p, (f_serializedName f)]
             wl "from _ = Prelude.Nothing"
 
-generateNullStructADLInstance :: Ident -> ModuleName -> RDecl -> Struct ResolvedType -> HGen ()
+generateNullStructADLInstance :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateNullStructADLInstance lname mn d s = do
     wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
     indent $ do
@@ -385,7 +388,7 @@ generateNullStructADLInstance lname mn d s = do
             wt "from (JSON.Object hm) = Prelude.Just $1 " [lname]
             wl "from _ = Prelude.Nothing"
 
-generateUnionDataType :: Ident -> ModuleName -> RDecl -> Union ResolvedType -> HGen ()
+generateUnionDataType :: Ident -> ModuleName -> CDecl -> Union CResolvedType -> HGen ()
 generateUnionDataType lname mn d u = do
     let prefixes = ["="] ++ repeat "|"
 
@@ -399,7 +402,7 @@ generateUnionDataType lname mn d u = do
             wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
       derivingStdClasses
 
-generateUnionADLInstance :: Ident -> ModuleName -> RDecl -> Union ResolvedType -> HGen ()
+generateUnionADLInstance :: Ident -> ModuleName -> CDecl -> Union CResolvedType -> HGen ()
 generateUnionADLInstance lname mn d u = do
 
     wl $ hInstanceHeader "ADLValue" lname (u_typeParams u)
@@ -437,7 +440,7 @@ generateUnionADLInstance lname mn d u = do
                     else wt "(\"$1\",Prelude.Just v) -> Prelude.fmap $2 (aFromJSON $1_js v)" [f_serializedName f,dn]
 
 
-generateNewtypeADLInstance :: Ident -> ModuleName -> RDecl -> Newtype ResolvedType -> HGen ()
+generateNewtypeADLInstance :: Ident -> ModuleName -> CDecl -> Newtype CResolvedType -> HGen ()
 generateNewtypeADLInstance lname mn d n = do
 
     wl $ hInstanceHeader "ADLValue" lname (n_typeParams n)
@@ -455,16 +458,16 @@ generateNewtypeADLInstance lname mn d n = do
             wt "to ($1 v) = aToJSON js v" [lname]
             wt "from o = Prelude.fmap $1 (aFromJSON js o)" [lname]
 
-generateDefaultValue :: TypeExpr ResolvedType -> (Maybe JSON.Value) -> HGen T.Text
+generateDefaultValue :: TypeExpr CResolvedType -> (Maybe JSON.Value) -> HGen T.Text
 generateDefaultValue _ Nothing = return "defaultv"
 generateDefaultValue te (Just v) = generateLiteral te v
 
-generateLiteral :: TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
+generateLiteral :: TypeExpr CResolvedType -> JSON.Value -> HGen T.Text
 generateLiteral te v =  generateLV Map.empty te v
   where
     -- We only need to match the appropriate JSON cases here, as the JSON value
     -- has already been validated by the compiler
-    generateLV :: TypeBindingMap -> TypeExpr ResolvedType -> JSON.Value -> HGen T.Text
+    generateLV :: TypeBindingMap -> TypeExpr CResolvedType -> JSON.Value -> HGen T.Text
     generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
     generateLV m (TypeExpr (RT_Primitive P_StringMap) [te]) v = generateStringMap m te v
@@ -526,7 +529,7 @@ generateLiteral te v =  generateLV Map.empty te v
       where
         m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
-generateCustomType :: Ident -> RDecl -> CustomType -> HGen ()
+generateCustomType :: Ident -> CDecl -> CustomType -> HGen ()
 generateCustomType n d ct = do
   -- imports and exports
   addExport (hTypeName n)
@@ -546,7 +549,7 @@ generateCustomType n d ct = do
       generateDecl i d
 
 
-generateModule :: RModule -> HGen T.Text
+generateModule :: CModule -> HGen T.Text
 generateModule m = do
   addLanguageFeature "OverloadedStrings"
   addImport "import qualified Prelude"
@@ -560,7 +563,7 @@ generateModule m = do
   let mname = ms_name ms
       genDecl (n,d) = do
           nl
-          case Map.lookup (ScopedName mname n) (ms_customTypes ms) of
+          case d_customType d of
             Nothing -> generateDecl (hTypeName (d_name d)) d
             (Just ct) -> generateCustomType n d ct
 
@@ -591,12 +594,14 @@ generateModule m = do
 -- name to the written file.
 writeModuleFile :: (ModuleName -> HaskellModule) ->
                    (HaskellModule -> FilePath) ->
-                   CustomTypeMap ->
+                   (ScopedName -> RDecl -> Maybe CustomType) ->
                    (FilePath -> LBS.ByteString -> IO ()) ->
                    RModule ->
                    EIO a ()
-writeModuleFile hmf fpf customTypes fileWriter m = do
-  let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty Set.empty []
+writeModuleFile hmf fpf getCustomType fileWriter m0 = do
+  let moduleName = m_name m
+      s0 = MState moduleName hmf "" Set.empty Set.empty Set.empty []
+      m = associateCustomTypes getCustomType moduleName m0
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
   liftIO $ fileWriter fpath (LBS.fromStrict (T.encodeUtf8 t))
@@ -618,12 +623,11 @@ data HaskellFlags = HaskellFlags {
   hf_modulePrefix :: String
 }
 
-generate :: AdlFlags -> HaskellFlags -> FileWriter -> (RModule -> CustomTypeMap) -> [FilePath] -> EIOT ()
-generate af hf fileWriter getCustomTypes modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
+generate :: AdlFlags -> HaskellFlags -> FileWriter -> (ScopedName -> RDecl -> Maybe CustomType) -> [FilePath] -> EIOT ()
+generate af hf fileWriter getCustomType modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
   rm <- loadAndCheckModule af modulePath
-  let customTypes = getCustomTypes rm
   writeModuleFile (moduleMapper (hf_modulePrefix hf))
                   fileMapper
-                  customTypes
+                  getCustomType
                   fileWriter
                   rm
