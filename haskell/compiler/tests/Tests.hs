@@ -61,21 +61,20 @@ runVerifyBackend ipath mpaths = do
 runVerifyBackend1 :: FilePath -> IO CodeGenResult
 runVerifyBackend1 mpath = runVerifyBackend [stdsrc,takeDirectory mpath] [mpath]
 
-runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> [FilePath] -> IO CodeGenResult
-runHaskellBackend ipaths mpaths epath customTypeFiles = do
+runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
+runHaskellBackend ipaths mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let af =  defaultAdlFlags{af_searchPath=ipaths}
       hf =  H.HaskellFlags {
-        H.hf_modulePrefix = "ADL",
-        H.hf_customTypeFiles = customTypeFiles
+        H.hf_modulePrefix = "ADL"
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ H.generate af hf fileWriter getCustomTypes mpaths
   processCompilerOutput epath tempDir er
 
 runHaskellBackend1 :: FilePath-> IO CodeGenResult
-runHaskellBackend1 mpath = runHaskellBackend [ipath,stdsrc] [mpath] epath []
+runHaskellBackend1 mpath = runHaskellBackend [ipath,stdsrc] [mpath] epath
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "hs-output"
@@ -186,13 +185,13 @@ runTests = do
       collectResults (runHaskellBackend1 "test3/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runHaskellBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/hs-output" (stdHsCustomTypes++["test4/input/hs-custom-types.json"]))
+      collectResults (runHaskellBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/hs-output")
           `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       collectResults (runHaskellBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      collectResults (runHaskellBackend [stdsrc] stdfiles "test6/hs-output" stdHsCustomTypes)
+      collectResults (runHaskellBackend [stdsrc] stdfiles "test6/hs-output")
           `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       collectResults (runHaskellBackend1 "test7/input/test.adl")

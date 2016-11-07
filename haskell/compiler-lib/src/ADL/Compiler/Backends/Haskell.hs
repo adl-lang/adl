@@ -36,6 +36,7 @@ import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
 
 newtype HaskellModule = HaskellModule T.Text
+  deriving Show
 
 instance Format HaskellModule where
   formatText (HaskellModule hm) = hm
@@ -55,7 +56,7 @@ data CustomType = CustomType {
    -- Whether to generate the original ADL Type. If required the name
    -- to be used is supplied.
    ct_generateOrigADLType :: Maybe Ident
-}
+} deriving Show
 
 type CustomTypeMap = Map.Map ScopedName CustomType
 
@@ -614,16 +615,15 @@ fileMapper (HaskellModule t) = addExtension (joinPath ps) "hs"
 ----------------------------------------------------------------------
 
 data HaskellFlags = HaskellFlags {
-  hf_modulePrefix :: String,
-  hf_customTypeFiles :: [FilePath]
+  hf_modulePrefix :: String
 }
 
-generate :: AdlFlags -> HaskellFlags -> FileWriter -> ([FilePath] -> EIOT CustomTypeMap) -> [FilePath] -> EIOT ()
+generate :: AdlFlags -> HaskellFlags -> FileWriter -> (RModule -> CustomTypeMap) -> [FilePath] -> EIOT ()
 generate af hf fileWriter getCustomTypes modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
   rm <- loadAndCheckModule af modulePath
-  hctypes <- getCustomTypes (hf_customTypeFiles hf)
+  let customTypes = getCustomTypes rm
   writeModuleFile (moduleMapper (hf_modulePrefix hf))
                   fileMapper
-                  hctypes
+                  customTypes
                   fileWriter
                   rm

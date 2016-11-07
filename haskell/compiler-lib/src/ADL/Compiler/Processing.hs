@@ -172,7 +172,7 @@ checkDuplicates m = structErrors ++ unionErrors ++ typedefErrors ++ newtypeError
     findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) (T.toCaseFold a) 1) Map.empty as),
                           n > (1::Int) ]
 
-type AnnotationMap = (Map.Map (Either Ident (Ident,Ident)) Annotation0)
+type AnnotationMap = (Map.Map (Either Ident (Ident,Ident)) (Map.Map ScopedName Annotation0))
 type MAState = State AnnotationMap
 
 -- | Generates a module where the the annotation declarations have been
@@ -182,9 +182,13 @@ mergeAnnotations :: Module0 Decl0 -> (Module0 (Decl ScopedName), [T.Text])
 mergeAnnotations m0 = (m,unusedAnnotation)
   where
     (m,unusedMap) = runState (mergeModule m0) annotationMap
-    
-    annotationMap = Map.fromList [ (annKey a, a) | Decl0_Annotation a <- m0_decls m0]
+
+    annotationMap :: AnnotationMap
+    annotationMap = foldr addAnnotation Map.empty [ (annKey a, a0_annotationName a, a) | Decl0_Annotation a <- m0_decls m0]
       where
+        addAnnotation :: (Either Ident (Ident,Ident),ScopedName, Annotation0) -> AnnotationMap -> AnnotationMap
+        addAnnotation (key,name,ann) = Map.insertWith Map.union key (Map.singleton name ann)
+        
         annKey ann@Annotation0{a0_fieldName=Just fieldName} = Right (a0_declName ann,fieldName)
         annKey ann = Left (a0_declName ann)
 
@@ -200,10 +204,8 @@ mergeAnnotations m0 = (m,unusedAnnotation)
 
     mergeDecl :: Decl ScopedName -> MAState (Decl ScopedName)
     mergeDecl decl = do
-      mann <- pullAnnotation (Left (d_name decl))
-      decl1 <- case mann of
-        Nothing -> return decl
-        (Just ann) -> return decl{d_annotations=insertAnnotation ann (d_annotations decl)}
+      anns <- pullAnnotations (Left (d_name decl))
+      let decl1 = decl{d_annotations=insertAnnotations anns (d_annotations decl)}
       declType <- mergeDeclType (d_name decl1) (d_type decl1)
       return decl1{d_type=declType}
 
@@ -219,20 +221,21 @@ mergeAnnotations m0 = (m,unusedAnnotation)
 
     mergeField :: Ident -> Field ScopedName -> MAState (Field ScopedName)
     mergeField declName field  = do
-      mann <- pullAnnotation (Right (declName,f_name field))
-      case mann of
-        Nothing -> return field
-        (Just ann) -> return field{f_annotations=insertAnnotation ann (f_annotations field)}
+      anns <- pullAnnotations (Right (declName,f_name field))
+      return field{f_annotations=insertAnnotations anns (f_annotations field)}
       
-    pullAnnotation :: (Either Ident (Ident,Ident)) -> MAState (Maybe Annotation0)
-    pullAnnotation key = do
+    pullAnnotations :: (Either Ident (Ident,Ident)) -> MAState (Map.Map ScopedName Annotation0)
+    pullAnnotations key = do
       map <- get
       case Map.lookup key map of
-         Nothing -> return Nothing
-         (Just ann) -> do
+         Nothing -> return Map.empty
+         (Just anns) -> do
            put (Map.delete key map)
-           return (Just ann)
-           
+           return anns
+
+    insertAnnotations :: Map.Map ScopedName Annotation0 -> Annotations ScopedName -> Annotations ScopedName
+    insertAnnotations amap anns0  = foldr insertAnnotation anns0 (Map.elems amap)
+    
     insertAnnotation :: Annotation0 -> Annotations ScopedName -> Annotations ScopedName
     insertAnnotation a0 = Map.insert (a0_annotationName a0) (a0_annotationName a0,a0_value a0)
       
@@ -629,7 +632,7 @@ defaultAdlFlags :: AdlFlags
 defaultAdlFlags = AdlFlags
   { af_searchPath = []
   , af_log = const (return ())
-  , af_mergeFileExtensions = ["adl-java"]
+  , af_mergeFileExtensions = ["adl-hs", "adl-java"]
   }
   
 loadAndCheckModule :: AdlFlags -> FilePath -> EIOT RModule

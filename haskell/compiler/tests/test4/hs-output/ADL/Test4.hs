@@ -1,13 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Test4(
     CDate(..),
-    Date(..),
+    Date,
+    DateO(..),
     S(..),
 ) where
 
 import ADL.Core.Primitives
 import ADL.Core.Value
 import Control.Applicative( (<$>), (<*>) )
+import Data.Time.Calendar(Day)
+import Data.Time.Format(parseTime,formatTime)
+import System.Locale(defaultTimeLocale)
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
@@ -48,19 +52,34 @@ instance ADLValue CDate where
                 <*> fieldFromJSON day_js "day" defaultv hm
             from _ = Prelude.Nothing
 
-newtype Date = Date { unDate :: T.Text }
+
+type Date = Day
+
+toDate :: DateO -> Maybe Day
+toDate (Date s) = parseTime defaultTimeLocale "%F" s
+
+fromDate :: Day -> Date_ADL
+fromDate d = Date (formatTime defaultTimeLocale "%F" d)
+
+instance ADLValue Day where
+  atype _ = atype (defaultv :: ODate)
+  defaultv = let (Just d) = toDate defaultv in d
+  aToJSON jf d = aToJSON jf (fromDate d)
+  afromJSON jf jv = (aFromJSON jf jv) >>= toDate
+
+newtype DateO = DateO { unDateO :: T.Text }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue Date where
+instance ADLValue DateO where
     atype _ = "test4.Date"
     
-    defaultv = Date "1900-01-01"
+    defaultv = DateO "1900-01-01"
     
     jsonSerialiser jf = JSONSerialiser to from
         where
             js = jsonSerialiser jf
-            to (Date v) = aToJSON js v
-            from o = Prelude.fmap Date (aFromJSON js o)
+            to (DateO v) = aToJSON js v
+            from o = Prelude.fmap DateO (aFromJSON js o)
 
 data S = S
     { s_v1 :: Date

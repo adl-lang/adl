@@ -57,8 +57,7 @@ runHaskell args0 =
     mkFlags opts = (foldl (.) id opts) (defaultAdlFlags,flags0,out0)
 
     flags0 = H.HaskellFlags {
-      hf_modulePrefix="ADL.Generated",
-      hf_customTypeFiles=[]
+      hf_modulePrefix="ADL.Generated"
     }
     out0 = OutputArgs {
       oa_log = putStrLn,

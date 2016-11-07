@@ -1,12 +1,7 @@
 module adlc.config.haskell {
 
-import sys.types.*;
-
-struct CustomType
+struct HaskellCustomType
 {
-    // The qualifed name of the ADL type
-    String adlname;
-
     // The name in haskell of the type to be used    
     String haskellname;
 
@@ -17,14 +12,8 @@ struct CustomType
     // type
     Vector<String> insertCode;
 
-    // If true the code for the original ADL type will be emitted,
+    // If non-empty, the code for the original ADL type will be emitted,
     // but with the supplied name.
-    Maybe<String> generateOrigADLType;
+    String generateOrigADLType;
 };
-
-struct Config
-{
-    Vector<CustomType> customTypes;
-};
-
 };

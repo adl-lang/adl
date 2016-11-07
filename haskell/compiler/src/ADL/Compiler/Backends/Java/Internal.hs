@@ -98,29 +98,28 @@ associateCustomTypes :: ModuleName -> Module ResolvedType -> Module CResolvedTyp
 associateCustomTypes moduleName mod = mapModule assocf mod
   where 
     assocf :: ResolvedType -> CResolvedType
-    assocf (RT_Named (sn,decl,()))  = RT_Named (sn,mapDecl assocf decl,getCustomType decl)
+    assocf (RT_Named (sn,decl,()))  = RT_Named (sn,mapDecl assocf decl,getCustomType sn decl)
     assocf (RT_Param i) = RT_Param i
     assocf (RT_Primitive pt) = RT_Primitive pt
 
-    getCustomType decl = case Map.lookup javaCustomType (d_annotations decl) of
+    getCustomType scopedName decl = case Map.lookup javaCustomType (d_annotations decl) of
       Nothing -> Nothing
       Just (_,json) -> Just (convertCustomType json)
-
-    convertCustomType :: JSON.Value -> CustomType
-    convertCustomType jv = case aFromJSON (jsonSerialiser (JSONFlags True)) jv of
-      Nothing -> error "BUG: failed to parse java custom type"
-      (Just jct) -> CustomType {
-        ct_scopedName = scopedName (JC.javaCustomType_javaname jct),
-        ct_helpers = scopedName (JC.javaCustomType_helpers jct)
-        }
-
-    javaCustomType = scopedName "adlc.config.java.JavaCustomType"
-    javaCustomType1 = scopedName "JavaCustomType"
+      where
+        convertCustomType :: JSON.Value -> CustomType
+        convertCustomType jv = case aFromJSON (jsonSerialiser (JSONFlags True)) jv of
+          Nothing -> error "BUG: failed to parse java custom type"
+          (Just jct) -> CustomType {
+            ct_scopedName = parseScopedName (JC.javaCustomType_javaname jct),
+            ct_helpers = parseScopedName (JC.javaCustomType_helpers jct)
+            }
     
-    scopedName :: T.Text -> ScopedName
-    scopedName t = case P.parse P.scopedName "" t of
-          (Right sn) -> sn
-          _ -> error "failed to parse scoped name in java custom type"
+        javaCustomType = ScopedName (ModuleName ["adlc","config","java"]) "JavaCustomType"
+    
+        parseScopedName :: T.Text -> ScopedName
+        parseScopedName t = case P.parse P.scopedName "" t of
+              (Right sn) -> sn
+              _ -> error ("failed to parse scoped name '" <> T.unpack t <> "' in java custom type for " <> T.unpack (formatText scopedName))
 
 data CodeGenProfile = CodeGenProfile {
   cgp_header :: T.Text,

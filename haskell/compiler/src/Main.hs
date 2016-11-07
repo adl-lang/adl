@@ -174,15 +174,13 @@ runHaskell args0 =
     header = "Usage: adl haskell [OPTION...] files..."
 
     flags0 libDir = H.HaskellFlags {
-      hf_modulePrefix="ADL.Generated",
-      hf_customTypeFiles=[stdlibCustomTypesHs libDir]
+      hf_modulePrefix="ADL.Generated"
       }
 
     optDescs =
       [ searchDirOption addToSearchPath
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
-      , customTypesOption (\s -> updateBackendFlags (\hf -> hf{hf_customTypeFiles=s:hf_customTypeFiles hf}))
       , Option "" ["moduleprefix"]
         (ReqArg (\s -> updateBackendFlags (\hf -> hf{hf_modulePrefix=s})) "PREFIX")
         "Set module name prefix for generated code "

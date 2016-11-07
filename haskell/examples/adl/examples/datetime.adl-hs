@@ -1,0 +1,63 @@
+module examples.datetime
+{
+
+import adlc.config.haskell.HaskellCustomType;
+
+annotation Date HaskellCustomType {
+  "haskellname" : "Day",
+  "haskellimports" : [
+      "Data.Time.Calendar(Day)",
+      "Data.Time.Format(parseTime,formatTime,defaultTimeLocale)",
+      "Prelude(Maybe(..),(>>=))",
+      "qualified Data.Text as T"
+      ],
+  "insertCode" : [
+      "type Date = Day",
+      "",
+      "toDay :: Date0 -> Maybe Day",
+      "toDay (Date0 s) = parseTime defaultTimeLocale \"%FT%XZ\" (T.unpack s)",
+      "",
+      "fromDay :: Day -> Date0",
+      "fromDay d = Date0 (T.pack (formatTime defaultTimeLocale \"%FT%XZ\" d))",
+      "",
+      "instance ADLValue Day where",
+      "  atype _ = atype (defaultv :: Date0)",
+      "  defaultv = let (Just d) = toDay defaultv in d",
+      "  jsonSerialiser jf = JSONSerialiser to from",
+      "     where",
+      "       js = jsonSerialiser jf",
+      "       to d = aToJSON js (fromDay d) ",
+      "       from o = aFromJSON js o >>= toDay"
+  ],
+  "generateOrigADLType" : "Date0"
+};
+
+
+annotation UTCTime HaskellCustomType {
+  "haskellname" : "UTCTime",
+  "haskellimports" : [
+      "Data.Time.Clock(UTCTime)",
+      "Data.Time.Format(parseTime,formatTime,defaultTimeLocale)",
+      "Prelude(Maybe(..),(>>=))",
+      "qualified Data.Text as T"
+  ],
+  "insertCode" : [
+      "toUTCTime :: UTCTime0 -> Maybe UTCTime",
+      "toUTCTime (UTCTime0 s) = parseTime defaultTimeLocale \"%FT%XZ\" (T.unpack s)",
+      "",
+      "fromUTCTime :: UTCTime -> UTCTime0",
+      "fromUTCTime d = UTCTime0 (T.pack (formatTime defaultTimeLocale \"%FT%XZ\" d))",
+      "",
+      "instance ADLValue UTCTime where",
+      "  atype _ = atype (defaultv :: UTCTime0)",
+      "  defaultv = let (Just d) = toUTCTime defaultv in d",
+      "  jsonSerialiser jf = JSONSerialiser to from",
+      "     where",
+      "       js = jsonSerialiser jf",
+      "       to d = aToJSON js (fromUTCTime d) ",
+      "       from o = aFromJSON js o >>= toUTCTime"
+  ],
+  "generateOrigADLType" : "UTCTime0"
+};
+
+};

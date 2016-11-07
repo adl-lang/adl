@@ -5,11 +5,11 @@ import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import ADL.Compiler.AST
-import ADL.Compiler.EIO
 import ADL.Compiler.Backends.Haskell
+import ADL.Compiler.Processing
 
-getCustomTypes :: [FilePath] -> EIO T.Text CustomTypeMap
-getCustomTypes srcdirs = return $ Map.fromList
+getCustomTypes :: RModule -> CustomTypeMap
+getCustomTypes _ = Map.fromList
     [ (ScopedName (ModuleName ["sys","types"]) "Maybe",
        CustomType "Prelude.Maybe" [HaskellModule "ADL.Core.CustomTypes"]
        ["type Maybe = Prelude.Maybe" ] Nothing )
