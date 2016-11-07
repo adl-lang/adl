@@ -87,39 +87,38 @@ javaClassFilePath (JavaClass ids) = T.unpack (T.intercalate "/" ids <> ".java")
 -- Types we want to override
 data CustomType = CustomType {
   ct_scopedName :: ScopedName,
-  ct_helpers :: ScopedName
+  ct_helpers :: ScopedName,
+  ct_generateType :: Bool
   } deriving (Show)
 
--- A variant of ResolvedType that carries associated custom
--- type information.
+-- A variant of the AST that carries custom type
+-- information.
+
 type CResolvedType = ResolvedTypeT (Maybe CustomType)
+type CModule = Module (Maybe CustomType) CResolvedType
+type CDecl = Decl (Maybe CustomType) CResolvedType
 
-associateCustomTypes :: ModuleName -> Module ResolvedType -> Module CResolvedType
-associateCustomTypes moduleName mod = mapModule assocf mod
-  where 
-    assocf :: ResolvedType -> CResolvedType
-    assocf (RT_Named (sn,decl,()))  = RT_Named (sn,mapDecl assocf decl,getCustomType sn decl)
-    assocf (RT_Param i) = RT_Param i
-    assocf (RT_Primitive pt) = RT_Primitive pt
+getCustomType :: ScopedName -> RDecl -> Maybe CustomType
+getCustomType scopedName decl = case Map.lookup javaCustomType (d_annotations decl) of
+  Nothing -> Nothing
+  Just (_,json) -> Just (convertCustomType json)
+  where
+    convertCustomType :: JSON.Value -> CustomType
+    convertCustomType jv = case aFromJSON (jsonSerialiser (JSONFlags True)) jv of
+      Nothing -> error "BUG: failed to parse java custom type"
+      (Just jct) -> CustomType
+        { ct_scopedName = parseScopedName (JC.javaCustomType_javaname jct)
+        , ct_helpers = parseScopedName (JC.javaCustomType_helpers jct)
+        , ct_generateType = (JC.javaCustomType_generateType jct)
+        }
+    
+    javaCustomType = ScopedName (ModuleName ["adlc","config","java"]) "JavaCustomType"
+    
+    parseScopedName :: T.Text -> ScopedName
+    parseScopedName t = case P.parse P.scopedName "" t of
+      (Right sn) -> sn
+      _ -> error ("failed to parse scoped name '" <> T.unpack t <> "' in java custom type for " <> T.unpack (formatText scopedName))
 
-    getCustomType scopedName decl = case Map.lookup javaCustomType (d_annotations decl) of
-      Nothing -> Nothing
-      Just (_,json) -> Just (convertCustomType json)
-      where
-        convertCustomType :: JSON.Value -> CustomType
-        convertCustomType jv = case aFromJSON (jsonSerialiser (JSONFlags True)) jv of
-          Nothing -> error "BUG: failed to parse java custom type"
-          (Just jct) -> CustomType {
-            ct_scopedName = parseScopedName (JC.javaCustomType_javaname jct),
-            ct_helpers = parseScopedName (JC.javaCustomType_helpers jct)
-            }
-    
-        javaCustomType = ScopedName (ModuleName ["adlc","config","java"]) "JavaCustomType"
-    
-        parseScopedName :: T.Text -> ScopedName
-        parseScopedName t = case P.parse P.scopedName "" t of
-              (Right sn) -> sn
-              _ -> error ("failed to parse scoped name '" <> T.unpack t <> "' in java custom type for " <> T.unpack (formatText scopedName))
 
 data CodeGenProfile = CodeGenProfile {
   cgp_header :: T.Text,
@@ -252,10 +251,10 @@ genTypeExprB boxed (TypeExpr rt params) = do
   genResolvedType boxed rt rtParamsStr
 
 genResolvedType :: TypeBoxed -> CResolvedType -> [T.Text] -> CState T.Text
-genResolvedType _ (RT_Named (_,_,Just customType)) args = do
+genResolvedType _ (RT_Named (_,Decl{d_customType=Just customType})) args = do
   ts <- addImport (classFromScopedName (ct_scopedName customType))
   return (withTypeArgs ts args)
-genResolvedType _ (RT_Named (scopedName,_,Nothing)) args = do
+genResolvedType _ (RT_Named (scopedName,Decl{d_customType=Nothing})) args = do
   ts <- genScopedName scopedName
   return (withTypeArgs ts args)
 genResolvedType _(RT_Param ident) args = return (unreserveWord ident)
@@ -279,7 +278,7 @@ genFactoryExpr :: TypeExpr CResolvedType -> CState T.Text
 genFactoryExpr (TypeExpr rt params) = do
   fparams <- mapM genFactoryExpr params
   fe <- case rt of
-    (RT_Named (scopedName,_,mct)) -> do
+    (RT_Named (scopedName,Decl{d_customType=mct})) -> do
       fscope <- case mct of
         Nothing -> genScopedName scopedName
         (Just ct) -> getHelpers ct
@@ -550,7 +549,7 @@ multiLineComment :: T.Text -> Code
 multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
 
 genLiteralText :: Literal (TypeExpr CResolvedType) -> CState T.Text
-genLiteralText (LDefault (TypeExpr (RT_Named (_,_,Just customType)) [])) = do
+genLiteralText (LDefault (TypeExpr (RT_Named (_,Decl{d_customType=Just customType})) [])) = do
   idHelpers <- getHelpers customType
   return (template "$1.FACTORY.create()" [idHelpers])
 genLiteralText (LDefault te@(TypeExpr (RT_Primitive pt) _)) = do
@@ -568,7 +567,7 @@ genLiteralText (LDefault te@(TypeExpr _ [])) = do
 genLiteralText (LDefault te) = do
   factoryExpr <- genFactoryExpr te
   return (template "$1.create()" [factoryExpr])
-genLiteralText (LCtor (TypeExpr (RT_Named (_,_,Just customType)) _) ls) = do
+genLiteralText (LCtor (TypeExpr (RT_Named (_,Decl{d_customType=Just customType})) _) ls) = do
   idHelpers <- getHelpers customType
   lits <- mapM genLiteralText ls
   return (template "$1.create($2)" [idHelpers, T.intercalate ", " lits])
@@ -576,7 +575,7 @@ genLiteralText (LCtor te ls) = do
   typeExpr <- genTypeExpr te
   lits <- mapM genLiteralText ls
   return (template "new $1($2)" [typeExpr, T.intercalate ", " lits])
-genLiteralText (LUnion (TypeExpr (RT_Named (_,_,Just customType)) _) ctor l) = do
+genLiteralText (LUnion (TypeExpr (RT_Named (_,Decl{d_customType=Just customType})) _) ctor l) = do
   idHelpers <- getHelpers customType
   lit <- genLiteralText l
   return (template "$1.$2($3)" [idHelpers, ctor, lit ])

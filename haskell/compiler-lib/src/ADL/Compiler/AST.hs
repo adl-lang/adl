@@ -32,56 +32,57 @@ instance Format ScopedName where
   formatText sn = T.intercalate "." ((unModuleName (sn_moduleName sn) ++ [sn_name sn]))
   
 
-data Field t = Field {
+data Field r = Field {
   f_name :: Ident,
   f_serializedName :: Ident,
-  f_type :: TypeExpr t,
+  f_type :: TypeExpr r,
   f_default :: (Maybe JSON.Value),
-  f_annotations :: Annotations t
+  f_annotations :: Annotations r
   } deriving (Show)
 
-data Struct t = Struct {
+data Struct r = Struct {
   s_typeParams :: [Ident],
-  s_fields :: [Field t]
+  s_fields :: [Field r]
 } deriving (Show)  
 
-data Union t = Union {
+data Union r = Union {
   u_typeParams :: [Ident],
-  u_fields :: [Field t]
+  u_fields :: [Field r]
 } deriving (Show)  
 
-data Typedef t = Typedef {
+data Typedef r = Typedef {
   t_typeParams :: [Ident],
-  t_typeExpr :: TypeExpr t
+  t_typeExpr :: TypeExpr r
 } deriving (Show)
 
-data Newtype t = Newtype {
+data Newtype r = Newtype {
   n_typeParams :: [Ident],
-  n_typeExpr :: TypeExpr t,
+  n_typeExpr :: TypeExpr r,
   n_default :: (Maybe JSON.Value)
 } deriving (Show)
 
-data TypeExpr t = TypeExpr t [TypeExpr t]
+data TypeExpr r = TypeExpr r [TypeExpr r]
   deriving (Show)                  
 
-data DeclType t = Decl_Struct (Struct t)
-                | Decl_Union (Union t)
-                | Decl_Typedef (Typedef t)
-                | Decl_Newtype (Newtype t)
+data DeclType r = Decl_Struct (Struct r)
+                | Decl_Union (Union r)
+                | Decl_Typedef (Typedef r)
+                | Decl_Newtype (Newtype r)
   deriving (Show)
 
 type Version = Int
 type MVersion = Maybe Version
 
-data Decl t = Decl {
+data Decl ct r = Decl {
   d_name :: Ident,
   d_version :: MVersion,
-  d_annotations :: Annotations t,
-  d_type :: DeclType t
+  d_annotations :: Annotations r,
+  d_type :: DeclType r,
+  d_customType :: ct
   }
   deriving (Show)
 
-data Decl0 = Decl0_Decl (Decl ScopedName)
+data Decl0 = Decl0_Decl (Decl () ScopedName)
            | Decl0_Annotation Annotation0
   deriving (Show)
 
@@ -114,10 +115,10 @@ data Module0 d = Module0 {
 --    * checked for duplicate definitions
 --    * checked for versioning consistency
 
-data Module t = Module {
+data Module ct r = Module {
   m_name :: ModuleName,
   m_imports :: [Import],
-  m_decls :: Map.Map Ident (Decl t)
+  m_decls :: Map.Map Ident (Decl ct r)
   }  
   deriving (Show)
 
@@ -138,9 +139,9 @@ instance Foldable DeclType where
     foldMap f (Decl_Union u) = foldMap f u
     foldMap f (Decl_Typedef t) = foldMap f t
     foldMap f (Decl_Newtype n) = foldMap f n
-instance Foldable Decl where
+instance Foldable (Decl ct) where
     foldMap f Decl{d_type=d} = foldMap f d
-instance Foldable Module where
+instance Foldable (Module ct) where
     foldMap f Module{m_decls=ds} = (foldMap.foldMap) f ds
 
 mapAnnotations :: (a -> b) -> Annotations a -> Annotations b
@@ -173,17 +174,17 @@ mapDeclType f (Decl_Union u) = Decl_Union (mapUnion f u)
 mapDeclType f (Decl_Typedef t) = Decl_Typedef (mapTypedef f t)
 mapDeclType f (Decl_Newtype n) = Decl_Newtype (mapNewtype f n)
 
-mapDecl :: (a -> b) -> Decl a -> Decl b
+mapDecl :: (a -> b) -> Decl ct a -> Decl ct b
 mapDecl f decl@Decl{d_type=d,d_annotations=as} = decl
   { d_type=mapDeclType f d
   , d_annotations=mapAnnotations f as
   }
 
-mapModule :: (a -> b) -> Module a -> Module b
+mapModule :: (a -> b) -> Module ct a -> Module ct b
 mapModule f mod@Module{m_decls=ds} = mod{m_decls=(fmap.mapDecl) f ds}
 
 
-getReferencedModules :: Module ScopedName -> Set.Set ModuleName
+getReferencedModules :: Module ct ScopedName -> Set.Set ModuleName
 getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` foldMap ref m
   where
     ref :: ScopedName -> Set.Set ModuleName

@@ -227,7 +227,7 @@ hTypeExprB m (TypeExpr c args) = do
   return (T.concat $ ["(", ct, " "] ++ L.intersperse " " argst ++ [")"])
 
 hTypeExprB1 :: TypeBindingMap -> ResolvedType -> HGen T.Text
-hTypeExprB1 m (RT_Named (sn,d,_)) = do
+hTypeExprB1 m (RT_Named (sn,d)) = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
@@ -283,7 +283,7 @@ declareAType gname tvars = do
 
 derivingStdClasses = wl "deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)"
 
-generateDecl :: Ident -> Decl ResolvedType -> HGen ()
+generateDecl :: Ident -> RDecl -> HGen ()
 
 generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
     addExport (template "$1(..)" [lname])
@@ -322,7 +322,7 @@ generateDecl lname d@(Decl{d_type=(Decl_Newtype n)}) = do
 commas :: [T.Text]
 commas = repeat ","
 
-generateStructDataType :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateStructDataType :: Ident -> ModuleName -> RDecl -> Struct ResolvedType -> HGen ()
 generateStructDataType lname mn d s = do
     wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
     indent $ do
@@ -334,13 +334,13 @@ generateStructDataType lname mn d s = do
         wl "}"
         derivingStdClasses
 
-generateNullStructDataType :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateNullStructDataType :: Ident -> ModuleName -> RDecl -> Struct ResolvedType -> HGen ()
 generateNullStructDataType lname mn d s = do
     wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
     indent derivingStdClasses
         
 
-generateStructADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateStructADLInstance :: Ident -> ModuleName -> RDecl -> Struct ResolvedType -> HGen ()
 generateStructADLInstance lname mn d s = do
     wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
     indent $ do
@@ -370,7 +370,7 @@ generateStructADLInstance lname mn d s = do
                 wt "$1 fieldFromJSON $2_js \"$2\" defaultv hm" [p, (f_serializedName f)]
             wl "from _ = Prelude.Nothing"
 
-generateNullStructADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Struct ResolvedType -> HGen ()
+generateNullStructADLInstance :: Ident -> ModuleName -> RDecl -> Struct ResolvedType -> HGen ()
 generateNullStructADLInstance lname mn d s = do
     wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
     indent $ do
@@ -385,7 +385,7 @@ generateNullStructADLInstance lname mn d s = do
             wt "from (JSON.Object hm) = Prelude.Just $1 " [lname]
             wl "from _ = Prelude.Nothing"
 
-generateUnionDataType :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
+generateUnionDataType :: Ident -> ModuleName -> RDecl -> Union ResolvedType -> HGen ()
 generateUnionDataType lname mn d u = do
     let prefixes = ["="] ++ repeat "|"
 
@@ -399,7 +399,7 @@ generateUnionDataType lname mn d u = do
             wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
       derivingStdClasses
 
-generateUnionADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Union ResolvedType -> HGen ()
+generateUnionADLInstance :: Ident -> ModuleName -> RDecl -> Union ResolvedType -> HGen ()
 generateUnionADLInstance lname mn d u = do
 
     wl $ hInstanceHeader "ADLValue" lname (u_typeParams u)
@@ -437,7 +437,7 @@ generateUnionADLInstance lname mn d u = do
                     else wt "(\"$1\",Prelude.Just v) -> Prelude.fmap $2 (aFromJSON $1_js v)" [f_serializedName f,dn]
 
 
-generateNewtypeADLInstance :: Ident -> ModuleName -> Decl ResolvedType -> Newtype ResolvedType -> HGen ()
+generateNewtypeADLInstance :: Ident -> ModuleName -> RDecl -> Newtype ResolvedType -> HGen ()
 generateNewtypeADLInstance lname mn d n = do
 
     wl $ hInstanceHeader "ADLValue" lname (n_typeParams n)
@@ -468,7 +468,7 @@ generateLiteral te v =  generateLV Map.empty te v
     generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
     generateLV m (TypeExpr (RT_Primitive P_StringMap) [te]) v = generateStringMap m te v
-    generateLV m te0@(TypeExpr (RT_Named (sn,decl,_)) tes) v = case d_type decl of
+    generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
       (Decl_Struct s) -> generateStruct m te0 decl s tes v
       (Decl_Union u) -> generateUnion m decl u tes v 
       (Decl_Typedef t) -> generateTypedef m decl t tes v
@@ -526,7 +526,7 @@ generateLiteral te v =  generateLV Map.empty te v
       where
         m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
-generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> HGen ()
+generateCustomType :: Ident -> RDecl -> CustomType -> HGen ()
 generateCustomType n d ct = do
   -- imports and exports
   addExport (hTypeName n)
@@ -546,7 +546,7 @@ generateCustomType n d ct = do
       generateDecl i d
 
 
-generateModule :: Module ResolvedType -> HGen T.Text
+generateModule :: RModule -> HGen T.Text
 generateModule m = do
   addLanguageFeature "OverloadedStrings"
   addImport "import qualified Prelude"
@@ -593,7 +593,7 @@ writeModuleFile :: (ModuleName -> HaskellModule) ->
                    (HaskellModule -> FilePath) ->
                    CustomTypeMap ->
                    (FilePath -> LBS.ByteString -> IO ()) ->
-                   Module ResolvedType ->
+                   RModule ->
                    EIO a ()
 writeModuleFile hmf fpf customTypes fileWriter m = do
   let s0 = MState (m_name m) hmf customTypes "" Set.empty Set.empty Set.empty []

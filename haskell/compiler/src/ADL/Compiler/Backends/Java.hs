@@ -61,11 +61,11 @@ generate af jf fileWriter modulePaths = catchAllExceptions  $ do
 generateModule :: JavaFlags ->
                   FileWriter ->
                   (ScopedName -> CodeGenProfile) ->
-                  Module ResolvedType ->
+                  RModule ->
                   EIO T.Text (Set.Set JavaClass)
 generateModule jf fileWriter mCodeGetProfile m0 = do
   let moduleName = m_name m
-      m = ( associateCustomTypes moduleName
+      m = ( associateCustomTypes getCustomType moduleName
           . removeModuleTypedefs
           . expandModuleTypedefs
           ) m0
@@ -87,7 +87,7 @@ generateModule jf fileWriter mCodeGetProfile m0 = do
     return imports
   return (mconcat imports)
 
-generateStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Struct CResolvedType -> ClassFile
+generateStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Struct CResolvedType -> ClassFile
 generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen state0
   where
     className = unreserveWord (d_name decl)
@@ -110,7 +110,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
       when (cgp_parcelable codeProfile) $ do
         generateStructParcelable codeProfile decl struct fieldDetails
 
-generateNewtype :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Newtype CResolvedType -> ClassFile
+generateNewtype :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Newtype CResolvedType -> ClassFile
 generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState gen state0
   where 
     className = unreserveWord (d_name decl)
@@ -147,7 +147,7 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState g
         generateStructParcelable codeProfile decl struct fieldDetails
 
 generateCoreStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage)
-                   -> Decl CResolvedType -> Struct CResolvedType -> [FieldDetails] -> CState ()
+                   -> CDecl -> Struct CResolvedType -> [FieldDetails] -> CState ()
 generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails =  gen
   where
     className = unreserveWord (d_name decl)
@@ -312,7 +312,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
 
 data UnionType = AllVoids | NoVoids | Mixed
 
-generateUnion :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> Decl CResolvedType -> Union CResolvedType -> ClassFile
+generateUnion :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Union CResolvedType -> ClassFile
 generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen state0
   where
     className = unreserveWord (d_name decl)

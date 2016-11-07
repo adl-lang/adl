@@ -38,7 +38,8 @@ import ADL.Compiler.AST
 import ADL.Compiler.Primitive
 import ADL.Compiler.EIO
 
-type SModule = Module ScopedName
+type SModule = Module () ScopedName
+type SDecl = Decl () ScopedName
 type SModuleMap = Map.Map ModuleName SModule
 
 -- | Maps a module name to the possible paths of the corresponding ADL file
@@ -73,7 +74,7 @@ loadModule log fpath0 findm filesetfn mm = do
          then parseAndCheckFileSet fpath
          else findModule mname fpaths
 
-    parseAndCheckFileSet :: FilePath -> EIO T.Text (Module ScopedName)
+    parseAndCheckFileSet :: FilePath -> EIO T.Text SModule
     parseAndCheckFileSet path = do
       extraFiles <- liftIO (filterM doesFileExist (filesetfn path))
       parseAndCheckFile log path extraFiles
@@ -82,7 +83,7 @@ loadModule log fpath0 findm filesetfn mm = do
 -- done on that file alone. Extra files can be specified, that must
 -- exist and be for the same ADL module. They will be merged into the
 -- resulting module.
-parseAndCheckFile :: (String -> IO ()) -> FilePath -> [FilePath] -> EIO T.Text (Module ScopedName)
+parseAndCheckFile :: (String -> IO ()) -> FilePath -> [FilePath] -> EIO T.Text SModule
 parseAndCheckFile log file extraFiles = do
     m0 <- parseFile file
     m0Extras <- mapM parseFile extraFiles
@@ -104,7 +105,7 @@ parseAndCheckFile log file extraFiles = do
         merge :: Module0 Decl0 -> Module0 Decl0 -> Module0 Decl0
         merge ma mb = ma{m0_imports=m0_imports ma <> m0_imports mb,m0_decls=m0_decls ma <> m0_decls mb}
         
-    checkDeclarations :: Module0 (Decl ScopedName) -> EIO T.Text SModule
+    checkDeclarations :: Module0 SDecl -> EIO T.Text SModule
     checkDeclarations (Module0 n i decls0) = do
       let declMap = foldr (\d -> Map.insertWith (++)  (d_name d) [d]) Map.empty decls0
       declMap' <- T.mapM checkDeclList declMap
@@ -113,7 +114,7 @@ parseAndCheckFile log file extraFiles = do
     -- Ensure that for all the decls associated with a name, either
     --    * we have one unversioned decl
     --    * we have have a consistently versioned set
-    checkDeclList :: [Decl ScopedName] -> EIO T.Text (Decl ScopedName)
+    checkDeclList :: [SDecl] -> EIO T.Text SDecl
     checkDeclList ds = case partition hasVersion ds of
         (ds,[]) -> do
           let ds' = sortBy (comparing fst) [ (i,d) | (d@Decl{d_version=Just i}) <- filter hasVersion ds ]
@@ -127,7 +128,7 @@ parseAndCheckFile log file extraFiles = do
         hasVersion Decl{d_version=Nothing} = False
         hasVersion _ = True
 
-    mergeAnnotations' :: Module0 Decl0 -> EIO T.Text (Module0 (Decl ScopedName))
+    mergeAnnotations' :: Module0 Decl0 -> EIO T.Text (Module0 SDecl)
     mergeAnnotations' m0 = do
       let (m,unusedAnnotations) = mergeAnnotations m0
       case unusedAnnotations of
@@ -151,7 +152,7 @@ instance Format Duplicate where
     where
       ds = "duplicate definition of "
 
-checkDuplicates :: Module t -> [Duplicate]
+checkDuplicates :: Module ct r -> [Duplicate]
 checkDuplicates m = structErrors ++ unionErrors ++ typedefErrors ++ newtypeErrors
   where
     structErrors = concat [ structErrors1 n s | Decl{d_name=n,d_type=Decl_Struct s} <- Map.elems (m_decls m) ]
@@ -178,7 +179,7 @@ type MAState = State AnnotationMap
 -- | Generates a module where the the annotation declarations have been
 -- merged into the corresponding type declarations. Also returns the
 -- unmerged annotations.
-mergeAnnotations :: Module0 Decl0 -> (Module0 (Decl ScopedName), [T.Text])
+mergeAnnotations :: Module0 Decl0 -> (Module0 SDecl, [T.Text])
 mergeAnnotations m0 = (m,unusedAnnotation)
   where
     (m,unusedMap) = runState (mergeModule m0) annotationMap
@@ -197,12 +198,12 @@ mergeAnnotations m0 = (m,unusedAnnotation)
         annText (Left decl) = decl
         annText (Right (decl,field)) = template "$1:$2" [decl,field]
 
-    mergeModule :: Module0 Decl0 -> MAState (Module0 (Decl ScopedName))
+    mergeModule :: Module0 Decl0 -> MAState (Module0 SDecl)
     mergeModule m0 = do
       decls' <-  mapM mergeDecl [d | Decl0_Decl d <- m0_decls m0]
       return m0{m0_decls=decls'}
 
-    mergeDecl :: Decl ScopedName -> MAState (Decl ScopedName)
+    mergeDecl :: SDecl -> MAState SDecl
     mergeDecl decl = do
       anns <- pullAnnotations (Left (d_name decl))
       let decl1 = decl{d_annotations=insertAnnotations anns (d_annotations decl)}
@@ -241,25 +242,26 @@ mergeAnnotations m0 = (m,unusedAnnotation)
       
 
 data ResolvedTypeT c
-  = RT_Named (ScopedName,Decl (ResolvedTypeT c),c)
+  = RT_Named (ScopedName,Decl c (ResolvedTypeT c))
   | RT_Param Ident
   | RT_Primitive PrimitiveType
 
 type TypeExprRT c = TypeExpr (ResolvedTypeT c)
 
 instance Show c => Show (ResolvedTypeT c) where
-    show (RT_Named (sn,_,c)) = show ("RT_Named",sn,c)
+    show (RT_Named (sn,_)) = show ("RT_Named",sn)
     show (RT_Param i) = show ( "RT_Param",i)
     show (RT_Primitive pt) = show ("RT_Primitive",pt)
 
 instance Format (ResolvedTypeT c) where
-    format (RT_Named (sn,_,_)) = format sn
+    format (RT_Named (sn,_)) = format sn
     format (RT_Param i) = format i
     format (RT_Primitive pt) = format pt
 
 type ResolvedType = ResolvedTypeT ()
 
-type RModule = Module ResolvedType
+type RModule = Module () ResolvedType
+type RDecl = Decl () ResolvedType
 type RModuleMap = Map.Map ModuleName RModule
 
 type TMap = Map.Map ScopedName ResolvedType
@@ -277,19 +279,19 @@ isVoidType _ = False
     -- Decls in current modules
     -- Type params for the current object
 
-data LocalDecl = LocalDecl (Decl ResolvedType)
-               | ImportedDecl ModuleName (Decl ResolvedType)
+data LocalDecl = LocalDecl (Decl () ResolvedType)
+               | ImportedDecl ModuleName (Decl () ResolvedType)
   deriving Show            
 
 data NameScope = NameScope {
-    ns_globals :: Map.Map ScopedName (Decl ResolvedType),
+    ns_globals :: Map.Map ScopedName (Decl () ResolvedType),
     ns_locals :: Map.Map Ident LocalDecl,
-    ns_currentModule :: Map.Map Ident (Decl ScopedName),
+    ns_currentModule :: Map.Map Ident SDecl,
     ns_typeParams :: Set.Set Ident
 } deriving Show
 
 data LookupResult = LR_Defined LocalDecl
-                  | LR_New (Decl ScopedName)
+                  | LR_New SDecl
                   | LR_Primitive PrimitiveType
                   | LR_TypeVar
                   | LR_NotFound
@@ -315,7 +317,7 @@ newtype UndefinedName = UndefinedName ScopedName
 instance Format UndefinedName where
   formatText (UndefinedName sn) = T.intercalate " " ["undefined type", formatText sn]
 
-undefinedNames :: Module ScopedName -> NameScope -> [UndefinedName]
+undefinedNames :: SModule -> NameScope -> [UndefinedName]
 undefinedNames m ns0 = foldMap checkDecl (m_decls m)
     where
       ns = namescopeForModule m ns0
@@ -326,7 +328,7 @@ undefinedNames m ns0 = foldMap checkDecl (m_decls m)
       checkDeclType (Decl_Typedef t) = checkTypeExpr (withTypeParams (t_typeParams t)) (t_typeExpr t)
       checkDeclType (Decl_Newtype n) = checkTypeExpr (withTypeParams (n_typeParams n)) (n_typeExpr n)
 
-      checkDecl :: (Decl ScopedName) -> [UndefinedName]
+      checkDecl :: SDecl -> [UndefinedName]
       checkDecl decl = checkDeclType (d_type decl) <> checkAnnotations (d_annotations decl)
 
       withTypeParams :: [Ident] -> NameScope
@@ -351,7 +353,7 @@ undefinedNames m ns0 = foldMap checkDecl (m_decls m)
 
 -- Resolve all type references in a module. This assumes that all types
 -- are resolvable, ie there are no undefined names
-resolveModule :: Module ScopedName -> NameScope -> Module ResolvedType
+resolveModule :: SModule -> NameScope -> RModule
 resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m)}
   where
     ns = namescopeForModule m ns0
@@ -370,7 +372,7 @@ resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m)}
       where
         expr' = resolveTypeExpr (withTypeParams ns (n_typeParams n)) (n_typeExpr n)
 
-    resolveDecl :: NameScope -> Decl ScopedName -> Decl ResolvedType
+    resolveDecl :: NameScope -> SDecl -> RDecl
     resolveDecl ns decl = decl
       { d_annotations=resolveAnnotations ns (d_annotations decl)
       , d_type=resolveDeclType ns (d_type decl)
@@ -384,7 +386,7 @@ resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m)}
            where
              rt = resolveName nscope sn
              sn' = case rt of 
-                 RT_Named (sn',_,_) -> sn'
+                 RT_Named (sn',_) -> sn'
                  _ -> error "BUG: Unabled to resolve annotation to a declaration"
 
     resolveField :: NameScope -> Field ScopedName -> Field ResolvedType
@@ -401,11 +403,11 @@ resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m)}
 
     resolveName :: NameScope -> ScopedName -> ResolvedType
     resolveName ns sn = case nlookup ns sn of
-        LR_Defined (LocalDecl decl) -> RT_Named (sn,decl,())
-        LR_Defined (ImportedDecl mn decl) -> RT_Named (sn{sn_moduleName=mn},decl,())
+        LR_Defined (LocalDecl decl) -> RT_Named (sn,decl)
+        LR_Defined (ImportedDecl mn decl) -> RT_Named (sn{sn_moduleName=mn},decl)
         LR_New decl -> let decl1 = resolveDecl ns1 decl
                            ns1 = ns{ns_locals=Map.insert (sn_name sn) (LocalDecl decl1) (ns_locals ns)}
-                       in RT_Named (sn,decl1,())
+                       in RT_Named (sn,decl1)
         LR_TypeVar -> RT_Param (sn_name sn)
         LR_Primitive pt -> RT_Primitive pt
         LR_NotFound -> error ("PRECONDITION FAIL: unable to resolve type for " ++ show sn)
@@ -426,7 +428,7 @@ instance Format TypeCtorAppError where
 checkTypeCtorApps :: RModule -> [TypeCtorAppError]
 checkTypeCtorApps m = foldMap checkDecl (m_decls m)
   where
-      checkDecl :: (Decl ResolvedType) -> [TypeCtorAppError]
+      checkDecl :: RDecl -> [TypeCtorAppError]
       checkDecl Decl{d_type=Decl_Struct s} = checkFields (s_fields s)
       checkDecl Decl{d_type=Decl_Union u} = checkFields (u_fields u)
       checkDecl Decl{d_type=Decl_Typedef t} = checkTypeExpr (t_typeExpr t)
@@ -442,7 +444,7 @@ checkTypeCtorApps m = foldMap checkDecl (m_decls m)
       checkTypeCtorApp (RT_Param _) [] = mempty
       checkTypeCtorApp rt@(RT_Param _) expr = [TypeCtorAppError (rt,0,length expr)]
       checkTypeCtorApp rt@(RT_Primitive pt) expr = check0 rt (ptArgCount pt) (length expr)
-      checkTypeCtorApp rt@(RT_Named (_,decl,())) expr = check0 rt (declTypeArgCount (d_type decl)) (length expr)
+      checkTypeCtorApp rt@(RT_Named (_,decl)) expr = check0 rt (declTypeArgCount (d_type decl)) (length expr)
 
       check0 rt expectedN actualN | expectedN == actualN = mempty
                                   | otherwise = [TypeCtorAppError (rt,expectedN,actualN)]
@@ -531,7 +533,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
     litForTE m (TypeExpr (RT_Primitive _) _) v =
       error "BUG: found primitive type with incorrect number of type parameters"
 
-    litForTE m te@(TypeExpr (RT_Named (_,decl,_)) tes) v = case d_type decl of
+    litForTE m te@(TypeExpr (RT_Named (_,decl)) tes) v = case d_type decl of
       (Decl_Struct s) -> LCtor te <$> structFields m decl s tes v
       (Decl_Union u) -> uncurry (LUnion te) <$> unionField m decl u tes v
       (Decl_Typedef t) -> typedefLiteral m t tes v
@@ -599,7 +601,7 @@ litNumber n = T.pack s
      (Right i) -> show (i::Integer)
 
 
-namescopeForModule :: Module ScopedName -> NameScope -> NameScope
+namescopeForModule :: SModule -> NameScope -> NameScope
 namescopeForModule m ns = ns
     { ns_locals = Map.fromList [ (sn_name sn,ImportedDecl (sn_moduleName sn) d)
                                | (sn,d)<- Map.toList (ns_globals ns),
@@ -671,7 +673,7 @@ loadAndCheckModule af modulePath = do
             ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
         return (ns', rm)
 
-    failOnErrors :: Format a => Module b -> [a] -> EIOT ()
+    failOnErrors :: Format a => Module ct b -> [a] -> EIOT ()
     failOnErrors _ [] = return ()
     failOnErrors m errs = eioError mesg
       where
@@ -700,7 +702,7 @@ topologicalSort idf depf as = fmap (map fst) (sort1 (addDeps as) Set.empty)
     addDeps as = map (\a -> (a,depf a)) as
 
 -- | expand all of the typedefs in a module
-expandModuleTypedefs :: Module ResolvedType -> Module ResolvedType
+expandModuleTypedefs :: RModule -> RModule
 expandModuleTypedefs = exModule
   where
   exModule mod@Module{m_decls=ds} = mod{m_decls=fmap exDecl ds}
@@ -716,7 +718,7 @@ expandModuleTypedefs = exModule
   exField field@Field{f_type=t} = field{f_type=expandTypedefs t}
 
 -- | Remove all typedef declations from a module
-removeModuleTypedefs :: Module ResolvedType -> Module ResolvedType
+removeModuleTypedefs :: RModule -> RModule
 removeModuleTypedefs mod@Module{m_decls=ds} = mod{m_decls=Map.filter (not . isTypedef) ds}
   where
     isTypedef Decl{d_type=Decl_Typedef _} = True
@@ -727,7 +729,7 @@ expandTypedefs :: TypeExpr ResolvedType -> TypeExpr ResolvedType
 expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
   where
     typeExpr :: ResolvedType -> [TypeExpr ResolvedType] -> TypeExpr ResolvedType
-    typeExpr (RT_Named (_,Decl{d_type=Decl_Typedef t},())) ts =
+    typeExpr (RT_Named (_,Decl{d_type=Decl_Typedef t})) ts =
       case substTypeParams (Map.fromList (zip (t_typeParams t) ts)) (t_typeExpr t) of
         Left err -> error ("BUG: " ++ T.unpack err)
         Right te -> te
@@ -747,6 +749,24 @@ fullyScopedName mname (ScopedName (ModuleName []) n) = ScopedName mname n
 fullyScopedName _ sn = sn
 
 fullyScopedType :: ModuleName -> ResolvedTypeT c -> ResolvedTypeT c
-fullyScopedType mname (RT_Named (sn,decl,c)) = RT_Named (fullyScopedName mname sn,mapDecl (fullyScopedType mname) decl,c)
+fullyScopedType mname (RT_Named (sn,decl)) = RT_Named (fullyScopedName mname sn,mapDecl (fullyScopedType mname) decl)
 fullyScopedType _ rt = rt
 
+-- Populate the custom type field for each declaration.
+--
+-- The given function determines the custom type value (presumably
+-- from the annotations).
+associateCustomTypes :: (ScopedName -> RDecl -> ct) -> ModuleName -> RModule -> Module ct (ResolvedTypeT ct)
+associateCustomTypes getCustomType mname m = m{m_decls=decls'}
+  where
+    decls' = Map.mapWithKey assocItem (m_decls m)
+
+    assocItem ident  decl = assocDecl (ScopedName mname ident) decl
+
+    assocDecl scopedName decl = (mapDecl assocf decl){d_customType=customType}
+      where
+        customType = getCustomType scopedName decl
+
+        assocf (RT_Named (sn,decl))  = RT_Named (sn,assocDecl sn decl)
+        assocf (RT_Param i) = RT_Param i
+        assocf (RT_Primitive pt) = RT_Primitive pt

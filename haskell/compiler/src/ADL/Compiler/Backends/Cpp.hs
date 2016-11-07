@@ -175,7 +175,7 @@ cTypeExprB scopeLocalNames m (TypeExpr c args) = do
   cTypeExprB1 scopeLocalNames m c targs
 
 cTypeExprB1 :: Bool -> TypeBindingMap -> ResolvedType -> [T.Text] -> Gen T.Text
-cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_,_)) targs = do
+cTypeExprB1 scopeLocalNames _ (RT_Named (sn,_)) targs = do
   ms <- get
   let isLocalName = case sn_moduleName sn of
         ModuleName [] -> True
@@ -451,13 +451,13 @@ generateFwdDecl1 dn tparams = do
     genTemplate tparams
     wt "struct $1;" [cTypeName dn]
   
-generateFwdDecl :: Ident -> Decl ResolvedType -> Gen ()
+generateFwdDecl :: Ident -> RDecl -> Gen ()
 generateFwdDecl dn (Decl{d_type=(Decl_Struct s)}) = generateFwdDecl1 dn (s_typeParams s)
 generateFwdDecl dn (Decl{d_type=(Decl_Union u)}) = generateFwdDecl1 dn (u_typeParams u)
 generateFwdDecl dn (Decl{d_type=(Decl_Newtype n)}) = generateFwdDecl1 dn (n_typeParams n)
 generateFwdDecl _ (Decl{d_type=(Decl_Typedef _)}) = error "BUG: Unexpected fwd declaration of typedef"
 
-generateDecl :: Ident -> Decl ResolvedType -> Gen ()
+generateDecl :: Ident -> RDecl -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
   fds <- mapM genFieldDetails (s_fields s)
@@ -960,7 +960,7 @@ localTypes (TypeExpr (RT_Primitive P_Vector) [te]) = Set.map nameOnly (localType
 localTypes (TypeExpr c args) = Set.unions (localTypes1 c:[localTypes a | a <- args])
 
 localTypes1 :: ResolvedType -> Set.Set (TypeRefType Ident)
-localTypes1 (RT_Named (sn,_,_)) = case sn_moduleName sn of
+localTypes1 (RT_Named (sn,_)) = case sn_moduleName sn of
     ModuleName [] -> Set.singleton (FullDecl (sn_name sn))
     -- FIXME: need to either check if fully scoped name matches current module here,
     -- or, alternatively, map fully scoped local references to unscoped ones as a compiler
@@ -969,7 +969,7 @@ localTypes1 (RT_Named (sn,_,_)) = case sn_moduleName sn of
 localTypes1 (RT_Param _) = Set.empty
 localTypes1 (RT_Primitive _) = Set.empty
 
-referencedLocalTypes :: Decl ResolvedType -> Set.Set (TypeRefType Ident)
+referencedLocalTypes :: RDecl -> Set.Set (TypeRefType Ident)
 referencedLocalTypes d = Set.difference (rtypes d) selfrefs
   where
     selfrefs = Set.fromList [NameOnly (d_name d), FullDecl (d_name d)]
@@ -978,7 +978,7 @@ referencedLocalTypes d = Set.difference (rtypes d) selfrefs
     rtypes (Decl{d_type=(Decl_Typedef t)}) = localTypes (t_typeExpr t)
     rtypes (Decl{d_type=(Decl_Newtype n)}) = localTypes (n_typeExpr n)
     
-generateCustomType :: Ident -> Decl ResolvedType -> CustomType -> Gen ()
+generateCustomType :: Ident -> RDecl -> CustomType -> Gen ()
 generateCustomType n d ct = do
   ms <- get
   mapM_ (include0 ifile) (Set.toList (ct_includes ct))
@@ -1009,7 +1009,7 @@ generateCustomType n d ct = do
 -- unions and vectors only need forward references, and we make use of this
 -- to determine code generation order for mutually recursive types. But we
 -- can usefully generate a forward reference to a typedef.
-expandUVTypedefs :: Module ResolvedType -> Module ResolvedType
+expandUVTypedefs :: RModule -> RModule
 expandUVTypedefs m = m{m_decls=decls}
   where
     decls = Map.map (\d->d{d_type=expand1 (d_type d)}) (m_decls m)
@@ -1034,7 +1034,7 @@ expandUVTypedefs m = m{m_decls=decls}
     expandVectors te@(TypeExpr (RT_Primitive P_Vector) _) = expandAll te
     expandVectors (TypeExpr rt tes) = TypeExpr rt (map expandVectors tes)
 
-generateModule :: Module ResolvedType -> Gen ()
+generateModule :: RModule -> Gen ()
 generateModule m0 = do
    ms <- get
    let mname = ms_name ms
@@ -1085,7 +1085,7 @@ writeModuleFile :: (ModuleName -> CppNamespace) ->
                    (ModuleName -> FilePath) ->
                    CustomTypeMap -> 
                    (FilePath -> LBS.ByteString -> IO ()) ->
-                   Module ResolvedType ->
+                   RModule ->
                    EIO a ()
 writeModuleFile mNamespace mIncFile mFile customTypes fileWriter m = do
   let fs0 = FState Set.empty  [] (mNamespace (m_name m))

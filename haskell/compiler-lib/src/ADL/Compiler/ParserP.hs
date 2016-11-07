@@ -155,7 +155,7 @@ annotations = Map.fromList <$> many (ann1 <|> ann2)
       let sn = ScopedName (ModuleName []) "Doc"
       return (sn,(sn,JSON.String ds))
 
-decl :: P.Parser (Decl ScopedName)
+decl :: P.Parser (Decl () ScopedName)
 decl =  do
   as <- annotations
   (      (mkStruct as <$> struct)
@@ -164,10 +164,10 @@ decl =  do
      <|> (mkNewtype as <$> newtype_)
      )
   where
-    mkStruct as (n,mv,s) = Decl n mv as (Decl_Struct s)
-    mkUnion as (n,mv,u) = Decl n mv as (Decl_Union u)
-    mkType as (n,mv,t) = Decl n mv as (Decl_Typedef t)
-    mkNewtype as (n,mv,nt) = Decl n mv as (Decl_Newtype nt)
+    mkStruct as (n,mv,s) = Decl n mv as (Decl_Struct s) ()
+    mkUnion as (n,mv,u) = Decl n mv as (Decl_Union u) ()
+    mkType as (n,mv,t) = Decl n mv as (Decl_Typedef t) ()
+    mkNewtype as (n,mv,nt) = Decl n mv as (Decl_Newtype nt) ()
 
 annotation0 :: P.Parser Annotation0
 annotation0 = do

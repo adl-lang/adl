@@ -20,7 +20,7 @@ import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Utils.IndentedCode
 import ADL.Utils.Format
 
-generateStructJson :: CodeGenProfile -> Decl CResolvedType -> Struct CResolvedType -> [FieldDetails] -> CState ()
+generateStructJson :: CodeGenProfile -> CDecl -> Struct CResolvedType -> [FieldDetails] -> CState ()
 generateStructJson cgp decl struct fieldDetails = do
   let typeArgs = case s_typeParams struct of
         [] -> ""
@@ -93,7 +93,7 @@ generateStructJson cgp decl struct fieldDetails = do
   addMethod (cline "/* Json serialization */")
   addMethod factory
 
-generateNewtypeJson :: CodeGenProfile -> Decl CResolvedType -> Newtype CResolvedType -> Ident -> CState ()
+generateNewtypeJson :: CodeGenProfile -> CDecl -> Newtype CResolvedType -> Ident -> CState ()
 generateNewtypeJson cgp decl newtype_ memberVarName = do
   let typeArgs = case n_typeParams newtype_ of
         [] -> ""
@@ -141,7 +141,7 @@ generateNewtypeJson cgp decl newtype_ memberVarName = do
   addMethod (cline "/* Json serialization */")
   addMethod factory
 
-generateUnionJson :: CodeGenProfile -> Decl CResolvedType -> Union CResolvedType -> [FieldDetails] -> CState ()
+generateUnionJson :: CodeGenProfile -> CDecl -> Union CResolvedType -> [FieldDetails] -> CState ()
 generateUnionJson cgp decl union fieldDetails = do
   let typeArgs = case u_typeParams union of
         [] -> ""
@@ -238,7 +238,7 @@ genJsonBindingExpr :: CodeGenProfile -> TypeExpr CResolvedType -> CState T.Text
 genJsonBindingExpr cgp (TypeExpr rt params) = do
   bparams <- mapM (genJsonBindingExpr cgp) params
   case rt of
-    (RT_Named (scopedName,_,mct)) -> do
+    (RT_Named (scopedName,Decl{d_customType=mct})) -> do
       fscope <- case mct of
         Nothing -> genScopedName scopedName
         (Just ct) -> getHelpers ct

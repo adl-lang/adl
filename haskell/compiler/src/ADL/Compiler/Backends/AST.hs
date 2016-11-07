@@ -31,7 +31,7 @@ data AstFlags = AstFlags {
   astf_fileWriter :: FilePath -> LBS.ByteString -> IO ()
   }
 
-moduleToA2 :: Module ResolvedType -> A2.Module
+moduleToA2 :: RModule -> A2.Module
 moduleToA2 m = A2.Module name imports decls
   where
     name = moduleNameToA2 (m_name m)
@@ -48,7 +48,7 @@ moduleNameToA2 mn = T.intercalate "." (unModuleName mn)
 scopedNameToA2 :: ScopedName -> A2.ScopedName
 scopedNameToA2 sn =A2.ScopedName (moduleNameToA2 (sn_moduleName sn))  (sn_name sn)
 
-declToA2 :: Decl ResolvedType -> A2.Decl
+declToA2 :: RDecl -> A2.Decl
 declToA2 d = A2.Decl (d_name d) (fmap fromIntegral (d_version d)) (declTypeToA2 (d_type d)) (annotationsToA2 (d_annotations d))
 
 declTypeToA2 :: DeclType ResolvedType -> A2.DeclType
@@ -64,7 +64,7 @@ typeExprToA2 :: TypeExpr ResolvedType -> A2.TypeExpr
 typeExprToA2 (TypeExpr rt rts) = A2.TypeExpr (typeRefToA2 rt) (map typeExprToA2 rts)
 
 typeRefToA2 :: ResolvedType -> A2.TypeRef
-typeRefToA2 (RT_Named (sn,_,_)) = A2.TypeRef_reference (scopedNameToA2 sn)
+typeRefToA2 (RT_Named (sn,_)) = A2.TypeRef_reference (scopedNameToA2 sn)
 typeRefToA2 (RT_Param i) = A2.TypeRef_typeParam i
 typeRefToA2 (RT_Primitive p) = A2.TypeRef_primitive (ptToText p)
 
@@ -82,7 +82,7 @@ annotationsToA2 :: Map.Map ScopedName (ResolvedType,JSON.Value) -> Map.Map A2.Sc
 annotationsToA2 = Map.fromList . map (\(k,(_,v)) -> (scopedNameToA2 k,literalToA2 v)) . Map.toList
 
 writeModuleFile :: (FilePath -> LBS.ByteString -> IO ()) ->
-                   Module ResolvedType ->
+                   RModule ->
                    EIO a ()
 writeModuleFile fileWriter m = do
   let adlast = moduleToA2 m

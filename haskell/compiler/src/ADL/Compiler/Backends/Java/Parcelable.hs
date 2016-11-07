@@ -16,7 +16,7 @@ import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Utils.IndentedCode
 import ADL.Utils.Format
 
-generateStructParcelable :: CodeGenProfile -> Decl CResolvedType -> Struct CResolvedType -> [FieldDetails] -> CState ()
+generateStructParcelable :: CodeGenProfile -> CDecl -> Struct CResolvedType -> [FieldDetails] -> CState ()
 generateStructParcelable codeProfile decl struct fieldDetails = do
   let className = unreserveWord (d_name decl)
   idParcel <- addImport "android.os.Parcel"
@@ -53,7 +53,7 @@ generateStructParcelable codeProfile decl struct fieldDetails = do
       )
     )
 
-generateUnionParcelable :: CodeGenProfile -> Decl CResolvedType -> Union CResolvedType -> [FieldDetails] -> CState ()
+generateUnionParcelable :: CodeGenProfile -> CDecl -> Union CResolvedType -> [FieldDetails] -> CState ()
 generateUnionParcelable codeProfile decl union fieldDetails = do
   let className = unreserveWord (d_name decl)
       discVar = if cgp_hungarianNaming codeProfile then "mDisc" else "disc"

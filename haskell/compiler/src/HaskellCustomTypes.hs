@@ -41,7 +41,7 @@ getCustomTypes rm = foldModule
 
             foldTypeExpr (TypeExpr t tes) = Map.unions (foldResolvedType t:map foldTypeExpr tes)
 
-            foldResolvedType (RT_Named (sn,decl,_))
+            foldResolvedType (RT_Named (sn,decl))
               = if Set.member sn inProgress
                    then Map.empty
                    else foldDecl (Set.insert sn inProgress) sn decl

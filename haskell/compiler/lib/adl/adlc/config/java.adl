@@ -8,6 +8,10 @@ struct JavaCustomType
     // The fully scoped name of the class containing
     // helper code.
     String helpers;
+
+    // If true, we still generate the standard ADL derived
+    // class (even though no generated code will refer to it)
+    Bool generateType;
 };
 
 };
