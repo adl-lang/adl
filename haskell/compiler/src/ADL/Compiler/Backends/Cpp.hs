@@ -430,7 +430,7 @@ genFieldDetails f = do
     (Just v) -> case literalForTypeExpr te v of
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
       Right litv -> return litv
-    Nothing -> return (LDefault te)
+    Nothing -> return (Literal te LDefault)
   defLValue <- literalLValue defValue
   defPValue <- literalPValue defValue
   serializerExpr <- cSerializerExpr te
@@ -891,7 +891,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
     (Just v) -> case literalForTypeExpr te v of
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
       Right litv -> return litv
-    Nothing -> return (LDefault te)
+    Nothing -> return (Literal te LDefault)
   defLValue <- literalLValue defValue
 
   let ns = ms_moduleMapper ms (ms_name ms)
@@ -1175,60 +1175,60 @@ generate af cf fileWriter modulePaths = catchAllExceptions  $ forM_ modulePaths 
 ----------------------------------------------------------------------
 
 literalLValue :: (Literal CTypeExpr) -> Gen T.Text
-literalLValue (LDefault te@(TypeExpr (RT_Primitive pt) [])) = do
+literalLValue (Literal te@(TypeExpr (RT_Primitive pt) []) LDefault) = do
   case cPrimitiveDefault pt of
    (Just t) -> return t
    Nothing -> do
      t <- cTypeExpr False te
      return (template "$1()" [t])
-literalLValue (LDefault te) = do
+literalLValue (Literal te LDefault) = do
   t <- cTypeExpr False te
   return (template "$1()" [t])
-literalLValue (LCtor te ls) = do
+literalLValue (Literal te (LCtor ls)) = do
   t <- cTypeExpr False te
   lits <- mapM literalLValue ls
   return (template "$1($2)" [t, T.intercalate "," lits])
-literalLValue (LUnion te ctor l) = do
+literalLValue (Literal te (LUnion ctor l)) = do
   t <- cTypeExpr False te
   lit <-  literalLValue l
   return (template "$1::$2($3)" [t,cUnionConstructorName ctor,lit])
-literalLValue (LVector (TypeExpr _ [te]) ls) = do
+literalLValue (Literal (TypeExpr _ [te]) (LVector ls)) = do
   t <- cTypeExpr False te
   lits <- mapM literalLValue ls
   return (template "mkvec<$1>($2)" [t, T.intercalate "," lits])
-literalLValue (LVector (TypeExpr _ _) ls) = error "BUG: LVector must have a single type param"
-literalLValue (LStringMap (TypeExpr _ [te]) map) = do
+literalLValue (Literal _ (LVector ls)) = error "BUG: LVector must have a single type param"
+literalLValue (Literal (TypeExpr _ [te]) (LStringMap map)) = do
   t <- cTypeExpr False te
   adds <- forM (Map.toList map) $ \(k,v) -> do
     litv <- literalLValue v
     return (template ".add(\"$1\",$2)" [k,litv])
   return (template "MapBuilder<std::string,$1>()$2.result()" [t, T.intercalate "" adds])
-literalLValue (LPrimitive pt jv) = return (cPrimitiveLiteral pt jv)
+literalLValue (Literal (TypeExpr (RT_Primitive pt) _) (LPrimitive  jv)) = return (cPrimitiveLiteral pt jv)
 
 literalPValue :: (Literal CTypeExpr) -> Gen T.Text
-literalPValue (LDefault te@(TypeExpr (RT_Primitive pt) [])) = do
+literalPValue (Literal te@(TypeExpr (RT_Primitive pt) []) LDefault) = do
   t <- cTypeExpr False te
   case cPrimitiveDefault pt of
    (Just v) -> return (template "$1($2)" [t,v])
    Nothing -> return (template "$1()" [t])
-literalPValue l@(LDefault te) = literalLValue l
-literalPValue l@(LCtor _ _) = literalLValue l
-literalPValue l@(LUnion te _ _) = do
+literalPValue l@(Literal _ LDefault) = literalLValue l
+literalPValue l@(Literal _ (LCtor _)) = literalLValue l
+literalPValue l@(Literal te (LUnion _ _)) = do
   t <- cTypeExpr False te
   lit <- literalLValue l
   return $ template "$1($2)" [t,lit]
-literalPValue l@(LVector te _) = do
+literalPValue l@(Literal te (LVector _)) = do
   t <- cTypeExpr False te
   lit <- literalLValue l
   return (template "std::vector<$1>( $2 )" [t,lit])
-literalPValue l@(LStringMap _ _) = literalLValue l  
-literalPValue (LPrimitive pt jv) = do
+literalPValue l@(Literal _ (LStringMap _)) = literalLValue l  
+literalPValue (Literal (TypeExpr (RT_Primitive pt) _) (LPrimitive jv)) = do
   t <- cPrimitiveType pt []
   return (template "$1($2)" [t, cPrimitiveLiteral pt jv])
 
 literalNeedsInit :: Literal CTypeExpr -> Bool
-literalNeedsInit (LDefault (TypeExpr (RT_Primitive pt) _)) = isJust (cPrimitiveDefault pt)
-literalNeedsInit (LDefault _)  = False
+literalNeedsInit (Literal  (TypeExpr (RT_Primitive pt) _) LDefault) = isJust (cPrimitiveDefault pt)
+literalNeedsInit (Literal _ LDefault)  = False
 literalNeedsInit _  = True
 
 ----------------------------------------------------------------------

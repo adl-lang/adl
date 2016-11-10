@@ -261,12 +261,7 @@ genFactoryExpr (TypeExpr rt params) = do
 
 -- | Generate an expression to construct a literal value.
 genLiteralText :: Literal CTypeExpr -> CState T.Text
-genLiteralText lit@(LDefault (TypeExpr rt tes))  = td_genLiteralText (getTypeDetails rt) lit
-genLiteralText lit@(LCtor (TypeExpr rt _) _)     = td_genLiteralText (getTypeDetails rt) lit
-genLiteralText lit@(LUnion (TypeExpr rt _) _ _ ) = td_genLiteralText (getTypeDetails rt) lit
-genLiteralText lit@(LPrimitive pt _)             = td_genLiteralText (getTypeDetails (RT_Primitive pt)) lit
-genLiteralText lit@(LVector _ ls)                = td_genLiteralText (getTypeDetails (RT_Primitive P_Vector)) lit
-genLiteralText lit@(LStringMap _ kvPairs)        = td_genLiteralText (getTypeDetails (RT_Primitive P_StringMap)) lit
+genLiteralText lit@(Literal (TypeExpr rt _) _) = td_genLiteralText (getTypeDetails rt) lit
 
 -- | The key functions needed to plug a type into the
 -- code generator
@@ -311,17 +306,17 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
   , td_hashfn = \v -> template "$1.hashCode()" [v]
   }
   where
-    genLiteralText' (LDefault te@(TypeExpr _ [])) = do
+    genLiteralText' (Literal te@(TypeExpr _ []) LDefault) = do
       typeExpr <- genTypeExpr te
       return (template "new $1()" [typeExpr])
-    genLiteralText' (LDefault te) = do
+    genLiteralText' (Literal te LDefault) = do
       factoryExpr <- genFactoryExpr te
       return (template "$1.create()" [factoryExpr])
-    genLiteralText' (LCtor te ls) = do
+    genLiteralText' (Literal te (LCtor ls)) = do
       typeExpr <- genTypeExpr te
       lits <- mapM genLiteralText ls
       return (template "new $1($2)" [typeExpr, T.intercalate ", " lits])
-    genLiteralText' (LUnion te ctor l) = do
+    genLiteralText' (Literal te (LUnion ctor l)) = do
       typeExpr <- genTypeExpr te
       lit <- genLiteralText l
       return (template "$1.$2($3)" [typeExpr, ctor, lit ])
@@ -341,14 +336,14 @@ getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetail
   , td_hashfn = \v -> template "$1.hashCode()" [v]
   }
   where
-    genLiteralText' (LDefault te) = do
+    genLiteralText' (Literal te LDefault) = do
       factoryExpr <- genFactoryExpr te
       return (template "$1.create()" [factoryExpr])
-    genLiteralText' (LCtor te ls) = do
+    genLiteralText' (Literal te (LCtor ls)) = do
       idHelpers <- getHelpers customType
       lits <- mapM genLiteralText ls
       return (template "$1.create($2)" [idHelpers, T.intercalate ", " lits])
-    genLiteralText' (LUnion te ctor l) = do
+    genLiteralText' (Literal te (LUnion ctor l)) = do
       idHelpers <- getHelpers customType
       lit <- genLiteralText l
       return (template "$1.$2($3)" [idHelpers, ctor, lit ])
@@ -363,7 +358,7 @@ getTypeDetails (RT_Param typeVar) = TypeDetails
   , td_hashfn = \v -> template "$1.hashCode()" [v]
   }
   where
-    genLiteralText' (LDefault te) = do
+    genLiteralText' (Literal te LDefault) = do
       typeExpr <- genTypeExpr te
       return (template "$1.create()" [factoryTypeArg typeVar])
 
@@ -384,9 +379,9 @@ getTypeDetails (RT_Primitive P_Bool) = TypeDetails
   , td_hashfn = \from -> template "($1 ? 0 : 1)" [from]
   }
   where
-    genLiteralText' (LDefault _ ) = return "false"
-    genLiteralText' (LPrimitive _ (JSON.Bool False)) = return "false"
-    genLiteralText' (LPrimitive _ (JSON.Bool True)) = return "true"
+    genLiteralText' (Literal _ LDefault) = return "false"
+    genLiteralText' (Literal _ (LPrimitive (JSON.Bool False))) = return "false"
+    genLiteralText' (Literal _ (LPrimitive (JSON.Bool True))) = return "true"
 
 getTypeDetails (RT_Primitive P_Int8) = TypeDetails
   { td_type = unboxedPrimitive "byte" "Byte"
@@ -396,8 +391,8 @@ getTypeDetails (RT_Primitive P_Int8) = TypeDetails
   , td_hashfn = \from -> template "(int) $1" [from]
   }
   where
-    genLiteralText' (LDefault _ ) = return "(byte)0"
-    genLiteralText' (LPrimitive _ (JSON.Number n)) = return ("(byte)" <> litNumber n)
+    genLiteralText' (Literal _ LDefault) = return "(byte)0"
+    genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return ("(byte)" <> litNumber n)
 
 getTypeDetails (RT_Primitive P_Int16) = TypeDetails
   { td_type = unboxedPrimitive "short" "Short"
@@ -407,8 +402,8 @@ getTypeDetails (RT_Primitive P_Int16) = TypeDetails
   , td_hashfn = \from -> template "(int) $1" [from]
   }
   where
-    genLiteralText' (LDefault _ ) = return "(short)0"
-    genLiteralText' (LPrimitive _ (JSON.Number n)) = return ("(short)" <> litNumber n)
+    genLiteralText' (Literal _ LDefault) = return "(short)0"
+    genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return ("(short)" <> litNumber n)
 
 getTypeDetails (RT_Primitive P_Int32) = TypeDetails
   { td_type = unboxedPrimitive "int" "Integer"
@@ -418,8 +413,8 @@ getTypeDetails (RT_Primitive P_Int32) = TypeDetails
   , td_hashfn = id
   }
   where
-    genLiteralText' (LDefault _ ) = return "0"
-    genLiteralText' (LPrimitive _ (JSON.Number n)) = return (litNumber n)
+    genLiteralText' (Literal _ LDefault) = return "0"
+    genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n)
 
 getTypeDetails (RT_Primitive P_Int64) = TypeDetails
   { td_type = unboxedPrimitive "long" "Long"
@@ -429,8 +424,8 @@ getTypeDetails (RT_Primitive P_Int64) = TypeDetails
   , td_hashfn = \from -> template "(int) ($1 ^ ($1 >>> 32))" [from]
   }
   where
-    genLiteralText' (LDefault _ ) = return "0L"
-    genLiteralText' (LPrimitive _ (JSON.Number n)) = return (litNumber n <> "L")
+    genLiteralText' (Literal _ LDefault) = return "0L"
+    genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n <> "L")
 
 getTypeDetails (RT_Primitive P_Float) = TypeDetails
   { td_type = unboxedPrimitive "float" "Float"
@@ -440,8 +435,8 @@ getTypeDetails (RT_Primitive P_Float) = TypeDetails
   , td_hashfn = \from -> template "Float.valueOf($1).hashCode()" [from]
   }
   where
-    genLiteralText' (LDefault _ ) = return "0.0F"
-    genLiteralText' (LPrimitive _ (JSON.Number n)) = return (litNumber n <> "F")
+    genLiteralText' (Literal _ LDefault) = return "0.0F"
+    genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n <> "F")
 
 getTypeDetails (RT_Primitive P_Double) = TypeDetails
   { td_type = unboxedPrimitive "double" "Double"
@@ -451,8 +446,8 @@ getTypeDetails (RT_Primitive P_Double) = TypeDetails
   , td_hashfn = \from -> template "Double.valueOf($1).hashCode()" [from]
   }
   where
-    genLiteralText' (LDefault _ ) = return "0.0"
-    genLiteralText' (LPrimitive _ (JSON.Number n)) = return (litNumber n)
+    genLiteralText' (Literal _ LDefault) = return "0.0"
+    genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n)
 
 getTypeDetails (RT_Primitive P_Word8) = getTypeDetails (RT_Primitive P_Int8)
 getTypeDetails (RT_Primitive P_Word16) = getTypeDetails (RT_Primitive P_Int16)
@@ -471,10 +466,10 @@ getTypeDetails (RT_Primitive P_ByteVector) = TypeDetails
       rtpackage <- getRuntimePackage
       addImport (javaClass rtpackage "ByteArray")
 
-    genLiteralText' (LDefault _ ) = do
+    genLiteralText' (Literal _ LDefault) = do
       iByteArray <- getType
       return (template "new $1()" [iByteArray])
-    genLiteralText' (LPrimitive _ (JSON.String s)) = do
+    genLiteralText' (Literal _ (LPrimitive (JSON.String s))) = do
       iByteArray <- getType
       return (template "new $1($2.getBytes())" [iByteArray,T.pack (show (decode s))])
 
@@ -492,10 +487,10 @@ getTypeDetails (RT_Primitive P_Vector) = TypeDetails
   , td_hashfn = \from -> template "$1.hashCode()" [from]
   }
   where
-    genLiteralText' (LDefault te) = do
+    genLiteralText' (Literal te LDefault) = do
       typeExpr <- genTypeExpr te
       return (template "new $1()" [typeExpr])
-    genLiteralText' (LVector _ ls) = do
+    genLiteralText' (Literal _ (LVector ls)) = do
       lits <- mapM genLiteralText ls
       rtpackage <- getRuntimePackage
       factories <- addImport (javaClass rtpackage "Factories")
@@ -511,10 +506,10 @@ getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
   , td_hashfn = \from -> template "$1.hashCode()" [from]
   }
   where
-    genLiteralText' (LDefault te) = do
+    genLiteralText' (Literal te LDefault) = do
       typeExpr <- genTypeExpr te
       return (template "new $1()" [typeExpr])
-    genLiteralText' (LStringMap _ kvPairs) = do
+    genLiteralText' (Literal _ (LStringMap kvPairs)) = do
       kvlits <- for (Map.toList kvPairs) $ \(k,v) -> do
         litv <- genLiteralText v
         return (template "\"$1\", $2" [k,litv])
@@ -530,8 +525,8 @@ getTypeDetails (RT_Primitive P_String) = TypeDetails
   , td_hashfn = \from -> template "$1.hashCode()" [from]
   }
   where
-    genLiteralText' (LDefault _ ) = return "\"\"";
-    genLiteralText' (LPrimitive _ (JSON.String s)) = return (T.pack (show s))
+    genLiteralText' (Literal _ LDefault) = return "\"\"";
+    genLiteralText' (Literal _ (LPrimitive (JSON.String s))) = return (T.pack (show s))
 
 getTypeDetails (RT_Primitive P_Sink) = TypeDetails
   { td_type = \_ args -> getType
@@ -608,7 +603,7 @@ genFieldDetails f = do
     (Just v) -> case literalForTypeExpr te v of
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
       Right litv -> return litv
-    Nothing -> return (LDefault te)
+    Nothing -> return (Literal te LDefault)
   defValue <- genLiteralText litv
   cgp <- cf_codeProfile <$> get
 

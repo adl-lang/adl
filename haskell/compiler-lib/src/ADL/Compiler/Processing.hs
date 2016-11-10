@@ -511,33 +511,36 @@ checkModuleAnnotations m = execWriter checkModule
 -- | Represent the construction of a literal value in a
 -- language independent way
 
-data Literal te
-  = LDefault te
-  | LCtor te [Literal te]
-  | LUnion te Ident (Literal te)
-  | LVector te [Literal te]
-  | LStringMap te (Map.Map T.Text (Literal te))
-  | LPrimitive PrimitiveType JSON.Value
+data Literal te = Literal te (LiteralType te)
+  deriving (Show)
+
+data LiteralType te
+  = LDefault
+  | LCtor [Literal te]
+  | LUnion Ident (Literal te)
+  | LVector [Literal te]
+  | LStringMap (Map.Map T.Text (Literal te))
+  | LPrimitive JSON.Value
   deriving (Show)
 
 -- | Generate a `Literal` value from a JSON value.
 literalForTypeExpr :: TypeExprRT c -> JSON.Value -> Either T.Text (Literal (TypeExprRT c))
 literalForTypeExpr te v = litForTE Map.empty te v
   where
-    litForTE m (TypeExpr (RT_Primitive pt) []) v = case ptValidateLiteral pt v of
-      Nothing -> Right (LPrimitive pt v)
+    litForTE m te@(TypeExpr (RT_Primitive pt) []) v = case ptValidateLiteral pt v of
+      Nothing -> Right (Literal te (LPrimitive v))
       Just err -> Left err
-    litForTE m te@(TypeExpr (RT_Primitive P_Vector) [te0]) v = LVector te <$> vecLiteral m te0 v
-    litForTE m te@(TypeExpr (RT_Primitive P_StringMap) [te0]) v = LStringMap te <$> stringMapLiteral m te0 v
+    litForTE m te@(TypeExpr (RT_Primitive P_Vector) [te0]) v = (Literal te . LVector) <$> vecLiteral m te0 v
+    litForTE m te@(TypeExpr (RT_Primitive P_StringMap) [te0]) v = (Literal te . LStringMap) <$> stringMapLiteral m te0 v
     litForTE m (TypeExpr (RT_Primitive P_Sink) [te]) v = Left "literals not allowed for sinks"
     litForTE m (TypeExpr (RT_Primitive _) _) v =
       error "BUG: found primitive type with incorrect number of type parameters"
 
     litForTE m te@(TypeExpr (RT_Named (_,decl)) tes) v = case d_type decl of
-      (Decl_Struct s) -> LCtor te <$> structFields m decl s tes v
-      (Decl_Union u) -> uncurry (LUnion te) <$> unionField m decl u tes v
+      (Decl_Struct s) -> (Literal te . LCtor) <$> structFields m decl s tes v
+      (Decl_Union u) -> (\(ctor,litv) -> Literal te (LUnion ctor litv))  <$> unionField m decl u tes v
       (Decl_Typedef t) -> typedefLiteral m t tes v
-      (Decl_Newtype n) -> (\t ->LCtor te [t]) <$> newtypeLiteral m n tes v
+      (Decl_Newtype n) -> (\t ->Literal te (LCtor [t])) <$> newtypeLiteral m n tes v
       
     litForTE m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
       (Just te) -> litForTE Map.empty te v
@@ -560,7 +563,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
        (Just jv) -> litForTE pm ftype jv
        Nothing -> case f_default f of
          (Just jv) -> litForTE pm ftype jv
-         Nothing -> Right (LDefault ftype)
+         Nothing -> Right (Literal ftype LDefault)
     structFields _ _ _ _ _ = Left "expected an object"
 
     unionField m decl u tes (JSON.Object hm) = do
