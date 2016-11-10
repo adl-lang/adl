@@ -95,6 +95,7 @@ data CustomType = CustomType {
 -- information.
 
 type CResolvedType = ResolvedTypeT (Maybe CustomType)
+type CTypeExpr = TypeExpr (CResolvedType)
 type CModule = Module (Maybe CustomType) CResolvedType
 type CDecl = Decl (Maybe CustomType) CResolvedType
 
@@ -242,28 +243,321 @@ getHelpers customType = do
 
 data TypeBoxed = TypeBoxed | TypeUnboxed
 
+-- | Generate the java code expressing a type.
 genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
 genTypeExpr te = genTypeExprB TypeUnboxed te
 
 genTypeExprB :: TypeBoxed ->  TypeExpr CResolvedType -> CState T.Text
 genTypeExprB boxed (TypeExpr rt params) = do
   rtParamsStr <- mapM (genTypeExprB TypeBoxed) params
-  genResolvedType boxed rt rtParamsStr
+  td_type (getTypeDetails rt) boxed rtParamsStr
 
-genResolvedType :: TypeBoxed -> CResolvedType -> [T.Text] -> CState T.Text
-genResolvedType _ (RT_Named (_,Decl{d_customType=Just customType})) args = do
-  ts <- addImport (classFromScopedName (ct_scopedName customType))
-  return (withTypeArgs ts args)
-genResolvedType _ (RT_Named (scopedName,Decl{d_customType=Nothing})) args = do
-  ts <- genScopedName scopedName
-  return (withTypeArgs ts args)
-genResolvedType _(RT_Param ident) args = return (unreserveWord ident)
-genResolvedType boxed (RT_Primitive pt) args = do
-  pd_type (genPrimitiveDetails pt) boxed args
+-- | Generate an expression referencing or constructing a
+-- factory for a type.
+genFactoryExpr :: TypeExpr CResolvedType -> CState T.Text
+genFactoryExpr (TypeExpr rt params) = do
+  fparams <- mapM genFactoryExpr params
+  td_factory (getTypeDetails rt) fparams
+
+-- | Generate an expression to construct a literal value.
+genLiteralText :: Literal CTypeExpr -> CState T.Text
+genLiteralText lit@(LDefault (TypeExpr rt tes))  = td_genLiteralText (getTypeDetails rt) lit
+genLiteralText lit@(LCtor (TypeExpr rt _) _)     = td_genLiteralText (getTypeDetails rt) lit
+genLiteralText lit@(LUnion (TypeExpr rt _) _ _ ) = td_genLiteralText (getTypeDetails rt) lit
+genLiteralText lit@(LPrimitive pt _)             = td_genLiteralText (getTypeDetails (RT_Primitive pt)) lit
+genLiteralText lit@(LVector _ ls)                = td_genLiteralText (getTypeDetails (RT_Primitive P_Vector)) lit
+genLiteralText lit@(LStringMap _ kvPairs)        = td_genLiteralText (getTypeDetails (RT_Primitive P_StringMap)) lit
+
+-- | The key functions needed to plug a type into the
+-- code generator
+data TypeDetails = TypeDetails {
+
+  -- | Generate the textual representation of the type,
+  -- given the representation of the type arguments.
+  td_type :: TypeBoxed -> [T.Text] -> CState T.Text,
+
+  -- | Generate the text for a literal of the type.
+  -- Implementations can be partial they only need to
+  -- handle the relevant Literal cases.
+  td_genLiteralText :: Literal CTypeExpr -> CState T.Text,
+
+  -- | True if the type is mutable. In particular classes
+  -- that are not mutable can be copied with "=".
+  td_mutable :: Bool,
+
+  -- | Construct an expression for a Factory instance
+  -- for this type.
+  td_factory :: [T.Text] -> CState T.Text,
+
+  -- | Return an expression to hash a value of this type.
+  td_hashfn :: T.Text -> T.Text
+}
+
+-- | Get the TypeDetails record for any resolved type.
+getTypeDetails :: CResolvedType -> TypeDetails
+
+-- a type defined through a regular ADL declaration
+getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetails
+  { td_type =  \_ typeArgs -> do
+      ts <- genScopedName scopedName
+      return (withTypeArgs ts typeArgs)
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = True
+  , td_factory = \params -> do
+      sn <- genScopedName scopedName
+      case params of
+        [] -> return (sn <> ".FACTORY")
+        _  -> return (withParams (sn <> ".factory") params)
+  , td_hashfn = \v -> template "$1.hashCode()" [v]
+  }
+  where
+    genLiteralText' (LDefault te@(TypeExpr _ [])) = do
+      typeExpr <- genTypeExpr te
+      return (template "new $1()" [typeExpr])
+    genLiteralText' (LDefault te) = do
+      factoryExpr <- genFactoryExpr te
+      return (template "$1.create()" [factoryExpr])
+    genLiteralText' (LCtor te ls) = do
+      typeExpr <- genTypeExpr te
+      lits <- mapM genLiteralText ls
+      return (template "new $1($2)" [typeExpr, T.intercalate ", " lits])
+    genLiteralText' (LUnion te ctor l) = do
+      typeExpr <- genTypeExpr te
+      lit <- genLiteralText l
+      return (template "$1.$2($3)" [typeExpr, ctor, lit ])
+
+-- a custom type
+getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetails
+  { td_type = \_ typeArgs -> do
+      ts <- addImport (classFromScopedName (ct_scopedName customType))
+      return (withTypeArgs ts typeArgs)
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = True
+  , td_factory = \params -> do
+      helpers <- getHelpers customType
+      case params of
+        [] -> return (helpers <> ".FACTORY")
+        _  -> return (withParams (helpers <> ".factory") params)
+  , td_hashfn = \v -> template "$1.hashCode()" [v]
+  }
+  where
+    genLiteralText' (LDefault te) = do
+      factoryExpr <- genFactoryExpr te
+      return (template "$1.create()" [factoryExpr])
+    genLiteralText' (LCtor te ls) = do
+      idHelpers <- getHelpers customType
+      lits <- mapM genLiteralText ls
+      return (template "$1.create($2)" [idHelpers, T.intercalate ", " lits])
+    genLiteralText' (LUnion te ctor l) = do
+      idHelpers <- getHelpers customType
+      lit <- genLiteralText l
+      return (template "$1.$2($3)" [idHelpers, ctor, lit ])
+
+-- a type variable
+getTypeDetails (RT_Param typeVar) = TypeDetails
+  { td_type = \_ _ -> do
+      return (unreserveWord typeVar)
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = True
+  , td_factory = \params -> return (withParams (factoryTypeArg typeVar) params)
+  , td_hashfn = \v -> template "$1.hashCode()" [v]
+  }
+  where
+    genLiteralText' (LDefault te) = do
+      typeExpr <- genTypeExpr te
+      return (template "$1.create()" [factoryTypeArg typeVar])
+
+-- each primitive
+getTypeDetails (RT_Primitive P_Void) = TypeDetails
+  { td_type = \_ _ -> return "Void"
+  , td_genLiteralText = \_ -> return "null"
+  , td_mutable = False
+  , td_factory = primitiveFactory "VOID"
+  , td_hashfn = \_ -> "0"
+  }
+
+getTypeDetails (RT_Primitive P_Bool) = TypeDetails
+  { td_type = unboxedPrimitive "boolean" "Boolean"
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "BOOLEAN"
+  , td_hashfn = \from -> template "($1 ? 0 : 1)" [from]
+  }
+  where
+    genLiteralText' (LDefault _ ) = return "false"
+    genLiteralText' (LPrimitive _ (JSON.Bool False)) = return "false"
+    genLiteralText' (LPrimitive _ (JSON.Bool True)) = return "true"
+
+getTypeDetails (RT_Primitive P_Int8) = TypeDetails
+  { td_type = unboxedPrimitive "byte" "Byte"
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "BYTE"
+  , td_hashfn = \from -> template "(int) $1" [from]
+  }
+  where
+    genLiteralText' (LDefault _ ) = return "(byte)0"
+    genLiteralText' (LPrimitive _ (JSON.Number n)) = return ("(byte)" <> litNumber n)
+
+getTypeDetails (RT_Primitive P_Int16) = TypeDetails
+  { td_type = unboxedPrimitive "short" "Short"
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "SHORT"
+  , td_hashfn = \from -> template "(int) $1" [from]
+  }
+  where
+    genLiteralText' (LDefault _ ) = return "(short)0"
+    genLiteralText' (LPrimitive _ (JSON.Number n)) = return ("(short)" <> litNumber n)
+
+getTypeDetails (RT_Primitive P_Int32) = TypeDetails
+  { td_type = unboxedPrimitive "int" "Integer"
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "INTEGER"
+  , td_hashfn = id
+  }
+  where
+    genLiteralText' (LDefault _ ) = return "0"
+    genLiteralText' (LPrimitive _ (JSON.Number n)) = return (litNumber n)
+
+getTypeDetails (RT_Primitive P_Int64) = TypeDetails
+  { td_type = unboxedPrimitive "long" "Long"
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "LONG"
+  , td_hashfn = \from -> template "(int) ($1 ^ ($1 >>> 32))" [from]
+  }
+  where
+    genLiteralText' (LDefault _ ) = return "0L"
+    genLiteralText' (LPrimitive _ (JSON.Number n)) = return (litNumber n <> "L")
+
+getTypeDetails (RT_Primitive P_Float) = TypeDetails
+  { td_type = unboxedPrimitive "float" "Float"
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "FLOAT"
+  , td_hashfn = \from -> template "Float.valueOf($1).hashCode()" [from]
+  }
+  where
+    genLiteralText' (LDefault _ ) = return "0.0F"
+    genLiteralText' (LPrimitive _ (JSON.Number n)) = return (litNumber n <> "F")
+
+getTypeDetails (RT_Primitive P_Double) = TypeDetails
+  { td_type = unboxedPrimitive "double" "Double"
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "DOUBLE"
+  , td_hashfn = \from -> template "Double.valueOf($1).hashCode()" [from]
+  }
+  where
+    genLiteralText' (LDefault _ ) = return "0.0"
+    genLiteralText' (LPrimitive _ (JSON.Number n)) = return (litNumber n)
+
+getTypeDetails (RT_Primitive P_Word8) = getTypeDetails (RT_Primitive P_Int8)
+getTypeDetails (RT_Primitive P_Word16) = getTypeDetails (RT_Primitive P_Int16)
+getTypeDetails (RT_Primitive P_Word32) = getTypeDetails (RT_Primitive P_Int32)
+getTypeDetails (RT_Primitive P_Word64) = getTypeDetails (RT_Primitive P_Int64)
+
+getTypeDetails (RT_Primitive P_ByteVector) = TypeDetails
+  { td_type = \_ _ -> getType
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = True
+  , td_factory = primitiveFactory "BYTE_ARRAY"
+  , td_hashfn = \from -> template "$1.hashCode()" [from]
+  }
+  where
+    getType = do
+      rtpackage <- getRuntimePackage
+      addImport (javaClass rtpackage "ByteArray")
+
+    genLiteralText' (LDefault _ ) = do
+      iByteArray <- getType
+      return (template "new $1()" [iByteArray])
+    genLiteralText' (LPrimitive _ (JSON.String s)) = do
+      iByteArray <- getType
+      return (template "new $1($2.getBytes())" [iByteArray,T.pack (show (decode s))])
+
+    decode s = case B64.decode (T.encodeUtf8 s) of
+      (Left _) -> "???"
+      (Right s) -> s
+
+getTypeDetails (RT_Primitive P_Vector) = TypeDetails
+  { td_type = \_ args -> do
+       arrayListI <- addImport "java.util.ArrayList"
+       return (withTypeArgs arrayListI args)
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = True
+  , td_factory = primitiveFactory "arrayList"
+  , td_hashfn = \from -> template "$1.hashCode()" [from]
+  }
+  where
+    genLiteralText' (LDefault te) = do
+      typeExpr <- genTypeExpr te
+      return (template "new $1()" [typeExpr])
+    genLiteralText' (LVector _ ls) = do
+      lits <- mapM genLiteralText ls
+      rtpackage <- getRuntimePackage
+      factories <- addImport (javaClass rtpackage "Factories")
+      return (template "$1.arrayList($2)" [factories,commaSep lits])
+      
+getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
+  { td_type = \_ args -> do
+       hashMapI <- addImport "java.util.HashMap"
+       return (withTypeArgs hashMapI ("String":args))
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = True
+  , td_factory = primitiveFactory "stringMap"
+  , td_hashfn = \from -> template "$1.hashCode()" [from]
+  }
+  where
+    genLiteralText' (LDefault te) = do
+      typeExpr <- genTypeExpr te
+      return (template "new $1()" [typeExpr])
+    genLiteralText' (LStringMap _ kvPairs) = do
+      kvlits <- for (Map.toList kvPairs) $ \(k,v) -> do
+        litv <- genLiteralText v
+        return (template "\"$1\", $2" [k,litv])
+      rtpackage <- getRuntimePackage
+      factories <- addImport (javaClass rtpackage "Factories")
+      return (template "$1.stringMap($2)" [factories,commaSep kvlits])
+
+getTypeDetails (RT_Primitive P_String) = TypeDetails
+  { td_type = \_ _ -> return "String"
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "STRING"
+  , td_hashfn = \from -> template "$1.hashCode()" [from]
+  }
+  where
+    genLiteralText' (LDefault _ ) = return "\"\"";
+    genLiteralText' (LPrimitive _ (JSON.String s)) = return (T.pack (show s))
+
+getTypeDetails (RT_Primitive P_Sink) = TypeDetails
+  { td_type = \_ args -> getType
+  , td_genLiteralText = error "BUG: td_genLiteralText shouldn't be called on a Sink"
+  , td_mutable = True
+  , td_factory = primitiveFactory "SINK"
+  , td_hashfn = \from -> template "$1.hashCode()" [from]
+  }
+  where
+    getType = do
+      rtpackage <- getRuntimePackage
+      addImport (javaClass rtpackage "Sink")
+
+primitiveFactory :: Ident -> [T.Text] -> CState T.Text
+primitiveFactory name params =  do
+  rtpackage <- getRuntimePackage
+  factories <- addImport (javaClass rtpackage "Factories")
+  return (withParams (factories <> "." <> name) params)
 
 withTypeArgs :: T.Text -> [T.Text] -> T.Text
 withTypeArgs ts [] = ts
-withTypeArgs ts tsargs = template "$1<$2>" [ts,T.intercalate ", " tsargs] 
+withTypeArgs ts tsargs = template "$1<$2>" [ts,T.intercalate ", " tsargs]
+
+withParams :: T.Text -> [T.Text] -> T.Text
+withParams v [] = v
+withParams f args = template "$1($2)" [f,T.intercalate ", " args]
 
 genScopedName :: ScopedName -> CState T.Text
 genScopedName scopedName0 = do
@@ -274,163 +568,6 @@ genScopedName scopedName0 = do
           _ -> scopedName0
   addImport (javaClass (cf_javaPackageFn cf (sn_moduleName scopedName)) (sn_name scopedName))
 
-genFactoryExpr :: TypeExpr CResolvedType -> CState T.Text
-genFactoryExpr (TypeExpr rt params) = do
-  fparams <- mapM genFactoryExpr params
-  fe <- case rt of
-    (RT_Named (scopedName,Decl{d_customType=mct})) -> do
-      fscope <- case mct of
-        Nothing -> genScopedName scopedName
-        (Just ct) -> getHelpers ct
-      case params of
-        [] -> return (template "$1.FACTORY" [fscope])
-        _ -> return (template "$1.factory" [fscope])
-    (RT_Param ident) -> return (factoryTypeArg ident)
-    (RT_Primitive pt) -> pd_factory (genPrimitiveDetails pt)
-  case fparams of
-    [] -> return fe
-    _ -> return (template "$1($2)" [fe,commaSep fparams])
-
-data PrimitiveDetails = PrimitiveDetails {
-  pd_type :: TypeBoxed -> [T.Text] -> CState T.Text,
-  pd_default :: Maybe T.Text,
-  pd_genLiteral :: JSON.Value -> T.Text,
-  pd_mutable :: Bool,
-  pd_factory :: CState T.Text,
-  pd_hashfn :: T.Text -> T.Text
-}
-
-genPrimitiveDetails :: PrimitiveType -> PrimitiveDetails
-genPrimitiveDetails P_Void = PrimitiveDetails {
-  pd_type = unboxedPrimitive "Void" "Void",
-  pd_default = Just "null",
-  pd_genLiteral = \jv -> "null",
-  pd_mutable = False,
-  pd_factory = primitiveFactory "VOID",
-  pd_hashfn = \from -> "0"
-  }
-genPrimitiveDetails P_Bool = PrimitiveDetails {
-  pd_type = unboxedPrimitive "boolean" "Boolean",
-  pd_default = Just "false",
-  pd_genLiteral = \jv ->
-    case jv of
-      (JSON.Bool True) -> "true"
-      (JSON.Bool False) -> "false"
-      _ -> error "BUG: invalid literal type for P_Bool",
-  pd_mutable = False,
-  pd_factory = primitiveFactory "BOOLEAN",
-  pd_hashfn = \from -> template "($1 ? 0 : 1)" [from]
-  }
-genPrimitiveDetails P_Int8 = PrimitiveDetails {
-  pd_type = unboxedPrimitive "byte" "Byte",
-  pd_default = Just "(byte)0",
-  pd_genLiteral = \(JSON.Number n) -> "(byte)" <> litNumber n,
-  pd_mutable = False,
-  pd_factory = primitiveFactory "BYTE",
-  pd_hashfn = \from -> template "(int) $1" [from]
-}
-genPrimitiveDetails P_Int16 = PrimitiveDetails {
-  pd_type = unboxedPrimitive "short" "Short",
-  pd_default = Just "(short)0",
-  pd_genLiteral = \(JSON.Number n) -> "(short)" <> litNumber n,
-  pd_mutable = False,
-  pd_factory = primitiveFactory "SHORT",
-  pd_hashfn = \from -> template "(int) $1" [from]
-}
-genPrimitiveDetails P_Int32 = PrimitiveDetails {
-  pd_type = unboxedPrimitive "int" "Integer",
-  pd_default = Just "0",
-  pd_genLiteral = \(JSON.Number n) -> litNumber n,
-  pd_mutable = False,
-  pd_factory = primitiveFactory "INTEGER",
-  pd_hashfn = \from -> template "$1" [from]
-}
-genPrimitiveDetails P_Int64 = PrimitiveDetails {
-  pd_type = unboxedPrimitive "long" "Long",
-  pd_default = Just "0L",
-  pd_genLiteral = \(JSON.Number n) -> litNumber n <> "L",
-  pd_mutable = False,
-  pd_factory = primitiveFactory "LONG",
-  pd_hashfn = \from -> template "(int) ($1 ^ ($1 >>> 32))" [from]
-}
-genPrimitiveDetails P_Float = PrimitiveDetails {
-  pd_type = unboxedPrimitive "float" "Float",
-  pd_default = Just "0.0",
-  pd_genLiteral = \(JSON.Number n) -> litNumber n <> "F",
-  pd_mutable = False,
-  pd_factory = primitiveFactory "FLOAT",
-  pd_hashfn = \from -> template "Float.valueOf($1).hashCode()" [from]
-}
-genPrimitiveDetails P_Double = PrimitiveDetails {
-  pd_type = unboxedPrimitive "double" "Double",
-  pd_default = Just "0.0",
-  pd_genLiteral = \(JSON.Number n) -> litNumber n,
-  pd_mutable = False,
-  pd_factory = primitiveFactory "DOUBLE",
-  pd_hashfn = \from -> template "Double.valueOf($1).hashCode()" [from]
-}
-
-genPrimitiveDetails P_Word8 = genPrimitiveDetails P_Int8
-genPrimitiveDetails P_Word16 = genPrimitiveDetails P_Int16
-genPrimitiveDetails P_Word32 = genPrimitiveDetails P_Int32
-genPrimitiveDetails P_Word64 = genPrimitiveDetails P_Int64
-
-genPrimitiveDetails P_ByteVector = PrimitiveDetails {
-  pd_type = \_ _ -> do
-    rtpackage <- getRuntimePackage
-    addImport (javaClass rtpackage "ByteArray"),
-  pd_default = Just "new ByteArray()",
-  pd_genLiteral = \(JSON.String s) -> template "new ByteArray($1.getBytes())" [T.pack (show (decode s))],
-  pd_mutable = True,
-  pd_factory = primitiveFactory "BYTE_ARRAY",
-  pd_hashfn = \from -> template "$1.hashCode()" [from]
-  }
-  where
-    decode s = case B64.decode (T.encodeUtf8 s) of
-      (Left _) -> "???"
-      (Right s) -> s
-genPrimitiveDetails P_Vector = PrimitiveDetails {
-  pd_type = \_ args -> do
-     arrayListI <- addImport "java.util.ArrayList"
-     return (withTypeArgs arrayListI args),
-  pd_default = Nothing,
-  pd_genLiteral = \(JSON.String s) -> "???", -- never called
-  pd_mutable = True,
-  pd_factory = primitiveFactory "arrayList",
-  pd_hashfn = \from -> template "$1.hashCode()" [from]
-  }
-genPrimitiveDetails P_StringMap = PrimitiveDetails {
-  pd_type = \_ targs -> do
-    hashMapI <- addImport "java.util.HashMap"
-    return (withTypeArgs hashMapI ("String":targs)),
-  pd_default = Nothing,
-  pd_genLiteral = \(JSON.String s) -> "???", -- never called
-  pd_mutable = True,
-  pd_factory = primitiveFactory "stringMap",
-  pd_hashfn = \from -> template "$1.hashCode()" [from]
-  }
-genPrimitiveDetails P_String = PrimitiveDetails {
-  pd_type = \_ _ -> return "String",
-  pd_default = Just "\"\"",
-  pd_genLiteral = \(JSON.String s) -> T.pack (show s),
-  pd_mutable= False,
-  pd_factory = primitiveFactory "STRING",
-  pd_hashfn = \from -> template "$1.hashCode()" [from]
-  }
-genPrimitiveDetails P_Sink = PrimitiveDetails {
-  pd_type = \_ args -> return (withTypeArgs "Sink" args),
-  pd_default = Just "new Sink()",
-  pd_genLiteral = \_ -> "????", -- never called
-  pd_mutable = True,
-  pd_factory = primitiveFactory "SINK",
-  pd_hashfn = \from -> template "$1.hashCode()" [from]
-  }
-
-primitiveFactory :: T.Text -> CState T.Text
-primitiveFactory name = do
-  rtpackage <- getRuntimePackage
-  factories <- addImport (javaClass rtpackage "Factories")
-  return (template "$1.$2" [factories,name])
 
 data FieldDetails = FieldDetails {
   fd_field :: Field CResolvedType,
@@ -458,9 +595,8 @@ unboxedField fd = fd_typeExprStr fd /= fd_boxedTypeExprStr fd
 
 needsNullCheck fd = not (unboxedField fd || fd_typeExprStr fd == "Void")
 
-immutableType te = case te of
-  (TypeExpr (RT_Primitive pt) _) -> not (pd_mutable (genPrimitiveDetails pt))
-  _-> False
+immutableType :: TypeExpr CResolvedType -> Bool
+immutableType te = let (TypeExpr rt _) = te in not (td_mutable (getTypeDetails rt))
 
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails f = do
@@ -496,17 +632,14 @@ genFieldDetails f = do
       serializedName = f_serializedName f
       hashCode =
         if isVoidType te
-          then \_ -> "0"
-          else case te of
-            (TypeExpr (RT_Primitive pt) []) -> \v -> pd_hashfn (genPrimitiveDetails pt) v
-            _ -> \v -> template "$1.hashCode()" [v]
+          then const "0"
+          else let (TypeExpr rt _) = te in td_hashfn (getTypeDetails rt)
       equals =
         if isVoidType te
           then \_ _ -> "true"
           else if typeExprStr /= boxedTypeExprStr  -- ie is unboxed
                then \v o -> template "$1 == $2" [v,o]
                else \v o -> template "$1.equals($2)" [v,o]
-                     
 
   return FieldDetails {
     fd_field=f,
@@ -547,56 +680,6 @@ docStringComment text = cline "/**" <> mconcat [cline (" * " <> line) | line <- 
 
 multiLineComment :: T.Text -> Code
 multiLineComment text = cline "/*" <> mconcat [cline (" * " <> line) | line <- T.lines text] <> cline " */"
-
-genLiteralText :: Literal (TypeExpr CResolvedType) -> CState T.Text
-genLiteralText (LDefault (TypeExpr (RT_Named (_,Decl{d_customType=Just customType})) [])) = do
-  idHelpers <- getHelpers customType
-  return (template "$1.FACTORY.create()" [idHelpers])
-genLiteralText (LDefault te@(TypeExpr (RT_Primitive pt) _)) = do
-  case  pd_default (genPrimitiveDetails pt) of
-    Just defaultStr -> return defaultStr
-    Nothing -> do
-      typeExpr <- genTypeExpr te
-      return (template "new $1()" [typeExpr])
-genLiteralText (LDefault te@(TypeExpr (RT_Param i) [])) = do
-  typeExpr <- genTypeExpr te
-  return (template "$1.create()" [factoryTypeArg i])
-genLiteralText (LDefault te@(TypeExpr _ [])) = do
-  typeExpr <- genTypeExpr te
-  return (template "new $1()" [typeExpr])
-genLiteralText (LDefault te) = do
-  factoryExpr <- genFactoryExpr te
-  return (template "$1.create()" [factoryExpr])
-genLiteralText (LCtor (TypeExpr (RT_Named (_,Decl{d_customType=Just customType})) _) ls) = do
-  idHelpers <- getHelpers customType
-  lits <- mapM genLiteralText ls
-  return (template "$1.create($2)" [idHelpers, T.intercalate ", " lits])
-genLiteralText (LCtor te ls) = do
-  typeExpr <- genTypeExpr te
-  lits <- mapM genLiteralText ls
-  return (template "new $1($2)" [typeExpr, T.intercalate ", " lits])
-genLiteralText (LUnion (TypeExpr (RT_Named (_,Decl{d_customType=Just customType})) _) ctor l) = do
-  idHelpers <- getHelpers customType
-  lit <- genLiteralText l
-  return (template "$1.$2($3)" [idHelpers, ctor, lit ])
-genLiteralText (LUnion te ctor l) = do
-  typeExpr <- genTypeExpr te
-  lit <- genLiteralText l
-  return (template "$1.$2($3)" [typeExpr, ctor, lit ])
-genLiteralText (LVector _ ls) = do
-  lits <- mapM genLiteralText ls
-  rtpackage <- getRuntimePackage
-  factories <- addImport (javaClass rtpackage "Factories")
-  return (template "$1.arrayList($2)" [factories,commaSep lits])
-genLiteralText (LStringMap _ kvPairs) = do
-  kvlits <- for (Map.toList kvPairs) $ \(k,v) -> do
-    litv <- genLiteralText v
-    return (template "\"$1\", $2" [k,litv])
-  rtpackage <- getRuntimePackage
-  factories <- addImport (javaClass rtpackage "Factories")
-  return (template "$1.stringMap($2)" [factories,commaSep kvlits])
-genLiteralText (LPrimitive pt jv) = do
-  return (pd_genLiteral (genPrimitiveDetails pt) jv)
 
 commaSep :: [T.Text] -> T.Text
 commaSep = T.intercalate ", "
