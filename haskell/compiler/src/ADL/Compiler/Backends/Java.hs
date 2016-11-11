@@ -76,15 +76,23 @@ generateModule jf fileWriter mCodeGetProfile m0 = do
         maxLineLength = cgp_maxLineLength codeProfile
         klass  = javaClass (JavaPackage (unModuleName moduleName)) (d_name decl)
         filePath = javaClassFilePath (withPackagePrefix (jf_package jf) klass)
-    classFile <- case d_type decl of
-      (Decl_Struct s) -> return (generateStruct codeProfile moduleName javaPackageFn decl s)
-      (Decl_Union u)  -> return (generateUnion codeProfile moduleName javaPackageFn decl u)
-      (Decl_Newtype n) -> return (generateNewtype codeProfile moduleName javaPackageFn decl n)
-      (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
-    let lines = codeText maxLineLength (classFileCode classFile)
-        imports = Set.fromList ([javaClass pkg cls| (cls,Just pkg) <- Map.toList (cf_imports classFile)])
-    liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
-    return imports
+        generateType = case d_customType decl of
+          Nothing -> True
+          (Just ct) -> ct_generateType ct
+
+    if generateType
+      then do
+        classFile <- case d_type decl of
+          (Decl_Struct s) -> return (generateStruct codeProfile moduleName javaPackageFn decl s)
+          (Decl_Union u)  -> return (generateUnion codeProfile moduleName javaPackageFn decl u)
+          (Decl_Newtype n) -> return (generateNewtype codeProfile moduleName javaPackageFn decl n)
+          (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
+        let lines = codeText maxLineLength (classFileCode classFile)
+            imports = Set.fromList ([javaClass pkg cls| (cls,Just pkg) <- Map.toList (cf_imports classFile)])
+        liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" lines <> "\n")))
+        return imports
+      else do
+        return mempty
   return (mconcat imports)
 
 generateStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Struct CResolvedType -> ClassFile

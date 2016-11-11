@@ -5,7 +5,8 @@ import adlc.config.java.JavaCustomType;
 
 annotation Date JavaCustomType {
   "javaname" : "java.time.LocalDate",
-  "helpers" : "helpers.DateHelpers"
+  "helpers" : "helpers.DateHelpers",
+  "generateType" : true
   };
 
 annotation CDate JavaCustomType {
