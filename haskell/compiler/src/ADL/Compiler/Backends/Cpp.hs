@@ -1166,6 +1166,7 @@ generate :: AdlFlags -> CppFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af cf fileWriter modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
   m0 <- loadAndCheckModule af modulePath
   let m = associateCustomTypes getCustomType (m_name m0) m0
+  checkCustomSerializations m
   writeModuleFile namespaceGenerator
                   (incFileGenerator (cf_incFilePrefix cf))
                   fileGenerator

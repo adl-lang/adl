@@ -7,4 +7,6 @@ type Doc = String;
 
 type SerializedName = String;
 
+type CustomSerialization = Bool;
+
 };

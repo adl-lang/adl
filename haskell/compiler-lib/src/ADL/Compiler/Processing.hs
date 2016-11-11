@@ -18,7 +18,7 @@ import Data.List(find,partition,sortBy)
 import Data.Foldable(foldMap)
 import Data.Traversable(for)
 import Data.Monoid
-import Data.Maybe(catMaybes)
+import Data.Maybe(catMaybes,isJust)
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -773,3 +773,20 @@ associateCustomTypes getCustomType mname m = m{m_decls=decls'}
         assocf (RT_Named (sn,decl))  = RT_Named (sn,assocDecl sn decl)
         assocf (RT_Param i) = RT_Param i
         assocf (RT_Primitive pt) = RT_Primitive pt
+
+
+-- | Check that all declarations that are annotated with CustomSerialization
+-- actual have custom types. Returns the failing declarations
+
+checkCustomSerializations :: Module (Maybe ct) (ResolvedTypeT (Maybe ct)) -> EIO T.Text ()
+checkCustomSerializations m = when (not (Map.null badDecls)) $ do
+  eioError (template "The declaration(s) for $1 specify a custom serialization with a custom type"
+            [T.intercalate ", " (Map.keys badDecls)])
+  where
+    badDecls = Map.filter (not.declOK) (m_decls m)
+
+    declOK d = case Map.lookup customSerialization (d_annotations d) of
+      Just (_,JSON.Bool True) -> isJust (d_customType d)
+      _ -> True
+
+    customSerialization = ScopedName (ModuleName ["sys","annotations"]) "CustomSerialization"

@@ -71,6 +71,9 @@ generateModule jf fileWriter mCodeGetProfile m0 = do
           ) m0
       decls = Map.elems (m_decls m)
       javaPackageFn mn = jf_package jf <> JavaPackage (unModuleName mn)
+
+  checkCustomSerializations m
+  
   imports <- for decls $ \decl -> do
     let codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
         maxLineLength = cgp_maxLineLength codeProfile

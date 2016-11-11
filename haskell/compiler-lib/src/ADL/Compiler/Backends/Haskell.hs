@@ -597,13 +597,14 @@ writeModuleFile :: (ModuleName -> HaskellModule) ->
                    (ScopedName -> RDecl -> Maybe CustomType) ->
                    (FilePath -> LBS.ByteString -> IO ()) ->
                    RModule ->
-                   EIO a ()
+                   EIOT ()
 writeModuleFile hmf fpf getCustomType fileWriter m0 = do
   let moduleName = m_name m
       s0 = MState moduleName hmf "" Set.empty Set.empty Set.empty []
       m = associateCustomTypes getCustomType moduleName m0
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
+  checkCustomSerializations m
   liftIO $ fileWriter fpath (LBS.fromStrict (T.encodeUtf8 t))
 
 moduleMapper :: String -> ModuleName -> HaskellModule
