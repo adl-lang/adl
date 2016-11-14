@@ -27,7 +27,8 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/java/runtime/org/adl/runtime/HashSetHelpers.java
                      lib/java/runtime/org/adl/runtime/JsonBinding.java
                      lib/java/runtime/org/adl/runtime/JsonBindings.java
-                     lib/java/runtime/org/adl/runtime/OptionalHelpers.java
+                     lib/java/runtime/org/adl/runtime/MaybeHelpers.java
+                     lib/java/runtime/org/adl/runtime/NullableHelpers.java
 
 executable adlc
   hs-source-dirs:      src

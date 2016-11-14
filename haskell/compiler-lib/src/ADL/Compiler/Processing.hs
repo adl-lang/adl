@@ -780,7 +780,7 @@ associateCustomTypes getCustomType mname m = m{m_decls=decls'}
 
 checkCustomSerializations :: Module (Maybe ct) (ResolvedTypeT (Maybe ct)) -> EIO T.Text ()
 checkCustomSerializations m = when (not (Map.null badDecls)) $ do
-  eioError (template "The declaration(s) for $1 specify a custom serialization with a custom type"
+  eioError (template "The declaration(s) for $1 specify a custom serialization without a corresponding custom type"
             [T.intercalate ", " (Map.keys badDecls)])
   where
     badDecls = Map.filter (not.declOK) (m_decls m)

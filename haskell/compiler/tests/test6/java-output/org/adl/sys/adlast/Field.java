@@ -8,7 +8,7 @@ import org.adl.runtime.HashMapHelpers;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
-import org.adl.runtime.OptionalHelpers;
+import org.adl.runtime.MaybeHelpers;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,14 +34,14 @@ public class Field {
   public Field() {
     this.name = "";
     this.typeExpr = new TypeExpr();
-    this.default_ = OptionalHelpers.factory(Literal.FACTORY).create();
+    this.default_ = MaybeHelpers.factory(Literal.FACTORY).create();
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create();
   }
 
   public Field(Field other) {
     this.name = other.name;
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
-    this.default_ = OptionalHelpers.factory(Literal.FACTORY).create(other.default_);
+    this.default_ = MaybeHelpers.factory(Literal.FACTORY).create(other.default_);
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create(other.annotations);
   }
 
@@ -120,7 +120,7 @@ public class Field {
   public static JsonBinding<Field> jsonBinding() {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
-    final Lazy<JsonBinding<Optional<Literal>>> default_ = new Lazy<>(() -> OptionalHelpers.jsonBinding(Literal.jsonBinding()));
+    final Lazy<JsonBinding<Optional<Literal>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(Literal.jsonBinding()));
     final Lazy<JsonBinding<HashMap<ScopedName, Literal>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), Literal.jsonBinding()));
     final Factory<Field> _factory = FACTORY;
 
@@ -143,7 +143,7 @@ public class Field {
         return new Field(
           _obj.has("name") ? name.get().fromJson(_obj.get("name")) : "",
           _obj.has("typeExpr") ? typeExpr.get().fromJson(_obj.get("typeExpr")) : new TypeExpr(),
-          _obj.has("default") ? default_.get().fromJson(_obj.get("default")) : OptionalHelpers.factory(Literal.FACTORY).create(),
+          _obj.has("default") ? default_.get().fromJson(_obj.get("default")) : MaybeHelpers.factory(Literal.FACTORY).create(),
           _obj.has("annotations") ? annotations.get().fromJson(_obj.get("annotations")) : HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create()
         );
       }

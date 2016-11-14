@@ -190,7 +190,8 @@ runTests = do
       collectResults (runHaskellBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      collectResults (runHaskellBackend [stdsrc] stdfiles "test6/hs-output")
+      let srcs = stdfiles <> ["test6/input/test.adl"]
+      collectResults (runHaskellBackend [stdsrc] srcs "test6/hs-output")
           `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       collectResults (runHaskellBackend1 "test7/input/test.adl")
@@ -269,7 +270,9 @@ runTests = do
       collectResults (runJavaBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
-      collectResults (runJavaBackend [stdsrc] (map (combine stdsrc) ["sys/types.adl","sys/adlast.adl"]) "test6/java-output"
+      let srcs = ["test6/input/test.adl"]
+               <> map (combine stdsrc) ["sys/types.adl","sys/adlast.adl"]
+      collectResults (runJavaBackend [stdsrc] srcs "test6/java-output"
                       (withJavaOutputPackage "org.adl"))
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do

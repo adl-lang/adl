@@ -33,4 +33,9 @@ annotation Set HaskellCustomType {
   "haskellimports" : [ "ADL.Core.CustomTypes" ]
   };
 
+annotation Nullable HaskellCustomType {
+  "haskellname" : "Nullable",
+  "haskellimports" : [ "ADL.Core.CustomTypes" ]
+  };
+
 };

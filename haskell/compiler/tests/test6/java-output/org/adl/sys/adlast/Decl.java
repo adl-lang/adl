@@ -8,7 +8,7 @@ import org.adl.runtime.HashMapHelpers;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
-import org.adl.runtime.OptionalHelpers;
+import org.adl.runtime.MaybeHelpers;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,14 +33,14 @@ public class Decl {
 
   public Decl() {
     this.name = "";
-    this.version = OptionalHelpers.factory(Factories.INTEGER).create();
+    this.version = MaybeHelpers.factory(Factories.INTEGER).create();
     this.type_ = new DeclType();
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create();
   }
 
   public Decl(Decl other) {
     this.name = other.name;
-    this.version = OptionalHelpers.factory(Factories.INTEGER).create(other.version);
+    this.version = MaybeHelpers.factory(Factories.INTEGER).create(other.version);
     this.type_ = DeclType.FACTORY.create(other.type_);
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create(other.annotations);
   }
@@ -119,7 +119,7 @@ public class Decl {
 
   public static JsonBinding<Decl> jsonBinding() {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
-    final Lazy<JsonBinding<Optional<Integer>>> version = new Lazy<>(() -> OptionalHelpers.jsonBinding(JsonBindings.INTEGER));
+    final Lazy<JsonBinding<Optional<Integer>>> version = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.INTEGER));
     final Lazy<JsonBinding<DeclType>> type_ = new Lazy<>(() -> DeclType.jsonBinding());
     final Lazy<JsonBinding<HashMap<ScopedName, Literal>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), Literal.jsonBinding()));
     final Factory<Decl> _factory = FACTORY;
@@ -142,7 +142,7 @@ public class Decl {
         JsonObject _obj = _json.getAsJsonObject();
         return new Decl(
           _obj.has("name") ? name.get().fromJson(_obj.get("name")) : "",
-          _obj.has("version") ? version.get().fromJson(_obj.get("version")) : OptionalHelpers.factory(Factories.INTEGER).create(),
+          _obj.has("version") ? version.get().fromJson(_obj.get("version")) : MaybeHelpers.factory(Factories.INTEGER).create(),
           _obj.has("type_") ? type_.get().fromJson(_obj.get("type_")) : new DeclType(),
           _obj.has("annotations") ? annotations.get().fromJson(_obj.get("annotations")) : HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create()
         );

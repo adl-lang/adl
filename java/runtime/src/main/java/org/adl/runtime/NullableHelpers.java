@@ -1,11 +1,12 @@
 package org.adl.runtime;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import java.util.Optional;
 
-public class OptionalHelpers
+public class NullableHelpers
 {
   public static <T> Factory<Optional<T>> factory(final Factory<T> tFactory) {
     return new Factory<Optional<T>>() {
@@ -39,22 +40,19 @@ public class OptionalHelpers
       };
 
       public JsonElement toJson(Optional<T> value) {
-        JsonObject result = new JsonObject();
         if (value.isPresent()) {
-          result.add("just", bindingT.toJson(value.get()));
+          return bindingT.toJson(value.get());
         } else {
-          result.add("nothing", null);
+          return JsonNull.INSTANCE;
         }
-        return result;
       }
 
       public Optional<T> fromJson(JsonElement json) {
-        JsonObject obj = json.getAsJsonObject();
-        if (obj.has("just")) {
-          return Optional.<T>of(bindingT.fromJson(obj.get("just")));
-        } else {
+        if (json.isJsonNull()) {
           return Optional.<T>empty();
-        }          
+        } else {
+          return Optional.<T>of(bindingT.fromJson(json));
+        }
       }
     };
   }

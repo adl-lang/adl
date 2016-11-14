@@ -33,6 +33,9 @@ getCustomType scopedName _ = Map.lookup scopedName customTypes
          CustomType "Set" [HaskellModule "ADL.Core.CustomTypes",
                            HaskellModule "qualified Data.Set as Set"]
          ["type Set v = Set.Set v"] Nothing)
+      , (ScopedName (ModuleName ["sys","types"]) "Nullable",
+         CustomType "Nullable" [HaskellModule "ADL.Core.CustomTypes"]
+         [] Nothing )
       ]
     
     

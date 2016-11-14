@@ -96,4 +96,22 @@ instance (Ord v, ADLValue v) => ADLValue (Set.Set v) where
       from o = fmap Set.fromList (aFromJSON js o)
                                   
 
-  
+newtype Nullable t = Nullable (Maybe t)
+
+instance (ADLValue t) => ADLValue (Nullable t) where
+  atype _ = T.concat
+        [ "sys.types.Nullable"
+        , "<", atype (Prelude.undefined ::t)
+        , ">" ]
+  defaultv = Nullable Nothing
+
+  jsonSerialiser jf = JSONSerialiser to from
+    where
+      js = jsonSerialiser jf
+
+      to v = case v of
+        (Nullable Nothing) -> JSON.Null
+        (Nullable (Just v)) -> aToJSON js v
+        
+      from JSON.Null = return (Nullable Nothing)
+      from jv        = (Nullable . Just) <$> aFromJSON js jv

@@ -11,7 +11,7 @@ import org.adl.runtime.HashSetHelpers;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
-import org.adl.runtime.OptionalHelpers;
+import org.adl.runtime.MaybeHelpers;
 import org.adl.sys.types.Pair;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -58,9 +58,9 @@ public class S {
     this.v2 = DateHelpers.create("2000-01-01");
     this.v3 = CDateHelpers.FACTORY.create();
     this.v4 = CDateHelpers.create((short)2000, (short)1, (short)1);
-    this.v5 = OptionalHelpers.factory(Factories.STRING).create();
-    this.v5a = OptionalHelpers.nothing(null);
-    this.v5b = OptionalHelpers.just("hello");
+    this.v5 = MaybeHelpers.factory(Factories.STRING).create();
+    this.v5a = MaybeHelpers.nothing(null);
+    this.v5b = MaybeHelpers.just("hello");
     this.v6 = Pair.factory(Factories.STRING, Factories.INTEGER).create();
     this.v7 = HashSetHelpers.create(Factories.arrayList(1, 2, 3));
     this.v7a = HashSetHelpers.factory(Factories.INTEGER).create();
@@ -73,9 +73,9 @@ public class S {
     this.v2 = DateHelpers.FACTORY.create(other.v2);
     this.v3 = CDateHelpers.FACTORY.create(other.v3);
     this.v4 = CDateHelpers.FACTORY.create(other.v4);
-    this.v5 = OptionalHelpers.factory(Factories.STRING).create(other.v5);
-    this.v5a = OptionalHelpers.factory(Factories.STRING).create(other.v5a);
-    this.v5b = OptionalHelpers.factory(Factories.STRING).create(other.v5b);
+    this.v5 = MaybeHelpers.factory(Factories.STRING).create(other.v5);
+    this.v5a = MaybeHelpers.factory(Factories.STRING).create(other.v5a);
+    this.v5b = MaybeHelpers.factory(Factories.STRING).create(other.v5b);
     this.v6 = Pair.factory(Factories.STRING, Factories.INTEGER).create(other.v6);
     this.v7 = HashSetHelpers.factory(Factories.INTEGER).create(other.v7);
     this.v7a = HashSetHelpers.factory(Factories.INTEGER).create(other.v7a);
@@ -240,9 +240,9 @@ public class S {
     final Lazy<JsonBinding<LocalDate>> v2 = new Lazy<>(() -> DateHelpers.jsonBinding());
     final Lazy<JsonBinding<LocalDate>> v3 = new Lazy<>(() -> CDateHelpers.jsonBinding());
     final Lazy<JsonBinding<LocalDate>> v4 = new Lazy<>(() -> CDateHelpers.jsonBinding());
-    final Lazy<JsonBinding<Optional<String>>> v5 = new Lazy<>(() -> OptionalHelpers.jsonBinding(JsonBindings.STRING));
-    final Lazy<JsonBinding<Optional<String>>> v5a = new Lazy<>(() -> OptionalHelpers.jsonBinding(JsonBindings.STRING));
-    final Lazy<JsonBinding<Optional<String>>> v5b = new Lazy<>(() -> OptionalHelpers.jsonBinding(JsonBindings.STRING));
+    final Lazy<JsonBinding<Optional<String>>> v5 = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
+    final Lazy<JsonBinding<Optional<String>>> v5a = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
+    final Lazy<JsonBinding<Optional<String>>> v5b = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Pair<String, Integer>>> v6 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
     final Lazy<JsonBinding<HashSet<Integer>>> v7 = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INTEGER));
     final Lazy<JsonBinding<HashSet<Integer>>> v7a = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INTEGER));
@@ -279,9 +279,9 @@ public class S {
           _obj.has("v2") ? v2.get().fromJson(_obj.get("v2")) : DateHelpers.create("2000-01-01"),
           _obj.has("v3") ? v3.get().fromJson(_obj.get("v3")) : CDateHelpers.FACTORY.create(),
           _obj.has("v4") ? v4.get().fromJson(_obj.get("v4")) : CDateHelpers.create((short)2000, (short)1, (short)1),
-          _obj.has("v5") ? v5.get().fromJson(_obj.get("v5")) : OptionalHelpers.factory(Factories.STRING).create(),
-          _obj.has("v5a") ? v5a.get().fromJson(_obj.get("v5a")) : OptionalHelpers.nothing(null),
-          _obj.has("v5b") ? v5b.get().fromJson(_obj.get("v5b")) : OptionalHelpers.just("hello"),
+          _obj.has("v5") ? v5.get().fromJson(_obj.get("v5")) : MaybeHelpers.factory(Factories.STRING).create(),
+          _obj.has("v5a") ? v5a.get().fromJson(_obj.get("v5a")) : MaybeHelpers.nothing(null),
+          _obj.has("v5b") ? v5b.get().fromJson(_obj.get("v5b")) : MaybeHelpers.just("hello"),
           _obj.has("v6") ? v6.get().fromJson(_obj.get("v6")) : Pair.factory(Factories.STRING, Factories.INTEGER).create(),
           _obj.has("v7") ? v7.get().fromJson(_obj.get("v7")) : HashSetHelpers.create(Factories.arrayList(1, 2, 3)),
           _obj.has("v7a") ? v7a.get().fromJson(_obj.get("v7a")) : HashSetHelpers.factory(Factories.INTEGER).create(),

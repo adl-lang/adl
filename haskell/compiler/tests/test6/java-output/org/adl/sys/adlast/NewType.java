@@ -7,7 +7,7 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
-import org.adl.runtime.OptionalHelpers;
+import org.adl.runtime.MaybeHelpers;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,13 +31,13 @@ public class NewType {
   public NewType() {
     this.typeParams = new ArrayList<String>();
     this.typeExpr = new TypeExpr();
-    this.default_ = OptionalHelpers.factory(Literal.FACTORY).create();
+    this.default_ = MaybeHelpers.factory(Literal.FACTORY).create();
   }
 
   public NewType(NewType other) {
     this.typeParams = Factories.arrayList(Factories.STRING).create(other.typeParams);
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
-    this.default_ = OptionalHelpers.factory(Literal.FACTORY).create(other.default_);
+    this.default_ = MaybeHelpers.factory(Literal.FACTORY).create(other.default_);
   }
 
   /* Accessors and mutators */
@@ -105,7 +105,7 @@ public class NewType {
   public static JsonBinding<NewType> jsonBinding() {
     final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
     final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
-    final Lazy<JsonBinding<Optional<Literal>>> default_ = new Lazy<>(() -> OptionalHelpers.jsonBinding(Literal.jsonBinding()));
+    final Lazy<JsonBinding<Optional<Literal>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(Literal.jsonBinding()));
     final Factory<NewType> _factory = FACTORY;
 
     return new JsonBinding<NewType>() {
@@ -126,7 +126,7 @@ public class NewType {
         return new NewType(
           _obj.has("typeParams") ? typeParams.get().fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
           _obj.has("typeExpr") ? typeExpr.get().fromJson(_obj.get("typeExpr")) : new TypeExpr(),
-          _obj.has("default") ? default_.get().fromJson(_obj.get("default")) : OptionalHelpers.factory(Literal.FACTORY).create()
+          _obj.has("default") ? default_.get().fromJson(_obj.get("default")) : MaybeHelpers.factory(Literal.FACTORY).create()
         );
       }
     };

@@ -567,6 +567,15 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
     return false;
 }
 
+// Nullable excluded due to custom definition
+
+template <class T>
+struct Nullable
+{
+    // TODO: Flesh this out
+    Maybe<T> value;
+};
+
 // Pair excluded due to custom definition
 
 template <class A, class B>
@@ -808,6 +817,18 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
     
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
+
+template <class T>
+struct Serialisable<Nullable<T>>
+{
+    typedef Nullable<T> N;
+
+    static typename Serialiser<N>::Ptr serialiser(const SerialiserFlags &sf)
+    {
+        // TODO: Implement this
+        throw json_parse_failure("unimplemented");
+    }
+};
 
 template <class A,class B>
 struct Serialisable<std::pair<A,B>>
