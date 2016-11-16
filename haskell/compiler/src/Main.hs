@@ -33,6 +33,11 @@ includePrefixOption ufn =
     (ReqArg ufn "DIR")
     "The prefix to be used to generate/reference include files"
 
+verboseOption ufn = 
+  Option "" ["verbose"]
+    (NoArg ufn)
+    "Print extra diagnostic information, especially about files being read/written"
+
 outputDirOption ufn =
   Option "O" ["outputdir"]
     (ReqArg ufn "DIR")
@@ -88,12 +93,11 @@ getDefaultAdlFlags = do
   systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
   return defaultAdlFlags
      { af_searchPath=[systemAdlDir]
-     , af_log=putStrLn
      }
 
 defaultOutputArgs :: OutputArgs
 defaultOutputArgs = OutputArgs {
-  oa_log = putStrLn,
+  oa_log = const (return ()),
   oa_noOverwrite = True,
   oa_outputPath = "."
   }
@@ -123,6 +127,10 @@ setOutputDir dir = updateOutputArgs (\oa -> oa{oa_outputPath=dir})
 
 setNoOverwrite :: Flags b -> Flags b
 setNoOverwrite = updateOutputArgs (\oa-> oa{oa_noOverwrite=True})
+
+setVerbose :: Flags b -> Flags b
+setVerbose = updateOutputArgs (\oa-> oa{oa_log=putStrLn})
+           . updateAdlFlags (\af-> af{af_log=putStrLn})
 
 -- | Combine an initial set of AdlFlags and appropriate backend
 -- flags with command line arguments.
@@ -176,6 +184,7 @@ runHaskell args0 =
       [ searchDirOption addToSearchPath
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
+      , verboseOption setVerbose
       , Option "" ["moduleprefix"]
         (ReqArg (\s -> updateBackendFlags (\hf -> hf{hf_modulePrefix=s})) "PREFIX")
         "Set module name prefix for generated code "
@@ -201,6 +210,7 @@ runCpp args0 =
       [ searchDirOption addToSearchPath
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
+      , verboseOption setVerbose
       , includePrefixOption (\s -> updateBackendFlags (\cf -> cf{cf_incFilePrefix=s}))
       ]
 
@@ -226,6 +236,7 @@ runJava args0 =
       [ searchDirOption addToSearchPath
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
+      , verboseOption setVerbose
       , javaPackageOption (\s -> updateBackendFlags (\jf -> jf{jf_package=javaPackage (T.pack s)}))
       , javaIncludeRuntimePackageOption (updateBackendFlags (\jf ->jf{jf_includeRuntime=True}))
       , javaRuntimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{cgp_runtimePackage=fromString s}))
