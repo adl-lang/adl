@@ -18,6 +18,7 @@ import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.AST as A
 import ADL.Compiler.Backends.Cpp as C
 import ADL.Compiler.Backends.Java as J
+import ADL.Compiler.Backends.Javascript as JS
 import ADL.Compiler.DataFiles
 import ADL.Compiler.Utils
 import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
@@ -264,12 +265,35 @@ runJava args0 =
 
     updateCodeGenProfile f = updateBackendFlags (\jf ->jf{jf_codeGenProfile=f (jf_codeGenProfile jf)})
 
+runJavaScript args0 =
+  case getOpt Permute optDescs args0 of
+    (opts,args,[]) -> do
+        libDir <- liftIO $ getLibDir
+        af <- getAdlFlags ["adl-js"]
+        let flags = buildFlags af (flags0 libDir) opts
+        JS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
+    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+  where
+    header = "Usage: adl javascript [OPTION...] files..."
+
+    flags0 libDir = JS.JavascriptFlags {
+    }
+
+    optDescs =
+      [ searchDirOption addToSearchPath
+      , outputDirOption setOutputDir
+      , noOverwriteOption setNoOverwrite
+      , verboseOption setVerbose
+      ]
+
+
 usage = T.intercalate "\n"
   [ "Usage: adl verify [OPTION..] <modulePath>..."
   , "       adl ast [OPTION..] <modulePath>..."
   , "       adl haskell [OPTION..] <modulePath>..."
   , "       adl cpp [OPTION..] <modulePath>..."
   , "       adl java [OPTION..] <modulePath>..."
+  , "       adl javascript [OPTION..] <modulePath>..."
   ]    
     
 main = do
@@ -280,6 +304,7 @@ main = do
     ("ast":args) -> runAst args
     ("cpp":args) -> runCpp args
     ("java":args) -> runJava args
+    ("javascript":args) -> runJavaScript args
     _ -> eioError usage
   where
     runEIO eio = do
