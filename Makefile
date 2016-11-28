@@ -7,7 +7,14 @@ ADLCFLAGS=-O $(TESTOUTDIR) --moduleprefix=$(MODULEPREFIX)
 
 -include .make/Makefile.srcs
 
-all: allhaskell runtime-cpp
+dist: allhaskell
+	(cd haskell && tools/make-dist.hs)
+
+allhaskell:
+	(cd haskell && stack build ./compiler-bootstrap)
+	(cd haskell && stack build)
+
+
 runtime-cpp: .make/built-runtime-cpp
 
 .make:
@@ -15,9 +22,6 @@ runtime-cpp: .make/built-runtime-cpp
 
 depends: .make
 	stack runghc mkdepends.hs >.make/Makefile.srcs
-
-allhaskell:
-	stack build
 
 .make/built-runtime-cpp: $(RUNTIME-CPP-SRC) allhaskell
 	(cd cpp/runtime && ./autogen.sh)
