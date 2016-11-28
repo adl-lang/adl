@@ -28,6 +28,11 @@ searchDirOption ufn =
     (ReqArg ufn "DIR")
     "Add the specifed directory to the ADL searchpath"
 
+mergeFileExtensionOption ufn =
+  Option "" ["merge-adlext"]
+    (ReqArg ufn "EXT")
+    "Add the specifed adl file extension to merged on loading"
+  
 includePrefixOption ufn =
   Option "" ["include-prefix"]
     (ReqArg ufn "DIR")
@@ -88,11 +93,12 @@ javaMaxLineLength ufn =
     (ReqArg ufn "PACKAGE")
     "The maximum length of the generated code lines"
 
-getDefaultAdlFlags :: EIO T.Text (AdlFlags)
-getDefaultAdlFlags = do
+getAdlFlags :: [String] -> EIO T.Text (AdlFlags)
+getAdlFlags mergeFileExtensions = do
   systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
   return defaultAdlFlags
      { af_searchPath=[systemAdlDir]
+     , af_mergeFileExtensions=mergeFileExtensions
      }
 
 defaultOutputArgs :: OutputArgs
@@ -122,6 +128,9 @@ updateBackendFlags fn flags = flags{f_backend=fn (f_backend flags)}
 addToSearchPath :: FilePath -> Flags b -> Flags b
 addToSearchPath path = updateAdlFlags (\af-> af{af_searchPath=path:af_searchPath af})
 
+addToMergeFileExtensions :: String -> Flags b -> Flags b
+addToMergeFileExtensions ext = updateAdlFlags (\af-> af{af_mergeFileExtensions=ext:af_mergeFileExtensions af})
+
 setOutputDir :: FilePath -> Flags b -> Flags b
 setOutputDir dir = updateOutputArgs (\oa -> oa{oa_outputPath=dir})
 
@@ -140,7 +149,7 @@ buildFlags af0 b0 opts = ((foldl (.) id opts) (Flags af0 defaultOutputArgs b0))
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      af <- getDefaultAdlFlags
+      af <- getAdlFlags []
       let flags = buildFlags af () opts
       V.verify (f_adl flags) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
@@ -149,12 +158,13 @@ runVerify args0 =
     
     optDescs =
       [ searchDirOption addToSearchPath
+      , mergeFileExtensionOption addToMergeFileExtensions
       ]
 
 runAst args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      af <- getDefaultAdlFlags
+      af <- getAdlFlags []
       let flags = buildFlags af () opts
       A.generate (f_adl flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
@@ -163,13 +173,14 @@ runAst args0 =
     
     optDescs =
       [ searchDirOption addToSearchPath
+      , mergeFileExtensionOption addToMergeFileExtensions
       ]
 
 runHaskell args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
         libDir <- liftIO $ getLibDir
-        af <- getDefaultAdlFlags
+        af <- getAdlFlags ["adl-hs"]
         let flags = buildFlags af (flags0 libDir) opts
         H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomType args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
@@ -182,6 +193,7 @@ runHaskell args0 =
 
     optDescs =
       [ searchDirOption addToSearchPath
+      , mergeFileExtensionOption addToMergeFileExtensions
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
       , verboseOption setVerbose
@@ -194,7 +206,7 @@ runCpp args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
         libDir <- liftIO $ getLibDir
-        af <- getDefaultAdlFlags
+        af <- getAdlFlags ["adl-cpp"]
         let flags = buildFlags af (flags0 libDir) opts
         C.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
@@ -208,6 +220,7 @@ runCpp args0 =
 
     optDescs =
       [ searchDirOption addToSearchPath
+      , mergeFileExtensionOption addToMergeFileExtensions
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
       , verboseOption setVerbose
@@ -218,7 +231,7 @@ runJava args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
         libDir <- liftIO $ getLibDir
-        af <- getDefaultAdlFlags
+        af <- getAdlFlags ["adl-java"]
         let flags = buildFlags af (flags0 libDir) opts
         J.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
@@ -234,6 +247,7 @@ runJava args0 =
 
     optDescs =
       [ searchDirOption addToSearchPath
+      , mergeFileExtensionOption addToMergeFileExtensions
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
       , verboseOption setVerbose

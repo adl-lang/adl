@@ -637,7 +637,7 @@ defaultAdlFlags :: AdlFlags
 defaultAdlFlags = AdlFlags
   { af_searchPath = []
   , af_log = const (return ())
-  , af_mergeFileExtensions = ["adl-hs", "adl-java", "adl-cpp"]
+  , af_mergeFileExtensions = []
   }
   
 loadAndCheckModule :: AdlFlags -> FilePath -> EIOT RModule

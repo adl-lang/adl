@@ -65,7 +65,7 @@ runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
 runHaskellBackend ipaths mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af =  defaultAdlFlags{af_searchPath=ipaths}
+  let af =  defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-hs"]}
       hf =  H.HaskellFlags {
         H.hf_modulePrefix = "ADL"
         }
@@ -83,7 +83,7 @@ runCppBackend :: [FilePath] -> [FilePath] -> FilePath -> FilePath -> IO CodeGenR
 runCppBackend ipaths mpaths epath iprefix = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af =  defaultAdlFlags{af_searchPath=ipaths}
+  let af =  defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-cpp"]}
       cf = CPP.CppFlags {
         CPP.cf_incFilePrefix = iprefix
         }
@@ -116,7 +116,7 @@ runJavaBackend :: [FilePath] -> [FilePath] -> FilePath -> (J.JavaFlags -> J.Java
 runJavaBackend ipaths mpaths epath updateflags = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af = defaultAdlFlags{af_searchPath=ipaths}
+  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-java"]}
       jf = J.JavaFlags {
         J.jf_libDir = "LIBDIR",
         J.jf_package = J.javaPackage "adl",
