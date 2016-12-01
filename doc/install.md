@@ -20,10 +20,10 @@ Archive:  dist/adl-0.1.1-darwin.zip
       378  11-28-16 23:45   lib/adl/adlc/config/java.adl
         0  11-28-16 23:45   lib/adl/sys/
      1468  11-28-16 23:45   lib/adl/sys/adlast.adl
-     1468  11-28-16 23:45   lib/adl/sys/adlast.adl
       165  11-28-16 23:45   lib/adl/sys/annotations.adl
       289  11-28-16 23:45   lib/adl/sys/rpc.adl
       575  11-28-16 23:45   lib/adl/sys/sinkimpl.adl
+      572  11-28-16 23:45   lib/adl/sys/types.adl
 ...      
 ```
 
