@@ -8,7 +8,7 @@ author:              Tim Docker
 maintainer:          tim@dockerz.net
 copyright:           (c) 2013, 2014 Tim Docker
 category:            Network
-build-type:          Custom
+build-type:          Simple
 cabal-version:       >=1.8
 
 executable runexample
@@ -28,3 +28,10 @@ executable runexample
                       , PSServer
                       , Serialisation
                       , Utils
+                      , ADL.Examples.Kvstore1
+                      , ADL.Examples.Kvstore2
+                      , ADL.Examples.Datetime
+                      , ADL.Examples.Echo
+                      , ADL.Examples.Pubsub
+                      , ADL.Examples.Pubsub1
+                      , ADL.Examples.Serialisation

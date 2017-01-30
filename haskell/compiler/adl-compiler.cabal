@@ -8,7 +8,7 @@ author:              Tim Docker
 maintainer:          tim@dockerz.net
 copyright:           (c) 2013, 2014 Tim Docker
 category:            Network
-build-type:          Custom
+build-type:          Simple
 cabal-version:       >=1.8
 
 data-files:          lib/adl/sys/adlast.adl
@@ -47,6 +47,9 @@ executable adlc
                      , ADL.Compiler.Backends.Java.Parcelable
                      , ADL.Compiler.Backends.Utils.IndentedCode
                      , ADL.Compiler.DataFiles
+                     , ADL.Adlc.Config.Cpp
+                     , ADL.Adlc.Config.Haskell
+                     , ADL.Adlc.Config.Java
                      , HaskellCustomTypes
   ghc-options:       -fwarn-incomplete-patterns
 
@@ -70,6 +73,9 @@ test-suite adlc-tests
                      , ADL.Compiler.Backends.Java.Parcelable
                      , ADL.Compiler.Backends.Utils.IndentedCode
                      , ADL.Compiler.DataFiles
+                     , ADL.Adlc.Config.Cpp
+                     , ADL.Adlc.Config.Haskell
+                     , ADL.Adlc.Config.Java
                      , HaskellCustomTypes
   ghc-options:       -fwarn-incomplete-patterns
 

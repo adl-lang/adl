@@ -9,8 +9,6 @@ dist: allhaskell
 	(cd haskell && tools/make-dist.hs)
 
 allhaskell:
-	(cd haskell && stack build ./compiler-bootstrap)
-	(cd haskell && stack build ./compiler)
 	(cd haskell && stack build)
 
 
