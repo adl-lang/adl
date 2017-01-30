@@ -1,5 +1,5 @@
 #!/usr/bin/env stack
-{- stack --install-ghc runghc -}
+{- stack --install-ghc runghc --package temporary -}
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Monad(when)

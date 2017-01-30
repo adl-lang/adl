@@ -5,8 +5,6 @@ TESTOUTDIR=/tmp/adltest
 MODULEPREFIX=ADL.Compiled
 ADLCFLAGS=-O $(TESTOUTDIR) --moduleprefix=$(MODULEPREFIX)
 
--include .make/Makefile.srcs
-
 dist: allhaskell
 	(cd haskell && tools/make-dist.hs)
 
@@ -21,9 +19,6 @@ runtime-cpp: .make/built-runtime-cpp
 .make:
 	mkdir -p .make
 
-depends: .make
-	stack runghc mkdepends.hs >.make/Makefile.srcs
-
 .make/built-runtime-cpp: $(RUNTIME-CPP-SRC) allhaskell
 	(cd cpp/runtime && ./autogen.sh)
 	(cd cpp/runtime && mkdir -p build && cd build && ../configure)
@@ -35,8 +30,8 @@ docs:
 	cd haskell && stack haddock
 
 clean: 
-	-rm -f .make/built-*
-	-(cd haskelll stack clean)
+	-rm -rf .make/built-*
+	-(cd haskell; stack clean)
 	-(cd cpp/runtime ; rm -rf build)
 
 cleanext:
