@@ -32,7 +32,7 @@ import Data.Traversable(for)
 import System.FilePath
 
 import ADL.Compiler.AST
-import ADL.Compiler.Backends.Utils.IndentedCode
+import ADL.Utils.IndentedCode
 import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Java.Parcelable
 import ADL.Compiler.Backends.Java.Json

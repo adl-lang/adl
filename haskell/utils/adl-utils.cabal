@@ -13,7 +13,7 @@ cabal-version:       >=1.8
 
 library
   hs-source-dirs:    src
-  exposed-modules:   ADL.Utils.Format, ADL.Utils.DelayIO, ADL.Utils.Resource, ADL.Utils.FileDiff
+  exposed-modules:   ADL.Utils.Format, ADL.Utils.DelayIO, ADL.Utils.Resource, ADL.Utils.FileDiff, ADL.Utils.IndentedCode
   build-depends:     base, text, containers, bytestring, stm,
                      filepath, directory
   ghc-options:       -fwarn-incomplete-patterns

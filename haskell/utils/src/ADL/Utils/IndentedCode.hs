@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | A trivial DSL for generated indented block structured text
-module ADL.Compiler.Backends.Utils.IndentedCode where
+module ADL.Utils.IndentedCode where
 
 import qualified Data.Text as T
 

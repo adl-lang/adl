@@ -29,7 +29,7 @@ import ADL.Compiler.AST
 import ADL.Compiler.EIO
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
-import ADL.Compiler.Backends.Utils.IndentedCode
+import ADL.Utils.IndentedCode
 import ADL.Core.Value
 import ADL.Utils.Format
 

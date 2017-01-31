@@ -45,7 +45,6 @@ executable adlc
                      , ADL.Compiler.Backends.Java.Internal
                      , ADL.Compiler.Backends.Java.Json
                      , ADL.Compiler.Backends.Java.Parcelable
-                     , ADL.Compiler.Backends.Utils.IndentedCode
                      , ADL.Compiler.DataFiles
                      , ADL.Adlc.Config.Cpp
                      , ADL.Adlc.Config.Haskell
@@ -71,7 +70,6 @@ test-suite adlc-tests
                      , ADL.Compiler.Backends.Java.Internal
                      , ADL.Compiler.Backends.Java.Json
                      , ADL.Compiler.Backends.Java.Parcelable
-                     , ADL.Compiler.Backends.Utils.IndentedCode
                      , ADL.Compiler.DataFiles
                      , ADL.Adlc.Config.Cpp
                      , ADL.Adlc.Config.Haskell

@@ -17,7 +17,7 @@ import ADL.Compiler.AST
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
 import ADL.Compiler.Backends.Java.Internal
-import ADL.Compiler.Backends.Utils.IndentedCode
+import ADL.Utils.IndentedCode
 import ADL.Utils.Format
 
 generateStructJson :: CodeGenProfile -> CDecl -> Struct CResolvedType -> [FieldDetails] -> CState ()
