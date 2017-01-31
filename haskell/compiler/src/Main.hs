@@ -173,6 +173,7 @@ runAst args0 =
     
     optDescs =
       [ searchDirOption addToSearchPath
+      , outputDirOption setOutputDir
       , mergeFileExtensionOption addToMergeFileExtensions
       ]
 
