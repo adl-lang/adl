@@ -16,9 +16,7 @@
                         "typeParams": []
                     }
                 },
-                "version": {
-                    "nothing": null
-                }
+                "version": "nothing"
             }
         },
         {
@@ -37,9 +35,7 @@
                         "typeParams": []
                     }
                 },
-                "version": {
-                    "nothing": null
-                }
+                "version": "nothing"
             }
         },
         {
@@ -52,9 +48,7 @@
                         "fields": [
                             {
                                 "annotations": [],
-                                "default": {
-                                    "nothing": null
-                                },
+                                "default": "nothing",
                                 "name": "f1",
                                 "typeExpr": {
                                     "parameters": [],
@@ -65,9 +59,7 @@
                             },
                             {
                                 "annotations": [],
-                                "default": {
-                                    "nothing": null
-                                },
+                                "default": "nothing",
                                 "name": "f2",
                                 "typeExpr": {
                                     "parameters": [],
@@ -80,9 +72,7 @@
                         "typeParams": []
                     }
                 },
-                "version": {
-                    "nothing": null
-                }
+                "version": "nothing"
             }
         },
         {
@@ -124,9 +114,7 @@
                                         }
                                     }
                                 ],
-                                "default": {
-                                    "nothing": null
-                                },
+                                "default": "nothing",
                                 "name": "x",
                                 "typeExpr": {
                                     "parameters": [],
@@ -147,9 +135,7 @@
                                         }
                                     }
                                 ],
-                                "default": {
-                                    "nothing": null
-                                },
+                                "default": "nothing",
                                 "name": "y",
                                 "typeExpr": {
                                     "parameters": [],
@@ -183,9 +169,7 @@
                                         }
                                     }
                                 ],
-                                "default": {
-                                    "nothing": null
-                                },
+                                "default": "nothing",
                                 "name": "name",
                                 "typeExpr": {
                                     "parameters": [],
@@ -198,9 +182,7 @@
                         "typeParams": []
                     }
                 },
-                "version": {
-                    "nothing": null
-                }
+                "version": "nothing"
             }
         }
     ],

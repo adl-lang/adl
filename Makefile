@@ -1,10 +1,6 @@
 MKFILE:=$(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 MKDIR:=$(dir $(MKFILE))
 
-TESTOUTDIR=/tmp/adltest
-MODULEPREFIX=ADL.Compiled
-ADLCFLAGS=-O $(TESTOUTDIR) --moduleprefix=$(MODULEPREFIX)
-
 dist: allhaskell
 	(cd haskell && tools/make-dist.hs)
 

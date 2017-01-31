@@ -22,9 +22,9 @@ instance (ADLValue t) => ADLValue (Maybe t) where
   jsonSerialiser jf = JSONSerialiser to from
     where
       js = jsonSerialiser jf
-      to v = JSON.Object $ case v of
-        Nothing -> HM.singleton "nothing" JSON.Null
-        (Just v) -> HM.singleton "just" (aToJSON js v)
+      to v =  case v of
+        Nothing -> JSON.String "nothing"
+        (Just v) -> JSON.Object (HM.singleton "just" (aToJSON js v))
       from o = do
         u <- splitUnion o
         case u of
