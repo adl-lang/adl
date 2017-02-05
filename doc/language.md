@@ -156,7 +156,7 @@ it's standard library, appropriate custom mappings are used.
 
 # Default Values
 
-All ADL defined types have a default value:
+All ADL defined types have an implicit default value:
 
    - Primitives have the defaults shown in the table above.
    - A struct's default value has each field is set to it's own types default value.
