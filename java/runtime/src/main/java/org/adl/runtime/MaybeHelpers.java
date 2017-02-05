@@ -1,6 +1,8 @@
 package org.adl.runtime;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonObject;
 
 import java.util.Optional;
@@ -39,22 +41,25 @@ public class MaybeHelpers
       };
 
       public JsonElement toJson(Optional<T> value) {
-        JsonObject result = new JsonObject();
         if (value.isPresent()) {
+          JsonObject result = new JsonObject();
           result.add("just", bindingT.toJson(value.get()));
+          return result;
         } else {
-          result.add("nothing", null);
+          return new JsonPrimitive("nothing");
         }
-        return result;
       }
 
       public Optional<T> fromJson(JsonElement json) {
-        JsonObject obj = json.getAsJsonObject();
-        if (obj.has("just")) {
-          return Optional.<T>of(bindingT.fromJson(obj.get("just")));
-        } else {
+        if (json.isJsonPrimitive() && json.getAsString().equals("nothing") ) {
           return Optional.<T>empty();
-        }          
+        } else {
+          JsonObject obj = json.getAsJsonObject();
+          if (obj.has("just")) {
+            return Optional.<T>of(bindingT.fromJson(obj.get("just")));
+          }
+          throw new JsonParseException("Expected just or nothing for sys.types.Maybe");
+        }
       }
     };
   }
