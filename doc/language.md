@@ -167,7 +167,7 @@ All ADL defined types have an implicit default value:
 In addition, it is possible to override the default values for some
 type definitions, by providing literal values in appropriate places in
 the ADL definitions. A literal value is specified in JSON form, structured
-according to the json [serialization specification][serialization.md].
+according to the json [serialization specification](serialization.md).
 
 ## struct default overrides
 
