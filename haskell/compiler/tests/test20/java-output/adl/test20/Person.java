@@ -31,7 +31,7 @@ public class Person {
     this.firstName = "";
     this.lastName = "";
     this.age = (short)0;
-    this.role = new Role();
+    this.role = Role.FACTORY.create();
   }
 
   public Person(Person other) {
@@ -140,7 +140,7 @@ public class Person {
           _obj.has("fn") ? firstName.get().fromJson(_obj.get("fn")) : "",
           _obj.has("ln") ? lastName.get().fromJson(_obj.get("ln")) : "",
           _obj.has("age") ? age.get().fromJson(_obj.get("age")) : (short)0,
-          _obj.has("role") ? role.get().fromJson(_obj.get("role")) : new Role()
+          _obj.has("role") ? role.get().fromJson(_obj.get("role")) : Role.FACTORY.create()
         );
       }
     };

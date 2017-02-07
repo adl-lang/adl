@@ -274,6 +274,9 @@ isVoidType :: TypeExpr (ResolvedTypeT a) -> Bool
 isVoidType (TypeExpr (RT_Primitive P_Void) []) = True
 isVoidType _ = False
 
+isEnumeration :: Union (ResolvedTypeT t) -> Bool
+isEnumeration u = null (u_typeParams u) && all (isVoidType . f_type)  (u_fields u)
+
 -- Naming Scope
     -- Decls in referenced modules (imported and explicitly referenced)
     -- Decls in current modules

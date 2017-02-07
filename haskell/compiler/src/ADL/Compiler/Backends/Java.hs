@@ -87,7 +87,9 @@ generateModule jf fileWriter mCodeGetProfile m0 = do
       then do
         classFile <- case d_type decl of
           (Decl_Struct s) -> return (generateStruct codeProfile moduleName javaPackageFn decl s)
-          (Decl_Union u)  -> return (generateUnion codeProfile moduleName javaPackageFn decl u)
+          (Decl_Union u)
+            | isEnumeration u -> return (generateEnum codeProfile moduleName javaPackageFn decl u)
+            | otherwise       -> return (generateUnion codeProfile moduleName javaPackageFn decl u)
           (Decl_Newtype n) -> return (generateNewtype codeProfile moduleName javaPackageFn decl n)
           (Decl_Typedef _) -> eioError "BUG: typedefs should have been eliminated"
         let lines = codeText maxLineLength (classFileCode classFile)
@@ -589,6 +591,56 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       when (cgp_parcelable codeProfile) $ do
         generateUnionParcelable codeProfile decl union fieldDetails
 
+generateEnum :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Union CResolvedType -> ClassFile
+generateEnum codeProfile moduleName javaPackageFn decl union = execState gen state0
+  where
+    className = unreserveWord (d_name decl)
+    classDecl = "public enum " <> className
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl
+
+    gen = do
+      setDocString (generateDocString (d_annotations decl))
+      fieldDetails <- mapM genFieldDetails (u_fields union)
+      fieldDetail0 <- case fieldDetails of
+        [] -> error "BUG: unions with no fields are illegal"
+        (fd:_) -> return fd
+      factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
+      
+      let terminators = replicate (length fieldDetails-1) "," <> [";"]
+      mapM_ addField [ctemplate "$1$2" [discriminatorName fd,term] | (fd,term) <- zip fieldDetails terminators]
+
+      addMethod $ coverride "public String toString()" (
+        cblock "switch(this)" (
+           mconcat [ctemplate "case $1: return \"$2\";" [discriminatorName fd, fd_serializedName fd] | fd <- fieldDetails]
+           )
+        <> cline "throw new IllegalArgumentException();"
+        )
+    
+      addMethod $ cblock (template "public static $1 fromString(String s)" [className]) (
+        mconcat [cblock (template "if (s.equals(\"$1\"))" [fd_serializedName fd]) (
+                    ctemplate "return $1;" [discriminatorName fd]
+                    )
+                | fd <- fieldDetails ]
+        <> cline "throw new IllegalArgumentException(\"illegal value: \" + s);"
+        )
+
+      addMethod $ cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface])
+        (  cblock (template "public $1 create()" [className])
+            ( ctemplate "return $1;" [discriminatorName fieldDetail0]
+            )
+        <> cline ""
+        <> cblock (template "public $1 create($1 other)" [className])
+            ( cline "return other;"
+            )
+        )
+
+      -- Json
+      when (cgp_json codeProfile) $ do
+        generateEnumJson codeProfile decl union fieldDetails
+
+      -- Parcelable
+      when (cgp_parcelable codeProfile) $ do
+        error "Unimplemented: Parcellable for enums"
 
 generateRuntime :: JavaFlags -> FileWriter -> Set.Set JavaClass -> IO ()
 generateRuntime jf fileWriter imports = do

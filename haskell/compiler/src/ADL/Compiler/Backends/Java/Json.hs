@@ -2,7 +2,8 @@
 module ADL.Compiler.Backends.Java.Json(
   generateStructJson,
   generateNewtypeJson,
-  generateUnionJson
+  generateUnionJson,
+  generateEnumJson
   ) where
 
 import Control.Monad(when)
@@ -230,6 +231,33 @@ generateUnionJson cgp decl union fieldDetails = do
                   )
                 )
               )
+
+  addMethod (cline "/* Json serialization */")
+  addMethod factory
+
+generateEnumJson :: CodeGenProfile -> CDecl -> Union CResolvedType -> [FieldDetails] -> CState ()
+generateEnumJson cgp decl union fieldDetails = do
+  factoryI <- addImport (javaClass (cgp_runtimePackage cgp) "Factory")
+  jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
+  jsonElementI <- addImport "com.google.gson.JsonElement"
+  jsonPrimitiveI <- addImport "com.google.gson.JsonPrimitive"
+
+  let className = unreserveWord (d_name decl)
+      factory = cblock (template "static $1<$2> jsonBinding()" [jsonBindingI,className])
+        (  cblock1 (template "return new $1<$2>()" [jsonBindingI,className])
+           (  cblock (template "public $1<$2> factory()" [factoryI,className])
+              (  cline "return FACTORY;"
+              )
+           <> cline ""
+           <> cblock (template "public $1 toJson($2 _value)" [jsonElementI,className])
+              (  ctemplate "return new $1(_value.toString());" [jsonPrimitiveI]
+              )
+           <> cline ""
+           <> cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI])
+              (  cline "return fromString(_json.getAsString());"
+              )
+           )
+        )
 
   addMethod (cline "/* Json serialization */")
   addMethod factory

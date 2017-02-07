@@ -1,120 +1,56 @@
 package adl.test14;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
-import org.adl.runtime.JsonBindings;
-import org.adl.runtime.Lazy;
-import java.util.Map;
-import java.util.Objects;
 
-public class unsigned {
+public enum unsigned {
 
   /* Members */
 
-  private Disc disc;
-  private Object value;
-
-  /**
-   * The unsigned discriminator type.
-   */
-  public enum Disc {
-    NULL_
-  }
-
-  /* Constructors */
-
-  public static unsigned null_() {
-    return new unsigned(Disc.NULL_, null);
-  }
-
-  public unsigned() {
-    this.disc = Disc.NULL_;
-    this.value = null;
-  }
-
-  public unsigned(unsigned other) {
-    this.disc = other.disc;
-    switch (other.disc) {
-      case NULL_:
-        this.value = (Void) other.value;
-        break;
-    }
-  }
-
-  private unsigned(Disc disc, Object value) {
-    this.disc = disc;
-    this.value = value;
-  }
-
-  /* Accessors */
-
-  public Disc getDisc() {
-    return disc;
-  }
-
-  /* Mutators */
-
-  public void setNull() {
-    this.value = null;
-    this.disc = Disc.NULL_;
-  }
-
-  /* Object level helpers */
+  NULL_;
 
   @Override
-  public boolean equals(Object other0) {
-    if (!(other0 instanceof unsigned)) {
-      return false;
+  public String toString() {
+    switch(this) {
+      case NULL_: return "null";
     }
-    unsigned other = (unsigned) other0;
-    return disc == other.disc;
+    throw new IllegalArgumentException();
   }
 
-  @Override
-  public int hashCode() {
-    return disc.hashCode();
+  public static unsigned fromString(String s) {
+    if (s.equals("null")) {
+      return NULL_;
+    }
+    throw new IllegalArgumentException("illegal value: " + s);
   }
-
-  /* Factory for construction of generic values */
 
   public static final Factory<unsigned> FACTORY = new Factory<unsigned>() {
     public unsigned create() {
-      return new unsigned();
+      return NULL_;
     }
+
     public unsigned create(unsigned other) {
-      return new unsigned(other);
+      return other;
     }
   };
 
   /* Json serialization */
 
-  public static JsonBinding<unsigned> jsonBinding() {
-    final Lazy<JsonBinding<Void>> null_ = new Lazy<>(() -> JsonBindings.VOID);
-    final Factory<unsigned> _factory = FACTORY;
-
+  static JsonBinding<unsigned> jsonBinding() {
     return new JsonBinding<unsigned>() {
       public Factory<unsigned> factory() {
-        return _factory;
+        return FACTORY;
       }
 
       public JsonElement toJson(unsigned _value) {
-        switch (_value.getDisc()) {
-          case NULL_:
-            return JsonBindings.unionToJson("null", null, null);
-        }
-        return null;
+        return new JsonPrimitive(_value.toString());
       }
 
       public unsigned fromJson(JsonElement _json) {
-        String _key = JsonBindings.unionNameFromJson(_json);
-        if (_key.equals("null")) {
-          return unsigned.null_();
-        }
-        throw new IllegalStateException();
+        return fromString(_json.getAsString());
       }
     };
   }

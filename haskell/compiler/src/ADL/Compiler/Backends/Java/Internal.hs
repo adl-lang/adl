@@ -306,7 +306,7 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
   , td_hashfn = \v -> template "$1.hashCode()" [v]
   }
   where
-    genLiteralText' (Literal te@(TypeExpr _ []) LDefault) = do
+    genLiteralText' (Literal te@(TypeExpr tref []) LDefault) | not (refEnumeration tref) = do
       typeExpr <- genTypeExpr te
       return (template "new $1()" [typeExpr])
     genLiteralText' (Literal te LDefault) = do
@@ -320,6 +320,9 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
       typeExpr <- genTypeExpr te
       lit <- genLiteralText l
       return (template "$1.$2($3)" [typeExpr, ctor, lit ])
+
+    refEnumeration (RT_Named (_,Decl{d_type=Decl_Union u})) = isEnumeration u
+    refEnumeration _ = False
 
 -- a custom type
 getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetails
