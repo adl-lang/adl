@@ -69,28 +69,30 @@ are populated with their default values.
 ### Unions
 
 An ADL `union` is a sum type - only one discriminator can be active at any
-time. The json serialisation is thus an object with a single name /value
-pair: the name of the active discriminator, and it's serialized value.
+time. The json serialisation depends on the type of discriminator. If
+the type is `Void` then the union is serialised as the discriminator name
+(ie a json string). For any other type, the union value is serialised as
+a json object with a single name /value pair: the name of the active
+discriminator, and it's serialized value.
 
 Hence
 
 ```
 union F
 {
+    Void empty;
     Int32 field1;
     Vector<String> field2;
 }
 ```
 
-could have have either discriminator active, (but not both),  eg
+could have any of the following serialised values:
 
 ```
+"empty"
+
 { "field1" : 42 }
-```
 
-or
-
-```
 { "field2" : ["the","day","is","done"] }
 ```
 
