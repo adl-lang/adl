@@ -39,7 +39,7 @@ public enum unsigned {
 
   /* Json serialization */
 
-  static JsonBinding<unsigned> jsonBinding() {
+  public static JsonBinding<unsigned> jsonBinding() {
     return new JsonBinding<unsigned>() {
       public Factory<unsigned> factory() {
         return FACTORY;

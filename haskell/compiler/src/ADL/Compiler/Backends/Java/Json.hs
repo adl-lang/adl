@@ -243,7 +243,7 @@ generateEnumJson cgp decl union fieldDetails = do
   jsonPrimitiveI <- addImport "com.google.gson.JsonPrimitive"
 
   let className = unreserveWord (d_name decl)
-      factory = cblock (template "static $1<$2> jsonBinding()" [jsonBindingI,className])
+      factory = cblock (template "public static $1<$2> jsonBinding()" [jsonBindingI,className])
         (  cblock1 (template "return new $1<$2>()" [jsonBindingI,className])
            (  cblock (template "public $1<$2> factory()" [factoryI,className])
               (  cline "return FACTORY;"

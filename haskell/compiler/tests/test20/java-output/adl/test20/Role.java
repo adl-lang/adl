@@ -49,7 +49,7 @@ public enum Role {
 
   /* Json serialization */
 
-  static JsonBinding<Role> jsonBinding() {
+  public static JsonBinding<Role> jsonBinding() {
     return new JsonBinding<Role>() {
       public Factory<Role> factory() {
         return FACTORY;
