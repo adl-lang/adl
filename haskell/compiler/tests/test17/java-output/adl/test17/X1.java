@@ -1,3 +1,5 @@
+/* Code generated from adl module test17 */
+
 package adl.test17;
 
 import com.google.gson.JsonElement;

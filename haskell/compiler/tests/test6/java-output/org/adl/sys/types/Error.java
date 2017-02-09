@@ -1,3 +1,5 @@
+/* Code generated from adl module sys.types */
+
 package org.adl.sys.types;
 
 import com.google.gson.JsonElement;

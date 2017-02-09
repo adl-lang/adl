@@ -165,6 +165,10 @@ cf_package  cf = cf_javaPackageFn cf (cf_module cf)
 
 classFileCode :: ClassFile -> Code
 classFileCode content =
+  ctemplate "/* Code generated from adl module $1 */" [formatText (cf_module content)]
+  <>
+  cline ""
+  <>
   ( if T.null header
       then mempty
       else multiLineComment header <> cline ""

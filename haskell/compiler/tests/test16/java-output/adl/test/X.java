@@ -1,3 +1,5 @@
+/* Code generated from adl module test */
+
 package adl.test;
 
 import adl.test2.A;

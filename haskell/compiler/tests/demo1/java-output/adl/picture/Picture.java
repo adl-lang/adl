@@ -1,3 +1,5 @@
+/* Code generated from adl module picture */
+
 package adl.picture;
 
 import com.google.gson.JsonElement;

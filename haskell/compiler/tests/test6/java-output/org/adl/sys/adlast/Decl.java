@@ -1,3 +1,5 @@
+/* Code generated from adl module sys.adlast */
+
 package org.adl.sys.adlast;
 
 import com.google.gson.JsonElement;
