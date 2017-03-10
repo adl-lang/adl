@@ -24,6 +24,7 @@ import qualified ADL.Compiler.Backends.Haskell as H
 import qualified ADL.Compiler.Backends.Cpp as CPP
 import qualified ADL.Compiler.Backends.AST as AST
 import qualified ADL.Compiler.Backends.Java as J
+import qualified ADL.Compiler.Backends.Javascript as JS
 
 data CodeGenResult = MatchOutput
                    | CompilerFailed T.Text
@@ -135,6 +136,16 @@ runJavaBackend1 mpath = runJavaBackend [ipath,stdsrc] [mpath] epath id
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "java-output"
+    
+runJsBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
+runJsBackend ipaths mpaths epath = do
+  tdir <- getTemporaryDirectory
+  tempDir <- createTempDirectory tdir "adl.test."
+  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
+      jf = JS.JavascriptFlags {}
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+  er <- unEIO $ JS.generate af jf fileWriter mpaths
+  processCompilerOutput epath tempDir er 
 
 stdsrc :: FilePath
 stdsrc = "../../../haskell/compiler/lib/adl"
@@ -289,6 +300,11 @@ runTests = do
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runJavaBackend1 "demo1/input/picture.adl")
+        `shouldReturn` MatchOutput
+
+  describe "adlc javascript backend" $ do
+    it "generates expected code for the standard library" $ do
+      collectResults (runJsBackend [stdsrc] stdfiles "test6/js-output")
         `shouldReturn` MatchOutput
     
   where

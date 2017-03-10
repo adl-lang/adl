@@ -298,21 +298,19 @@ getTypeDetails (RT_Primitive P_Double) = monomorphicPrimitive "Double"
 getTypeDetails (RT_Primitive P_Float) = monomorphicPrimitive "Double"
 getTypeDetails (RT_Primitive P_Bool) = monomorphicPrimitive "Bool"
 getTypeDetails (RT_Primitive P_ByteVector) = monomorphicPrimitive "ByteVector"
-getTypeDetails (RT_Primitive P_Sink) = error "Sink type not implemented"
-
-getTypeDetails (RT_Primitive P_Vector) = TypeDetails
-  { td_type = \typeArgs -> do
-      return (withTypeArgs (JSON.object ["primitive" .= ("Vector"::T.Text)]) typeArgs)
-  }
-
-getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
-  { td_type = \typeArgs -> do
-      return (withTypeArgs (JSON.object ["primitive" .= ("StringMap"::T.Text)]) typeArgs)
-  }
+getTypeDetails (RT_Primitive P_Vector) = polymorphicPrimitive "Vector"
+getTypeDetails (RT_Primitive P_StringMap) = polymorphicPrimitive "StringMap"
+getTypeDetails (RT_Primitive P_Sink) = polymorphicPrimitive "Sink"
 
 monomorphicPrimitive :: T.Text -> TypeDetails
 monomorphicPrimitive name = TypeDetails
   { td_type = \_ -> return (JSON.object ["primitive" .= name])
+  }
+
+polymorphicPrimitive :: T.Text  -> TypeDetails
+polymorphicPrimitive name = TypeDetails
+  { td_type = \typeArgs -> do
+      return (withTypeArgs (JSON.object ["primitive" .= name]) typeArgs)
   }
 
 genScopedName :: ScopedName -> CState JSON.Value
