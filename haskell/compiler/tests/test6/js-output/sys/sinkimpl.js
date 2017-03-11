@@ -3,7 +3,7 @@
 //
 
 
-var SerialisationType = {
+const SerialisationType = {
   name : "SerialisationType",
   module : "sys.sinkimpl",
   kind : "newtype",
@@ -14,7 +14,7 @@ var SerialisationType = {
   ]
 };
 
-var SinkData = {
+const SinkData = {
   name : "SinkData",
   module : "sys.sinkimpl",
   kind : "struct",
@@ -46,7 +46,7 @@ var SinkData = {
   ]
 };
 
-var TransportAddr = {
+const TransportAddr = {
   name : "TransportAddr",
   module : "sys.sinkimpl",
   kind : "union",
@@ -78,7 +78,7 @@ var TransportAddr = {
   ]
 };
 
-var TransportName = {
+const TransportName = {
   name : "TransportName",
   module : "sys.sinkimpl",
   kind : "newtype",
@@ -89,11 +89,9 @@ var TransportName = {
   ]
 };
 
-function _addTypes(dict) {
-  dict["sys.sinkimpl.TransportName"] = TransportName;
-  dict["sys.sinkimpl.TransportAddr"] = TransportAddr;
-  dict["sys.sinkimpl.SinkData"] = SinkData;
-  dict["sys.sinkimpl.SerialisationType"] = SerialisationType;
-}
-
-export { _addTypes };
+export const _ADL_TYPES = {
+  "sys.sinkimpl.TransportName" : TransportName,
+  "sys.sinkimpl.TransportAddr" : TransportAddr,
+  "sys.sinkimpl.SinkData" : SinkData,
+  "sys.sinkimpl.SerialisationType" : SerialisationType
+};

@@ -3,7 +3,7 @@
 //
 
 
-var Rpc = {
+const Rpc = {
   name : "Rpc",
   module : "sys.rpc",
   kind : "struct",
@@ -28,7 +28,7 @@ var Rpc = {
   ]
 };
 
-var RpcSvc = {
+const RpcSvc = {
   name : "RpcSvc",
   module : "sys.rpc",
   kind : "typedef",
@@ -38,9 +38,7 @@ var RpcSvc = {
   ]
 };
 
-function _addTypes(dict) {
-  dict["sys.rpc.RpcSvc"] = RpcSvc;
-  dict["sys.rpc.Rpc"] = Rpc;
-}
-
-export { _addTypes };
+export const _ADL_TYPES = {
+  "sys.rpc.RpcSvc" : RpcSvc,
+  "sys.rpc.Rpc" : Rpc
+};

@@ -138,7 +138,7 @@ genAType mod decl typeParams fields kind = do
   fieldDetails <- mapM genFieldDetails fields
   let jsname = unreserveWord (d_name decl)
       code
-        = ctemplate "var $1 = {" [jsname]
+        = ctemplate "const $1 = {" [jsname]
         <> indent
           (  ctemplate "name : \"$1\"," [d_name decl]
           <> ctemplate "module : \"$1\"," [formatText (m_name mod)]
@@ -184,7 +184,7 @@ genTypedef  mod decl typedef = do
   texpr <- genTypeExpr (t_typeExpr typedef)
   let jsname = unreserveWord (d_name decl)
       code
-        =  ctemplate "var $1 = {" [jsname]
+        =  ctemplate "const $1 = {" [jsname]
         <> indent
           (  ctemplate "name : \"$1\"," [d_name decl]
           <> ctemplate "module : \"$1\"," [formatText (m_name mod)]
@@ -205,7 +205,7 @@ genNewtype  mod decl ntype = do
   texpr <- genTypeExpr (n_typeExpr ntype)
   let jsname = unreserveWord (d_name decl)
       code
-        =  ctemplate "var $1 = {" [jsname]
+        =  ctemplate "const $1 = {" [jsname]
         <> indent
           (  ctemplate "name : \"$1\"," [d_name decl]
           <> ctemplate "module : \"$1\"," [formatText (m_name mod)]
@@ -227,7 +227,7 @@ mkAnnotation (ann,(_,value)) mcomma
   =  cline "{"
   <> indent
     (  ctemplate "type : \"$1\"," [formatText ann]
-    <> ctemplate "value : $1," [textFromJson value]
+    <> ctemplate "value : $1" [textFromJson value]
     )
   <> ctemplate "}$1" [mcomma]
 
@@ -350,11 +350,10 @@ jsModuleCode mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText 10000 code))
          <> cline ""
          <> mconcat [ CLine "" <> decl | decl <- reverse (mf_declarations mf)]
          <> cline ""
-         <> cline "function _addTypes(dict) {"
-         <> indent (mconcat [ctemplate "dict[\"$1\"] = $2;" [formatText sn, unreserveWord (sn_name sn)] | sn <- mf_exports mf])
-         <> cline "}"
-         <> cline ""
-         <> cline "export { _addTypes };"
+         <> cline "export const _ADL_TYPES = {"
+         <> indent (mconcat [ctemplate "\"$1\" : $2$3" [formatText sn, unreserveWord (sn_name sn), mcomma]
+                            | (sn,mcomma) <- withCommas (mf_exports mf)])
+         <> cline "};"
 
 coreModule :: JSModuleName
 coreModule = JSModuleName ["adl"] "core"

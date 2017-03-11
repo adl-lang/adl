@@ -4,7 +4,7 @@
 //
 
 
-var Annotations = {
+const Annotations = {
   name : "Annotations",
   module : "sys.adlast",
   kind : "typedef",
@@ -14,7 +14,7 @@ var Annotations = {
   ]
 };
 
-var Decl = {
+const Decl = {
   name : "Decl",
   module : "sys.adlast",
   kind : "struct",
@@ -53,7 +53,7 @@ var Decl = {
   ]
 };
 
-var DeclType = {
+const DeclType = {
   name : "DeclType",
   module : "sys.adlast",
   kind : "union",
@@ -92,7 +92,7 @@ var DeclType = {
   ]
 };
 
-var DeclVersions = {
+const DeclVersions = {
   name : "DeclVersions",
   module : "sys.adlast",
   kind : "typedef",
@@ -102,7 +102,7 @@ var DeclVersions = {
   ]
 };
 
-var Field = {
+const Field = {
   name : "Field",
   module : "sys.adlast",
   kind : "struct",
@@ -141,7 +141,7 @@ var Field = {
   ]
 };
 
-var Ident = {
+const Ident = {
   name : "Ident",
   module : "sys.adlast",
   kind : "typedef",
@@ -151,7 +151,7 @@ var Ident = {
   ]
 };
 
-var Import = {
+const Import = {
   name : "Import",
   module : "sys.adlast",
   kind : "union",
@@ -176,7 +176,7 @@ var Import = {
   ]
 };
 
-var Literal = {
+const Literal = {
   name : "Literal",
   module : "sys.adlast",
   kind : "union",
@@ -236,7 +236,7 @@ var Literal = {
   ]
 };
 
-var Module = {
+const Module = {
   name : "Module",
   module : "sys.adlast",
   kind : "struct",
@@ -268,7 +268,7 @@ var Module = {
   ]
 };
 
-var ModuleName = {
+const ModuleName = {
   name : "ModuleName",
   module : "sys.adlast",
   kind : "typedef",
@@ -278,7 +278,7 @@ var ModuleName = {
   ]
 };
 
-var NewType = {
+const NewType = {
   name : "NewType",
   module : "sys.adlast",
   kind : "struct",
@@ -310,7 +310,7 @@ var NewType = {
   ]
 };
 
-var ScopedName = {
+const ScopedName = {
   name : "ScopedName",
   module : "sys.adlast",
   kind : "struct",
@@ -335,7 +335,7 @@ var ScopedName = {
   ]
 };
 
-var Struct = {
+const Struct = {
   name : "Struct",
   module : "sys.adlast",
   kind : "struct",
@@ -360,7 +360,7 @@ var Struct = {
   ]
 };
 
-var TypeDef = {
+const TypeDef = {
   name : "TypeDef",
   module : "sys.adlast",
   kind : "struct",
@@ -385,7 +385,7 @@ var TypeDef = {
   ]
 };
 
-var TypeExpr = {
+const TypeExpr = {
   name : "TypeExpr",
   module : "sys.adlast",
   kind : "struct",
@@ -410,7 +410,7 @@ var TypeExpr = {
   ]
 };
 
-var TypeRef = {
+const TypeRef = {
   name : "TypeRef",
   module : "sys.adlast",
   kind : "union",
@@ -442,7 +442,7 @@ var TypeRef = {
   ]
 };
 
-var Union = {
+const Union = {
   name : "Union",
   module : "sys.adlast",
   kind : "struct",
@@ -467,24 +467,22 @@ var Union = {
   ]
 };
 
-function _addTypes(dict) {
-  dict["sys.adlast.Union"] = Union;
-  dict["sys.adlast.TypeRef"] = TypeRef;
-  dict["sys.adlast.TypeExpr"] = TypeExpr;
-  dict["sys.adlast.TypeDef"] = TypeDef;
-  dict["sys.adlast.Struct"] = Struct;
-  dict["sys.adlast.ScopedName"] = ScopedName;
-  dict["sys.adlast.NewType"] = NewType;
-  dict["sys.adlast.ModuleName"] = ModuleName;
-  dict["sys.adlast.Module"] = Module;
-  dict["sys.adlast.Literal"] = Literal;
-  dict["sys.adlast.Import"] = Import;
-  dict["sys.adlast.Ident"] = Ident;
-  dict["sys.adlast.Field"] = Field;
-  dict["sys.adlast.DeclVersions"] = DeclVersions;
-  dict["sys.adlast.DeclType"] = DeclType;
-  dict["sys.adlast.Decl"] = Decl;
-  dict["sys.adlast.Annotations"] = Annotations;
-}
-
-export { _addTypes };
+export const _ADL_TYPES = {
+  "sys.adlast.Union" : Union,
+  "sys.adlast.TypeRef" : TypeRef,
+  "sys.adlast.TypeExpr" : TypeExpr,
+  "sys.adlast.TypeDef" : TypeDef,
+  "sys.adlast.Struct" : Struct,
+  "sys.adlast.ScopedName" : ScopedName,
+  "sys.adlast.NewType" : NewType,
+  "sys.adlast.ModuleName" : ModuleName,
+  "sys.adlast.Module" : Module,
+  "sys.adlast.Literal" : Literal,
+  "sys.adlast.Import" : Import,
+  "sys.adlast.Ident" : Ident,
+  "sys.adlast.Field" : Field,
+  "sys.adlast.DeclVersions" : DeclVersions,
+  "sys.adlast.DeclType" : DeclType,
+  "sys.adlast.Decl" : Decl,
+  "sys.adlast.Annotations" : Annotations
+};

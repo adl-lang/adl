@@ -3,7 +3,7 @@
 //
 
 
-var Either = {
+const Either = {
   name : "Either",
   module : "sys.types",
   kind : "union",
@@ -28,7 +28,7 @@ var Either = {
   ]
 };
 
-var Error = {
+const Error = {
   name : "Error",
   module : "sys.types",
   kind : "union",
@@ -53,7 +53,7 @@ var Error = {
   ]
 };
 
-var Map = {
+const Map = {
   name : "Map",
   module : "sys.types",
   kind : "newtype",
@@ -64,7 +64,7 @@ var Map = {
   ]
 };
 
-var Maybe = {
+const Maybe = {
   name : "Maybe",
   module : "sys.types",
   kind : "union",
@@ -89,7 +89,7 @@ var Maybe = {
   ]
 };
 
-var Nullable = {
+const Nullable = {
   name : "Nullable",
   module : "sys.types",
   kind : "union",
@@ -113,16 +113,16 @@ var Nullable = {
   annotations : [
     {
       type : "sys.annotations.CustomSerialization",
-      value : true,
+      value : true
     },
     {
       type : "sys.annotations.Doc",
-      value : "Nullable<T> is isomorphic to Maybe<T> but with an alternative\njson serialisation, where the null_ branch is represented by a\njson null Value.\n",
+      value : "Nullable<T> is isomorphic to Maybe<T> but with an alternative\njson serialisation, where the null_ branch is represented by a\njson null Value.\n"
     }
   ]
 };
 
-var Pair = {
+const Pair = {
   name : "Pair",
   module : "sys.types",
   kind : "struct",
@@ -147,7 +147,7 @@ var Pair = {
   ]
 };
 
-var Set = {
+const Set = {
   name : "Set",
   module : "sys.types",
   kind : "newtype",
@@ -158,14 +158,12 @@ var Set = {
   ]
 };
 
-function _addTypes(dict) {
-  dict["sys.types.Set"] = Set;
-  dict["sys.types.Pair"] = Pair;
-  dict["sys.types.Nullable"] = Nullable;
-  dict["sys.types.Maybe"] = Maybe;
-  dict["sys.types.Map"] = Map;
-  dict["sys.types.Error"] = Error;
-  dict["sys.types.Either"] = Either;
-}
-
-export { _addTypes };
+export const _ADL_TYPES = {
+  "sys.types.Set" : Set,
+  "sys.types.Pair" : Pair,
+  "sys.types.Nullable" : Nullable,
+  "sys.types.Maybe" : Maybe,
+  "sys.types.Map" : Map,
+  "sys.types.Error" : Error,
+  "sys.types.Either" : Either
+};
