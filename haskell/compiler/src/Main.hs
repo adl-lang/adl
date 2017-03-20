@@ -286,6 +286,12 @@ runJavaScript args0 =
       , verboseOption setVerbose
       ]
 
+runShow args0 = 
+  case args0 of
+    ["--adlstdlib"] -> liftIO $ do
+      systemAdlDir <- systemAdlDir <$> getLibDir
+      putStrLn systemAdlDir
+    _ -> eioError "Usage: adl show [OPTION...]"
 
 usage = T.intercalate "\n"
   [ "Usage: adl verify [OPTION..] <modulePath>..."
@@ -294,6 +300,7 @@ usage = T.intercalate "\n"
   , "       adl cpp [OPTION..] <modulePath>..."
   , "       adl java [OPTION..] <modulePath>..."
   , "       adl javascript [OPTION..] <modulePath>..."
+  , "       adl show --adlstdlib"
   ]    
     
 main = do
@@ -305,6 +312,7 @@ main = do
     ("cpp":args) -> runCpp args
     ("java":args) -> runJava args
     ("javascript":args) -> runJavaScript args
+    ("show":args) -> runShow args
     _ -> eioError usage
   where
     runEIO eio = do
