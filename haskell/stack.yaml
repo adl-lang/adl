@@ -8,4 +8,4 @@ packages:
 - compiler
 - examples
 extra-deps:
-resolver: lts-7.13
+resolver: lts-8.5
