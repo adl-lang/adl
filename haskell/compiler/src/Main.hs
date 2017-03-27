@@ -8,6 +8,7 @@ import System.Environment (getArgs)
 import System.FilePath(joinPath)
 import Data.List(intercalate,partition)
 import Data.String(IsString(..))
+import Data.Version(showVersion)
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -23,6 +24,8 @@ import ADL.Compiler.DataFiles
 import ADL.Compiler.Utils
 import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
 import HaskellCustomTypes
+
+import qualified Paths_adl_compiler as P
 
 searchDirOption ufn =
   Option "I" ["searchdir"]
@@ -291,16 +294,20 @@ runShow args0 =
     ["--adlstdlib"] -> liftIO $ do
       systemAdlDir <- systemAdlDir <$> getLibDir
       putStrLn systemAdlDir
+    ["--version"] -> liftIO $ do
+      putStrLn (showVersion P.version)
+    _ -> eioError "Usage: adl show [OPTION...]"
     _ -> eioError "Usage: adl show [OPTION...]"
 
 usage = T.intercalate "\n"
-  [ "Usage: adl verify [OPTION..] <modulePath>..."
-  , "       adl ast [OPTION..] <modulePath>..."
-  , "       adl haskell [OPTION..] <modulePath>..."
-  , "       adl cpp [OPTION..] <modulePath>..."
-  , "       adl java [OPTION..] <modulePath>..."
-  , "       adl javascript [OPTION..] <modulePath>..."
-  , "       adl show --adlstdlib"
+  [ "Usage: adlc verify [OPTION..] <modulePath>..."
+  , "       adlc ast [OPTION..] <modulePath>..."
+  , "       adlc haskell [OPTION..] <modulePath>..."
+  , "       adlc cpp [OPTION..] <modulePath>..."
+  , "       adlc java [OPTION..] <modulePath>..."
+  , "       adlc javascript [OPTION..] <modulePath>..."
+  , "       adlc show --version"
+  , "       adlc show --adlstdlib"
   ]    
     
 main = do
