@@ -14,6 +14,7 @@ import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.Builder as LT
 import qualified Data.Text.Encoding as T
 
+import Control.Monad(when)
 import Control.Monad.Trans(liftIO)
 import Control.Monad.Trans.State.Strict(State,execState,modify,get,put)
 import Data.Aeson( (.=) )
@@ -58,9 +59,6 @@ type CState a = State ModuleFile a
 data ModuleFile = ModuleFile {
   mf_moduleName :: ModuleName,
   
-  -- The names currently used
-  mf_names :: Map.Map Ident Int,
-
   -- The modules on which this one depends
   mf_depends :: Set.Set ModuleName,
 
@@ -94,7 +92,7 @@ data TypeDetails = TypeDetails {
 }
 
 emptyModuleFile :: ModuleName -> ModuleFile
-emptyModuleFile mn = ModuleFile mn Map.empty Set.empty [] []
+emptyModuleFile mn = ModuleFile mn Set.empty [] []
 
 generate :: AdlFlags -> JavascriptFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do
@@ -116,10 +114,7 @@ generateModule jf fileWriter m0 = do
 
 genModule :: CModule -> CState ()
 genModule m = do
-  -- First reserve the correct names for the declarations
-  for_ (Map.keys (m_decls m)) genUniqueName
-
-  -- Then generate them
+  -- Generate each declaration
   for_ (Map.elems (m_decls m)) $ \decl -> do
     case d_type decl of
      (Decl_Struct struct) -> genStruct m decl struct
@@ -148,7 +143,7 @@ genAType mod decl typeParams fields kind = do
           <> indent (mconcat [mkField f comma | (f,comma) <- withCommas fieldDetails])
           <> cline "],"
           <> cline "annotations : ["
-          <> indent (mconcat [mkAnnotation a comma | (a,comma) <- (withCommas . Map.toList) (d_annotations decl)])
+          <> indent (mconcat [mkAnnotation mod a comma | (a,comma) <- (withCommas . Map.toList) (d_annotations decl)])
           <> cline "]"
           )
         <> cline "};"
@@ -159,7 +154,7 @@ genAType mod decl typeParams fields kind = do
           <> ctemplate "type : $1," [textFromJson (fd_typeExpr fieldDetails)]
           <> ctemplate "defaultv : $1," [textFromDefault (f_default field)]
           <> cline "annotations : ["
-          <> indent (mconcat [mkAnnotation a comma | (a,comma) <- (withCommas . Map.toList) (f_annotations field)])
+          <> indent (mconcat [mkAnnotation mod a comma | (a,comma) <- (withCommas . Map.toList) (f_annotations field)])
           <> cline "]"
           )
         <> ctemplate "}$1" [mcomma]
@@ -192,7 +187,7 @@ genTypedef  mod decl typedef = do
           <> ctemplate "typevars : $1," [textFromTypeVars (t_typeParams typedef)]
           <> ctemplate "type : $1," [textFromJson texpr]
           <> cline "annotations : ["
-          <> indent (mconcat [mkAnnotation a comma | (a,comma) <- (withCommas . Map.toList) (d_annotations decl)])
+          <> indent (mconcat [mkAnnotation mod a comma | (a,comma) <- (withCommas . Map.toList) (d_annotations decl)])
           <> cline "]"
           )
         <> cline "};"
@@ -214,7 +209,7 @@ genNewtype  mod decl ntype = do
           <> ctemplate "type : $1," [textFromJson texpr]
           <> ctemplate "defaultv : $1," [textFromDefault (n_default ntype)]
           <> cline "annotations : ["
-          <> indent (mconcat [mkAnnotation a comma | (a,comma) <- (withCommas . Map.toList) (d_annotations decl)])
+          <> indent (mconcat [mkAnnotation mod a comma | (a,comma) <- (withCommas . Map.toList) (d_annotations decl)])
           <> cline "]"
           )
         <> cline "};"
@@ -222,14 +217,14 @@ genNewtype  mod decl ntype = do
   addDeclaration code
   addExport (ScopedName (m_name mod) (d_name decl))
 
-mkAnnotation :: (ScopedName,(r,JSON.Value)) -> T.Text -> Code
-mkAnnotation (ann,(_,value)) mcomma
-  =  cline "{"
-  <> indent
-    (  ctemplate "type : \"$1\"," [formatText ann]
-    <> ctemplate "value : $1" [textFromJson value]
-    )
-  <> ctemplate "}$1" [mcomma]
+mkAnnotation :: CModule -> (ScopedName,(r,JSON.Value)) -> T.Text -> Code
+mkAnnotation mod (ann,(_,value)) mcomma =
+  cline "{"
+    <> indent
+      (  ctemplate "type : \"$1\"," [formatText (scopedName (m_name mod) ann)]
+      <> ctemplate "value : $1" [textFromJson value]
+      )
+    <> ctemplate "}$1" [mcomma]
 
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails field = do
@@ -253,18 +248,6 @@ addExport sn = modify (\mf->mf{mf_exports=sn:mf_exports mf})
 addDepends :: ModuleName -> CState ()
 addDepends moduleName = do
   modify (\mf->mf{mf_depends=Set.insert moduleName (mf_depends mf)})
-
-genUniqueName :: Ident -> CState Ident
-genUniqueName ident = do
-  mf <- get
-  case Map.lookup ident (mf_names mf) of
-     Nothing -> do
-       modify (\mf->mf{mf_names=Map.insert ident 0 (mf_names mf)})
-       return ident
-     (Just n) -> do
-       let ident' = ident <> T.pack (show (n+1))
-       modify (\mf->mf{mf_names=Map.insert ident (n+1) (mf_names mf)})
-       return ident'
 
 getTypeDetails ::CResolvedType -> TypeDetails
 
@@ -313,16 +296,16 @@ polymorphicPrimitive name = TypeDetails
       return (withTypeArgs (JSON.object ["primitive" .= name]) typeArgs)
   }
 
+scopedName :: ModuleName -> ScopedName -> ScopedName
+scopedName mname sn@ScopedName{sn_moduleName=ModuleName []} = sn{sn_moduleName=mname}
+scopedName _ sn = sn
+
 genScopedName :: ScopedName -> CState JSON.Value
 genScopedName sn0 = do
-  sn <- case sn0 of
-    ScopedName{sn_moduleName=ModuleName []} -> do
-      mf <- get
-      return sn0{sn_moduleName=mf_moduleName mf}
-    _ -> do
-      addDepends (sn_moduleName sn0)
-      return sn0
-  return (JSON.object ["ref" .= formatText sn])
+  mf <- get
+  let sn = scopedName (mf_moduleName mf) sn0
+  when (sn_moduleName sn /= mf_moduleName mf) (addDepends (sn_moduleName sn))
+  return (JSON.object ["ref" .= formatText (scopedName (mf_moduleName mf) sn)])
 
 withTypeArgs :: JSON.Value -> [JSON.Value] -> JSON.Value
 withTypeArgs ts [] = ts

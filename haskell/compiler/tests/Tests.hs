@@ -306,6 +306,9 @@ runTests = do
     it "generates expected code for the standard library" $ do
       collectResults (runJsBackend [stdsrc] stdfiles "test6/js-output")
         `shouldReturn` MatchOutput
+    it "generates expected output for custom annotation types" $ do
+      collectResults (runJsBackend [stdsrc] ["test21/input/test.adl"] "test21/js-output")
+        `shouldReturn` MatchOutput
     
   where
     collectResults1 resultvar test = do
