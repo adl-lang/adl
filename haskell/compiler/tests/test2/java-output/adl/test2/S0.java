@@ -32,8 +32,8 @@ public class S0 {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    return result;
+    int _result = 1;
+    return _result;
   }
 
   /* Factory for construction of generic values */

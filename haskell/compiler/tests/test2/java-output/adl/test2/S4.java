@@ -58,10 +58,10 @@ public class S4<T> {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + f1.hashCode();
-    result = result * 37 + f2.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + f1.hashCode();
+    _result = _result * 37 + f2.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

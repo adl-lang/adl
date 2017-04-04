@@ -73,10 +73,10 @@ public class S1 {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + x;
-    result = result * 37 + y.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + x;
+    _result = _result * 37 + y.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

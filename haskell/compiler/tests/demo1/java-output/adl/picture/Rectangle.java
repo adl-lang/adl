@@ -68,10 +68,10 @@ public class Rectangle {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + Double.valueOf(width).hashCode();
-    result = result * 37 + Double.valueOf(height).hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + Double.valueOf(width).hashCode();
+    _result = _result * 37 + Double.valueOf(height).hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

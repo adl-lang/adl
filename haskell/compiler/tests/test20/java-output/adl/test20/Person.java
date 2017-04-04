@@ -94,12 +94,12 @@ public class Person {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + firstName.hashCode();
-    result = result * 37 + lastName.hashCode();
-    result = result * 37 + (int) age;
-    result = result * 37 + role.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + firstName.hashCode();
+    _result = _result * 37 + lastName.hashCode();
+    _result = _result * 37 + (int) age;
+    _result = _result * 37 + role.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

@@ -208,20 +208,20 @@ public class S {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + v1.hashCode();
-    result = result * 37 + v2.hashCode();
-    result = result * 37 + v3.hashCode();
-    result = result * 37 + v4.hashCode();
-    result = result * 37 + v5.hashCode();
-    result = result * 37 + v5a.hashCode();
-    result = result * 37 + v5b.hashCode();
-    result = result * 37 + v6.hashCode();
-    result = result * 37 + v7.hashCode();
-    result = result * 37 + v7a.hashCode();
-    result = result * 37 + v8.hashCode();
-    result = result * 37 + v8a.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + v1.hashCode();
+    _result = _result * 37 + v2.hashCode();
+    _result = _result * 37 + v3.hashCode();
+    _result = _result * 37 + v4.hashCode();
+    _result = _result * 37 + v5.hashCode();
+    _result = _result * 37 + v5a.hashCode();
+    _result = _result * 37 + v5b.hashCode();
+    _result = _result * 37 + v6.hashCode();
+    _result = _result * 37 + v7.hashCode();
+    _result = _result * 37 + v7a.hashCode();
+    _result = _result * 37 + v8.hashCode();
+    _result = _result * 37 + v8a.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

@@ -56,10 +56,10 @@ public class Pair<T1, T2> {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + v1.hashCode();
-    result = result * 37 + v2.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + v1.hashCode();
+    _result = _result * 37 + v2.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

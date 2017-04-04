@@ -54,9 +54,9 @@ public class Date {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + value.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + value.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

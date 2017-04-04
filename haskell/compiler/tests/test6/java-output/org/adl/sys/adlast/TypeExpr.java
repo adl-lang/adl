@@ -69,10 +69,10 @@ public class TypeExpr {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + typeRef.hashCode();
-    result = result * 37 + parameters.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + typeRef.hashCode();
+    _result = _result * 37 + parameters.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

@@ -85,11 +85,11 @@ public class S2 {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + f1.hashCode();
-    result = result * 37 + Double.valueOf(f2).hashCode();
-    result = result * 37 + f3.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + f1.hashCode();
+    _result = _result * 37 + Double.valueOf(f2).hashCode();
+    _result = _result * 37 + f3.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

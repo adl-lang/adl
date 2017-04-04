@@ -81,12 +81,12 @@ public class B<T> {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + f_t.hashCode();
-    result = result * 37 + f_string.hashCode();
-    result = result * 37 + f_tvec.hashCode();
-    result = result * 37 + f_xy.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + f_t.hashCode();
+    _result = _result * 37 + f_string.hashCode();
+    _result = _result * 37 + f_tvec.hashCode();
+    _result = _result * 37 + f_xy.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

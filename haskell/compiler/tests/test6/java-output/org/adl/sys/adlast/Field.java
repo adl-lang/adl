@@ -98,12 +98,12 @@ public class Field {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + name.hashCode();
-    result = result * 37 + typeExpr.hashCode();
-    result = result * 37 + default_.hashCode();
-    result = result * 37 + annotations.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + name.hashCode();
+    _result = _result * 37 + typeExpr.hashCode();
+    _result = _result * 37 + default_.hashCode();
+    _result = _result * 37 + annotations.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

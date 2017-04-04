@@ -258,11 +258,11 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       addMethod (if isEmpty then equalsEmpty else equals)
 
       addMethod $ coverride "public int hashCode()" (
-        cline "int result = 1;"
+        cline "int _result = 1;"
         <>
-        mconcat [ctemplate "result = result * 37 + $1;" [fd_hashcode fd (fd_memberVarName fd)] | fd <- fieldDetails]
+        mconcat [ctemplate "_result = _result * 37 + $1;" [fd_hashcode fd (fd_memberVarName fd)] | fd <- fieldDetails]
         <>
-        cline "return result;"
+        cline "return _result;"
         )
 
       factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")

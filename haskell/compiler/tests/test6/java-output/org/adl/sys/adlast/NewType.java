@@ -84,11 +84,11 @@ public class NewType {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + typeParams.hashCode();
-    result = result * 37 + typeExpr.hashCode();
-    result = result * 37 + default_.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + typeParams.hashCode();
+    _result = _result * 37 + typeExpr.hashCode();
+    _result = _result * 37 + default_.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

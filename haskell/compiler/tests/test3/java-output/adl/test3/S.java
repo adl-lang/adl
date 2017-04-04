@@ -259,28 +259,28 @@ public class S<T> {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + 0;
-    result = result * 37 + (f_bool ? 0 : 1);
-    result = result * 37 + (int) f_int8;
-    result = result * 37 + (int) f_int16;
-    result = result * 37 + f_int32;
-    result = result * 37 + (int) (f_int64 ^ (f_int64 >>> 32));
-    result = result * 37 + (int) f_word8;
-    result = result * 37 + (int) f_word16;
-    result = result * 37 + f_word32;
-    result = result * 37 + (int) (f_word64 ^ (f_word64 >>> 32));
-    result = result * 37 + Float.valueOf(f_float).hashCode();
-    result = result * 37 + Double.valueOf(f_double).hashCode();
-    result = result * 37 + f_bytes.hashCode();
-    result = result * 37 + f_string.hashCode();
-    result = result * 37 + f_vstring.hashCode();
-    result = result * 37 + f_a.hashCode();
-    result = result * 37 + f_u.hashCode();
-    result = result * 37 + f_t.hashCode();
-    result = result * 37 + f_bint16.hashCode();
-    result = result * 37 + f_smap.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + 0;
+    _result = _result * 37 + (f_bool ? 0 : 1);
+    _result = _result * 37 + (int) f_int8;
+    _result = _result * 37 + (int) f_int16;
+    _result = _result * 37 + f_int32;
+    _result = _result * 37 + (int) (f_int64 ^ (f_int64 >>> 32));
+    _result = _result * 37 + (int) f_word8;
+    _result = _result * 37 + (int) f_word16;
+    _result = _result * 37 + f_word32;
+    _result = _result * 37 + (int) (f_word64 ^ (f_word64 >>> 32));
+    _result = _result * 37 + Float.valueOf(f_float).hashCode();
+    _result = _result * 37 + Double.valueOf(f_double).hashCode();
+    _result = _result * 37 + f_bytes.hashCode();
+    _result = _result * 37 + f_string.hashCode();
+    _result = _result * 37 + f_vstring.hashCode();
+    _result = _result * 37 + f_a.hashCode();
+    _result = _result * 37 + f_u.hashCode();
+    _result = _result * 37 + f_t.hashCode();
+    _result = _result * 37 + f_bint16.hashCode();
+    _result = _result * 37 + f_smap.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

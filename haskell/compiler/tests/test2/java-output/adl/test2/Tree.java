@@ -59,10 +59,10 @@ public class Tree<T> {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + value.hashCode();
-    result = result * 37 + children.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + value.hashCode();
+    _result = _result * 37 + children.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

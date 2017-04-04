@@ -169,17 +169,17 @@ public class S {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + f_pair.hashCode();
-    result = result * 37 + f_either.hashCode();
-    result = result * 37 + f_error.hashCode();
-    result = result * 37 + f_map.hashCode();
-    result = result * 37 + f_set.hashCode();
-    result = result * 37 + f_mstring.hashCode();
-    result = result * 37 + f_mstring2.hashCode();
-    result = result * 37 + f_nstring.hashCode();
-    result = result * 37 + f_nstring2.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + f_pair.hashCode();
+    _result = _result * 37 + f_either.hashCode();
+    _result = _result * 37 + f_error.hashCode();
+    _result = _result * 37 + f_map.hashCode();
+    _result = _result * 37 + f_set.hashCode();
+    _result = _result * 37 + f_mstring.hashCode();
+    _result = _result * 37 + f_mstring2.hashCode();
+    _result = _result * 37 + f_nstring.hashCode();
+    _result = _result * 37 + f_nstring2.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

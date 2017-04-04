@@ -98,12 +98,12 @@ public class Decl {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + name.hashCode();
-    result = result * 37 + version.hashCode();
-    result = result * 37 + type_.hashCode();
-    result = result * 37 + annotations.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + name.hashCode();
+    _result = _result * 37 + version.hashCode();
+    _result = _result * 37 + type_.hashCode();
+    _result = _result * 37 + annotations.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

@@ -106,13 +106,13 @@ public class switch_ {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + Double.valueOf(double_).hashCode();
-    result = result * 37 + int_;
-    result = result * 37 + string.hashCode();
-    result = result * 37 + (for_ ? 0 : 1);
-    result = result * 37 + Objects.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + Double.valueOf(double_).hashCode();
+    _result = _result * 37 + int_;
+    _result = _result * 37 + string.hashCode();
+    _result = _result * 37 + (for_ ? 0 : 1);
+    _result = _result * 37 + Objects.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

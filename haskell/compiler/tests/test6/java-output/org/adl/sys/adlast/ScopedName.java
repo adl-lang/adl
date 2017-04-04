@@ -68,10 +68,10 @@ public class ScopedName {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + moduleName.hashCode();
-    result = result * 37 + name.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + moduleName.hashCode();
+    _result = _result * 37 + name.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

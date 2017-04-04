@@ -134,15 +134,15 @@ public class X1 {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + f1;
-    result = result * 37 + f2;
-    result = result * 37 + f3.hashCode();
-    result = result * 37 + f4.hashCode();
-    result = result * 37 + f5.hashCode();
-    result = result * 37 + f6.hashCode();
-    result = result * 37 + f7.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + f1;
+    _result = _result * 37 + f2;
+    _result = _result * 37 + f3.hashCode();
+    _result = _result * 37 + f4.hashCode();
+    _result = _result * 37 + f5.hashCode();
+    _result = _result * 37 + f6.hashCode();
+    _result = _result * 37 + f7.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

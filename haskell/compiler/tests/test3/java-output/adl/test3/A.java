@@ -81,11 +81,11 @@ public class A {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + (int) f_int;
-    result = result * 37 + f_string.hashCode();
-    result = result * 37 + (f_bool ? 0 : 1);
-    return result;
+    int _result = 1;
+    _result = _result * 37 + (int) f_int;
+    _result = _result * 37 + f_string.hashCode();
+    _result = _result * 37 + (f_bool ? 0 : 1);
+    return _result;
   }
 
   /* Factory for construction of generic values */

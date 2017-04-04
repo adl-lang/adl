@@ -56,10 +56,10 @@ public class Cell<T> {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + head.hashCode();
-    result = result * 37 + tail.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + head.hashCode();
+    _result = _result * 37 + tail.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

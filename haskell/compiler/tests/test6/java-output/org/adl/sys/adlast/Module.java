@@ -84,11 +84,11 @@ public class Module {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + name.hashCode();
-    result = result * 37 + imports.hashCode();
-    result = result * 37 + decls.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + name.hashCode();
+    _result = _result * 37 + imports.hashCode();
+    _result = _result * 37 + decls.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */

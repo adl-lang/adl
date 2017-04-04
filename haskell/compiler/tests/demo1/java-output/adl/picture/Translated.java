@@ -69,11 +69,11 @@ public class Translated<T> {
 
   @Override
   public int hashCode() {
-    int result = 1;
-    result = result * 37 + Double.valueOf(xoffset).hashCode();
-    result = result * 37 + Double.valueOf(yoffset).hashCode();
-    result = result * 37 + object.hashCode();
-    return result;
+    int _result = 1;
+    _result = _result * 37 + Double.valueOf(xoffset).hashCode();
+    _result = _result * 37 + Double.valueOf(yoffset).hashCode();
+    _result = _result * 37 + object.hashCode();
+    return _result;
   }
 
   /* Factory for construction of generic values */
