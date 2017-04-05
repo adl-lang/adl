@@ -151,7 +151,7 @@ stdsrc :: FilePath
 stdsrc = "../../../haskell/compiler/lib/adl"
 
 stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
-stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/rpc.adl", "sys/sinkimpl.adl", "sys/adlast.adl"]
+stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/adlast.adl"]
 stdHsCustomTypes = ["../../compiler/lib/adl/sys/types/hs-custom-types.json"]
 stdCppCustomTypes = ["../../compiler/lib/adl/sys/types/cpp-custom-types.json"]
 

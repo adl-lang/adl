@@ -42,12 +42,3 @@ main = do
   adlcb adlstdlibdir "runtime/src" "sys/rpc.adl"
   adlcb adlstdlibdir "runtime/src" "sys/sinkimpl.adl"
   adlcb adlstdlibdir "runtime/src" "sys/adlast.adl"
-
-  -- examples
-  adlc "examples/adl" "examples" "examples/echo.adl"
-  adlc "examples/adl" "examples" "examples/kvstore1.adl"
-  adlc "examples/adl" "examples" "examples/kvstore2.adl"
-  adlc "examples/adl" "examples" "examples/pubsub.adl"
-  adlc "examples/adl" "examples" "examples/pubsub1.adl"
-  adlc "examples/adl" "examples" "examples/datetime.adl"
-  adlc "examples/adl" "examples" "examples/serialisation.adl"

@@ -77,11 +77,6 @@ is called [custom type mappings][4].
 Currently, json serialization is supported, with a [strict mapping][5]
 defined between ADL types and json values.
 
-Using the (experimental) `Sink` communications primitive, A variety of
-[application level communication protocols][5] can be defined in the
-ADL language.
-
-
 [examplejava]:../haskell/compiler/tests/demo1/java-output/adl/picture/
 [examplehaskell]:../haskell/compiler/tests/demo1/hs-output/ADL/Picture.hs
 [1]:language.md
@@ -89,4 +84,3 @@ ADL language.
 [3]:install.md
 [4]:custom-types.md
 [5]:serialization.md
-[6]:protocols.md

@@ -4,8 +4,6 @@ packages:
 - compiler-lib
 - compiler-bootstrap
 - runtime
-- comms-http
 - compiler
-- examples
 extra-deps:
 resolver: lts-8.5
