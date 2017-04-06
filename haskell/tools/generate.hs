@@ -39,6 +39,4 @@ main = do
   
   -- runtime
   adlcb adlstdlibdir "runtime/src" "sys/types.adl"
-  adlcb adlstdlibdir "runtime/src" "sys/rpc.adl"
-  adlcb adlstdlibdir "runtime/src" "sys/sinkimpl.adl"
   adlcb adlstdlibdir "runtime/src" "sys/adlast.adl"
