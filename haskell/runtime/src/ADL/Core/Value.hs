@@ -6,6 +6,8 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
 
+import Data.Proxy
+
 -- | A type that is an instance of @ADLValue@ can be serialised, and has
 -- a defined default value.
 
@@ -24,7 +26,7 @@ data JSONFlags = JSONFlags {
 class ADLValue a where
   -- | A text string describing the type. The return string may only depend on
   -- the type - the parameter must be ignored.
-  atype :: a -> T.Text
+  atype :: Proxy a -> T.Text
 
   -- | A default value of the given type
   defaultv :: a
@@ -81,7 +83,7 @@ aFromJSONFile' js file = do
   case ma of
     Nothing -> ioError $ userError
       ("Unable to parse a value of type " ++
-       T.unpack (atype (undefined :: a)) ++ " from " ++ file)
+       T.unpack (atype (Proxy :: Proxy a)) ++ " from " ++ file)
     (Just a) -> return a
 
 wrapToplevel :: JSON.Value -> JSON.Value

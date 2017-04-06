@@ -20,6 +20,7 @@ import Control.Applicative( (<$>), (<*>) )
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
+import qualified Data.Proxy
 import qualified Data.Text as T
 import qualified Prelude
 
@@ -32,7 +33,7 @@ data Cell t = Cell
 instance (ADLValue t) => ADLValue (Cell t) where
     atype _ = T.concat
         [ "test5.Cell"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = Cell
@@ -62,7 +63,7 @@ data List t
 instance (ADLValue t) => ADLValue (List t) where
     atype _ = T.concat
         [ "test5.List"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = List_null
@@ -274,7 +275,7 @@ data U9 t
 instance (ADLValue t) => ADLValue (U9 t) where
     atype _ = T.concat
         [ "test5.U9"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = U9_v1 defaultv

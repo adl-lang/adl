@@ -13,6 +13,7 @@ import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Vector as V
+import Data.Proxy
 import Data.Int
 import Data.Word
 import GHC.Float
@@ -129,7 +130,7 @@ instance ADLValue B.ByteString where
       from  _ = Nothing
 
 instance forall a . (ADLValue a) => ADLValue [a] where
-  atype _ = T.concat ["vector<",atype (undefined :: a),">"]
+  atype _ = T.concat ["vector<",atype (Proxy :: Proxy a),">"]
   defaultv = []
   jsonSerialiser jf = JSONSerialiser to from
     where
@@ -145,7 +146,7 @@ stringMapFromList :: [(T.Text,v)] -> StringMap v
 stringMapFromList = StringMap . M.fromList
 
 instance forall a . (ADLValue a) => ADLValue (StringMap a) where
-  atype _ = T.concat ["StringMap<",atype (undefined :: a),">"]
+  atype _ = T.concat ["StringMap<",atype (Proxy :: Proxy a),">"]
   defaultv = StringMap (M.empty)
   jsonSerialiser jf = JSONSerialiser to from
     where

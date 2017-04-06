@@ -15,6 +15,7 @@ import qualified Data.ByteString as B
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
 import qualified Data.Map as M
+import qualified Data.Proxy
 import qualified Data.Text as T
 import qualified Data.Word
 import qualified Prelude
@@ -63,7 +64,7 @@ data B t = B
 instance (ADLValue t) => ADLValue (B t) where
     atype _ = T.concat
         [ "test3.B"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = B
@@ -120,7 +121,7 @@ data S t = S
 instance (ADLValue t) => ADLValue (S t) where
     atype _ = T.concat
         [ "test3.S"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = S
@@ -247,7 +248,7 @@ data XY t = XY
 instance (ADLValue t) => ADLValue (XY t) where
     atype _ = T.concat
         [ "test3.XY"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = XY

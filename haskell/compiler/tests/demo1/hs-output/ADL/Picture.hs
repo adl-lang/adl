@@ -11,6 +11,7 @@ import ADL.Core.Value
 import Control.Applicative( (<$>), (<*>) )
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
+import qualified Data.Proxy
 import qualified Data.Text as T
 import qualified Prelude
 
@@ -107,7 +108,7 @@ data Translated t = Translated
 instance (ADLValue t) => ADLValue (Translated t) where
     atype _ = T.concat
         [ "picture.Translated"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = Translated

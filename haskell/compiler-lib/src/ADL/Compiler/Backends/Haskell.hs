@@ -281,7 +281,7 @@ declareAType gname tvars = do
   indent $ do
     wt "[ \"$1\"" [formatText gname]
     forM_ (zip (", \"<\",": repeat ", \",\",") tvars) $ \(p,tv) -> do
-      wt "$1 atype (Prelude.undefined ::$2)" [p, hTypeParamName tv]
+      wt "$1 atype (Data.Proxy.Proxy :: Data.Proxy.Proxy $2)" [p, hTypeParamName tv]
     wl ", \">\" ]"
 
 derivingStdClasses = wl "deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)"
@@ -553,6 +553,7 @@ generateModule :: CModule -> HGen T.Text
 generateModule m = do
   addLanguageFeature "OverloadedStrings"
   addImport "import qualified Prelude"
+  addImport "import qualified Data.Proxy"
   addImport "import Control.Applicative( (<$>), (<*>) )"
   importModule (HaskellModule "ADL.Core.Value")
   importModule (HaskellModule "ADL.Core.Primitives")

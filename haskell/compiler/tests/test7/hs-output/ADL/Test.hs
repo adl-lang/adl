@@ -26,6 +26,7 @@ import Control.Applicative( (<$>), (<*>) )
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
+import qualified Data.Proxy
 import qualified Data.Text as T
 import qualified Prelude
 
@@ -67,7 +68,7 @@ newtype Int5 x = Int5 { unInt5 :: Data.Int.Int64 }
 instance (ADLValue x) => ADLValue (Int5 x) where
     atype _ = T.concat
         [ "test.Int5"
-        , "<", atype (Prelude.undefined ::x)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
     defaultv = Int5 defaultv
@@ -84,7 +85,7 @@ newtype Int6 x = Int6 { unInt6 :: Data.Int.Int64 }
 instance (ADLValue x) => ADLValue (Int6 x) where
     atype _ = T.concat
         [ "test.Int6"
-        , "<", atype (Prelude.undefined ::x)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
     defaultv = Int6 43
@@ -134,7 +135,7 @@ data Point t = Point
 instance (ADLValue t) => ADLValue (Point t) where
     atype _ = T.concat
         [ "test.Point"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = Point
@@ -164,7 +165,7 @@ newtype Point2 x = Point2 { unPoint2 :: (Point x) }
 instance (ADLValue x) => ADLValue (Point2 x) where
     atype _ = T.concat
         [ "test.Point2"
-        , "<", atype (Prelude.undefined ::x)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
     defaultv = Point2 defaultv
@@ -213,7 +214,7 @@ newtype String5 x = String5 { unString5 :: T.Text }
 instance (ADLValue x) => ADLValue (String5 x) where
     atype _ = T.concat
         [ "test.String5"
-        , "<", atype (Prelude.undefined ::x)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
     defaultv = String5 defaultv
@@ -230,7 +231,7 @@ newtype String6 x = String6 { unString6 :: T.Text }
 instance (ADLValue x) => ADLValue (String6 x) where
     atype _ = T.concat
         [ "test.String6"
-        , "<", atype (Prelude.undefined ::x)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
     defaultv = String6 "goodbye"

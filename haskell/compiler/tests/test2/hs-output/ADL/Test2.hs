@@ -15,6 +15,7 @@ import Control.Applicative( (<$>), (<*>) )
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
+import qualified Data.Proxy
 import qualified Data.Text as T
 import qualified Prelude
 
@@ -105,7 +106,7 @@ data S3 t = S3
 instance (ADLValue t) => ADLValue (S3 t) where
     atype _ = T.concat
         [ "test2.S3"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = S3
@@ -144,7 +145,7 @@ data S4 t = S4
 instance (ADLValue t) => ADLValue (S4 t) where
     atype _ = T.concat
         [ "test2.S4"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = S4
@@ -175,7 +176,7 @@ data Tree t = Tree
 instance (ADLValue t) => ADLValue (Tree t) where
     atype _ = T.concat
         [ "test2.Tree"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
     defaultv = Tree

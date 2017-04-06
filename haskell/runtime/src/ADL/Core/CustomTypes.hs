@@ -8,6 +8,7 @@ import qualified Data.Set as Set
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as HM
 
+import Data.Proxy
 import ADL.Core.Value
 import ADL.Core.Primitives
 
@@ -15,7 +16,7 @@ import ADL.Core.Primitives
 instance (ADLValue t) => ADLValue (Maybe t) where
   atype _ = T.concat
         [ "sys.types.Maybe"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Proxy :: Proxy t)
         , ">" ]
   defaultv = Nothing
 
@@ -35,8 +36,8 @@ instance (ADLValue t) => ADLValue (Maybe t) where
 instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
   atype _ = T.concat
         [ "sys.types.Either"
-        , "<", atype (Prelude.undefined ::t1)
-        , ",", atype (Prelude.undefined ::t2)
+        , "<", atype (Proxy :: Proxy t1)
+        , ",", atype (Proxy :: Proxy t2)
         , ">" ]
     
   defaultv = Left defaultv
@@ -57,8 +58,8 @@ instance (ADLValue t1, ADLValue t2) => ADLValue (Either t1 t2) where
 instance forall t1 t2 . (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
   atype _ = T.concat
         [ "sys.types.Pair"
-        , "<", atype (Prelude.undefined ::t1)
-        , ",", atype (Prelude.undefined ::t2)
+        , "<", atype (Proxy :: Proxy t1)
+        , ",", atype (Proxy :: Proxy t2)
         , ">" ]
     
   defaultv = (defaultv,defaultv)
@@ -78,7 +79,7 @@ instance forall t1 t2 . (ADLValue t1, ADLValue t2) => ADLValue (t1,t2) where
       from _ = Nothing
 
 instance (ADLValue k, Ord k, ADLValue v) => ADLValue (Map.Map k v) where
-  atype _ = atype (undefined :: [(k,v)])
+  atype _ = atype (Proxy :: Proxy [(k,v)])
   defaultv = Map.empty
   jsonSerialiser jf = JSONSerialiser to from
     where
@@ -87,7 +88,7 @@ instance (ADLValue k, Ord k, ADLValue v) => ADLValue (Map.Map k v) where
       from o = fmap Map.fromList (aFromJSON js o)
 
 instance (Ord v, ADLValue v) => ADLValue (Set.Set v) where
-  atype _ = atype (undefined :: [v])
+  atype _ = atype (Proxy :: Proxy [v])
   defaultv = Set.empty
   jsonSerialiser jf = JSONSerialiser to from
     where
@@ -101,7 +102,7 @@ newtype Nullable t = Nullable (Maybe t)
 instance (ADLValue t) => ADLValue (Nullable t) where
   atype _ = T.concat
         [ "sys.types.Nullable"
-        , "<", atype (Prelude.undefined ::t)
+        , "<", atype (Proxy :: Proxy t)
         , ">" ]
   defaultv = Nullable Nothing
 
