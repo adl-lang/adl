@@ -3,10 +3,9 @@ module ADL.Adlc.Config.Java(
     JavaCustomType(..),
 ) where
 
-import ADL.Core.Primitives
-import ADL.Core.Value
-import Control.Applicative( (<$>), (<*>) )
-import qualified Data.Aeson as JSON
+import ADL.Core
+import Control.Applicative( (<$>), (<*>), (<|>) )
+import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Proxy
 import qualified Data.Text as T
@@ -19,7 +18,7 @@ data JavaCustomType = JavaCustomType
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue JavaCustomType where
+instance AdlValue JavaCustomType where
     atype _ = "adlc.config.java.JavaCustomType"
     
     defaultv = JavaCustomType
@@ -27,20 +26,13 @@ instance ADLValue JavaCustomType where
         defaultv
         defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            javaname_js = jsonSerialiser jf
-            helpers_js = jsonSerialiser jf
-            generateType_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("javaname",aToJSON javaname_js (javaCustomType_javaname v))
-                , ("helpers",aToJSON helpers_js (javaCustomType_helpers v))
-                , ("generateType",aToJSON generateType_js (javaCustomType_generateType v))
-                ] )
-            
-            from (JSON.Object hm) = JavaCustomType 
-                <$> fieldFromJSON javaname_js "javaname" defaultv hm
-                <*> fieldFromJSON helpers_js "helpers" defaultv hm
-                <*> fieldFromJSON generateType_js "generateType" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "javaname" javaCustomType_javaname
+        , genField "helpers" javaCustomType_helpers
+        , genField "generateType" javaCustomType_generateType
+        ]
+    
+    jsonParser = JavaCustomType
+        <$> parseField "javaname"
+        <*> parseField "helpers"
+        <*> parseField "generateType"

@@ -6,14 +6,13 @@ module ADL.Test4(
     S(..),
 ) where
 
-import ADL.Core.Primitives
-import ADL.Core.Value
-import Control.Applicative( (<$>), (<*>) )
+import ADL.Core
+import Control.Applicative( (<$>), (<*>), (<|>) )
 import Data.Time.Calendar(Day)
 import Data.Time.Format(parseTime,formatTime)
 import System.Locale(defaultTimeLocale)
 import qualified ADL.Sys.Types
-import qualified Data.Aeson as JSON
+import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
 import qualified Data.Proxy
@@ -27,7 +26,7 @@ data CDate = CDate
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue CDate where
+instance AdlValue CDate where
     atype _ = "test4.CDate"
     
     defaultv = CDate
@@ -35,52 +34,43 @@ instance ADLValue CDate where
         defaultv
         defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            year_js = jsonSerialiser jf
-            month_js = jsonSerialiser jf
-            day_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("year",aToJSON year_js (cDate_year v))
-                , ("month",aToJSON month_js (cDate_month v))
-                , ("day",aToJSON day_js (cDate_day v))
-                ] )
-            
-            from (JSON.Object hm) = CDate 
-                <$> fieldFromJSON year_js "year" defaultv hm
-                <*> fieldFromJSON month_js "month" defaultv hm
-                <*> fieldFromJSON day_js "day" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "year" cDate_year
+        , genField "month" cDate_month
+        , genField "day" cDate_day
+        ]
+    
+    jsonParser = CDate
+        <$> parseField "year"
+        <*> parseField "month"
+        <*> parseField "day"
 
 
 type Date = Day
 
-toDate :: DateO -> Maybe Day
-toDate (Date s) = parseTime defaultTimeLocale "%F" s
+fromDateO :: DateO -> Prelude.Maybe Day
+fromDateO (DateO s) = parseTime defaultTimeLocale "%F" s
 
-fromDate :: Day -> Date_ADL
-fromDate d = Date (formatTime defaultTimeLocale "%F" d)
+toDateO :: Day -> DateO
+toDateO d = DateO (formatTime defaultTimeLocale "%F" d)
 
-instance ADLValue Day where
-  atype _ = atype (defaultv :: ODate)
-  defaultv = let (Just d) = toDate defaultv in d
-  aToJSON jf d = aToJSON jf (fromDate d)
-  afromJSON jf jv = (aFromJSON jf jv) >>= toDate
+instance AdlValue Day where
+  atype _ = atype (Data.Proxy.Proxy :: Data.Proxy.Proxy DateO)
+  defaultv = let (Prelude.Just d) = toDate defaultv in d
+  jsonGen = JsonGen (adlToJson . toDateO)
+  jsonParser = jsonParser undefined
 
 newtype DateO = DateO { unDateO :: T.Text }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue DateO where
+instance AdlValue DateO where
     atype _ = "test4.Date"
     
     defaultv = DateO "1900-01-01"
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            js = jsonSerialiser jf
-            to (DateO v) = aToJSON js v
-            from o = Prelude.fmap DateO (aFromJSON js o)
+    jsonGen = JsonGen (\(DateO v) -> adlToJson v)
+    
+    jsonParser = DateO <$> jsonParser
 
 data S = S
     { s_v1 :: Date
@@ -98,7 +88,7 @@ data S = S
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue S where
+instance AdlValue S where
     atype _ = "test4.S"
     
     defaultv = S
@@ -115,47 +105,31 @@ instance ADLValue S where
         defaultv
         (Map [ (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "X", pair_v2 = 1 }, (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "Y", pair_v2 = 2 } ])
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v1_js = jsonSerialiser jf
-            v2_js = jsonSerialiser jf
-            v3_js = jsonSerialiser jf
-            v4_js = jsonSerialiser jf
-            v5_js = jsonSerialiser jf
-            v5a_js = jsonSerialiser jf
-            v5b_js = jsonSerialiser jf
-            v6_js = jsonSerialiser jf
-            v7_js = jsonSerialiser jf
-            v7a_js = jsonSerialiser jf
-            v8_js = jsonSerialiser jf
-            v8a_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("v1",aToJSON v1_js (s_v1 v))
-                , ("v2",aToJSON v2_js (s_v2 v))
-                , ("v3",aToJSON v3_js (s_v3 v))
-                , ("v4",aToJSON v4_js (s_v4 v))
-                , ("v5",aToJSON v5_js (s_v5 v))
-                , ("v5a",aToJSON v5a_js (s_v5a v))
-                , ("v5b",aToJSON v5b_js (s_v5b v))
-                , ("v6",aToJSON v6_js (s_v6 v))
-                , ("v7",aToJSON v7_js (s_v7 v))
-                , ("v7a",aToJSON v7a_js (s_v7a v))
-                , ("v8",aToJSON v8_js (s_v8 v))
-                , ("v8a",aToJSON v8a_js (s_v8a v))
-                ] )
-            
-            from (JSON.Object hm) = S 
-                <$> fieldFromJSON v1_js "v1" defaultv hm
-                <*> fieldFromJSON v2_js "v2" defaultv hm
-                <*> fieldFromJSON v3_js "v3" defaultv hm
-                <*> fieldFromJSON v4_js "v4" defaultv hm
-                <*> fieldFromJSON v5_js "v5" defaultv hm
-                <*> fieldFromJSON v5a_js "v5a" defaultv hm
-                <*> fieldFromJSON v5b_js "v5b" defaultv hm
-                <*> fieldFromJSON v6_js "v6" defaultv hm
-                <*> fieldFromJSON v7_js "v7" defaultv hm
-                <*> fieldFromJSON v7a_js "v7a" defaultv hm
-                <*> fieldFromJSON v8_js "v8" defaultv hm
-                <*> fieldFromJSON v8a_js "v8a" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "v1" s_v1
+        , genField "v2" s_v2
+        , genField "v3" s_v3
+        , genField "v4" s_v4
+        , genField "v5" s_v5
+        , genField "v5a" s_v5a
+        , genField "v5b" s_v5b
+        , genField "v6" s_v6
+        , genField "v7" s_v7
+        , genField "v7a" s_v7a
+        , genField "v8" s_v8
+        , genField "v8a" s_v8a
+        ]
+    
+    jsonParser = S
+        <$> parseField "v1"
+        <*> parseFieldDef "v2" (Date "2000-01-01")
+        <*> parseField "v3"
+        <*> parseFieldDef "v4" defaultv { cDate_day = 1, cDate_month = 1, cDate_year = 2000 }
+        <*> parseField "v5"
+        <*> parseFieldDef "v5a" (Maybe_nothing ())
+        <*> parseFieldDef "v5b" (Maybe_just "hello")
+        <*> parseField "v6"
+        <*> parseFieldDef "v7" (Set [ 1, 2, 3 ])
+        <*> parseField "v7a"
+        <*> parseField "v8"
+        <*> parseFieldDef "v8a" (Map [ (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "X", pair_v2 = 1 }, (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "Y", pair_v2 = 2 } ])

@@ -118,15 +118,15 @@ genModule m = do
   for_ (Map.elems (m_decls m)) $ \decl -> do
     case d_type decl of
      (Decl_Struct struct) -> genStruct m decl struct
-     (Decl_Union union) -> genUnion m decl union
+     (Decl_Union union) -> genUnion' m decl union
      (Decl_Typedef typedef) -> genTypedef m decl typedef
      (Decl_Newtype ntype) -> genNewtype m decl ntype
 
 genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
 genStruct  m decl struct = genAType m decl (s_typeParams struct) (s_fields struct) "struct"
 
-genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
-genUnion m decl union = genAType m decl (u_typeParams union) (u_fields union) "union"
+genUnion' :: CModule -> CDecl -> Union CResolvedType -> CState ()
+genUnion' m decl union = genAType m decl (u_typeParams union) (u_fields union) "union"
 
 genAType :: CModule -> CDecl -> [Ident] -> [Field CResolvedType] -> Ident -> CState ()
 genAType mod decl typeParams fields kind = do

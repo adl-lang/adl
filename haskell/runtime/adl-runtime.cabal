@@ -13,8 +13,8 @@ cabal-version:       >=1.8
 
 library
   hs-source-dirs:      src
-  exposed-modules:     ADL.Core, ADL.Core.CustomTypes, ADL.Core.Value, ADL.Core.Primitives,
-                       ADL.Sys.Types, ADL.Sys.Adlast
+  ghc-options:         -Wall
+  exposed-modules:     ADL.Core, ADL.Core.Value
   build-depends:       base, text, containers, bytestring,
                        parsec, mtl, transformers,
                        time, network, unordered-containers, vector,

@@ -4,38 +4,38 @@ module sys.types
 import adlc.config.haskell.HaskellCustomType;
 
 annotation Maybe HaskellCustomType {
-  "haskellname" : "Maybe",
-  "haskellimports" : [ "ADL.Core.CustomTypes" ]
+  "haskellname" : "Prelude.Maybe",
+  "haskellimports" : []
   };
   
 annotation Either HaskellCustomType {
-  "haskellname" : "Either",
-  "haskellimports" : [ "ADL.Core.CustomTypes" ]
+  "haskellname" : "Prelude.Either",
+  "haskellimports" : []
   };
   
 annotation Error HaskellCustomType {
   "haskellname" : "Error",
-  "haskellimports" : [ "ADL.Core.CustomTypes" ]
+  "haskellimports" : []
   };
   
 annotation Pair HaskellCustomType {
   "haskellname" : "Pair",
-  "haskellimports" : [ "ADL.Core.CustomTypes" ]
+  "haskellimports" : []
   };
   
 annotation Map HaskellCustomType {
   "haskellname" : "Map",
-  "haskellimports" : [ "ADL.Core.CustomTypes" ]
+  "haskellimports" : []
   };
   
 annotation Set HaskellCustomType {
   "haskellname" : "Set",
-  "haskellimports" : [ "ADL.Core.CustomTypes" ]
+  "haskellimports" : []
   };
 
 annotation Nullable HaskellCustomType {
   "haskellname" : "Nullable",
-  "haskellimports" : [ "ADL.Core.CustomTypes" ]
+  "haskellimports" : []
   };
 
 };

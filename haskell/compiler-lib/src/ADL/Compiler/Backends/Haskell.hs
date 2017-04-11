@@ -18,7 +18,7 @@ import Control.Monad.Trans.State.Strict
 
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
-import qualified Data.Aeson as JSON
+import qualified Data.Aeson as JS
 import qualified Data.Scientific as S
 import Data.Attoparsec.Number
 
@@ -48,7 +48,7 @@ data CustomType = CustomType {
    -- Any imports required to support the custom haskell type.
    ct_hImports :: [HaskellModule],
 
-   -- Lines of helper code. This must implement the ADLValue typeclass
+   -- Lines of helper code. This must implement the AdlValue typeclass
    -- for the custom haskell type
    ct_insertCode :: [T.Text],
 
@@ -178,27 +178,27 @@ hPrimitiveType P_Sink = do
   importModule (HaskellModule "ADL.Core.Sink")
   return "Sink"
 
-hPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
-hPrimitiveLiteral P_Void JSON.Null = "()"
-hPrimitiveLiteral P_Bool (JSON.Bool True) = "Prelude.True"
-hPrimitiveLiteral P_Bool (JSON.Bool False) = "Prelude.False"
-hPrimitiveLiteral P_Int8 (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Int16 (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Int32 (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Int64 (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Word8 (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Word16 (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Word32 (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Word64 (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Float (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_Double (JSON.Number n) = litNumber n
-hPrimitiveLiteral P_ByteVector (JSON.String s) = T.pack (show (decode s))
+hPrimitiveLiteral :: PrimitiveType -> JS.Value -> T.Text
+hPrimitiveLiteral P_Void JS.Null = "()"
+hPrimitiveLiteral P_Bool (JS.Bool True) = "Prelude.True"
+hPrimitiveLiteral P_Bool (JS.Bool False) = "Prelude.False"
+hPrimitiveLiteral P_Int8 (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Int16 (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Int32 (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Int64 (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Word8 (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Word16 (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Word32 (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Word64 (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Float (JS.Number n) = litNumber n
+hPrimitiveLiteral P_Double (JS.Number n) = litNumber n
+hPrimitiveLiteral P_ByteVector (JS.String s) = T.pack (show (decode s))
   where
     decode s = case B64.decode (T.encodeUtf8 s) of
       (Left _) -> "???"
       (Right s) -> s
 hPrimitiveLiteral P_Vector _ = "defaultv" -- never called
-hPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
+hPrimitiveLiteral P_String (JS.String s) = T.pack (show s)
 hPrimitiveLiteral P_Sink _ = "defaultv" -- never called
 
 litNumber :: S.Scientific -> T.Text
@@ -325,6 +325,15 @@ generateDecl lname d@(Decl{d_type=(Decl_Newtype n)}) = do
 commas :: [T.Text]
 commas = repeat ","
 
+listPrefixes :: [T.Text]
+listPrefixes = "[":repeat ","
+
+appPrefixes :: [T.Text]
+appPrefixes = "<$>":repeat "<*>"
+
+altPrefixes :: [T.Text]
+altPrefixes = "=  ":repeat "<|>"
+
 generateStructDataType :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateStructDataType lname mn d s = do
     wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
@@ -345,7 +354,7 @@ generateNullStructDataType lname mn d s = do
 
 generateStructADLInstance :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateStructADLInstance lname mn d s = do
-    wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
+    wl $ hInstanceHeader "AdlValue" lname (s_typeParams s)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (s_typeParams s)
         nl
@@ -354,39 +363,31 @@ generateStructADLInstance lname mn d s = do
           forM_ (s_fields s) $ \f -> do
             defv <- generateDefaultValue (f_type f) (f_default f) 
             wl $ defv
-        nl    
-        wl "jsonSerialiser jf = JSONSerialiser to from"
+        nl
+        wl "jsonGen = genObject"
         indent $ do
-          wl "where"
-          indent $ do
-            forM_ (s_fields s) $ \f -> do
-              wt "$1_js = jsonSerialiser jf" [f_name f]
-            nl
-            wl "to v = JSON.Object ( HM.fromList"
-            indent $ do
-              forM_ (zip ("[":commas) (s_fields s)) $ \(fp,f) -> do                wt "$1 (\"$2\",aToJSON $2_js ($3 v))" [fp,(f_serializedName f),hFieldName (d_name d) (f_name f)]
-              wl "] )"
-            nl
-            wt "from (JSON.Object hm) = $1 " [lname]
-            indent $ do
-              forM_ (zip ("<$>":repeat "<*>") (s_fields s)) $ \(p,f) -> do
-                wt "$1 fieldFromJSON $2_js \"$2\" defaultv hm" [p, (f_serializedName f)]
-            wl "from _ = Prelude.Nothing"
+          forM_ (zip listPrefixes (s_fields s)) $ \(prefix,f) -> do
+            wt "$1 genField \"$2\" $3" [prefix, f_serializedName f, hFieldName (d_name d) (f_name f)]
+          wl "]"
+        nl
+        wt "jsonParser = $1" [lname]
+        indent $ do
+          forM_ (zip appPrefixes (s_fields s)) $ \(prefix,f) -> do
+            case f_default f of
+             Nothing -> wt "$1 parseField \"$2\"" [prefix, f_serializedName f]
+             Just def -> do
+               defv <- generateDefaultValue (f_type f) (f_default f) 
+               wt "$1 parseFieldDef \"$2\" $3" [prefix, f_serializedName f, defv]
 
 generateNullStructADLInstance :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateNullStructADLInstance lname mn d s = do
-    wl $ hInstanceHeader "ADLValue" lname (s_typeParams s)
+    wl $ hInstanceHeader "AdlValue" lname (s_typeParams s)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (s_typeParams s)
         nl
         wt "defaultv = $1" [lname]
-        wl "jsonSerialiser jf = JSONSerialiser to from"
-        indent $ do
-          wl "where"
-          indent $ do
-            wl "to v = JSON.Object HM.empty"
-            wt "from (JSON.Object hm) = Prelude.Just $1 " [lname]
-            wl "from _ = Prelude.Nothing"
+        wl "jsonGen = genObject []"
+        wt "jsonParser = Prelude.pure $1" [lname]
 
 generateUnionDataType :: Ident -> ModuleName -> CDecl -> Union CResolvedType -> HGen ()
 generateUnionDataType lname mn d u = do
@@ -405,7 +406,7 @@ generateUnionDataType lname mn d u = do
 generateUnionADLInstance :: Ident -> ModuleName -> CDecl -> Union CResolvedType -> HGen ()
 generateUnionADLInstance lname mn d u = do
 
-    wl $ hInstanceHeader "ADLValue" lname (u_typeParams u)
+    wl $ hInstanceHeader "AdlValue" lname (u_typeParams u)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (u_typeParams u)
         nl
@@ -415,59 +416,47 @@ generateUnionADLInstance lname mn d u = do
           then wt "defaultv = $1" [dn0]
           else wt "defaultv = $1 defaultv" [dn0]
         nl
-        wl "jsonSerialiser jf = JSONSerialiser to from"
+        wl "jsonGen = genUnion (\\jv -> case jv of"
         indent $ do
-          wl "where"
-          indent $ do
-            forM_ (u_fields u) $ \f -> do
-              when (not (isVoidType (f_type f))) $ wt "$1_js = jsonSerialiser jf" [f_name f]
-            nl
             forM_ (u_fields u) $ \f -> do
               let dn = hDiscName (d_name d) (f_name f)
               if isVoidType (f_type f)
-                then wt "to $1 = JSON.String \"$2\"" [dn, f_serializedName f]
-                else wt "to ($1 v) = JSON.Object (HM.singleton \"$2\" (aToJSON $2_js v))" [dn, f_serializedName f]
-            nl
-            wl "from o = do"
-            indent $ do
-              wl "u <- splitUnion o"
-              wl "case u of"
-              indent $ do
-                forM_ (u_fields u) $ \f -> do
-                  let dn = hDiscName (d_name d) (f_name f)
-                  if isVoidType (f_type f)
-                    then wt "(\"$1\",Prelude.Nothing) -> Prelude.Just $2" [f_serializedName f, dn ]
-                    else wt "(\"$1\",Prelude.Just v) -> Prelude.fmap $2 (aFromJSON $1_js v)" [f_serializedName f,dn]
-
+                then wt "$1 -> genUnionVoid \"$2\"" [dn, f_serializedName f]
+                else wt "$1 v -> genUnionValue \"$2\" v" [dn, f_serializedName f]
+            wl ")"
+        nl
+        wl "jsonParser"
+        indent $ do
+            forM_ (zip altPrefixes (u_fields u)) $ \(prefix,f) -> do
+              let dn = hDiscName (d_name d) (f_name f)
+              if isVoidType (f_type f)
+                then wt "$1 parseUnionVoid \"$2\" $3" [prefix, f_serializedName f, dn]
+                else wt "$1 parseUnionValue \"$2\" $3" [prefix, f_serializedName f, dn]
 
 generateNewtypeADLInstance :: Ident -> ModuleName -> CDecl -> Newtype CResolvedType -> HGen ()
 generateNewtypeADLInstance lname mn d n = do
 
-    wl $ hInstanceHeader "ADLValue" lname (n_typeParams n)
+    wl $ hInstanceHeader "AdlValue" lname (n_typeParams n)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (n_typeParams n)
         nl
         defv <- generateDefaultValue (n_typeExpr n) (n_default n) 
         wt "defaultv = $1 $2" [lname, defv]
         nl
-        wl "jsonSerialiser jf = JSONSerialiser to from"
-        indent $ do
-          wl "where"
-          indent $ do
-            wl "js = jsonSerialiser jf"
-            wt "to ($1 v) = aToJSON js v" [lname]
-            wt "from o = Prelude.fmap $1 (aFromJSON js o)" [lname]
+        wt "jsonGen = JsonGen (\\($1 v) -> adlToJson v)" [lname]
+        nl
+        wt "jsonParser = $1 <$> jsonParser" [lname]
 
-generateDefaultValue :: TypeExpr CResolvedType -> (Maybe JSON.Value) -> HGen T.Text
+generateDefaultValue :: TypeExpr CResolvedType -> (Maybe JS.Value) -> HGen T.Text
 generateDefaultValue _ Nothing = return "defaultv"
 generateDefaultValue te (Just v) = generateLiteral te v
 
-generateLiteral :: TypeExpr CResolvedType -> JSON.Value -> HGen T.Text
+generateLiteral :: TypeExpr CResolvedType -> JS.Value -> HGen T.Text
 generateLiteral te v =  generateLV Map.empty te v
   where
     -- We only need to match the appropriate JSON cases here, as the JSON value
     -- has already been validated by the compiler
-    generateLV :: TypeBindingMap -> TypeExpr CResolvedType -> JSON.Value -> HGen T.Text
+    generateLV :: TypeBindingMap -> TypeExpr CResolvedType -> JS.Value -> HGen T.Text
     generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
     generateLV m (TypeExpr (RT_Primitive P_StringMap) [te]) v = generateStringMap m te v
@@ -479,11 +468,11 @@ generateLiteral te v =  generateLV Map.empty te v
     generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
          (Just te) -> generateLV m te v
 
-    generateVec m te (JSON.Array v) = do
+    generateVec m te (JS.Array v) = do
       vals <- mapM (generateLV m te) (V.toList v) 
       return (template "[ $1 ]" [T.intercalate ", " vals])
 
-    generateStringMap m te (JSON.Object hm) = do
+    generateStringMap m te (JS.Object hm) = do
       pairs <- mapM genPair (HM.toList hm) 
       return (template "(stringMapFromList [$1])" [T.intercalate ", " pairs])
       where
@@ -491,7 +480,7 @@ generateLiteral te v =  generateLV Map.empty te v
           v <- generateLV m te jv
           return (template "(\"$1\", $2)" [k,v])
 
-    generateStruct m te0 d s tes (JSON.Object hm) = do
+    generateStruct m te0 d s tes (JS.Object hm) = do
       fields <- forM (L.sortBy (comparing fst) $ HM.toList hm) $ \(fname,v) -> do
         lit <- generateLV m2 (getTE s fname) v
         return (template "$1 = $2" [hFieldName (d_name d) fname, lit])
@@ -509,7 +498,7 @@ generateLiteral te v =  generateLV Map.empty te v
           Just f -> f_type f
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
 
-    generateUnion m d u tes (JSON.Object hm) = do
+    generateUnion m d u tes (JS.Object hm) = do
       lit <- generateLV m2 te v
       return (template "($1 $2)" [hDiscName (d_name d) fname,lit])
       where
@@ -554,10 +543,9 @@ generateModule m = do
   addLanguageFeature "OverloadedStrings"
   addImport "import qualified Prelude"
   addImport "import qualified Data.Proxy"
-  addImport "import Control.Applicative( (<$>), (<*>) )"
-  importModule (HaskellModule "ADL.Core.Value")
-  importModule (HaskellModule "ADL.Core.Primitives")
-  importQualifiedModuleAs (HaskellModule "Data.Aeson") "JSON"
+  addImport "import Control.Applicative( (<$>), (<*>), (<|>) )"
+  importModule (HaskellModule "ADL.Core")
+  importQualifiedModuleAs (HaskellModule "Data.Aeson") "JS"
   importQualifiedModuleAs (HaskellModule "Data.HashMap.Strict") "HM"
 
   ms <- get

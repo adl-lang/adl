@@ -86,8 +86,7 @@ writeModuleFile :: (FilePath -> LBS.ByteString -> IO ()) ->
                    EIO a ()
 writeModuleFile fileWriter m = do
   let adlast = moduleToA2 m
-      js = jsonSerialiser defaultJSONFlags
-      v = aToJSON js adlast
+      v = adlToJson adlast
       fpath =  T.unpack (T.intercalate "." (unModuleName (m_name m) )) ++ ".json"
       
       -- JSON output in sorted keyname order, as we use the 

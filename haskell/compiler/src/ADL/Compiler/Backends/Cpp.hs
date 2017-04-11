@@ -1133,7 +1133,7 @@ getCustomType scopedName decl = case Map.lookup cppCustomType (d_annotations dec
   Just (_,json) -> Just (convertCustomType json)
   where
     convertCustomType :: JSON.Value -> CustomType
-    convertCustomType jv = case aFromJSON (jsonSerialiser (JSONFlags True)) jv of
+    convertCustomType jv = case adlFromJson jv of
       Nothing -> error "BUG: failed to parse java custom type"
       (Just cct) -> CustomType
         { ct_name = CC.cppCustomType_cppname cct

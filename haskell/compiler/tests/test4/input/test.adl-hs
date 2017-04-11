@@ -13,17 +13,17 @@ annotation Date HaskellCustomType {
     "insertCode" : [
         "type Date = Day",
         "",
-        "toDate :: DateO -> Maybe Day",
-        "toDate (Date s) = parseTime defaultTimeLocale \"%F\" s",
+        "fromDateO :: DateO -> Prelude.Maybe Day",
+        "fromDateO (DateO s) = parseTime defaultTimeLocale \"%F\" s",
         "",
-        "fromDate :: Day -> Date_ADL",
-        "fromDate d = Date (formatTime defaultTimeLocale \"%F\" d)",
+        "toDateO :: Day -> DateO",
+        "toDateO d = DateO (formatTime defaultTimeLocale \"%F\" d)",
         "",
-        "instance ADLValue Day where",
-        "  atype _ = atype (defaultv :: ODate)",
-        "  defaultv = let (Just d) = toDate defaultv in d",
-        "  aToJSON jf d = aToJSON jf (fromDate d)",
-        "  afromJSON jf jv = (aFromJSON jf jv) >>= toDate"
+        "instance AdlValue Day where",
+        "  atype _ = atype (Data.Proxy.Proxy :: Data.Proxy.Proxy DateO)",
+        "  defaultv = let (Prelude.Just d) = toDate defaultv in d",
+        "  jsonGen = JsonGen (adlToJson . toDateO)",
+        "  jsonParser = jsonParser undefined"
     ],
     "generateOrigADLType" : "DateO"
 };

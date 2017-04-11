@@ -4,10 +4,9 @@ module ADL.Adlc.Config.Cpp(
     Include(..),
 ) where
 
-import ADL.Core.Primitives
-import ADL.Core.Value
-import Control.Applicative( (<$>), (<*>) )
-import qualified Data.Aeson as JSON
+import ADL.Core
+import Control.Applicative( (<$>), (<*>), (<|>) )
+import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Proxy
 import qualified Data.Text as T
@@ -22,7 +21,7 @@ data CppCustomType = CppCustomType
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue CppCustomType where
+instance AdlValue CppCustomType where
     atype _ = "adlc.config.cpp.CppCustomType"
     
     defaultv = CppCustomType
@@ -32,29 +31,20 @@ instance ADLValue CppCustomType where
         defaultv
         defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            cppname_js = jsonSerialiser jf
-            cppincludes_js = jsonSerialiser jf
-            declarationCode_js = jsonSerialiser jf
-            serialisationCode_js = jsonSerialiser jf
-            generateOrigADLType_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("cppname",aToJSON cppname_js (cppCustomType_cppname v))
-                , ("cppincludes",aToJSON cppincludes_js (cppCustomType_cppincludes v))
-                , ("declarationCode",aToJSON declarationCode_js (cppCustomType_declarationCode v))
-                , ("serialisationCode",aToJSON serialisationCode_js (cppCustomType_serialisationCode v))
-                , ("generateOrigADLType",aToJSON generateOrigADLType_js (cppCustomType_generateOrigADLType v))
-                ] )
-            
-            from (JSON.Object hm) = CppCustomType 
-                <$> fieldFromJSON cppname_js "cppname" defaultv hm
-                <*> fieldFromJSON cppincludes_js "cppincludes" defaultv hm
-                <*> fieldFromJSON declarationCode_js "declarationCode" defaultv hm
-                <*> fieldFromJSON serialisationCode_js "serialisationCode" defaultv hm
-                <*> fieldFromJSON generateOrigADLType_js "generateOrigADLType" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "cppname" cppCustomType_cppname
+        , genField "cppincludes" cppCustomType_cppincludes
+        , genField "declarationCode" cppCustomType_declarationCode
+        , genField "serialisationCode" cppCustomType_serialisationCode
+        , genField "generateOrigADLType" cppCustomType_generateOrigADLType
+        ]
+    
+    jsonParser = CppCustomType
+        <$> parseField "cppname"
+        <*> parseField "cppincludes"
+        <*> parseField "declarationCode"
+        <*> parseField "serialisationCode"
+        <*> parseField "generateOrigADLType"
 
 data Include = Include
     { include_name :: T.Text
@@ -62,24 +52,18 @@ data Include = Include
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue Include where
+instance AdlValue Include where
     atype _ = "adlc.config.cpp.Include"
     
     defaultv = Include
         defaultv
         defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            name_js = jsonSerialiser jf
-            system_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("name",aToJSON name_js (include_name v))
-                , ("system",aToJSON system_js (include_system v))
-                ] )
-            
-            from (JSON.Object hm) = Include 
-                <$> fieldFromJSON name_js "name" defaultv hm
-                <*> fieldFromJSON system_js "system" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "name" include_name
+        , genField "system" include_system
+        ]
+    
+    jsonParser = Include
+        <$> parseField "name"
+        <*> parseField "system"

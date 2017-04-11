@@ -14,10 +14,9 @@ module ADL.Test5(
     U9(..),
 ) where
 
-import ADL.Core.Primitives
-import ADL.Core.Value
-import Control.Applicative( (<$>), (<*>) )
-import qualified Data.Aeson as JSON
+import ADL.Core
+import Control.Applicative( (<$>), (<*>), (<|>) )
+import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
 import qualified Data.Proxy
@@ -30,7 +29,7 @@ data Cell t = Cell
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance (ADLValue t) => ADLValue (Cell t) where
+instance (AdlValue t) => AdlValue (Cell t) where
     atype _ = T.concat
         [ "test5.Cell"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
@@ -40,27 +39,21 @@ instance (ADLValue t) => ADLValue (Cell t) where
         defaultv
         defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            head_js = jsonSerialiser jf
-            tail_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("head",aToJSON head_js (cell_head v))
-                , ("tail",aToJSON tail_js (cell_tail v))
-                ] )
-            
-            from (JSON.Object hm) = Cell 
-                <$> fieldFromJSON head_js "head" defaultv hm
-                <*> fieldFromJSON tail_js "tail" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "head" cell_head
+        , genField "tail" cell_tail
+        ]
+    
+    jsonParser = Cell
+        <$> parseField "head"
+        <*> parseField "tail"
 
 data List t
     = List_null
     | List_cell (Cell t)
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance (ADLValue t) => ADLValue (List t) where
+instance (AdlValue t) => AdlValue (List t) where
     atype _ = T.concat
         [ "test5.List"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
@@ -68,211 +61,170 @@ instance (ADLValue t) => ADLValue (List t) where
     
     defaultv = List_null
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            cell_js = jsonSerialiser jf
-            
-            to List_null = JSON.String "null"
-            to (List_cell v) = JSON.Object (HM.singleton "cell" (aToJSON cell_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("null",Prelude.Nothing) -> Prelude.Just List_null
-                    ("cell",Prelude.Just v) -> Prelude.fmap List_cell (aFromJSON cell_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        List_null -> genUnionVoid "null"
+        List_cell v -> genUnionValue "cell" v
+        )
+    
+    jsonParser
+        =   parseUnionVoid "null" List_null
+        <|> parseUnionValue "cell" List_cell
 
 data S1 = S1
     { s1_f :: Data.Int.Int16
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue S1 where
+instance AdlValue S1 where
     atype _ = "test5.S1"
     
     defaultv = S1
         100
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            f_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("f",aToJSON f_js (s1_f v))
-                ] )
-            
-            from (JSON.Object hm) = S1 
-                <$> fieldFromJSON f_js "f" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "f" s1_f
+        ]
+    
+    jsonParser = S1
+        <$> parseFieldDef "f" 100
 
 data U1
     = U1_v
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue U1 where
+instance AdlValue U1 where
     atype _ = "test5.U1"
     
     defaultv = U1_v
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            
-            to U1_v = JSON.String "v"
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v",Prelude.Nothing) -> Prelude.Just U1_v
+    jsonGen = genUnion (\jv -> case jv of
+        U1_v -> genUnionVoid "v"
+        )
+    
+    jsonParser
+        =   parseUnionVoid "v" U1_v
 
 data U2
     = U2_v Data.Int.Int16
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue U2 where
+instance AdlValue U2 where
     atype _ = "test5.U2"
     
     defaultv = U2_v defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v_js = jsonSerialiser jf
-            
-            to (U2_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v",Prelude.Just v) -> Prelude.fmap U2_v (aFromJSON v_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        U2_v v -> genUnionValue "v" v
+        )
+    
+    jsonParser
+        =   parseUnionValue "v" U2_v
 
 data U3
     = U3_v Data.Int.Int16
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue U3 where
+instance AdlValue U3 where
     atype _ = "test5.U3"
     
     defaultv = U3_v defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v_js = jsonSerialiser jf
-            
-            to (U3_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v",Prelude.Just v) -> Prelude.fmap U3_v (aFromJSON v_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        U3_v v -> genUnionValue "v" v
+        )
+    
+    jsonParser
+        =   parseUnionValue "v" U3_v
 
 data U4
     = U4_v S1
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue U4 where
+instance AdlValue U4 where
     atype _ = "test5.U4"
     
     defaultv = U4_v defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v_js = jsonSerialiser jf
-            
-            to (U4_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v",Prelude.Just v) -> Prelude.fmap U4_v (aFromJSON v_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        U4_v v -> genUnionValue "v" v
+        )
+    
+    jsonParser
+        =   parseUnionValue "v" U4_v
 
 data U5
     = U5_v S1
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue U5 where
+instance AdlValue U5 where
     atype _ = "test5.U5"
     
     defaultv = U5_v defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v_js = jsonSerialiser jf
-            
-            to (U5_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v",Prelude.Just v) -> Prelude.fmap U5_v (aFromJSON v_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        U5_v v -> genUnionValue "v" v
+        )
+    
+    jsonParser
+        =   parseUnionValue "v" U5_v
 
 data U6
     = U6_v U3
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue U6 where
+instance AdlValue U6 where
     atype _ = "test5.U6"
     
     defaultv = U6_v defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v_js = jsonSerialiser jf
-            
-            to (U6_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v",Prelude.Just v) -> Prelude.fmap U6_v (aFromJSON v_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        U6_v v -> genUnionValue "v" v
+        )
+    
+    jsonParser
+        =   parseUnionValue "v" U6_v
 
 data U7
     = U7_v U3
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue U7 where
+instance AdlValue U7 where
     atype _ = "test5.U7"
     
     defaultv = U7_v defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v_js = jsonSerialiser jf
-            
-            to (U7_v v) = JSON.Object (HM.singleton "v" (aToJSON v_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v",Prelude.Just v) -> Prelude.fmap U7_v (aFromJSON v_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        U7_v v -> genUnionValue "v" v
+        )
+    
+    jsonParser
+        =   parseUnionValue "v" U7_v
 
 data U8
     = U8_v1 S1
     | U8_v2 Data.Int.Int16
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue U8 where
+instance AdlValue U8 where
     atype _ = "test5.U8"
     
     defaultv = U8_v1 defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v1_js = jsonSerialiser jf
-            v2_js = jsonSerialiser jf
-            
-            to (U8_v1 v) = JSON.Object (HM.singleton "v1" (aToJSON v1_js v))
-            to (U8_v2 v) = JSON.Object (HM.singleton "v2" (aToJSON v2_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v1",Prelude.Just v) -> Prelude.fmap U8_v1 (aFromJSON v1_js v)
-                    ("v2",Prelude.Just v) -> Prelude.fmap U8_v2 (aFromJSON v2_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        U8_v1 v -> genUnionValue "v1" v
+        U8_v2 v -> genUnionValue "v2" v
+        )
+    
+    jsonParser
+        =   parseUnionValue "v1" U8_v1
+        <|> parseUnionValue "v2" U8_v2
 
 data U9 t
     = U9_v1 t
     | U9_v2 Data.Int.Int16
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance (ADLValue t) => ADLValue (U9 t) where
+instance (AdlValue t) => AdlValue (U9 t) where
     atype _ = T.concat
         [ "test5.U9"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
@@ -280,16 +232,11 @@ instance (ADLValue t) => ADLValue (U9 t) where
     
     defaultv = U9_v1 defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            v1_js = jsonSerialiser jf
-            v2_js = jsonSerialiser jf
-            
-            to (U9_v1 v) = JSON.Object (HM.singleton "v1" (aToJSON v1_js v))
-            to (U9_v2 v) = JSON.Object (HM.singleton "v2" (aToJSON v2_js v))
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("v1",Prelude.Just v) -> Prelude.fmap U9_v1 (aFromJSON v1_js v)
-                    ("v2",Prelude.Just v) -> Prelude.fmap U9_v2 (aFromJSON v2_js v)
+    jsonGen = genUnion (\jv -> case jv of
+        U9_v1 v -> genUnionValue "v1" v
+        U9_v2 v -> genUnionValue "v2" v
+        )
+    
+    jsonParser
+        =   parseUnionValue "v1" U9_v1
+        <|> parseUnionValue "v2" U9_v2

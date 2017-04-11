@@ -3,11 +3,10 @@ module ADL.Test(
     S(..),
 ) where
 
-import ADL.Core.Primitives
-import ADL.Core.Value
-import Control.Applicative( (<$>), (<*>) )
+import ADL.Core
+import Control.Applicative( (<$>), (<*>), (<|>) )
 import qualified ADL.Sys.Types
-import qualified Data.Aeson as JSON
+import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
 import qualified Data.Proxy
@@ -27,7 +26,7 @@ data S = S
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue S where
+instance AdlValue S where
     atype _ = "test.S"
     
     defaultv = S
@@ -41,38 +40,25 @@ instance ADLValue S where
         defaultv
         (Nullable_just "abcde")
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            f_pair_js = jsonSerialiser jf
-            f_either_js = jsonSerialiser jf
-            f_error_js = jsonSerialiser jf
-            f_map_js = jsonSerialiser jf
-            f_set_js = jsonSerialiser jf
-            f_mstring_js = jsonSerialiser jf
-            f_mstring2_js = jsonSerialiser jf
-            f_nstring_js = jsonSerialiser jf
-            f_nstring2_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("f_pair",aToJSON f_pair_js (s_f_pair v))
-                , ("f_either",aToJSON f_either_js (s_f_either v))
-                , ("f_error",aToJSON f_error_js (s_f_error v))
-                , ("f_map",aToJSON f_map_js (s_f_map v))
-                , ("f_set",aToJSON f_set_js (s_f_set v))
-                , ("f_mstring",aToJSON f_mstring_js (s_f_mstring v))
-                , ("f_mstring2",aToJSON f_mstring2_js (s_f_mstring2 v))
-                , ("f_nstring",aToJSON f_nstring_js (s_f_nstring v))
-                , ("f_nstring2",aToJSON f_nstring2_js (s_f_nstring2 v))
-                ] )
-            
-            from (JSON.Object hm) = S 
-                <$> fieldFromJSON f_pair_js "f_pair" defaultv hm
-                <*> fieldFromJSON f_either_js "f_either" defaultv hm
-                <*> fieldFromJSON f_error_js "f_error" defaultv hm
-                <*> fieldFromJSON f_map_js "f_map" defaultv hm
-                <*> fieldFromJSON f_set_js "f_set" defaultv hm
-                <*> fieldFromJSON f_mstring_js "f_mstring" defaultv hm
-                <*> fieldFromJSON f_mstring2_js "f_mstring2" defaultv hm
-                <*> fieldFromJSON f_nstring_js "f_nstring" defaultv hm
-                <*> fieldFromJSON f_nstring2_js "f_nstring2" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "f_pair" s_f_pair
+        , genField "f_either" s_f_either
+        , genField "f_error" s_f_error
+        , genField "f_map" s_f_map
+        , genField "f_set" s_f_set
+        , genField "f_mstring" s_f_mstring
+        , genField "f_mstring2" s_f_mstring2
+        , genField "f_nstring" s_f_nstring
+        , genField "f_nstring2" s_f_nstring2
+        ]
+    
+    jsonParser = S
+        <$> parseField "f_pair"
+        <*> parseField "f_either"
+        <*> parseField "f_error"
+        <*> parseField "f_map"
+        <*> parseField "f_set"
+        <*> parseField "f_mstring"
+        <*> parseFieldDef "f_mstring2" (Maybe_just "sukpeepolup")
+        <*> parseField "f_nstring"
+        <*> parseFieldDef "f_nstring2" (Nullable_just "abcde")

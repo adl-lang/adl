@@ -38,5 +38,5 @@ main = do
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "java.adl"
   
   -- runtime
-  adlcb adlstdlibdir "runtime/src" "sys/types.adl"
-  adlcb adlstdlibdir "runtime/src" "sys/adlast.adl"
+  adlcb adlstdlibdir "compiler/src" "sys/types.adl"
+  adlcb adlstdlibdir "compiler/src" "sys/adlast.adl"

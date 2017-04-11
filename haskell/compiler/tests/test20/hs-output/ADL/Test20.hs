@@ -4,10 +4,9 @@ module ADL.Test20(
     Role(..),
 ) where
 
-import ADL.Core.Primitives
-import ADL.Core.Value
-import Control.Applicative( (<$>), (<*>) )
-import qualified Data.Aeson as JSON
+import ADL.Core
+import Control.Applicative( (<$>), (<*>), (<|>) )
+import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
 import qualified Data.Proxy
@@ -22,7 +21,7 @@ data Person = Person
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue Person where
+instance AdlValue Person where
     atype _ = "test20.Person"
     
     defaultv = Person
@@ -31,26 +30,18 @@ instance ADLValue Person where
         defaultv
         defaultv
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            firstName_js = jsonSerialiser jf
-            lastName_js = jsonSerialiser jf
-            age_js = jsonSerialiser jf
-            role_js = jsonSerialiser jf
-            
-            to v = JSON.Object ( HM.fromList
-                [ ("fn",aToJSON fn_js (person_firstName v))
-                , ("ln",aToJSON ln_js (person_lastName v))
-                , ("age",aToJSON age_js (person_age v))
-                , ("role",aToJSON role_js (person_role v))
-                ] )
-            
-            from (JSON.Object hm) = Person 
-                <$> fieldFromJSON fn_js "fn" defaultv hm
-                <*> fieldFromJSON ln_js "ln" defaultv hm
-                <*> fieldFromJSON age_js "age" defaultv hm
-                <*> fieldFromJSON role_js "role" defaultv hm
-            from _ = Prelude.Nothing
+    jsonGen = genObject
+        [ genField "fn" person_firstName
+        , genField "ln" person_lastName
+        , genField "age" person_age
+        , genField "role" person_role
+        ]
+    
+    jsonParser = Person
+        <$> parseField "fn"
+        <*> parseField "ln"
+        <*> parseField "age"
+        <*> parseField "role"
 
 data Role
     = Role_underling
@@ -58,21 +49,18 @@ data Role
     | Role_superBoss
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-instance ADLValue Role where
+instance AdlValue Role where
     atype _ = "test20.Role"
     
     defaultv = Role_underling
     
-    jsonSerialiser jf = JSONSerialiser to from
-        where
-            
-            to Role_underling = JSON.String "u"
-            to Role_boss = JSON.String "b"
-            to Role_superBoss = JSON.String "sb"
-            
-            from o = do
-                u <- splitUnion o
-                case u of
-                    ("u",Prelude.Nothing) -> Prelude.Just Role_underling
-                    ("b",Prelude.Nothing) -> Prelude.Just Role_boss
-                    ("sb",Prelude.Nothing) -> Prelude.Just Role_superBoss
+    jsonGen = genUnion (\jv -> case jv of
+        Role_underling -> genUnionVoid "u"
+        Role_boss -> genUnionVoid "b"
+        Role_superBoss -> genUnionVoid "sb"
+        )
+    
+    jsonParser
+        =   parseUnionVoid "u" Role_underling
+        <|> parseUnionVoid "b" Role_boss
+        <|> parseUnionVoid "sb" Role_superBoss
