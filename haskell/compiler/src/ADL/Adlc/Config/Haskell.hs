@@ -22,6 +22,9 @@ data HaskellCustomType = HaskellCustomType
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkHaskellCustomType :: T.Text -> [T.Text] -> [T.Text] -> HaskellCustomType
+mkHaskellCustomType haskellname haskellimports insertCode = HaskellCustomType haskellname haskellimports insertCode "" "" [  ]
+
 instance AdlValue HaskellCustomType where
     atype _ = "adlc.config.haskell.HaskellCustomType"
     
@@ -55,6 +58,9 @@ data UnionConstructor = UnionConstructor
     , unionConstructor_constructor :: T.Text
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkUnionConstructor :: T.Text -> T.Text -> UnionConstructor
+mkUnionConstructor fieldName constructor = UnionConstructor fieldName constructor
 
 instance AdlValue UnionConstructor where
     atype _ = "adlc.config.haskell.UnionConstructor"

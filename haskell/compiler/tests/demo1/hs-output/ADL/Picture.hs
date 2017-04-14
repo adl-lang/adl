@@ -19,6 +19,9 @@ data Circle = Circle
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkCircle :: Prelude.Double -> Circle
+mkCircle radius = Circle radius
+
 instance AdlValue Circle where
     atype _ = "picture.Circle"
     
@@ -63,6 +66,9 @@ data Rectangle = Rectangle
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkRectangle :: Prelude.Double -> Prelude.Double -> Rectangle
+mkRectangle width height = Rectangle width height
+
 instance AdlValue Rectangle where
     atype _ = "picture.Rectangle"
     
@@ -86,6 +92,9 @@ data Translated t = Translated
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkTranslated :: t -> Translated t
+mkTranslated object = Translated 0 0 object
+
 instance (AdlValue t) => AdlValue (Translated t) where
     atype _ = T.concat
         [ "picture.Translated"
@@ -93,8 +102,8 @@ instance (AdlValue t) => AdlValue (Translated t) where
         , ">" ]
     
     defaultv = Translated
-        defaultv
-        defaultv
+        0
+        0
         defaultv
     
     jsonGen = genObject
@@ -104,6 +113,6 @@ instance (AdlValue t) => AdlValue (Translated t) where
         ]
     
     jsonParser = Translated
-        <$> parseField "xoffset"
-        <*> parseField "yoffset"
+        <$> parseFieldDef "xoffset" 0
+        <*> parseFieldDef "yoffset" 0
         <*> parseField "object"

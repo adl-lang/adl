@@ -40,6 +40,9 @@ data Decl = Decl
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkDecl :: Ident -> (ADL.Sys.Types.Maybe Data.Word.Word32) -> DeclType -> Annotations -> Decl
+mkDecl name version type_ annotations = Decl name version type_ annotations
+
 instance AdlValue Decl where
     atype _ = "sys.adlast.Decl"
     
@@ -96,6 +99,9 @@ data Field = Field
     , field_annotations :: Annotations
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkField :: Ident -> TypeExpr -> (ADL.Sys.Types.Maybe Literal) -> Annotations -> Field
+mkField name typeExpr default_ annotations = Field name typeExpr default_ annotations
 
 instance AdlValue Field where
     atype _ = "sys.adlast.Field"
@@ -181,6 +187,9 @@ data Module = Module
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkModule :: ModuleName -> [Import] -> (ADL.Sys.Types.Map Ident Decl) -> Module
+mkModule name imports decls = Module name imports decls
+
 instance AdlValue Module where
     atype _ = "sys.adlast.Module"
     
@@ -209,6 +218,9 @@ data NewType = NewType
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkNewType :: [Ident] -> TypeExpr -> (ADL.Sys.Types.Maybe Literal) -> NewType
+mkNewType typeParams typeExpr default_ = NewType typeParams typeExpr default_
+
 instance AdlValue NewType where
     atype _ = "sys.adlast.NewType"
     
@@ -234,6 +246,9 @@ data ScopedName = ScopedName
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkScopedName :: ModuleName -> Ident -> ScopedName
+mkScopedName moduleName name = ScopedName moduleName name
+
 instance AdlValue ScopedName where
     atype _ = "sys.adlast.ScopedName"
     
@@ -255,6 +270,9 @@ data Struct = Struct
     , struct_fields :: [Field]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkStruct :: [Ident] -> [Field] -> Struct
+mkStruct typeParams fields = Struct typeParams fields
 
 instance AdlValue Struct where
     atype _ = "sys.adlast.Struct"
@@ -278,6 +296,9 @@ data TypeDef = TypeDef
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkTypeDef :: [Ident] -> TypeExpr -> TypeDef
+mkTypeDef typeParams typeExpr = TypeDef typeParams typeExpr
+
 instance AdlValue TypeDef where
     atype _ = "sys.adlast.TypeDef"
     
@@ -299,6 +320,9 @@ data TypeExpr = TypeExpr
     , typeExpr_parameters :: [TypeExpr]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkTypeExpr :: TypeRef -> [TypeExpr] -> TypeExpr
+mkTypeExpr typeRef parameters = TypeExpr typeRef parameters
 
 instance AdlValue TypeExpr where
     atype _ = "sys.adlast.TypeExpr"
@@ -343,6 +367,9 @@ data Union = Union
     , union_fields :: [Field]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkUnion :: [Ident] -> [Field] -> Union
+mkUnion typeParams fields = Union typeParams fields
 
 instance AdlValue Union where
     atype _ = "sys.adlast.Union"

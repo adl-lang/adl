@@ -21,6 +21,9 @@ data CppCustomType = CppCustomType
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkCppCustomType :: T.Text -> CppCustomType
+mkCppCustomType cppname = CppCustomType cppname [  ] [  ] [  ] ""
+
 instance AdlValue CppCustomType where
     atype _ = "adlc.config.cpp.CppCustomType"
     
@@ -51,6 +54,9 @@ data Include = Include
     , include_system :: Prelude.Bool
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkInclude :: T.Text -> Prelude.Bool -> Include
+mkInclude name system = Include name system
 
 instance AdlValue Include where
     atype _ = "adlc.config.cpp.Include"

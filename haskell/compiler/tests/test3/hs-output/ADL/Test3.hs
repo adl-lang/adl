@@ -26,6 +26,9 @@ data A = A
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkA :: Data.Int.Int16 -> T.Text -> Prelude.Bool -> A
+mkA f_int f_string f_bool = A f_int f_string f_bool
+
 instance AdlValue A where
     atype _ = "test3.A"
     
@@ -52,6 +55,9 @@ data B t = B
     , b_f_xy :: (XY t)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkB :: t -> T.Text -> [t] -> (XY t) -> B t
+mkB f_t f_string f_tvec f_xy = B f_t f_string f_tvec f_xy
 
 instance (AdlValue t) => AdlValue (B t) where
     atype _ = T.concat
@@ -101,6 +107,9 @@ data S t = S
     , s_f_smap :: StringMap (Data.Int.Int32)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS :: t -> S t
+mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.True) (U_f_int 45) f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)])
 
 instance (AdlValue t) => AdlValue (S t) where
     atype _ = T.concat
@@ -199,6 +208,9 @@ data XY t = XY
     , xY_y :: t
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkXY :: t -> t -> XY t
+mkXY x y = XY x y
 
 instance (AdlValue t) => AdlValue (XY t) where
     atype _ = T.concat

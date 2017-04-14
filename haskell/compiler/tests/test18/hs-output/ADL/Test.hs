@@ -39,6 +39,9 @@ data X2 = X2
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkX2 :: Prelude.Double -> [Y2] -> X2
+mkX2 f1 f2 = X2 f1 f2
+
 instance AdlValue X2 where
     atype _ = "test.X2"
     
@@ -79,6 +82,9 @@ data Y2 = Y2
     , y2_f2 :: [X2]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkY2 :: T.Text -> [X2] -> Y2
+mkY2 f1 f2 = Y2 f1 f2
 
 instance AdlValue Y2 where
     atype _ = "test.Y2"

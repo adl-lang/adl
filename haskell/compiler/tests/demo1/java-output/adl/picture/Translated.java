@@ -86,8 +86,8 @@ public class Translated<T> {
 
       public Translated<T> create() {
         return new Translated<T>(
-          xoffset.get().create(),
-          yoffset.get().create(),
+          0,
+          0,
           object.get().create()
           );
       }
@@ -127,8 +127,8 @@ public class Translated<T> {
       public Translated<T> fromJson(JsonElement _json) {
         JsonObject _obj = _json.getAsJsonObject();
         return new Translated<T>(
-          _obj.has("xoffset") ? xoffset.get().fromJson(_obj.get("xoffset")) : 0.0,
-          _obj.has("yoffset") ? yoffset.get().fromJson(_obj.get("yoffset")) : 0.0,
+          _obj.has("xoffset") ? xoffset.get().fromJson(_obj.get("xoffset")) : 0,
+          _obj.has("yoffset") ? yoffset.get().fromJson(_obj.get("yoffset")) : 0,
           _obj.has("object") ? object.get().fromJson(_obj.get("object")) : factoryT.create()
         );
       }

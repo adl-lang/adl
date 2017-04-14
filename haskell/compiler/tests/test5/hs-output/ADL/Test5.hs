@@ -29,6 +29,9 @@ data Cell t = Cell
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkCell :: t -> (List t) -> Cell t
+mkCell head tail = Cell head tail
+
 instance (AdlValue t) => AdlValue (Cell t) where
     atype _ = T.concat
         [ "test5.Cell"
@@ -74,6 +77,9 @@ data S1 = S1
     { s1_f :: Data.Int.Int16
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS1 ::  S1
+mkS1  = S1 100
 
 instance AdlValue S1 where
     atype _ = "test5.S1"

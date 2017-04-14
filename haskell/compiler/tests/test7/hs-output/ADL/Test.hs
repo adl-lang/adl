@@ -119,6 +119,9 @@ data Point t = Point
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkPoint :: t -> t -> Point t
+mkPoint x y = Point x y
+
 instance (AdlValue t) => AdlValue (Point t) where
     atype _ = T.concat
         [ "test.Point"

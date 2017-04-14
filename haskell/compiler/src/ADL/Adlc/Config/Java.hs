@@ -18,6 +18,9 @@ data JavaCustomType = JavaCustomType
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkJavaCustomType :: T.Text -> T.Text -> JavaCustomType
+mkJavaCustomType javaname helpers = JavaCustomType javaname helpers Prelude.False
+
 instance AdlValue JavaCustomType where
     atype _ = "adlc.config.java.JavaCustomType"
     

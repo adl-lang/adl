@@ -23,6 +23,9 @@ type IntTree = (Tree Data.Int.Int32)
 data S0 = S0
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkS0 ::  S0
+mkS0  = S0 
+
 instance AdlValue S0 where
     atype _ = "test2.S0"
     
@@ -35,6 +38,9 @@ data S1 = S1
     , s1_y :: T.Text
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS1 :: Data.Int.Int32 -> T.Text -> S1
+mkS1 x y = S1 x y
 
 instance AdlValue S1 where
     atype _ = "test2.S1"
@@ -58,6 +64,9 @@ data S2 = S2
     , s2_f3 :: [Data.Int.Int32]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS2 :: T.Text -> Prelude.Double -> [Data.Int.Int32] -> S2
+mkS2 f1 f2 f3 = S2 f1 f2 f3
 
 instance AdlValue S2 where
     atype _ = "test2.S2"
@@ -85,6 +94,9 @@ data S3 t = S3
     , s3_f4 :: [t]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS3 :: T.Text -> Prelude.Double -> t -> [t] -> S3 t
+mkS3 f1 f2 f3 f4 = S3 f1 f2 f3 f4
 
 instance (AdlValue t) => AdlValue (S3 t) where
     atype _ = T.concat
@@ -117,6 +129,9 @@ data S4 t = S4
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkS4 :: (S3 T.Text) -> (S3 t) -> S4 t
+mkS4 f1 f2 = S4 f1 f2
+
 instance (AdlValue t) => AdlValue (S4 t) where
     atype _ = T.concat
         [ "test2.S4"
@@ -141,6 +156,9 @@ data Tree t = Tree
     , tree_children :: [(Tree t)]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkTree :: t -> [(Tree t)] -> Tree t
+mkTree value children = Tree value children
 
 instance (AdlValue t) => AdlValue (Tree t) where
     atype _ = T.concat

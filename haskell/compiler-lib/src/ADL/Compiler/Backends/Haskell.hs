@@ -12,6 +12,7 @@ import qualified Data.List as L
 import Data.Ord (comparing)
 
 import System.FilePath(takeDirectory,joinPath,addExtension)
+import Data.Monoid
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
@@ -300,7 +301,10 @@ generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
     mn <- fmap ms_name get
     if (null (s_fields s))
       then generateNullStructDataType lname mn d s
-      else generateStructDataType lname mn d s
+      else do
+        generateStructDataType lname mn d s
+    nl
+    generateMkStructFunction lname mn d s
     nl
     if (null (s_fields s))
       then generateNullStructADLInstance lname mn d s
@@ -351,6 +355,26 @@ generateStructDataType lname mn d s = do
                            t ]
         wl "}"
         derivingStdClasses
+
+generateMkStructFunction :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
+generateMkStructFunction lname mn d s = do
+  args <- forM (s_fields s) $ \f -> do
+    case f_default f of
+     Nothing -> do
+       paramtype <- hTypeExpr (f_type f)
+       return (let param = unreserveWord (f_name f) in (Just (param,paramtype),param))
+     (Just jv) -> do
+       lit <- generateLiteral (f_type f) jv
+       return (Nothing, lit)
+       
+  let fnname = "mk" <> lname
+      params = [param | (Just (param,_),_) <- args]
+      paramtypes = [ptype | (Just (_,ptype),_) <- args]
+      ctorArgs = [arg | (_,arg) <- args]
+
+  wt "$1 :: $2 $3$4" [fnname, T.intercalate " " [p <> " ->" | p <- paramtypes], lname, hTParams (s_typeParams s)]
+  wt "$1 $2 = $3 $4" [fnname, T.intercalate " "  params, lname, T.intercalate " " ctorArgs]
+  where
 
 generateNullStructDataType :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateNullStructDataType lname mn d s = do
@@ -627,8 +651,46 @@ fileMapper :: HaskellModule -> FilePath
 fileMapper (HaskellModule t) = addExtension (joinPath ps) "hs"
   where
     ps = map T.unpack (T.splitOn "." t)
-      
-----------------------------------------------------------------------
+
+unreserveWord :: T.Text -> T.Text
+unreserveWord n | Set.member n reservedWords = T.append n "_"
+                | otherwise = n
+  
+reservedWords :: Set.Set T.Text
+reservedWords = Set.fromList
+  [ "as"
+  , "case"
+  , "class"
+  , "data"
+  , "default"
+  , "deriving"
+  , "do"
+  , "else"
+  , "family"
+  , "forall"
+  , "foreign"
+  , "hiding"
+  , "if"
+  , "import"
+  , "in"
+  , "infix"
+  , "infixl"
+  , "infixr"
+  , "instance"
+  , "let"
+  , "mdo"
+  , "module"
+  , "newtype"
+  , "of"
+  , "proc"
+  , "qualified"
+  , "rec"
+  , "then"
+  , "type"
+  , "where"
+  ]
+
+ ----------------------------------------------------------------------
 
 data HaskellFlags = HaskellFlags {
   hf_modulePrefix :: String

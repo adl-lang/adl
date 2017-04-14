@@ -21,6 +21,9 @@ data Person = Person
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkPerson :: T.Text -> T.Text -> Data.Int.Int16 -> Role -> Person
+mkPerson firstName lastName age role = Person firstName lastName age role
+
 instance AdlValue Person where
     atype _ = "test20.Person"
     

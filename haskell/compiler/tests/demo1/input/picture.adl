@@ -21,8 +21,8 @@ module picture
 
     struct Translated<T>
     {
-        Double xoffset;
-        Double yoffset;
+        Double xoffset = 0;
+        Double yoffset = 0;
         T object;
     };
 };

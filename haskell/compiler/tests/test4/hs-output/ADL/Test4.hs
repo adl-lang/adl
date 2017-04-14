@@ -30,6 +30,9 @@ data CDate = CDate
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
+mkCDate :: Data.Int.Int16 -> Data.Int.Int16 -> Data.Int.Int16 -> CDate
+mkCDate year month day = CDate year month day
+
 instance AdlValue CDate where
     atype _ = "test4.CDate"
     
@@ -82,6 +85,9 @@ data S = S
     , s_v8a :: (ADL.Sys.Types.Map T.Text Data.Int.Int32)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS :: Date -> CDate -> (ADL.Sys.Types.Maybe T.Text) -> (ADL.Sys.Types.Pair T.Text Data.Int.Int32) -> (ADL.Sys.Types.Set Data.Int.Int32) -> (ADL.Sys.Types.Map T.Text Data.Int.Int32) -> S
+mkS v1 v3 v5 v6 v7a v8 = S v1 ((Data.Maybe.fromJust . dateFromText) "2000-01-01") v3 (CDate 2000 1 1) v5 Prelude.Nothing (Prelude.Just "hello") v6 (Data.Set.fromList [ 1, 2, 3 ]) v7a v8 (Data.Map.fromList [ ((,) "X" 1), ((,) "Y" 2) ])
 
 instance AdlValue S where
     atype _ = "test4.S"
