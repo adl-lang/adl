@@ -2,20 +2,24 @@
 module ADL.Test4(
     CDate(..),
     Date,
-    DateO(..),
     S(..),
 ) where
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
 import Data.Time.Calendar(Day)
-import Data.Time.Format(parseTime,formatTime)
-import System.Locale(defaultTimeLocale)
+import Data.Time.Format(parseTimeM,formatTime,defaultTimeLocale)
+import Prelude((.))
 import qualified ADL.Sys.Types
+import qualified Data.Aeson
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
+import qualified Data.Map
+import qualified Data.Maybe
 import qualified Data.Proxy
+import qualified Data.Set
+import qualified Data.Text
 import qualified Data.Text as T
 import qualified Prelude
 
@@ -48,29 +52,20 @@ instance AdlValue CDate where
 
 type Date = Day
 
-fromDateO :: DateO -> Prelude.Maybe Day
-fromDateO (DateO s) = parseTime defaultTimeLocale "%F" s
+dateFromText :: Data.Text.Text -> Prelude.Maybe Day
+dateFromText s = parseTimeM Prelude.True defaultTimeLocale "%F" (T.unpack s)
 
-toDateO :: Day -> DateO
-toDateO d = DateO (formatTime defaultTimeLocale "%F" d)
+dateToText :: Day -> Data.Text.Text
+dateToText d = T.pack (formatTime defaultTimeLocale "%F" d)
 
 instance AdlValue Day where
-  atype _ = atype (Data.Proxy.Proxy :: Data.Proxy.Proxy DateO)
-  defaultv = let (Prelude.Just d) = toDate defaultv in d
-  jsonGen = JsonGen (adlToJson . toDateO)
-  jsonParser = jsonParser undefined
-
-newtype DateO = DateO { unDateO :: T.Text }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
-
-instance AdlValue DateO where
-    atype _ = "test4.Date"
-    
-    defaultv = DateO "1900-01-01"
-    
-    jsonGen = JsonGen (\(DateO v) -> adlToJson v)
-    
-    jsonParser = DateO <$> jsonParser
+  atype _ = "test4.Date"
+  defaultv = let (Prelude.Just d) = dateFromText "1900-01-01" in d
+  jsonGen = JsonGen (adlToJson . dateToText)
+  jsonParser = JsonParser (\jv -> case jv of 
+    Data.Aeson.String s -> dateFromText s
+    _ -> Prelude.Nothing
+    )
 
 data S = S
     { s_v1 :: Date
@@ -93,17 +88,17 @@ instance AdlValue S where
     
     defaultv = S
         defaultv
-        (Date "2000-01-01")
+        ((Data.Maybe.fromJust . dateFromText) "2000-01-01")
         defaultv
-        defaultv { cDate_day = 1, cDate_month = 1, cDate_year = 2000 }
+        (CDate 2000 1 1)
         defaultv
-        (Maybe_nothing ())
-        (Maybe_just "hello")
+        Prelude.Nothing
+        (Prelude.Just "hello")
         defaultv
-        (Set [ 1, 2, 3 ])
+        (Data.Set.fromList [ 1, 2, 3 ])
         defaultv
         defaultv
-        (Map [ (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "X", pair_v2 = 1 }, (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "Y", pair_v2 = 2 } ])
+        (Data.Map.fromList [ ((,) "X" 1), ((,) "Y" 2) ])
     
     jsonGen = genObject
         [ genField "v1" s_v1
@@ -122,14 +117,14 @@ instance AdlValue S where
     
     jsonParser = S
         <$> parseField "v1"
-        <*> parseFieldDef "v2" (Date "2000-01-01")
+        <*> parseFieldDef "v2" ((Data.Maybe.fromJust . dateFromText) "2000-01-01")
         <*> parseField "v3"
-        <*> parseFieldDef "v4" defaultv { cDate_day = 1, cDate_month = 1, cDate_year = 2000 }
+        <*> parseFieldDef "v4" (CDate 2000 1 1)
         <*> parseField "v5"
-        <*> parseFieldDef "v5a" (Maybe_nothing ())
-        <*> parseFieldDef "v5b" (Maybe_just "hello")
+        <*> parseFieldDef "v5a" Prelude.Nothing
+        <*> parseFieldDef "v5b" (Prelude.Just "hello")
         <*> parseField "v6"
-        <*> parseFieldDef "v7" (Set [ 1, 2, 3 ])
+        <*> parseFieldDef "v7" (Data.Set.fromList [ 1, 2, 3 ])
         <*> parseField "v7a"
         <*> parseField "v8"
-        <*> parseFieldDef "v8a" (Map [ (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "X", pair_v2 = 1 }, (defaultv :: (ADL.Sys.Types.Pair T.Text Data.Int.Int32)) { pair_v1 = "Y", pair_v2 = 2 } ])
+        <*> parseFieldDef "v8a" (Data.Map.fromList [ ((,) "X" 1), ((,) "Y" 2) ])

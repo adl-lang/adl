@@ -14,25 +14,46 @@ getCustomType scopedName _ = Map.lookup scopedName customTypes
     customTypes = Map.fromList
       [ (ScopedName (ModuleName ["sys","types"]) "Maybe",
          CustomType "Prelude.Maybe" []
-         ["type Maybe = Prelude.Maybe" ] Nothing )
+         ["type Maybe = Prelude.Maybe" ]
+         ""
+         (Map.fromList [("nothing", "Prelude.Nothing"), ("just", "Prelude.Just")])
+         Nothing )
       , (ScopedName (ModuleName ["sys","types"]) "Either",
          CustomType "Prelude.Either" []
-         ["type Either = Prelude.Either"] Nothing)
+         ["type Either = Prelude.Either"]
+         ""
+         (Map.fromList [("left", "Prelude.Left"), ("right", "Prelude.Right")])
+         Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Error",
          CustomType "Error" [HaskellModule "qualified Data.Text as T"]
-         ["type Error a  = Prelude.Either T.Text a"] Nothing)
+         ["type Error a  = Prelude.Either T.Text a"]
+         ""
+         (Map.fromList [("error", "Prelude.Left"), ("value", "Prelude.Right")])
+         Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Pair",
          CustomType "Pair" []
-         ["type Pair a b = (a,b)"] Nothing)
+         ["type Pair a b = (a,b)"]
+         "(\a b -> (a,b))"
+         Map.empty
+         Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Map",
          CustomType "Map" [HaskellModule "qualified Data.Map as Map"]
-         ["type Map k v = Map.Map k v" ] Nothing)
+         ["type Map k v = Map.Map k v" ]
+         "Map.fromList"
+         Map.empty
+         Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Set",
          CustomType "Set" [HaskellModule "qualified Data.Set as Set"]
-         ["type Set v = Set.Set v"] Nothing)
+         ["type Set v = Set.Set v"]
+         "Set.fromList"
+         Map.empty
+         Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Nullable",
          CustomType "Nullable" []
-         [] Nothing )
+         []
+         ""
+         (Map.fromList [("left", "Prelude.Left"), ("right", "Prelude.Right")])
+         Nothing )
       ]
     
     

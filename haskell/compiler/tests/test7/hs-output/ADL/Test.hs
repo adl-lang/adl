@@ -107,7 +107,7 @@ newtype IntPoint3 = IntPoint3 { unIntPoint3 :: (Point Data.Int.Int64) }
 instance AdlValue IntPoint3 where
     atype _ = "test.IntPoint3"
     
-    defaultv = IntPoint3 (defaultv :: (Point Data.Int.Int64)) { point_x = 5, point_y = 27 }
+    defaultv = IntPoint3 (Point 5 27)
     
     jsonGen = JsonGen (\(IntPoint3 v) -> adlToJson v)
     

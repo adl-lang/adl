@@ -124,10 +124,10 @@ instance (AdlValue t) => AdlValue (S t) where
         "hello"
         "abcd"
         [ "xy", "ab" ]
-        defaultv { a_f_bool = Prelude.True, a_f_string = "xyz" }
+        (A defaultv "xyz" Prelude.True)
         (U_f_int 45)
         defaultv
-        (defaultv :: (B Data.Int.Int16)) { b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = (defaultv :: (XY Data.Int.Int16)) { xY_x = 5, xY_y = 5 } }
+        (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5))
         (stringMapFromList [("a", 45), ("b", 47)])
     
     jsonGen = genObject
@@ -169,10 +169,10 @@ instance (AdlValue t) => AdlValue (S t) where
         <*> parseFieldDef "f_bytes" "hello"
         <*> parseFieldDef "f_string" "abcd"
         <*> parseFieldDef "f_vstring" [ "xy", "ab" ]
-        <*> parseFieldDef "f_a" defaultv { a_f_bool = Prelude.True, a_f_string = "xyz" }
+        <*> parseFieldDef "f_a" (A defaultv "xyz" Prelude.True)
         <*> parseFieldDef "f_u" (U_f_int 45)
         <*> parseField "f_t"
-        <*> parseFieldDef "f_bint16" (defaultv :: (B Data.Int.Int16)) { b_f_string = "yikes", b_f_t = 56, b_f_tvec = [ 1, 2, 3 ], b_f_xy = (defaultv :: (XY Data.Int.Int16)) { xY_x = 5, xY_y = 5 } }
+        <*> parseFieldDef "f_bint16" (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5))
         <*> parseFieldDef "f_smap" (stringMapFromList [("a", 45), ("b", 47)])
 
 data U

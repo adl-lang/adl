@@ -5,37 +5,77 @@ import adlc.config.haskell.HaskellCustomType;
 
 annotation Maybe HaskellCustomType {
   "haskellname" : "Prelude.Maybe",
-  "haskellimports" : []
+  "haskellimports" : [],
+  "insertCode" : ["type Maybe = Prelude.Maybe"],
+  "generateOrigADLType" : "",
+  "structConstructor" : "",
+  "unionConstructors" : [
+    {"fieldName":"nothing", "constructor":"Prelude.Nothing"},
+    {"fieldName":"just", "constructor":"Prelude.Just"}
+    ]
   };
   
 annotation Either HaskellCustomType {
   "haskellname" : "Prelude.Either",
-  "haskellimports" : []
+  "haskellimports" : [],
+  "insertCode" : ["type Either a b = Prelude.Either a b"],
+  "generateOrigADLType" : "",
+  "structConstructor" : "",
+  "unionConstructors" : [
+    {"fieldName":"left", "constructor":"Prelude.Left"},
+    {"fieldName":"right", "constructor":"Prelude.Right"}
+    ]
   };
   
 annotation Error HaskellCustomType {
   "haskellname" : "Error",
-  "haskellimports" : []
+  "haskellimports" : ["qualified Data.Text"],
+  "insertCode" : ["type Error a  = Prelude.Either Data.Text.Text a"],
+  "generateOrigADLType" : "",
+  "structConstructor" : "",
+  "unionConstructors" : [
+    {"fieldName":"error", "constructor":"Prelude.Left"},
+    {"fieldName":"value", "constructor":"Prelude.Right"}
+    ]
   };
   
 annotation Pair HaskellCustomType {
   "haskellname" : "Pair",
-  "haskellimports" : []
+  "haskellimports" : [],
+  "insertCode" : ["type Pair a b = (a,b)"],
+  "generateOrigADLType" : "",
+  "structConstructor" : "(,)",
+  "unionConstructors" : []
   };
   
 annotation Map HaskellCustomType {
   "haskellname" : "Map",
-  "haskellimports" : []
+  "haskellimports" : ["qualified Data.Map"],
+  "insertCode" : ["type Map k v = Data.Map.Map k v"],
+  "generateOrigADLType" : "",
+  "structConstructor" : "Data.Map.fromList",
+  "unionConstructors" : []
   };
   
 annotation Set HaskellCustomType {
   "haskellname" : "Set",
-  "haskellimports" : []
+  "haskellimports" : ["qualified Data.Set"],
+  "insertCode" : ["type Set v = Data.Set.Set v"],
+  "generateOrigADLType" : "",
+  "structConstructor" : "Data.Set.fromList",
+  "unionConstructors" : []
   };
 
 annotation Nullable HaskellCustomType {
   "haskellname" : "Nullable",
-  "haskellimports" : []
+  "haskellimports" : ["qualified ADL.Core"],
+  "insertCode" : [],
+  "generateOrigADLType" : "",
+  "structConstructor" : "",
+  "unionConstructors" : [
+    {"fieldName":"nothing", "constructor":"(ADL.Core.Nullable Prelude.Nothing)"},
+    {"fieldName":"just", "constructor":"(\\v -> ADL.Core.Nullable (Prelude.Just v))"}
+    ]
   };
 
 };

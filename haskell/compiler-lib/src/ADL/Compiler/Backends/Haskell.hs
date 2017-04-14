@@ -52,6 +52,12 @@ data CustomType = CustomType {
    -- for the custom haskell type
    ct_insertCode :: [T.Text],
 
+   -- The function to call to construct struct values
+   ct_structConstructor :: T.Text,
+
+   -- The functions to call to construct union values
+   ct_unionConstructors :: Map.Map Ident T.Text,
+
    -- Whether to generate the original ADL Type. If required the name
    -- to be used is supplied.
    ct_generateOrigADLType :: Maybe Ident
@@ -481,31 +487,28 @@ generateLiteral te v =  generateLV Map.empty te v
           return (template "(\"$1\", $2)" [k,v])
 
     generateStruct m te0 d s tes (JS.Object hm) = do
-      fields <- forM (L.sortBy (comparing fst) $ HM.toList hm) $ \(fname,v) -> do
-        lit <- generateLV m2 (getTE s fname) v
-        return (template "$1 = $2" [hFieldName (d_name d) fname, lit])
-      let fields1 = T.intercalate ", " fields
-      case tes of
-        [] -> do
-          return (template "defaultv { $1 }" [fields1])
-        _  -> do
-          -- If the type has parameters, then we may need to specify the type
-          -- of defaultv... so do it just in case
-          hte0 <- hTypeExprB m te0
-          return (template "(defaultv :: $1) { $2 }" [hte0,fields1])
+      fields <- forM (s_fields s) $ \f -> do
+        case HM.lookup (f_serializedName f) hm of
+          Nothing -> return "defaultv"
+          Just jv -> generateLV m2 (f_type f) jv
+      let fields1 = T.intercalate " " fields
+      ctor <- structCtor d
+      return (template "($1 $2)" [ctor,fields1])
       where
-        getTE s fname = case L.find (\f -> f_name f == fname) (s_fields s) of
-          Just f -> f_type f
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
 
     generateUnion m d u tes (JS.Object hm) = do
-      lit <- generateLV m2 te v
-      return (template "($1 $2)" [hDiscName (d_name d) fname,lit])
+      ctor <- unionCtor d fname
+      if isVoidType te
+        then return ctor
+        else do
+          lit <- generateLV m2 te v
+          return (template "($1 $2)" [ctor,lit])
       where
         (fname,v) = case HM.toList hm of
           [v] -> v
-        (name,te) = case L.find (\f -> f_name f == fname) (u_fields u) of
-          Just f -> (f_name f,f_type f)
+        te = case L.find (\f -> f_name f == fname) (u_fields u) of
+          Just f -> f_type f
         m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
 
     generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
@@ -514,15 +517,31 @@ generateLiteral te v =  generateLV Map.empty te v
 
     generateNewtype m d n tes v = do
       lit <- generateLV m2 (n_typeExpr n) v
-      return (template "($1 $2)" [hTypeName (d_name d),lit])
+      ctor <- structCtor d
+      return (template "($1 $2)" [ctor,lit])
       where
         m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
 
+    unionCtor decl fname = case d_customType decl of
+      Nothing -> return (hDiscName (d_name decl) fname)
+      Just ct -> do
+        importsForCustomType ct
+        case Map.lookup fname (ct_unionConstructors ct) of
+          Just fctor -> return fctor
+          Nothing -> error ("Missing custom constructor for " ++  T.unpack fname)
+
+    structCtor decl = case d_customType decl of
+      Nothing -> return (hTypeName (d_name decl))
+      (Just ct) -> do
+        importsForCustomType ct
+        let ctor = ct_structConstructor ct
+        if T.null ctor then error "Missing custom constructor for struct" else return ctor
+                                                                                        
 generateCustomType :: Ident -> CDecl -> CustomType -> HGen ()
 generateCustomType n d ct = do
   -- imports and exports
   addExport (hTypeName n)
-  mapM_ importModule (ct_hImports ct)
+  importsForCustomType ct
 
   -- Insert the user supplied code
   when (not (null (ct_insertCode ct))) $ do
@@ -537,6 +556,8 @@ generateCustomType n d ct = do
       nl
       generateDecl i d
 
+importsForCustomType :: CustomType -> HGen ()
+importsForCustomType ct = mapM_ importModule (ct_hImports ct) 
 
 generateModule :: CModule -> HGen T.Text
 generateModule m = do

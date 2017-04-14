@@ -6,26 +6,32 @@ import adlc.config.haskell.HaskellCustomType;
 annotation Date HaskellCustomType {
     "haskellname" : "Day",
     "haskellimports" : [
+        "Prelude((.))",
         "Data.Time.Calendar(Day)",
-        "Data.Time.Format(parseTime,formatTime)",
-        "System.Locale(defaultTimeLocale)"
+        "Data.Time.Format(parseTimeM,formatTime,defaultTimeLocale)",
+        "qualified Data.Aeson",
+        "qualified Data.Maybe",
+        "qualified Data.Text"
      ],
     "insertCode" : [
         "type Date = Day",
         "",
-        "fromDateO :: DateO -> Prelude.Maybe Day",
-        "fromDateO (DateO s) = parseTime defaultTimeLocale \"%F\" s",
+        "dateFromText :: Data.Text.Text -> Prelude.Maybe Day",
+        "dateFromText s = parseTimeM Prelude.True defaultTimeLocale \"%F\" (T.unpack s)",
         "",
-        "toDateO :: Day -> DateO",
-        "toDateO d = DateO (formatTime defaultTimeLocale \"%F\" d)",
+        "dateToText :: Day -> Data.Text.Text",
+        "dateToText d = T.pack (formatTime defaultTimeLocale \"%F\" d)",
         "",
         "instance AdlValue Day where",
-        "  atype _ = atype (Data.Proxy.Proxy :: Data.Proxy.Proxy DateO)",
-        "  defaultv = let (Prelude.Just d) = toDate defaultv in d",
-        "  jsonGen = JsonGen (adlToJson . toDateO)",
-        "  jsonParser = jsonParser undefined"
+        "  atype _ = \"test4.Date\"",
+        "  defaultv = let (Prelude.Just d) = dateFromText \"1900-01-01\" in d",
+        "  jsonGen = JsonGen (adlToJson . dateToText)",
+        "  jsonParser = JsonParser (\\jv -> case jv of ",
+        "    Data.Aeson.String s -> dateFromText s",
+        "    _ -> Prelude.Nothing",
+        "    )"
     ],
-    "generateOrigADLType" : "DateO"
+    "structConstructor" : "(Data.Maybe.fromJust . dateFromText)"
 };
 
 };

@@ -5,6 +5,7 @@ module ADL.Test(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import qualified ADL.Core
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
@@ -36,9 +37,9 @@ instance AdlValue S where
         defaultv
         defaultv
         defaultv
-        (Maybe_just "sukpeepolup")
+        (Prelude.Just "sukpeepolup")
         defaultv
-        (Nullable_just "abcde")
+        ((\v -> ADL.Core.Nullable (Prelude.Just v)) "abcde")
     
     jsonGen = genObject
         [ genField "f_pair" s_f_pair
@@ -59,6 +60,6 @@ instance AdlValue S where
         <*> parseField "f_map"
         <*> parseField "f_set"
         <*> parseField "f_mstring"
-        <*> parseFieldDef "f_mstring2" (Maybe_just "sukpeepolup")
+        <*> parseFieldDef "f_mstring2" (Prelude.Just "sukpeepolup")
         <*> parseField "f_nstring"
-        <*> parseFieldDef "f_nstring2" (Nullable_just "abcde")
+        <*> parseFieldDef "f_nstring2" ((\v -> ADL.Core.Nullable (Prelude.Just v)) "abcde")
