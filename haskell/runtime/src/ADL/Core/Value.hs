@@ -51,9 +51,6 @@ class AdlValue a where
   -- the type - the parameter must be ignored.
   atype :: Proxy a -> T.Text
 
-  -- | A default value of the given type
-  defaultv :: a
-
   -- | A JSON generator for this ADL type
   jsonGen :: JsonGen a
 
@@ -123,7 +120,7 @@ parseField :: AdlValue a => T.Text -> JsonParser a
 parseField label = JsonParser $ \jv -> case jv of
   (JS.Object hm) -> case HM.lookup label hm of
      (Just b) -> runJsonParser jsonParser b
-     _ -> pure defaultv
+     _ -> empty
   _ -> empty
 
 parseFieldDef :: AdlValue a => T.Text -> a -> JsonParser a
@@ -147,7 +144,6 @@ parseUnionValue disc fa = JsonParser $ \jv -> case jv of
 
 instance AdlValue () where
   atype _ = "Void"
-  defaultv = ()
 
   jsonGen = JsonGen (const JS.Null)
   
@@ -157,7 +153,6 @@ instance AdlValue () where
 
 instance AdlValue Bool where
   atype _ = "Bool"
-  defaultv = False
 
   jsonGen = JsonGen JS.Bool
   
@@ -172,61 +167,51 @@ withJsonNumber f = JsonParser $ \jv -> case jv of
   
 instance AdlValue Int8 where
   atype _ = "Int8"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . fromIntegral)
   jsonParser = withJsonNumber SC.toBoundedInteger
 
 instance AdlValue Int16 where
   atype _ = "Int16"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . fromIntegral)
   jsonParser = withJsonNumber SC.toBoundedInteger
 
 instance AdlValue Int32 where
   atype _ = "Int32"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . fromIntegral)
   jsonParser = withJsonNumber SC.toBoundedInteger
 
 instance AdlValue Int64 where
   atype _ = "Int64"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . fromIntegral)
   jsonParser = withJsonNumber SC.toBoundedInteger
 
 instance AdlValue Word8 where
   atype _ = "Word8"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . fromIntegral)
   jsonParser = withJsonNumber SC.toBoundedInteger
 
 instance AdlValue Word16 where
   atype _ = "Word16"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . fromIntegral)
   jsonParser = withJsonNumber SC.toBoundedInteger
 
 instance AdlValue Word32 where
   atype _ = "Word32"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . fromIntegral)
   jsonParser = withJsonNumber SC.toBoundedInteger
 
 instance AdlValue Word64 where
   atype _ = "Word64"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . fromIntegral)
   jsonParser = withJsonNumber SC.toBoundedInteger
 
 instance AdlValue Double where
   atype _ = "Double"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . SC.fromFloatDigits)
   jsonParser = withJsonNumber (Just . SC.toRealFloat)
 
 instance AdlValue Float where
   atype _ = "Float"
-  defaultv = 0
   jsonGen = JsonGen (JS.Number . SC.fromFloatDigits)
   jsonParser = withJsonNumber (Just . SC.toRealFloat)
 
@@ -237,19 +222,16 @@ withJsonString f = JsonParser $ \jv -> case jv of
 
 instance AdlValue T.Text where
   atype _ = "String"
-  defaultv = T.empty
   jsonGen = JsonGen JS.String
   jsonParser = withJsonString (Just . id)
 
 instance AdlValue BS.ByteString where
   atype _ = "Bytes"
-  defaultv = BS.empty
   jsonGen = JsonGen (JS.String . T.decodeUtf8 . B64.encode)
   jsonParser = withJsonString (either (const Nothing) Just . B64.decode . T.encodeUtf8)
 
 instance forall a . (AdlValue a) => AdlValue [a] where
   atype _ = T.concat ["Vector<",atype (Proxy :: Proxy a),">"]
-  defaultv = []
   jsonGen = JsonGen (JS.Array . V.fromList . (map (adlToJson)))
   jsonParser = JsonParser $ \v -> case v of
     (JS.Array a) -> mapM (runJsonParser jsonParser) (V.toList a)
@@ -263,7 +245,6 @@ stringMapFromList = StringMap . M.fromList
 
 instance forall a . (AdlValue a) => AdlValue (StringMap a) where
   atype _ = T.concat ["StringMap<",atype (Proxy :: Proxy a),">"]
-  defaultv = StringMap (M.empty)
   jsonGen = JsonGen (JS.Object . HM.fromList . (map toPair) . M.toList . unStringMap)
     where
       toPair (k,v) = (k,adlToJson v)
@@ -281,7 +262,6 @@ instance (AdlValue t) => AdlValue (Maybe t) where
     [ "sys.types.Maybe"
     , "<", atype (Proxy :: Proxy t)
     , ">" ]
-  defaultv = Nothing
 
   jsonGen = genUnion $ \v -> case v of
     Nothing -> genUnionVoid "nothing"
@@ -298,8 +278,6 @@ instance (AdlValue t1, AdlValue t2) => AdlValue (Either t1 t2) where
         , ",", atype (Proxy :: Proxy t2)
         , ">" ]
     
-  defaultv = Left defaultv
-
   jsonGen = genUnion  $ \v -> case v of
     (Left v1) -> genUnionValue "left" v1
     (Right v2) -> genUnionValue "right" v2
@@ -315,8 +293,6 @@ instance forall t1 t2 . (AdlValue t1, AdlValue t2) => AdlValue (t1,t2) where
         , ",", atype (Proxy :: Proxy t2)
         , ">" ]
     
-  defaultv = (defaultv,defaultv)
-
   jsonGen = genObject
     [ genField "v1" fst
     , genField "v2" snd
@@ -328,13 +304,11 @@ instance forall t1 t2 . (AdlValue t1, AdlValue t2) => AdlValue (t1,t2) where
 
 instance (AdlValue k, Ord k, AdlValue v) => AdlValue (M.Map k v) where
   atype _ = atype (Proxy :: Proxy [(k,v)])
-  defaultv = M.empty
   jsonGen = JsonGen (adlToJson . M.toList)
   jsonParser = M.fromList <$> jsonParser
 
 instance (Ord v, AdlValue v) => AdlValue (S.Set v) where
   atype _ = atype (Proxy :: Proxy [v])
-  defaultv = S.empty
   jsonGen = JsonGen (adlToJson . S.toList)
   jsonParser = S.fromList <$> jsonParser
 
@@ -346,7 +320,6 @@ instance (AdlValue t) => AdlValue (Nullable t) where
         [ "sys.types.Nullable"
         , "<", atype (Proxy :: Proxy t)
         , ">" ]
-  defaultv = Nullable Nothing
   
   jsonGen = JsonGen $ \v -> case v of
     (Nullable Nothing) -> JS.Null

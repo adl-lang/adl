@@ -24,7 +24,6 @@ annotation Date HaskellCustomType {
         "",
         "instance AdlValue Day where",
         "  atype _ = \"test4.Date\"",
-        "  defaultv = let (Prelude.Just d) = dateFromText \"1900-01-01\" in d",
         "  jsonGen = JsonGen (adlToJson . dateToText)",
         "  jsonParser = JsonParser (\\jv -> case jv of ",
         "    Data.Aeson.String s -> dateFromText s",

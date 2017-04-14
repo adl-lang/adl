@@ -26,16 +26,11 @@ data A = A
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-mkA :: Data.Int.Int16 -> T.Text -> Prelude.Bool -> A
-mkA f_int f_string f_bool = A f_int f_string f_bool
+mkA :: Data.Int.Int16 -> T.Text -> A
+mkA f_int f_string = A f_int f_string Prelude.False
 
 instance AdlValue A where
     atype _ = "test3.A"
-    
-    defaultv = A
-        defaultv
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "f_int" a_f_int
@@ -46,7 +41,7 @@ instance AdlValue A where
     jsonParser = A
         <$> parseField "f_int"
         <*> parseField "f_string"
-        <*> parseField "f_bool"
+        <*> parseFieldDef "f_bool" Prelude.False
 
 data B t = B
     { b_f_t :: t
@@ -64,12 +59,6 @@ instance (AdlValue t) => AdlValue (B t) where
         [ "test3.B"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
-    
-    defaultv = B
-        defaultv
-        defaultv
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "f_t" b_f_t
@@ -109,35 +98,13 @@ data S t = S
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 mkS :: t -> S t
-mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.True) (U_f_int 45) f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)])
+mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.False) (U_f_int 45) f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)])
 
 instance (AdlValue t) => AdlValue (S t) where
     atype _ = T.concat
         [ "test3.S"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
-    
-    defaultv = S
-        ()
-        Prelude.True
-        (-5)
-        (-10000)
-        56
-        40000
-        32
-        50000
-        124456
-        2344
-        0.5
-        0.45
-        "hello"
-        "abcd"
-        [ "xy", "ab" ]
-        (A 0 "xyz" Prelude.True)
-        (U_f_int 45)
-        defaultv
-        (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5))
-        (stringMapFromList [("a", 45), ("b", 47)])
     
     jsonGen = genObject
         [ genField "f_void" s_f_void
@@ -178,7 +145,7 @@ instance (AdlValue t) => AdlValue (S t) where
         <*> parseFieldDef "f_bytes" "hello"
         <*> parseFieldDef "f_string" "abcd"
         <*> parseFieldDef "f_vstring" [ "xy", "ab" ]
-        <*> parseFieldDef "f_a" (A 0 "xyz" Prelude.True)
+        <*> parseFieldDef "f_a" (A 0 "xyz" Prelude.False)
         <*> parseFieldDef "f_u" (U_f_int 45)
         <*> parseField "f_t"
         <*> parseFieldDef "f_bint16" (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5))
@@ -191,8 +158,6 @@ data U
 
 instance AdlValue U where
     atype _ = "test3.U"
-    
-    defaultv = U_f_int defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         U_f_int v -> genUnionValue "f_int" v
@@ -217,10 +182,6 @@ instance (AdlValue t) => AdlValue (XY t) where
         [ "test3.XY"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
-    
-    defaultv = XY
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "x" xY_x

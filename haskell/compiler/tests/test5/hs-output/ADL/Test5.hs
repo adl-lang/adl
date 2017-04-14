@@ -38,10 +38,6 @@ instance (AdlValue t) => AdlValue (Cell t) where
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
-    defaultv = Cell
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "head" cell_head
         , genField "tail" cell_tail
@@ -61,8 +57,6 @@ instance (AdlValue t) => AdlValue (List t) where
         [ "test5.List"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
-    
-    defaultv = List_null
     
     jsonGen = genUnion (\jv -> case jv of
         List_null -> genUnionVoid "null"
@@ -84,9 +78,6 @@ mkS1  = S1 100
 instance AdlValue S1 where
     atype _ = "test5.S1"
     
-    defaultv = S1
-        100
-    
     jsonGen = genObject
         [ genField "f" s1_f
         ]
@@ -100,8 +91,6 @@ data U1
 
 instance AdlValue U1 where
     atype _ = "test5.U1"
-    
-    defaultv = U1_v
     
     jsonGen = genUnion (\jv -> case jv of
         U1_v -> genUnionVoid "v"
@@ -117,8 +106,6 @@ data U2
 instance AdlValue U2 where
     atype _ = "test5.U2"
     
-    defaultv = U2_v defaultv
-    
     jsonGen = genUnion (\jv -> case jv of
         U2_v v -> genUnionValue "v" v
         )
@@ -132,8 +119,6 @@ data U3
 
 instance AdlValue U3 where
     atype _ = "test5.U3"
-    
-    defaultv = U3_v defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         U3_v v -> genUnionValue "v" v
@@ -149,8 +134,6 @@ data U4
 instance AdlValue U4 where
     atype _ = "test5.U4"
     
-    defaultv = U4_v defaultv
-    
     jsonGen = genUnion (\jv -> case jv of
         U4_v v -> genUnionValue "v" v
         )
@@ -164,8 +147,6 @@ data U5
 
 instance AdlValue U5 where
     atype _ = "test5.U5"
-    
-    defaultv = U5_v defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         U5_v v -> genUnionValue "v" v
@@ -181,8 +162,6 @@ data U6
 instance AdlValue U6 where
     atype _ = "test5.U6"
     
-    defaultv = U6_v defaultv
-    
     jsonGen = genUnion (\jv -> case jv of
         U6_v v -> genUnionValue "v" v
         )
@@ -196,8 +175,6 @@ data U7
 
 instance AdlValue U7 where
     atype _ = "test5.U7"
-    
-    defaultv = U7_v defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         U7_v v -> genUnionValue "v" v
@@ -213,8 +190,6 @@ data U8
 
 instance AdlValue U8 where
     atype _ = "test5.U8"
-    
-    defaultv = U8_v1 defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         U8_v1 v -> genUnionValue "v1" v
@@ -235,8 +210,6 @@ instance (AdlValue t) => AdlValue (U9 t) where
         [ "test5.U9"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
-    
-    defaultv = U9_v1 defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         U9_v1 v -> genUnionValue "v1" v

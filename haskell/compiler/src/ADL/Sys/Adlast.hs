@@ -46,12 +46,6 @@ mkDecl name version type_ annotations = Decl name version type_ annotations
 instance AdlValue Decl where
     atype _ = "sys.adlast.Decl"
     
-    defaultv = Decl
-        defaultv
-        defaultv
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "name" decl_name
         , genField "version" decl_version
@@ -74,8 +68,6 @@ data DeclType
 
 instance AdlValue DeclType where
     atype _ = "sys.adlast.DeclType"
-    
-    defaultv = DeclType_struct_ defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         DeclType_struct_ v -> genUnionValue "struct_" v
@@ -106,12 +98,6 @@ mkField name typeExpr default_ annotations = Field name typeExpr default_ annota
 instance AdlValue Field where
     atype _ = "sys.adlast.Field"
     
-    defaultv = Field
-        defaultv
-        defaultv
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "name" field_name
         , genField "typeExpr" field_typeExpr
@@ -135,8 +121,6 @@ data Import
 instance AdlValue Import where
     atype _ = "sys.adlast.Import"
     
-    defaultv = Import_moduleName defaultv
-    
     jsonGen = genUnion (\jv -> case jv of
         Import_moduleName v -> genUnionValue "moduleName" v
         Import_scopedName v -> genUnionValue "scopedName" v
@@ -158,8 +142,6 @@ data Literal
 
 instance AdlValue Literal where
     atype _ = "sys.adlast.Literal"
-    
-    defaultv = Literal_null
     
     jsonGen = genUnion (\jv -> case jv of
         Literal_null -> genUnionVoid "null"
@@ -193,11 +175,6 @@ mkModule name imports decls = Module name imports decls
 instance AdlValue Module where
     atype _ = "sys.adlast.Module"
     
-    defaultv = Module
-        defaultv
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "name" module_name
         , genField "imports" module_imports
@@ -224,11 +201,6 @@ mkNewType typeParams typeExpr default_ = NewType typeParams typeExpr default_
 instance AdlValue NewType where
     atype _ = "sys.adlast.NewType"
     
-    defaultv = NewType
-        defaultv
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "typeParams" newType_typeParams
         , genField "typeExpr" newType_typeExpr
@@ -252,10 +224,6 @@ mkScopedName moduleName name = ScopedName moduleName name
 instance AdlValue ScopedName where
     atype _ = "sys.adlast.ScopedName"
     
-    defaultv = ScopedName
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "moduleName" scopedName_moduleName
         , genField "name" scopedName_name
@@ -276,10 +244,6 @@ mkStruct typeParams fields = Struct typeParams fields
 
 instance AdlValue Struct where
     atype _ = "sys.adlast.Struct"
-    
-    defaultv = Struct
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "typeParams" struct_typeParams
@@ -302,10 +266,6 @@ mkTypeDef typeParams typeExpr = TypeDef typeParams typeExpr
 instance AdlValue TypeDef where
     atype _ = "sys.adlast.TypeDef"
     
-    defaultv = TypeDef
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "typeParams" typeDef_typeParams
         , genField "typeExpr" typeDef_typeExpr
@@ -327,10 +287,6 @@ mkTypeExpr typeRef parameters = TypeExpr typeRef parameters
 instance AdlValue TypeExpr where
     atype _ = "sys.adlast.TypeExpr"
     
-    defaultv = TypeExpr
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "typeRef" typeExpr_typeRef
         , genField "parameters" typeExpr_parameters
@@ -348,8 +304,6 @@ data TypeRef
 
 instance AdlValue TypeRef where
     atype _ = "sys.adlast.TypeRef"
-    
-    defaultv = TypeRef_primitive defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         TypeRef_primitive v -> genUnionValue "primitive" v
@@ -373,10 +327,6 @@ mkUnion typeParams fields = Union typeParams fields
 
 instance AdlValue Union where
     atype _ = "sys.adlast.Union"
-    
-    defaultv = Union
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "typeParams" union_typeParams

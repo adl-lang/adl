@@ -36,11 +36,6 @@ mkCDate year month day = CDate year month day
 instance AdlValue CDate where
     atype _ = "test4.CDate"
     
-    defaultv = CDate
-        defaultv
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "year" cDate_year
         , genField "month" cDate_month
@@ -63,7 +58,6 @@ dateToText d = T.pack (formatTime defaultTimeLocale "%F" d)
 
 instance AdlValue Day where
   atype _ = "test4.Date"
-  defaultv = let (Prelude.Just d) = dateFromText "1900-01-01" in d
   jsonGen = JsonGen (adlToJson . dateToText)
   jsonParser = JsonParser (\jv -> case jv of 
     Data.Aeson.String s -> dateFromText s
@@ -91,20 +85,6 @@ mkS v1 v3 v5 v6 v7a v8 = S v1 ((Data.Maybe.fromJust . dateFromText) "2000-01-01"
 
 instance AdlValue S where
     atype _ = "test4.S"
-    
-    defaultv = S
-        defaultv
-        ((Data.Maybe.fromJust . dateFromText) "2000-01-01")
-        defaultv
-        (CDate 2000 1 1)
-        defaultv
-        Prelude.Nothing
-        (Prelude.Just "hello")
-        defaultv
-        (Data.Set.fromList [ 1, 2, 3 ])
-        defaultv
-        defaultv
-        (Data.Map.fromList [ ((,) "X" 1), ((,) "Y" 2) ])
     
     jsonGen = genObject
         [ genField "v1" s_v1

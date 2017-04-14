@@ -37,8 +37,6 @@ newtype Int2 = Int2 { unInt2 :: Data.Int.Int64 }
 instance AdlValue Int2 where
     atype _ = "test.Int2"
     
-    defaultv = Int2 defaultv
-    
     jsonGen = JsonGen (\(Int2 v) -> adlToJson v)
     
     jsonParser = Int2 <$> jsonParser
@@ -48,8 +46,6 @@ newtype Int3 = Int3 { unInt3 :: Data.Int.Int64 }
 
 instance AdlValue Int3 where
     atype _ = "test.Int3"
-    
-    defaultv = Int3 42
     
     jsonGen = JsonGen (\(Int3 v) -> adlToJson v)
     
@@ -66,8 +62,6 @@ instance (AdlValue x) => AdlValue (Int5 x) where
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
-    defaultv = Int5 defaultv
-    
     jsonGen = JsonGen (\(Int5 v) -> adlToJson v)
     
     jsonParser = Int5 <$> jsonParser
@@ -81,8 +75,6 @@ instance (AdlValue x) => AdlValue (Int6 x) where
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
-    defaultv = Int6 43
-    
     jsonGen = JsonGen (\(Int6 v) -> adlToJson v)
     
     jsonParser = Int6 <$> jsonParser
@@ -95,8 +87,6 @@ newtype IntPoint2 = IntPoint2 { unIntPoint2 :: (Point Data.Int.Int64) }
 instance AdlValue IntPoint2 where
     atype _ = "test.IntPoint2"
     
-    defaultv = IntPoint2 defaultv
-    
     jsonGen = JsonGen (\(IntPoint2 v) -> adlToJson v)
     
     jsonParser = IntPoint2 <$> jsonParser
@@ -106,8 +96,6 @@ newtype IntPoint3 = IntPoint3 { unIntPoint3 :: (Point Data.Int.Int64) }
 
 instance AdlValue IntPoint3 where
     atype _ = "test.IntPoint3"
-    
-    defaultv = IntPoint3 (Point 5 27)
     
     jsonGen = JsonGen (\(IntPoint3 v) -> adlToJson v)
     
@@ -127,10 +115,6 @@ instance (AdlValue t) => AdlValue (Point t) where
         [ "test.Point"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
-    
-    defaultv = Point
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "x" point_x
@@ -152,8 +136,6 @@ instance (AdlValue x) => AdlValue (Point2 x) where
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
-    defaultv = Point2 defaultv
-    
     jsonGen = JsonGen (\(Point2 v) -> adlToJson v)
     
     jsonParser = Point2 <$> jsonParser
@@ -166,8 +148,6 @@ newtype String2 = String2 { unString2 :: T.Text }
 instance AdlValue String2 where
     atype _ = "test.String2"
     
-    defaultv = String2 defaultv
-    
     jsonGen = JsonGen (\(String2 v) -> adlToJson v)
     
     jsonParser = String2 <$> jsonParser
@@ -177,8 +157,6 @@ newtype String3 = String3 { unString3 :: T.Text }
 
 instance AdlValue String3 where
     atype _ = "test.String3"
-    
-    defaultv = String3 "hello"
     
     jsonGen = JsonGen (\(String3 v) -> adlToJson v)
     
@@ -195,8 +173,6 @@ instance (AdlValue x) => AdlValue (String5 x) where
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
-    defaultv = String5 defaultv
-    
     jsonGen = JsonGen (\(String5 v) -> adlToJson v)
     
     jsonParser = String5 <$> jsonParser
@@ -209,8 +185,6 @@ instance (AdlValue x) => AdlValue (String6 x) where
         [ "test.String6"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
-    
-    defaultv = String6 "goodbye"
     
     jsonGen = JsonGen (\(String6 v) -> adlToJson v)
     

@@ -33,17 +33,6 @@ mkS f_pair f_either f_error f_map f_set f_mstring f_nstring = S f_pair f_either 
 instance AdlValue S where
     atype _ = "test.S"
     
-    defaultv = S
-        defaultv
-        defaultv
-        defaultv
-        defaultv
-        defaultv
-        defaultv
-        (Prelude.Just "sukpeepolup")
-        defaultv
-        ((\v -> ADL.Core.Nullable (Prelude.Just v)) "abcde")
-    
     jsonGen = genObject
         [ genField "f_pair" s_f_pair
         , genField "f_either" s_f_either

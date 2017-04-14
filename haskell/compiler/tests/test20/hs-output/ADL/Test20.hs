@@ -27,12 +27,6 @@ mkPerson firstName lastName age role = Person firstName lastName age role
 instance AdlValue Person where
     atype _ = "test20.Person"
     
-    defaultv = Person
-        defaultv
-        defaultv
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "fn" person_firstName
         , genField "ln" person_lastName
@@ -54,8 +48,6 @@ data Role
 
 instance AdlValue Role where
     atype _ = "test20.Role"
-    
-    defaultv = Role_underling
     
     jsonGen = genUnion (\jv -> case jv of
         Role_underling -> genUnionVoid "u"

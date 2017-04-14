@@ -5,7 +5,7 @@ struct A
 {
    Int16 f_int;
    String f_string;
-   Bool f_bool;
+   Bool f_bool = false;
 };
 
 struct XY<T>
@@ -48,8 +48,7 @@ struct S<T>
     Vector<String> f_vstring = ["xy", "ab" ];
 
     A f_a = { "f_int" : 0,
-              "f_string" : "xyz",
-              "f_bool" : true };
+              "f_string" : "xyz" };
 
     U f_u = { "f_int" : 45 };
 

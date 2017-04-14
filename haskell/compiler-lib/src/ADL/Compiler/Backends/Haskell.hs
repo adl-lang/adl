@@ -13,6 +13,7 @@ import Data.Ord (comparing)
 
 import System.FilePath(takeDirectory,joinPath,addExtension)
 import Data.Monoid
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
@@ -204,9 +205,9 @@ hPrimitiveLiteral P_ByteVector (JS.String s) = T.pack (show (decode s))
     decode s = case B64.decode (T.encodeUtf8 s) of
       (Left _) -> "???"
       (Right s) -> s
-hPrimitiveLiteral P_Vector _ = "defaultv" -- never called
+hPrimitiveLiteral P_Vector _ = "undefined" -- never called
 hPrimitiveLiteral P_String (JS.String s) = T.pack (show s)
-hPrimitiveLiteral P_Sink _ = "defaultv" -- never called
+hPrimitiveLiteral P_Sink _ = "undefined" -- never called
 
 litNumber :: S.Scientific -> T.Text
 litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)
@@ -388,12 +389,6 @@ generateStructADLInstance lname mn d s = do
     indent $ do
         declareAType (ScopedName mn (d_name d)) (s_typeParams s)
         nl
-        wt "defaultv = $1" [lname]
-        indent $ do
-          forM_ (s_fields s) $ \f -> do
-            defv <- generateDefaultValue (f_type f) (f_default f) 
-            wl $ defv
-        nl
         wl "jsonGen = genObject"
         indent $ do
           forM_ (zip listPrefixes (s_fields s)) $ \(prefix,f) -> do
@@ -406,7 +401,7 @@ generateStructADLInstance lname mn d s = do
             case f_default f of
              Nothing -> wt "$1 parseField \"$2\"" [prefix, f_serializedName f]
              Just def -> do
-               defv <- generateDefaultValue (f_type f) (f_default f) 
+               defv <- generateLiteral (f_type f) def
                wt "$1 parseFieldDef \"$2\" $3" [prefix, f_serializedName f, defv]
 
 generateNullStructADLInstance :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
@@ -415,7 +410,6 @@ generateNullStructADLInstance lname mn d s = do
     indent $ do
         declareAType (ScopedName mn (d_name d)) (s_typeParams s)
         nl
-        wt "defaultv = $1" [lname]
         wl "jsonGen = genObject []"
         wt "jsonParser = Prelude.pure $1" [lname]
 
@@ -439,12 +433,6 @@ generateUnionADLInstance lname mn d u = do
     wl $ hInstanceHeader "AdlValue" lname (u_typeParams u)
     indent $ do
         declareAType (ScopedName mn (d_name d)) (u_typeParams u)
-        nl
-        let f0 = head (u_fields u)
-            dn0 = hDiscName (d_name d) (f_name f0)
-        if isVoidType (f_type f0)
-          then wt "defaultv = $1" [dn0]
-          else wt "defaultv = $1 defaultv" [dn0]
         nl
         wl "jsonGen = genUnion (\\jv -> case jv of"
         indent $ do
@@ -470,16 +458,9 @@ generateNewtypeADLInstance lname mn d n = do
     indent $ do
         declareAType (ScopedName mn (d_name d)) (n_typeParams n)
         nl
-        defv <- generateDefaultValue (n_typeExpr n) (n_default n) 
-        wt "defaultv = $1 $2" [lname, defv]
-        nl
         wt "jsonGen = JsonGen (\\($1 v) -> adlToJson v)" [lname]
         nl
         wt "jsonParser = $1 <$> jsonParser" [lname]
-
-generateDefaultValue :: TypeExpr CResolvedType -> (Maybe JS.Value) -> HGen T.Text
-generateDefaultValue _ Nothing = return "defaultv"
-generateDefaultValue te (Just v) = generateLiteral te v
 
 generateLiteral :: TypeExpr CResolvedType -> JS.Value -> HGen T.Text
 generateLiteral te v =  generateLV Map.empty te v
@@ -512,12 +493,13 @@ generateLiteral te v =  generateLV Map.empty te v
 
     generateStruct m te0 d s tes (JS.Object hm) = do
       fields <- forM (s_fields s) $ \f -> do
-        case HM.lookup (f_serializedName f) hm of
-          Nothing -> return "defaultv"
-          Just jv -> generateLV m2 (f_type f) jv
-      let fields1 = T.intercalate " " fields
+        let mjv = HM.lookup (f_serializedName f) hm <|> f_default f 
+            jv = case mjv of
+              Just jv -> jv
+              Nothing -> error ("BUG: missing default value for field " <> T.unpack (f_name f))
+        generateLV m2 (f_type f) jv
       ctor <- structCtor d
-      return (template "($1 $2)" [ctor,fields1])
+      return (template "($1 $2)" [ctor,T.intercalate " " fields])
       where
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
 

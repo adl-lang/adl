@@ -29,7 +29,6 @@ mkS0  = S0
 instance AdlValue S0 where
     atype _ = "test2.S0"
     
-    defaultv = S0
     jsonGen = genObject []
     jsonParser = Prelude.pure S0
 
@@ -44,10 +43,6 @@ mkS1 x y = S1 x y
 
 instance AdlValue S1 where
     atype _ = "test2.S1"
-    
-    defaultv = S1
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "x" s1_x
@@ -70,11 +65,6 @@ mkS2 f1 f2 f3 = S2 f1 f2 f3
 
 instance AdlValue S2 where
     atype _ = "test2.S2"
-    
-    defaultv = S2
-        defaultv
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "f1" s2_f1
@@ -104,12 +94,6 @@ instance (AdlValue t) => AdlValue (S3 t) where
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
-    defaultv = S3
-        defaultv
-        defaultv
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "f1" s3_f1
         , genField "f2" s3_f2
@@ -138,10 +122,6 @@ instance (AdlValue t) => AdlValue (S4 t) where
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
-    defaultv = S4
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "f1" s4_f1
         , genField "f2" s4_f2
@@ -165,10 +145,6 @@ instance (AdlValue t) => AdlValue (Tree t) where
         [ "test2.Tree"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
-    
-    defaultv = Tree
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "value" tree_value

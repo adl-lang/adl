@@ -28,14 +28,6 @@ mkHaskellCustomType haskellname haskellimports insertCode = HaskellCustomType ha
 instance AdlValue HaskellCustomType where
     atype _ = "adlc.config.haskell.HaskellCustomType"
     
-    defaultv = HaskellCustomType
-        defaultv
-        defaultv
-        defaultv
-        ""
-        ""
-        [  ]
-    
     jsonGen = genObject
         [ genField "haskellname" haskellCustomType_haskellname
         , genField "haskellimports" haskellCustomType_haskellimports
@@ -64,10 +56,6 @@ mkUnionConstructor fieldName constructor = UnionConstructor fieldName constructo
 
 instance AdlValue UnionConstructor where
     atype _ = "adlc.config.haskell.UnionConstructor"
-    
-    defaultv = UnionConstructor
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "fieldName" unionConstructor_fieldName

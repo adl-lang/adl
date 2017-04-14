@@ -22,8 +22,6 @@ data X1
 instance AdlValue X1 where
     atype _ = "test.X1"
     
-    defaultv = X1_f1 defaultv
-    
     jsonGen = genUnion (\jv -> case jv of
         X1_f1 v -> genUnionValue "f1" v
         X1_f2 v -> genUnionValue "f2" v
@@ -45,10 +43,6 @@ mkX2 f1 f2 = X2 f1 f2
 instance AdlValue X2 where
     atype _ = "test.X2"
     
-    defaultv = X2
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "f1" x2_f1
         , genField "f2" x2_f2
@@ -65,8 +59,6 @@ data Y1
 
 instance AdlValue Y1 where
     atype _ = "test.Y1"
-    
-    defaultv = Y1_f1 defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         Y1_f1 v -> genUnionValue "f1" v
@@ -88,10 +80,6 @@ mkY2 f1 f2 = Y2 f1 f2
 
 instance AdlValue Y2 where
     atype _ = "test.Y2"
-    
-    defaultv = Y2
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "f1" y2_f1

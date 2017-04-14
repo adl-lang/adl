@@ -24,11 +24,6 @@ mkJavaCustomType javaname helpers = JavaCustomType javaname helpers Prelude.Fals
 instance AdlValue JavaCustomType where
     atype _ = "adlc.config.java.JavaCustomType"
     
-    defaultv = JavaCustomType
-        defaultv
-        defaultv
-        Prelude.False
-    
     jsonGen = genObject
         [ genField "javaname" javaCustomType_javaname
         , genField "helpers" javaCustomType_helpers

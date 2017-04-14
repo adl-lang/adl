@@ -27,13 +27,6 @@ mkCppCustomType cppname = CppCustomType cppname [  ] [  ] [  ] ""
 instance AdlValue CppCustomType where
     atype _ = "adlc.config.cpp.CppCustomType"
     
-    defaultv = CppCustomType
-        defaultv
-        [  ]
-        [  ]
-        [  ]
-        ""
-    
     jsonGen = genObject
         [ genField "cppname" cppCustomType_cppname
         , genField "cppincludes" cppCustomType_cppincludes
@@ -60,10 +53,6 @@ mkInclude name system = Include name system
 
 instance AdlValue Include where
     atype _ = "adlc.config.cpp.Include"
-    
-    defaultv = Include
-        defaultv
-        defaultv
     
     jsonGen = genObject
         [ genField "name" include_name

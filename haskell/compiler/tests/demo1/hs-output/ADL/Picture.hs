@@ -25,9 +25,6 @@ mkCircle radius = Circle radius
 instance AdlValue Circle where
     atype _ = "picture.Circle"
     
-    defaultv = Circle
-        defaultv
-    
     jsonGen = genObject
         [ genField "radius" circle_radius
         ]
@@ -44,8 +41,6 @@ data Picture
 
 instance AdlValue Picture where
     atype _ = "picture.Picture"
-    
-    defaultv = Picture_circle defaultv
     
     jsonGen = genUnion (\jv -> case jv of
         Picture_circle v -> genUnionValue "circle" v
@@ -72,10 +67,6 @@ mkRectangle width height = Rectangle width height
 instance AdlValue Rectangle where
     atype _ = "picture.Rectangle"
     
-    defaultv = Rectangle
-        defaultv
-        defaultv
-    
     jsonGen = genObject
         [ genField "width" rectangle_width
         , genField "height" rectangle_height
@@ -100,11 +91,6 @@ instance (AdlValue t) => AdlValue (Translated t) where
         [ "picture.Translated"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
-    
-    defaultv = Translated
-        0
-        0
-        defaultv
     
     jsonGen = genObject
         [ genField "xoffset" translated_xoffset
