@@ -559,14 +559,18 @@ literalForTypeExpr te v = litForTE Map.empty te v
            return (key,lit)
     stringMapLiteral _ _ _ = Left "expected an object"
 
-    structFields m decl s tes (JSON.Object hm) = for (s_fields s) $ \f -> do
-      pm <- createParamMap (s_typeParams s) tes m
+    structFields :: Map.Map Ident (TypeExprRT c)
+      -> Decl c (ResolvedTypeT c) -> Struct (ResolvedTypeT c) -> [TypeExprRT c]
+      -> JSON.Value
+      -> Either T.Text [Literal (TypeExprRT c)]
+    structFields pm0 decl s tes (JSON.Object hm) = for (s_fields s) $ \f -> do
+      pm <- createParamMap (s_typeParams s) tes pm0
       ftype <- substTypeParams pm (f_type f)
       case HM.lookup (f_name f) hm of
        (Just jv) -> litForTE pm ftype jv
        Nothing -> case f_default f of
          (Just jv) -> litForTE pm ftype jv
-         Nothing -> Right (Literal ftype LDefault)
+         Nothing -> Left ("no literal value provided for field " <> f_name f <> " of struct " <> d_name decl)
     structFields _ _ _ _ _ = Left "expected an object"
 
     unionField m decl u tes (JSON.Object hm) = do

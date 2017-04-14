@@ -29,9 +29,9 @@ instance AdlValue HaskellCustomType where
         defaultv
         defaultv
         defaultv
-        defaultv
-        defaultv
-        defaultv
+        ""
+        ""
+        [  ]
     
     jsonGen = genObject
         [ genField "haskellname" haskellCustomType_haskellname
@@ -46,9 +46,9 @@ instance AdlValue HaskellCustomType where
         <$> parseField "haskellname"
         <*> parseField "haskellimports"
         <*> parseField "insertCode"
-        <*> parseField "generateOrigADLType"
-        <*> parseField "structConstructor"
-        <*> parseField "unionConstructors"
+        <*> parseFieldDef "generateOrigADLType" ""
+        <*> parseFieldDef "structConstructor" ""
+        <*> parseFieldDef "unionConstructors" [  ]
 
 data UnionConstructor = UnionConstructor
     { unionConstructor_fieldName :: T.Text

@@ -26,10 +26,10 @@ instance AdlValue CppCustomType where
     
     defaultv = CppCustomType
         defaultv
-        defaultv
-        defaultv
-        defaultv
-        defaultv
+        [  ]
+        [  ]
+        [  ]
+        ""
     
     jsonGen = genObject
         [ genField "cppname" cppCustomType_cppname
@@ -41,10 +41,10 @@ instance AdlValue CppCustomType where
     
     jsonParser = CppCustomType
         <$> parseField "cppname"
-        <*> parseField "cppincludes"
-        <*> parseField "declarationCode"
-        <*> parseField "serialisationCode"
-        <*> parseField "generateOrigADLType"
+        <*> parseFieldDef "cppincludes" [  ]
+        <*> parseFieldDef "declarationCode" [  ]
+        <*> parseFieldDef "serialisationCode" [  ]
+        <*> parseFieldDef "generateOrigADLType" ""
 
 data Include = Include
     { include_name :: T.Text

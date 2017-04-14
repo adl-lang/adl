@@ -124,7 +124,7 @@ instance (AdlValue t) => AdlValue (S t) where
         "hello"
         "abcd"
         [ "xy", "ab" ]
-        (A defaultv "xyz" Prelude.True)
+        (A 0 "xyz" Prelude.True)
         (U_f_int 45)
         defaultv
         (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5))
@@ -169,7 +169,7 @@ instance (AdlValue t) => AdlValue (S t) where
         <*> parseFieldDef "f_bytes" "hello"
         <*> parseFieldDef "f_string" "abcd"
         <*> parseFieldDef "f_vstring" [ "xy", "ab" ]
-        <*> parseFieldDef "f_a" (A defaultv "xyz" Prelude.True)
+        <*> parseFieldDef "f_a" (A 0 "xyz" Prelude.True)
         <*> parseFieldDef "f_u" (U_f_int 45)
         <*> parseField "f_t"
         <*> parseFieldDef "f_bint16" (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5))

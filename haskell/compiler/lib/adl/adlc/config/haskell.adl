@@ -20,16 +20,16 @@ struct HaskellCustomType
 
     // If non-empty, the code for the original ADL type will be emitted,
     // but with the supplied name.
-    String generateOrigADLType;
+    String generateOrigADLType = "";
 
     // The name of the constructor/function to be
     // called to create values of this type (if it's
     // a struct annotation)
-    String structConstructor;
+    String structConstructor = "";
 
     // The names of the constructors/functions to be
     // called to create values of this type (if it's
     // a union annotation)
-    Vector<UnionConstructor> unionConstructors;
+    Vector<UnionConstructor> unionConstructors = [];
 };
 };

@@ -11,7 +11,7 @@ struct JavaCustomType
 
     // If true, we still generate the standard ADL derived
     // class (even though no generated code will refer to it)
-    Bool generateType;
+    Bool generateType = false;
 };
 
 };

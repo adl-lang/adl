@@ -47,7 +47,8 @@ struct S<T>
 
     Vector<String> f_vstring = ["xy", "ab" ];
 
-    A f_a = { "f_string" : "xyz",
+    A f_a = { "f_int" : 0,
+              "f_string" : "xyz",
               "f_bool" : true };
 
     U f_u = { "f_int" : 45 };

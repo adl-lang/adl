@@ -24,7 +24,7 @@ instance AdlValue JavaCustomType where
     defaultv = JavaCustomType
         defaultv
         defaultv
-        defaultv
+        Prelude.False
     
     jsonGen = genObject
         [ genField "javaname" javaCustomType_javaname
@@ -35,4 +35,4 @@ instance AdlValue JavaCustomType where
     jsonParser = JavaCustomType
         <$> parseField "javaname"
         <*> parseField "helpers"
-        <*> parseField "generateType"
+        <*> parseFieldDef "generateType" Prelude.False
