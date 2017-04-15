@@ -1134,7 +1134,8 @@ getCustomType scopedName decl = case Map.lookup cppCustomType (d_annotations dec
   where
     convertCustomType :: JSON.Value -> CustomType
     convertCustomType jv = case adlFromJson jv of
-      (ParseFailure e) -> error ("BUG: failed to parse java custom type: " <> T.unpack e)
+      (ParseFailure e ctx) -> error (T.unpack (  "BUG: failed to parse java custom type: " <> e
+                                    <> ", at " <> textFromParseContext ctx))
       (ParseSuccess cct) -> CustomType
         { ct_name = CC.cppCustomType_cppname cct
         , ct_includes = Set.fromList (map mkInc (CC.cppCustomType_cppincludes cct))

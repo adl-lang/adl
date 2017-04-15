@@ -106,7 +106,8 @@ getCustomType scopedName decl = case Map.lookup javaCustomType (d_annotations de
   where
     convertCustomType :: JSON.Value -> CustomType
     convertCustomType jv = case adlFromJson jv of
-      (ParseFailure e) -> error ("BUG: failed to parse java custom type: " <> T.unpack e)
+      (ParseFailure e ctx) -> error (T.unpack (  "BUG: failed to parse java custom type: " <> e
+                                    <> ", at " <> textFromParseContext ctx))
       (ParseSuccess jct) -> CustomType
         { ct_scopedName = parseScopedName (JC.javaCustomType_javaname jct)
         , ct_helpers = parseScopedName (JC.javaCustomType_helpers jct)

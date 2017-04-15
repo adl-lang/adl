@@ -59,11 +59,11 @@ dateToText d = T.pack (formatTime defaultTimeLocale "%F" d)
 instance AdlValue Day where
   atype _ = "test4.Date"
   jsonGen = JsonGen (adlToJson . dateToText)
-  jsonParser = JsonParser (\jv -> case jv of 
+  jsonParser = JsonParser (\ctx jv -> case jv of 
     Data.Aeson.String s -> case dateFromText s of
-      Prelude.Nothing -> ParseFailure "expected a date"
+      Prelude.Nothing -> ParseFailure "expected a date" ctx
       (Prelude.Just d) -> ParseSuccess d
-    _ -> ParseFailure "expected a date"
+    _ -> ParseFailure "expected a date" ctx
     )
 
 data S = S

@@ -22,7 +22,8 @@ module ADL.Core.Value(
   parseUnionValue,
   parseUnionVoid,
   stringMapFromList,
-  parseFail
+  parseFail,
+  textFromParseContext
 ) where
 
 import qualified Data.Aeson as JS
@@ -47,11 +48,18 @@ import Data.Word
 newtype JsonGen a = JsonGen {runJsonGen :: a -> JS.Value}
 
 -- | A Json parser
-newtype JsonParser a = JsonParser {runJsonParser :: JS.Value -> ParseResult a}
+newtype JsonParser a = JsonParser {runJsonParser :: ParseContext -> JS.Value -> ParseResult a}
 
+-- | A path within a json value, used in error reporting
+type ParseContext = [ParseContextItem]
+
+data ParseContextItem
+  = ParseField T.Text
+  | ParseItem Int
+    
 data ParseResult a
-   = ParseSuccess a
-   | ParseFailure T.Text
+  = ParseSuccess a
+  | ParseFailure T.Text ParseContext
 
 class AdlValue a where
   -- | A text string describing the type. The return string may only depend on
@@ -65,36 +73,33 @@ class AdlValue a where
   jsonParser :: JsonParser a
 
 instance Functor JsonParser where
-  fmap f (JsonParser pf) = JsonParser (fmap (fmap f) pf)
+  fmap f (JsonParser pf) = JsonParser (\ctx jv -> fmap f (pf ctx jv))
 
 instance Applicative JsonParser where
-  pure = JsonParser . const . ParseSuccess
-  (JsonParser fa) <*> (JsonParser a) = JsonParser (\jv -> fa jv <*> a jv)
+  pure a = JsonParser (\_ _ -> ParseSuccess a)
+  (JsonParser fa) <*> (JsonParser a) = JsonParser (\ctx jv -> fa ctx jv <*> a ctx jv)
 
 instance Alternative JsonParser where
-  empty = JsonParser (const empty)
-  (JsonParser fa) <|> (JsonParser a) = JsonParser (\jv -> fa jv <|> a jv)
+  empty = JsonParser (\_ _ -> empty)
+  (JsonParser fa) <|> (JsonParser a) = JsonParser (\ctx jv -> fa ctx jv <|> a ctx jv)
 
 instance Functor ParseResult where
   fmap f (ParseSuccess a) = ParseSuccess (f a)
-  fmap _ (ParseFailure e) = ParseFailure e
+  fmap _ (ParseFailure e ctx) = ParseFailure e ctx
 
 instance Applicative ParseResult where
   pure = ParseSuccess
-  (ParseFailure e) <*> _ = ParseFailure e
-  _ <*> (ParseFailure e) = ParseFailure e
+  (ParseFailure e ctx) <*> _ = ParseFailure e ctx
+  _ <*> (ParseFailure e ctx) = ParseFailure e ctx
   (ParseSuccess a) <*> (ParseSuccess b) = ParseSuccess (a b)
   
 instance Alternative ParseResult where
-  empty = ParseFailure ""
+  empty = ParseFailure "" []
   ParseFailure{} <|> pr = pr
   pr <|> _ = pr
 
-parseFailure :: T.Text -> ParseResult a
-parseFailure = ParseFailure
-
 parseFail :: T.Text -> JsonParser a
-parseFail t = JsonParser (const (ParseFailure t))
+parseFail t = JsonParser (\ctx _ -> (ParseFailure t ctx))
 
 -- Convert an ADL value to a JSON value
 adlToJson :: AdlValue a => a -> JS.Value
@@ -102,7 +107,7 @@ adlToJson = runJsonGen jsonGen
 
 -- Convert a JSON value to an ADL value
 adlFromJson :: AdlValue a => JS.Value -> ParseResult a
-adlFromJson = runJsonParser jsonParser
+adlFromJson = runJsonParser jsonParser []
 
 -- Write an ADL value to a JSON file.
 aToJSONFile :: JsonGen a -> FilePath -> a -> IO ()
@@ -114,8 +119,8 @@ aFromJSONFile :: JsonParser a -> FilePath -> IO (ParseResult a)
 aFromJSONFile jp file = do
   lbs <- LBS.readFile file
   case JS.eitherDecode' lbs of
-    (Left e) -> return (ParseFailure ("Invalid json:" <> T.pack e))
-    (Right jv) -> return (runJsonParser jp jv)
+    (Left e) -> return (ParseFailure ("Invalid json:" <> T.pack e) [])
+    (Right jv) -> return (runJsonParser jp [] jv)
 
 -- Read and parse an ADL value from a JSON file, throwing an exception
 -- on failure.    
@@ -123,11 +128,22 @@ aFromJSONFile' :: forall a .(AdlValue a) => JsonParser a -> FilePath -> IO a
 aFromJSONFile' jg file = do
   ma <- aFromJSONFile jg file
   case ma of
-    (ParseFailure e) -> ioError $ userError
-      ("Unable to parse a value of type " ++
-       T.unpack (atype (Proxy :: Proxy a)) ++ " from " ++ file ++ ": " ++ T.unpack e)
+    (ParseFailure e ctx) -> ioError $ userError $
+      T.unpack
+        (  "Unable to parse a value of type "
+        <> atype (Proxy :: Proxy a)
+        <> " from " <>  T.pack file <> ": "
+        <> e <> ", at " <> textFromParseContext ctx
+        )
     (ParseSuccess a) -> return a
 
+textFromParseContext :: ParseContext -> T.Text
+textFromParseContext [] = "[root]"
+textFromParseContext pc = T.intercalate "." (map fmt (reverse pc))
+  where
+    fmt (ParseField f) = f
+    fmt (ParseItem i) = "[" <> T.pack (show i) <> "]"
+  
 genObject :: [o -> (T.Text, JS.Value)] -> JsonGen o
 genObject fieldfns = JsonGen (\o -> JS.object [f o | f <- fieldfns])
 
@@ -144,57 +160,57 @@ genUnionVoid :: T.Text -> JS.Value
 genUnionVoid disc = JS.toJSON disc
  
 parseField :: AdlValue a => T.Text -> JsonParser a
-parseField label = withJsonObject $ \hm -> case HM.lookup label hm of
-  (Just b) -> runJsonParser jsonParser b
-  _ -> parseFailure ("expected field " <> label)
+parseField label = withJsonObject $ \ctx hm -> case HM.lookup label hm of
+  (Just b) -> runJsonParser jsonParser (ParseField label:ctx) b
+  _ -> ParseFailure ("expected field " <> label) ctx
 
 parseFieldDef :: AdlValue a => T.Text -> a -> JsonParser a
-parseFieldDef label defv = withJsonObject $ \hm -> case HM.lookup label hm of
-  (Just b) -> runJsonParser jsonParser b
+parseFieldDef label defv = withJsonObject $ \ctx hm -> case HM.lookup label hm of
+  (Just b) -> runJsonParser jsonParser (ParseField label:ctx) b
   _ -> pure defv
 
 parseUnionVoid :: T.Text -> a -> JsonParser a
-parseUnionVoid disc a = JsonParser $ \jv -> case jv of
+parseUnionVoid disc a = JsonParser $ \ctx jv -> case jv of
   (JS.String s) | s == disc -> pure a
   _ -> empty
 
 parseUnionValue :: AdlValue b => T.Text -> (b -> a) -> JsonParser a
-parseUnionValue disc fa = withJsonObject $ \hm -> case HM.lookup disc hm of
-  (Just b) -> fa <$> runJsonParser jsonParser b
+parseUnionValue disc fa = withJsonObject $ \ctx hm -> case HM.lookup disc hm of
+  (Just b) -> fa <$> runJsonParser jsonParser (ParseField disc:ctx) b
   _ -> empty
 
-withJsonObject :: (JS.Object -> ParseResult a) -> JsonParser a
-withJsonObject f = JsonParser $ \jv -> case jv of
-  (JS.Object hm) -> f hm
-  _ -> parseFailure "expected an object"
+withJsonObject :: (ParseContext -> JS.Object -> ParseResult a) -> JsonParser a
+withJsonObject f = JsonParser $ \ctx jv -> case jv of
+  (JS.Object hm) -> f ctx hm
+  _ -> ParseFailure "expected an object" ctx
 
-withJsonNumber :: (SC.Scientific -> ParseResult a) -> JsonParser a
-withJsonNumber f = JsonParser $ \jv -> case jv of
-  (JS.Number n) -> f n
-  _ -> parseFailure "expected a number"
+withJsonNumber :: (ParseContext -> SC.Scientific -> ParseResult a) -> JsonParser a
+withJsonNumber f = JsonParser $ \ctx jv -> case jv of
+  (JS.Number n) -> f ctx n
+  _ -> ParseFailure "expected a number" ctx
 
-withJsonString :: (T.Text -> ParseResult a) -> JsonParser a
-withJsonString f = JsonParser $ \jv -> case jv of
-  (JS.String s) -> f s
-  _ -> parseFailure "expected a string"
+withJsonString :: (ParseContext -> T.Text -> ParseResult a) -> JsonParser a
+withJsonString f = JsonParser $ \ctx jv -> case jv of
+  (JS.String s) -> f ctx s
+  _ -> ParseFailure "expected a string" ctx
 
 instance AdlValue () where
   atype _ = "Void"
 
   jsonGen = JsonGen (const JS.Null)
   
-  jsonParser = JsonParser $ \v -> case v of
+  jsonParser = JsonParser $ \ctx v -> case v of
     JS.Null -> pure ()
-    _ -> parseFailure "expected null"
+    _ -> ParseFailure "expected null" ctx
 
 instance AdlValue Bool where
   atype _ = "Bool"
 
   jsonGen = JsonGen JS.Bool
   
-  jsonParser = JsonParser $ \v -> case v of
+  jsonParser = JsonParser $ \ctx v -> case v of
     (JS.Bool b) -> pure b
-    _ -> parseFailure "expected a boolean"
+    _ -> ParseFailure "expected a boolean" ctx
 
 instance AdlValue Int8 where
   atype _ = "Int8"
@@ -239,36 +255,37 @@ instance AdlValue Word64 where
 instance AdlValue Double where
   atype _ = "Double"
   jsonGen = JsonGen (JS.Number . SC.fromFloatDigits)
-  jsonParser = withJsonNumber (pure . SC.toRealFloat)
+  jsonParser = withJsonNumber (\_ n -> pure (SC.toRealFloat n))
 
-toBoundedInteger :: forall i. (Integral i, Bounded i, AdlValue i) => SC.Scientific -> ParseResult i
-toBoundedInteger n = case SC.toBoundedInteger n of
-  Nothing -> parseFailure ("expected an " <> atype (Proxy :: Proxy i))
-  (Just i) -> pure i
-  
 instance AdlValue Float where
   atype _ = "Float"
   jsonGen = JsonGen (JS.Number . SC.fromFloatDigits)
-  jsonParser = withJsonNumber (pure . SC.toRealFloat)
+  jsonParser = withJsonNumber (\_ n -> pure (SC.toRealFloat n))
+
+toBoundedInteger :: forall i. (Integral i, Bounded i, AdlValue i) => ParseContext -> SC.Scientific -> ParseResult i
+toBoundedInteger ctx n = case SC.toBoundedInteger n of
+  Nothing -> ParseFailure ("expected an " <> atype (Proxy :: Proxy i)) ctx
+  (Just i) -> pure i
 
 instance AdlValue T.Text where
   atype _ = "String"
   jsonGen = JsonGen JS.String
-  jsonParser = withJsonString (pure . id)
+  jsonParser = withJsonString (\_ s -> pure s)
 
 instance AdlValue BS.ByteString where
   atype _ = "Bytes"
   jsonGen = JsonGen (JS.String . T.decodeUtf8 . B64.encode)
-  jsonParser = withJsonString $ \s -> case B64.decode (T.encodeUtf8 s) of
-    Left e -> parseFailure ("unable to decode base64 value: " <> T.pack e)
+  jsonParser = withJsonString $ \ctx s -> case B64.decode (T.encodeUtf8 s) of
+    Left e -> ParseFailure ("unable to decode base64 value: " <> T.pack e) ctx
     Right v -> pure v
 
 instance forall a . (AdlValue a) => AdlValue [a] where
   atype _ = T.concat ["Vector<",atype (Proxy :: Proxy a),">"]
   jsonGen = JsonGen (JS.Array . V.fromList . (map (adlToJson)))
-  jsonParser = JsonParser $ \v -> case v of
-    (JS.Array a) -> traverse (runJsonParser jsonParser) (V.toList a)
-    _ -> parseFailure "expected an array"
+  jsonParser = JsonParser $ \ctx v -> case v of
+    (JS.Array a) -> let parse (i,jv) = runJsonParser jsonParser (ParseItem i:ctx) jv
+                    in traverse parse (zip [0,1..] (V.toList a))
+    _ -> ParseFailure "expected an array" ctx
  
 newtype StringMap v = StringMap {unStringMap :: M.Map T.Text v}
   deriving (Eq,Ord,Show)
@@ -282,9 +299,9 @@ instance forall a . (AdlValue a) => AdlValue (StringMap a) where
     where
       toPair (k,v) = (k,adlToJson v)
 
-  jsonParser = withJsonObject $ \hm -> (StringMap . M.fromList) <$> traverse fromPair (HM.toList hm)
-    where
-      fromPair (k,jv) = (\jv -> (k,jv)) <$> runJsonParser jsonParser jv
+  jsonParser = withJsonObject $ \ctx hm ->
+    let parse (k,jv) = (\jv -> (k,jv)) <$> runJsonParser jsonParser (ParseField k:ctx) jv
+    in (StringMap . M.fromList) <$> traverse parse (HM.toList hm)
 
 instance (AdlValue t) => AdlValue (Maybe t) where
   atype _ = T.concat
@@ -354,6 +371,6 @@ instance (AdlValue t) => AdlValue (Nullable t) where
     (Nullable Nothing) -> JS.Null
     (Nullable (Just v1)) -> adlToJson v1
 
-  jsonParser = JsonParser $ \jv -> case jv of
+  jsonParser = JsonParser $ \ctx jv -> case jv of
     JS.Null -> pure (Nullable Nothing)
-    _ -> Nullable <$> adlFromJson jv
+    _ -> runJsonParser jsonParser ctx jv
