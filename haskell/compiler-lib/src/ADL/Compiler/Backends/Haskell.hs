@@ -450,6 +450,7 @@ generateUnionADLInstance lname mn d u = do
               if isVoidType (f_type f)
                 then wt "$1 parseUnionVoid \"$2\" $3" [prefix, f_serializedName f, dn]
                 else wt "$1 parseUnionValue \"$2\" $3" [prefix, f_serializedName f, dn]
+            wt "<|> parseFail \"expected a $1\"" [d_name d]
 
 generateNewtypeADLInstance :: Ident -> ModuleName -> CDecl -> Newtype CResolvedType -> HGen ()
 generateNewtypeADLInstance lname mn d n = do

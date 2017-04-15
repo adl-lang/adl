@@ -35,8 +35,8 @@ getCustomType scopedName decl = case Map.lookup haskellCustomType (d_annotations
 
     convertCustomType :: JSON.Value -> CustomType
     convertCustomType jv = case adlFromJson jv of
-      Nothing -> error "BUG: failed to parse haskell custom type"
-      (Just hct) -> CustomType {
+      (ParseFailure e) -> error ("BUG: failed to parse haskell custom type: " <> T.unpack e)
+      (ParseSuccess hct) -> CustomType {
         ct_hTypeName = (HC.haskellCustomType_haskellname hct),
         ct_hImports = map HaskellModule (HC.haskellCustomType_haskellimports hct),
         ct_insertCode = (HC.haskellCustomType_insertCode hct),

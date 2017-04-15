@@ -66,6 +66,7 @@ instance (AdlValue t) => AdlValue (List t) where
     jsonParser
         =   parseUnionVoid "null" List_null
         <|> parseUnionValue "cell" List_cell
+        <|> parseFail "expected a List"
 
 data S1 = S1
     { s1_f :: Data.Int.Int16
@@ -98,6 +99,7 @@ instance AdlValue U1 where
     
     jsonParser
         =   parseUnionVoid "v" U1_v
+        <|> parseFail "expected a U1"
 
 data U2
     = U2_v Data.Int.Int16
@@ -112,6 +114,7 @@ instance AdlValue U2 where
     
     jsonParser
         =   parseUnionValue "v" U2_v
+        <|> parseFail "expected a U2"
 
 data U3
     = U3_v Data.Int.Int16
@@ -126,6 +129,7 @@ instance AdlValue U3 where
     
     jsonParser
         =   parseUnionValue "v" U3_v
+        <|> parseFail "expected a U3"
 
 data U4
     = U4_v S1
@@ -140,6 +144,7 @@ instance AdlValue U4 where
     
     jsonParser
         =   parseUnionValue "v" U4_v
+        <|> parseFail "expected a U4"
 
 data U5
     = U5_v S1
@@ -154,6 +159,7 @@ instance AdlValue U5 where
     
     jsonParser
         =   parseUnionValue "v" U5_v
+        <|> parseFail "expected a U5"
 
 data U6
     = U6_v U3
@@ -168,6 +174,7 @@ instance AdlValue U6 where
     
     jsonParser
         =   parseUnionValue "v" U6_v
+        <|> parseFail "expected a U6"
 
 data U7
     = U7_v U3
@@ -182,6 +189,7 @@ instance AdlValue U7 where
     
     jsonParser
         =   parseUnionValue "v" U7_v
+        <|> parseFail "expected a U7"
 
 data U8
     = U8_v1 S1
@@ -199,6 +207,7 @@ instance AdlValue U8 where
     jsonParser
         =   parseUnionValue "v1" U8_v1
         <|> parseUnionValue "v2" U8_v2
+        <|> parseFail "expected a U8"
 
 data U9 t
     = U9_v1 t
@@ -219,3 +228,4 @@ instance (AdlValue t) => AdlValue (U9 t) where
     jsonParser
         =   parseUnionValue "v1" U9_v1
         <|> parseUnionValue "v2" U9_v2
+        <|> parseFail "expected a U9"

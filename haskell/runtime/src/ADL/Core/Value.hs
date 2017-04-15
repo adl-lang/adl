@@ -2,6 +2,7 @@
 module ADL.Core.Value(
   JsonGen(..),
   JsonParser(..),
+  ParseResult(..),
   AdlValue(..),
   StringMap(..),
   Nullable(..),
@@ -21,6 +22,7 @@ module ADL.Core.Value(
   parseUnionValue,
   parseUnionVoid,
   stringMapFromList,
+  parseFail
 ) where
 
 import qualified Data.Aeson as JS
@@ -36,6 +38,7 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Vector as V
 
 import Control.Applicative
+import Data.Monoid
 import Data.Proxy
 import Data.Int
 import Data.Word
@@ -44,7 +47,11 @@ import Data.Word
 newtype JsonGen a = JsonGen {runJsonGen :: a -> JS.Value}
 
 -- | A Json parser
-newtype JsonParser a = JsonParser {runJsonParser :: JS.Value -> Maybe a}
+newtype JsonParser a = JsonParser {runJsonParser :: JS.Value -> ParseResult a}
+
+data ParseResult a
+   = ParseSuccess a
+   | ParseFailure T.Text
 
 class AdlValue a where
   -- | A text string describing the type. The return string may only depend on
@@ -61,20 +68,40 @@ instance Functor JsonParser where
   fmap f (JsonParser pf) = JsonParser (fmap (fmap f) pf)
 
 instance Applicative JsonParser where
-  pure = JsonParser . const . Just
+  pure = JsonParser . const . ParseSuccess
   (JsonParser fa) <*> (JsonParser a) = JsonParser (\jv -> fa jv <*> a jv)
 
 instance Alternative JsonParser where
   empty = JsonParser (const empty)
   (JsonParser fa) <|> (JsonParser a) = JsonParser (\jv -> fa jv <|> a jv)
 
+instance Functor ParseResult where
+  fmap f (ParseSuccess a) = ParseSuccess (f a)
+  fmap _ (ParseFailure e) = ParseFailure e
+
+instance Applicative ParseResult where
+  pure = ParseSuccess
+  (ParseFailure e) <*> _ = ParseFailure e
+  _ <*> (ParseFailure e) = ParseFailure e
+  (ParseSuccess a) <*> (ParseSuccess b) = ParseSuccess (a b)
+  
+instance Alternative ParseResult where
+  empty = ParseFailure ""
+  ParseFailure{} <|> pr = pr
+  pr <|> _ = pr
+
+parseFailure :: T.Text -> ParseResult a
+parseFailure = ParseFailure
+
+parseFail :: T.Text -> JsonParser a
+parseFail t = JsonParser (const (ParseFailure t))
 
 -- Convert an ADL value to a JSON value
 adlToJson :: AdlValue a => a -> JS.Value
 adlToJson = runJsonGen jsonGen
 
 -- Convert a JSON value to an ADL value
-adlFromJson :: AdlValue a => JS.Value -> Maybe a
+adlFromJson :: AdlValue a => JS.Value -> ParseResult a
 adlFromJson = runJsonParser jsonParser
 
 -- Write an ADL value to a JSON file.
@@ -83,11 +110,11 @@ aToJSONFile jg file a = LBS.writeFile file lbs
   where lbs = JS.encode (runJsonGen jg a)
 
 -- Read and parse an ADL value from a JSON file. 
-aFromJSONFile :: JsonParser a -> FilePath -> IO (Maybe a)
+aFromJSONFile :: JsonParser a -> FilePath -> IO (ParseResult a)
 aFromJSONFile jp file = do
   lbs <- LBS.readFile file
   case JS.eitherDecode' lbs of
-    (Left _) -> return Nothing
+    (Left e) -> return (ParseFailure ("Invalid json:" <> T.pack e))
     (Right jv) -> return (runJsonParser jp jv)
 
 -- Read and parse an ADL value from a JSON file, throwing an exception
@@ -96,10 +123,10 @@ aFromJSONFile' :: forall a .(AdlValue a) => JsonParser a -> FilePath -> IO a
 aFromJSONFile' jg file = do
   ma <- aFromJSONFile jg file
   case ma of
-    Nothing -> ioError $ userError
+    (ParseFailure e) -> ioError $ userError
       ("Unable to parse a value of type " ++
-       T.unpack (atype (Proxy :: Proxy a)) ++ " from " ++ file)
-    (Just a) -> return a
+       T.unpack (atype (Proxy :: Proxy a)) ++ " from " ++ file ++ ": " ++ T.unpack e)
+    (ParseSuccess a) -> return a
 
 genObject :: [o -> (T.Text, JS.Value)] -> JsonGen o
 genObject fieldfns = JsonGen (\o -> JS.object [f o | f <- fieldfns])
@@ -119,7 +146,7 @@ genUnionVoid disc = JS.toJSON disc
 parseField :: AdlValue a => T.Text -> JsonParser a
 parseField label = withJsonObject $ \hm -> case HM.lookup label hm of
   (Just b) -> runJsonParser jsonParser b
-  _ -> empty
+  _ -> parseFailure ("expected field " <> label)
 
 parseFieldDef :: AdlValue a => T.Text -> a -> JsonParser a
 parseFieldDef label defv = withJsonObject $ \hm -> case HM.lookup label hm of
@@ -136,20 +163,20 @@ parseUnionValue disc fa = withJsonObject $ \hm -> case HM.lookup disc hm of
   (Just b) -> fa <$> runJsonParser jsonParser b
   _ -> empty
 
-withJsonObject :: (JS.Object -> Maybe a) -> JsonParser a
+withJsonObject :: (JS.Object -> ParseResult a) -> JsonParser a
 withJsonObject f = JsonParser $ \jv -> case jv of
   (JS.Object hm) -> f hm
-  _ -> Nothing
+  _ -> parseFailure "expected an object"
 
-withJsonNumber :: (SC.Scientific -> Maybe a) -> JsonParser a
+withJsonNumber :: (SC.Scientific -> ParseResult a) -> JsonParser a
 withJsonNumber f = JsonParser $ \jv -> case jv of
   (JS.Number n) -> f n
-  _ -> Nothing
+  _ -> parseFailure "expected a number"
 
-withJsonString :: (T.Text -> Maybe a) -> JsonParser a
+withJsonString :: (T.Text -> ParseResult a) -> JsonParser a
 withJsonString f = JsonParser $ \jv -> case jv of
   (JS.String s) -> f s
-  _ -> Nothing
+  _ -> parseFailure "expected a string"
 
 instance AdlValue () where
   atype _ = "Void"
@@ -157,8 +184,8 @@ instance AdlValue () where
   jsonGen = JsonGen (const JS.Null)
   
   jsonParser = JsonParser $ \v -> case v of
-    JS.Null -> Just ()
-    _ -> Nothing
+    JS.Null -> pure ()
+    _ -> parseFailure "expected null"
 
 instance AdlValue Bool where
   atype _ = "Bool"
@@ -166,75 +193,82 @@ instance AdlValue Bool where
   jsonGen = JsonGen JS.Bool
   
   jsonParser = JsonParser $ \v -> case v of
-    (JS.Bool b) -> Just b
-    _ -> Nothing
+    (JS.Bool b) -> pure b
+    _ -> parseFailure "expected a boolean"
 
 instance AdlValue Int8 where
   atype _ = "Int8"
   jsonGen = JsonGen (JS.Number . fromIntegral)
-  jsonParser = withJsonNumber SC.toBoundedInteger
+  jsonParser = withJsonNumber toBoundedInteger
 
 instance AdlValue Int16 where
   atype _ = "Int16"
   jsonGen = JsonGen (JS.Number . fromIntegral)
-  jsonParser = withJsonNumber SC.toBoundedInteger
+  jsonParser = withJsonNumber toBoundedInteger
 
 instance AdlValue Int32 where
   atype _ = "Int32"
   jsonGen = JsonGen (JS.Number . fromIntegral)
-  jsonParser = withJsonNumber SC.toBoundedInteger
+  jsonParser = withJsonNumber toBoundedInteger
 
 instance AdlValue Int64 where
   atype _ = "Int64"
   jsonGen = JsonGen (JS.Number . fromIntegral)
-  jsonParser = withJsonNumber SC.toBoundedInteger
+  jsonParser = withJsonNumber toBoundedInteger
 
 instance AdlValue Word8 where
   atype _ = "Word8"
   jsonGen = JsonGen (JS.Number . fromIntegral)
-  jsonParser = withJsonNumber SC.toBoundedInteger
+  jsonParser = withJsonNumber toBoundedInteger
 
 instance AdlValue Word16 where
   atype _ = "Word16"
   jsonGen = JsonGen (JS.Number . fromIntegral)
-  jsonParser = withJsonNumber SC.toBoundedInteger
+  jsonParser = withJsonNumber toBoundedInteger
 
 instance AdlValue Word32 where
   atype _ = "Word32"
   jsonGen = JsonGen (JS.Number . fromIntegral)
-  jsonParser = withJsonNumber SC.toBoundedInteger
+  jsonParser = withJsonNumber toBoundedInteger
 
 instance AdlValue Word64 where
   atype _ = "Word64"
   jsonGen = JsonGen (JS.Number . fromIntegral)
-  jsonParser = withJsonNumber SC.toBoundedInteger
+  jsonParser = withJsonNumber toBoundedInteger
 
 instance AdlValue Double where
   atype _ = "Double"
   jsonGen = JsonGen (JS.Number . SC.fromFloatDigits)
-  jsonParser = withJsonNumber (Just . SC.toRealFloat)
+  jsonParser = withJsonNumber (pure . SC.toRealFloat)
 
+toBoundedInteger :: forall i. (Integral i, Bounded i, AdlValue i) => SC.Scientific -> ParseResult i
+toBoundedInteger n = case SC.toBoundedInteger n of
+  Nothing -> parseFailure ("expected an " <> atype (Proxy :: Proxy i))
+  (Just i) -> pure i
+  
 instance AdlValue Float where
   atype _ = "Float"
   jsonGen = JsonGen (JS.Number . SC.fromFloatDigits)
-  jsonParser = withJsonNumber (Just . SC.toRealFloat)
+  jsonParser = withJsonNumber (pure . SC.toRealFloat)
 
 instance AdlValue T.Text where
   atype _ = "String"
   jsonGen = JsonGen JS.String
-  jsonParser = withJsonString (Just . id)
+  jsonParser = withJsonString (pure . id)
 
 instance AdlValue BS.ByteString where
   atype _ = "Bytes"
   jsonGen = JsonGen (JS.String . T.decodeUtf8 . B64.encode)
-  jsonParser = withJsonString (either (const Nothing) Just . B64.decode . T.encodeUtf8)
+  jsonParser = withJsonString $ \s -> case B64.decode (T.encodeUtf8 s) of
+    Left e -> parseFailure ("unable to decode base64 value: " <> T.pack e)
+    Right v -> pure v
 
 instance forall a . (AdlValue a) => AdlValue [a] where
   atype _ = T.concat ["Vector<",atype (Proxy :: Proxy a),">"]
   jsonGen = JsonGen (JS.Array . V.fromList . (map (adlToJson)))
   jsonParser = JsonParser $ \v -> case v of
-    (JS.Array a) -> mapM (runJsonParser jsonParser) (V.toList a)
-    _ -> Nothing
+    (JS.Array a) -> traverse (runJsonParser jsonParser) (V.toList a)
+    _ -> parseFailure "expected an array"
  
 newtype StringMap v = StringMap {unStringMap :: M.Map T.Text v}
   deriving (Eq,Ord,Show)
@@ -248,13 +282,9 @@ instance forall a . (AdlValue a) => AdlValue (StringMap a) where
     where
       toPair (k,v) = (k,adlToJson v)
 
-  jsonParser = JsonParser $ \v -> case v of
-    (JS.Object hm) -> (StringMap . M.fromList) <$> mapM fromPair (HM.toList hm)
-    _ -> Nothing
+  jsonParser = withJsonObject $ \hm -> (StringMap . M.fromList) <$> traverse fromPair (HM.toList hm)
     where
-      fromPair (k,jv) = do
-        v <- runJsonParser jsonParser jv
-        return (k,v)
+      fromPair (k,jv) = (\jv -> (k,jv)) <$> runJsonParser jsonParser jv
 
 instance (AdlValue t) => AdlValue (Maybe t) where
   atype _ = T.concat
@@ -325,5 +355,5 @@ instance (AdlValue t) => AdlValue (Nullable t) where
     (Nullable (Just v1)) -> adlToJson v1
 
   jsonParser = JsonParser $ \jv -> case jv of
-    JS.Null -> return (Nullable Nothing)
+    JS.Null -> pure (Nullable Nothing)
     _ -> Nullable <$> adlFromJson jv

@@ -81,6 +81,7 @@ instance AdlValue DeclType where
         <|> parseUnionValue "union_" DeclType_union_
         <|> parseUnionValue "type_" DeclType_type_
         <|> parseUnionValue "newtype_" DeclType_newtype_
+        <|> parseFail "expected a DeclType"
 
 type DeclVersions = [Decl]
 
@@ -129,6 +130,7 @@ instance AdlValue Import where
     jsonParser
         =   parseUnionValue "moduleName" Import_moduleName
         <|> parseUnionValue "scopedName" Import_scopedName
+        <|> parseFail "expected a Import"
 
 data Literal
     = Literal_null
@@ -161,6 +163,7 @@ instance AdlValue Literal where
         <|> parseUnionValue "boolean" Literal_boolean
         <|> parseUnionValue "array" Literal_array
         <|> parseUnionValue "object" Literal_object
+        <|> parseFail "expected a Literal"
 
 data Module = Module
     { module_name :: ModuleName
@@ -315,6 +318,7 @@ instance AdlValue TypeRef where
         =   parseUnionValue "primitive" TypeRef_primitive
         <|> parseUnionValue "typeParam" TypeRef_typeParam
         <|> parseUnionValue "reference" TypeRef_reference
+        <|> parseFail "expected a TypeRef"
 
 data Union = Union
     { union_typeParams :: [Ident]

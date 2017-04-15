@@ -30,6 +30,7 @@ instance AdlValue X1 where
     jsonParser
         =   parseUnionValue "f1" X1_f1
         <|> parseUnionValue "f2" X1_f2
+        <|> parseFail "expected a X1"
 
 data X2 = X2
     { x2_f1 :: Prelude.Double
@@ -68,6 +69,7 @@ instance AdlValue Y1 where
     jsonParser
         =   parseUnionValue "f1" Y1_f1
         <|> parseUnionValue "f2" Y1_f2
+        <|> parseFail "expected a Y1"
 
 data Y2 = Y2
     { y2_f1 :: T.Text

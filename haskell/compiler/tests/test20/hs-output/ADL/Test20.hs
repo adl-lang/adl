@@ -59,3 +59,4 @@ instance AdlValue Role where
         =   parseUnionVoid "u" Role_underling
         <|> parseUnionVoid "b" Role_boss
         <|> parseUnionVoid "sb" Role_superBoss
+        <|> parseFail "expected a Role"

@@ -54,6 +54,7 @@ instance AdlValue Picture where
         <|> parseUnionValue "rectangle" Picture_rectangle
         <|> parseUnionValue "composed" Picture_composed
         <|> parseUnionValue "translated" Picture_translated
+        <|> parseFail "expected a Picture"
 
 data Rectangle = Rectangle
     { rectangle_width :: Prelude.Double

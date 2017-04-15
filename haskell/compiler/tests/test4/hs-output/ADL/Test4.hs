@@ -60,8 +60,10 @@ instance AdlValue Day where
   atype _ = "test4.Date"
   jsonGen = JsonGen (adlToJson . dateToText)
   jsonParser = JsonParser (\jv -> case jv of 
-    Data.Aeson.String s -> dateFromText s
-    _ -> Prelude.Nothing
+    Data.Aeson.String s -> case dateFromText s of
+      Prelude.Nothing -> ParseFailure "expected a date"
+      (Prelude.Just d) -> ParseSuccess d
+    _ -> ParseFailure "expected a date"
     )
 
 data S = S

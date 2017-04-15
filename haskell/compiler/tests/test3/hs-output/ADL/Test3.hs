@@ -167,6 +167,7 @@ instance AdlValue U where
     jsonParser
         =   parseUnionValue "f_int" U_f_int
         <|> parseUnionValue "f_string" U_f_string
+        <|> parseFail "expected a U"
 
 data XY t = XY
     { xY_x :: t
