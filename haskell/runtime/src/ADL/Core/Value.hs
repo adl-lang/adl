@@ -65,7 +65,7 @@ instance Applicative JsonParser where
   (JsonParser fa) <*> (JsonParser a) = JsonParser (\jv -> fa jv <*> a jv)
 
 instance Alternative JsonParser where
-  empty = JsonParser (const Nothing)
+  empty = JsonParser (const empty)
   (JsonParser fa) <|> (JsonParser a) = JsonParser (\jv -> fa jv <|> a jv)
 
 
@@ -117,18 +117,14 @@ genUnionVoid :: T.Text -> JS.Value
 genUnionVoid disc = JS.toJSON disc
  
 parseField :: AdlValue a => T.Text -> JsonParser a
-parseField label = JsonParser $ \jv -> case jv of
-  (JS.Object hm) -> case HM.lookup label hm of
-     (Just b) -> runJsonParser jsonParser b
-     _ -> empty
+parseField label = withJsonObject $ \hm -> case HM.lookup label hm of
+  (Just b) -> runJsonParser jsonParser b
   _ -> empty
 
 parseFieldDef :: AdlValue a => T.Text -> a -> JsonParser a
-parseFieldDef label defv = JsonParser $ \jv -> case jv of
-  (JS.Object hm) -> case HM.lookup label hm of
-     (Just b) -> runJsonParser jsonParser b
-     _ -> pure defv
-  _ -> empty
+parseFieldDef label defv = withJsonObject $ \hm -> case HM.lookup label hm of
+  (Just b) -> runJsonParser jsonParser b
+  _ -> pure defv
 
 parseUnionVoid :: T.Text -> a -> JsonParser a
 parseUnionVoid disc a = JsonParser $ \jv -> case jv of
@@ -136,11 +132,24 @@ parseUnionVoid disc a = JsonParser $ \jv -> case jv of
   _ -> empty
 
 parseUnionValue :: AdlValue b => T.Text -> (b -> a) -> JsonParser a
-parseUnionValue disc fa = JsonParser $ \jv -> case jv of
-  (JS.Object hm) -> case HM.lookup disc hm of
-     (Just b) -> fa <$> runJsonParser jsonParser b
-     _ -> empty
+parseUnionValue disc fa = withJsonObject $ \hm -> case HM.lookup disc hm of
+  (Just b) -> fa <$> runJsonParser jsonParser b
   _ -> empty
+
+withJsonObject :: (JS.Object -> Maybe a) -> JsonParser a
+withJsonObject f = JsonParser $ \jv -> case jv of
+  (JS.Object hm) -> f hm
+  _ -> Nothing
+
+withJsonNumber :: (SC.Scientific -> Maybe a) -> JsonParser a
+withJsonNumber f = JsonParser $ \jv -> case jv of
+  (JS.Number n) -> f n
+  _ -> Nothing
+
+withJsonString :: (T.Text -> Maybe a) -> JsonParser a
+withJsonString f = JsonParser $ \jv -> case jv of
+  (JS.String s) -> f s
+  _ -> Nothing
 
 instance AdlValue () where
   atype _ = "Void"
@@ -160,11 +169,6 @@ instance AdlValue Bool where
     (JS.Bool b) -> Just b
     _ -> Nothing
 
-withJsonNumber :: (SC.Scientific -> Maybe a) -> JsonParser a
-withJsonNumber f = JsonParser $ \jv -> case jv of
-  (JS.Number n) -> f n
-  _ -> Nothing
-  
 instance AdlValue Int8 where
   atype _ = "Int8"
   jsonGen = JsonGen (JS.Number . fromIntegral)
@@ -214,11 +218,6 @@ instance AdlValue Float where
   atype _ = "Float"
   jsonGen = JsonGen (JS.Number . SC.fromFloatDigits)
   jsonParser = withJsonNumber (Just . SC.toRealFloat)
-
-withJsonString :: (T.Text -> Maybe a) -> JsonParser a
-withJsonString f = JsonParser $ \jv -> case jv of
-  (JS.String s) -> f s
-  _ -> Nothing
 
 instance AdlValue T.Text where
   atype _ = "String"
