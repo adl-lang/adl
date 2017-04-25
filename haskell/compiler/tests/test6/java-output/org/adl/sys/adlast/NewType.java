@@ -124,11 +124,11 @@ public class NewType {
       }
 
       public NewType fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new NewType(
-          _obj.has("typeParams") ? typeParams.get().fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
-          _obj.has("typeExpr") ? typeExpr.get().fromJson(_obj.get("typeExpr")) : new TypeExpr(),
-          _obj.has("default") ? default_.get().fromJson(_obj.get("default")) : MaybeHelpers.factory(Literal.FACTORY).create()
+          JsonBindings.fieldFromJson(_obj, "typeParams", typeParams.get()),
+          JsonBindings.fieldFromJson(_obj, "typeExpr", typeExpr.get()),
+          JsonBindings.fieldFromJson(_obj, "default", default_.get())
         );
       }
     };

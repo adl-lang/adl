@@ -143,12 +143,12 @@ public class B<T> {
       }
 
       public B<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new B<T>(
-          _obj.has("f_t") ? f_t.get().fromJson(_obj.get("f_t")) : factoryT.create(),
-          _obj.has("f_string") ? f_string.get().fromJson(_obj.get("f_string")) : "",
-          _obj.has("f_tvec") ? f_tvec.get().fromJson(_obj.get("f_tvec")) : new ArrayList<T>(),
-          _obj.has("f_xy") ? f_xy.get().fromJson(_obj.get("f_xy")) : XY.factory(factoryT).create()
+          JsonBindings.fieldFromJson(_obj, "f_t", f_t.get()),
+          JsonBindings.fieldFromJson(_obj, "f_string", f_string.get()),
+          JsonBindings.fieldFromJson(_obj, "f_tvec", f_tvec.get()),
+          JsonBindings.fieldFromJson(_obj, "f_xy", f_xy.get())
         );
       }
     };

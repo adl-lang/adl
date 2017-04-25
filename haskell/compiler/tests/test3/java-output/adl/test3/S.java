@@ -417,28 +417,28 @@ public class S<T> {
       }
 
       public S<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S<T>(
-          _obj.has("f_void") ? f_void.get().fromJson(_obj.get("f_void")) : null,
-          _obj.has("f_bool") ? f_bool.get().fromJson(_obj.get("f_bool")) : true,
-          _obj.has("f_int8") ? f_int8.get().fromJson(_obj.get("f_int8")) : (byte)-5,
-          _obj.has("f_int16") ? f_int16.get().fromJson(_obj.get("f_int16")) : (short)-10000,
-          _obj.has("f_int32") ? f_int32.get().fromJson(_obj.get("f_int32")) : 56,
-          _obj.has("f_int64") ? f_int64.get().fromJson(_obj.get("f_int64")) : 40000L,
-          _obj.has("f_word8") ? f_word8.get().fromJson(_obj.get("f_word8")) : (byte)32,
-          _obj.has("f_word16") ? f_word16.get().fromJson(_obj.get("f_word16")) : (short)50000,
-          _obj.has("f_word32") ? f_word32.get().fromJson(_obj.get("f_word32")) : 124456,
-          _obj.has("f_word64") ? f_word64.get().fromJson(_obj.get("f_word64")) : 2344L,
-          _obj.has("f_float") ? f_float.get().fromJson(_obj.get("f_float")) : 0.5F,
-          _obj.has("f_double") ? f_double.get().fromJson(_obj.get("f_double")) : 0.45,
-          _obj.has("f_bytes") ? f_bytes.get().fromJson(_obj.get("f_bytes")) : new ByteArray("hello".getBytes()),
-          _obj.has("f_string") ? f_string.get().fromJson(_obj.get("f_string")) : "abcd",
-          _obj.has("f_vstring") ? f_vstring.get().fromJson(_obj.get("f_vstring")) : Factories.arrayList("xy", "ab"),
-          _obj.has("f_a") ? f_a.get().fromJson(_obj.get("f_a")) : new A((short)0, "xyz", false),
-          _obj.has("f_u") ? f_u.get().fromJson(_obj.get("f_u")) : U.f_int((short)45),
-          _obj.has("f_t") ? f_t.get().fromJson(_obj.get("f_t")) : factoryT.create(),
-          _obj.has("f_bint16") ? f_bint16.get().fromJson(_obj.get("f_bint16")) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
-          _obj.has("f_smap") ? f_smap.get().fromJson(_obj.get("f_smap")) : Factories.stringMap("a", 45, "b", 47)
+          _obj.has("f_void") ? JsonBindings.fieldFromJson(_obj, "f_void", f_void.get()) : null,
+          _obj.has("f_bool") ? JsonBindings.fieldFromJson(_obj, "f_bool", f_bool.get()) : true,
+          _obj.has("f_int8") ? JsonBindings.fieldFromJson(_obj, "f_int8", f_int8.get()) : (byte)-5,
+          _obj.has("f_int16") ? JsonBindings.fieldFromJson(_obj, "f_int16", f_int16.get()) : (short)-10000,
+          _obj.has("f_int32") ? JsonBindings.fieldFromJson(_obj, "f_int32", f_int32.get()) : 56,
+          _obj.has("f_int64") ? JsonBindings.fieldFromJson(_obj, "f_int64", f_int64.get()) : 40000L,
+          _obj.has("f_word8") ? JsonBindings.fieldFromJson(_obj, "f_word8", f_word8.get()) : (byte)32,
+          _obj.has("f_word16") ? JsonBindings.fieldFromJson(_obj, "f_word16", f_word16.get()) : (short)50000,
+          _obj.has("f_word32") ? JsonBindings.fieldFromJson(_obj, "f_word32", f_word32.get()) : 124456,
+          _obj.has("f_word64") ? JsonBindings.fieldFromJson(_obj, "f_word64", f_word64.get()) : 2344L,
+          _obj.has("f_float") ? JsonBindings.fieldFromJson(_obj, "f_float", f_float.get()) : 0.5F,
+          _obj.has("f_double") ? JsonBindings.fieldFromJson(_obj, "f_double", f_double.get()) : 0.45,
+          _obj.has("f_bytes") ? JsonBindings.fieldFromJson(_obj, "f_bytes", f_bytes.get()) : new ByteArray("hello".getBytes()),
+          _obj.has("f_string") ? JsonBindings.fieldFromJson(_obj, "f_string", f_string.get()) : "abcd",
+          _obj.has("f_vstring") ? JsonBindings.fieldFromJson(_obj, "f_vstring", f_vstring.get()) : Factories.arrayList("xy", "ab"),
+          _obj.has("f_a") ? JsonBindings.fieldFromJson(_obj, "f_a", f_a.get()) : new A((short)0, "xyz", false),
+          _obj.has("f_u") ? JsonBindings.fieldFromJson(_obj, "f_u", f_u.get()) : U.f_int((short)45),
+          JsonBindings.fieldFromJson(_obj, "f_t", f_t.get()),
+          _obj.has("f_bint16") ? JsonBindings.fieldFromJson(_obj, "f_bint16", f_bint16.get()) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
+          _obj.has("f_smap") ? JsonBindings.fieldFromJson(_obj, "f_smap", f_smap.get()) : Factories.stringMap("a", 45, "b", 47)
         );
       }
     };

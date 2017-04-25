@@ -152,13 +152,13 @@ public class switch_ {
       }
 
       public switch_ fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new switch_(
-          _obj.has("double") ? double_.get().fromJson(_obj.get("double")) : 0.0,
-          _obj.has("int") ? int_.get().fromJson(_obj.get("int")) : 0,
-          _obj.has("string") ? string.get().fromJson(_obj.get("string")) : "",
-          _obj.has("for") ? for_.get().fromJson(_obj.get("for")) : false,
-          _obj.has("Objects") ? Objects.get().fromJson(_obj.get("Objects")) : ""
+          JsonBindings.fieldFromJson(_obj, "double", double_.get()),
+          JsonBindings.fieldFromJson(_obj, "int", int_.get()),
+          JsonBindings.fieldFromJson(_obj, "string", string.get()),
+          JsonBindings.fieldFromJson(_obj, "for", for_.get()),
+          JsonBindings.fieldFromJson(_obj, "Objects", Objects.get())
         );
       }
     };

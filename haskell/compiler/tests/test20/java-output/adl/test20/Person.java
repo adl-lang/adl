@@ -137,12 +137,12 @@ public class Person {
       }
 
       public Person fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Person(
-          _obj.has("fn") ? firstName.get().fromJson(_obj.get("fn")) : "",
-          _obj.has("ln") ? lastName.get().fromJson(_obj.get("ln")) : "",
-          _obj.has("age") ? age.get().fromJson(_obj.get("age")) : (short)0,
-          _obj.has("role") ? role.get().fromJson(_obj.get("role")) : Role.FACTORY.create()
+          JsonBindings.fieldFromJson(_obj, "fn", firstName.get()),
+          JsonBindings.fieldFromJson(_obj, "ln", lastName.get()),
+          JsonBindings.fieldFromJson(_obj, "age", age.get()),
+          JsonBindings.fieldFromJson(_obj, "role", role.get())
         );
       }
     };

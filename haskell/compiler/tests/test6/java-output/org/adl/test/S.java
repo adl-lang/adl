@@ -227,17 +227,17 @@ public class S {
       }
 
       public S fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S(
-          _obj.has("f_pair") ? f_pair.get().fromJson(_obj.get("f_pair")) : Pair.factory(Factories.INTEGER, Factories.DOUBLE).create(),
-          _obj.has("f_either") ? f_either.get().fromJson(_obj.get("f_either")) : Either.factory(Factories.STRING, Factories.INTEGER).create(),
-          _obj.has("f_error") ? f_error.get().fromJson(_obj.get("f_error")) : Error.factory(Factories.INTEGER).create(),
-          _obj.has("f_map") ? f_map.get().fromJson(_obj.get("f_map")) : HashMapHelpers.factory(Factories.STRING, Factories.DOUBLE).create(),
-          _obj.has("f_set") ? f_set.get().fromJson(_obj.get("f_set")) : HashSetHelpers.factory(Factories.STRING).create(),
-          _obj.has("f_mstring") ? f_mstring.get().fromJson(_obj.get("f_mstring")) : MaybeHelpers.factory(Factories.STRING).create(),
-          _obj.has("f_mstring2") ? f_mstring2.get().fromJson(_obj.get("f_mstring2")) : MaybeHelpers.just("sukpeepolup"),
-          _obj.has("f_nstring") ? f_nstring.get().fromJson(_obj.get("f_nstring")) : NullableHelpers.factory(Factories.STRING).create(),
-          _obj.has("f_nstring2") ? f_nstring2.get().fromJson(_obj.get("f_nstring2")) : NullableHelpers.just("abcde")
+          JsonBindings.fieldFromJson(_obj, "f_pair", f_pair.get()),
+          JsonBindings.fieldFromJson(_obj, "f_either", f_either.get()),
+          JsonBindings.fieldFromJson(_obj, "f_error", f_error.get()),
+          JsonBindings.fieldFromJson(_obj, "f_map", f_map.get()),
+          JsonBindings.fieldFromJson(_obj, "f_set", f_set.get()),
+          JsonBindings.fieldFromJson(_obj, "f_mstring", f_mstring.get()),
+          _obj.has("f_mstring2") ? JsonBindings.fieldFromJson(_obj, "f_mstring2", f_mstring2.get()) : MaybeHelpers.just("sukpeepolup"),
+          JsonBindings.fieldFromJson(_obj, "f_nstring", f_nstring.get()),
+          _obj.has("f_nstring2") ? JsonBindings.fieldFromJson(_obj, "f_nstring2", f_nstring2.get()) : NullableHelpers.just("abcde")
         );
       }
     };

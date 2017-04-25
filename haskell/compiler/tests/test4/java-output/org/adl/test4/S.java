@@ -275,20 +275,20 @@ public class S {
       }
 
       public S fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S(
-          _obj.has("v1") ? v1.get().fromJson(_obj.get("v1")) : DateHelpers.FACTORY.create(),
-          _obj.has("v2") ? v2.get().fromJson(_obj.get("v2")) : DateHelpers.create("2000-01-01"),
-          _obj.has("v3") ? v3.get().fromJson(_obj.get("v3")) : CDateHelpers.FACTORY.create(),
-          _obj.has("v4") ? v4.get().fromJson(_obj.get("v4")) : CDateHelpers.create((short)2000, (short)1, (short)1),
-          _obj.has("v5") ? v5.get().fromJson(_obj.get("v5")) : MaybeHelpers.factory(Factories.STRING).create(),
-          _obj.has("v5a") ? v5a.get().fromJson(_obj.get("v5a")) : MaybeHelpers.nothing(null),
-          _obj.has("v5b") ? v5b.get().fromJson(_obj.get("v5b")) : MaybeHelpers.just("hello"),
-          _obj.has("v6") ? v6.get().fromJson(_obj.get("v6")) : Pair.factory(Factories.STRING, Factories.INTEGER).create(),
-          _obj.has("v7") ? v7.get().fromJson(_obj.get("v7")) : HashSetHelpers.create(Factories.arrayList(1, 2, 3)),
-          _obj.has("v7a") ? v7a.get().fromJson(_obj.get("v7a")) : HashSetHelpers.factory(Factories.INTEGER).create(),
-          _obj.has("v8") ? v8.get().fromJson(_obj.get("v8")) : HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(),
-          _obj.has("v8a") ? v8a.get().fromJson(_obj.get("v8a")) : HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)))
+          JsonBindings.fieldFromJson(_obj, "v1", v1.get()),
+          _obj.has("v2") ? JsonBindings.fieldFromJson(_obj, "v2", v2.get()) : DateHelpers.create("2000-01-01"),
+          JsonBindings.fieldFromJson(_obj, "v3", v3.get()),
+          _obj.has("v4") ? JsonBindings.fieldFromJson(_obj, "v4", v4.get()) : CDateHelpers.create((short)2000, (short)1, (short)1),
+          JsonBindings.fieldFromJson(_obj, "v5", v5.get()),
+          _obj.has("v5a") ? JsonBindings.fieldFromJson(_obj, "v5a", v5a.get()) : MaybeHelpers.nothing(null),
+          _obj.has("v5b") ? JsonBindings.fieldFromJson(_obj, "v5b", v5b.get()) : MaybeHelpers.just("hello"),
+          JsonBindings.fieldFromJson(_obj, "v6", v6.get()),
+          _obj.has("v7") ? JsonBindings.fieldFromJson(_obj, "v7", v7.get()) : HashSetHelpers.create(Factories.arrayList(1, 2, 3)),
+          JsonBindings.fieldFromJson(_obj, "v7a", v7a.get()),
+          JsonBindings.fieldFromJson(_obj, "v8", v8.get()),
+          _obj.has("v8a") ? JsonBindings.fieldFromJson(_obj, "v8a", v8a.get()) : HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)))
         );
       }
     };

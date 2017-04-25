@@ -647,11 +647,18 @@ generateRuntime jf fileWriter imports = do
     files <- dirContents runtimedir
     for_ files $ \inpath -> do
       let cls = javaClass rtpackage (T.pack (dropExtensions (takeFileName inpath)))
-          toGenerate = imports <> Set.fromList
-            [ javaClass rtpackage "ByteArray"
-            , javaClass rtpackage "Factory"
-            , javaClass rtpackage "Factories"
-            ]
+          toGenerate
+            =  imports
+            <> (if Set.member (javaClass rtpackage "JsonBinding") imports
+                  then Set.singleton (javaClass rtpackage "JsonParseException")
+                  else mempty
+               )
+            <> (Set.fromList
+                  [ javaClass rtpackage "ByteArray"
+                  , javaClass rtpackage "Factory"
+                  , javaClass rtpackage "Factories"
+                  ]
+               )
       when (Set.member cls toGenerate) $ do
         content <- LBS.readFile (runtimedir </> inpath)
         fileWriter (javaClassFilePath cls) (adjustContent content)

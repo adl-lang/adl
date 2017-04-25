@@ -89,9 +89,9 @@ public class Circle {
       }
 
       public Circle fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Circle(
-          _obj.has("radius") ? radius.get().fromJson(_obj.get("radius")) : 0.0
+          JsonBindings.fieldFromJson(_obj, "radius", radius.get())
         );
       }
     };

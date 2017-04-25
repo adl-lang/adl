@@ -186,15 +186,15 @@ public class X1 {
       }
 
       public X1 fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new X1(
-          _obj.has("f1") ? f1.get().fromJson(_obj.get("f1")) : 0,
-          _obj.has("f2") ? f2.get().fromJson(_obj.get("f2")) : 0,
-          _obj.has("f3") ? f3.get().fromJson(_obj.get("f3")) : Pair.factory(Factories.STRING, Factories.INTEGER).create(),
-          _obj.has("f4") ? f4.get().fromJson(_obj.get("f4")) : Pair.factory(Factories.STRING, Factories.STRING).create(),
-          _obj.has("f5") ? f5.get().fromJson(_obj.get("f5")) : new ArrayList<Integer>(),
-          _obj.has("f6") ? f6.get().fromJson(_obj.get("f6")) : new ArrayList<Pair<String, Integer>>(),
-          _obj.has("f7") ? f7.get().fromJson(_obj.get("f7")) : new ArrayList<Pair<String, String>>()
+          JsonBindings.fieldFromJson(_obj, "f1", f1.get()),
+          JsonBindings.fieldFromJson(_obj, "f2", f2.get()),
+          JsonBindings.fieldFromJson(_obj, "f3", f3.get()),
+          JsonBindings.fieldFromJson(_obj, "f4", f4.get()),
+          JsonBindings.fieldFromJson(_obj, "f5", f5.get()),
+          JsonBindings.fieldFromJson(_obj, "f6", f6.get()),
+          JsonBindings.fieldFromJson(_obj, "f7", f7.get())
         );
       }
     };

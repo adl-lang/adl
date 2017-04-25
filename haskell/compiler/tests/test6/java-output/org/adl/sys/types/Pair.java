@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
@@ -107,10 +108,10 @@ public class Pair<T1, T2> {
       }
 
       public Pair<T1, T2> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Pair<T1, T2>(
-          _obj.has("v1") ? v1.get().fromJson(_obj.get("v1")) : factoryT1.create(),
-          _obj.has("v2") ? v2.get().fromJson(_obj.get("v2")) : factoryT2.create()
+          JsonBindings.fieldFromJson(_obj, "v1", v1.get()),
+          JsonBindings.fieldFromJson(_obj, "v2", v2.get())
         );
       }
     };

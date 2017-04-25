@@ -141,12 +141,12 @@ public class Field {
       }
 
       public Field fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Field(
-          _obj.has("name") ? name.get().fromJson(_obj.get("name")) : "",
-          _obj.has("typeExpr") ? typeExpr.get().fromJson(_obj.get("typeExpr")) : new TypeExpr(),
-          _obj.has("default") ? default_.get().fromJson(_obj.get("default")) : MaybeHelpers.factory(Literal.FACTORY).create(),
-          _obj.has("annotations") ? annotations.get().fromJson(_obj.get("annotations")) : HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create()
+          JsonBindings.fieldFromJson(_obj, "name", name.get()),
+          JsonBindings.fieldFromJson(_obj, "typeExpr", typeExpr.get()),
+          JsonBindings.fieldFromJson(_obj, "default", default_.get()),
+          JsonBindings.fieldFromJson(_obj, "annotations", annotations.get())
         );
       }
     };

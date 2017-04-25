@@ -59,13 +59,22 @@ public class HashMapHelpers
       }
 
       public HashMap<K,V> fromJson(JsonElement json) {
+        if (!json.isJsonArray()) {
+          throw new JsonParseException("expected an array");
+        }
+
         JsonArray array = json.getAsJsonArray();
         HashMap<K,V> result = new HashMap<>();
         for(int i = 0; i < array.size(); i++) {
-          JsonObject pair = array.get(i).getAsJsonObject();
-          if(!pair.has("v1") || !pair.has("v2"))
-            throw new IllegalStateException();
-          result.put(bindingK.fromJson(pair.get("v1")), bindingV.fromJson(pair.get("v2")));
+          try {
+            JsonObject pair = JsonBindings.objectFromJson(array.get(i));
+            K v1 = JsonBindings.fieldFromJson(pair, "v1", bindingK);
+            V v2 = JsonBindings.fieldFromJson(pair, "v2", bindingV);
+            result.put(v1,v2);
+          } catch (JsonParseException e) {
+            e.pushIndex(i);
+            throw e;
+          }
         }
         return result;
       }

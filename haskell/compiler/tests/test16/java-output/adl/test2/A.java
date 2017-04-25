@@ -89,9 +89,9 @@ public class A {
       }
 
       public A fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new A(
-          _obj.has("a") ? a.get().fromJson(_obj.get("a")) : 0
+          JsonBindings.fieldFromJson(_obj, "a", a.get())
         );
       }
     };

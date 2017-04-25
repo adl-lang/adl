@@ -8,6 +8,7 @@ module ADL.Compiler.Backends.Java.Json(
 
 import Control.Monad(when)
 import Data.Foldable(for_,fold)
+import Data.Maybe(isJust)
 import Data.Monoid
 import Data.String(IsString(..))
 import Data.Traversable(for)
@@ -31,6 +32,7 @@ generateStructJson cgp decl struct fieldDetails = do
   factoryI <- addImport (javaClass (cgp_runtimePackage cgp) "Factory")
   lazyC <- addImport (javaClass (cgp_runtimePackage cgp) "Lazy")
   jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
+  jsonBindingsI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBindings")
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonObjectI <- addImport "com.google.gson.JsonObject"
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
@@ -73,15 +75,23 @@ generateStructJson cgp decl struct fieldDetails = do
                 cline ""
                 <>
                 cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
-                  ctemplate "$1 _obj = _json.getAsJsonObject();" [jsonObjectI]
+                  ctemplate "$1 _obj = $2.objectFromJson(_json);" [jsonObjectI,jsonBindingsI]
                   <>
                   ( ctemplate "return new $1(" [className]
                     <>
                     indent (
-                      let terminators = replicate (length fieldDetails-1) "," <> [""] in
+                      let terminators = replicate (length fieldDetails-1) "," <> [""]
+                          requiredField fd terminator =
+                            template "$2.fieldFromJson(_obj, \"$1\", $3.get())$4"
+                                     [fd_serializedName fd,jsonBindingsI, fd_varName fd,terminator]
+                          optionalField fd terminator =
+                            template "_obj.has(\"$1\") ? $2.fieldFromJson(_obj, \"$1\", $3.get()) : $4$5"
+                                     [fd_serializedName fd,jsonBindingsI, fd_varName fd,fd_defValue fd,terminator]
+                      in
                       clineN
-                      [ template "_obj.has(\"$1\") ? $2.get().fromJson(_obj.get(\"$1\")) : $3$4"
-                                 [fd_serializedName fd,fd_varName fd,fd_defValue fd,terminator]
+                      [ if isJust (f_default (fd_field fd))
+                          then optionalField fd terminator
+                          else requiredField fd terminator
                       | (fd,terminator) <- zip fieldDetails terminators]
                       )
                     <>
@@ -241,6 +251,7 @@ generateEnumJson cgp decl union fieldDetails = do
   jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonPrimitiveI <- addImport "com.google.gson.JsonPrimitive"
+  jsonParseExceptionI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonParseException")
 
   let className = unreserveWord (d_name decl)
       factory = cblock (template "public static $1<$2> jsonBinding()" [jsonBindingI,className])
@@ -254,7 +265,11 @@ generateEnumJson cgp decl union fieldDetails = do
               )
            <> cline ""
            <> cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI])
-              (  cline "return fromString(_json.getAsString());"
+              (  cline "try {"
+              <> indent (cline "return fromString(_json.getAsString());")
+              <> cline "} catch (IllegalArgumentException e) {"
+              <> indent (ctemplate "throw new $1(e.getMessage());" [jsonParseExceptionI])
+              <> cline "}"
               )
            )
         )

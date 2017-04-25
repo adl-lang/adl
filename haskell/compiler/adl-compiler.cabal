@@ -25,6 +25,7 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/java/runtime/org/adl/runtime/Factory.java
                      lib/java/runtime/org/adl/runtime/HashMapHelpers.java
                      lib/java/runtime/org/adl/runtime/HashSetHelpers.java
+                     lib/java/runtime/org/adl/runtime/JsonParseException.java
                      lib/java/runtime/org/adl/runtime/JsonBinding.java
                      lib/java/runtime/org/adl/runtime/JsonBindings.java
                      lib/java/runtime/org/adl/runtime/MaybeHelpers.java

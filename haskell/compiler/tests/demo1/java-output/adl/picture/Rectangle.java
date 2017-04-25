@@ -105,10 +105,10 @@ public class Rectangle {
       }
 
       public Rectangle fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Rectangle(
-          _obj.has("width") ? width.get().fromJson(_obj.get("width")) : 0.0,
-          _obj.has("height") ? height.get().fromJson(_obj.get("height")) : 0.0
+          JsonBindings.fieldFromJson(_obj, "width", width.get()),
+          JsonBindings.fieldFromJson(_obj, "height", height.get())
         );
       }
     };

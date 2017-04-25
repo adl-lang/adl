@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
@@ -106,10 +107,10 @@ public class Cell<T> {
       }
 
       public Cell<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Cell<T>(
-          _obj.has("head") ? head.get().fromJson(_obj.get("head")) : factoryT.create(),
-          _obj.has("tail") ? tail.get().fromJson(_obj.get("tail")) : List.factory(factoryT).create()
+          JsonBindings.fieldFromJson(_obj, "head", head.get()),
+          JsonBindings.fieldFromJson(_obj, "tail", tail.get())
         );
       }
     };

@@ -110,10 +110,10 @@ public class S1 {
       }
 
       public S1 fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S1(
-          _obj.has("x") ? x.get().fromJson(_obj.get("x")) : 0,
-          _obj.has("y") ? y.get().fromJson(_obj.get("y")) : ""
+          JsonBindings.fieldFromJson(_obj, "x", x.get()),
+          JsonBindings.fieldFromJson(_obj, "y", y.get())
         );
       }
     };

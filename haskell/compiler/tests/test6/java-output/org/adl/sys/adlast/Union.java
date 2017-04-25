@@ -106,10 +106,10 @@ public class Union {
       }
 
       public Union fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Union(
-          _obj.has("typeParams") ? typeParams.get().fromJson(_obj.get("typeParams")) : new ArrayList<String>(),
-          _obj.has("fields") ? fields.get().fromJson(_obj.get("fields")) : new ArrayList<Field>()
+          JsonBindings.fieldFromJson(_obj, "typeParams", typeParams.get()),
+          JsonBindings.fieldFromJson(_obj, "fields", fields.get())
         );
       }
     };

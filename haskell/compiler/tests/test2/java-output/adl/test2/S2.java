@@ -125,11 +125,11 @@ public class S2 {
       }
 
       public S2 fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S2(
-          _obj.has("f1") ? f1.get().fromJson(_obj.get("f1")) : "",
-          _obj.has("f2") ? f2.get().fromJson(_obj.get("f2")) : 0.0,
-          _obj.has("f3") ? f3.get().fromJson(_obj.get("f3")) : new ArrayList<Integer>()
+          JsonBindings.fieldFromJson(_obj, "f1", f1.get()),
+          JsonBindings.fieldFromJson(_obj, "f2", f2.get()),
+          JsonBindings.fieldFromJson(_obj, "f3", f3.get())
         );
       }
     };

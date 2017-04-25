@@ -52,10 +52,20 @@ public class HashSetHelpers
       }
 
       public HashSet<T> fromJson(JsonElement json) {
+        if (!json.isJsonArray()) {
+          throw new JsonParseException("expected an array");
+        }
+
         JsonArray array = json.getAsJsonArray();
         HashSet<T> result = new HashSet<>();
         for(int i = 0; i < array.size(); i++) {
-          result.add(bindingT.fromJson(array.get(i)));
+          try {
+            T v = bindingT.fromJson(array.get(i));
+            result.add(v);
+          } catch (JsonParseException e) {
+            e.pushIndex(i);
+            throw e;
+          }
         }
         return result;
       }

@@ -121,11 +121,11 @@ public class A {
       }
 
       public A fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new A(
-          _obj.has("f_int") ? f_int.get().fromJson(_obj.get("f_int")) : (short)0,
-          _obj.has("f_string") ? f_string.get().fromJson(_obj.get("f_string")) : "",
-          _obj.has("f_bool") ? f_bool.get().fromJson(_obj.get("f_bool")) : false
+          JsonBindings.fieldFromJson(_obj, "f_int", f_int.get()),
+          JsonBindings.fieldFromJson(_obj, "f_string", f_string.get()),
+          _obj.has("f_bool") ? JsonBindings.fieldFromJson(_obj, "f_bool", f_bool.get()) : false
         );
       }
     };

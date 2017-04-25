@@ -109,10 +109,10 @@ public class Tree<T> {
       }
 
       public Tree<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Tree<T>(
-          _obj.has("value") ? value.get().fromJson(_obj.get("value")) : factoryT.create(),
-          _obj.has("children") ? children.get().fromJson(_obj.get("children")) : new ArrayList<Tree<T>>()
+          JsonBindings.fieldFromJson(_obj, "value", value.get()),
+          JsonBindings.fieldFromJson(_obj, "children", children.get())
         );
       }
     };

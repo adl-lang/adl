@@ -7,6 +7,7 @@ import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
+import org.adl.runtime.JsonParseException;
 
 public enum U1 {
 
@@ -52,7 +53,11 @@ public enum U1 {
       }
 
       public U1 fromJson(JsonElement _json) {
-        return fromString(_json.getAsString());
+        try {
+          return fromString(_json.getAsString());
+        } catch (IllegalArgumentException e) {
+          throw new JsonParseException(e.getMessage());
+        }
       }
     };
   }

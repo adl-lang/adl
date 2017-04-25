@@ -106,10 +106,10 @@ public class TypeExpr {
       }
 
       public TypeExpr fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new TypeExpr(
-          _obj.has("typeRef") ? typeRef.get().fromJson(_obj.get("typeRef")) : new TypeRef(),
-          _obj.has("parameters") ? parameters.get().fromJson(_obj.get("parameters")) : new ArrayList<TypeExpr>()
+          JsonBindings.fieldFromJson(_obj, "typeRef", typeRef.get()),
+          JsonBindings.fieldFromJson(_obj, "parameters", parameters.get())
         );
       }
     };

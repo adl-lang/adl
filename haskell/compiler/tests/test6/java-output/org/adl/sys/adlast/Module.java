@@ -124,11 +124,11 @@ public class Module {
       }
 
       public Module fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Module(
-          _obj.has("name") ? name.get().fromJson(_obj.get("name")) : "",
-          _obj.has("imports") ? imports.get().fromJson(_obj.get("imports")) : new ArrayList<Import>(),
-          _obj.has("decls") ? decls.get().fromJson(_obj.get("decls")) : HashMapHelpers.factory(Factories.STRING, Decl.FACTORY).create()
+          JsonBindings.fieldFromJson(_obj, "name", name.get()),
+          JsonBindings.fieldFromJson(_obj, "imports", imports.get()),
+          JsonBindings.fieldFromJson(_obj, "decls", decls.get())
         );
       }
     };

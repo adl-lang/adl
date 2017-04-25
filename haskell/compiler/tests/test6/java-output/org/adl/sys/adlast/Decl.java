@@ -141,12 +141,12 @@ public class Decl {
       }
 
       public Decl fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Decl(
-          _obj.has("name") ? name.get().fromJson(_obj.get("name")) : "",
-          _obj.has("version") ? version.get().fromJson(_obj.get("version")) : MaybeHelpers.factory(Factories.INTEGER).create(),
-          _obj.has("type_") ? type_.get().fromJson(_obj.get("type_")) : new DeclType(),
-          _obj.has("annotations") ? annotations.get().fromJson(_obj.get("annotations")) : HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create()
+          JsonBindings.fieldFromJson(_obj, "name", name.get()),
+          JsonBindings.fieldFromJson(_obj, "version", version.get()),
+          JsonBindings.fieldFromJson(_obj, "type_", type_.get()),
+          JsonBindings.fieldFromJson(_obj, "annotations", annotations.get())
         );
       }
     };

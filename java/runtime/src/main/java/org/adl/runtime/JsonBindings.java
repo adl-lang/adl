@@ -26,8 +26,10 @@ public class JsonBindings
       return JsonNull.INSTANCE;
     }
     public Void fromJson(JsonElement json) {
-      json.getAsJsonNull();
-      return null;
+      if (json.isJsonNull()) {
+        return null;
+      }
+      throw new JsonParseException("expected null");
     }
   };
 
@@ -39,7 +41,11 @@ public class JsonBindings
       return new JsonPrimitive(value);
     }
     public Boolean fromJson(JsonElement json) {
-      return json.getAsBoolean();
+      try {
+        return json.getAsBoolean();
+      } catch (UnsupportedOperationException | ClassCastException e) {
+        throw new JsonParseException("expected a boolean");
+      }
     }
   };
 
@@ -51,7 +57,11 @@ public class JsonBindings
       return new JsonPrimitive(value);
     }
     public Byte fromJson(JsonElement json) {
-      return json.getAsNumber().byteValue();
+      try {
+        return json.getAsNumber().byteValue();
+      } catch (UnsupportedOperationException | ClassCastException e) {
+        throw new JsonParseException("expected a number");
+      }
     }
   };
 
@@ -63,7 +73,11 @@ public class JsonBindings
       return new JsonPrimitive(value);
     }
     public Short fromJson(JsonElement json) {
-      return json.getAsNumber().shortValue();
+      try {
+        return json.getAsNumber().shortValue();
+      } catch (UnsupportedOperationException | ClassCastException | NumberFormatException e) {
+        throw new JsonParseException("expected a number");
+      }
     }
   };
 
@@ -75,7 +89,11 @@ public class JsonBindings
       return new JsonPrimitive(value);
     }
     public Integer fromJson(JsonElement json) {
-      return json.getAsNumber().intValue();
+      try {
+        return json.getAsNumber().intValue();
+      } catch (UnsupportedOperationException | ClassCastException | NumberFormatException e) {
+        throw new JsonParseException("expected a number");
+      }
     }
   };
 
@@ -87,7 +105,11 @@ public class JsonBindings
       return new JsonPrimitive(value);
     }
     public Long fromJson(JsonElement json) {
-      return json.getAsNumber().longValue();
+      try {
+        return json.getAsNumber().longValue();
+      } catch (UnsupportedOperationException | ClassCastException | NumberFormatException e) {
+        throw new JsonParseException("expected a number");
+      }
     }
   };
 
@@ -99,7 +121,11 @@ public class JsonBindings
       return new JsonPrimitive(value);
     }
     public Float fromJson(JsonElement json) {
-      return json.getAsNumber().floatValue();
+      try {
+        return json.getAsNumber().floatValue();
+      } catch (UnsupportedOperationException | ClassCastException | NumberFormatException e) {
+        throw new JsonParseException("expected a number");
+      }
     }
   };
 
@@ -111,7 +137,11 @@ public class JsonBindings
       return new JsonPrimitive(value);
     }
     public Double fromJson(JsonElement json) {
-      return json.getAsNumber().doubleValue();
+      try {
+        return json.getAsNumber().doubleValue();
+      } catch (UnsupportedOperationException | ClassCastException | NumberFormatException e) {
+        throw new JsonParseException("expected a number");
+      }
     }
   };
 
@@ -123,7 +153,11 @@ public class JsonBindings
       return new JsonPrimitive(value);
     }
     public String fromJson(JsonElement json) {
-      return json.getAsString();
+      if (json.isJsonPrimitive() && json.getAsJsonPrimitive().isString()) {
+        return json.getAsString();
+      }
+        
+      throw new JsonParseException("expected a string");
     }
   };
 
@@ -135,7 +169,13 @@ public class JsonBindings
       return new JsonPrimitive(new String(Base64.getEncoder().encode(value.getValue())));
     }
     public ByteArray fromJson(JsonElement json) {
-      return new ByteArray(Base64.getDecoder().decode(json.getAsString().getBytes()));
+      try {
+        return new ByteArray(Base64.getDecoder().decode(json.getAsString().getBytes()));
+      } catch (UnsupportedOperationException | ClassCastException e) {
+        throw new JsonParseException("expected a base 64 encoded string");
+      } catch (RuntimeException e) {
+        throw new JsonParseException("expected a base 64 encoded string");
+      }
     }
   };
   
@@ -153,8 +193,20 @@ public class JsonBindings
       }
       public ArrayList<T> fromJson(JsonElement json) {
         ArrayList<T> result = new ArrayList<T>();
-        for (JsonElement je : json.getAsJsonArray()) {
-          result.add(factoryT.fromJson(je));
+        JsonArray jarray;
+        try {
+          jarray = json.getAsJsonArray();
+        } catch (UnsupportedOperationException | ClassCastException e) {
+          throw new JsonParseException("expected an array");
+        }
+        int i = 0;
+        for (JsonElement je : jarray) {
+          try {
+            result.add(factoryT.fromJson(je));
+          } catch (JsonParseException e) {
+            e.pushIndex(i);
+            throw e;
+          }
         }
         return result;
       }
@@ -174,10 +226,20 @@ public class JsonBindings
         return result;
       }
       public HashMap<String,T> fromJson(JsonElement json) {
-        JsonObject jobj = json.getAsJsonObject();
+        JsonObject jobj;
+        try {
+          jobj = json.getAsJsonObject();
+        } catch (UnsupportedOperationException | ClassCastException e) {
+          throw new JsonParseException("expected an object");
+        }
         HashMap<String,T> result = new HashMap<String,T>();
         for (Map.Entry<String,JsonElement> e : jobj.entrySet()) {
-          result.put(e.getKey(), factoryT.fromJson(e.getValue()));
+          try {
+            result.put(e.getKey(), factoryT.fromJson(e.getValue()));
+          } catch (JsonParseException jpe) {
+            jpe.pushField(e.getKey());
+            throw jpe;
+          }
         }
         return result;
       }
@@ -205,7 +267,11 @@ public class JsonBindings
       }
       throw new IllegalStateException();
     } else {
-      return json.getAsString();
+      try {
+        return json.getAsString();
+      } catch (UnsupportedOperationException | ClassCastException e) {
+        throw new JsonParseException( "expected an object or string");
+      }
     }
   }
 
@@ -216,11 +282,36 @@ public class JsonBindings
         throw new IllegalStateException();
       }
       for (Map.Entry<String,JsonElement> v : entries) {
-        return jsonBinding.fromJson(v.getValue());
+        try {
+          return jsonBinding.fromJson(v.getValue());
+        } catch (JsonParseException e) {
+          e.pushField(v.getKey());
+          throw e;
+        }
       }
       throw new IllegalStateException();
     } else {
       return null;
+    }
+  }
+
+  public static JsonObject objectFromJson(JsonElement json) {
+    if (!json.isJsonObject()) {
+      throw new JsonParseException("expected an object");
+    }
+    return json.getAsJsonObject();
+  }
+  
+  public static <T> T fieldFromJson(JsonObject obj, String field, JsonBinding<T> jsonBinding) {
+    JsonElement el = objectFromJson(obj).get(field);
+    if (el == null) {
+      throw new JsonParseException( "expected field " + field);
+    }
+    try {
+      return jsonBinding.fromJson(el);
+    } catch(JsonParseException e) {
+      e.pushField(field);
+      throw e;
     }
   }
 };

@@ -125,11 +125,11 @@ public class Translated<T> {
       }
 
       public Translated<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Translated<T>(
-          _obj.has("xoffset") ? xoffset.get().fromJson(_obj.get("xoffset")) : 0,
-          _obj.has("yoffset") ? yoffset.get().fromJson(_obj.get("yoffset")) : 0,
-          _obj.has("object") ? object.get().fromJson(_obj.get("object")) : factoryT.create()
+          _obj.has("xoffset") ? JsonBindings.fieldFromJson(_obj, "xoffset", xoffset.get()) : 0,
+          _obj.has("yoffset") ? JsonBindings.fieldFromJson(_obj, "yoffset", yoffset.get()) : 0,
+          JsonBindings.fieldFromJson(_obj, "object", object.get())
         );
       }
     };

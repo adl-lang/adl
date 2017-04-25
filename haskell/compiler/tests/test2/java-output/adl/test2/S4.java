@@ -108,10 +108,10 @@ public class S4<T> {
       }
 
       public S4<T> fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S4<T>(
-          _obj.has("f1") ? f1.get().fromJson(_obj.get("f1")) : S3.factory(Factories.STRING).create(),
-          _obj.has("f2") ? f2.get().fromJson(_obj.get("f2")) : S3.factory(factoryT).create()
+          JsonBindings.fieldFromJson(_obj, "f1", f1.get()),
+          JsonBindings.fieldFromJson(_obj, "f2", f2.get())
         );
       }
     };

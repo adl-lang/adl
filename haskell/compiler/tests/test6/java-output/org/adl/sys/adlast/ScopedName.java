@@ -105,10 +105,10 @@ public class ScopedName {
       }
 
       public ScopedName fromJson(JsonElement _json) {
-        JsonObject _obj = _json.getAsJsonObject();
+        JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new ScopedName(
-          _obj.has("moduleName") ? moduleName.get().fromJson(_obj.get("moduleName")) : "",
-          _obj.has("name") ? name.get().fromJson(_obj.get("name")) : ""
+          JsonBindings.fieldFromJson(_obj, "moduleName", moduleName.get()),
+          JsonBindings.fieldFromJson(_obj, "name", name.get())
         );
       }
     };
