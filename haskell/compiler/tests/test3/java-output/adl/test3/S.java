@@ -35,13 +35,15 @@ public class S<T> {
   private ArrayList<String> f_vstring;
   private A f_a;
   private U f_u;
+  private U f_u1;
+  private E f_e;
   private T f_t;
   private B<Short> f_bint16;
   private HashMap<String, Integer> f_smap;
 
   /* Constructors */
 
-  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, ArrayList<String> f_vstring, A f_a, U f_u, T f_t, B<Short> f_bint16, HashMap<String, Integer> f_smap) {
+  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, ArrayList<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, HashMap<String, Integer> f_smap) {
     this.f_void = f_void;
     this.f_bool = f_bool;
     this.f_int8 = f_int8;
@@ -59,6 +61,8 @@ public class S<T> {
     this.f_vstring = Objects.requireNonNull(f_vstring);
     this.f_a = Objects.requireNonNull(f_a);
     this.f_u = Objects.requireNonNull(f_u);
+    this.f_u1 = Objects.requireNonNull(f_u1);
+    this.f_e = Objects.requireNonNull(f_e);
     this.f_t = Objects.requireNonNull(f_t);
     this.f_bint16 = Objects.requireNonNull(f_bint16);
     this.f_smap = Objects.requireNonNull(f_smap);
@@ -202,6 +206,22 @@ public class S<T> {
     this.f_u = Objects.requireNonNull(f_u);
   }
 
+  public U getF_u1() {
+    return f_u1;
+  }
+
+  public void setF_u1(U f_u1) {
+    this.f_u1 = Objects.requireNonNull(f_u1);
+  }
+
+  public E getF_e() {
+    return f_e;
+  }
+
+  public void setF_e(E f_e) {
+    this.f_e = Objects.requireNonNull(f_e);
+  }
+
   public T getF_t() {
     return f_t;
   }
@@ -252,6 +272,8 @@ public class S<T> {
       f_vstring.equals(other.f_vstring) &&
       f_a.equals(other.f_a) &&
       f_u.equals(other.f_u) &&
+      f_u1.equals(other.f_u1) &&
+      f_e.equals(other.f_e) &&
       f_t.equals(other.f_t) &&
       f_bint16.equals(other.f_bint16) &&
       f_smap.equals(other.f_smap);
@@ -277,6 +299,8 @@ public class S<T> {
     _result = _result * 37 + f_vstring.hashCode();
     _result = _result * 37 + f_a.hashCode();
     _result = _result * 37 + f_u.hashCode();
+    _result = _result * 37 + f_u1.hashCode();
+    _result = _result * 37 + f_e.hashCode();
     _result = _result * 37 + f_t.hashCode();
     _result = _result * 37 + f_bint16.hashCode();
     _result = _result * 37 + f_smap.hashCode();
@@ -304,6 +328,8 @@ public class S<T> {
       final Lazy<Factory<ArrayList<String>>> f_vstring = new Lazy<>(() -> Factories.arrayList(Factories.STRING));
       final Lazy<Factory<A>> f_a = new Lazy<>(() -> A.FACTORY);
       final Lazy<Factory<U>> f_u = new Lazy<>(() -> U.FACTORY);
+      final Lazy<Factory<U>> f_u1 = new Lazy<>(() -> U.FACTORY);
+      final Lazy<Factory<E>> f_e = new Lazy<>(() -> E.FACTORY);
       final Lazy<Factory<T>> f_t = new Lazy<>(() -> factoryT);
       final Lazy<Factory<B<Short>>> f_bint16 = new Lazy<>(() -> B.factory(Factories.SHORT));
       final Lazy<Factory<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> Factories.stringMap(Factories.INTEGER));
@@ -327,6 +353,8 @@ public class S<T> {
           Factories.arrayList("xy", "ab"),
           new A((short)0, "xyz", false),
           U.f_int((short)45),
+          f_u1.get().create(),
+          f_e.get().create(),
           f_t.get().create(),
           new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
           Factories.stringMap("a", 45, "b", 47)
@@ -352,6 +380,8 @@ public class S<T> {
           f_vstring.get().create(other.getF_vstring()),
           f_a.get().create(other.getF_a()),
           f_u.get().create(other.getF_u()),
+          f_u1.get().create(other.getF_u1()),
+          f_e.get().create(other.getF_e()),
           f_t.get().create(other.getF_t()),
           f_bint16.get().create(other.getF_bint16()),
           f_smap.get().create(other.getF_smap())
@@ -380,6 +410,8 @@ public class S<T> {
     final Lazy<JsonBinding<ArrayList<String>>> f_vstring = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
     final Lazy<JsonBinding<A>> f_a = new Lazy<>(() -> A.jsonBinding());
     final Lazy<JsonBinding<U>> f_u = new Lazy<>(() -> U.jsonBinding());
+    final Lazy<JsonBinding<U>> f_u1 = new Lazy<>(() -> U.jsonBinding());
+    final Lazy<JsonBinding<E>> f_e = new Lazy<>(() -> E.jsonBinding());
     final Lazy<JsonBinding<T>> f_t = new Lazy<>(() -> bindingT);
     final Lazy<JsonBinding<B<Short>>> f_bint16 = new Lazy<>(() -> B.jsonBinding(JsonBindings.SHORT));
     final Lazy<JsonBinding<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.INTEGER));
@@ -410,6 +442,8 @@ public class S<T> {
         _result.add("f_vstring", f_vstring.get().toJson(_value.f_vstring));
         _result.add("f_a", f_a.get().toJson(_value.f_a));
         _result.add("f_u", f_u.get().toJson(_value.f_u));
+        _result.add("f_u1", f_u1.get().toJson(_value.f_u1));
+        _result.add("f_e", f_e.get().toJson(_value.f_e));
         _result.add("f_t", f_t.get().toJson(_value.f_t));
         _result.add("f_bint16", f_bint16.get().toJson(_value.f_bint16));
         _result.add("f_smap", f_smap.get().toJson(_value.f_smap));
@@ -436,6 +470,8 @@ public class S<T> {
           _obj.has("f_vstring") ? JsonBindings.fieldFromJson(_obj, "f_vstring", f_vstring.get()) : Factories.arrayList("xy", "ab"),
           _obj.has("f_a") ? JsonBindings.fieldFromJson(_obj, "f_a", f_a.get()) : new A((short)0, "xyz", false),
           _obj.has("f_u") ? JsonBindings.fieldFromJson(_obj, "f_u", f_u.get()) : U.f_int((short)45),
+          JsonBindings.fieldFromJson(_obj, "f_u1", f_u1.get()),
+          JsonBindings.fieldFromJson(_obj, "f_e", f_e.get()),
           JsonBindings.fieldFromJson(_obj, "f_t", f_t.get()),
           _obj.has("f_bint16") ? JsonBindings.fieldFromJson(_obj, "f_bint16", f_bint16.get()) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
           _obj.has("f_smap") ? JsonBindings.fieldFromJson(_obj, "f_smap", f_smap.get()) : Factories.stringMap("a", 45, "b", 47)

@@ -2,6 +2,7 @@
 module ADL.Test3(
     A(..),
     B(..),
+    E(..),
     S(..),
     U(..),
     XY(..),
@@ -73,6 +74,24 @@ instance (AdlValue t) => AdlValue (B t) where
         <*> parseField "f_tvec"
         <*> parseField "f_xy"
 
+data E
+    = E_v1
+    | E_v2
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance AdlValue E where
+    atype _ = "test3.E"
+    
+    jsonGen = genUnion (\jv -> case jv of
+        E_v1 -> genUnionVoid "v1"
+        E_v2 -> genUnionVoid "v2"
+        )
+    
+    jsonParser
+        =   parseUnionVoid "v1" E_v1
+        <|> parseUnionVoid "v2" E_v2
+        <|> parseFail "expected a E"
+
 data S t = S
     { s_f_void :: ()
     , s_f_bool :: Prelude.Bool
@@ -91,14 +110,16 @@ data S t = S
     , s_f_vstring :: [T.Text]
     , s_f_a :: A
     , s_f_u :: U
+    , s_f_u1 :: U
+    , s_f_e :: E
     , s_f_t :: t
     , s_f_bint16 :: (B Data.Int.Int16)
     , s_f_smap :: StringMap (Data.Int.Int32)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-mkS :: t -> S t
-mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.False) (U_f_int 45) f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)])
+mkS :: U -> E -> t -> S t
+mkS f_u1 f_e f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.False) (U_f_int 45) f_u1 f_e f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)])
 
 instance (AdlValue t) => AdlValue (S t) where
     atype _ = T.concat
@@ -124,6 +145,8 @@ instance (AdlValue t) => AdlValue (S t) where
         , genField "f_vstring" s_f_vstring
         , genField "f_a" s_f_a
         , genField "f_u" s_f_u
+        , genField "f_u1" s_f_u1
+        , genField "f_e" s_f_e
         , genField "f_t" s_f_t
         , genField "f_bint16" s_f_bint16
         , genField "f_smap" s_f_smap
@@ -147,6 +170,8 @@ instance (AdlValue t) => AdlValue (S t) where
         <*> parseFieldDef "f_vstring" [ "xy", "ab" ]
         <*> parseFieldDef "f_a" (A 0 "xyz" Prelude.False)
         <*> parseFieldDef "f_u" (U_f_int 45)
+        <*> parseField "f_u1"
+        <*> parseField "f_e"
         <*> parseField "f_t"
         <*> parseFieldDef "f_bint16" (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5))
         <*> parseFieldDef "f_smap" (stringMapFromList [("a", 45), ("b", 47)])
@@ -154,6 +179,7 @@ instance (AdlValue t) => AdlValue (S t) where
 data U
     = U_f_int Data.Int.Int16
     | U_f_string T.Text
+    | U_f_void
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue U where
@@ -162,11 +188,13 @@ instance AdlValue U where
     jsonGen = genUnion (\jv -> case jv of
         U_f_int v -> genUnionValue "f_int" v
         U_f_string v -> genUnionValue "f_string" v
+        U_f_void -> genUnionVoid "f_void"
         )
     
     jsonParser
         =   parseUnionValue "f_int" U_f_int
         <|> parseUnionValue "f_string" U_f_string
+        <|> parseUnionVoid "f_void" U_f_void
         <|> parseFail "expected a U"
 
 data XY t = XY

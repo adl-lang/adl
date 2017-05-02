@@ -27,12 +27,53 @@ struct A
 bool operator<( const A &a, const A &b );
 bool operator==( const A &a, const A &b );
 
+class E
+{
+public:
+    E();
+    static E mk_v1();
+    static E mk_v2();
+    
+    E( const E & );
+    ~E();
+    E & operator=( const E & );
+    
+    enum DiscType
+    {
+        V1,
+        V2
+    };
+    
+    DiscType d() const;
+    
+    void set_v1();
+    void set_v2();
+    
+private:
+    E( DiscType d, void * v);
+    
+    DiscType d_;
+    void *p_;
+    
+    static void free( DiscType d, void *v );
+    static void *copy( DiscType d, void *v );
+};
+
+bool operator<( const E &a, const E &b );
+bool operator==( const E &a, const E &b );
+
+inline E::DiscType E::d() const
+{
+    return d_;
+}
+
 class U
 {
 public:
     U();
     static U mk_f_int( const int16_t & v );
     static U mk_f_string( const std::string & v );
+    static U mk_f_void();
     
     U( const U & );
     ~U();
@@ -41,7 +82,8 @@ public:
     enum DiscType
     {
         F_INT,
-        F_STRING
+        F_STRING,
+        F_VOID
     };
     
     DiscType d() const;
@@ -50,6 +92,7 @@ public:
     
     const int16_t & set_f_int(const int16_t & );
     const std::string & set_f_string(const std::string & );
+    void set_f_void();
     
 private:
     U( DiscType d, void * v);
@@ -232,6 +275,8 @@ struct S
         const std::vector<std::string>  & f_vstring,
         const A & f_a,
         const U & f_u,
+        const U & f_u1,
+        const E & f_e,
         const T & f_t,
         const B<int16_t>  & f_bint16,
         const std::map<std::string,int32_t> & f_smap
@@ -254,6 +299,8 @@ struct S
     std::vector<std::string>  f_vstring;
     A f_a;
     U f_u;
+    U f_u1;
+    E f_e;
     T f_t;
     B<int16_t>  f_bint16;
     std::map<std::string,int32_t> f_smap;
@@ -307,6 +354,8 @@ S<T>::S(
     const std::vector<std::string>  & f_vstring_,
     const A & f_a_,
     const U & f_u_,
+    const U & f_u1_,
+    const E & f_e_,
     const T & f_t_,
     const B<int16_t>  & f_bint16_,
     const std::map<std::string,int32_t> & f_smap_
@@ -328,6 +377,8 @@ S<T>::S(
     , f_vstring(f_vstring_)
     , f_a(f_a_)
     , f_u(f_u_)
+    , f_u1(f_u1_)
+    , f_e(f_e_)
     , f_t(f_t_)
     , f_bint16(f_bint16_)
     , f_smap(f_smap_)
@@ -372,6 +423,10 @@ operator<( const S<T> &a, const S<T> &b )
     if( b.f_a < a.f_a ) return false;
     if( a.f_u < b.f_u ) return true;
     if( b.f_u < a.f_u ) return false;
+    if( a.f_u1 < b.f_u1 ) return true;
+    if( b.f_u1 < a.f_u1 ) return false;
+    if( a.f_e < b.f_e ) return true;
+    if( b.f_e < a.f_e ) return false;
     if( a.f_t < b.f_t ) return true;
     if( b.f_t < a.f_t ) return false;
     if( a.f_bint16 < b.f_bint16 ) return true;
@@ -403,6 +458,8 @@ operator==( const S<T> &a, const S<T> &b )
         a.f_vstring == b.f_vstring &&
         a.f_a == b.f_a &&
         a.f_u == b.f_u &&
+        a.f_u1 == b.f_u1 &&
+        a.f_e == b.f_e &&
         a.f_t == b.f_t &&
         a.f_bint16 == b.f_bint16 &&
         a.f_smap == b.f_smap ;
@@ -416,6 +473,12 @@ template <>
 struct Serialisable<ADL::test3::A>
 {
     static Serialiser<ADL::test3::A>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test3::E>
+{
+    static Serialiser<ADL::test3::E>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
@@ -556,6 +619,8 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
             , f_vstring_s( Serialisable<std::vector<std::string> >::serialiser(sf) )
             , f_a_s( Serialisable<ADL::test3::A>::serialiser(sf) )
             , f_u_s( Serialisable<ADL::test3::U>::serialiser(sf) )
+            , f_u1_s( Serialisable<ADL::test3::U>::serialiser(sf) )
+            , f_e_s( Serialisable<ADL::test3::E>::serialiser(sf) )
             , f_t_s( Serialisable<T>::serialiser(sf) )
             , f_bint16_s( Serialisable<ADL::test3::B<int16_t> >::serialiser(sf) )
             , f_smap_s( stringMapSerialiser<int32_t>(sf) )
@@ -579,6 +644,8 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<std::vector<std::string> >::Ptr f_vstring_s;
         typename Serialiser<ADL::test3::A>::Ptr f_a_s;
         typename Serialiser<ADL::test3::U>::Ptr f_u_s;
+        typename Serialiser<ADL::test3::U>::Ptr f_u1_s;
+        typename Serialiser<ADL::test3::E>::Ptr f_e_s;
         typename Serialiser<T>::Ptr f_t_s;
         typename Serialiser<ADL::test3::B<int16_t> >::Ptr f_bint16_s;
         typename Serialiser<std::map<std::string,int32_t>>::Ptr f_smap_s;
@@ -603,6 +670,8 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
             writeField<std::vector<std::string> >( json, f_vstring_s, "f_vstring", v.f_vstring );
             writeField<ADL::test3::A>( json, f_a_s, "f_a", v.f_a );
             writeField<ADL::test3::U>( json, f_u_s, "f_u", v.f_u );
+            writeField<ADL::test3::U>( json, f_u1_s, "f_u1", v.f_u1 );
+            writeField<ADL::test3::E>( json, f_e_s, "f_e", v.f_e );
             writeField<T>( json, f_t_s, "f_t", v.f_t );
             writeField<ADL::test3::B<int16_t> >( json, f_bint16_s, "f_bint16", v.f_bint16 );
             writeField<std::map<std::string,int32_t>>( json, f_smap_s, "f_smap", v.f_smap );
@@ -631,6 +700,8 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
                 readField( f_vstring_s, v.f_vstring, "f_vstring", json ) ||
                 readField( f_a_s, v.f_a, "f_a", json ) ||
                 readField( f_u_s, v.f_u, "f_u", json ) ||
+                readField( f_u1_s, v.f_u1, "f_u1", json ) ||
+                readField( f_e_s, v.f_e, "f_e", json ) ||
                 readField( f_t_s, v.f_t, "f_t", json ) ||
                 readField( f_bint16_s, v.f_bint16, "f_bint16", json ) ||
                 readField( f_smap_s, v.f_smap, "f_smap", json ) ||

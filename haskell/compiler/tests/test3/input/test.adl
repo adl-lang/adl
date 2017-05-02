@@ -26,6 +26,13 @@ union U
 {
    Int16 f_int;
    String f_string;
+   Void f_void;
+};
+
+union E
+{
+   Void v1;
+   Void v2;
 };
 
 struct S<T>
@@ -51,6 +58,9 @@ struct S<T>
               "f_string" : "xyz" };
 
     U f_u = { "f_int" : 45 };
+    U f_u1;
+
+    E f_e;
 
     T f_t;
 

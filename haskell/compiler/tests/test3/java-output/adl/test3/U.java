@@ -25,7 +25,8 @@ public class U {
    */
   public enum Disc {
     F_INT,
-    F_STRING
+    F_STRING,
+    F_VOID
   }
 
   /* Constructors */
@@ -36,6 +37,10 @@ public class U {
 
   public static U f_string(String v) {
     return new U(Disc.F_STRING, Objects.requireNonNull(v));
+  }
+
+  public static U f_void() {
+    return new U(Disc.F_VOID, null);
   }
 
   public U() {
@@ -51,6 +56,9 @@ public class U {
         break;
       case F_STRING:
         this.value = (String) other.value;
+        break;
+      case F_VOID:
+        this.value = (Void) other.value;
         break;
     }
   }
@@ -92,6 +100,11 @@ public class U {
     this.disc = Disc.F_STRING;
   }
 
+  public void setF_void() {
+    this.value = null;
+    this.disc = Disc.F_VOID;
+  }
+
   /* Object level helpers */
 
   @Override
@@ -100,12 +113,28 @@ public class U {
       return false;
     }
     U other = (U) other0;
-    return disc == other.disc && value.equals(other.value);
+    switch (disc) {
+      case F_INT:
+        return disc == other.disc && value.equals(other.value);
+      case F_STRING:
+        return disc == other.disc && value.equals(other.value);
+      case F_VOID:
+        return disc == other.disc;
+    }
+    throw new IllegalStateException();
   }
 
   @Override
   public int hashCode() {
-    return disc.hashCode() * 37 + value.hashCode();
+    switch (disc) {
+      case F_INT:
+        return disc.hashCode() * 37 + value.hashCode();
+      case F_STRING:
+        return disc.hashCode() * 37 + value.hashCode();
+      case F_VOID:
+        return disc.hashCode();
+    }
+    throw new IllegalStateException();
   }
 
   /* Factory for construction of generic values */
@@ -124,6 +153,7 @@ public class U {
   public static JsonBinding<U> jsonBinding() {
     final Lazy<JsonBinding<Short>> f_int = new Lazy<>(() -> JsonBindings.SHORT);
     final Lazy<JsonBinding<String>> f_string = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<Void>> f_void = new Lazy<>(() -> JsonBindings.VOID);
     final Factory<U> _factory = FACTORY;
 
     return new JsonBinding<U>() {
@@ -137,6 +167,8 @@ public class U {
             return JsonBindings.unionToJson("f_int", _value.getF_int(), f_int.get());
           case F_STRING:
             return JsonBindings.unionToJson("f_string", _value.getF_string(), f_string.get());
+          case F_VOID:
+            return JsonBindings.unionToJson("f_void", null, null);
         }
         return null;
       }
@@ -148,6 +180,9 @@ public class U {
         }
         else if (_key.equals("f_string")) {
           return U.f_string(JsonBindings.unionValueFromJson(_json, f_string.get()));
+        }
+        else if (_key.equals("f_void")) {
+          return U.f_void();
         }
         throw new IllegalStateException();
       }

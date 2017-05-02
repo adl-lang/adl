@@ -41,6 +41,108 @@ operator==( const A &a, const A &b )
         a.f_bool == b.f_bool ;
 }
 
+E::E()
+    : d_(V1), p_(0)
+{
+}
+
+E E::mk_v1()
+{
+    return E( V1, 0 );
+}
+
+E E::mk_v2()
+{
+    return E( V2, 0 );
+}
+
+E::E( const E & v )
+    : d_(v.d_), p_(copy(v.d_,v.p_))
+{
+}
+
+E::~E()
+{
+    free(d_,p_);
+}
+
+E & E::operator=( const E & o )
+{
+    free(d_,p_);
+    d_ = o.d_;
+    p_ = copy( o.d_, o.p_ );
+    return *this;
+}
+
+void E::set_v1()
+{
+    if( d_ != V1 )
+    {
+        free(d_,p_);
+        d_ = V1;
+        p_ = 0;
+    }
+}
+
+void E::set_v2()
+{
+    if( d_ != V2 )
+    {
+        free(d_,p_);
+        d_ = V2;
+        p_ = 0;
+    }
+}
+
+E::E(DiscType d, void *p)
+    : d_(d), p_(p)
+{
+}
+
+void E::free(DiscType d, void *p)
+{
+    switch( d )
+    {
+        case V1: return;
+        case V2: return;
+    }
+}
+
+void * E::copy( DiscType d, void *p )
+{
+    switch( d )
+    {
+        case V1: return 0;
+        case V2: return 0;
+    }
+    return 0;
+}
+
+bool
+operator<( const E &a, const E &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case E::V1: return false;
+        case E::V2: return false;
+    }
+    return false;
+}
+
+bool
+operator==( const E &a, const E &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case E::V1: return true;
+        case E::V2: return true;
+    }
+    return false;
+}
+
 U::U()
     : d_(F_INT), p_(new int16_t(0))
 {
@@ -54,6 +156,11 @@ U U::mk_f_int( const int16_t & v )
 U U::mk_f_string( const std::string & v )
 {
     return U( F_STRING, new std::string(v) );
+}
+
+U U::mk_f_void()
+{
+    return U( F_VOID, 0 );
 }
 
 U::U( const U & v )
@@ -104,6 +211,16 @@ const std::string & U::set_f_string(const std::string &v)
     return *(std::string *)p_;
 }
 
+void U::set_f_void()
+{
+    if( d_ != F_VOID )
+    {
+        free(d_,p_);
+        d_ = F_VOID;
+        p_ = 0;
+    }
+}
+
 U::U(DiscType d, void *p)
     : d_(d), p_(p)
 {
@@ -115,6 +232,7 @@ void U::free(DiscType d, void *p)
     {
         case F_INT: delete (int16_t *)p; return;
         case F_STRING: delete (std::string *)p; return;
+        case F_VOID: return;
     }
 }
 
@@ -124,6 +242,7 @@ void * U::copy( DiscType d, void *p )
     {
         case F_INT: return new int16_t(*(int16_t *)p);
         case F_STRING: return new std::string(*(std::string *)p);
+        case F_VOID: return 0;
     }
     return 0;
 }
@@ -137,6 +256,7 @@ operator<( const U &a, const U &b )
     {
         case U::F_INT: return a.f_int() < b.f_int();
         case U::F_STRING: return a.f_string() < b.f_string();
+        case U::F_VOID: return false;
     }
     return false;
 }
@@ -149,6 +269,7 @@ operator==( const U &a, const U &b )
     {
         case U::F_INT: return a.f_int() == b.f_int();
         case U::F_STRING: return a.f_string() == b.f_string();
+        case U::F_VOID: return true;
     }
     return false;
 }
@@ -200,6 +321,66 @@ Serialisable<ADL::test3::A>::serialiser( const SerialiserFlags &sf )
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
+typename Serialiser<ADL::test3::E>::Ptr
+Serialisable<ADL::test3::E>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test3::E _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : sf_(sf)
+            {}
+        
+        SerialiserFlags sf_;
+        mutable typename Serialiser<Void>::Ptr v1_;
+        mutable typename Serialiser<Void>::Ptr v2_;
+        
+        typename Serialiser<Void>::Ptr v1_s() const
+        {
+            if( !v1_ )
+                v1_ = Serialisable<Void>::serialiser(sf_);
+            return v1_;
+        }
+        
+        typename Serialiser<Void>::Ptr v2_s() const
+        {
+            if( !v2_ )
+                v2_ = Serialisable<Void>::serialiser(sf_);
+            return v2_;
+        }
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            switch( v.d() )
+            {
+                case ADL::test3::E::V1: json.stringV( "v1" ); break;
+                case ADL::test3::E::V2: json.stringV( "v2" ); break;
+            }
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            if( json.type() == JsonReader::STRING )
+            {
+                if( json.stringV() == "v1" )
+                    v.set_v1();
+                else if( json.stringV() == "v2" )
+                    v.set_v2();
+                else
+                    throw json_parse_failure();
+                json.next();
+                return;
+            }
+            throw json_parse_failure();
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+}
+
 typename Serialiser<ADL::test3::U>::Ptr
 Serialisable<ADL::test3::U>::serialiser( const SerialiserFlags &sf )
 {
@@ -214,6 +395,7 @@ Serialisable<ADL::test3::U>::serialiser( const SerialiserFlags &sf )
         SerialiserFlags sf_;
         mutable typename Serialiser<int16_t>::Ptr f_int_;
         mutable typename Serialiser<std::string>::Ptr f_string_;
+        mutable typename Serialiser<Void>::Ptr f_void_;
         
         typename Serialiser<int16_t>::Ptr f_int_s() const
         {
@@ -229,6 +411,13 @@ Serialisable<ADL::test3::U>::serialiser( const SerialiserFlags &sf )
             return f_string_;
         }
         
+        typename Serialiser<Void>::Ptr f_void_s() const
+        {
+            if( !f_void_ )
+                f_void_ = Serialisable<Void>::serialiser(sf_);
+            return f_void_;
+        }
+        
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
@@ -236,12 +425,22 @@ Serialisable<ADL::test3::U>::serialiser( const SerialiserFlags &sf )
             {
                 case ADL::test3::U::F_INT: writeField( json, f_int_s(), "f_int", v.f_int() ); break;
                 case ADL::test3::U::F_STRING: writeField( json, f_string_s(), "f_string", v.f_string() ); break;
+                case ADL::test3::U::F_VOID: json.stringV( "f_void" ); break;
             }
             json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
         {
+            if( json.type() == JsonReader::STRING )
+            {
+                if( json.stringV() == "f_void" )
+                    v.set_f_void();
+                else
+                    throw json_parse_failure();
+                json.next();
+                return;
+            }
             if( json.type() == JsonReader::START_OBJECT )
             {
                 match( json, JsonReader::START_OBJECT );
