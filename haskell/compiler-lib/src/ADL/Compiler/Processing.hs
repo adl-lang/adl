@@ -580,12 +580,19 @@ literalForTypeExpr te v = litForTE Map.empty te v
           (Just f) -> do
             ftype <- substTypeParams pm (f_type f)
             lit <- litForTE pm ftype v
-            return (k,lit)
+            Right (k,lit)
           Nothing ->
             Left (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
         _ -> Left "literal union must have a single key/value pair"
+    unionField m decl u tes (JSON.String k) = do
+      pm <- createParamMap (u_typeParams u) tes m
+      case find ((k==).f_name) (u_fields u) of
+          (Just f) | isVoidType (f_type f) -> Right (k,Literal (f_type f) (LPrimitive JSON.Null))
+                   | otherwise -> Left (T.concat ["Field ",k, " in literal for ", d_name decl, " must be an object"])
+          Nothing ->
+            Left (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
     unionField _ _ _ _ _ = Left "expected an object"
-
+ 
     typedefLiteral m t tes v = do
       pm <- createParamMap (t_typeParams t) tes m
       te <- substTypeParams pm (t_typeExpr t)

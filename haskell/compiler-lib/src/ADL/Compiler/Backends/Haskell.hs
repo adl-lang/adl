@@ -504,6 +504,9 @@ generateLiteral te v =  generateLV Map.empty te v
       where
         m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
 
+    generateUnion m d u tes (JS.String fname) = do
+      unionCtor d fname
+
     generateUnion m d u tes (JS.Object hm) = do
       ctor <- unionCtor d fname
       if isVoidType te

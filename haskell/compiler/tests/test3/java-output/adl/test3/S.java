@@ -353,8 +353,8 @@ public class S<T> {
           Factories.arrayList("xy", "ab"),
           new A((short)0, "xyz", false),
           U.f_int((short)45),
-          f_u1.get().create(),
-          f_e.get().create(),
+          U.f_void(null),
+          E.v2(null),
           f_t.get().create(),
           new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
           Factories.stringMap("a", 45, "b", 47)
@@ -470,8 +470,8 @@ public class S<T> {
           _obj.has("f_vstring") ? JsonBindings.fieldFromJson(_obj, "f_vstring", f_vstring.get()) : Factories.arrayList("xy", "ab"),
           _obj.has("f_a") ? JsonBindings.fieldFromJson(_obj, "f_a", f_a.get()) : new A((short)0, "xyz", false),
           _obj.has("f_u") ? JsonBindings.fieldFromJson(_obj, "f_u", f_u.get()) : U.f_int((short)45),
-          JsonBindings.fieldFromJson(_obj, "f_u1", f_u1.get()),
-          JsonBindings.fieldFromJson(_obj, "f_e", f_e.get()),
+          _obj.has("f_u1") ? JsonBindings.fieldFromJson(_obj, "f_u1", f_u1.get()) : U.f_void(null),
+          _obj.has("f_e") ? JsonBindings.fieldFromJson(_obj, "f_e", f_e.get()) : E.v2(null),
           JsonBindings.fieldFromJson(_obj, "f_t", f_t.get()),
           _obj.has("f_bint16") ? JsonBindings.fieldFromJson(_obj, "f_bint16", f_bint16.get()) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
           _obj.has("f_smap") ? JsonBindings.fieldFromJson(_obj, "f_smap", f_smap.get()) : Factories.stringMap("a", 45, "b", 47)

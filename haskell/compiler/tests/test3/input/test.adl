@@ -58,9 +58,9 @@ struct S<T>
               "f_string" : "xyz" };
 
     U f_u = { "f_int" : 45 };
-    U f_u1;
+    U f_u1 = "f_void";
 
-    E f_e;
+    E f_e = "v2";
 
     T f_t;
 
