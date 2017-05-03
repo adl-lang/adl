@@ -311,7 +311,7 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
   , td_hashfn = \v -> template "$1.hashCode()" [v]
   }
   where
-    genLiteralText' (Literal te@(TypeExpr tref []) LDefault) | not (refEnumeration tref) = do
+    genLiteralText' (Literal te@(TypeExpr _ []) LDefault) | not (refEnumeration te) = do
       typeExpr <- genTypeExpr te
       return (template "new $1()" [typeExpr])
     genLiteralText' (Literal te LDefault) = do
@@ -324,9 +324,15 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
     genLiteralText' (Literal te (LUnion ctor l)) = do
       typeExpr <- genTypeExpr te
       lit <- genLiteralText l
-      return (template "$1.$2($3)" [typeExpr, ctor, lit ])
-
-    refEnumeration (RT_Named (_,Decl{d_type=Decl_Union u})) = isEnumeration u
+      case te of
+       te | refEnumeration te -> return (template "$1.$2" [typeExpr, discriminatorName0 ctor])
+          | isVoid l -> return (template "$1.$2()" [typeExpr, ctor])
+          | otherwise -> return (template "$1.$2($3)" [typeExpr, ctor, lit ])
+       where
+         isVoid (Literal _ (LPrimitive JSON.Null)) = True
+         isVoid _ = False
+                 
+    refEnumeration (TypeExpr (RT_Named (_,Decl{d_type=Decl_Union u})) []) = isEnumeration u
     refEnumeration _ = False
 
 -- a custom type
@@ -770,8 +776,11 @@ factoryTypeArg n = "factory" <> n
 classFromScopedName :: ScopedName -> JavaClass
 classFromScopedName scopedName = javaClass (JavaPackage (unModuleName (sn_moduleName scopedName))) (sn_name scopedName)
 
+discriminatorName0 :: T.Text -> Ident
+discriminatorName0 = T.toUpper . unreserveWord
+
 discriminatorName :: FieldDetails -> Ident
-discriminatorName = T.toUpper . unreserveWord . f_name . fd_field
+discriminatorName = discriminatorName0 . f_name . fd_field
 
 leadSpace :: T.Text -> T.Text
 leadSpace "" = ""
