@@ -1,5 +1,5 @@
 name:                adl-compiler
-version:             0.4
+version:             0.4.1
 synopsis:            A compiler for the Algebraic Data Language (ADL)
 -- description:         
 license:             BSD3
