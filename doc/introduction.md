@@ -3,11 +3,11 @@
 ADL (Algebraic Data Language) is a framework for building multi language systems. It consists of
 a domain specific language (DSL) for describing algebraic data types,
 code generators for several target languages, and runtimes for these
-languages.
+languages. Langage interoperability is ensured through a consistent json serialisation schema.
 
 # Example
 
-Here is a tiny ADL example:
+Here is a small ADL example:
 
 ```
 module picture
@@ -17,7 +17,7 @@ module picture
         Circle circle;
         Rectangle rectangle;
         Vector<Picture> composed;
-        TranslatedPicture translated;
+        Translated<Picture> translated;
     };
 
     struct Circle
@@ -31,14 +31,13 @@ module picture
         Double height;
     };
 
-    struct TranslatedPicture
+    struct Translated<T>
     {
-        Double xoffset;
-        Double yoffset;
-        Picture picture;
+        Double xoffset = 0;
+        Double yoffset = 0;
+        T object;
     };
 };
-
 ```
 
 This specifies a data type representing a Picture. In this example a
