@@ -10,7 +10,7 @@ The language:
 
    * supports parameterised data types
 
-   * can describe communications based upon the [concurrent actor model](http://en.wikipedia.org/wiki/Actor_model)
+   * supports field defaulting with comprehensive literal support.
 
 Together these features facilitate the interoperation between a
 variety of object oriented and functional programming languages.  The
@@ -29,8 +29,8 @@ declarations, and then a list of type definitions:
 
     module demo.sample
     {
-        import sys.rpc.Rpc;
         import sys.types.*;
+        import demo.types.Foo;
 
         ... type definitions ...        
     };
@@ -50,19 +50,16 @@ with a single module, but may not span across modules.
 
 ADL supports the following primitive types:
 
-| Type                         | Description                                            | Default   |
-|------------------------------|--------------------------------------------------------|-----------|
-| Int8,Int16,Int32,Int64       | Signed integers                                        | 0         |
-| Word8,Word16,Word32,Word64   | Unsigned integers                                      | 0         |
-| Bool                         | boolean values                                         | false     |
-| Void                         | The unary or "null" type                               | null      |
-| Float,Double                 | floating point values                                  | 0         |
-| String                       | A unicode text string                                  | ""        |
-| `Vector<T>`                  | A vector/array of type T                               | []        |
-| `StringMap<T>`                | A map with string keys and values of type T           | {}        |
-| `Sink<T>`                    | A communications endpoint accepting messages of type T | null sink |
-
-The null sink drops all messages that are sent to it.
+| Type                         | Description                                            |
+|------------------------------|--------------------------------------------------------|
+| Int8,Int16,Int32,Int64       | Signed integers                                        |
+| Word8,Word16,Word32,Word64   | Unsigned integers                                      |
+| Bool                         | boolean values                                         |
+| Void                         | The unary or "null" type                               |
+| Float,Double                 | floating point values                                  |
+| String                       | A unicode text string                                  |
+| `Vector<T>`                  | A vector/array of type T                               |
+| `StringMap<T>`                | A map with string keys and values of type T           |
 
 # Type Definitions
 
@@ -94,7 +91,7 @@ A struct definition may take type parameters. A simple example from the standard
 
 ## union
 
-A union definition specifies a tagged union (ie an algebraic sum
+A union definition specifies a discriminated union (ie an algebraic sum
 type). Other than a different keyword, it has identical syntax to a
 struct definition:
 
@@ -138,7 +135,7 @@ definitions may also take type parameters:
 
 # Standard Library
 
-In addition to the builtin language primitives the ADL standard library
+In addition to the builtin language primitives the [ADL standard library][stdlib]
 defines the following:
 
 | Module    | Type        | Description                                                                    |
@@ -148,24 +145,17 @@ defines the following:
 | sys.types | Maybe<A>    | An optional value of type A                                                    |
 | sys.types | Map<K,V>    | A map with keys of type K and values of type V                                 |
 | sys.types | Set<A>      | A set of values of type A                                                      |
-| sys.rpc   | Rpc<I,O>    | The payload for an RPC request with parameters of type I, and result of type O |
-| sys.rpc   | RpcSvc<I,O> | A service accepting RPC requests of type Rpc<I,O>                              |
 
 Where there is natural support for these types in a target language or
 it's standard library, appropriate custom mappings are used.
 
+[stdlib]:https://github.com/timbod7/adl/blob/master/adl/stdlib/sys/types.adl
+
 # Default Values
-
-All ADL defined types have an implicit default value:
-
-   - Primitives have the defaults shown in the table above.
-   - A struct's default value has each field is set to it's own types default value.
-   - A union's default value is the first discriminator, with it's own types default value.
-   - A typedef's default value is inherited from the underlying type
-   - A newtype's default value is inherited from the underlying type
-
-In addition, it is possible to override the default values for some
-type definitions, by providing literal values in appropriate places in
+ 
+Default values can specified for fields. Such fields then become optional
+in serialized values, and hence facilitate backwards compatibility. Default
+literal values are specified in appropriate places in
 the ADL definitions. A literal value is specified in JSON form, structured
 according to the json [serialization specification](serialization.md).
 
