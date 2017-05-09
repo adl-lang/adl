@@ -650,7 +650,10 @@ generateRuntime jf fileWriter imports = do
           toGenerate
             =  imports
             <> (if Set.member (javaClass rtpackage "JsonBinding") imports
-                  then Set.singleton (javaClass rtpackage "JsonParseException")
+                  then Set.fromList
+                    [ javaClass rtpackage "JsonParseException"
+                    , javaClass rtpackage "JsonHelpers"
+                    ]      
                   else mempty
                )
             <> (Set.fromList
