@@ -78,6 +78,16 @@ data TSImport = TSImport {
   i_fromModule :: TSModuleName
 }
 
+-- data structure to capture all of the details
+-- we need for a field
+
+data FieldDetails = FieldDetails {
+  fd_field :: Field CResolvedType,
+  fd_name :: T.Text,
+  fd_typeExprStr :: T.Text,
+  fd_defValue :: Maybe T.Text
+};
+
 -- | Run this backend on a list of ADL modules. Check each module
 -- for validity, and then generate the code for it.
 generate :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
@@ -132,9 +142,13 @@ genModule m = do
 
 genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
 genStruct  m decl struct = do
-  addDeclaration placeholder
-  where
-    placeholder = ctemplate "// FIXME: struct for $1 to be implemented" [d_name decl]
+  fds <- mapM genFieldDetails (s_fields struct)
+  let interface =  cblock1 (template "interface $1$2" [d_name decl,typeParams]) fields
+      typeParams = case s_typeParams struct of
+         [] -> ""
+         _ -> "<" <> T.intercalate "," (s_typeParams struct) <> ">"
+      fields = mconcat [ctemplate "$1 : $2" [fd_name fd, fd_typeExprStr fd] | fd <- fds]
+  addDeclaration interface
 
 genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnion  m decl  union = do
@@ -169,3 +183,18 @@ genModuleCode mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText 10000 code)
       where
         mpath = T.intercalate "/" (mn_package mn <> [mn_name mn])
         mn = i_fromModule i
+
+genFieldDetails :: Field CResolvedType -> CState FieldDetails
+genFieldDetails field = do
+  typeExprStr <- genTypeExpr (f_type field)
+  defValueStr <- traverse (genLiteralVal (f_type field)) (f_default field)
+  return (FieldDetails field (f_name field) typeExprStr defValueStr)
+
+-- | Generate the typescript type given an ADL type expression
+genTypeExpr :: CTypeExpr -> CState T.Text
+genTypeExpr _ = return "TYPE??"  -- FIXME: implement
+
+-- | Generate the typescript literal value for the given ADL type and
+-- literal
+genLiteralVal :: CTypeExpr -> JSON.Value -> CState T.Text
+genLiteralVal _ _ = return "LITERAL??" -- FIXME: implement
