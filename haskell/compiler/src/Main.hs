@@ -20,6 +20,7 @@ import ADL.Compiler.Backends.AST as A
 import ADL.Compiler.Backends.Cpp as C
 import ADL.Compiler.Backends.Java as J
 import ADL.Compiler.Backends.Javascript as JS
+import ADL.Compiler.Backends.Typescript as TS
 import ADL.Compiler.DataFiles
 import ADL.Compiler.Utils
 import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
@@ -268,7 +269,7 @@ runJava args0 =
 
     updateCodeGenProfile f = updateBackendFlags (\jf ->jf{jf_codeGenProfile=f (jf_codeGenProfile jf)})
 
-runJavaScript args0 =
+runJavascript args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
         libDir <- liftIO $ getLibDir
@@ -280,6 +281,27 @@ runJavaScript args0 =
     header = "Usage: adl javascript [OPTION...] files..."
 
     flags0 libDir = JS.JavascriptFlags {
+    }
+
+    optDescs =
+      [ searchDirOption addToSearchPath
+      , outputDirOption setOutputDir
+      , noOverwriteOption setNoOverwrite
+      , verboseOption setVerbose
+      ]
+
+runTypescript args0 =
+  case getOpt Permute optDescs args0 of
+    (opts,args,[]) -> do
+        libDir <- liftIO $ getLibDir
+        af <- getAdlFlags ["adl-ts"]
+        let flags = buildFlags af (flags0 libDir) opts
+        TS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
+    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+  where
+    header = "Usage: adl typescript [OPTION...] files..."
+
+    flags0 libDir = TS.TypescriptFlags {
     }
 
     optDescs =
@@ -306,6 +328,7 @@ usage = T.intercalate "\n"
   , "       adlc cpp [OPTION..] <modulePath>..."
   , "       adlc java [OPTION..] <modulePath>..."
   , "       adlc javascript [OPTION..] <modulePath>..."
+  , "       adlc typescript [OPTION..] <modulePath>..."
   , "       adlc show --version"
   , "       adlc show --adlstdlib"
   ]    
@@ -318,7 +341,8 @@ main = do
     ("ast":args) -> runAst args
     ("cpp":args) -> runCpp args
     ("java":args) -> runJava args
-    ("javascript":args) -> runJavaScript args
+    ("javascript":args) -> runJavascript args
+    ("typescript":args) -> runTypescript args
     ("show":args) -> runShow args
     _ -> eioError usage
   where
