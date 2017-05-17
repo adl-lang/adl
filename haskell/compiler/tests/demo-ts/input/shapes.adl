@@ -1,0 +1,17 @@
+module shapes {
+    import sys.types.Nullable;
+    type Color = String;
+
+    struct Circle
+    {
+        Double radius;
+        Nullable<Color> color;
+    };
+    /// Testing multiline comment.
+    /// This is the second line.
+    struct Rectangle
+    {
+        Double width;
+        Double height;
+    };
+};

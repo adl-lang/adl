@@ -25,6 +25,7 @@ import qualified ADL.Compiler.Backends.Cpp as CPP
 import qualified ADL.Compiler.Backends.AST as AST
 import qualified ADL.Compiler.Backends.Java as J
 import qualified ADL.Compiler.Backends.Javascript as JS
+import qualified ADL.Compiler.Backends.Typescript as TS
 
 data CodeGenResult = MatchOutput
                    | CompilerFailed T.Text
@@ -146,6 +147,21 @@ runJsBackend ipaths mpaths epath = do
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ JS.generate af jf fileWriter mpaths
   processCompilerOutput epath tempDir er 
+
+runTsBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
+runTsBackend ipaths mpaths epath = do
+  tdir <- getTemporaryDirectory
+  tempDir <- createTempDirectory tdir "adlt.test."
+  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
+      js = TS.TypescriptFlags {}
+      fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
+  er <- unEIO $ TS.generate af js fileWriter mpaths
+  processCompilerOutput epath tempDir er
+
+runTsBackend1 mpath = runTsBackend [ipath,stdsrc] [mpath] epath
+  where
+    ipath = takeDirectory mpath
+    epath = takeDirectory ipath </> "ts-output"
 
 stdsrc :: FilePath
 stdsrc = "../../../haskell/compiler/lib/adl"
@@ -310,6 +326,13 @@ runTests = do
       collectResults (runJsBackend [stdsrc] ["test21/input/test.adl"] "test21/js-output")
         `shouldReturn` MatchOutput
     
+  describe "adlc typescript backend" $ do
+    it "generates expected output for various structures" $
+      collectResults (runTsBackend [stdsrc] ["test2/input/test.adl"] "test2/ts-output")
+        `shouldReturn` MatchOutput
+    it "Generates the correct code for the picture demo" $
+      collectResults (runTsBackend [stdsrc, "demo-ts/input"] ["demo-ts/input/shapes.adl", "demo-ts/input/picture.adl"] "demo-ts/ts-output")
+        `shouldReturn` MatchOutput
   where
     collectResults1 resultvar test = do
       r <- test
