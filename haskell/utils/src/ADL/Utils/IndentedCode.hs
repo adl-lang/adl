@@ -4,15 +4,18 @@
 module ADL.Utils.IndentedCode where
 
 import qualified Data.Text as T
+import qualified Data.List as L
 
 import Data.Monoid
 
 import ADL.Utils.Format
 
 data Code = CEmpty
-          | CLine T.Text      
+          | CLine T.Text
+          | CSpan Code Code
           | CAppend Code Code
           | CIndent Code
+          deriving (Show)
 
 instance Monoid Code where
   mempty = CEmpty
@@ -20,6 +23,9 @@ instance Monoid Code where
 
 cline :: T.Text -> Code
 cline t = CLine t
+
+cspan :: Code -> Code -> Code
+cspan c1 c2 = CSpan c1 c2
 
 clineN :: [T.Text] -> Code
 clineN ts = mconcat (map CLine ts)
@@ -50,12 +56,24 @@ codeText maxLineLength c = mkLines "" c
   where
     mkLines i CEmpty = []
     mkLines i (CAppend c1 c2) = mkLines i c1 <> mkLines i c2
+    mkLines i (CSpan c1 c2) = joinSpannedText i (mkLines i c1) (mkLines i c2)
     mkLines i (CIndent c) = mkLines (indentStr <> i) c
     mkLines i (CLine "") = [""]
     mkLines i (CLine t) = case breakLine (maxLineLength - T.length i) t of
       [] -> []
       (l1:ls) -> (i <> l1):[i <> i <> l | l <- ls]
     indentStr = "  "
+
+joinSpannedText :: T.Text -> [T.Text] -> [T.Text] -> [T.Text]
+joinSpannedText _ [] [] = []
+joinSpannedText _ list1 [] = list1
+joinSpannedText _ [] list2 = list2
+joinSpannedText prefix list1 list2 =
+  L.init list1 <>  [joinedLine] <> L.tail list2
+  where
+    joinedLine = (L.last list1) <> lines2HeadUnindented
+    (_, lines2HeadUnindented) = T.splitAt (T.length prefix) list2Head
+    list2Head = L.head list2
 
 breakLine :: Int -> T.Text -> [T.Text]
 breakLine maxlength t
