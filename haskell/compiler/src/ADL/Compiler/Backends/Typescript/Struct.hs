@@ -11,9 +11,10 @@ import           ADL.Compiler.Backends.Typescript.DataTypes (CDecl, CModule,
                                                              CState)
 
 genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
-genStruct _ decl struct = do
+genStruct m decl struct@Struct{s_typeParams=parameters} = do
   fds <- mapM genFieldDetails (s_fields struct)
   let structName = capitalise (d_name decl)
       renderedComments = renderCommentsForDeclaration decl
-  addDeclaration $ CAppend renderedComments (renderInterface structName (s_typeParams struct) fds False)
+  addDeclaration $ renderTypeDescription m decl parameters
   addDeclaration $ renderFactory structName (s_typeParams struct) fds
+  addDeclaration $ CAppend renderedComments (renderInterface structName (s_typeParams struct) fds False)

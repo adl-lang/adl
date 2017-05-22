@@ -76,6 +76,13 @@ addModulesImport modules _ = addImport importAsName tsImport
 
 -- * Pure functions
 
+renderTypeDescription :: CModule -> CDecl -> [Ident] -> Code
+renderTypeDescription Module{m_name=ModuleName{unModuleName=moduleParts}} decl parameters =
+  cblock functionHeader (ctemplate "return {ref: '$1.$2'};" [T.intercalate "." moduleParts, d_name decl])
+  where
+    parametersCode = renderTypeParams parameters
+    functionHeader = template "export function get$1Desc$2(): TypeDesc<$1$2>" [d_name decl, parametersCode]
+
 renderLiteralValue :: CTypeExpr -> JSON.Value -> Code
 renderLiteralValue (TypeExpr (RT_Primitive P_Double) _) (JSON.Number value) = cline $ litNumber value
 renderLiteralValue (TypeExpr (RT_Primitive P_String) _) (JSON.String value) = cline value

@@ -70,8 +70,13 @@ genModuleCode :: ModuleFile -> LBS.ByteString
 genModuleCode mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText 10000 code)))
   where
     code
-      =  mconcat [genImport i | i <- Map.elems (mfImports mf)]
+      =  cline "/**"
+      <> cline " * This is an auto generated typescript file compiled with the adl compiler."
+      <> cline " */"
+      <> cline "// This file requires the adl runtime typescript file to be located in the same directory."
+      <> cline "import { TypeDesc } from './adl/runtime';"
       <> cline ""
+      <> mconcat [genImport i | i <- Map.elems (mfImports mf)]
       <> mconcat (intersperse (cline "") (mfDeclarations mf))
 
 genImport :: TSImport -> Code
