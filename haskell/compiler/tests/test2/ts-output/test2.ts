@@ -1,3 +1,13 @@
+/**
+ * This is an auto generated typescript file compiled with the adl compiler.
+ */
+// This file requires the adl runtime typescript file to be located in the same directory.
+import { TypeRef } from './runtime/adl';
+
+export interface Tree<T> {
+  children: Tree<T>[];
+  value: T;
+}
 
 export function makeTree<T>(
   input: {
@@ -11,9 +21,13 @@ export function makeTree<T>(
   };
 }
 
-export interface Tree<T> {
-  children: Tree<T>[];
-  value: T;
+export function refTree<T>(): TypeRef<Tree<T>> {
+  return {ref: 'test2.Tree'};
+}
+
+export interface S4<T> {
+  f1: S3<string>;
+  f2: S3<T>;
 }
 
 export function makeS4<T>(
@@ -28,9 +42,18 @@ export function makeS4<T>(
   };
 }
 
-export interface S4<T> {
-  f1: S3<string>;
-  f2: S3<T>;
+export function refS4<T>(): TypeRef<S4<T>> {
+  return {ref: 'test2.S4'};
+}
+
+/**
+ * A generic structure.
+ */
+export interface S3<T> {
+  f1: string;
+  f2: number;
+  f3: T;
+  f4: T[];
 }
 
 export function makeS3<T>(
@@ -49,14 +72,17 @@ export function makeS3<T>(
   };
 }
 
+export function refS3<T>(): TypeRef<S3<T>> {
+  return {ref: 'test2.S3'};
+}
+
 /**
- * A generic structure.
+ * A structure containing a vector.
  */
-export interface S3<T> {
+export interface S2 {
   f1: string;
   f2: number;
-  f3: T;
-  f4: T[];
+  f3: number[];
 }
 
 export function makeS2(
@@ -73,13 +99,17 @@ export function makeS2(
   };
 }
 
+export function refS2(): TypeRef<S2> {
+  return {ref: 'test2.S2'};
+}
+
 /**
- * A structure containing a vector.
+ * A structure containing primitives.
+ * It has two fields: an integer x and a String y.
  */
-export interface S2 {
-  f1: string;
-  f2: number;
-  f3: number[];
+export interface S1 {
+  x: number;
+  y: string;
 }
 
 export function makeS1(
@@ -94,13 +124,14 @@ export function makeS1(
   };
 }
 
+export function refS1(): TypeRef<S1> {
+  return {ref: 'test2.S1'};
+}
+
 /**
- * A structure containing primitives.
- * It has two fields: an integer x and a String y.
+ * An empty structure.
  */
-export interface S1 {
-  x: number;
-  y: string;
+export interface S0 {
 }
 
 export function makeS0(
@@ -111,10 +142,12 @@ export function makeS0(
   };
 }
 
-/**
- * An empty structure.
- */
-export interface S0 {
+export function refS0(): TypeRef<S0> {
+  return {ref: 'test2.S0'};
 }
 
-type IntTree = Tree<number>;
+export type IntTree = Tree<number>;
+
+export function refIntTree(): TypeRef<IntTree> {
+  return {ref: 'test2.IntTree'};
+}

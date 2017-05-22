@@ -153,7 +153,11 @@ runTsBackend ipaths mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adlt.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
-      js = TS.TypescriptFlags {}
+      js = TS.TypescriptFlags {
+        TS.tsIncludeRuntime=False,
+        TS.tsRuntimeDir=tempDir </> "runtime",
+        TS.tsLibDir="../../../haskell/compiler/lib"
+      }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
   er <- unEIO $ TS.generate af js fileWriter mpaths
   processCompilerOutput epath tempDir er
