@@ -1,4 +1,19 @@
+/**
+ * This is an auto generated typescript file compiled with the adl compiler.
+ */
+// This file requires the adl runtime typescript file to be located in the same directory.
+import { TypeDesc } from './adl/runtime';
+
 import * as shapes from './shapes';
+/**
+ * Testing doc comment for Translated.
+ */
+export interface Translated<T> {
+  layer: number;
+  object: T;
+  xoffset: number;
+  yoffset: number;
+}
 
 export function makeTranslated<T>(
   input: {
@@ -16,14 +31,8 @@ export function makeTranslated<T>(
   };
 }
 
-/**
- * Testing doc comment for Translated.
- */
-export interface Translated<T> {
-  layer: number;
-  object: T;
-  xoffset: number;
-  yoffset: number;
+export function getTranslatedDesc<T>(): TypeDesc<Translated<T>> {
+  return {ref: 'picture.Translated'};
 }
 
 export enum Terminal {
@@ -32,7 +41,15 @@ export enum Terminal {
   t3,
 }
 
-type PictureRow = Picture[];
+export function getTerminalDesc(): TypeDesc<Terminal> {
+  return {ref: 'picture.Terminal'};
+}
+
+export type PictureRow = Picture[];
+
+export function getPictureRowDesc(): TypeDesc<PictureRow> {
+  return {ref: 'picture.PictureRow'};
+}
 
 interface PictureCircle {
   kind: 'circle';
@@ -134,6 +151,14 @@ export function makePictureTranslated(
  */
 export type Picture = PictureCircle | PictureComposed | PictureEmpty | PictureNumbers | PictureRectangle | PictureTranslated;
 
+export function getPictureDesc(): TypeDesc<Picture> {
+  return {ref: 'picture.Picture'};
+}
+
+export interface ModernArtGallery {
+  circle: shapes.Circle;
+}
+
 export function makeModernArtGallery(
   input: {
     circle?: shapes.Circle,
@@ -143,26 +168,41 @@ export function makeModernArtGallery(
     circle: input.circle === undefined ? {
       radius: 10,
       color: '#f00',
+      center: {
+        x: 10,
+        y: 10,
+      },
     } : input.circle,
   };
 }
 
-export interface ModernArtGallery {
-  circle: shapes.Circle;
+export function getModernArtGalleryDesc(): TypeDesc<ModernArtGallery> {
+  return {ref: 'picture.ModernArtGallery'};
+}
+
+export interface Gallery {
+  artwork: Picture[];
+  moved: Translated<Picture>;
 }
 
 export function makeGallery(
   input: {
     artwork: Picture[],
+    moved: Translated<Picture>,
   }
 ): Gallery {
   return {
     artwork: input.artwork,
+    moved: input.moved,
   };
 }
 
-export interface Gallery {
-  artwork: Picture[];
+export function getGalleryDesc(): TypeDesc<Gallery> {
+  return {ref: 'picture.Gallery'};
+}
+
+export interface ContemporaryArtGallery {
+  artwork: number[];
 }
 
 export function makeContemporaryArtGallery(
@@ -175,8 +215,13 @@ export function makeContemporaryArtGallery(
   };
 }
 
-export interface ContemporaryArtGallery {
-  artwork: number[];
+export function getContemporaryArtGalleryDesc(): TypeDesc<ContemporaryArtGallery> {
+  return {ref: 'picture.ContemporaryArtGallery'};
+}
+
+export interface CircleAndBlankWall {
+  circle1: shapes.Circle;
+  circle2: shapes.Circle;
 }
 
 export function makeCircleAndBlankWall(
@@ -189,15 +234,22 @@ export function makeCircleAndBlankWall(
     circle1: input.circle1 === undefined ? {
       radius: 5,
       color: '#f00',
+      center: {
+        x: 10,
+        y: 10,
+      },
     } : input.circle1,
     circle2: input.circle2 === undefined ? {
       radius: 5,
       color: null,
+      center: {
+        x: 10,
+        y: 10,
+      },
     } : input.circle2,
   };
 }
 
-export interface CircleAndBlankWall {
-  circle1: shapes.Circle;
-  circle2: shapes.Circle;
+export function getCircleAndBlankWallDesc(): TypeDesc<CircleAndBlankWall> {
+  return {ref: 'picture.CircleAndBlankWall'};
 }

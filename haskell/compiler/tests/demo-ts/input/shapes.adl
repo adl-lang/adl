@@ -2,10 +2,17 @@ module shapes {
     import sys.types.Nullable;
     type Color = String;
 
+    struct Point
+    {
+        Double x;
+        Double y;
+    };
+
     struct Circle
     {
         Double radius;
         Nullable<Color> color;
+        Point center = {"x": 10.0, "y": 10.0};
     };
     /// Testing multiline comment.
     /// This is the second line.

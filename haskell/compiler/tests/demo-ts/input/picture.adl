@@ -33,6 +33,7 @@ module picture
 
     struct Gallery {
       Vector<Picture> artwork;
+      Translated<Picture> moved;
     };
 
     struct ModernArtGallery {
