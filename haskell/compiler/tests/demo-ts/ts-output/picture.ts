@@ -51,95 +51,89 @@ export function refPictureRow(): TypeRef<PictureRow> {
   return {ref: 'picture.PictureRow'};
 }
 
-interface PictureCircle {
+interface Picture_Circle {
   kind: 'circle';
   value: shapes.Circle;
 }
-
-interface PictureComposed {
+interface Picture_Composed {
   kind: 'composed';
   value: Picture[];
 }
-
-interface PictureEmpty {
+interface Picture_Empty {
   kind: 'empty';
 }
-
-interface PictureNumbers {
+interface Picture_Numbers {
   kind: 'numbers';
   value: number;
 }
-
-interface PictureRectangle {
+interface Picture_Rectangle {
   kind: 'rectangle';
   value: shapes.Rectangle;
 }
-
-interface PictureTranslated {
+interface Picture_Translated {
   kind: 'translated';
   value: Translated<Picture>;
 }
 
-
-export function makePictureCircle(
+export function makePicture_Circle(
   input: {
     kind: 'circle',
     value: shapes.Circle,
   }
-): PictureCircle {
+): Picture_Circle {
   return {
     kind: input.kind,
     value: input.value,
   };
 }
-export function makePictureComposed(
+export function makePicture_Composed(
   input: {
     kind: 'composed',
     value: Picture[],
   }
-): PictureComposed {
+): Picture_Composed {
   return {
     kind: input.kind,
     value: input.value,
   };
 }
-export function makePictureEmpty(
+export function makePicture_Empty(
   input: {
     kind: 'empty',
   }
-): PictureEmpty {
+): Picture_Empty {
   return {
     kind: input.kind,
   };
 }
-export function makePictureNumbers(
+export function makePicture_Numbers(
   input: {
     kind: 'numbers',
     value: number,
   }
-): PictureNumbers {
+): Picture_Numbers {
   return {
     kind: input.kind,
     value: input.value,
   };
 }
-export function makePictureRectangle(
+export function makePicture_Rectangle(
   input: {
     kind: 'rectangle',
     value: shapes.Rectangle,
   }
-): PictureRectangle {
+): Picture_Rectangle {
   return {
     kind: input.kind,
     value: input.value,
   };
 }
-export function makePictureTranslated(
+export function makePicture_Translated(
   input: {
     kind: 'translated',
     value: Translated<Picture>,
   }
-): PictureTranslated {
+): Picture_Translated {
   return {
     kind: input.kind,
     value: input.value,
@@ -149,7 +143,7 @@ export function makePictureTranslated(
 /**
  * Testing doc comment for Picture.
  */
-export type Picture = PictureCircle | PictureComposed | PictureEmpty | PictureNumbers | PictureRectangle | PictureTranslated;
+export type Picture = Picture_Circle | Picture_Composed | Picture_Empty | Picture_Numbers | Picture_Rectangle | Picture_Translated;
 
 export function refPicture(): TypeRef<Picture> {
   return {ref: 'picture.Picture'};
