@@ -18,7 +18,7 @@ import qualified Data.Text                                  as T (Text,
 -- Generate code for union declaration.
 genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnion  m decl union@Union{u_typeParams=parameters} = do
-  addDeclaration $ renderTypeDescription m decl parameters
+  addDeclaration $ renderTypeRef m decl parameters
   genUnionWithDiscriminate m decl union
 
 genUnionWithDiscriminate :: CModule -> CDecl -> Union CResolvedType -> CState ()

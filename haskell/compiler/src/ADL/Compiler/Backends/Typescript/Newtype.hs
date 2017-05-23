@@ -12,5 +12,5 @@ genNewtype  m declaration ntype@Newtype{n_typeParams=parameters} = do
   typeExprOutput <- genTypeExpr (n_typeExpr ntype)
   let
     placeholder = ctemplate "export type $1 = $2;" [d_name declaration, typeExprOutput]
-  addDeclaration $ renderTypeDescription m declaration parameters
+  addDeclaration $ renderTypeRef m declaration parameters
   addDeclaration placeholder

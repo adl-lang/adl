@@ -11,5 +11,5 @@ genTypedef m declaration typedef@Typedef{t_typeParams=parameters} = do
   typeExprOutput <- genTypeExpr (t_typeExpr typedef)
   let
     placeholder = ctemplate "export type $1 = $2;" [d_name declaration, typeExprOutput]
-  addDeclaration $ renderTypeDescription m declaration parameters
+  addDeclaration $ renderTypeRef m declaration parameters
   addDeclaration placeholder
