@@ -10,6 +10,7 @@ genTypedef :: CModule -> CDecl -> Typedef CResolvedType -> CState ()
 genTypedef m declaration typedef@Typedef{t_typeParams=parameters} = do
   typeExprOutput <- genTypeExpr (t_typeExpr typedef)
   let
-    placeholder = ctemplate "export type $1 = $2;" [d_name declaration, typeExprOutput]
+    renderedTypeParams = renderParametersExpr parameters
+    typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, renderedTypeParams, typeExprOutput]
   addDeclaration $ renderTypeRef m declaration parameters
-  addDeclaration placeholder
+  addDeclaration typeDecl

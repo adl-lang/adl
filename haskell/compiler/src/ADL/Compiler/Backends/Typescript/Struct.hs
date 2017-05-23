@@ -17,4 +17,4 @@ genStruct m decl struct@Struct{s_typeParams=parameters} = do
       renderedComments = renderCommentsForDeclaration decl
   addDeclaration $ renderTypeRef m decl parameters
   addDeclaration $ renderFactory structName (s_typeParams struct) fds
-  addDeclaration $ CAppend renderedComments (renderInterface structName (s_typeParams struct) fds False)
+  addDeclaration $ CAppend renderedComments (renderInterface structName parameters fds False)

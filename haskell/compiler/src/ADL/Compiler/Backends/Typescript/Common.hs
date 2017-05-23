@@ -32,11 +32,16 @@ genFieldDetails field = do
 -- | Generate the typescript type given an ADL type expression
 genTypeExpr :: CTypeExpr -> CState T.Text
 genTypeExpr (TypeExpr (RT_Primitive P_Double) _) = return "number"
+genTypeExpr (TypeExpr (RT_Primitive P_Float) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_String) _) = return "string"
 genTypeExpr (TypeExpr (RT_Primitive P_Int8) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Int16) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Int32) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Int64) _) = return "number"
+genTypeExpr (TypeExpr (RT_Primitive P_Word8) _) = return "number"
+genTypeExpr (TypeExpr (RT_Primitive P_Word16) _) = return "number"
+genTypeExpr (TypeExpr (RT_Primitive P_Word32) _) = return "number"
+genTypeExpr (TypeExpr (RT_Primitive P_Word64) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Bool) _) = return "boolean"
 
 genTypeExpr (TypeExpr (RT_Primitive P_Vector) [vectorEntryTypeExpr]) = do
@@ -80,16 +85,21 @@ renderTypeRef:: CModule -> CDecl -> [Ident] -> Code
 renderTypeRef Module{m_name=ModuleName{unModuleName=moduleParts}} decl parameters =
   cblock functionHeader (ctemplate "return {ref: '$1.$2'};" [T.intercalate "." moduleParts, d_name decl])
   where
-    parametersCode = renderTypeParams parameters
+    parametersCode = renderParametersExpr parameters
     functionHeader = template "export function ref$1$2(): TypeRef<$1$2>" [d_name decl, parametersCode]
 
 renderLiteralValue :: CTypeExpr -> JSON.Value -> Code
 renderLiteralValue (TypeExpr (RT_Primitive P_Double) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_String) _) (JSON.String value) = cline value
+renderLiteralValue (TypeExpr (RT_Primitive P_Float) _) (JSON.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_String) _) (JSON.String value) = ctemplate "'$1'" [value]
 renderLiteralValue (TypeExpr (RT_Primitive P_Int8) _) (JSON.Number value) = cline $ litNumber value
 renderLiteralValue (TypeExpr (RT_Primitive P_Int16) _) (JSON.Number value) = cline $ litNumber value
 renderLiteralValue (TypeExpr (RT_Primitive P_Int32) _) (JSON.Number value) = cline $ litNumber value
 renderLiteralValue (TypeExpr (RT_Primitive P_Int64) _) (JSON.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Word8) _) (JSON.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Word16) _) (JSON.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Word32) _) (JSON.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Word64) _) (JSON.Number value) = cline $ litNumber value
 renderLiteralValue (TypeExpr (RT_Primitive P_Bool) _) (JSON.Bool value)
   | value = cline "true"
   | otherwise = cline "false"
@@ -135,12 +145,7 @@ renderLiteralValForField Field{f_name=fieldName, f_type=fieldType, f_default=def
 
 renderModulePrefix :: [Ident] -> T.Text
 renderModulePrefix []      = T.pack ""
-renderModulePrefix modules = T.intercalate "." modules <> "."
-
-renderTypeParams :: [T.Text] -> T.Text
-renderTypeParams params
-  | L.null params = ""
-  | otherwise = "<" <> T.intercalate "," params <> ">"
+renderModulePrefix modules = T.intercalate "_" modules <> "."
 
 renderInterface :: InterfaceName -> ParameterNames -> [FieldDetails] -> Bool -> Code
 renderInterface name typeParams fields isPrivate =
@@ -149,7 +154,7 @@ renderInterface name typeParams fields isPrivate =
   else
     cblock (template "export interface $1$2" [name, renderedTypeParams]) renderedFields
   where
-    renderedTypeParams = renderTypeParams typeParams
+    renderedTypeParams = renderParametersExpr typeParams
     renderedFields = mconcat [renderFieldDeclaration fd ";"| fd <- sortedFds]
     sortedFds = L.sort fields
 
@@ -164,7 +169,7 @@ renderFactory :: T.Text -> ParameterNames -> [FieldDetails] -> Code
 renderFactory name typeParams fds = function
   where
     sortedFds = L.sort fds
-    renderedTypeParams = renderTypeParams typeParams
+    renderedTypeParams = renderParametersExpr typeParams
     factoryInputVariable = renderFactoryInput sortedFds
     factoryDeclaration = template "export function make$1$2" [name, renderedTypeParams]
     fieldInitialisations = renderFieldInitialisations sortedFds
@@ -206,7 +211,7 @@ renderComment _ = CEmpty
 
 renderParametersExpr :: [T.Text] -> T.Text
 renderParametersExpr []         = T.pack ""
-renderParametersExpr parameters = "<" <> T.intercalate "," parameters <> ">"
+renderParametersExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
 
 capitalise :: T.Text -> T.Text
 capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)

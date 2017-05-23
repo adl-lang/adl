@@ -2,7 +2,7 @@ import {TypeRef, isJsonParseException, jsonParseException, exceptionOn} from './
 
 /**
  * Reference field type.
- * Use a reference string to refer to either 
+ * Use a reference string to refer to either
  */
 interface Ref {
   ref: string;
@@ -144,19 +144,25 @@ export class JsonBindings {
   }
 
   serializeField(value: {}, fieldType: FieldType, fieldName: string, defaultv?: {}|null): {}|null {
-      if (isFieldPrimitive(fieldType)) {
-        return value;
-      } else if (isFieldRef(fieldType)) {
-        return this.serializeRefType(value, fieldType.ref, fieldName, defaultv);
-      } else if (isFieldComplex(fieldType)) {
-        return this.serializeComplexType(value, fieldType.app, fieldType.args, fieldName);
-      } else {
-        exceptionOn(() => true, `encountered unhandled field type ${fieldType} for field`);
-        return null;
-      }
+    if (value === undefined && !!defaultv) {
+      return defaultv;
+    }
+    if (isFieldPrimitive(fieldType)) {
+      return value;
+    } else if (isFieldRef(fieldType)) {
+      return this.serializeRefType(value, fieldType.ref, fieldName, defaultv);
+    } else if (isFieldComplex(fieldType)) {
+      return this.serializeComplexType(value, fieldType.app, fieldType.args, fieldName);
+    } else {
+      exceptionOn(() => true, `encountered unhandled field type ${fieldType} for field`);
+      return null;
+    }
   }
 
   serializeRefType(value: {}, ref: string, fieldName: string, defaultv?: {}|null): {}|null {
+    if (value === undefined && !!defaultv) {
+      return defaultv;
+    }
     let serialized: {} = {};
     let schema: Schema = this.schemaMap[ref];
     exceptionOn(() => !schema, `couldn't find schema for ${ref} while validating ${fieldName}`);
@@ -188,7 +194,10 @@ export class JsonBindings {
     return serialized;
   }
 
-  serializeComplexType(value: {}, app: FieldType, args: FieldType[], fieldName: string): {}|null {
+  serializeComplexType(value: {}, app: FieldType, args: FieldType[], fieldName: string, defaultv?: {}|null): {}|null {
+    if (value === undefined && !!defaultv) {
+      return defaultv;
+    }
     if (isFieldPrimitive(app)) {
       if (app.primitive === 'Vector') {
         if (isArray(value)) {
@@ -208,7 +217,10 @@ export class JsonBindings {
     return null;
   }
 
-  serializeArray(array: {}[], fieldType: FieldType, fieldName: string): Array<{}|null> {
+  serializeArray(array: {}[], fieldType: FieldType, fieldName: string, defaultv?: Array<{}|null>|null): Array<{}|null> {
+    if (array === undefined && !!defaultv) {
+      return defaultv;
+    }
     let validatedArray = new Array<{}|null>();
     array.forEach((arrayElement: {}) => {
       validatedArray.push(this.serializeField(arrayElement, fieldType, fieldName));

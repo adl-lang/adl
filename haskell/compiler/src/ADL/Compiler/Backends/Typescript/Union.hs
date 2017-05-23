@@ -41,38 +41,39 @@ genUnionEnum _ decl enum = do
   addDeclaration enumDecl
 
 genUnionInterface :: CModule -> CDecl -> Union CResolvedType -> CState ()
-genUnionInterface _ decl union = do
+genUnionInterface _ decl union@Union{u_typeParams=parameters} = do
   fds <- mapM genFieldDetails (u_fields union)
   let unionName = d_name decl
       sortedFds = L.sort fds
-  addDeclaration (renderUnionChoice decl unionName sortedFds)
-  addDeclaration (renderUnionFieldFactories unionName sortedFds)
-  addDeclaration (renderUnionFieldsAsInterfaces unionName sortedFds)
+  addDeclaration (renderUnionChoice decl unionName parameters sortedFds)
+  addDeclaration (renderUnionFieldFactories unionName parameters sortedFds)
+  addDeclaration (renderUnionFieldsAsInterfaces unionName parameters sortedFds)
 
-renderUnionChoice :: CDecl -> T.Text -> [FieldDetails] -> Code
-renderUnionChoice decl unionName fds =
-  CAppend renderedComments (ctemplate "export type $1 = $2;" [unionName, T.intercalate " | " [getChoiceName fd | fd <- fds]])
+renderUnionChoice :: CDecl -> T.Text -> [Ident] -> [FieldDetails] -> Code
+renderUnionChoice decl unionName parameters fds =
+  CAppend renderedComments (ctemplate "export type $1$2 = $3;" [unionName, renderedParameters, T.intercalate " | " [getChoiceName fd | fd <- fds]])
   where
-    getChoiceName fd = unionName <> capitalise (fdName fd)
+    getChoiceName fd = unionName <> "_" <> capitalise (fdName fd) <> renderedParameters
     renderedComments = renderCommentsForDeclaration decl
+    renderedParameters = renderParametersExpr parameters
 
-renderUnionFieldsAsInterfaces :: T.Text -> [FieldDetails] -> Code
-renderUnionFieldsAsInterfaces unionName (fd:xs) =
-  CAppend renderedInterface (renderUnionFieldsAsInterfaces unionName xs)
+renderUnionFieldsAsInterfaces :: T.Text -> [Ident] -> [FieldDetails] -> Code
+renderUnionFieldsAsInterfaces unionName parameters (fd:xs) =
+  CAppend renderedInterface (renderUnionFieldsAsInterfaces unionName parameters xs)
     where
-      renderedInterface = CAppend (renderInterface interfaceName [] fieldDetails True) (CLine "")
-      interfaceName = unionName <> capitalise (fdName fd)
+      renderedInterface = CAppend (renderInterface interfaceName parameters fieldDetails True) CEmpty
+      interfaceName = unionName <> "_" <> capitalise (fdName fd)
       fieldDetails = constructUnionFieldDetailsFromField fd
-renderUnionFieldsAsInterfaces _ [] = CEmpty
+renderUnionFieldsAsInterfaces _ _ [] = CEmpty
 
-renderUnionFieldFactories :: T.Text -> [FieldDetails] -> Code
-renderUnionFieldFactories unionName (fd:xs) =
-  CAppend renderedFactory (renderUnionFieldFactories unionName xs)
+renderUnionFieldFactories :: T.Text -> [Ident] -> [FieldDetails] -> Code
+renderUnionFieldFactories unionName parameters (fd:xs) =
+  CAppend renderedFactory (renderUnionFieldFactories unionName parameters xs)
     where
-      renderedFactory = renderFactory interfaceName [] fieldDetails
-      interfaceName = unionName <> capitalise (fdName fd)
+      renderedFactory = renderFactory interfaceName parameters fieldDetails
+      interfaceName = unionName <> "_" <> capitalise (fdName fd)
       fieldDetails = constructUnionFieldDetailsFromField fd
-renderUnionFieldFactories _ [] = CEmpty
+renderUnionFieldFactories _ _ [] = CEmpty
 
 constructUnionFieldDetailsFromField :: FieldDetails -> [FieldDetails]
 constructUnionFieldDetailsFromField fd@FieldDetails{fdField=Field{f_type=(TypeExpr (RT_Primitive P_Void) _)}}
