@@ -96,7 +96,7 @@ genModuleCode mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText 10000 code)
       <> cline "import { TypeRef } from './runtime/adl';"
       <> cline ""
       <> mconcat [genImport i | i <- Map.elems (mfImports mf)]
-      <> mconcat (intersperse (cline "") (mfDeclarations mf))
+      <> mconcat (intersperse (cline "") (reverse (mfDeclarations mf)))
 
 genImport :: TSImport -> Code
 genImport TSImport{iAsName=asName, iModulePath=modulePath} = ctemplate "import * as $1 from \'$2\';" [asName, mpath]
@@ -111,4 +111,3 @@ getCustomType _ _ = Nothing
 
 moduleFilePath  :: [Ident] -> FilePath
 moduleFilePath path = joinPath (map T.unpack path)
-

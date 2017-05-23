@@ -4,46 +4,80 @@
 // This file requires the adl runtime typescript file to be located in the same directory.
 import { TypeRef } from './runtime/adl';
 
-export interface Tree<T> {
-  children: Tree<T>[];
-  value: T;
+export type IntTree = Tree<number>;
+
+export function refIntTree(): TypeRef<IntTree> {
+  return {ref: 'test2.IntTree'};
 }
 
-export function makeTree<T>(
+/**
+ * An empty structure.
+ */
+export interface S0 {
+}
+
+export function makeS0(
   input: {
-    children: Tree<T>[],
-    value: T,
   }
-): Tree<T> {
+): S0 {
   return {
-    children: input.children,
-    value: input.value,
   };
 }
 
-export function refTree<T>(): TypeRef<Tree<T>> {
-  return {ref: 'test2.Tree'};
+export function refS0(): TypeRef<S0> {
+  return {ref: 'test2.S0'};
 }
 
-export interface S4<T> {
-  f1: S3<string>;
-  f2: S3<T>;
+/**
+ * A structure containing primitives.
+ * It has two fields: an integer x and a String y.
+ */
+export interface S1 {
+  x: number;
+  y: string;
 }
 
-export function makeS4<T>(
+export function makeS1(
   input: {
-    f1: S3<string>,
-    f2: S3<T>,
+    x: number,
+    y: string,
   }
-): S4<T> {
+): S1 {
+  return {
+    x: input.x,
+    y: input.y,
+  };
+}
+
+export function refS1(): TypeRef<S1> {
+  return {ref: 'test2.S1'};
+}
+
+/**
+ * A structure containing a vector.
+ */
+export interface S2 {
+  f1: string;
+  f2: number;
+  f3: number[];
+}
+
+export function makeS2(
+  input: {
+    f1: string,
+    f2: number,
+    f3: number[],
+  }
+): S2 {
   return {
     f1: input.f1,
     f2: input.f2,
+    f3: input.f3,
   };
 }
 
-export function refS4<T>(): TypeRef<S4<T>> {
-  return {ref: 'test2.S4'};
+export function refS2(): TypeRef<S2> {
+  return {ref: 'test2.S2'};
 }
 
 /**
@@ -76,78 +110,44 @@ export function refS3<T>(): TypeRef<S3<T>> {
   return {ref: 'test2.S3'};
 }
 
-/**
- * A structure containing a vector.
- */
-export interface S2 {
-  f1: string;
-  f2: number;
-  f3: number[];
+export interface S4<T> {
+  f1: S3<string>;
+  f2: S3<T>;
 }
 
-export function makeS2(
+export function makeS4<T>(
   input: {
-    f1: string,
-    f2: number,
-    f3: number[],
+    f1: S3<string>,
+    f2: S3<T>,
   }
-): S2 {
+): S4<T> {
   return {
     f1: input.f1,
     f2: input.f2,
-    f3: input.f3,
   };
 }
 
-export function refS2(): TypeRef<S2> {
-  return {ref: 'test2.S2'};
+export function refS4<T>(): TypeRef<S4<T>> {
+  return {ref: 'test2.S4'};
 }
 
-/**
- * A structure containing primitives.
- * It has two fields: an integer x and a String y.
- */
-export interface S1 {
-  x: number;
-  y: string;
+export interface Tree<T> {
+  children: Tree<T>[];
+  value: T;
 }
 
-export function makeS1(
+export function makeTree<T>(
   input: {
-    x: number,
-    y: string,
+    children: Tree<T>[],
+    value: T,
   }
-): S1 {
+): Tree<T> {
   return {
-    x: input.x,
-    y: input.y,
+    children: input.children,
+    value: input.value,
   };
 }
 
-export function refS1(): TypeRef<S1> {
-  return {ref: 'test2.S1'};
-}
-
-/**
- * An empty structure.
- */
-export interface S0 {
-}
-
-export function makeS0(
-  input: {
-  }
-): S0 {
-  return {
-  };
-}
-
-export function refS0(): TypeRef<S0> {
-  return {ref: 'test2.S0'};
-}
-
-export type IntTree = Tree<number>;
-
-export function refIntTree(): TypeRef<IntTree> {
-  return {ref: 'test2.IntTree'};
+export function refTree<T>(): TypeRef<Tree<T>> {
+  return {ref: 'test2.Tree'};
 }

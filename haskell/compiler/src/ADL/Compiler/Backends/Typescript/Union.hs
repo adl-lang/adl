@@ -18,8 +18,8 @@ import qualified Data.Text                                  as T (Text,
 -- Generate code for union declaration.
 genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnion  m decl union@Union{u_typeParams=parameters} = do
-  addDeclaration $ renderTypeRef m decl parameters
   genUnionWithDiscriminate m decl union
+  addDeclaration $ renderTypeRef m decl parameters
 
 genUnionWithDiscriminate :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnionWithDiscriminate  m decl union
@@ -45,9 +45,9 @@ genUnionInterface _ decl union@Union{u_typeParams=parameters} = do
   fds <- mapM genFieldDetails (u_fields union)
   let unionName = d_name decl
       sortedFds = L.sort fds
-  addDeclaration (renderUnionChoice decl unionName parameters sortedFds)
-  addDeclaration (renderUnionFieldFactories unionName parameters sortedFds)
   addDeclaration (renderUnionFieldsAsInterfaces unionName parameters sortedFds)
+  addDeclaration (renderUnionFieldFactories unionName parameters sortedFds)
+  addDeclaration (renderUnionChoice decl unionName parameters sortedFds)
 
 renderUnionChoice :: CDecl -> T.Text -> [Ident] -> [FieldDetails] -> Code
 renderUnionChoice decl unionName parameters fds =

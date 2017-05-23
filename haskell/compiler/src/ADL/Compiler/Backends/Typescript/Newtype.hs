@@ -13,5 +13,5 @@ genNewtype  m declaration ntype@Newtype{n_typeParams=parameters} = do
   let
     renderedTypeParams = renderParametersExpr parameters
     typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, renderedTypeParams, typeExprOutput]
-  addDeclaration $ renderTypeRef m declaration parameters
   addDeclaration typeDecl
+  addDeclaration $ renderTypeRef m declaration parameters

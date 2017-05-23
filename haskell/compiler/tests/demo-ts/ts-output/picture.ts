@@ -5,50 +5,103 @@
 import { TypeRef } from './runtime/adl';
 
 import * as shapes from './shapes';
-/**
- * Testing doc comment for Translated.
- */
-export interface Translated<T> {
-  layer: number;
-  object: T;
-  xoffset: number;
-  yoffset: number;
+export interface CircleAndBlankWall {
+  circle1: shapes.Circle;
+  circle2: shapes.Circle;
 }
 
-export function makeTranslated<T>(
+export function makeCircleAndBlankWall(
   input: {
-    layer?: number,
-    object: T,
-    xoffset?: number,
-    yoffset?: number,
+    circle1?: shapes.Circle,
+    circle2?: shapes.Circle,
   }
-): Translated<T> {
+): CircleAndBlankWall {
   return {
-    layer: input.layer === undefined ? 1 : input.layer,
-    object: input.object,
-    xoffset: input.xoffset === undefined ? 0 : input.xoffset,
-    yoffset: input.yoffset === undefined ? 10.5 : input.yoffset,
+    circle1: input.circle1 === undefined ? {
+      radius: 5,
+      color: '#f00',
+      center: {
+        x: 10,
+        y: 10,
+      },
+    } : input.circle1,
+    circle2: input.circle2 === undefined ? {
+      radius: 5,
+      color: null,
+      center: {
+        x: 10,
+        y: 10,
+      },
+    } : input.circle2,
   };
 }
 
-export function refTranslated<T>(): TypeRef<Translated<T>> {
-  return {ref: 'picture.Translated'};
+export function refCircleAndBlankWall(): TypeRef<CircleAndBlankWall> {
+  return {ref: 'picture.CircleAndBlankWall'};
 }
 
-export enum Terminal {
-  t1,
-  t2,
-  t3,
+export interface ContemporaryArtGallery {
+  artwork: number[];
 }
 
-export function refTerminal(): TypeRef<Terminal> {
-  return {ref: 'picture.Terminal'};
+export function makeContemporaryArtGallery(
+  input: {
+    artwork?: number[],
+  }
+): ContemporaryArtGallery {
+  return {
+    artwork: input.artwork === undefined ? [5.6, 7.8, 9] : input.artwork,
+  };
 }
 
-export type PictureRow = Picture[];
+export function refContemporaryArtGallery(): TypeRef<ContemporaryArtGallery> {
+  return {ref: 'picture.ContemporaryArtGallery'};
+}
 
-export function refPictureRow(): TypeRef<PictureRow> {
-  return {ref: 'picture.PictureRow'};
+export interface Gallery {
+  artwork: Picture[];
+  moved: Translated<Picture>;
+}
+
+export function makeGallery(
+  input: {
+    artwork: Picture[],
+    moved: Translated<Picture>,
+  }
+): Gallery {
+  return {
+    artwork: input.artwork,
+    moved: input.moved,
+  };
+}
+
+export function refGallery(): TypeRef<Gallery> {
+  return {ref: 'picture.Gallery'};
+}
+
+export interface ModernArtGallery {
+  circle: shapes.Circle;
+}
+
+export function makeModernArtGallery(
+  input: {
+    circle?: shapes.Circle,
+  }
+): ModernArtGallery {
+  return {
+    circle: input.circle === undefined ? {
+      radius: 10,
+      color: '#f00',
+      center: {
+        x: 10,
+        y: 10,
+      },
+    } : input.circle,
+  };
+}
+
+export function refModernArtGallery(): TypeRef<ModernArtGallery> {
+  return {ref: 'picture.ModernArtGallery'};
 }
 
 interface Picture_Circle {
@@ -149,101 +202,48 @@ export function refPicture(): TypeRef<Picture> {
   return {ref: 'picture.Picture'};
 }
 
-export interface ModernArtGallery {
-  circle: shapes.Circle;
+export type PictureRow = Picture[];
+
+export function refPictureRow(): TypeRef<PictureRow> {
+  return {ref: 'picture.PictureRow'};
 }
 
-export function makeModernArtGallery(
+export enum Terminal {
+  t1,
+  t2,
+  t3,
+}
+
+export function refTerminal(): TypeRef<Terminal> {
+  return {ref: 'picture.Terminal'};
+}
+
+/**
+ * Testing doc comment for Translated.
+ */
+export interface Translated<T> {
+  layer: number;
+  object: T;
+  xoffset: number;
+  yoffset: number;
+}
+
+export function makeTranslated<T>(
   input: {
-    circle?: shapes.Circle,
+    layer?: number,
+    object: T,
+    xoffset?: number,
+    yoffset?: number,
   }
-): ModernArtGallery {
+): Translated<T> {
   return {
-    circle: input.circle === undefined ? {
-      radius: 10,
-      color: '#f00',
-      center: {
-        x: 10,
-        y: 10,
-      },
-    } : input.circle,
+    layer: input.layer === undefined ? 1 : input.layer,
+    object: input.object,
+    xoffset: input.xoffset === undefined ? 0 : input.xoffset,
+    yoffset: input.yoffset === undefined ? 10.5 : input.yoffset,
   };
 }
 
-export function refModernArtGallery(): TypeRef<ModernArtGallery> {
-  return {ref: 'picture.ModernArtGallery'};
-}
-
-export interface Gallery {
-  artwork: Picture[];
-  moved: Translated<Picture>;
-}
-
-export function makeGallery(
-  input: {
-    artwork: Picture[],
-    moved: Translated<Picture>,
-  }
-): Gallery {
-  return {
-    artwork: input.artwork,
-    moved: input.moved,
-  };
-}
-
-export function refGallery(): TypeRef<Gallery> {
-  return {ref: 'picture.Gallery'};
-}
-
-export interface ContemporaryArtGallery {
-  artwork: number[];
-}
-
-export function makeContemporaryArtGallery(
-  input: {
-    artwork?: number[],
-  }
-): ContemporaryArtGallery {
-  return {
-    artwork: input.artwork === undefined ? [5.6, 7.8, 9] : input.artwork,
-  };
-}
-
-export function refContemporaryArtGallery(): TypeRef<ContemporaryArtGallery> {
-  return {ref: 'picture.ContemporaryArtGallery'};
-}
-
-export interface CircleAndBlankWall {
-  circle1: shapes.Circle;
-  circle2: shapes.Circle;
-}
-
-export function makeCircleAndBlankWall(
-  input: {
-    circle1?: shapes.Circle,
-    circle2?: shapes.Circle,
-  }
-): CircleAndBlankWall {
-  return {
-    circle1: input.circle1 === undefined ? {
-      radius: 5,
-      color: '#f00',
-      center: {
-        x: 10,
-        y: 10,
-      },
-    } : input.circle1,
-    circle2: input.circle2 === undefined ? {
-      radius: 5,
-      color: null,
-      center: {
-        x: 10,
-        y: 10,
-      },
-    } : input.circle2,
-  };
-}
-
-export function refCircleAndBlankWall(): TypeRef<CircleAndBlankWall> {
-  return {ref: 'picture.CircleAndBlankWall'};
+export function refTranslated<T>(): TypeRef<Translated<T>> {
+  return {ref: 'picture.Translated'};
 }
