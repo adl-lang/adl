@@ -98,6 +98,16 @@ javaMaxLineLength ufn =
     (ReqArg ufn "PACKAGE")
     "The maximum length of the generated code lines"
 
+tsIncludeRuntimePackageOption ufn =
+  Option "" ["include-rt"]
+    (NoArg ufn)
+    "Generate the runtime code"
+
+tsRuntimeDirectoryOption ufn =
+  Option "R" ["runtime-dir"]
+    (ReqArg ufn "DIR")
+    "Set the directory where runtime code is written"
+
 getAdlFlags :: [String] -> EIO T.Text (AdlFlags)
 getAdlFlags mergeFileExtensions = do
   systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
@@ -293,7 +303,7 @@ runJavascript args0 =
 runTypescript args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-        libDir <- liftIO $ getLibDir
+        libDir <- liftIO getLibDir
         af <- getAdlFlags ["adl-ts"]
         let flags = buildFlags af (flags0 libDir) opts
         TS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
@@ -302,6 +312,9 @@ runTypescript args0 =
     header = "Usage: adl typescript [OPTION...] files..."
 
     flags0 libDir = TS.TypescriptFlags {
+      tsLibDir=libDir,
+      tsIncludeRuntime=False,
+      tsRuntimeDir=""
     }
 
     optDescs =
@@ -309,6 +322,8 @@ runTypescript args0 =
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
       , verboseOption setVerbose
+      , tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{tsIncludeRuntime=True}))
+      , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{tsRuntimeDir=path}))
       ]
 
 runShow args0 = 

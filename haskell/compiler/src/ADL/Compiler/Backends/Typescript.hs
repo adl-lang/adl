@@ -13,6 +13,7 @@ module ADL.Compiler.Backends.Typescript(
 
 import           ADL.Compiler.AST
 import           ADL.Compiler.Backends.Typescript.DataTypes
+import           ADL.Utils.FileDiff                         (dirContents)
 import qualified Data.ByteString.Lazy                       as LBS
 import qualified Data.Map                                   as Map
 import qualified Data.Text                                  as T
@@ -27,22 +28,40 @@ import           Control.Monad.Trans.State.Strict
 import           Data.Foldable                              (for_)
 import           Data.List                                  (intersperse)
 import           Data.Monoid
+import           Data.Traversable                           (for)
 import           System.FilePath                            (joinPath,
                                                              takeDirectory,
                                                              (<.>), (</>))
 
+import qualified ADL.Compiler.Backends.Javascript           as JS (JavascriptFlags (..),
+                                                                   generate)
 import           ADL.Compiler.Backends.Typescript.Newtype   (genNewtype)
 import           ADL.Compiler.Backends.Typescript.Struct    (genStruct)
 import           ADL.Compiler.Backends.Typescript.Typedef   (genTypedef)
 import           ADL.Compiler.Backends.Typescript.Union     (genUnion)
+import           ADL.Compiler.DataFiles
 
 -- | Run this backend on a list of ADL modules. Check each module
 -- for validity, and then generate the code for it.
 generate :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af tf fileWriter modulePaths = catchAllExceptions  $
-    for_ modulePaths $ \modulePath -> do
-      m <- loadAndCheckModule af modulePath
-      generateModule tf fileWriter m
+generate af tf fileWriter modulePaths = catchAllExceptions  $ do
+  for modulePaths $ \modulePath -> do
+    m <- loadAndCheckModule af modulePath
+    generateModule tf fileWriter m
+  case tsIncludeRuntime tf of
+    True -> generateRuntime af tf fileWriter modulePaths
+
+-- JS.generate af (JS.JavascriptFlags {}) fileWriter
+generateRuntime :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
+generateRuntime af tf fileWriter modulePaths = do
+    files <- liftIO $ dirContents runtimeLibDir
+    liftIO $ for_ files $ \inpath -> do
+      content <- LBS.readFile (runtimeLibDir </> inpath)
+      fileWriter (tsRuntimeDir tf </> inpath) content
+    JS.generate af JS.JavascriptFlags {} jsFileWriter modulePaths
+    where
+      runtimeLibDir = typescriptRuntimeDir (tsLibDir tf)
+      jsFileWriter fpath0 = fileWriter (tsRuntimeDir tf </> fpath0)
 
 -- | Generate and the typescript code for a single ADL module, and
 -- save the resulting code to the apppropriate file
@@ -74,7 +93,7 @@ genModuleCode mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText 10000 code)
       <> cline " * This is an auto generated typescript file compiled with the adl compiler."
       <> cline " */"
       <> cline "// This file requires the adl runtime typescript file to be located in the same directory."
-      <> cline "import { TypeDesc } from './adl/runtime';"
+      <> cline "import { TypeDesc } from './runtime/adl';"
       <> cline ""
       <> mconcat [genImport i | i <- Map.elems (mfImports mf)]
       <> mconcat (intersperse (cline "") (mfDeclarations mf))
