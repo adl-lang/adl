@@ -12,7 +12,11 @@ import qualified Data.Text                        as T (Text)
 
 -- | Command line flags to control the backend.
 -- (once we have them)
-data TypescriptFlags = TypescriptFlags
+data TypescriptFlags = TypescriptFlags {
+  tsLibDir :: FilePath,
+  tsIncludeRuntime :: Bool,
+  tsRuntimeDir :: FilePath
+}
 
 -- A variant of the AST that carries custom type
 -- information. A `CModule` value is the input to

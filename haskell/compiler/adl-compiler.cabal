@@ -32,6 +32,8 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/java/runtime/org/adl/runtime/MaybeHelpers.java
                      lib/java/runtime/org/adl/runtime/NullableHelpers.java
                      lib/java/runtime/org/adl/runtime/Lazy.java
+                     lib/typescript/runtime/adl.ts
+                     lib/typescript/runtime/validation.ts
 
 executable adlc
   hs-source-dirs:      src
