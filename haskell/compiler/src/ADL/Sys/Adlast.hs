@@ -87,20 +87,22 @@ type DeclVersions = [Decl]
 
 data Field = Field
     { field_name :: Ident
+    , field_serializedName :: Ident
     , field_typeExpr :: TypeExpr
     , field_default :: (ADL.Sys.Types.Maybe Literal)
     , field_annotations :: Annotations
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-mkField :: Ident -> TypeExpr -> (ADL.Sys.Types.Maybe Literal) -> Annotations -> Field
-mkField name typeExpr default_ annotations = Field name typeExpr default_ annotations
+mkField :: Ident -> Ident -> TypeExpr -> (ADL.Sys.Types.Maybe Literal) -> Annotations -> Field
+mkField name serializedName typeExpr default_ annotations = Field name serializedName typeExpr default_ annotations
 
 instance AdlValue Field where
     atype _ = "sys.adlast.Field"
     
     jsonGen = genObject
         [ genField "name" field_name
+        , genField "serializedName" field_serializedName
         , genField "typeExpr" field_typeExpr
         , genField "default" field_default
         , genField "annotations" field_annotations
@@ -108,6 +110,7 @@ instance AdlValue Field where
     
     jsonParser = Field
         <$> parseField "name"
+        <*> parseField "serializedName"
         <*> parseField "typeExpr"
         <*> parseField "default"
         <*> parseField "annotations"

@@ -20,14 +20,16 @@ public class Field {
   /* Members */
 
   private String name;
+  private String serializedName;
   private TypeExpr typeExpr;
   private Optional<Literal> default_;
   private HashMap<ScopedName, Literal> annotations;
 
   /* Constructors */
 
-  public Field(String name, TypeExpr typeExpr, Optional<Literal> default_, HashMap<ScopedName, Literal> annotations) {
+  public Field(String name, String serializedName, TypeExpr typeExpr, Optional<Literal> default_, HashMap<ScopedName, Literal> annotations) {
     this.name = Objects.requireNonNull(name);
+    this.serializedName = Objects.requireNonNull(serializedName);
     this.typeExpr = Objects.requireNonNull(typeExpr);
     this.default_ = Objects.requireNonNull(default_);
     this.annotations = Objects.requireNonNull(annotations);
@@ -35,6 +37,7 @@ public class Field {
 
   public Field() {
     this.name = "";
+    this.serializedName = "";
     this.typeExpr = new TypeExpr();
     this.default_ = MaybeHelpers.factory(Literal.FACTORY).create();
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create();
@@ -42,6 +45,7 @@ public class Field {
 
   public Field(Field other) {
     this.name = other.name;
+    this.serializedName = other.serializedName;
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
     this.default_ = MaybeHelpers.factory(Literal.FACTORY).create(other.default_);
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create(other.annotations);
@@ -55,6 +59,14 @@ public class Field {
 
   public void setName(String name) {
     this.name = Objects.requireNonNull(name);
+  }
+
+  public String getSerializedName() {
+    return serializedName;
+  }
+
+  public void setSerializedName(String serializedName) {
+    this.serializedName = Objects.requireNonNull(serializedName);
   }
 
   public TypeExpr getTypeExpr() {
@@ -91,6 +103,7 @@ public class Field {
     Field other = (Field) other0;
     return
       name.equals(other.name) &&
+      serializedName.equals(other.serializedName) &&
       typeExpr.equals(other.typeExpr) &&
       default_.equals(other.default_) &&
       annotations.equals(other.annotations);
@@ -100,6 +113,7 @@ public class Field {
   public int hashCode() {
     int _result = 1;
     _result = _result * 37 + name.hashCode();
+    _result = _result * 37 + serializedName.hashCode();
     _result = _result * 37 + typeExpr.hashCode();
     _result = _result * 37 + default_.hashCode();
     _result = _result * 37 + annotations.hashCode();
@@ -121,6 +135,7 @@ public class Field {
 
   public static JsonBinding<Field> jsonBinding() {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
+    final Lazy<JsonBinding<String>> serializedName = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
     final Lazy<JsonBinding<Optional<Literal>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(Literal.jsonBinding()));
     final Lazy<JsonBinding<HashMap<ScopedName, Literal>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), Literal.jsonBinding()));
@@ -134,6 +149,7 @@ public class Field {
       public JsonElement toJson(Field _value) {
         JsonObject _result = new JsonObject();
         _result.add("name", name.get().toJson(_value.name));
+        _result.add("serializedName", serializedName.get().toJson(_value.serializedName));
         _result.add("typeExpr", typeExpr.get().toJson(_value.typeExpr));
         _result.add("default", default_.get().toJson(_value.default_));
         _result.add("annotations", annotations.get().toJson(_value.annotations));
@@ -144,6 +160,7 @@ public class Field {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Field(
           JsonBindings.fieldFromJson(_obj, "name", name.get()),
+          JsonBindings.fieldFromJson(_obj, "serializedName", serializedName.get()),
           JsonBindings.fieldFromJson(_obj, "typeExpr", typeExpr.get()),
           JsonBindings.fieldFromJson(_obj, "default", default_.get()),
           JsonBindings.fieldFromJson(_obj, "annotations", annotations.get())

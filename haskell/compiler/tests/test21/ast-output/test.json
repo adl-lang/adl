@@ -50,6 +50,7 @@
                                 "annotations": [],
                                 "default": "nothing",
                                 "name": "f1",
+                                "serializedName": "f1",
                                 "typeExpr": {
                                     "parameters": [],
                                     "typeRef": {
@@ -61,6 +62,7 @@
                                 "annotations": [],
                                 "default": "nothing",
                                 "name": "f2",
+                                "serializedName": "f2",
                                 "typeExpr": {
                                     "parameters": [],
                                     "typeRef": {
@@ -116,6 +118,7 @@
                                 ],
                                 "default": "nothing",
                                 "name": "x",
+                                "serializedName": "x",
                                 "typeExpr": {
                                     "parameters": [],
                                     "typeRef": {
@@ -137,6 +140,7 @@
                                 ],
                                 "default": "nothing",
                                 "name": "y",
+                                "serializedName": "y",
                                 "typeExpr": {
                                     "parameters": [],
                                     "typeRef": {
@@ -171,6 +175,7 @@
                                 ],
                                 "default": "nothing",
                                 "name": "name",
+                                "serializedName": "name",
                                 "typeExpr": {
                                     "parameters": [],
                                     "typeRef": {
