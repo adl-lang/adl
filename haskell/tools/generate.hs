@@ -22,7 +22,7 @@ compile compiler args adldir outdir path0 = do
     <> "--moduleprefix=ADL "
     <> "--no-overwrite "
     <> "-O " <> outdir <> " "
-    <> "-I " <> adldir <> " "  
+    <> "-I " <> adldir <> " "
     <> "-I " <> adlstdlibdir <> " "
     <> args
     <> path
@@ -36,7 +36,17 @@ main = do
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "haskell.adl"
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "cpp.adl"
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "java.adl"
-  
+
   -- runtime
   adlcb adlstdlibdir "compiler/src" "sys/types.adl"
   adlcb adlstdlibdir "compiler/src" "sys/adlast.adl"
+
+  -- typescript runtime
+  system
+    (  "stack exec adlc -- typescript "
+    <> "--no-overwrite "
+    <> "--exclude-ast "
+    <> "-O compiler/lib/typescript/runtime "
+    <> "-I compiler/lib/adl"
+    <> "compiler/lib/adl/sys/types.adl compiler/lib/adl/sys/adlast.adl"
+    )
