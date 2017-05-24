@@ -493,12 +493,14 @@ struct Field
     
     Field(
         const Ident & name,
+        const Ident & serializedName,
         const TypeExpr & typeExpr,
         const ADL::sys::types::Maybe<Literal>  & default_,
         const Annotations & annotations
         );
     
     Ident name;
+    Ident serializedName;
     TypeExpr typeExpr;
     ADL::sys::types::Maybe<Literal>  default_;
     Annotations annotations;

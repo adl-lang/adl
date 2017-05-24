@@ -877,11 +877,13 @@ Field::Field()
 
 Field::Field(
     const Ident & name_,
+    const Ident & serializedName_,
     const TypeExpr & typeExpr_,
     const ADL::sys::types::Maybe<Literal>  & default__,
     const Annotations & annotations_
     )
     : name(name_)
+    , serializedName(serializedName_)
     , typeExpr(typeExpr_)
     , default_(default__)
     , annotations(annotations_)
@@ -893,6 +895,8 @@ operator<( const Field &a, const Field &b )
 {
     if( a.name < b.name ) return true;
     if( b.name < a.name ) return false;
+    if( a.serializedName < b.serializedName ) return true;
+    if( b.serializedName < a.serializedName ) return false;
     if( a.typeExpr < b.typeExpr ) return true;
     if( b.typeExpr < a.typeExpr ) return false;
     if( a.default_ < b.default_ ) return true;
@@ -907,6 +911,7 @@ operator==( const Field &a, const Field &b )
 {
     return
         a.name == b.name &&
+        a.serializedName == b.serializedName &&
         a.typeExpr == b.typeExpr &&
         a.default_ == b.default_ &&
         a.annotations == b.annotations ;
@@ -1601,6 +1606,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
     {
         S_( const SerialiserFlags & sf )
             : name_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
+            , serializedName_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
             , typeExpr_s( Serialisable<ADL::sys::adlast::TypeExpr>::serialiser(sf) )
             , default__s( Serialisable<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::serialiser(sf) )
             , annotations_s( Serialisable<ADL::sys::adlast::Annotations>::serialiser(sf) )
@@ -1608,6 +1614,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
         
         
         typename Serialiser<ADL::sys::adlast::Ident>::Ptr name_s;
+        typename Serialiser<ADL::sys::adlast::Ident>::Ptr serializedName_s;
         typename Serialiser<ADL::sys::adlast::TypeExpr>::Ptr typeExpr_s;
         typename Serialiser<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::Ptr default__s;
         typename Serialiser<ADL::sys::adlast::Annotations>::Ptr annotations_s;
@@ -1616,6 +1623,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
         {
             json.startObject();
             writeField<ADL::sys::adlast::Ident>( json, name_s, "name", v.name );
+            writeField<ADL::sys::adlast::Ident>( json, serializedName_s, "serializedName", v.serializedName );
             writeField<ADL::sys::adlast::TypeExpr>( json, typeExpr_s, "typeExpr", v.typeExpr );
             writeField<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >( json, default__s, "default", v.default_ );
             writeField<ADL::sys::adlast::Annotations>( json, annotations_s, "annotations", v.annotations );
@@ -1628,6 +1636,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
                 readField( name_s, v.name, "name", json ) ||
+                readField( serializedName_s, v.serializedName, "serializedName", json ) ||
                 readField( typeExpr_s, v.typeExpr, "typeExpr", json ) ||
                 readField( default__s, v.default_, "default", json ) ||
                 readField( annotations_s, v.annotations, "annotations", json ) ||

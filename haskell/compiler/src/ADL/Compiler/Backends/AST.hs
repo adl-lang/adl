@@ -58,7 +58,7 @@ declTypeToA2 (Decl_Typedef t) = A2.DeclType_type_ (A2.TypeDef (t_typeParams t) (
 declTypeToA2 (Decl_Newtype n) = A2.DeclType_newtype_ (A2.NewType (n_typeParams n) (typeExprToA2 (n_typeExpr n)) (fmap literalToA2 (n_default n)))
 
 fieldToA2 :: Field ResolvedType -> A2.Field
-fieldToA2 f = A2.Field (f_name f) (typeExprToA2 (f_type f)) (fmap literalToA2 (f_default f)) (annotationsToA2 (f_annotations f))
+fieldToA2 f = A2.Field (f_name f) (f_serializedName f) (typeExprToA2 (f_type f)) (fmap literalToA2 (f_default f)) (annotationsToA2 (f_annotations f))
 
 typeExprToA2 :: TypeExpr ResolvedType -> A2.TypeExpr
 typeExprToA2 (TypeExpr rt rts) = A2.TypeExpr (typeRefToA2 rt) (map typeExprToA2 rts)
@@ -88,15 +88,14 @@ writeModuleFile fileWriter m = do
   let adlast = moduleToA2 m
       v = adlToJson adlast
       fpath =  T.unpack (T.intercalate "." (unModuleName (m_name m) )) ++ ".json"
-      
-      -- JSON output in sorted keyname order, as we use the 
+
+      -- JSON output in sorted keyname order, as we use the
       -- output in the unit tests
       encodeDef = JSON.defConfig{JSON.confCompare=compare}
-  
+
   liftIO $ fileWriter fpath (JSON.encodePretty' encodeDef v)
-  
+
 generate :: AdlFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af fileWriter modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
   rm <- loadAndCheckModule af modulePath
   writeModuleFile fileWriter rm
-

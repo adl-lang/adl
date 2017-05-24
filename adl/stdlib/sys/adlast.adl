@@ -43,6 +43,7 @@ struct TypeExpr
 struct Field
 {
     Ident name;
+    Ident serializedName;
     TypeExpr typeExpr;
     Maybe<Literal> default;
     Annotations annotations;
@@ -75,10 +76,10 @@ struct NewType
 
 union DeclType
 {
-    Struct struct_;        
-    Union union_;        
-    TypeDef type_;        
-    NewType newtype_;        
+    Struct struct_;
+    Union union_;
+    TypeDef type_;
+    NewType newtype_;
 };
 
 struct Decl
@@ -93,7 +94,7 @@ type DeclVersions = Vector<Decl>;
 
 union Import
 {
-    ModuleName moduleName; 
+    ModuleName moduleName;
     ScopedName scopedName;
 };
 

@@ -116,6 +116,13 @@ const Field = {
       ]
     },
     {
+      name : "serializedName",
+      type : {"ref":"sys.adlast.Ident"},
+      defaultv : null,
+      annotations : [
+      ]
+    },
+    {
       name : "typeExpr",
       type : {"ref":"sys.adlast.TypeExpr"},
       defaultv : null,
