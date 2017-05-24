@@ -97,6 +97,7 @@ export interface Field {
   annotations: Annotations;
   default: sys_types.Maybe<Literal>;
   name: Ident;
+  serializedName: Ident;
   typeExpr: TypeExpr;
 }
 
@@ -105,6 +106,7 @@ export function makeField(
     annotations: Annotations,
     default: sys_types.Maybe<Literal>,
     name: Ident,
+    serializedName: Ident,
     typeExpr: TypeExpr,
   }
 ): Field {
@@ -112,6 +114,7 @@ export function makeField(
     annotations: input.annotations,
     default: input.default,
     name: input.name,
+    serializedName: input.serializedName,
     typeExpr: input.typeExpr,
   };
 }
@@ -297,6 +300,23 @@ export function makeNewType(
     default: input.default,
     typeExpr: input.typeExpr,
     typeParams: input.typeParams,
+  };
+}
+
+export interface ScopedDecl {
+  decl: Decl;
+  moduleName: ModuleName;
+}
+
+export function makeScopedDecl(
+  input: {
+    decl: Decl,
+    moduleName: ModuleName,
+  }
+): ScopedDecl {
+  return {
+    decl: input.decl,
+    moduleName: input.moduleName,
   };
 }
 

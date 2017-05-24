@@ -11,6 +11,7 @@ module ADL.Sys.Adlast(
     Module(..),
     ModuleName,
     NewType(..),
+    ScopedDecl(..),
     ScopedName(..),
     Struct(..),
     TypeDef(..),
@@ -217,6 +218,27 @@ instance AdlValue NewType where
         <$> parseField "typeParams"
         <*> parseField "typeExpr"
         <*> parseField "default"
+
+data ScopedDecl = ScopedDecl
+    { scopedDecl_moduleName :: ModuleName
+    , scopedDecl_decl :: Decl
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkScopedDecl :: ModuleName -> Decl -> ScopedDecl
+mkScopedDecl moduleName decl = ScopedDecl moduleName decl
+
+instance AdlValue ScopedDecl where
+    atype _ = "sys.adlast.ScopedDecl"
+    
+    jsonGen = genObject
+        [ genField "moduleName" scopedDecl_moduleName
+        , genField "decl" scopedDecl_decl
+        ]
+    
+    jsonParser = ScopedDecl
+        <$> parseField "moduleName"
+        <*> parseField "decl"
 
 data ScopedName = ScopedName
     { scopedName_moduleName :: ModuleName

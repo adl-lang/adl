@@ -10,24 +10,24 @@ import           ADL.Utils.Format                           (template)
 import           ADL.Utils.IndentedCode
 import           Control.Monad(when)
 import           Control.Monad.Trans.State.Strict
-import qualified Data.Aeson                                 as JSON
+import           Data.Scientific(isInteger)
+import qualified Data.Aeson as JS
+import qualified Data.Aeson.Text as JS
 import qualified Data.Char                                  as C
 import qualified Data.Foldable                              as F
 import qualified Data.HashMap.Lazy                          as HM
 import qualified Data.List                                  as L
 import qualified Data.Map                                   as Map
 import           Data.Monoid
-import           Data.Text                                  as T
+import qualified Data.Text                                  as T
+import qualified Data.Text.Lazy                             as LT
+import qualified Data.Vector                                as V
+
 
 -- * Stateful functions
 
 addDeclaration :: Code -> CState ()
 addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
-
-addAstDeclaration :: Code -> CState ()
-addAstDeclaration code = do
-  state <- get
-  when (cgp_includeAst (mfCodeGenProfile state)) (addDeclaration code)
 
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails field = do
@@ -70,10 +70,10 @@ genTypeExpr _ = return "TYPE??"  -- FIXME: implement
 
 -- | Generate the typescript literal value for the given ADL type and
 -- literal
-genLiteralValue :: CTypeExpr -> JSON.Value -> CState Code
+genLiteralValue :: CTypeExpr -> JS.Value -> CState Code
 genLiteralValue typeExpr value = return $ renderLiteralValue typeExpr value
 
-genAnnotation :: ScopedName -> JSON.Value -> CState T.Text
+genAnnotation :: ScopedName -> JS.Value -> CState T.Text
 genAnnotation _ _ = return "UNHANDLED ANNOTATION???"
 
 addImport :: Ident -> TSImport -> CState ()
@@ -88,54 +88,54 @@ addModulesImport modules _ = addImport importAsName tsImport
 
 -- * Pure functions
 
-renderLiteralValue :: CTypeExpr -> JSON.Value -> Code
-renderLiteralValue (TypeExpr (RT_Primitive P_Double) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Float) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_String) _) (JSON.String value) = ctemplate "'$1'" [value]
-renderLiteralValue (TypeExpr (RT_Primitive P_Int8) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Int16) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Int32) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Int64) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Word8) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Word16) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Word32) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Word64) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Bool) _) (JSON.Bool value)
+renderLiteralValue :: CTypeExpr -> JS.Value -> Code
+renderLiteralValue (TypeExpr (RT_Primitive P_Double) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Float) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_String) _) (JS.String value) = ctemplate "'$1'" [value]
+renderLiteralValue (TypeExpr (RT_Primitive P_Int8) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Int16) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Int32) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Int64) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Word8) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Word16) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Word32) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Word64) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Primitive P_Bool) _) (JS.Bool value)
   | value = cline "true"
   | otherwise = cline "false"
-renderLiteralValue (TypeExpr (RT_Primitive P_Vector) [vectorEntryTypeExpr]) (JSON.Array values) =
+renderLiteralValue (TypeExpr (RT_Primitive P_Vector) [vectorEntryTypeExpr]) (JS.Array values) =
   cspan (cspan (cline "[") (F.foldr (constructListSpan vectorEntryTypeExpr) CEmpty values)) (cline "]")
-renderLiteralValue (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) _) JSON.Null =
+renderLiteralValue (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) _) JS.Null =
   cline "null"
-renderLiteralValue (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) [nullableTypeExpr]) (JSON.Object object) =
+renderLiteralValue (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) [nullableTypeExpr]) (JS.Object object) =
   case HM.lookup "just" object of
     Nothing    -> cline "null"
     Just value -> renderLiteralValue nullableTypeExpr value
 
-renderLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) _) (JSON.Object value) =
+renderLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) _) (JS.Object value) =
   renderStructLiteralVal struct value
 
-renderLiteralValue (TypeExpr (RT_Named _) _) (JSON.String value) = cline ("\'" <> value <> "\'")
-renderLiteralValue (TypeExpr (RT_Named _) _) (JSON.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Named _) _) (JSON.Bool value)
+renderLiteralValue (TypeExpr (RT_Named _) _) (JS.String value) = cline ("\'" <> value <> "\'")
+renderLiteralValue (TypeExpr (RT_Named _) _) (JS.Number value) = cline $ litNumber value
+renderLiteralValue (TypeExpr (RT_Named _) _) (JS.Bool value)
   | value = cline "true"
   | otherwise = cline "false"
 renderLiteralValue _ value = cline (T.pack $ show value)
 
 
-constructListSpan :: CTypeExpr -> JSON.Value -> Code -> Code
+constructListSpan :: CTypeExpr -> JS.Value -> Code -> Code
 constructListSpan typeExpr value CEmpty = renderLiteralValue typeExpr value
 constructListSpan typeExpr value c2 = CSpan (CSpan (renderLiteralValue typeExpr value) (cline ", ")) c2
 
-renderStructLiteralVal :: CStruct-> JSON.Object -> Code
+renderStructLiteralVal :: CStruct-> JS.Object -> Code
 renderStructLiteralVal Struct{s_fields=fields} object =
   cblock "" $ renderLiteralValForFields fields object
 
-renderLiteralValForFields :: [CField] -> JSON.Object -> Code
+renderLiteralValForFields :: [CField] -> JS.Object -> Code
 renderLiteralValForFields (x:xs) object = renderLiteralValForField x object <> renderLiteralValForFields xs object
 renderLiteralValForFields [] _ = CEmpty
 
-renderLiteralValForField :: CField -> JSON.Object -> Code
+renderLiteralValForField :: CField -> JS.Object -> Code
 renderLiteralValForField Field{f_name=fieldName, f_type=fieldType, f_default=defaultValue} object =
   case HM.lookup fieldName object of
     Nothing -> case defaultValue of
@@ -199,11 +199,11 @@ renderFieldInitialisation fd = case fdDefValue fd of
 renderCommentsForDeclaration :: CDecl -> Code
 renderCommentsForDeclaration decl = renderComments $ Map.elems (d_annotations decl)
 
-renderComments :: [(CResolvedType, JSON.Value)] -> Code
+renderComments :: [(CResolvedType, JS.Value)] -> Code
 renderComments = L.foldr (CAppend . renderComment) CEmpty
 
-renderComment :: (CResolvedType, JSON.Value) -> Code
-renderComment (RT_Named (ScopedName{sn_name="Doc"}, _), JSON.String commentValue) = clineN commentLinesStarred
+renderComment :: (CResolvedType, JS.Value) -> Code
+renderComment (RT_Named (ScopedName{sn_name="Doc"}, _), JS.String commentValue) = clineN commentLinesStarred
   where
     commentLinesStarred = ["/**"] ++ [" * " <> commentLine | commentLine <- commentLinesBroken] ++ [" */"]
     commentLinesBroken = L.filter (/= "") (T.splitOn "\n" commentValue)
@@ -215,3 +215,120 @@ renderParametersExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
 
 capitalise :: T.Text -> T.Text
 capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)
+
+
+addAstDeclaration :: CModule -> CDecl -> CState ()
+addAstDeclaration m decl = do
+  includeAst <- fmap (cgp_includeAst . mfCodeGenProfile) get
+  when includeAst $ do
+    let astDecl
+          =  ctemplate "const $1_AST : AST.ScopedDecl =" [capitalise (d_name decl)]
+          <> indent (ctemplate "$1;" [jsonToText (scopedDeclAst m decl)])
+    addDeclaration astDecl
+
+scopedDeclAst :: CModule -> CDecl -> JS.Value
+scopedDeclAst m decl = JS.object
+  [ ("moduleName", moduleNameAst (m_name m))
+  , ("decl", declAst decl)
+  ]
+
+declAst :: CDecl -> JS.Value
+declAst decl = JS.object
+ [ ("annotations", annotationsAst (d_annotations decl))
+ , ("name", JS.toJSON (d_name decl))
+ , ("version", mkMaybe Nothing)
+ , ("type_", (declTypeAst (d_type decl)))
+ ]
+
+declTypeAst :: DeclType CResolvedType -> JS.Value
+declTypeAst (Decl_Struct s) = mkUnion "struct_" (structAst s)
+declTypeAst (Decl_Union u) = mkUnion "union_" (unionAst u)
+declTypeAst (Decl_Typedef t) = mkUnion "type_"  (typeAst t)
+declTypeAst (Decl_Newtype n) = mkUnion "newtype_"  (newtypeAst n)
+
+structAst :: Struct CResolvedType -> JS.Value
+structAst s = JS.object
+  [ ("fields", JS.toJSON (map fieldAst (s_fields s)))
+  , ("typeParams", JS.toJSON (s_typeParams s))
+  ]
+
+unionAst :: Union CResolvedType -> JS.Value
+unionAst u = JS.object
+  [ ("fields", JS.toJSON (map fieldAst (u_fields u)))
+  , ("typeParams", JS.toJSON (u_typeParams u))
+  ]
+
+typeAst :: Typedef CResolvedType -> JS.Value
+typeAst t = JS.object
+  [ ("typeExpr", typeExprAst (t_typeExpr t))
+  , ("typeParams", JS.toJSON (t_typeParams t))
+  ]
+
+newtypeAst :: Newtype CResolvedType -> JS.Value
+newtypeAst n = JS.object
+  [ ("typeExpr", typeExprAst (n_typeExpr n))
+  , ("typeParams", JS.toJSON (n_typeParams n))
+  , ("default", mkMaybe (fmap literalAst (n_default n)))
+  ]
+
+fieldAst :: Field CResolvedType -> JS.Value
+fieldAst f = JS.object
+ [ ("name", JS.toJSON (f_name f))
+ , ("serializedName", JS.toJSON (f_serializedName f))
+ , ("typeExpr", typeExprAst (f_type f))
+ , ("default", mkMaybe (fmap literalAst (f_default f)))
+ , ("annotations", annotationsAst (f_annotations f))
+ ]
+
+annotationsAst :: Annotations CResolvedType -> JS.Value
+annotationsAst a = JS.toJSON ([]::[()]) -- FIXME and implement
+
+typeExprAst :: TypeExpr CResolvedType -> JS.Value
+typeExprAst (TypeExpr tr tes) = JS.object
+ [ ("typeRef", typeRefAst tr)
+ , ("parameters", JS.toJSON (map typeExprAst tes))
+ ]
+
+typeRefAst :: CResolvedType -> JS.Value
+typeRefAst (RT_Named (sn,_)) = mkUnion "reference" (scopedNameAst sn)
+typeRefAst (RT_Param id) = mkUnion "typeParam" (JS.toJSON id)
+typeRefAst (RT_Primitive p) = mkUnion "primitive" (JS.toJSON (ptToText p))
+
+scopedNameAst :: ScopedName -> JS.Value
+scopedNameAst (ScopedName moduleName name) = JS.object
+  [ ("moduleName", moduleNameAst moduleName)
+  , ("name", JS.toJSON name)
+  ]
+
+moduleNameAst :: ModuleName -> JS.Value
+moduleNameAst (ModuleName mn) = JS.toJSON (T.intercalate "." mn)
+
+literalAst :: JS.Value -> JS.Value
+literalAst (JS.Array jvs) = mkUnion "array" (JS.toJSON (map literalAst (V.toList jvs)))
+literalAst (JS.Bool b) = mkUnion "boolean" (JS.toJSON b)
+literalAst (JS.Number v) | isInteger v = mkUnion "integer" (JS.toJSON v) -- Should git rid of this distinction in adlast.adl
+                          | otherwise = mkUnion "double" (JS.toJSON v)
+literalAst (JS.Null) = mkVoidUnion "null"
+literalAst o@(JS.Object _) = mkUnion "object" o
+literalAst (JS.String s) = mkUnion "string" (JS.toJSON s)
+
+mkMaybe :: Maybe JS.Value -> JS.Value
+mkMaybe Nothing = JS.object [("kind", (JS.toJSON ("nothing"::T.Text)))]
+mkMaybe (Just jv) = JS.object
+  [ ("kind", (JS.toJSON ("just"::T.Text)))
+  , ("value", jv)
+  ]
+
+mkUnion :: T.Text -> JS.Value -> JS.Value
+mkUnion kind value = JS.object
+  [ ("kind", (JS.toJSON kind))
+  , ("value", value)
+  ]
+
+mkVoidUnion :: T.Text -> JS.Value
+mkVoidUnion kind = JS.object
+  [ ("kind", (JS.toJSON kind))
+  ]
+
+jsonToText :: JS.Value -> T.Text
+jsonToText = LT.toStrict . JS.encodeToLazyText

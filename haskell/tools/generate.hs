@@ -46,6 +46,7 @@ main = do
     (  "stack exec adlc -- typescript "
     <> "--no-overwrite "
     <> "--exclude-ast "
+    <> "--verbose "
     <> "-O compiler/lib/typescript/runtime "
     <> "-I compiler/lib/adl"
     <> "compiler/lib/adl/sys/types.adl compiler/lib/adl/sys/adlast.adl"

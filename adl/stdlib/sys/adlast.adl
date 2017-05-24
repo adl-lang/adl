@@ -90,6 +90,12 @@ struct Decl
     Annotations annotations;
 };
 
+struct ScopedDecl
+{
+    ModuleName moduleName;
+    Decl decl;
+};
+
 type DeclVersions = Vector<Decl>;
 
 union Import

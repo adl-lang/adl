@@ -34,12 +34,11 @@ import           System.FilePath                            (joinPath,
                                                              takeDirectory,
                                                              (<.>), (</>))
 
-import qualified ADL.Compiler.Backends.Javascript           as JS (JavascriptFlags (..),
-                                                                   generate)
 import           ADL.Compiler.Backends.Typescript.Newtype   (genNewtype)
 import           ADL.Compiler.Backends.Typescript.Struct    (genStruct)
 import           ADL.Compiler.Backends.Typescript.Typedef   (genTypedef)
 import           ADL.Compiler.Backends.Typescript.Union     (genUnion)
+import           ADL.Compiler.Backends.Typescript.Common    (addImport)
 import           ADL.Compiler.DataFiles
 
 -- | Run this backend on a list of ADL modules. Check each module
@@ -78,7 +77,11 @@ generateModule tf fileWriter m0 = do
   liftIO $ fileWriter (moduleFilePath (unModuleName moduleName) <.> "ts") (genModuleCode mf)
 
 genModule :: CModule -> CState ()
-genModule m =
+genModule m = do
+  includeAst <- fmap (cgp_includeAst . mfCodeGenProfile) get
+  when includeAst $ do
+    addImport "AST" (TSImport "AST" ["runtime","sys","adlast"])
+
   -- Generate each declaration
   for_ (Map.elems (m_decls m)) $ \decl ->
     case d_type decl of
