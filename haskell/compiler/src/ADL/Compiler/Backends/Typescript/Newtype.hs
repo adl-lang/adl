@@ -14,4 +14,3 @@ genNewtype  m declaration ntype@Newtype{n_typeParams=parameters} = do
     renderedTypeParams = renderParametersExpr parameters
     typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, renderedTypeParams, typeExprOutput]
   addDeclaration typeDecl
-  addDeclaration $ renderTypeRef m declaration parameters

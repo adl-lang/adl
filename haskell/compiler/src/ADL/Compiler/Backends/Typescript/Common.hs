@@ -8,6 +8,7 @@ import           ADL.Compiler.Primitive
 import           ADL.Compiler.Processing
 import           ADL.Utils.Format                           (template)
 import           ADL.Utils.IndentedCode
+import           Control.Monad(when)
 import           Control.Monad.Trans.State.Strict
 import qualified Data.Aeson                                 as JSON
 import qualified Data.Char                                  as C
@@ -22,6 +23,11 @@ import           Data.Text                                  as T
 
 addDeclaration :: Code -> CState ()
 addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
+
+addAstDeclaration :: Code -> CState ()
+addAstDeclaration code = do
+  state <- get
+  when (cgp_includeAst (mfCodeGenProfile state)) (addDeclaration code)
 
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails field = do
@@ -47,6 +53,7 @@ genTypeExpr (TypeExpr (RT_Primitive P_Bool) _) = return "boolean"
 genTypeExpr (TypeExpr (RT_Primitive P_Vector) [vectorEntryTypeExpr]) = do
   vectorEntryOutput <- genTypeExpr vectorEntryTypeExpr
   return (vectorEntryOutput <> "[]")
+genTypeExpr (TypeExpr (RT_Primitive P_Vector) _) = error "BUG: Vector must have 1 type parameter"
 
 genTypeExpr (TypeExpr (RT_Param parameterName) _) = return parameterName
 
@@ -80,13 +87,6 @@ addModulesImport modules _ = addImport importAsName tsImport
       importAsName = T.intercalate "_" modules
 
 -- * Pure functions
-
-renderTypeRef:: CModule -> CDecl -> [Ident] -> Code
-renderTypeRef Module{m_name=ModuleName{unModuleName=moduleParts}} decl parameters =
-  cblock functionHeader (ctemplate "return {ref: '$1.$2'};" [T.intercalate "." moduleParts, d_name decl])
-  where
-    parametersCode = renderParametersExpr parameters
-    functionHeader = template "export function ref$1$2(): TypeRef<$1$2>" [d_name decl, parametersCode]
 
 renderLiteralValue :: CTypeExpr -> JSON.Value -> Code
 renderLiteralValue (TypeExpr (RT_Primitive P_Double) _) (JSON.Number value) = cline $ litNumber value

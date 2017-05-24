@@ -15,6 +15,7 @@ import qualified Data.Text                        as T (Text)
 data TypescriptFlags = TypescriptFlags {
   tsLibDir :: FilePath,
   tsIncludeRuntime :: Bool,
+  tsExcludeAst :: Bool,
   tsRuntimeDir :: FilePath
 }
 
@@ -39,6 +40,10 @@ type ParameterNames = [Ident]
 data CustomType = CustomType
   deriving (Show)
 
+data CodeGenProfile = CodeGenProfile {
+  cgp_includeAst :: Bool
+}
+
 -- We use a state monad to accumulate details of the typescript file
 -- corresponding to each ADL module
 type CState a = State ModuleFile a
@@ -50,7 +55,10 @@ data ModuleFile = ModuleFile {
   mfImports      :: Map.Map Ident TSImport,
 
   -- The code
-  mfDeclarations :: [Code]
+  mfDeclarations :: [Code],
+
+  -- Details to control the code generate
+  mfCodeGenProfile :: CodeGenProfile
 }
 
 data TSImport = TSImport {

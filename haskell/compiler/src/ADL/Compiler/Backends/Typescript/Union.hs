@@ -19,7 +19,6 @@ import qualified Data.Text                                  as T (Text,
 genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnion  m decl union@Union{u_typeParams=parameters} = do
   genUnionWithDiscriminate m decl union
-  addDeclaration $ renderTypeRef m decl parameters
 
 genUnionWithDiscriminate :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnionWithDiscriminate  m decl union

@@ -8,7 +8,7 @@ import System.Directory(getTemporaryDirectory,removeDirectoryRecursive,getCurren
 import System.IO.Temp(createTempDirectory)
 import Control.Concurrent.STM.TVar(newTVar,readTVar,modifyTVar',TVar)
 import Control.Concurrent.STM(atomically)
-                                   
+
 
 import ADL.Utils.FileDiff
 import qualified Data.Text as T
@@ -36,7 +36,7 @@ instance Show CodeGenResult where
   show MatchOutput = "matching output"
   show (CompilerFailed t) = "compiler failure: " ++ T.unpack t
   show (OutputDiff expected actual diffs ) = "diff " ++ actual ++ "/ " ++ expected ++ "/ (details: " ++ show diffs ++ ")"
-  
+
 
 processCompilerOutput :: FilePath -> FilePath -> Either T.Text () -> IO CodeGenResult
 processCompilerOutput _ tempDir (Left err) = do
@@ -127,7 +127,7 @@ runJavaBackend ipaths mpaths epath updateflags = do
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ J.generate af (updateflags jf) fileWriter mpaths
-  processCompilerOutput epath tempDir er 
+  processCompilerOutput epath tempDir er
 
 withJavaOutputPackage :: T.Text -> J.JavaFlags -> J.JavaFlags
 withJavaOutputPackage package flags = flags{J.jf_package=J.javaPackage package}
@@ -137,7 +137,7 @@ runJavaBackend1 mpath = runJavaBackend [ipath,stdsrc] [mpath] epath id
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "java-output"
-    
+
 runJsBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
 runJsBackend ipaths mpaths epath = do
   tdir <- getTemporaryDirectory
@@ -146,7 +146,7 @@ runJsBackend ipaths mpaths epath = do
       jf = JS.JavascriptFlags {}
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ JS.generate af jf fileWriter mpaths
-  processCompilerOutput epath tempDir er 
+  processCompilerOutput epath tempDir er
 
 runTsBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
 runTsBackend ipaths mpaths epath = do
@@ -156,7 +156,8 @@ runTsBackend ipaths mpaths epath = do
       js = TS.TypescriptFlags {
         TS.tsIncludeRuntime=False,
         TS.tsRuntimeDir=tempDir </> "runtime",
-        TS.tsLibDir="../../../haskell/compiler/lib"
+        TS.tsLibDir="../../../haskell/compiler/lib",
+        TS.tsExcludeAst=False
       }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
   er <- unEIO $ TS.generate af js fileWriter mpaths
@@ -179,7 +180,7 @@ runTests :: IO ()
 runTests = do
   resultvar <- atomically $ newTVar []
   let collectResults = collectResults1 resultvar
-  
+
   hspec $ afterAll_ (printRsyncCommands resultvar) $ do
   describe "adlc verify backend" $ do
     it "aborts with error for duplicate definitions of a name" $ do
@@ -203,7 +204,7 @@ runTests = do
     it "aborts with error for type constructors applied to incorrect numbers of arguments" $ do
       runVerifyBackend1 "test19/input/test.adl"
         `shouldReturn` (CompilerFailed "In module test :\ntype X doesn't take arguments\n  type constructor Pair expected 2 arguments, but was passed 1")
-    
+
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do
       collectResults (runHaskellBackend1 "test1/input/test.adl")
@@ -244,7 +245,7 @@ runTests = do
     it "generates expected json serialisation for custom annotation types" $ do
       collectResults (runAstBackend1 "test21/input/test.adl")
         `shouldReturn` MatchOutput
-    
+
   describe "adlc cpp backend" $ do
     it "generates expected code for an empty module" $ do
       collectResults (runCppBackend1 "test1/input/test.adl")
@@ -291,7 +292,7 @@ runTests = do
       collectResults (runJavaBackend1 "test3/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runJavaBackend 
+      collectResults (runJavaBackend
           ["test4/input",stdsrc] ["test4/input/test.adl"]
           "test4/java-output"
           (withJavaOutputPackage "org.adl")
@@ -329,7 +330,7 @@ runTests = do
     it "generates expected output for custom annotation types" $ do
       collectResults (runJsBackend [stdsrc] ["test21/input/test.adl"] "test21/js-output")
         `shouldReturn` MatchOutput
-    
+
   describe "adlc typescript backend" $ do
     it "generates expected output for various structures" $
       collectResults (runTsBackend [stdsrc] ["test2/input/test.adl"] "test2/ts-output")
@@ -348,10 +349,10 @@ runTests = do
       results <- atomically $ readTVar resultvar
       putStrLn "\n** Rsync commands to update"
       mapM_ printRsyncCommand results
-      
+
     printRsyncCommand (OutputDiff expected actual _) = putStrLn ("rsync -r --delete " <> actual <> "/ " <> expected <> "/")
     printRsyncCommand _ = return ()
-    
+
 main :: IO ()
 main = do
   setCurrentDirectory "tests"

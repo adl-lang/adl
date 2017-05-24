@@ -37,13 +37,13 @@ mergeFileExtensionOption ufn =
   Option "" ["merge-adlext"]
     (ReqArg ufn "EXT")
     "Add the specifed adl file extension to merged on loading"
-  
+
 includePrefixOption ufn =
   Option "" ["include-prefix"]
     (ReqArg ufn "DIR")
     "The prefix to be used to generate/reference include files"
 
-verboseOption ufn = 
+verboseOption ufn =
   Option "" ["verbose"]
     (NoArg ufn)
     "Print extra diagnostic information, especially about files being read/written"
@@ -102,6 +102,11 @@ tsIncludeRuntimePackageOption ufn =
   Option "" ["include-rt"]
     (NoArg ufn)
     "Generate the runtime code"
+
+tsExcludeAstOption ufn =
+  Option "" ["exclude-ast"]
+    (NoArg ufn)
+    "Exclude the generated ASTs"
 
 tsRuntimeDirectoryOption ufn =
   Option "R" ["runtime-dir"]
@@ -170,7 +175,7 @@ runVerify args0 =
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl verify [OPTION...] files..."
-    
+
     optDescs =
       [ searchDirOption addToSearchPath
       , mergeFileExtensionOption addToMergeFileExtensions
@@ -185,7 +190,7 @@ runAst args0 =
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl ast [OPTION...] files..."
-    
+
     optDescs =
       [ searchDirOption addToSearchPath
       , outputDirOption setOutputDir
@@ -314,6 +319,7 @@ runTypescript args0 =
     flags0 libDir = TS.TypescriptFlags {
       tsLibDir=libDir,
       tsIncludeRuntime=False,
+      tsExcludeAst=False,
       tsRuntimeDir=""
     }
 
@@ -323,17 +329,17 @@ runTypescript args0 =
       , noOverwriteOption setNoOverwrite
       , verboseOption setVerbose
       , tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{tsIncludeRuntime=True}))
+      , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{tsExcludeAst=True}))
       , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{tsRuntimeDir=path}))
       ]
 
-runShow args0 = 
+runShow args0 =
   case args0 of
     ["--adlstdlib"] -> liftIO $ do
       systemAdlDir <- systemAdlDir <$> getLibDir
       putStrLn systemAdlDir
     ["--version"] -> liftIO $ do
       putStrLn (showVersion P.version)
-    _ -> eioError "Usage: adl show [OPTION...]"
     _ -> eioError "Usage: adl show [OPTION...]"
 
 usage = T.intercalate "\n"
@@ -346,8 +352,8 @@ usage = T.intercalate "\n"
   , "       adlc typescript [OPTION..] <modulePath>..."
   , "       adlc show --version"
   , "       adlc show --adlstdlib"
-  ]    
-    
+  ]
+
 main = do
   args <- getArgs
   runEIO $ case args of
@@ -367,5 +373,3 @@ main = do
         (Left perr) ->
           T.putStrLn perr >> exitWith (ExitFailure 1)
         (Right _) -> exitWith ExitSuccess
-
-      
