@@ -56,7 +56,6 @@ generateRuntime :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EI
 generateRuntime af tf fileWriter modulePaths = do
     files <- liftIO $ dirContents runtimeLibDir
     liftIO $ for_ files $ \inpath -> do
-      putStrLn ("Reading runtime: " ++ inpath)
       content <- LBS.readFile (runtimeLibDir </> inpath)
       fileWriter (tsRuntimeDir tf </> inpath) content
     where

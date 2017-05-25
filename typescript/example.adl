@@ -1,0 +1,31 @@
+module example
+{
+
+// An enum
+
+union Gender {
+   Void male;
+   Void female;
+};
+
+// A simple struct
+
+struct Person {
+   String name;
+   Gender gender;
+   Word16 age = 50;
+   Bool married = false;
+};
+
+// A recursive, generic type
+
+struct Tree<T>
+{
+    T value;
+    Vector<Tree<T>> children;
+};
+
+type IntTree = Tree<Int32>;
+
+
+};
