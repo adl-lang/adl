@@ -33,7 +33,7 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/java/runtime/org/adl/runtime/NullableHelpers.java
                      lib/java/runtime/org/adl/runtime/Lazy.java
                      lib/typescript/runtime/adl.ts
-                     lib/typescript/runtime/validation.ts
+                     lib/typescript/runtime/json.ts
                      lib/typescript/runtime/sys/types.ts
                      lib/typescript/runtime/sys/adlast.ts
 

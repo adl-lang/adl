@@ -10,6 +10,13 @@ interface JsonBinding<T> {
 };
 
 /**
+ * Construct a JsonBinding for an arbitrary type expression
+ */
+export function createJsonBinding<T>(dresolver : DeclResolver, texpr : ATypeExpr<T>) : JsonBinding<T> {
+  return buildJsonBinding(dresolver, texpr.value, {});
+};
+
+/**
  * Interface for json parsing exceptions.
  * Any implementation should properly show the parse error tree.
  *
@@ -58,13 +65,6 @@ export function jsonParseException(message: string): JsonParseException {
 export function isJsonParseException(exception: {}): exception is JsonParseException {
   return (<JsonParseException> exception).kind === 'JsonParseException';
 }
-
-/**
- * Construct a JsonBinding for an arbitrary type expression
- */
-export function createJsonBinding<T>(dresolver : DeclResolver, texpr : ATypeExpr<T>) : JsonBinding<T> {
-  return buildJsonBinding(dresolver, texpr.value, {});
-};
 
 interface BoundTypeParams {
   [key: string]: JsonBinding<any>;

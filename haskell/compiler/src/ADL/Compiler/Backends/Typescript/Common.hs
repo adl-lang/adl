@@ -6,7 +6,7 @@ import           ADL.Compiler.AST
 import           ADL.Compiler.Backends.Typescript.DataTypes
 import           ADL.Compiler.Primitive
 import           ADL.Compiler.Processing
-import           ADL.Utils.Format                           (template)
+import           ADL.Utils.Format                           (template,formatText)
 import           ADL.Utils.IndentedCode
 import           Control.Monad(when)
 import           Control.Monad.Trans.State.Strict
@@ -222,9 +222,31 @@ addAstDeclaration m decl = do
   includeAst <- fmap (cgp_includeAst . mfCodeGenProfile) get
   when includeAst $ do
     let astDecl
-          =  ctemplate "const $1_AST : AST.ScopedDecl =" [capitalise (d_name decl)]
+          =  ctemplate "const $1 : ADL.ScopedDecl =" [astVariableName decl]
           <> indent (ctemplate "$1;" [jsonToText (scopedDeclAst m decl)])
+        typeRef
+          =  cblock (template "export function ref$1$2(): ADL.ATypeRef<$1$2>"
+                              [d_name decl, renderParametersExpr (getTypeParams (d_type decl))])
+                    (ctemplate "return {value : {kind: \"reference\", value : {moduleName : \"$1\",name : \"$2\"}}};"
+                               [formatText (m_name m), d_name decl])
     addDeclaration astDecl
+    addDeclaration typeRef
+
+
+astVariableName :: CDecl -> T.Text
+astVariableName decl = capitalise (d_name decl) <> "_AST"
+
+addAstMap :: CModule -> CState ()
+addAstMap m = do
+  addDeclaration $
+    cline "export const _AST_MAP = {"
+    <> indent (mconcat [ctemplate "\"$1\" : $2$3" [scopedName m decl, astVariableName decl, mcomma]
+                       | (decl,mcomma) <- withCommas (Map.elems (m_decls m))])
+    <> cline "};"
+  where
+
+scopedName :: CModule -> CDecl -> T.Text
+scopedName m d = formatText (ScopedName (m_name m) (d_name d))
 
 scopedDeclAst :: CModule -> CDecl -> JS.Value
 scopedDeclAst m decl = JS.object
@@ -332,3 +354,8 @@ mkVoidUnion kind = JS.object
 
 jsonToText :: JS.Value -> T.Text
 jsonToText = LT.toStrict . JS.encodeToLazyText
+
+withCommas :: [a] -> [(a,T.Text)]
+withCommas [] = []
+withCommas [a] = [(a,"")]
+withCommas (a:as) = (a,","):withCommas as

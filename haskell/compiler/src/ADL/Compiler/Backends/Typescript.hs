@@ -38,7 +38,7 @@ import           ADL.Compiler.Backends.Typescript.Newtype   (genNewtype)
 import           ADL.Compiler.Backends.Typescript.Struct    (genStruct)
 import           ADL.Compiler.Backends.Typescript.Typedef   (genTypedef)
 import           ADL.Compiler.Backends.Typescript.Union     (genUnion)
-import           ADL.Compiler.Backends.Typescript.Common    (addImport)
+import           ADL.Compiler.Backends.Typescript.Common    (addImport,addAstMap)
 import           ADL.Compiler.DataFiles
 
 -- | Run this backend on a list of ADL modules. Check each module
@@ -80,7 +80,7 @@ genModule :: CModule -> CState ()
 genModule m = do
   includeAst <- fmap (cgp_includeAst . mfCodeGenProfile) get
   when includeAst $ do
-    addImport "AST" (TSImport "AST" ["runtime","sys","adlast"])
+    addImport "ADL" (TSImport "ADL" ["runtime","adl"])
 
   -- Generate each declaration
   for_ (Map.elems (m_decls m)) $ \decl ->
@@ -89,6 +89,9 @@ genModule m = do
      (Decl_Union union)     -> genUnion m decl union
      (Decl_Typedef typedef) -> genTypedef m decl typedef
      (Decl_Newtype ntype)   -> genNewtype m decl ntype
+
+  when includeAst $ do
+    addAstMap m
 
 genModuleCode :: ModuleFile -> LBS.ByteString
 genModuleCode mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText 10000 code)))

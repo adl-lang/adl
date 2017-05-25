@@ -1,8 +1,15 @@
 import * as AST from './sys/adlast';
 
-export type TypeRef<T> = {ref: string};
-
+export type ScopedDecl = AST.ScopedDecl;
+export type ATypeRef<T> = {value: AST.TypeRef};
 export type ATypeExpr<T> = {value : AST.TypeExpr};
+
+/**
+ * Construct a type expression from a monomorphic type reference.
+ */
+export function aTypeExpr0<T>(typeRef0 : ATypeRef<T>) : ATypeExpr<T> {
+  return {value: {typeRef : typeRef0.value, parameters : []}};
+}
 
 /**
  * A function to obtain details on a declared type.
@@ -10,3 +17,22 @@ export type ATypeExpr<T> = {value : AST.TypeExpr};
 export interface DeclResolver {
     (decl : AST.ScopedName): AST.ScopedDecl;
 };
+
+export function declResolver(...astMaps : ({[key:string] : AST.ScopedDecl})[]) {
+  const astMap = {};
+  for (let map of astMaps) {
+    for (let scopedName in map) {
+      astMap[scopedName] = map[scopedName];
+    }
+  }
+
+  function resolver(scopedName) {
+    const result = astMap[scopedName];
+    if (result === undefined) {
+      throw new Error("Unable to resolve ADL type " + scopedName);
+    }
+    return result;
+  }
+
+  return resolver;
+}
