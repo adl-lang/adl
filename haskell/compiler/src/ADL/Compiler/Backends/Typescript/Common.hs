@@ -226,13 +226,22 @@ addAstDeclaration m decl = do
     let astDecl
           =  ctemplate "const $1 : ADL.ScopedDecl =" [astVariableName decl]
           <> indent (ctemplate "$1;" [jsonToText (scopedDeclAst m decl)])
-        typeRef
-          =  cblock (template "export function ref$1$2(): ADL.ATypeRef<$1$2>"
-                              [d_name decl, renderParametersExpr (getTypeParams (d_type decl))])
-                    (ctemplate "return {value : {kind: \"reference\", value : {moduleName : \"$1\",name : \"$2\"}}};"
+        typeExprFn0
+          =  cblock (template "export function texpr$1(): ADL.ATypeExpr<$1>" [d_name decl])
+                    (ctemplate "return {value : {typeRef : {kind: \"reference\", value : {moduleName : \"$1\",name : \"$2\"}}, parameters : []}};"
                                [formatText (m_name m), d_name decl])
+        typeExprFnN tparams
+          =  cblock (template "export function texpr$1$2($3): ADL.ATypeExpr<$1$2>"
+                              [d_name decl, renderParametersExpr tparams, exprArgs])
+                    (ctemplate "return {value : {typeRef : {kind: \"reference\", value : {moduleName : \"$1\",name : \"$2\"}}, parameters : [$3]}};"
+                               [formatText (m_name m), d_name decl, exprParams])
+             where
+               exprArgs = T.intercalate ", " [template "texpr$1 : ADL.ATypeExpr<$1>" [t] | t <- tparams]
+               exprParams = T.intercalate ", " [template "texpr$1.value" [t] | t <- tparams]
     addDeclaration astDecl
-    addDeclaration typeRef
+    case getTypeParams (d_type decl) of
+      []      -> addDeclaration typeExprFn0
+      tparams -> addDeclaration (typeExprFnN tparams)
 
 
 astVariableName :: CDecl -> T.Text

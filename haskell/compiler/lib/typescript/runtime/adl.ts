@@ -5,13 +5,6 @@ export type ATypeRef<T> = {value: AST.TypeRef};
 export type ATypeExpr<T> = {value : AST.TypeExpr};
 
 /**
- * Construct a type expression from a monomorphic type reference.
- */
-export function aTypeExpr0<T>(typeRef : ATypeRef<T>) : ATypeExpr<T> {
-  return {value: {typeRef : typeRef.value, parameters : []}};
-}
-
-/**
  * A function to obtain details on a declared type.
  */
 export interface DeclResolver {
