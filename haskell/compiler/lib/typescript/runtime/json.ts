@@ -4,7 +4,7 @@ import * as AST from './sys/adlast';
 /**
  * A JsonBinding is a de/serialiser for a give ADL type
  */
-interface JsonBinding<T> {
+export interface JsonBinding<T> {
   toJson (t : T): any;
   fromJson(json : any) : T;
 };

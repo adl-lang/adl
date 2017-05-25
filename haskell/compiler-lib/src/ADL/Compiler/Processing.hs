@@ -52,7 +52,7 @@ type FileSetGenerator = FilePath -> [FilePath]
 -- | Load and parse an adl file and all of its dependencies
 loadModule :: (String -> IO ()) -> FilePath -> ModuleFinder -> FileSetGenerator -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
 loadModule log fpath0 findm filesetfn mm = do
-    m0 <- parseAndCheckFileSet fpath0 
+    m0 <- parseAndCheckFileSet fpath0
     mm' <- addDeps m0 mm
     return (m0,mm')
   where
@@ -104,7 +104,7 @@ parseAndCheckFile log file extraFiles = do
       where
         merge :: Module0 Decl0 -> Module0 Decl0 -> Module0 Decl0
         merge ma mb = ma{m0_imports=m0_imports ma <> m0_imports mb,m0_decls=m0_decls ma <> m0_decls mb}
-        
+
     checkDeclarations :: Module0 SDecl -> EIO T.Text SModule
     checkDeclarations (Module0 n i decls0) = do
       let declMap = foldr (\d -> Map.insertWith (++)  (d_name d) [d]) Map.empty decls0
@@ -189,7 +189,7 @@ mergeAnnotations m0 = (m,unusedAnnotation)
       where
         addAnnotation :: (Either Ident (Ident,Ident),ScopedName, Annotation0) -> AnnotationMap -> AnnotationMap
         addAnnotation (key,name,ann) = Map.insertWith Map.union key (Map.singleton name ann)
-        
+
         annKey ann@Annotation0{a0_fieldName=Just fieldName} = Right (a0_declName ann,fieldName)
         annKey ann = Left (a0_declName ann)
 
@@ -224,7 +224,7 @@ mergeAnnotations m0 = (m,unusedAnnotation)
     mergeField declName field  = do
       anns <- pullAnnotations (Right (declName,f_name field))
       return field{f_annotations=insertAnnotations anns (f_annotations field)}
-      
+
     pullAnnotations :: (Either Ident (Ident,Ident)) -> MAState (Map.Map ScopedName Annotation0)
     pullAnnotations key = do
       map <- get
@@ -236,10 +236,10 @@ mergeAnnotations m0 = (m,unusedAnnotation)
 
     insertAnnotations :: Map.Map ScopedName Annotation0 -> Annotations ScopedName -> Annotations ScopedName
     insertAnnotations amap anns0  = foldr insertAnnotation anns0 (Map.elems amap)
-    
+
     insertAnnotation :: Annotation0 -> Annotations ScopedName -> Annotations ScopedName
     insertAnnotation a0 = Map.insert (a0_annotationName a0) (a0_annotationName a0,a0_value a0)
-      
+
 
 data ResolvedTypeT c
   = RT_Named (ScopedName,Decl c (ResolvedTypeT c))
@@ -284,7 +284,7 @@ isEnumeration u = null (u_typeParams u) && all (isVoidType . f_type)  (u_fields 
 
 data LocalDecl = LocalDecl (Decl () ResolvedType)
                | ImportedDecl ModuleName (Decl () ResolvedType)
-  deriving Show            
+  deriving Show
 
 data NameScope = NameScope {
     ns_globals :: Map.Map ScopedName (Decl () ResolvedType),
@@ -388,7 +388,7 @@ resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m)}
          resolve1 (sn,jv) = (sn',(rt,jv))
            where
              rt = resolveName nscope sn
-             sn' = case rt of 
+             sn' = case rt of
                  RT_Named (sn',_) -> sn'
                  _ -> error "BUG: Unabled to resolve annotation to a declaration"
 
@@ -544,11 +544,11 @@ literalForTypeExpr te v = litForTE Map.empty te v
       (Decl_Union u) -> (\(ctor,litv) -> Literal te (LUnion ctor litv))  <$> unionField m decl u tes v
       (Decl_Typedef t) -> typedefLiteral m t tes v
       (Decl_Newtype n) -> (\t ->Literal te (LCtor [t])) <$> newtypeLiteral m n tes v
-      
+
     litForTE m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
       (Just te) -> litForTE Map.empty te v
       Nothing -> Left "literals not allows for parameterised fields"
-    
+
     vecLiteral m te (JSON.Array v) = mapM (litForTE m te) (V.toList v)
     vecLiteral _ _ _ = Left "expected an array"
 
@@ -592,7 +592,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
           Nothing ->
             Left (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
     unionField _ _ _ _ _ = Left "expected an object"
- 
+
     typedefLiteral m t tes v = do
       pm <- createParamMap (t_typeParams t) tes m
       te <- substTypeParams pm (t_typeExpr t)
@@ -653,14 +653,14 @@ defaultAdlFlags = AdlFlags
   , af_log = const (return ())
   , af_mergeFileExtensions = []
   }
-  
+
 loadAndCheckModule :: AdlFlags -> FilePath -> EIOT RModule
 loadAndCheckModule af modulePath = do
     (m,mm) <- loadModule1
     mapM_ checkModuleForDuplicates (m:Map.elems mm)
     case sortByDeps (Map.elems mm) of
       Nothing -> eioError (template "Mutually dependent modules are not allowed: $1" [T.intercalate ", " (map formatText (Map.keys mm))])
-      (Just mmSorted) -> do  
+      (Just mmSorted) -> do
         ns <- resolveN mmSorted emptyNameScope
         (_,rm) <- resolve1 m ns
         return rm
@@ -677,7 +677,7 @@ loadAndCheckModule af modulePath = do
     resolveN (m:ms) ns = do
         (ns',rm) <- resolve1 m ns
         resolveN ms ns'
-    
+
     resolve1 :: SModule -> NameScope -> EIOT (NameScope,RModule)
     resolve1 m ns = do
         failOnErrors m (undefinedNames m ns)
@@ -712,7 +712,7 @@ topologicalSort idf depf as = fmap (map fst) (sort1 (addDeps as) Set.empty)
     sort1 [] _ = Just []
     sort1 as sofar | length todo == length as = Nothing
                    | otherwise = sort1 todo sofar' >>= \vs -> Just (ok ++ vs)
-      where                                                              
+      where
         (ok,todo) = partition (\(a,ad)-> Set.null (ad `Set.difference` sofar)) as
         sofar' = Set.unions (sofar:map (Set.singleton . idf . fst) ok)
 
@@ -740,7 +740,7 @@ removeModuleTypedefs mod@Module{m_decls=ds} = mod{m_decls=Map.filter (not . isTy
   where
     isTypedef Decl{d_type=Decl_Typedef _} = True
     isTypedef _ = False
-  
+
 -- | eliminate the typedefs from an expression through substitution
 expandTypedefs :: TypeExpr (ResolvedTypeT c) -> TypeExpr (ResolvedTypeT c)
 expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
@@ -768,6 +768,11 @@ fullyScopedName _ sn = sn
 fullyScopedType :: ModuleName -> ResolvedTypeT c -> ResolvedTypeT c
 fullyScopedType mname (RT_Named (sn,decl)) = RT_Named (fullyScopedName mname sn,mapDecl (fullyScopedType mname) decl)
 fullyScopedType _ rt = rt
+
+fullyScopedModule :: Module c (ResolvedTypeT c) -> Module c (ResolvedTypeT c)
+fullyScopedModule m = m{m_decls=decls'}
+  where
+    decls' = (fmap (mapDecl (fullyScopedType (m_name m))) (m_decls m))
 
 -- Populate the custom type field for each declaration.
 --

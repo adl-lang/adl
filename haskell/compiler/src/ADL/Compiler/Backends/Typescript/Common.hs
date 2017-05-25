@@ -61,8 +61,10 @@ genTypeExpr (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) nullableTyp
     nonNullableTypeExpr <- genTypeExpr $ L.head nullableTypeExpr
     return (nonNullableTypeExpr <> "|null")
 
-genTypeExpr (TypeExpr (RT_Named (ScopedName{sn_moduleName = ModuleName{unModuleName=modules}, sn_name=name}, _)) parameters) = do
+genTypeExpr (TypeExpr (RT_Named (ScopedName moduleName name, _)) parameters) = do
     parametersExpressions <- mapM genTypeExpr parameters
+    currentModuleName <- fmap mfModuleName get
+    let modules =  if moduleName == currentModuleName then [] else unModuleName moduleName
     addModulesImport modules name
     return $ (renderModulePrefix modules <> name) <> renderParametersExpr parametersExpressions
 

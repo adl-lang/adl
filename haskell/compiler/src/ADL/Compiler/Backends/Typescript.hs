@@ -47,7 +47,8 @@ generate :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af tf fileWriter modulePaths = catchAllExceptions  $ do
   for modulePaths $ \modulePath -> do
     m <- loadAndCheckModule af modulePath
-    generateModule tf fileWriter m
+    let m' = fullyScopedModule m
+    generateModule tf fileWriter m'
   when (tsIncludeRuntime tf) (generateRuntime af tf fileWriter modulePaths)
 
 -- JS.generate af (JS.JavascriptFlags {}) fileWriter

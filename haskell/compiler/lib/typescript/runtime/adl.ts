@@ -26,10 +26,11 @@ export function declResolver(...astMaps : ({[key:string] : AST.ScopedDecl})[]) {
     }
   }
 
-  function resolver(scopedName) {
-    const result = astMap[scopedName];
+  function resolver(scopedName : AST.ScopedName) : AST.ScopedDecl {
+    const scopedNameStr = scopedName.moduleName + "." + scopedName.name;
+    const result = astMap[scopedNameStr];
     if (result === undefined) {
-      throw new Error("Unable to resolve ADL type " + scopedName);
+      throw new Error("Unable to resolve ADL type " + scopedNameStr);
     }
     return result;
   }
