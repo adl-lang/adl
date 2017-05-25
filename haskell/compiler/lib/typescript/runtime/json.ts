@@ -94,6 +94,7 @@ export function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr,
   } else if (texpr.typeRef.kind === "typeParam") {
     return boundTypeParams[texpr.typeRef.value];
   }
+  throw new Error("buildJsonBinding : unimplemented ADL type");
 };
 
 function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
@@ -144,7 +145,7 @@ function vectorJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bound
       if (!(json instanceof Array)) {
         throw jsonParseException('expected an array');
       }
-      let result = [];
+      let result : any[] = [];
       json.forEach( (eljson,i) => {
         try {
           result.push(elementBinding().fromJson(eljson));
@@ -192,9 +193,15 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
   return {toJson, fromJson};
 }
 
+interface StructFieldDetails {
+  field : AST.Field,
+  jsonBinding : () => JsonBinding<any>,
+  buildDefault : () => any
+};
+
 function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, struct.typeParams, params, boundTypeParams);
-  const fieldDetails = [];
+  const fieldDetails : StructFieldDetails[] = [];
   struct.fields.forEach( (field) => {
     let buildDefault = once( () => {
       if (field.default.kind === "just")  {
@@ -252,7 +259,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
 }
 
 function enumJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
-  const fieldSerializedNames = [];
+  const fieldSerializedNames : string[] = [];
   const fieldNumbers = {};
   union.fields.forEach( (field,i) => {
     fieldSerializedNames.push(field.serializedName);
@@ -435,7 +442,7 @@ function jsonFromLiteral(literal : AST.Literal) : any {
  * calls return the previous value
  */
 function once<T>(run : () => T) : () => T {
-  let result = null;
+  let result : T | null = null;
   return () => {
     if(result === null) {
       result = run();

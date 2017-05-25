@@ -7,8 +7,8 @@ export type ATypeExpr<T> = {value : AST.TypeExpr};
 /**
  * Construct a type expression from a monomorphic type reference.
  */
-export function aTypeExpr0<T>(typeRef0 : ATypeRef<T>) : ATypeExpr<T> {
-  return {value: {typeRef : typeRef0.value, parameters : []}};
+export function aTypeExpr0<T>(typeRef : ATypeRef<T>) : ATypeExpr<T> {
+  return {value: {typeRef : typeRef.value, parameters : []}};
 }
 
 /**
