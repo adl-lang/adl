@@ -17,11 +17,30 @@ struct Person {
    Bool married = false;
 };
 
+// A union
+
+union DataSource {
+   Void implicit;
+   Content inline;
+   FilePath file;
+};
+
+newtype FilePath = String;
+
+struct Content {
+   String encoding;
+   String content;
+};
+
 // A recursive, generic type
+// (with custom serialized field names)
 
 struct Tree<T>
 {
+    @SerializedName "v"
     T value;
+
+    @SerializedName "cs"
     Vector<Tree<T>> children;
 };
 
