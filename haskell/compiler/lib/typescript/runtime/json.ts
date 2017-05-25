@@ -78,7 +78,11 @@ export function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr,
     if (ast.decl.type_.kind === "struct_") {
       return structJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
     } else if (ast.decl.type_.kind === "union_") {
-      return unionJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
+      if (isEnum(ast.decl.type_.value)) {
+        return enumJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
+      } else {
+        return unionJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
+      }
     } else if (ast.decl.type_.kind === "newtype_") {
       return newtypeJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
     } else if (ast.decl.type_.kind === "type_") {
@@ -215,7 +219,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
 
   function fromJson(json) {
     if (!(json instanceof Object)) {
-      jsonParseException("expected an object");
+      throw jsonParseException("expected an object");
     }
 
     const v = {};
@@ -244,6 +248,32 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
   return {toJson, fromJson};
 }
 
+function enumJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
+  const fieldSerializedNames = [];
+  const fieldNumbers = {};
+  union.fields.forEach( (field,i) => {
+    fieldSerializedNames.push(field.serializedName);
+    fieldNumbers[field.serializedName] = i;
+  });
+
+  function toJson(v :any) : any {
+    return fieldSerializedNames[v];
+  }
+
+  function fromJson(json : any) : any {
+    if (typeof(json) !== 'string') {
+      throw jsonParseException("expected a string for enum");
+    }
+    const result = fieldNumbers[json];
+    if (result === undefined) {
+      throw jsonParseException("invalid string for enum: " + json);
+    }
+    return result;
+  }
+
+  return {toJson, fromJson};
+}
+
 function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, union.typeParams, params, boundTypeParams);
   const detailsByName = {};
@@ -251,6 +281,7 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
   union.fields.forEach( (field) => {
     const details = {
       field : field,
+      isVoid : isVoid(field.typeExpr),
       jsonBinding : buildJsonBinding(dresolver, field.typeExpr, newBoundTypeParams)
     };
     detailsByName[field.name] = details;
@@ -259,33 +290,49 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
 
   function toJson(v : any) : any {
     const details = detailsByName[v.kind];
-    const result = {};
-    result[details.field.serializedName] = details.jsonBinding.toJson(v.value);
-    return result;
+    if (details.isVoid) {
+      return details.field.serializedName;
+    } else {
+      const result = {};
+      result[details.field.serializedName] = details.jsonBinding.toJson(v.value);
+      return result;
+    }
+  }
+
+  function lookupDetails(serializedName : string) {
+    let details = detailsBySerializedName[serializedName];
+    if (details === undefined) {
+      throw jsonParseException("invalid union field " + serializedName);
+    }
+    return details;
   }
 
   function fromJson(json : any) : any {
-    if (!(json instanceof Object)) {
-      jsonParseException("expected an object");
-    }
-    for (let k in json) {
-      let details = detailsBySerializedName[k];
-      if (details === undefined) {
-        throw jsonParseException("invalid union property " + k);
+    if (typeof(json) === "string") {
+      let details = lookupDetails(json);
+      if (!details.isVoid) {
+        throw jsonParseException("union field " + json + "needs an associated value");
       }
-      try {
-        return {
-          kind : details.field.name,
-          value : details.jsonBinding.fromJson(json[k])
+      return { kind : details.field.name };
+    } else if (json instanceof Object) {
+      for (let k in json) {
+        let details = lookupDetails(k);
+        try {
+          return {
+            kind : details.field.name,
+            value : details.jsonBinding.fromJson(json[k])
+          }
+        } catch(e) {
+          if (isJsonParseException(e)) {
+            e.pushField(k);
+          }
+          throw e;
         }
-      } catch(e) {
-        if (isJsonParseException(e)) {
-          e.pushField(k);
-        }
-        throw e;
       }
+      throw jsonParseException("union without a property");
+    } else {
+      throw jsonParseException("expected an object or string");
     }
-    throw jsonParseException("union without a property");
   }
 
   return {toJson, fromJson};
@@ -308,6 +355,22 @@ function createBoundTypeParams(dresolver : DeclResolver, paramNames : string[], 
     result[paramName] = buildJsonBinding(dresolver,paramTypes[i], boundTypeParams);
   });
   return result;
+}
+
+function isEnum(union : AST.Union) : boolean {
+  for (let field of union.fields) {
+    if (!isVoid(field.typeExpr)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isVoid(texpr : AST.TypeExpr) : boolean {
+  if (texpr.typeRef.kind === "primitive") {
+    return texpr.typeRef.value === "Void";
+  }
+  return false;
 }
 
 /**
