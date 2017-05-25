@@ -75,14 +75,17 @@ export function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr,
     return primitiveJsonBinding(dresolver, texpr.typeRef.value, texpr.parameters, boundTypeParams);
   } else if (texpr.typeRef.kind === "reference") {
     const ast = dresolver(texpr.typeRef.value);
+
+    // Special case for nullable, as we don't have custom types  yet
+    // (and perhaps Nullable<> should become a primitive anyway)
+    if (texpr.typeRef.value.moduleName === "sys.types" && texpr.typeRef.value.name === "Nullable") {
+      return nullableJsonBinding(dresolver, texpr.parameters[0], boundTypeParams);
+    }
+
     if (ast.decl.type_.kind === "struct_") {
       return structJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
     } else if (ast.decl.type_.kind === "union_") {
-      if (isEnum(ast.decl.type_.value)) {
-        return enumJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
-      } else {
-        return unionJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
-      }
+      return unionJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
     } else if (ast.decl.type_.kind === "newtype_") {
       return newtypeJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
     } else if (ast.decl.type_.kind === "type_") {
@@ -274,7 +277,33 @@ function enumJsonBinding(dresolver : DeclResolver, union : AST.Union, params : A
   return {toJson, fromJson};
 }
 
+function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding<any> {
+  const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams))
+
+  function toJson(v : any) : any {
+    if (v == null) {
+      return v;
+    };
+    return elementBinding().toJson(v);
+  }
+
+  function fromJson(json : any) : any {
+    if (json == null) {
+      return json;
+    };
+    return elementBinding().toJson(json);
+  }
+
+  return {toJson, fromJson};
+}
+
 function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
+
+  // Enums are a special union case
+  if (isEnum(union)) {
+    return enumJsonBinding(dresolver, union, params, boundTypeParams);
+  }
+
   const newBoundTypeParams = createBoundTypeParams(dresolver, union.typeParams, params, boundTypeParams);
   const detailsByName = {};
   const detailsBySerializedName = {};
