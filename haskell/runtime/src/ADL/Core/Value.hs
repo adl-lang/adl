@@ -9,9 +9,9 @@ module ADL.Core.Value(
 
   adlToJson,
   adlFromJson,
-  aFromJSONFile,
-  aFromJSONFile',
-  aToJSONFile,
+  adlFromJsonFile,
+  adlFromJsonFile',
+  adlToJsonFile,
   genField,
   genObject,
   genUnion,
@@ -56,7 +56,7 @@ type ParseContext = [ParseContextItem]
 data ParseContextItem
   = ParseField T.Text
   | ParseItem Int
-    
+
 data ParseResult a
   = ParseSuccess a
   | ParseFailure T.Text ParseContext
@@ -92,7 +92,7 @@ instance Applicative ParseResult where
   (ParseFailure e ctx) <*> _ = ParseFailure e ctx
   _ <*> (ParseFailure e ctx) = ParseFailure e ctx
   (ParseSuccess a) <*> (ParseSuccess b) = ParseSuccess (a b)
-  
+
 instance Alternative ParseResult where
   empty = ParseFailure "" []
   ParseFailure{} <|> pr = pr
@@ -110,40 +110,40 @@ adlFromJson :: AdlValue a => JS.Value -> ParseResult a
 adlFromJson = runJsonParser jsonParser []
 
 -- Write an ADL value to a JSON file.
-aToJSONFile :: JsonGen a -> FilePath -> a -> IO ()
-aToJSONFile jg file a = LBS.writeFile file lbs
-  where lbs = JS.encode (runJsonGen jg a)
+adlToJsonFile :: AdlValue a => FilePath -> a -> IO ()
+adlToJsonFile file a = LBS.writeFile file lbs
+  where lbs = JS.encode (runJsonGen jsonGen a)
 
--- Read and parse an ADL value from a JSON file. 
-aFromJSONFile :: JsonParser a -> FilePath -> IO (ParseResult a)
-aFromJSONFile jp file = do
+-- Read and parse an ADL value from a JSON file.
+adlFromJsonFile :: AdlValue a => FilePath -> IO (ParseResult a)
+adlFromJsonFile file = do
   lbs <- LBS.readFile file
   case JS.eitherDecode' lbs of
     (Left e) -> return (ParseFailure ("Invalid json:" <> T.pack e) [])
-    (Right jv) -> return (runJsonParser jp [] jv)
+    (Right jv) -> return (runJsonParser jsonParser [] jv)
 
 -- Read and parse an ADL value from a JSON file, throwing an exception
--- on failure.    
-aFromJSONFile' :: forall a .(AdlValue a) => JsonParser a -> FilePath -> IO a
-aFromJSONFile' jg file = do
-  ma <- aFromJSONFile jg file
+-- on failure.
+adlFromJsonFile' :: forall a . AdlValue a => FilePath -> IO a
+adlFromJsonFile' file = do
+  ma <- adlFromJsonFile file
   case ma of
     (ParseFailure e ctx) -> ioError $ userError $
       T.unpack
         (  "Unable to parse a value of type "
         <> atype (Proxy :: Proxy a)
         <> " from " <>  T.pack file <> ": "
-        <> e <> ", at " <> textFromParseContext ctx
+        <> e <> " at " <> textFromParseContext ctx
         )
     (ParseSuccess a) -> return a
 
 textFromParseContext :: ParseContext -> T.Text
-textFromParseContext [] = "[root]"
+textFromParseContext [] = "$"
 textFromParseContext pc = T.intercalate "." (map fmt (reverse pc))
   where
     fmt (ParseField f) = f
     fmt (ParseItem i) = "[" <> T.pack (show i) <> "]"
-  
+
 genObject :: [o -> (T.Text, JS.Value)] -> JsonGen o
 genObject fieldfns = JsonGen (\o -> JS.object [f o | f <- fieldfns])
 
@@ -152,13 +152,13 @@ genField label f o = (label,adlToJson (f o))
 
 genUnion :: (u -> JS.Value) -> JsonGen u
 genUnion f = JsonGen f
-  
+
 genUnionValue :: AdlValue a => T.Text -> a -> JS.Value
 genUnionValue disc a = JS.object [(disc,adlToJson a)]
 
 genUnionVoid :: T.Text -> JS.Value
 genUnionVoid disc = JS.toJSON disc
- 
+
 parseField :: AdlValue a => T.Text -> JsonParser a
 parseField label = withJsonObject $ \ctx hm -> case HM.lookup label hm of
   (Just b) -> runJsonParser jsonParser (ParseField label:ctx) b
@@ -198,7 +198,7 @@ instance AdlValue () where
   atype _ = "Void"
 
   jsonGen = JsonGen (const JS.Null)
-  
+
   jsonParser = JsonParser $ \ctx v -> case v of
     JS.Null -> pure ()
     _ -> ParseFailure "expected null" ctx
@@ -207,7 +207,7 @@ instance AdlValue Bool where
   atype _ = "Bool"
 
   jsonGen = JsonGen JS.Bool
-  
+
   jsonParser = JsonParser $ \ctx v -> case v of
     (JS.Bool b) -> pure b
     _ -> ParseFailure "expected a boolean" ctx
@@ -286,7 +286,7 @@ instance forall a . (AdlValue a) => AdlValue [a] where
     (JS.Array a) -> let parse (i,jv) = runJsonParser jsonParser (ParseItem i:ctx) jv
                     in traverse parse (zip [0,1..] (V.toList a))
     _ -> ParseFailure "expected an array" ctx
- 
+
 newtype StringMap v = StringMap {unStringMap :: M.Map T.Text v}
   deriving (Eq,Ord,Show)
 
@@ -323,7 +323,7 @@ instance (AdlValue t1, AdlValue t2) => AdlValue (Either t1 t2) where
         , "<", atype (Proxy :: Proxy t1)
         , ",", atype (Proxy :: Proxy t2)
         , ">" ]
-    
+
   jsonGen = genUnion  $ \v -> case v of
     (Left v1) -> genUnionValue "left" v1
     (Right v2) -> genUnionValue "right" v2
@@ -338,7 +338,7 @@ instance forall t1 t2 . (AdlValue t1, AdlValue t2) => AdlValue (t1,t2) where
         , "<", atype (Proxy :: Proxy t1)
         , ",", atype (Proxy :: Proxy t2)
         , ">" ]
-    
+
   jsonGen = genObject
     [ genField "v1" fst
     , genField "v2" snd
@@ -366,7 +366,7 @@ instance (AdlValue t) => AdlValue (Nullable t) where
         [ "sys.types.Nullable"
         , "<", atype (Proxy :: Proxy t)
         , ">" ]
-  
+
   jsonGen = JsonGen $ \v -> case v of
     (Nullable Nothing) -> JS.Null
     (Nullable (Just v1)) -> adlToJson v1
