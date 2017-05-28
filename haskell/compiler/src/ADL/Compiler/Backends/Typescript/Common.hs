@@ -59,7 +59,7 @@ genTypeExpr (TypeExpr (RT_Param parameterName) _) = return parameterName
 
 genTypeExpr (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) nullableTypeExpr) = do
     nonNullableTypeExpr <- genTypeExpr $ L.head nullableTypeExpr
-    return (nonNullableTypeExpr <> "|null")
+    return ("(" <> nonNullableTypeExpr <> "|null)")
 
 genTypeExpr (TypeExpr (RT_Named (ScopedName moduleName name, _)) parameters) = do
     parametersExpressions <- mapM genTypeExpr parameters
