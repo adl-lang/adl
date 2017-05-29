@@ -1,7 +1,7 @@
 name:                adl-compiler
 version:             0.4.1
 synopsis:            A compiler for the Algebraic Data Language (ADL)
--- description:         
+-- description:
 license:             BSD3
 license-file:        ../../LICENSE
 author:              Tim Docker
@@ -32,6 +32,8 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/java/runtime/org/adl/runtime/MaybeHelpers.java
                      lib/java/runtime/org/adl/runtime/NullableHelpers.java
                      lib/java/runtime/org/adl/runtime/Lazy.java
+                     lib/haskell/runtime/ADL/Core.hs
+                     lib/haskell/runtime/ADL/Core/Value.hs
 
 executable adlc
   hs-source-dirs:      src
@@ -80,4 +82,3 @@ test-suite adlc-tests
                      , ADL.Adlc.Config.Java
                      , HaskellCustomTypes
   ghc-options:       -fwarn-incomplete-patterns
-

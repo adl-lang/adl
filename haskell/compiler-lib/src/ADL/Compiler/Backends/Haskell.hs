@@ -3,26 +3,27 @@ module ADL.Compiler.Backends.Haskell(
   HaskellFlags(..),
   HaskellModule(..),
   CustomType(..),
-  generate, 
+  generate,
   )where
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.List as L
-import Data.Ord (comparing)
 
-import System.FilePath(takeDirectory,joinPath,addExtension)
-import Data.Monoid
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
+import Data.Attoparsec.Number
+import Data.Foldable(for_)
+import Data.Monoid
+import Data.Ord (comparing)
+import System.FilePath(takeDirectory,joinPath,addExtension, splitDirectories, splitExtension, (</>))
 
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson as JS
 import qualified Data.Scientific as S
-import Data.Attoparsec.Number
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -35,6 +36,7 @@ import ADL.Compiler.EIO
 import ADL.Compiler.Processing hiding (litNumber)
 import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
+import ADL.Utils.FileDiff(dirContents)
 
 newtype HaskellModule = HaskellModule T.Text
   deriving Show
@@ -75,6 +77,7 @@ type CDecl = Decl (Maybe CustomType) CResolvedType
 data MState = MState {
    ms_name :: ModuleName,
    ms_moduleMapper :: ModuleName -> HaskellModule,
+   ms_runtimePackage :: T.Text,
    ms_indent :: T.Text,
    ms_exports :: Set.Set T.Text,
    ms_imports :: Set.Set T.Text,
@@ -231,7 +234,7 @@ hTypeExprB m (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   importMap
   importText
   return (template "StringMap ($1)" [argt])
-  
+
 hTypeExprB m (TypeExpr c args) = do
   ct <- hTypeExprB1 m c
   argst <- mapM (hTypeExprB m) args
@@ -271,7 +274,7 @@ hInstanceHeader klass sname tps =
   where
     constraints = T.intercalate ", " [template "$1 $2" [klass, hTypeParamName tp]
                                      | tp <- tps ]
-  
+
 
 enableScopedTypeVariables :: [Ident] -> HGen ()
 enableScopedTypeVariables [] = return ()
@@ -367,7 +370,7 @@ generateMkStructFunction lname mn d s = do
      (Just jv) -> do
        lit <- generateLiteral (f_type f) jv
        return (Nothing, lit)
-       
+
   let fnname = "mk" <> lname
       params = [param | (Just (param,_),_) <- args]
       paramtypes = [ptype | (Just (_,ptype),_) <- args]
@@ -381,7 +384,7 @@ generateNullStructDataType :: Ident -> ModuleName -> CDecl -> Struct CResolvedTy
 generateNullStructDataType lname mn d s = do
     wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
     indent derivingStdClasses
-        
+
 
 generateStructADLInstance :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateStructADLInstance lname mn d s = do
@@ -474,18 +477,18 @@ generateLiteral te v =  generateLV Map.empty te v
     generateLV m (TypeExpr (RT_Primitive P_StringMap) [te]) v = generateStringMap m te v
     generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
       (Decl_Struct s) -> generateStruct m te0 decl s tes v
-      (Decl_Union u) -> generateUnion m decl u tes v 
+      (Decl_Union u) -> generateUnion m decl u tes v
       (Decl_Typedef t) -> generateTypedef m decl t tes v
       (Decl_Newtype n) -> generateNewtype m decl n tes v
     generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
          (Just te) -> generateLV m te v
 
     generateVec m te (JS.Array v) = do
-      vals <- mapM (generateLV m te) (V.toList v) 
+      vals <- mapM (generateLV m te) (V.toList v)
       return (template "[ $1 ]" [T.intercalate ", " vals])
 
     generateStringMap m te (JS.Object hm) = do
-      pairs <- mapM genPair (HM.toList hm) 
+      pairs <- mapM genPair (HM.toList hm)
       return (template "(stringMapFromList [$1])" [T.intercalate ", " pairs])
       where
         genPair (k,jv) = do
@@ -494,7 +497,7 @@ generateLiteral te v =  generateLV Map.empty te v
 
     generateStruct m te0 d s tes (JS.Object hm) = do
       fields <- forM (s_fields s) $ \f -> do
-        let mjv = HM.lookup (f_serializedName f) hm <|> f_default f 
+        let mjv = HM.lookup (f_serializedName f) hm <|> f_default f
             jv = case mjv of
               Just jv -> jv
               Nothing -> error ("BUG: missing default value for field " <> T.unpack (f_name f))
@@ -546,7 +549,7 @@ generateLiteral te v =  generateLV Map.empty te v
         importsForCustomType ct
         let ctor = ct_structConstructor ct
         if T.null ctor then error "Missing custom constructor for struct" else return ctor
-                                                                                        
+
 generateCustomType :: Ident -> CDecl -> CustomType -> HGen ()
 generateCustomType n d ct = do
   -- imports and exports
@@ -567,19 +570,19 @@ generateCustomType n d ct = do
       generateDecl i d
 
 importsForCustomType :: CustomType -> HGen ()
-importsForCustomType ct = mapM_ importModule (ct_hImports ct) 
+importsForCustomType ct = mapM_ importModule (ct_hImports ct)
 
 generateModule :: CModule -> HGen T.Text
 generateModule m = do
+  ms <- get
   addLanguageFeature "OverloadedStrings"
   addImport "import qualified Prelude"
   addImport "import qualified Data.Proxy"
   addImport "import Control.Applicative( (<$>), (<*>), (<|>) )"
-  importModule (HaskellModule "ADL.Core")
+  importModule (HaskellModule (ms_runtimePackage ms))
   importQualifiedModuleAs (HaskellModule "Data.Aeson") "JS"
   importQualifiedModuleAs (HaskellModule "Data.HashMap.Strict") "HM"
 
-  ms <- get
   let mname = ms_name ms
       genDecl (n,d) = do
           nl
@@ -613,14 +616,15 @@ generateModule m = do
 -- from adl module names to haskell modules, and from haskell module
 -- name to the written file.
 writeModuleFile :: (ModuleName -> HaskellModule) ->
+                   T.Text ->
                    (HaskellModule -> FilePath) ->
                    (ScopedName -> RDecl -> Maybe CustomType) ->
                    (FilePath -> LBS.ByteString -> IO ()) ->
                    RModule ->
                    EIOT ()
-writeModuleFile hmf fpf getCustomType fileWriter m0 = do
+writeModuleFile hmf runtimePackage fpf getCustomType fileWriter m0 = do
   let moduleName = m_name m
-      s0 = MState moduleName hmf "" Set.empty Set.empty Set.empty []
+      s0 = MState moduleName hmf runtimePackage "" Set.empty Set.empty Set.empty []
       m = associateCustomTypes getCustomType moduleName m0
       t = evalState (generateModule m) s0
       fpath = fpf (hmf (m_name m))
@@ -641,7 +645,7 @@ fileMapper (HaskellModule t) = addExtension (joinPath ps) "hs"
 unreserveWord :: T.Text -> T.Text
 unreserveWord n | Set.member n reservedWords = T.append n "_"
                 | otherwise = n
-  
+
 reservedWords :: Set.Set T.Text
 reservedWords = Set.fromList
   [ "as"
@@ -679,14 +683,41 @@ reservedWords = Set.fromList
  ----------------------------------------------------------------------
 
 data HaskellFlags = HaskellFlags {
-  hf_modulePrefix :: String
+  hf_modulePrefix :: String,
+  hf_includeRuntime :: Maybe FilePath,
+  hf_runtimePackage :: T.Text
 }
 
 generate :: AdlFlags -> HaskellFlags -> FileWriter -> (ScopedName -> RDecl -> Maybe CustomType) -> [FilePath] -> EIOT ()
 generate af hf fileWriter getCustomType modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
   rm <- loadAndCheckModule af modulePath
   writeModuleFile (moduleMapper (hf_modulePrefix hf))
+                  (hf_runtimePackage hf)
                   fileMapper
                   getCustomType
                   fileWriter
                   rm
+  case hf_includeRuntime hf of
+    (Just runtimedir) -> liftIO $ generateRuntime hf fileWriter runtimedir
+    Nothing -> return ()
+
+generateRuntime :: HaskellFlags -> FileWriter -> FilePath  -> IO ()
+generateRuntime hf fileWriter runtimedir = do
+  files <- dirContents runtimedir
+  for_ files $ \inpath -> do
+    content <- LBS.readFile (runtimedir </> inpath)
+    fileWriter (fileMapper (newModuleName inpath)) (adjustContent content)
+  where
+    newModuleName :: FilePath -> HaskellModule
+    newModuleName path = HaskellModule (T.intercalate "." (map T.pack components1))
+      where
+        (path1,ext) = splitExtension path
+        components = splitDirectories path1
+        components1 = case L.stripPrefix ["ADL","Core"] components of
+          Nothing -> components
+          (Just cs) -> map T.unpack (T.splitOn "." (hf_runtimePackage hf)) <> cs
+
+    adjustContent :: LBS.ByteString -> LBS.ByteString
+    adjustContent origLBS = LBS.fromStrict (T.encodeUtf8 newT)
+      where origT = T.decodeUtf8 (LBS.toStrict origLBS)
+            newT = T.replace "ADL.Core"  (hf_runtimePackage hf) origT

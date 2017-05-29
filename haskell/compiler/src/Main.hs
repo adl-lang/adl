@@ -36,13 +36,13 @@ mergeFileExtensionOption ufn =
   Option "" ["merge-adlext"]
     (ReqArg ufn "EXT")
     "Add the specifed adl file extension to merged on loading"
-  
+
 includePrefixOption ufn =
   Option "" ["include-prefix"]
     (ReqArg ufn "DIR")
     "The prefix to be used to generate/reference include files"
 
-verboseOption ufn = 
+verboseOption ufn =
   Option "" ["verbose"]
     (NoArg ufn)
     "Print extra diagnostic information, especially about files being read/written"
@@ -57,17 +57,17 @@ noOverwriteOption ufn =
     (NoArg ufn)
     "Don't update files that haven't changed"
 
-javaPackageOption ufn =
+outputPackageOption ufn =
   Option "" ["package"]
     (ReqArg ufn "PACKAGE")
-    "The java package into which the generated ADL code will be placed"
+    "The language package into which the generated ADL code will be placed"
 
-javaRuntimePackageOption ufn =
+runtimePackageOption ufn =
   Option "" ["rtpackage"]
     (ReqArg ufn "PACKAGE")
     "The java package where the ADL runtime is located"
 
-javaIncludeRuntimePackageOption ufn =
+includeRuntimePackageOption ufn =
   Option "" ["include-rt"]
     (NoArg ufn)
     "Generate the runtime code"
@@ -159,7 +159,7 @@ runVerify args0 =
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl verify [OPTION...] files..."
-    
+
     optDescs =
       [ searchDirOption addToSearchPath
       , mergeFileExtensionOption addToMergeFileExtensions
@@ -174,17 +174,18 @@ runAst args0 =
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl ast [OPTION...] files..."
-    
+
     optDescs =
       [ searchDirOption addToSearchPath
       , outputDirOption setOutputDir
       , mergeFileExtensionOption addToMergeFileExtensions
       ]
 
-runHaskell args0 =
+runHaskell args0 = do
+  libDir <- liftIO $ getLibDir
+  let optDescs = mkOptDescs libDir
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-        libDir <- liftIO $ getLibDir
         af <- getAdlFlags ["adl-hs"]
         let flags = buildFlags af (flags0 libDir) opts
         H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomType args
@@ -192,19 +193,21 @@ runHaskell args0 =
   where
     header = "Usage: adl haskell [OPTION...] files..."
 
-    flags0 libDir = H.HaskellFlags {
-      hf_modulePrefix="ADL.Generated"
+    flags0 libDir = H.HaskellFlags
+      { hf_modulePrefix="ADL.Generated"
+      , hf_includeRuntime=Nothing
+      , hf_runtimePackage="ADL.Core"
       }
 
-    optDescs =
+    mkOptDescs libDir =
       [ searchDirOption addToSearchPath
       , mergeFileExtensionOption addToMergeFileExtensions
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
       , verboseOption setVerbose
-      , Option "" ["moduleprefix"]
-        (ReqArg (\s -> updateBackendFlags (\hf -> hf{hf_modulePrefix=s})) "PREFIX")
-        "Set module name prefix for generated code "
+      , outputPackageOption (\s -> updateBackendFlags (\hf -> hf{hf_modulePrefix=s}))
+      , includeRuntimePackageOption (updateBackendFlags (\hf ->hf{hf_includeRuntime=Just (haskellRuntimeDir libDir)}))
+      , runtimePackageOption (\s -> updateBackendFlags (\hf -> hf{hf_runtimePackage=T.pack s}))
       ]
 
 runCpp args0 =
@@ -256,9 +259,9 @@ runJava args0 =
       , outputDirOption setOutputDir
       , noOverwriteOption setNoOverwrite
       , verboseOption setVerbose
-      , javaPackageOption (\s -> updateBackendFlags (\jf -> jf{jf_package=javaPackage (T.pack s)}))
-      , javaIncludeRuntimePackageOption (updateBackendFlags (\jf ->jf{jf_includeRuntime=True}))
-      , javaRuntimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{cgp_runtimePackage=fromString s}))
+      , outputPackageOption (\s -> updateBackendFlags (\jf -> jf{jf_package=javaPackage (T.pack s)}))
+      , includeRuntimePackageOption (updateBackendFlags (\jf ->jf{jf_includeRuntime=True}))
+      , runtimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{cgp_runtimePackage=fromString s}))
       , javaGenerateParcelable (updateCodeGenProfile (\cgp->cgp{cgp_parcelable=True}))
       , javaGenerateJson (updateCodeGenProfile (\cgp->cgp{cgp_json=True}))
       , javaHungarianNaming (updateCodeGenProfile (\cgp->cgp{cgp_hungarianNaming=True}))
@@ -289,7 +292,7 @@ runJavaScript args0 =
       , verboseOption setVerbose
       ]
 
-runShow args0 = 
+runShow args0 =
   case args0 of
     ["--adlstdlib"] -> liftIO $ do
       systemAdlDir <- systemAdlDir <$> getLibDir
@@ -308,8 +311,8 @@ usage = T.intercalate "\n"
   , "       adlc javascript [OPTION..] <modulePath>..."
   , "       adlc show --version"
   , "       adlc show --adlstdlib"
-  ]    
-    
+  ]
+
 main = do
   args <- getArgs
   runEIO $ case args of
@@ -328,5 +331,3 @@ main = do
         (Left perr) ->
           T.putStrLn perr >> exitWith (ExitFailure 1)
         (Right _) -> exitWith ExitSuccess
-
-      
