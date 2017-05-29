@@ -74,7 +74,7 @@ data FieldDetails = FieldDetails {
   fdName        :: T.Text,
   fdTypeExprStr :: T.Text,
   fdOptional    :: Bool,
-  fdDefValue    :: Maybe Code
+  fdDefValue    :: Maybe T.Text
 };
 
 instance Eq FieldDetails where

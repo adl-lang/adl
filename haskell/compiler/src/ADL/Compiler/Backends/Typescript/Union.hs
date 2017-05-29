@@ -23,14 +23,8 @@ genUnion  m decl union@Union{u_typeParams=parameters} = do
 
 genUnionWithDiscriminate :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnionWithDiscriminate  m decl union
-  | isUnionEnum (u_fields union) = genUnionEnum m decl union
+  | isUnionEnum union = genUnionEnum m decl union
   | otherwise = genUnionInterface m decl union
-
--- Check if all fields of the union are void.
-isUnionEnum :: [Field CResolvedType] -> Bool
-isUnionEnum (Field{f_type=(TypeExpr (RT_Primitive P_Void) _)}:xs) = isUnionEnum xs
-isUnionEnum [] = True
-isUnionEnum _ = False
 
 genUnionEnum :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnionEnum _ decl enum = do

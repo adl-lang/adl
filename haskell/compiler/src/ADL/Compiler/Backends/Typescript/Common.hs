@@ -1,30 +1,29 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Compiler.Backends.Typescript.Common where
 
-import           ADL.Compiler.AST
-import           ADL.Compiler.Backends.Typescript.DataTypes
-import           ADL.Compiler.Primitive
-import           ADL.Compiler.Processing
-import           ADL.Utils.Format                           (template,formatText)
-import           ADL.Utils.IndentedCode
-import           Control.Monad(when)
-import           Control.Monad.Trans.State.Strict
-import           Data.Scientific(isInteger)
 import qualified Data.Aeson as JS
 import qualified Data.Aeson.Text as JS
-import qualified Data.Char                                  as C
-import qualified Data.Foldable                              as F
-import qualified Data.HashMap.Lazy                          as HM
-import qualified Data.List                                  as L
-import qualified Data.Map                                   as Map
-import           Data.Monoid
-import qualified Data.Text                                  as T
-import qualified Data.Text.Lazy                             as LT
-import qualified Data.Vector                                as V
+import qualified Data.Char as C
+import qualified Data.Foldable as F
+import qualified Data.HashMap.Lazy as HM
+import qualified Data.List as L
+import qualified Data.Map as M
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as LT
+import qualified Data.Vector as V
 
-
--- * Stateful functions
+import ADL.Compiler.AST
+import ADL.Compiler.Backends.Typescript.DataTypes
+import ADL.Compiler.Primitive
+import ADL.Compiler.Processing
+import ADL.Utils.Format(template,formatText)
+import ADL.Utils.IndentedCode
+import Control.Applicative
+import Control.Monad(when)
+import Control.Monad.Trans.State.Strict
+import Data.Maybe(fromMaybe)
+import Data.Monoid
+import Data.Scientific(isInteger)
 
 addDeclaration :: Code -> CState ()
 addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
@@ -32,7 +31,7 @@ addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails field = do
   typeExprStr <- genTypeExpr (f_type field)
-  defValueStr <- traverse (genLiteralValue (f_type field)) (f_default field)
+  let defValueStr = fmap (genLiteralValue (f_type field) M.empty) (f_default field)
   return (FieldDetails field (f_name field) typeExprStr False defValueStr)
 
 -- | Generate the typescript type given an ADL type expression
@@ -49,6 +48,10 @@ genTypeExpr (TypeExpr (RT_Primitive P_Word16) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Word32) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Word64) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Bool) _) = return "boolean"
+genTypeExpr (TypeExpr (RT_Primitive P_Void) _) = return "null"
+genTypeExpr (TypeExpr (RT_Primitive P_ByteVector) _) = error "FIXME: ByteVector type not implemented"
+genTypeExpr (TypeExpr (RT_Primitive P_StringMap) _) = error "FIXME: StringMap type not implemented"
+genTypeExpr (TypeExpr (RT_Primitive P_Sink) _) = error "FIXME: Sink type not implemented"
 
 genTypeExpr (TypeExpr (RT_Primitive P_Vector) [vectorEntryTypeExpr]) = do
   vectorEntryOutput <- genTypeExpr vectorEntryTypeExpr
@@ -57,7 +60,7 @@ genTypeExpr (TypeExpr (RT_Primitive P_Vector) _) = error "BUG: Vector must have 
 
 genTypeExpr (TypeExpr (RT_Param parameterName) _) = return parameterName
 
-genTypeExpr (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) nullableTypeExpr) = do
+genTypeExpr (TypeExpr (RT_Named (scopedName, _)) nullableTypeExpr) | isNullable scopedName = do
     nonNullableTypeExpr <- genTypeExpr $ L.head nullableTypeExpr
     return ("(" <> nonNullableTypeExpr <> "|null)")
 
@@ -68,18 +71,11 @@ genTypeExpr (TypeExpr (RT_Named (ScopedName moduleName name, _)) parameters) = d
     addModulesImport modules name
     return $ (renderModulePrefix modules <> name) <> renderParametersExpr parametersExpressions
 
-genTypeExpr _ = return "TYPE??"  -- FIXME: implement
-
--- | Generate the typescript literal value for the given ADL type and
--- literal
-genLiteralValue :: CTypeExpr -> JS.Value -> CState Code
-genLiteralValue typeExpr value = return $ renderLiteralValue typeExpr value
-
 genAnnotation :: ScopedName -> JS.Value -> CState T.Text
-genAnnotation _ _ = return "UNHANDLED ANNOTATION???"
+genAnnotation _ _ = error "FIXME: genAnnotation not implemented"
 
 addImport :: Ident -> TSImport -> CState ()
-addImport moduleIdentity tsImport = modify (\mf->mf{mfImports=Map.insert moduleIdentity tsImport (mfImports mf)})
+addImport moduleIdentity tsImport = modify (\mf->mf{mfImports=M.insert moduleIdentity tsImport (mfImports mf)})
 
 addModulesImport :: [Ident] -> T.Text -> CState ()
 addModulesImport [] _ = return ()
@@ -88,62 +84,93 @@ addModulesImport modules _ = addImport importAsName tsImport
       tsImport = TSImport{iAsName=importAsName, iModulePath=modules}
       importAsName = T.intercalate "_" modules
 
--- * Pure functions
+type BoundTypeVariables = M.Map Ident CTypeExpr
 
-renderLiteralValue :: CTypeExpr -> JS.Value -> Code
-renderLiteralValue (TypeExpr (RT_Primitive P_Double) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Float) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_String) _) (JS.String value) = ctemplate "'$1'" [value]
-renderLiteralValue (TypeExpr (RT_Primitive P_Int8) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Int16) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Int32) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Int64) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Word8) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Word16) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Word32) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Word64) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Primitive P_Bool) _) (JS.Bool value)
-  | value = cline "true"
-  | otherwise = cline "false"
-renderLiteralValue (TypeExpr (RT_Primitive P_Vector) [vectorEntryTypeExpr]) (JS.Array values) =
-  cspan (cspan (cline "[") (F.foldr (constructListSpan vectorEntryTypeExpr) CEmpty values)) (cline "]")
-renderLiteralValue (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) _) JS.Null =
-  cline "null"
-renderLiteralValue (TypeExpr (RT_Named (ScopedName{sn_name="Nullable"}, _)) [nullableTypeExpr]) (JS.Object object) =
-  case HM.lookup "just" object of
-    Nothing    -> cline "null"
-    Just value -> renderLiteralValue nullableTypeExpr value
+genLiteralValue :: CTypeExpr -> BoundTypeVariables -> JS.Value -> T.Text
+genLiteralValue (TypeExpr (RT_Primitive p) tparams) btv jv = case p of
+  P_Double -> toNumber jv
+  P_Float -> toNumber jv
+  P_Int8 -> toNumber jv
+  P_Int16 -> toNumber jv
+  P_Int32 -> toNumber jv
+  P_Int64 -> toNumber jv
+  P_Word8 -> toNumber jv
+  P_Word16 -> toNumber jv
+  P_Word32 -> toNumber jv
+  P_Word64 -> toNumber jv
+  P_String -> case jv of
+    JS.String v -> template "'$1'" [v]
+    _ -> error "BUG: expected a string literal"
+  P_Bool -> case jv of
+    JS.Bool True -> "true"
+    JS.Bool False -> "false"
+    _ -> error "BUG: expected a boolean literal"
+  P_Void -> "null"
+  P_Vector -> case tparams of
+    [texpr] -> case jv of
+      JS.Array values -> template "[$1]" [T.intercalate ", " (map (genLiteralValue texpr btv) (V.toList values))]
+      _ -> error "BUG: expected an array literal for Vector"
+    _ -> error "BUG: expected a single type parameter for Vector"
+  P_ByteVector -> error "FIXME: ByteVector literals not implemented"
+  P_StringMap -> error "FIXME: ByteVector literals not implemented"
+  P_Sink -> error "FIXME: Sink literals not implemented"
+  where
+    toNumber (JS.Number n) = litNumber n
+    toNumber _ = error "BUG: expected a number literal"
 
-renderLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) _) (JS.Object value) =
-  renderStructLiteralVal struct value
+genLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) tparams) btv jv =
+  case jv of
+    JS.Object hm -> template "{$1}" [T.intercalate ", " (map (renderField hm) (s_fields struct))]
+    _ -> error "BUG: expected an object literal for struct"
+  where
+    btv' = createBoundTypeVariables btv (s_typeParams struct)  tparams
+    renderField hm f = template "$1 : $2" [f_name f, genLiteralValue (f_type f) btv' value]
+      where
+        value = case HM.lookup (f_name f) hm of
+          Nothing -> case f_default f of
+            Nothing -> error ("BUG: missing default value for " <> T.unpack (f_name f))
+            (Just value) -> value
+          (Just value) -> value
 
-renderLiteralValue (TypeExpr (RT_Named _) _) (JS.String value) = cline ("\'" <> value <> "\'")
-renderLiteralValue (TypeExpr (RT_Named _) _) (JS.Number value) = cline $ litNumber value
-renderLiteralValue (TypeExpr (RT_Named _) _) (JS.Bool value)
-  | value = cline "true"
-  | otherwise = cline "false"
-renderLiteralValue _ value = cline (T.pack $ show value)
+genLiteralValue (TypeExpr (RT_Named (scopedName, Decl{d_type=Decl_Union union})) tparams) btv value =
+  case value of
+    JS.String v ->
+      case findUnionField v (u_fields union) of
+        (i,f) | isUnionEnum union -> T.pack (show i)
+              | isNullable scopedName && v == "nothing" -> "null"
+              | otherwise -> template "{kind : \"$1\"}" [f_name f]
+    JS.Object hm -> case HM.toList hm of
+      [(k,value)] ->
+        case findUnionField k (u_fields union) of
+          (i,f) | isNullable scopedName -> genLiteralValue (f_type f) btv' value
+                | otherwise -> template "{kind : $1, value : $2}" [f_name f, genLiteralValue (f_type f) btv' value]
+      _ -> error "BUG: union literal should be a single element object"
+    _ -> error "BUG: expected a string or object literal for union"
+  where
+    btv' = createBoundTypeVariables btv (u_typeParams union)  tparams
 
+genLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Typedef typedef})) tparams) btv value =
+  genLiteralValue (t_typeExpr typedef) btv' value
+  where
+    btv' = createBoundTypeVariables btv (t_typeParams typedef)  tparams
 
-constructListSpan :: CTypeExpr -> JS.Value -> Code -> Code
-constructListSpan typeExpr value CEmpty = renderLiteralValue typeExpr value
-constructListSpan typeExpr value c2 = CSpan (CSpan (renderLiteralValue typeExpr value) (cline ", ")) c2
+genLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Newtype ntype})) tparams) btv value =
+  genLiteralValue (n_typeExpr ntype) btv' value
+  where
+    btv' = createBoundTypeVariables btv (n_typeParams ntype)  tparams
 
-renderStructLiteralVal :: CStruct-> JS.Object -> Code
-renderStructLiteralVal Struct{s_fields=fields} object =
-  cblock "" $ renderLiteralValForFields fields object
+genLiteralValue (TypeExpr (RT_Param param) _) btv value =
+  case M.lookup param btv of
+    Nothing -> error ("BUG: unable to resolve type variable " <> T.unpack param)
+    Just texpr -> genLiteralValue texpr btv value
 
-renderLiteralValForFields :: [CField] -> JS.Object -> Code
-renderLiteralValForFields (x:xs) object = renderLiteralValForField x object <> renderLiteralValForFields xs object
-renderLiteralValForFields [] _ = CEmpty
+createBoundTypeVariables :: BoundTypeVariables -> [Ident] -> [CTypeExpr] -> BoundTypeVariables
+createBoundTypeVariables btv names types = M.union btv (M.fromList (zip names types))
 
-renderLiteralValForField :: CField -> JS.Object -> Code
-renderLiteralValForField Field{f_name=fieldName, f_type=fieldType, f_default=defaultValue} object =
-  case HM.lookup fieldName object of
-    Nothing -> case defaultValue of
-      Nothing -> CEmpty
-      Just value -> cspan (cspan (ctemplate "$1: " [fieldName]) (renderLiteralValue fieldType value)) (cline ",")
-    Just value -> cspan (cspan (ctemplate "$1: " [fieldName]) (renderLiteralValue fieldType value)) (cline ",")
+findUnionField :: T.Text -> [Field CResolvedType] -> (Int,Field CResolvedType)
+findUnionField fname fs = case L.find (\(_,f) -> f_name f == fname) (zip [0,1..] fs) of
+  (Just v) -> v
+  Nothing -> error ("BUG: invalid literal " <> show fname <> "for union")
 
 renderModulePrefix :: [Ident] -> T.Text
 renderModulePrefix []      = T.pack ""
@@ -196,10 +223,10 @@ renderFieldInitialisation :: FieldDetails -> Code
 renderFieldInitialisation fd = case fdDefValue fd of
   Nothing -> ctemplate "$1: input.$1," [fdName fd]
   Just defaultValue ->
-    cspan (cspan (ctemplate "$1: input.$1 === undefined ? " [fdName fd]) defaultValue) (ctemplate " : input.$1," [fdName fd])
+    cspan (cspan (ctemplate "$1: input.$1 === undefined ? " [fdName fd]) (cline defaultValue)) (ctemplate " : input.$1," [fdName fd])
 
 renderCommentsForDeclaration :: CDecl -> Code
-renderCommentsForDeclaration decl = renderComments $ Map.elems (d_annotations decl)
+renderCommentsForDeclaration decl = renderComments $ M.elems (d_annotations decl)
 
 renderComments :: [(CResolvedType, JS.Value)] -> Code
 renderComments = L.foldr (CAppend . renderComment) CEmpty
@@ -252,7 +279,7 @@ addAstMap m = do
   addDeclaration $
     cline "export const _AST_MAP = {"
     <> indent (mconcat [ctemplate "\"$1\" : $2$3" [scopedName m decl, astVariableName decl, mcomma]
-                       | (decl,mcomma) <- withCommas (Map.elems (m_decls m))])
+                       | (decl,mcomma) <- withCommas (M.elems (m_decls m))])
     <> cline "};"
   where
 
@@ -372,3 +399,14 @@ withCommas :: [a] -> [(a,T.Text)]
 withCommas [] = []
 withCommas [a] = [(a,"")]
 withCommas (a:as) = (a,","):withCommas as
+
+-- Check if all fields of the union are void.
+isUnionEnum :: Union CResolvedType -> Bool
+isUnionEnum u = all (isVoid . f_type) (u_fields u)
+
+isVoid :: CTypeExpr -> Bool
+isVoid (TypeExpr (RT_Primitive P_Void) _)  = True
+isVoid _ = False
+
+isNullable :: ScopedName -> Bool
+isNullable sn = sn_moduleName sn == ModuleName ["sys","types"] && sn_name sn == "Nullable"
