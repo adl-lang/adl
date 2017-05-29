@@ -196,7 +196,7 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
 interface StructFieldDetails {
   field : AST.Field,
   jsonBinding : () => JsonBinding<any>,
-  buildDefault : () => any
+  buildDefault : () => { value : any } | null
 };
 
 function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
@@ -414,7 +414,10 @@ function isVoid(texpr : AST.TypeExpr) : boolean {
 }
 
 function isNullable(texpr : AST.TypeExpr) : boolean {
-  return texpr.typeRef.value.moduleName === "sys.types" && texpr.typeRef.value.name === "Nullable"
+  if (texpr.typeRef.kind === "reference") {
+    return texpr.typeRef.value.moduleName === "sys.types" && texpr.typeRef.value.name === "Nullable";
+  }
+  return false;
 }
 
 /**
@@ -446,11 +449,12 @@ function jsonFromLiteral(literal : AST.Literal) : any {
 }
 
 function nullableFromLiteral(literal : AST.Literal) : any {
-  if  (literal.kind == "string" && literal.value == "nothing") {
+  if (literal.kind === "string" && literal.value === "nothing") {
     return null;
-  } else {
+  } else if(literal.kind === "object") {
     return jsonFromLiteral(literal.value[0].v2);
   }
+  throw new Error("Invalid literal for nullable");
 }
 
 /**

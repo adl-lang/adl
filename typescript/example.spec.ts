@@ -1,3 +1,4 @@
+/// <reference path="node_modules/@types/jest/index.d.ts" />
 import {DeclResolver,declResolver} from './build/runtime/adl'
 import {JsonBinding,createJsonBinding} from './build/runtime/json'
 import * as example from './build/example'
@@ -83,20 +84,20 @@ describe('IntTree Recursive Type', () => {
 const dataSourceJsonBinding : JsonBinding<example.DataSource>
   = createJsonBinding(dresolver,example.texprDataSource());
 
-const dataSource1 : example.DataSource1 = {
+const dataSource1 : example.DataSource = {
   kind : "implicit"
 };
 
-const dataSource2 : example.DataSource1 = {
-  kind : "inline"
+const dataSource2 : example.DataSource = {
+  kind : "inline",
   value : {
     encoding : "utf-8",
     content : "Now is the time, or so they said"
   }
 };
 
-const dataSource3 : example.DataSource1 = {
-  kind : "file"
+const dataSource3 : example.DataSource = {
+  kind : "file",
   value : "/tmp/testdata.txt"
 };
 
@@ -107,10 +108,14 @@ describe('DataSource union', () => {
     expect(dataSource1r.kind).toEqual("implicit");
     const dataSource2r = jb.fromJson(jb.toJson(dataSource2));
     expect(dataSource2r.kind).toEqual("inline");
-    expect(dataSource2r.value.encoding).toEqual("utf-8");
+    if (dataSource2r.kind == "inline") {
+      expect(dataSource2r.value.encoding).toEqual("utf-8");
+    }
     const dataSource3r = jb.fromJson(jb.toJson(dataSource3));
     expect(dataSource3r.kind).toEqual("file");
-    expect(dataSource3r.value).toEqual("/tmp/testdata.txt");
+    if (dataSource3r.kind == "file") {
+      expect(dataSource3r.value).toEqual("/tmp/testdata.txt");
+    }
   });
 });
 
@@ -154,4 +159,4 @@ describe('StructWithDefaults', () => {
     expect(structWithDefaultsJsonBinding.fromJson({}).field3.name).toEqual("Mike");
     expect(structWithDefaultsJsonBinding.fromJson({}).field3.age).toEqual(50);
   })
-));
+});
