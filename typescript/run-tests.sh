@@ -12,5 +12,6 @@ mkdir -p $GENDIR
 
 (cd $HERE/../haskell; stack exec adlc -- typescript -O $GENDIR --include-rt --runtime-dir $GENDIR/runtime $HERE/example.adl $ADLSTDLIBDIR/sys/types.adl)
 yarn
-./node_modules/.bin/tsc --outDir build/tsc-out *.spec.ts `find build -name '*.ts'`
+# Compile everything to check all the types, as running jest-ts doesn't actually do so :-(
+./node_modules/.bin/tsc --outDir build/tsc-out *.spec.ts `find build -name '*.ts'`; rm -r build/tsc-out
 yarn test

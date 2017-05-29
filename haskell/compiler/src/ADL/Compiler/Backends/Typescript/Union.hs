@@ -44,12 +44,12 @@ genUnionInterface _ decl union@Union{u_typeParams=parameters} = do
   addDeclaration (renderUnionChoice decl unionName parameters sortedFds)
 
 renderUnionChoice :: CDecl -> T.Text -> [Ident] -> [FieldDetails] -> Code
-renderUnionChoice decl unionName parameters fds =
+renderUnionChoice decl unionName typeParams fds =
   CAppend renderedComments (ctemplate "export type $1$2 = $3;" [unionName, renderedParameters, T.intercalate " | " [getChoiceName fd | fd <- fds]])
   where
     getChoiceName fd = unionName <> "_" <> capitalise (fdName fd) <> renderedParameters
     renderedComments = renderCommentsForDeclaration decl
-    renderedParameters = renderParametersExpr parameters
+    renderedParameters = typeParamsExpr typeParams
 
 renderUnionFieldsAsInterfaces :: T.Text -> [Ident] -> [FieldDetails] -> Code
 renderUnionFieldsAsInterfaces unionName parameters (fd:xs) =

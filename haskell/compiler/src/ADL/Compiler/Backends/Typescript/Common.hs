@@ -69,7 +69,7 @@ genTypeExpr (TypeExpr (RT_Named (ScopedName moduleName name, _)) parameters) = d
     currentModuleName <- fmap mfModuleName get
     let modules =  if moduleName == currentModuleName then [] else unModuleName moduleName
     addModulesImport modules name
-    return $ (renderModulePrefix modules <> name) <> renderParametersExpr parametersExpressions
+    return (modulePrefix modules <> name <> typeParamsExpr parametersExpressions)
 
 genAnnotation :: ScopedName -> JS.Value -> CState T.Text
 genAnnotation _ _ = error "FIXME: genAnnotation not implemented"
@@ -172,75 +172,73 @@ findUnionField fname fs = case L.find (\(_,f) -> f_name f == fname) (zip [0,1..]
   (Just v) -> v
   Nothing -> error ("BUG: invalid literal " <> show fname <> "for union")
 
-renderModulePrefix :: [Ident] -> T.Text
-renderModulePrefix []      = T.pack ""
-renderModulePrefix modules = T.intercalate "_" modules <> "."
+modulePrefix :: [Ident] -> T.Text
+modulePrefix [] = T.pack ""
+modulePrefix modules = T.intercalate "_" modules <> "."
 
 renderInterface :: InterfaceName -> ParameterNames -> [FieldDetails] -> Bool -> Code
 renderInterface name typeParams fields isPrivate =
-  if isPrivate then
-    cblock (template "interface $1$2" [name, renderedTypeParams]) renderedFields
-  else
-    cblock (template "export interface $1$2" [name, renderedTypeParams]) renderedFields
+  cblock (template "$1interface $2$3" [export, name, typeParamsExpr typeParams]) renderedFields
   where
-    renderedTypeParams = renderParametersExpr typeParams
+    export = if isPrivate then "" else "export "
     renderedFields = mconcat [renderFieldDeclaration fd ";"| fd <- sortedFds]
     sortedFds = L.sort fields
 
-renderFieldDeclaration :: FieldDetails -> T.Text -> Code
-renderFieldDeclaration fd endChar
-  | fdOptional fd = ctemplate "$1?: $2$3" [fdName fd, fdTypeExprStr fd, endChar]
-  | otherwise = ctemplate "$1: $2$3" [fdName fd, fdTypeExprStr fd, endChar]
+    renderFieldDeclaration :: FieldDetails -> T.Text -> Code
+    renderFieldDeclaration fd endChar
+      | fdOptional fd = ctemplate "$1?: $2$3" [fdName fd, fdTypeExprStr fd, endChar]
+      | otherwise = ctemplate "$1: $2$3" [fdName fd, fdTypeExprStr fd, endChar]
 
 -- Generate the factory method for a named object
 -- Takes in the name, type parameters and field details of object.
 renderFactory :: T.Text -> ParameterNames -> [FieldDetails] -> Code
 renderFactory name typeParams fds = function
   where
-    sortedFds = L.sort fds
-    renderedTypeParams = renderParametersExpr typeParams
-    factoryInputVariable = renderFactoryInput sortedFds
-    factoryDeclaration = template "export function make$1$2" [name, renderedTypeParams]
-    fieldInitialisations = renderFieldInitialisations sortedFds
-    function = cline (factoryDeclaration <> "(")
+    function
+      =  ctemplate "export function make$1$2(" [name, tparams]
       <> indent factoryInputVariable
-      <> cline (template "): $1$2 {" [name, renderedTypeParams])
+      <> cline (template "): $1$2 {" [name, tparams])
       <> indent fieldInitialisations
       <> cline "}"
+    sortedFds = L.sort fds
+    tparams = typeParamsExpr typeParams
+    factoryInputVariable = renderFactoryInput sortedFds
+    fieldInitialisations = renderFieldInitialisations sortedFds
 
-renderFactoryInput :: [FieldDetails] -> Code
-renderFactoryInput fds = cblock "input:" fields
-  where fields = mconcat [renderInputField fd | fd <- fds]
+    renderFactoryInput fds = cblock "input:" fields
+      where
+        fields = mconcat [renderInputField fd | fd <- fds]
         renderInputField fd = case fdDefValue fd of
           Nothing -> ctemplate "$1: $2," [fdName fd, fdTypeExprStr fd]
           Just _  -> ctemplate "$1?: $2," [fdName fd, fdTypeExprStr fd]
 
-renderFieldInitialisations :: [FieldDetails] -> Code
-renderFieldInitialisations fds = cblock1 "return" fieldInitialisations
-  where fieldInitialisations = mconcat [renderFieldInitialisation fd | fd <- fds]
+    renderFieldInitialisations :: [FieldDetails] -> Code
+    renderFieldInitialisations fds = cblock1 "return" fieldInitialisations
+      where fieldInitialisations = mconcat [renderFieldInitialisation fd | fd <- fds]
 
-renderFieldInitialisation :: FieldDetails -> Code
-renderFieldInitialisation fd = case fdDefValue fd of
-  Nothing -> ctemplate "$1: input.$1," [fdName fd]
-  Just defaultValue ->
-    cspan (cspan (ctemplate "$1: input.$1 === undefined ? " [fdName fd]) (cline defaultValue)) (ctemplate " : input.$1," [fdName fd])
+    renderFieldInitialisation :: FieldDetails -> Code
+    renderFieldInitialisation fd = case fdDefValue fd of
+      Nothing -> ctemplate "$1: input.$1," [fdName fd]
+      Just defaultValue ->
+        cspan (cspan (ctemplate "$1: input.$1 === undefined ? " [fdName fd]) (cline defaultValue)) (ctemplate " : input.$1," [fdName fd])
 
 renderCommentsForDeclaration :: CDecl -> Code
 renderCommentsForDeclaration decl = renderComments $ M.elems (d_annotations decl)
-
-renderComments :: [(CResolvedType, JS.Value)] -> Code
-renderComments = L.foldr (CAppend . renderComment) CEmpty
-
-renderComment :: (CResolvedType, JS.Value) -> Code
-renderComment (RT_Named (ScopedName{sn_name="Doc"}, _), JS.String commentValue) = clineN commentLinesStarred
   where
-    commentLinesStarred = ["/**"] ++ [" * " <> commentLine | commentLine <- commentLinesBroken] ++ [" */"]
-    commentLinesBroken = L.filter (/= "") (T.splitOn "\n" commentValue)
-renderComment _ = CEmpty
+    renderComments :: [(CResolvedType, JS.Value)] -> Code
+    renderComments = L.foldr (CAppend . renderComment) CEmpty
 
-renderParametersExpr :: [T.Text] -> T.Text
-renderParametersExpr []         = T.pack ""
-renderParametersExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
+    renderComment :: (CResolvedType, JS.Value) -> Code
+    renderComment (RT_Named (ScopedName{sn_name="Doc"}, _), JS.String commentValue) = clineN commentLinesStarred
+      where
+        commentLinesStarred = ["/**"] ++ [" * " <> commentLine | commentLine <- commentLinesBroken] ++ [" */"]
+        commentLinesBroken = L.filter (/= "") (T.splitOn "\n" commentValue)
+    renderComment _ = CEmpty
+
+
+typeParamsExpr :: [T.Text] -> T.Text
+typeParamsExpr []         = T.pack ""
+typeParamsExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
 
 capitalise :: T.Text -> T.Text
 capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)
@@ -259,7 +257,7 @@ addAstDeclaration m decl = do
                                [formatText (m_name m), d_name decl])
         typeExprFnN tparams
           =  cblock (template "export function texpr$1$2($3): ADL.ATypeExpr<$1$2>"
-                              [d_name decl, renderParametersExpr tparams, exprArgs])
+                              [d_name decl, typeParamsExpr tparams, exprArgs])
                     (ctemplate "return {value : {typeRef : {kind: \"reference\", value : {moduleName : \"$1\",name : \"$2\"}}, parameters : [$3]}};"
                                [formatText (m_name m), d_name decl, exprParams])
              where

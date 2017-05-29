@@ -8,10 +8,9 @@ import           ADL.Utils.IndentedCode
 
 
 genNewtype :: CModule -> CDecl -> Newtype CResolvedType -> CState ()
-genNewtype  m declaration ntype@Newtype{n_typeParams=parameters} = do
+genNewtype  m declaration ntype@Newtype{n_typeParams=typeParams} = do
   typeExprOutput <- genTypeExpr (n_typeExpr ntype)
   let
-    renderedTypeParams = renderParametersExpr parameters
-    typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, renderedTypeParams, typeExprOutput]
+    typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, typeParamsExpr typeParams, typeExprOutput]
   addDeclaration typeDecl
   addAstDeclaration m declaration
