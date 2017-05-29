@@ -1,6 +1,8 @@
 module example
 {
 
+import sys.types.Nullable;
+
 // An enum
 
 union Gender {
@@ -45,6 +47,14 @@ struct Tree<T>
 };
 
 type IntTree = Tree<Int32>;
+
+
+struct StructWithDefaults
+{
+    Nullable<String> field1 = "nothing";
+    Nullable<String> field2 = {"just" : "hello"};
+    Person field3 = { "name" : "Mike", "gender" : "male" };
+};
 
 
 };

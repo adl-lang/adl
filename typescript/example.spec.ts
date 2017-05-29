@@ -142,3 +142,16 @@ describe('GenderTree Constructed Concrete Type', () => {
     expect(gtree2.children[1].value).toEqual(example.Gender.female);
   })
 });
+
+//----------------------------------------------------------------------
+const structWithDefaultsJsonBinding : JsonBinding<example.StructWithDefaults>
+    = createJsonBinding(dresolver,example.texprStructWithDefaults());
+
+describe('StructWithDefaults', () => {
+  it( 'correctly inserts default values', () => {
+    expect(structWithDefaultsJsonBinding.fromJson({}).field1).toEqual(null);
+    expect(structWithDefaultsJsonBinding.fromJson({}).field2).toEqual("hello");
+    expect(structWithDefaultsJsonBinding.fromJson({}).field3.name).toEqual("Mike");
+    expect(structWithDefaultsJsonBinding.fromJson({}).field3.age).toEqual(50);
+  })
+));

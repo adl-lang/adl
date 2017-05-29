@@ -78,7 +78,7 @@ export function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr,
 
     // Special case for nullable, as we don't have custom types  yet
     // (and perhaps Nullable<> should become a primitive anyway)
-    if (texpr.typeRef.value.moduleName === "sys.types" && texpr.typeRef.value.name === "Nullable") {
+    if (isNullable(texpr)) {
       return nullableJsonBinding(dresolver, texpr.parameters[0], boundTypeParams);
     }
 
@@ -205,8 +205,12 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
   struct.fields.forEach( (field) => {
     let buildDefault = once( () => {
       if (field.default.kind === "just")  {
+        // Special case for nullable, as we don't have custom types.
+        if (isNullable(field.typeExpr)) {
+          return { 'value' : nullableFromLiteral(field.default.value) };
+        }
         const json = jsonFromLiteral(field.default.value);
-        return buildJsonBinding(dresolver, field.typeExpr, newBoundTypeParams).fromJson(json);
+        return { 'value' : buildJsonBinding(dresolver, field.typeExpr, newBoundTypeParams).fromJson(json)};
       } else {
         return null;
       }
@@ -239,7 +243,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
         if (defaultv === null)  {
           throw jsonParseException("missing struct field " + fd.field.serializedName );
         } else {
-          v[fd.field.name] = defaultv;
+          v[fd.field.name] = defaultv.value;
         }
       } else {
         try {
@@ -409,6 +413,10 @@ function isVoid(texpr : AST.TypeExpr) : boolean {
   return false;
 }
 
+function isNullable(texpr : AST.TypeExpr) : boolean {
+  return texpr.typeRef.value.moduleName === "sys.types" && texpr.typeRef.value.name === "Nullable"
+}
+
 /**
  *  Convert a ADLAST literal to a json value.
  *
@@ -434,6 +442,14 @@ function jsonFromLiteral(literal : AST.Literal) : any {
       result[pair.v1] = jsonFromLiteral(pair.v2);
     });
     return result;
+  }
+}
+
+function nullableFromLiteral(literal : AST.Literal) : any {
+  if  (literal.kind == "string" && literal.value == "nothing") {
+    return null;
+  } else {
+    return jsonFromLiteral(literal.value[0].v2);
   }
 }
 

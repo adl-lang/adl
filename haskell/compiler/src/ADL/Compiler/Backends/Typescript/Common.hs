@@ -342,7 +342,9 @@ literalAst (JS.Bool b) = mkUnion "boolean" (JS.toJSON b)
 literalAst (JS.Number v) | isInteger v = mkUnion "integer" (JS.toJSON v) -- Should git rid of this distinction in adlast.adl
                           | otherwise = mkUnion "double" (JS.toJSON v)
 literalAst (JS.Null) = mkVoidUnion "null"
-literalAst o@(JS.Object _) = mkUnion "object" o
+literalAst (JS.Object hm) = mkUnion "object" map
+  where
+    map = JS.toJSON [JS.object [("v1",JS.toJSON k),("v2",literalAst v)] | (k,v) <- HM.toList hm]
 literalAst (JS.String s) = mkUnion "string" (JS.toJSON s)
 
 mkMaybe :: Maybe JS.Value -> JS.Value
