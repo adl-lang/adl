@@ -2,6 +2,7 @@ module ADL.Compiler.DataFiles(
   getLibDir,
   javaRuntimeDir,
   typescriptRuntimeDir,
+  haskellRuntimeDir,
   systemAdlDir,
   stdlibCustomTypesHs,
   stdlibCustomTypesCpp
@@ -38,6 +39,9 @@ getLibDir = do
 
 javaRuntimeDir :: FilePath -> FilePath
 javaRuntimeDir libdir = libdir </> "java/runtime"
+
+haskellRuntimeDir :: FilePath -> FilePath
+haskellRuntimeDir libdir = libdir </> "haskell/runtime"
 
 systemAdlDir :: FilePath -> FilePath
 systemAdlDir libdir = libdir </> "adl"

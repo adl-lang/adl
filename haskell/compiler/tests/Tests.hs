@@ -68,8 +68,10 @@ runHaskellBackend ipaths mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let af =  defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-hs"]}
-      hf =  H.HaskellFlags {
-        H.hf_modulePrefix = "ADL"
+      hf =  H.HaskellFlags
+        { H.hf_modulePrefix = "ADL"
+        , H.hf_includeRuntime = Nothing
+        , H.hf_runtimePackage = "ADL.Core"
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ H.generate af hf fileWriter getCustomType mpaths
@@ -338,6 +340,7 @@ runTests = do
     it "Generates the correct code for the picture demo" $
       collectResults (runTsBackend [stdsrc, "demo-ts/input"] ["demo-ts/input/shapes.adl", "demo-ts/input/picture.adl"] "demo-ts/ts-output")
         `shouldReturn` MatchOutput
+
   where
     collectResults1 resultvar test = do
       r <- test
