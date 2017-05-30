@@ -10,6 +10,7 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -312,7 +313,7 @@ public class Literal {
         else if (_key.equals("object")) {
           return Literal.object(JsonBindings.unionValueFromJson(_json, object.get()));
         }
-        throw new IllegalStateException();
+        throw new JsonParseException("Invalid discriminator " + _key + " for union Literal");
       }
     };
   }

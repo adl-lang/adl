@@ -8,6 +8,7 @@ import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
@@ -150,7 +151,7 @@ public class Either<T1, T2> {
         else if (_key.equals("right")) {
           return Either.<T1, T2>right(JsonBindings.unionValueFromJson(_json, right.get()));
         }
-        throw new IllegalStateException();
+        throw new JsonParseException("Invalid discriminator " + _key + " for union Either<T1, T2>");
       }
     };
   }

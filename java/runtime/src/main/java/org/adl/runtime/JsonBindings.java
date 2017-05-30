@@ -156,7 +156,7 @@ public class JsonBindings
       if (json.isJsonPrimitive() && json.getAsJsonPrimitive().isString()) {
         return json.getAsString();
       }
-        
+
       throw new JsonParseException("expected a string");
     }
   };
@@ -178,7 +178,7 @@ public class JsonBindings
       }
     }
   };
-  
+
   public static <T> JsonBinding<ArrayList<T>> arrayList(final JsonBinding<T> factoryT) {
     return new JsonBinding<ArrayList<T>>() {
       public Factory<ArrayList<T>> factory() {
@@ -260,7 +260,7 @@ public class JsonBindings
     if(json.isJsonObject()) {
       Set<Map.Entry<String,JsonElement>> entries = json.getAsJsonObject().entrySet();
       if (entries.size() != 1) {
-        throw new IllegalStateException();
+        throw new JsonParseException("union object must have a single field");
       }
       for (Map.Entry<String,JsonElement> v : entries) {
         return v.getKey();
@@ -301,7 +301,7 @@ public class JsonBindings
     }
     return json.getAsJsonObject();
   }
-  
+
   public static <T> T fieldFromJson(JsonObject obj, String field, JsonBinding<T> jsonBinding) {
     JsonElement el = objectFromJson(obj).get(field);
     if (el == null) {
