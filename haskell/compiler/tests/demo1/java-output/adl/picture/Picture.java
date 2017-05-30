@@ -9,6 +9,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Map;
@@ -207,7 +208,7 @@ public class Picture {
         else if (_key.equals("translated")) {
           return Picture.translated(JsonBindings.unionValueFromJson(_json, translated.get()));
         }
-        throw new IllegalStateException();
+        throw new JsonParseException("Invalid discriminator " + _key + " for union Picture");
       }
     };
   }

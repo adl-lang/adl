@@ -8,6 +8,7 @@ import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
@@ -200,7 +201,7 @@ public class DeclType {
         else if (_key.equals("newtype_")) {
           return DeclType.newtype_(JsonBindings.unionValueFromJson(_json, newtype_.get()));
         }
-        throw new IllegalStateException();
+        throw new JsonParseException("Invalid discriminator " + _key + " for union DeclType");
       }
     };
   }

@@ -9,6 +9,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
@@ -150,7 +151,7 @@ public class U9<T> {
         else if (_key.equals("v2")) {
           return U9.<T>v2(JsonBindings.unionValueFromJson(_json, v2.get()));
         }
-        throw new IllegalStateException();
+        throw new JsonParseException("Invalid discriminator " + _key + " for union U9<T>");
       }
     };
   }

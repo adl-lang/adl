@@ -9,6 +9,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
@@ -175,7 +176,7 @@ public class TypeRef {
         else if (_key.equals("reference")) {
           return TypeRef.reference(JsonBindings.unionValueFromJson(_json, reference.get()));
         }
-        throw new IllegalStateException();
+        throw new JsonParseException("Invalid discriminator " + _key + " for union TypeRef");
       }
     };
   }

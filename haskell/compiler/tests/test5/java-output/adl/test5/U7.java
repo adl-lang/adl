@@ -8,6 +8,7 @@ import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
@@ -122,7 +123,7 @@ public class U7 {
         if (_key.equals("v")) {
           return U7.v(JsonBindings.unionValueFromJson(_json, v.get()));
         }
-        throw new IllegalStateException();
+        throw new JsonParseException("Invalid discriminator " + _key + " for union U7");
       }
     };
   }

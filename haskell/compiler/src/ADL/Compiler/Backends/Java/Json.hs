@@ -36,7 +36,7 @@ generateStructJson cgp decl struct fieldDetails = do
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonObjectI <- addImport "com.google.gson.JsonObject"
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
-  
+
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- s_typeParams struct]
 
   let factory =
@@ -52,7 +52,7 @@ generateStructJson cgp decl struct fieldDetails = do
               case s_typeParams struct of
                 [] -> ctemplate "final $1<$2> _factory = FACTORY;" [factoryI,className]
                 tparams -> ctemplate "final $1<$2> _factory = factory($3);" [factoryI,className,commaSep [template "binding$1.factory()" [i] | i <-tparams ]]
-              <> 
+              <>
               cline ""
               <>
               cblock1 (template "return new $1<$2>()" [jsonBindingI,className]) (
@@ -117,7 +117,7 @@ generateNewtypeJson cgp decl newtype_ memberVarName = do
   jsonObjectI <- addImport "com.google.gson.JsonObject"
   jsonBinding <- genJsonBindingExpr cgp (n_typeExpr newtype_)
   boxedTypeExprStr <- genTypeExprB TypeBoxed (n_typeExpr newtype_)
-  
+
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- n_typeParams newtype_]
 
   let factory =
@@ -127,7 +127,7 @@ generateNewtypeJson cgp decl newtype_ memberVarName = do
               case n_typeParams newtype_ of
                 [] -> ctemplate "final $1<$2> _factory = FACTORY;" [factoryI,className]
                 tparams -> ctemplate "final $1<$2> _factory = factory($3);" [factoryI,className,commaSep [template "binding$1.factory()" [i] | i <-tparams ]]
-              <> 
+              <>
               cline ""
               <>
               cblock1 (template "return new $1<$2>()" [jsonBindingI,className]) (
@@ -167,9 +167,10 @@ generateUnionJson cgp decl union fieldDetails = do
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonObjectI <- addImport "com.google.gson.JsonObject"
   jsonPrimitiveI <- addImport "com.google.gson.JsonPrimitive"
+  jsonParseExceptionI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonParseException")
   mapI <- addImport "java.util.Map"
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
-  
+
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- u_typeParams union]
 
   let factory =
@@ -185,7 +186,7 @@ generateUnionJson cgp decl union fieldDetails = do
               case u_typeParams union of
                 [] -> ctemplate "final $1<$2> _factory = FACTORY;" [factoryI,className]
                 tparams -> ctemplate "final $1<$2> _factory = factory($3);" [factoryI,className,commaSep [template "binding$1.factory()" [i] | i <-tparams ]]
-              <> 
+              <>
               cline ""
               <>
               cblock1 (template "return new $1<$2>()" [jsonBindingI,className]) (
@@ -237,7 +238,7 @@ generateUnionJson cgp decl union fieldDetails = do
                        <>
                        cline "}"
                   <>
-                  cline "throw new IllegalStateException();"
+                  ctemplate "throw new $1(\"Invalid discriminator \" + _key + \" for union $2\");" [jsonParseExceptionI,className]
                   )
                 )
               )
@@ -292,7 +293,7 @@ genJsonBindingExpr cgp (TypeExpr rt params) = do
       case bparams of
         [] -> return prim
         _ -> return (template "$1($2)" [prim,commaSep bparams])
-        
+
 
 primJsonBinding :: CodeGenProfile -> PrimitiveType -> CState T.Text
 primJsonBinding cgp pt = do
@@ -300,7 +301,7 @@ primJsonBinding cgp pt = do
   return (jsonBindingsI <> "." <> bindingName pt)
   where
     bindingName P_Void = "VOID"
-    bindingName P_Bool = "BOOLEAN"  
+    bindingName P_Bool = "BOOLEAN"
     bindingName P_Int8 = "BYTE"
     bindingName P_Int16 = "SHORT"
     bindingName P_Int32 = "INTEGER"
