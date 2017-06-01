@@ -953,6 +953,37 @@ operator==( const Module &a, const Module &b )
         a.decls == b.decls ;
 }
 
+ScopedDecl::ScopedDecl()
+{
+}
+
+ScopedDecl::ScopedDecl(
+    const ModuleName & moduleName_,
+    const Decl & decl_
+    )
+    : moduleName(moduleName_)
+    , decl(decl_)
+{
+}
+
+bool
+operator<( const ScopedDecl &a, const ScopedDecl &b )
+{
+    if( a.moduleName < b.moduleName ) return true;
+    if( b.moduleName < a.moduleName ) return false;
+    if( a.decl < b.decl ) return true;
+    if( b.decl < a.decl ) return false;
+    return false;
+}
+
+bool
+operator==( const ScopedDecl &a, const ScopedDecl &b )
+{
+    return
+        a.moduleName == b.moduleName &&
+        a.decl == b.decl ;
+}
+
 }}}; // ADL::sys::adlast
 
 namespace ADL {
@@ -1683,6 +1714,45 @@ Serialisable<ADL::sys::adlast::Module>::serialiser( const SerialiserFlags &sf )
                 readField( name_s, v.name, "name", json ) ||
                 readField( imports_s, v.imports, "imports", json ) ||
                 readField( decls_s, v.decls, "decls", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
+
+typename Serialiser<ADL::sys::adlast::ScopedDecl>::Ptr
+Serialisable<ADL::sys::adlast::ScopedDecl>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::sys::adlast::ScopedDecl _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : moduleName_s( Serialisable<ADL::sys::adlast::ModuleName>::serialiser(sf) )
+            , decl_s( Serialisable<ADL::sys::adlast::Decl>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<ADL::sys::adlast::ModuleName>::Ptr moduleName_s;
+        typename Serialiser<ADL::sys::adlast::Decl>::Ptr decl_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<ADL::sys::adlast::ModuleName>( json, moduleName_s, "moduleName", v.moduleName );
+            writeField<ADL::sys::adlast::Decl>( json, decl_s, "decl", v.decl );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( moduleName_s, v.moduleName, "moduleName", json ) ||
+                readField( decl_s, v.decl, "decl", json ) ||
                 ignoreField( json );
             }
         }

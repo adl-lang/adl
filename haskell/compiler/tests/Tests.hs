@@ -337,10 +337,19 @@ runTests = do
     it "generates expected output for various structures" $
       collectResults (runTsBackend [stdsrc] ["test2/input/test.adl"] "test2/ts-output")
         `shouldReturn` MatchOutput
-    it "Generates the correct code for the picture demo" $
-      collectResults (runTsBackend [stdsrc, "demo-ts/input"] ["demo-ts/input/shapes.adl", "demo-ts/input/picture.adl"] "demo-ts/ts-output")
+    it "generates expected code for structures with default overrides" $ do
+      collectResults (runTsBackend [stdsrc] ["test3/input/test.adl"] "test3/ts-output")
         `shouldReturn` MatchOutput
-
+    it "generates expected code for various unions" $ do
+      collectResults (runTsBackend [stdsrc] ["test5/input/test.adl"] "test5/ts-output")
+        `shouldReturn` MatchOutput
+    it "generates expected code for the standard library" $ do
+      let srcs = stdfiles <> ["test6/input/test.adl"]
+      collectResults (runTsBackend [stdsrc] srcs "test6/ts-output")
+          `shouldReturn` MatchOutput
+    it "generates expected code type aliases and newtypes" $ do
+      collectResults (runTsBackend [stdsrc] ["test7/input/test.adl"] "test7/ts-output")
+        `shouldReturn` MatchOutput
   where
     collectResults1 resultvar test = do
       r <- test

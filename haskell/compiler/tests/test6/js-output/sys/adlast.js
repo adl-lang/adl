@@ -317,6 +317,31 @@ const NewType = {
   ]
 };
 
+const ScopedDecl = {
+  name : "ScopedDecl",
+  module : "sys.adlast",
+  kind : "struct",
+  typevars : [[]],
+  fields : [
+    {
+      name : "moduleName",
+      type : {"ref":"sys.adlast.ModuleName"},
+      defaultv : null,
+      annotations : [
+      ]
+    },
+    {
+      name : "decl",
+      type : {"ref":"sys.adlast.Decl"},
+      defaultv : null,
+      annotations : [
+      ]
+    }
+  ],
+  annotations : [
+  ]
+};
+
 const ScopedName = {
   name : "ScopedName",
   module : "sys.adlast",
@@ -481,6 +506,7 @@ export const _ADL_TYPES = {
   "sys.adlast.TypeDef" : TypeDef,
   "sys.adlast.Struct" : Struct,
   "sys.adlast.ScopedName" : ScopedName,
+  "sys.adlast.ScopedDecl" : ScopedDecl,
   "sys.adlast.NewType" : NewType,
   "sys.adlast.ModuleName" : ModuleName,
   "sys.adlast.Module" : Module,
