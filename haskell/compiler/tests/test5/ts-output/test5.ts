@@ -34,27 +34,6 @@ interface List_Null<T> {
   kind: 'null';
 }
 
-export function makeList_Cell<T>(
-  input: {
-    kind: 'cell',
-    value: Cell<T>,
-  }
-): List_Cell<T> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeList_Null<T>(
-  input: {
-    kind: 'null',
-  }
-): List_Null<T> {
-  return {
-    kind: input.kind,
-  };
-}
-
 export type List<T> = List_Cell<T> | List_Null<T>;
 
 const List_AST : ADL.ScopedDecl =
@@ -101,18 +80,6 @@ interface U2_V {
   value: number;
 }
 
-export function makeU2_V(
-  input: {
-    kind: 'v',
-    value: number,
-  }
-): U2_V {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-
 export type U2 = U2_V;
 
 const U2_AST : ADL.ScopedDecl =
@@ -125,18 +92,6 @@ export function texprU2(): ADL.ATypeExpr<U2> {
 interface U3_V {
   kind: 'v';
   value: number;
-}
-
-export function makeU3_V(
-  input: {
-    kind: 'v',
-    value: number,
-  }
-): U3_V {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
 }
 
 export type U3 = U3_V;
@@ -153,18 +108,6 @@ interface U4_V {
   value: S1;
 }
 
-export function makeU4_V(
-  input: {
-    kind: 'v',
-    value: S1,
-  }
-): U4_V {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-
 export type U4 = U4_V;
 
 const U4_AST : ADL.ScopedDecl =
@@ -177,18 +120,6 @@ export function texprU4(): ADL.ATypeExpr<U4> {
 interface U5_V {
   kind: 'v';
   value: S1;
-}
-
-export function makeU5_V(
-  input: {
-    kind: 'v',
-    value: S1,
-  }
-): U5_V {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
 }
 
 export type U5 = U5_V;
@@ -205,18 +136,6 @@ interface U6_V {
   value: U3;
 }
 
-export function makeU6_V(
-  input: {
-    kind: 'v',
-    value: U3,
-  }
-): U6_V {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-
 export type U6 = U6_V;
 
 const U6_AST : ADL.ScopedDecl =
@@ -229,18 +148,6 @@ export function texprU6(): ADL.ATypeExpr<U6> {
 interface U7_V {
   kind: 'v';
   value: U3;
-}
-
-export function makeU7_V(
-  input: {
-    kind: 'v',
-    value: U3,
-  }
-): U7_V {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
 }
 
 export type U7 = U7_V;
@@ -261,29 +168,6 @@ interface U8_V2 {
   value: number;
 }
 
-export function makeU8_V1(
-  input: {
-    kind: 'v1',
-    value: S1,
-  }
-): U8_V1 {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeU8_V2(
-  input: {
-    kind: 'v2',
-    value: number,
-  }
-): U8_V2 {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-
 export type U8 = U8_V1 | U8_V2;
 
 const U8_AST : ADL.ScopedDecl =
@@ -300,29 +184,6 @@ interface U9_V1<T> {
 interface U9_V2<T> {
   kind: 'v2';
   value: number;
-}
-
-export function makeU9_V1<T>(
-  input: {
-    kind: 'v1',
-    value: T,
-  }
-): U9_V1<T> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeU9_V2<T>(
-  input: {
-    kind: 'v2',
-    value: number,
-  }
-): U9_V2<T> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
 }
 
 export type U9<T> = U9_V1<T> | U9_V2<T>;

@@ -40,7 +40,6 @@ genUnionInterface _ decl union@Union{u_typeParams=parameters} = do
   let unionName = d_name decl
       sortedFds = L.sort fds
   addDeclaration (renderUnionFieldsAsInterfaces unionName parameters sortedFds)
-  addDeclaration (renderUnionFieldFactories unionName parameters sortedFds)
   addDeclaration (renderUnionChoice decl unionName parameters sortedFds)
 
 renderUnionChoice :: CDecl -> T.Text -> [Ident] -> [FieldDetails] -> Code
@@ -59,15 +58,6 @@ renderUnionFieldsAsInterfaces unionName parameters (fd:xs) =
       interfaceName = unionName <> "_" <> capitalise (fdName fd)
       fieldDetails = constructUnionFieldDetailsFromField fd
 renderUnionFieldsAsInterfaces _ _ [] = CEmpty
-
-renderUnionFieldFactories :: T.Text -> [Ident] -> [FieldDetails] -> Code
-renderUnionFieldFactories unionName parameters (fd:xs) =
-  CAppend renderedFactory (renderUnionFieldFactories unionName parameters xs)
-    where
-      renderedFactory = renderFactory interfaceName parameters fieldDetails
-      interfaceName = unionName <> "_" <> capitalise (fdName fd)
-      fieldDetails = constructUnionFieldDetailsFromField fd
-renderUnionFieldFactories _ _ [] = CEmpty
 
 constructUnionFieldDetailsFromField :: FieldDetails -> [FieldDetails]
 constructUnionFieldDetailsFromField fd@FieldDetails{fdField=Field{f_type=(TypeExpr (RT_Primitive P_Void) _)}}

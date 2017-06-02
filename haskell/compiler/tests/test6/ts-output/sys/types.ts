@@ -11,29 +11,6 @@ interface Either_Right<T1, T2> {
   value: T2;
 }
 
-export function makeEither_Left<T1, T2>(
-  input: {
-    kind: 'left',
-    value: T1,
-  }
-): Either_Left<T1, T2> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeEither_Right<T1, T2>(
-  input: {
-    kind: 'right',
-    value: T2,
-  }
-): Either_Right<T1, T2> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-
 export type Either<T1, T2> = Either_Left<T1, T2> | Either_Right<T1, T2>;
 
 const Either_AST : ADL.ScopedDecl =
@@ -50,29 +27,6 @@ interface Error_Error<T> {
 interface Error_Value<T> {
   kind: 'value';
   value: T;
-}
-
-export function makeError_Error<T>(
-  input: {
-    kind: 'error',
-    value: string,
-  }
-): Error_Error<T> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeError_Value<T>(
-  input: {
-    kind: 'value',
-    value: T,
-  }
-): Error_Value<T> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
 }
 
 export type Error<T> = Error_Error<T> | Error_Value<T>;
@@ -101,27 +55,6 @@ interface Maybe_Nothing<T> {
   kind: 'nothing';
 }
 
-export function makeMaybe_Just<T>(
-  input: {
-    kind: 'just',
-    value: T,
-  }
-): Maybe_Just<T> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeMaybe_Nothing<T>(
-  input: {
-    kind: 'nothing',
-  }
-): Maybe_Nothing<T> {
-  return {
-    kind: input.kind,
-  };
-}
-
 export type Maybe<T> = Maybe_Just<T> | Maybe_Nothing<T>;
 
 const Maybe_AST : ADL.ScopedDecl =
@@ -137,27 +70,6 @@ interface Nullable_Just<T> {
 }
 interface Nullable_Nothing<T> {
   kind: 'nothing';
-}
-
-export function makeNullable_Just<T>(
-  input: {
-    kind: 'just',
-    value: T,
-  }
-): Nullable_Just<T> {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeNullable_Nothing<T>(
-  input: {
-    kind: 'nothing',
-  }
-): Nullable_Nothing<T> {
-  return {
-    kind: input.kind,
-  };
 }
 
 /**

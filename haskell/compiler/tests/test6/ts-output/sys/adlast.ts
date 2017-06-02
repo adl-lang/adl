@@ -59,51 +59,6 @@ interface DeclType_Union_ {
   value: Union;
 }
 
-export function makeDeclType_Newtype_(
-  input: {
-    kind: 'newtype_',
-    value: NewType,
-  }
-): DeclType_Newtype_ {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeDeclType_Struct_(
-  input: {
-    kind: 'struct_',
-    value: Struct,
-  }
-): DeclType_Struct_ {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeDeclType_Type_(
-  input: {
-    kind: 'type_',
-    value: TypeDef,
-  }
-): DeclType_Type_ {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeDeclType_Union_(
-  input: {
-    kind: 'union_',
-    value: Union,
-  }
-): DeclType_Union_ {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-
 export type DeclType = DeclType_Newtype_ | DeclType_Struct_ | DeclType_Type_ | DeclType_Union_;
 
 const DeclType_AST : ADL.ScopedDecl =
@@ -173,29 +128,6 @@ interface Import_ScopedName {
   value: ScopedName;
 }
 
-export function makeImport_ModuleName(
-  input: {
-    kind: 'moduleName',
-    value: ModuleName,
-  }
-): Import_ModuleName {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeImport_ScopedName(
-  input: {
-    kind: 'scopedName',
-    value: ScopedName,
-  }
-): Import_ScopedName {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-
 export type Import = Import_ModuleName | Import_ScopedName;
 
 const Import_AST : ADL.ScopedDecl =
@@ -231,82 +163,6 @@ interface Literal_Object {
 interface Literal_String {
   kind: 'string';
   value: string;
-}
-
-export function makeLiteral_Array(
-  input: {
-    kind: 'array',
-    value: Literal[],
-  }
-): Literal_Array {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeLiteral_Boolean(
-  input: {
-    kind: 'boolean',
-    value: boolean,
-  }
-): Literal_Boolean {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeLiteral_Double(
-  input: {
-    kind: 'double',
-    value: number,
-  }
-): Literal_Double {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeLiteral_Integer(
-  input: {
-    kind: 'integer',
-    value: number,
-  }
-): Literal_Integer {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeLiteral_Null(
-  input: {
-    kind: 'null',
-  }
-): Literal_Null {
-  return {
-    kind: input.kind,
-  };
-}
-export function makeLiteral_Object(
-  input: {
-    kind: 'object',
-    value: sys_types.Map<string, Literal>,
-  }
-): Literal_Object {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeLiteral_String(
-  input: {
-    kind: 'string',
-    value: string,
-  }
-): Literal_String {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
 }
 
 export type Literal = Literal_Array | Literal_Boolean | Literal_Double | Literal_Integer | Literal_Null | Literal_Object | Literal_String;
@@ -512,40 +368,6 @@ interface TypeRef_Reference {
 interface TypeRef_TypeParam {
   kind: 'typeParam';
   value: Ident;
-}
-
-export function makeTypeRef_Primitive(
-  input: {
-    kind: 'primitive',
-    value: Ident,
-  }
-): TypeRef_Primitive {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeTypeRef_Reference(
-  input: {
-    kind: 'reference',
-    value: ScopedName,
-  }
-): TypeRef_Reference {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeTypeRef_TypeParam(
-  input: {
-    kind: 'typeParam',
-    value: Ident,
-  }
-): TypeRef_TypeParam {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
 }
 
 export type TypeRef = TypeRef_Primitive | TypeRef_Reference | TypeRef_TypeParam;

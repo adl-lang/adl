@@ -167,38 +167,6 @@ interface U_F_void {
   kind: 'f_void';
 }
 
-export function makeU_F_int(
-  input: {
-    kind: 'f_int',
-    value: number,
-  }
-): U_F_int {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeU_F_string(
-  input: {
-    kind: 'f_string',
-    value: string,
-  }
-): U_F_string {
-  return {
-    kind: input.kind,
-    value: input.value,
-  };
-}
-export function makeU_F_void(
-  input: {
-    kind: 'f_void',
-  }
-): U_F_void {
-  return {
-    kind: input.kind,
-  };
-}
-
 export type U = U_F_int | U_F_string | U_F_void;
 
 const U_AST : ADL.ScopedDecl =
