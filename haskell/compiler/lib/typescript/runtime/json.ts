@@ -1,5 +1,6 @@
 import {DeclResolver,ATypeExpr} from './adl';
 import * as AST from './sys/adlast';
+import * as b64 from 'base64-js';
 
 /**
  * A JsonBinding is a de/serialiser for a give ADL type
@@ -112,10 +113,10 @@ function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params :
   else if (ptype === "Word64")     { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
   else if (ptype === "Float")      { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
   else if (ptype === "Double")     { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
-  else if (ptype === "ByteVector") { return identityJsonBinding("a base64 string", (v) => typeof(v) === 'string'); }
+  else if (ptype === "Bytes")      { return bytesJsonBinding(); }
   else if (ptype === "Vector")     { return vectorJsonBinding(dresolver, params[0], boundTypeParams); }
   else if (ptype === "StringMap")  { return stringMapJsonBinding(dresolver, params[0], boundTypeParams); }
-  else throw new Error("Unimplemented json binding for primitive" + ptype);
+  else throw new Error("Unimplemented json binding for primitive " + ptype);
 };
 
 function identityJsonBinding(expected : string, predicate : (json : any) => boolean) : JsonBinding<any>{
@@ -129,6 +130,21 @@ function identityJsonBinding(expected : string, predicate : (json : any) => bool
       throw jsonParseException("expected " + expected);
     }
     return json;
+  }
+
+  return {toJson, fromJson};
+}
+
+function bytesJsonBinding() : JsonBinding<any> {
+  function toJson(v : any) : any {
+    return b64.fromByteArray(v);
+  }
+
+  function fromJson(json : any) : any {
+    if (typeof(json) != 'string') {
+      throw jsonParseException('expected a string');
+    }
+    return b64.toByteArray(json);
   }
 
   return {toJson, fromJson};

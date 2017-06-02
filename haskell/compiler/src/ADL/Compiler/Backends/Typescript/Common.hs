@@ -49,14 +49,18 @@ genTypeExpr (TypeExpr (RT_Primitive P_Word32) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Word64) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Bool) _) = return "boolean"
 genTypeExpr (TypeExpr (RT_Primitive P_Void) _) = return "null"
-genTypeExpr (TypeExpr (RT_Primitive P_ByteVector) _) = error "FIXME: ByteVector type not implemented"
-genTypeExpr (TypeExpr (RT_Primitive P_StringMap) _) = error "FIXME: StringMap type not implemented"
+genTypeExpr (TypeExpr (RT_Primitive P_ByteVector) _) = return "Uint8Array"
 genTypeExpr (TypeExpr (RT_Primitive P_Sink) _) = error "FIXME: Sink type not implemented"
 
-genTypeExpr (TypeExpr (RT_Primitive P_Vector) [vectorEntryTypeExpr]) = do
-  vectorEntryOutput <- genTypeExpr vectorEntryTypeExpr
-  return (vectorEntryOutput <> "[]")
+genTypeExpr (TypeExpr (RT_Primitive P_Vector) [texpr]) = do
+  texprStr <- genTypeExpr texpr
+  return (texprStr <> "[]")
 genTypeExpr (TypeExpr (RT_Primitive P_Vector) _) = error "BUG: Vector must have 1 type parameter"
+
+genTypeExpr (TypeExpr (RT_Primitive P_StringMap) [texpr]) = do
+  texprStr <- genTypeExpr texpr
+  return (template "{[key: string]: $1}" [texprStr])
+genTypeExpr (TypeExpr (RT_Primitive P_StringMap) _) = error "BUG: StringMap must have 1 type parameter"
 
 genTypeExpr (TypeExpr (RT_Param parameterName) _) = return parameterName
 
@@ -111,8 +115,17 @@ genLiteralValue (TypeExpr (RT_Primitive p) tparams) btv jv = case p of
       JS.Array values -> template "[$1]" [T.intercalate ", " (map (genLiteralValue texpr btv) (V.toList values))]
       _ -> error "BUG: expected an array literal for Vector"
     _ -> error "BUG: expected a single type parameter for Vector"
-  P_ByteVector -> error "FIXME: ByteVector literals not implemented"
-  P_StringMap -> error "FIXME: ByteVector literals not implemented"
+  P_ByteVector -> case jv of
+    JS.String v -> template "b64.toByteArray('$1')" [v]
+    _ -> error "BUG: expected a string literal for bytevector"
+  P_StringMap -> case tparams of
+    [texpr] -> case jv of
+      JS.Object hm -> template "{$1}"
+        [T.intercalate ", "
+         [template "$1 : $2" [k, genLiteralValue texpr btv v] | (k,v) <- HM.toList hm]
+        ]
+      _ -> error "BUG: expected an object literal for StringMap"
+    _ -> error "BUG: expected a single type parameter for StringMap"
   P_Sink -> error "FIXME: Sink literals not implemented"
   where
     toNumber (JS.Number n) = litNumber n
@@ -143,7 +156,7 @@ genLiteralValue (TypeExpr (RT_Named (scopedName, Decl{d_type=Decl_Union union}))
       [(k,value)] ->
         case findUnionField k (u_fields union) of
           (i,f) | isNullable scopedName -> genLiteralValue (f_type f) btv' value
-                | otherwise -> template "{kind : $1, value : $2}" [f_name f, genLiteralValue (f_type f) btv' value]
+                | otherwise -> template "{kind : \"$1\", value : $2}" [f_name f, genLiteralValue (f_type f) btv' value]
       _ -> error "BUG: union literal should be a single element object"
     _ -> error "BUG: expected a string or object literal for union"
   where

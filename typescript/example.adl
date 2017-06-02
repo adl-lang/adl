@@ -24,6 +24,7 @@ struct Person {
 union DataSource {
    Void implicit;
    Content inline;
+   Bytes inlinebinary;
    FilePath file;
 };
 
@@ -54,7 +55,11 @@ struct StructWithDefaults
     Nullable<String> field1 = "nothing";
     Nullable<String> field2 = {"just" : "hello"};
     Person field3 = { "name" : "Mike", "gender" : "male" };
+    DataSource src1 = "implicit";
+    DataSource src2 = {"file" : "/dev/null"};
+    DataSource src3 = {"inline" :
+       { "encoding" : "utf8", "content" : "some stuff"}
+     };
 };
-
 
 };

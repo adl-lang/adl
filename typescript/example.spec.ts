@@ -101,6 +101,11 @@ const dataSource3 : example.DataSource = {
   value : "/tmp/testdata.txt"
 };
 
+const dataSource4 : example.DataSource = {
+  kind : "inlinebinary",
+  value : new Uint8Array([100,56,233])
+};
+
 describe('DataSource union', () => {
   it( 'roundtrips via json', () => {
     const jb = dataSourceJsonBinding;
@@ -115,6 +120,13 @@ describe('DataSource union', () => {
     expect(dataSource3r.kind).toEqual("file");
     if (dataSource3r.kind == "file") {
       expect(dataSource3r.value).toEqual("/tmp/testdata.txt");
+    }
+
+    const dataSource4r = jb.fromJson(jb.toJson(dataSource4));
+    expect(dataSource4r.kind).toEqual("inlinebinary");
+    if (dataSource4r.kind == "inlinebinary") {
+      expect(dataSource4r.value[0]).toEqual(100);
+      expect(dataSource4r.value[2]).toEqual(233);
     }
   });
 });

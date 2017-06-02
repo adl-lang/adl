@@ -33,7 +33,7 @@ export function makeS(
     f_error: input.f_error,
     f_map: input.f_map,
     f_mstring: input.f_mstring,
-    f_mstring2: input.f_mstring2 === undefined ? {kind : just, value : 'sukpeepolup'} : input.f_mstring2,
+    f_mstring2: input.f_mstring2 === undefined ? {kind : "just", value : 'sukpeepolup'} : input.f_mstring2,
     f_nstring: input.f_nstring,
     f_nstring2: input.f_nstring2 === undefined ? 'abcde' : input.f_nstring2,
     f_pair: input.f_pair,
