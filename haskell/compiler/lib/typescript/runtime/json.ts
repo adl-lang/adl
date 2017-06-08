@@ -318,7 +318,7 @@ function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bou
     if (json == null) {
       return json;
     };
-    return elementBinding().toJson(json);
+    return elementBinding().fromJson(json);
   }
 
   return {toJson, fromJson};
