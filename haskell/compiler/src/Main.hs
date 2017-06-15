@@ -20,6 +20,7 @@ import ADL.Compiler.Backends.AST as A
 import ADL.Compiler.Backends.Cpp as C
 import ADL.Compiler.Backends.Java as J
 import ADL.Compiler.Backends.Javascript as JS
+import ADL.Compiler.Backends.Typescript as TS
 import ADL.Compiler.DataFiles
 import ADL.Compiler.Utils
 import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
@@ -96,6 +97,21 @@ javaMaxLineLength ufn =
   Option "" ["max-line-length"]
     (ReqArg ufn "PACKAGE")
     "The maximum length of the generated code lines"
+
+tsIncludeRuntimePackageOption ufn =
+  Option "" ["include-rt"]
+    (NoArg ufn)
+    "Generate the runtime code"
+
+tsExcludeAstOption ufn =
+  Option "" ["exclude-ast"]
+    (NoArg ufn)
+    "Exclude the generated ASTs"
+
+tsRuntimeDirectoryOption ufn =
+  Option "R" ["runtime-dir"]
+    (ReqArg ufn "DIR")
+    "Set the directory where runtime code is written"
 
 getAdlFlags :: [String] -> EIO T.Text (AdlFlags)
 getAdlFlags mergeFileExtensions = do
@@ -271,7 +287,7 @@ runJava args0 =
 
     updateCodeGenProfile f = updateBackendFlags (\jf ->jf{jf_codeGenProfile=f (jf_codeGenProfile jf)})
 
-runJavaScript args0 =
+runJavascript args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
         libDir <- liftIO $ getLibDir
@@ -292,6 +308,34 @@ runJavaScript args0 =
       , verboseOption setVerbose
       ]
 
+runTypescript args0 =
+  case getOpt Permute optDescs args0 of
+    (opts,args,[]) -> do
+        libDir <- liftIO getLibDir
+        af <- getAdlFlags ["adl-ts"]
+        let flags = buildFlags af (flags0 libDir) opts
+        TS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
+    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+  where
+    header = "Usage: adl typescript [OPTION...] files..."
+
+    flags0 libDir = TS.TypescriptFlags {
+      tsLibDir=libDir,
+      tsIncludeRuntime=False,
+      tsExcludeAst=False,
+      tsRuntimeDir=""
+    }
+
+    optDescs =
+      [ searchDirOption addToSearchPath
+      , outputDirOption setOutputDir
+      , noOverwriteOption setNoOverwrite
+      , verboseOption setVerbose
+      , tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{tsIncludeRuntime=True}))
+      , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{tsExcludeAst=True}))
+      , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{tsRuntimeDir=path}))
+      ]
+
 runShow args0 =
   case args0 of
     ["--adlstdlib"] -> liftIO $ do
@@ -299,7 +343,6 @@ runShow args0 =
       putStrLn systemAdlDir
     ["--version"] -> liftIO $ do
       putStrLn (showVersion P.version)
-    _ -> eioError "Usage: adl show [OPTION...]"
     _ -> eioError "Usage: adl show [OPTION...]"
 
 usage = T.intercalate "\n"
@@ -309,6 +352,7 @@ usage = T.intercalate "\n"
   , "       adlc cpp [OPTION..] <modulePath>..."
   , "       adlc java [OPTION..] <modulePath>..."
   , "       adlc javascript [OPTION..] <modulePath>..."
+  , "       adlc typescript [OPTION..] <modulePath>..."
   , "       adlc show --version"
   , "       adlc show --adlstdlib"
   ]
@@ -321,7 +365,8 @@ main = do
     ("ast":args) -> runAst args
     ("cpp":args) -> runCpp args
     ("java":args) -> runJava args
-    ("javascript":args) -> runJavaScript args
+    ("javascript":args) -> runJavascript args
+    ("typescript":args) -> runTypescript args
     ("show":args) -> runShow args
     _ -> eioError usage
   where

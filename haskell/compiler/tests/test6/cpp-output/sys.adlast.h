@@ -527,6 +527,22 @@ struct Module
 bool operator<( const Module &a, const Module &b );
 bool operator==( const Module &a, const Module &b );
 
+struct ScopedDecl
+{
+    ScopedDecl();
+    
+    ScopedDecl(
+        const ModuleName & moduleName,
+        const Decl & decl
+        );
+    
+    ModuleName moduleName;
+    Decl decl;
+};
+
+bool operator<( const ScopedDecl &a, const ScopedDecl &b );
+bool operator==( const ScopedDecl &a, const ScopedDecl &b );
+
 }}}; // ADL::sys::adlast
 
 namespace ADL {
@@ -607,6 +623,12 @@ template <>
 struct Serialisable<ADL::sys::adlast::Module>
 {
     static Serialiser<ADL::sys::adlast::Module>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::sys::adlast::ScopedDecl>
+{
+    static Serialiser<ADL::sys::adlast::ScopedDecl>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL

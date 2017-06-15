@@ -34,6 +34,10 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/java/runtime/org/adl/runtime/Lazy.java
                      lib/haskell/runtime/ADL/Core.hs
                      lib/haskell/runtime/ADL/Core/Value.hs
+                     lib/typescript/runtime/adl.ts
+                     lib/typescript/runtime/json.ts
+                     lib/typescript/runtime/sys/types.ts
+                     lib/typescript/runtime/sys/adlast.ts
 
 executable adlc
   hs-source-dirs:      src
@@ -50,7 +54,16 @@ executable adlc
                      , ADL.Compiler.Backends.Java.Json
                      , ADL.Compiler.Backends.Java.Parcelable
                      , ADL.Compiler.Backends.Javascript
+                     , ADL.Compiler.Backends.Typescript
+                     , ADL.Compiler.Backends.Typescript.Common
+                     , ADL.Compiler.Backends.Typescript.DataTypes
+                     , ADL.Compiler.Backends.Typescript.Newtype
+                     , ADL.Compiler.Backends.Typescript.Struct
+                     , ADL.Compiler.Backends.Typescript.Typedef
+                     , ADL.Compiler.Backends.Typescript.Union
                      , ADL.Compiler.DataFiles
+                     , ADL.Sys.Adlast
+                     , ADL.Sys.Types
                      , ADL.Adlc.Config.Cpp
                      , ADL.Adlc.Config.Haskell
                      , ADL.Adlc.Config.Java
@@ -76,6 +89,15 @@ test-suite adlc-tests
                      , ADL.Compiler.Backends.Java.Json
                      , ADL.Compiler.Backends.Java.Parcelable
                      , ADL.Compiler.Backends.Javascript
+                     , ADL.Compiler.Backends.Typescript
+                     , ADL.Compiler.Backends.Typescript.Common
+                     , ADL.Compiler.Backends.Typescript.DataTypes
+                     , ADL.Compiler.Backends.Typescript.Newtype
+                     , ADL.Compiler.Backends.Typescript.Struct
+                     , ADL.Compiler.Backends.Typescript.Typedef
+                     , ADL.Compiler.Backends.Typescript.Union
+                     , ADL.Sys.Adlast
+                     , ADL.Sys.Types
                      , ADL.Compiler.DataFiles
                      , ADL.Adlc.Config.Cpp
                      , ADL.Adlc.Config.Haskell

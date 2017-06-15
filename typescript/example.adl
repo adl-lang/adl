@@ -1,0 +1,65 @@
+module example
+{
+
+import sys.types.Nullable;
+
+// An enum
+
+union Gender {
+   Void male;
+   Void female;
+};
+
+// A simple struct
+
+struct Person {
+   String name;
+   Gender gender;
+   Word16 age = 50;
+   Bool married = false;
+};
+
+// A union
+
+union DataSource {
+   Void implicit;
+   Content inline;
+   Bytes inlinebinary;
+   FilePath file;
+};
+
+newtype FilePath = String;
+
+struct Content {
+   String encoding;
+   String content;
+};
+
+// A recursive, generic type
+// (with custom serialized field names)
+
+struct Tree<T>
+{
+    @SerializedName "v"
+    T value;
+
+    @SerializedName "cs"
+    Vector<Tree<T>> children;
+};
+
+type IntTree = Tree<Int32>;
+
+
+struct StructWithDefaults
+{
+    Nullable<String> field1 = "nothing";
+    Nullable<String> field2 = {"just" : "hello"};
+    Person field3 = { "name" : "Mike", "gender" : "male" };
+    DataSource src1 = "implicit";
+    DataSource src2 = {"file" : "/dev/null"};
+    DataSource src3 = {"inline" :
+       { "encoding" : "utf8", "content" : "some stuff"}
+     };
+};
+
+};
