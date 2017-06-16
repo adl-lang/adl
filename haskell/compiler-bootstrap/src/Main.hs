@@ -38,7 +38,7 @@ runVerify args0 =
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl verify [OPTION...] files..."
-    
+
     mkFlags opts = (foldl (.) id opts) defaultAdlFlags
 
     optDescs =
@@ -53,11 +53,13 @@ runHaskell args0 =
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."
-    
+
     mkFlags opts = (foldl (.) id opts) (defaultAdlFlags,flags0,out0)
 
     flags0 = H.HaskellFlags {
-      hf_modulePrefix="ADL.Generated"
+      hf_modulePrefix="ADL.Generated",
+      hf_includeRuntime=Nothing,
+      hf_runtimePackage="ADL.Core"
     }
     out0 = OutputArgs {
       oa_log = putStrLn,
@@ -77,8 +79,8 @@ runHaskell args0 =
 usage = T.intercalate "\n"
   [ "Usage: adl verify [OPTION..] <modulePath>..."
   , "       adl haskell [OPTION..] <modulePath>..."
-  ]    
-    
+  ]
+
 main = do
   args <- getArgs
   runEIO $ case args of
@@ -92,6 +94,3 @@ main = do
         (Left perr) ->
           T.putStrLn perr >> exitWith (ExitFailure 1)
         (Right _) -> exitWith ExitSuccess
-
-
-      
