@@ -50,7 +50,6 @@ genTypeExpr (TypeExpr (RT_Primitive P_Word64) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Bool) _) = return "boolean"
 genTypeExpr (TypeExpr (RT_Primitive P_Void) _) = return "null"
 genTypeExpr (TypeExpr (RT_Primitive P_ByteVector) _) = return "Uint8Array"
-genTypeExpr (TypeExpr (RT_Primitive P_Sink) _) = error "FIXME: Sink type not implemented"
 
 genTypeExpr (TypeExpr (RT_Primitive P_Vector) [texpr]) = do
   texprStr <- genTypeExpr texpr
@@ -126,7 +125,6 @@ genLiteralValue (TypeExpr (RT_Primitive p) tparams) btv jv = case p of
         ]
       _ -> error "BUG: expected an object literal for StringMap"
     _ -> error "BUG: expected a single type parameter for StringMap"
-  P_Sink -> error "FIXME: Sink literals not implemented"
   where
     toNumber (JS.Number n) = litNumber n
     toNumber _ = error "BUG: expected a number literal"

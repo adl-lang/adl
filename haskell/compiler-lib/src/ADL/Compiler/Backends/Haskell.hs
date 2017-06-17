@@ -185,9 +185,6 @@ hPrimitiveType P_ByteVector = importByteString >> return "B.ByteString"
 hPrimitiveType P_Vector = return "[]" -- never called
 hPrimitiveType P_StringMap = return "???" -- never called
 hPrimitiveType P_String = importText >> return "T.Text"
-hPrimitiveType P_Sink = do
-  importModule (HaskellModule "ADL.Core.Sink")
-  return "Sink"
 
 hPrimitiveLiteral :: PrimitiveType -> JS.Value -> T.Text
 hPrimitiveLiteral P_Void JS.Null = "()"
@@ -210,7 +207,6 @@ hPrimitiveLiteral P_ByteVector (JS.String s) = T.pack (show (decode s))
       (Right s) -> s
 hPrimitiveLiteral P_Vector _ = "undefined" -- never called
 hPrimitiveLiteral P_String (JS.String s) = T.pack (show s)
-hPrimitiveLiteral P_Sink _ = "undefined" -- never called
 
 litNumber :: S.Scientific -> T.Text
 litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)

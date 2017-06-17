@@ -48,7 +48,7 @@ type CDecl = Decl (Maybe CustomType) CResolvedType
 
 -- currently we don't support custom types, but when we do,
 -- they would go here (see the java backend as an example)
-  
+
 data CustomType = CustomType
   deriving (Show)
 
@@ -58,7 +58,7 @@ type CState a = State ModuleFile a
 
 data ModuleFile = ModuleFile {
   mf_moduleName :: ModuleName,
-  
+
   -- The modules on which this one depends
   mf_depends :: Set.Set ModuleName,
 
@@ -283,7 +283,6 @@ getTypeDetails (RT_Primitive P_Bool) = monomorphicPrimitive "Bool"
 getTypeDetails (RT_Primitive P_ByteVector) = monomorphicPrimitive "ByteVector"
 getTypeDetails (RT_Primitive P_Vector) = polymorphicPrimitive "Vector"
 getTypeDetails (RT_Primitive P_StringMap) = polymorphicPrimitive "StringMap"
-getTypeDetails (RT_Primitive P_Sink) = polymorphicPrimitive "Sink"
 
 monomorphicPrimitive :: T.Text -> TypeDetails
 monomorphicPrimitive name = TypeDetails

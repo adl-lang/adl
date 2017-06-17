@@ -35,7 +35,7 @@ import ADL.Utils.Format
 
 data JavaFlags = JavaFlags {
   jf_libDir :: FilePath,
-  
+
   -- The java package under which we hang the generated ADL
   jf_package :: JavaPackage,
 
@@ -113,9 +113,9 @@ getCustomType scopedName decl = case Map.lookup javaCustomType (d_annotations de
         , ct_helpers = parseScopedName (JC.javaCustomType_helpers jct)
         , ct_generateType = (JC.javaCustomType_generateType jct)
         }
-    
+
     javaCustomType = ScopedName (ModuleName ["adlc","config","java"]) "JavaCustomType"
-    
+
     parseScopedName :: T.Text -> ScopedName
     parseScopedName t = case P.parse P.scopedName "" t of
       (Right sn) -> sn
@@ -219,7 +219,7 @@ addMethod method = modify (\cf->cf{cf_methods=method:cf_methods cf})
 addImport :: JavaClass -> CState T.Text
 addImport cls  = do
   let (package,name) = splitJavaClass cls
-  state <- get 
+  state <- get
   case Map.lookup name (cf_imports state) of
     Just mpackage | (Just package) == mpackage -> return name
                   | otherwise                  -> return (genJavaClass cls)
@@ -229,9 +229,9 @@ addImport cls  = do
 
 preventImport :: Ident -> CState ()
 preventImport name = do
-  state <- get 
+  state <- get
   put state{cf_imports=Map.insert name Nothing (cf_imports state)}
-  
+
 addImplements :: T.Text -> CState ()
 addImplements imp = modify (\cf->cf{cf_implements=Set.insert imp (cf_implements cf)})
 
@@ -331,7 +331,7 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
        where
          isVoid (Literal _ (LPrimitive JSON.Null)) = True
          isVoid _ = False
-                 
+
     refEnumeration (TypeExpr (RT_Named (_,Decl{d_type=Decl_Union u})) []) = isEnumeration u
     refEnumeration _ = False
 
@@ -509,7 +509,7 @@ getTypeDetails (RT_Primitive P_Vector) = TypeDetails
       rtpackage <- getRuntimePackage
       factories <- addImport (javaClass rtpackage "Factories")
       return (template "$1.arrayList($2)" [factories,commaSep lits])
-      
+
 getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
   { td_type = \_ args -> do
        hashMapI <- addImport "java.util.HashMap"
@@ -541,18 +541,6 @@ getTypeDetails (RT_Primitive P_String) = TypeDetails
   where
     genLiteralText' (Literal _ LDefault) = return "\"\"";
     genLiteralText' (Literal _ (LPrimitive (JSON.String s))) = return (T.pack (show s))
-
-getTypeDetails (RT_Primitive P_Sink) = TypeDetails
-  { td_type = \_ args -> getType
-  , td_genLiteralText = error "BUG: td_genLiteralText shouldn't be called on a Sink"
-  , td_mutable = True
-  , td_factory = primitiveFactory "SINK"
-  , td_hashfn = \from -> template "$1.hashCode()" [from]
-  }
-  where
-    getType = do
-      rtpackage <- getRuntimePackage
-      addImport (javaClass rtpackage "Sink")
 
 primitiveFactory :: Ident -> [T.Text] -> CState T.Text
 primitiveFactory name params =  do
@@ -672,7 +660,7 @@ genFieldDetails f = do
 -- from Object to the type of the branch. For a simple enough type
 -- (T) v is enough. When generics are involved we need to call
 -- a helper function to suppress the warnings.
-    
+
 needsSuppressedCheckInCast :: TypeExpr CResolvedType -> Bool
 needsSuppressedCheckInCast (TypeExpr (RT_Param _) []) = True
 needsSuppressedCheckInCast (TypeExpr _ []) = False
@@ -757,7 +745,7 @@ reservedWords = Set.fromList
  , "volatile"
  , "while"
 
- -- reserved for ADL  
+ -- reserved for ADL
  , "factory"
  ]
 
@@ -793,4 +781,3 @@ fixStdRef (JavaClass ("org":"adl":"runtime":[ident])) = do
   rtpackage <- (cgp_runtimePackage . cf_codeProfile) <$> get
   return (javaClass rtpackage ident)
 fixStdRef jclass = return jclass
-

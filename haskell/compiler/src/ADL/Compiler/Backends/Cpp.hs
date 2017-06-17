@@ -202,7 +202,7 @@ cTypeExprB1 scopeLocalNames _ (RT_Named (sn,decl)) targs = do
             let ns = ms_moduleMapper ms (ms_name ms)
             return (template "$1::$2" [formatText ns, cTypeName (sn_name sn)])
           else return (cTypeName (sn_name sn))
-        
+
       False -> do
         -- ADL type defined in an imported module
         let m = sn_moduleName sn
@@ -313,7 +313,7 @@ reservedWords = Set.fromList
 unreserveWord :: Ident -> Ident
 unreserveWord n | Set.member (T.toLower n) reservedWords = T.append n "_"
                 | otherwise = n
-                  
+
 -- Returns the c++ name corresponding to the ADL type name
 cTypeName :: Ident -> Ident
 cTypeName = unreserveWord
@@ -453,11 +453,11 @@ genFieldDetails f = do
 
 generateFwdDecl1 :: Ident -> [Ident] -> Gen ()
 generateFwdDecl1 dn tparams = do
-  write ifile $ do        
+  write ifile $ do
     wl ""
     genTemplate tparams
     wt "struct $1;" [cTypeName dn]
-  
+
 generateFwdDecl :: Ident -> CDecl -> Gen ()
 generateFwdDecl dn (Decl{d_type=(Decl_Struct s)}) = generateFwdDecl1 dn (s_typeParams s)
 generateFwdDecl dn (Decl{d_type=(Decl_Union u)}) = generateFwdDecl1 dn (u_typeParams u)
@@ -468,7 +468,7 @@ generateDecl :: Ident -> CDecl -> Gen ()
 generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
   ms <- get
   fds <- mapM genFieldDetails (s_fields s)
-  
+
   let isEmpty = null (s_fields s)
       ns = ms_moduleMapper ms (ms_name ms)
       ctname = cTypeName dn
@@ -482,7 +482,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       icfileS = if null (s_typeParams s) then cppfileS else ifileS
 
   -- Class Declaration
-  write ifile $ do        
+  write ifile $ do
     wl ""
     genTemplate (s_typeParams s)
     wt "struct $1" [ctname]
@@ -537,7 +537,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     genTemplate (s_typeParams s)
     wl "bool"
     wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
-    cblock $ do 
+    cblock $ do
       if isEmpty
         then wl "return true;"
         else do
@@ -614,7 +614,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       forM_ fds $ \fd -> do
         let ctorName = fd_unionConstructorName fd
         if fd_isVoidType fd
-          then wt "static $1 $2();" [ctnameP, ctorName] 
+          then wt "static $1 $2();" [ctnameP, ctorName]
           else wt "static $1 $2( const $3 & v );" [ctnameP, ctorName, fd_typeExpr fd]
 
       wl ""
@@ -623,7 +623,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wt "$1 & operator=( const $1 & );" [ctnameP]
       wl ""
       wl "enum DiscType"
-      dblock $ 
+      dblock $
         forM_ (commaSep fds) $ \(fd,sep) -> do
           wt "$1$2" [fd_unionDiscName fd, sep]
       wl ""
@@ -752,7 +752,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wt "void $1::free(DiscType d, void *p)" [ctnameP]
     cblock $ do
       wl "switch( d )"
-      cblock $ 
+      cblock $
         forM_ fds $ \fd -> do
           if fd_isVoidType fd
             then wt "case $1: return;"
@@ -764,7 +764,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wt "void * $1::copy( DiscType d, void *p )" [ctnameP]
     cblock $ do
       wl "switch( d )"
-      cblock $ 
+      cblock $
         forM_ fds $ \fd -> do
           if fd_isVoidType fd
             then wt "case $1: return 0;"
@@ -780,7 +780,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl "if( a.d() < b.d() ) return true;"
       wl "if( b.d() < a.d()) return false;"
       wl "switch( a.d() )"
-      cblock $ 
+      cblock $
         forM_ fds $ \fd -> do
           if fd_isVoidType fd
             then wt "case $1::$2: return false;"
@@ -793,10 +793,10 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     genTemplate (u_typeParams u)
     wl "bool"
     wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
-    cblock $ do 
+    cblock $ do
       wl "if( a.d() != b.d() ) return false;"
       wl "switch( a.d() )"
-      cblock $ 
+      cblock $
         forM_ fds $ \fd -> do
           if fd_isVoidType fd
             then wt "case $1::$2: return true;"
@@ -805,7 +805,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                  [ctnameP,fd_unionDiscName fd,fd_unionAccessorName fd]
       wl "return false;"
 
-  write ifileS $ do        
+  write ifileS $ do
     declareSerialisation (u_typeParams u) ms ctnameP
 
   write icfileS $ do
@@ -846,7 +846,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                     then wt "case $1::$2: json.stringV( \"$3\" ); break;" [scopedctnameP,fd_unionDiscName fd,fd_serializedName fd]
                     else wt "case $1::$2: writeField( json, $3_s(), \"$4\", v.$5() ); break;"
                            [scopedctnameP,fd_unionDiscName fd, f_name (fd_field fd), fd_serializedName fd,fd_unionAccessorName fd]
-                   
+
               wl "json.endObject();"
               return ()
             wl ""
@@ -900,7 +900,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
       ctnameP = case tparams of
         [] -> ctname
         ids -> template "$1<$2>" [ctname,T.intercalate "," ids]
-      ctnameP1 = template "$1::$2" [formatText ns,ctnameP]      
+      ctnameP1 = template "$1::$2" [formatText ns,ctnameP]
 
   write ifile $ do
     wl ""
@@ -928,7 +928,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
     wt "struct Serialisable<$1>" [ctnameP1]
     dblock $ do
       wt "struct S : public Serialiser<$1>" [ctnameP1]
-      dblock $ do 
+      dblock $ do
           wt "S( typename Serialiser<$1>::Ptr s_ ) : s(s_) {}" [scopedt]
           wl ""
           wt "void toJson( JsonWriter &json, const $1 & v ) const" [ctnameP1]
@@ -955,7 +955,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Typedef t)}) = do
 -- In C++ we either need just the name in scope to use a type (eg for a pointer)
 -- or we need the whole type definition (eg to contain a value)
 data TypeRefType a = NameOnly a | FullDecl a
-   deriving (Eq,Ord,Show)                
+   deriving (Eq,Ord,Show)
 
 nameOnly :: TypeRefType a -> TypeRefType a
 nameOnly (FullDecl a) = (NameOnly a)
@@ -971,7 +971,7 @@ localTypes1 (RT_Named (sn,_)) = case sn_moduleName sn of
     -- FIXME: need to either check if fully scoped name matches current module here,
     -- or, alternatively, map fully scoped local references to unscoped ones as a compiler
     -- phase.
-    _ -> Set.empty 
+    _ -> Set.empty
 localTypes1 (RT_Param _) = Set.empty
 localTypes1 (RT_Primitive _) = Set.empty
 
@@ -987,7 +987,7 @@ referencedLocalTypes d = Set.difference (rtypes d) selfrefs
 
 ignoreNameOnly :: Ord a => Set.Set (TypeRefType a) -> Set.Set a
 ignoreNameOnly ts = Set.fromList [ a | (FullDecl a) <- Set.toList ts]
-    
+
 generateCustomType :: Ident -> CDecl -> CustomType -> Gen ()
 generateCustomType n d ct = do
   ms <- get
@@ -1015,7 +1015,7 @@ generateCustomType n d ct = do
       mapM_ wl (ct_serialisationCode ct)
 
 -- |  Expand typedefs present in the definitions of unions and vectors.
---      
+--
 -- unions and vectors only need forward references, and we make use of this
 -- to determine code generation order for mutually recursive types. But we
 -- can usefully generate a forward reference to a typedef.
@@ -1110,7 +1110,7 @@ writeModuleFile mNamespace mIncFile mFile fileWriter m = do
 
       cppfileElements = [ms_cppFileUserModule s1,ms_cppFileSerialisation s1]
       cppfileLines = fileLines cppfileElements
-      
+
   liftIO $ fileWriter (mIncFile (m_name m) ++ ".h") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" ifileLines )))
   liftIO $ fileWriter (mFile (m_name m) ++ ".cpp") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" cppfileLines)))
 
@@ -1143,7 +1143,7 @@ getCustomType scopedName decl = case Map.lookup cppCustomType (d_annotations dec
         , ct_declarationCode = CC.cppCustomType_declarationCode cct
         , ct_serialisationCode = CC.cppCustomType_serialisationCode cct
         }
-      where 
+      where
         parseScopedName :: T.Text -> ScopedName
         parseScopedName t = case P.parse P.scopedName "" t of
           (Right sn) -> sn
@@ -1223,7 +1223,7 @@ literalPValue l@(Literal te (LVector _)) = do
   t <- cTypeExpr False te
   lit <- literalLValue l
   return (template "std::vector<$1>( $2 )" [t,lit])
-literalPValue l@(Literal _ (LStringMap _)) = literalLValue l  
+literalPValue l@(Literal _ (LStringMap _)) = literalLValue l
 literalPValue (Literal (TypeExpr (RT_Primitive pt) _) (LPrimitive jv)) = do
   t <- cPrimitiveType pt []
   return (template "$1($2)" [t, cPrimitiveLiteral pt jv])
@@ -1262,9 +1262,6 @@ cPrimitiveType P_StringMap targs = do
 cPrimitiveType P_String targs = do
   includeStd ifile "string"
   return "std::string"
-cPrimitiveType P_Sink targs = do
-  includeStd ifile "adl/sink.h"
-  return (template "Sink<$1> " targs)
 
 cPrimitiveDefault :: PrimitiveType -> Maybe T.Text
 cPrimitiveDefault P_Void = Nothing
@@ -1283,7 +1280,6 @@ cPrimitiveDefault P_ByteVector = Nothing
 cPrimitiveDefault P_Vector = Nothing
 cPrimitiveDefault P_StringMap = Nothing
 cPrimitiveDefault P_String = Nothing
-cPrimitiveDefault P_Sink = Nothing
 
 cPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
 cPrimitiveLiteral P_Void _ = "Void()"
@@ -1307,7 +1303,4 @@ cPrimitiveLiteral P_ByteVector (JSON.String s) = template "ByteVector::fromLiter
 cPrimitiveLiteral P_Vector _ = "????" -- never called
 cPrimitiveLiteral P_StringMap _ = "????" -- never called
 cPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
-cPrimitiveLiteral P_Sink _ = "????" -- never called
 cPrimitiveLiteral _ _ = error "BUG: invalid json literal for primitive"
-
-  

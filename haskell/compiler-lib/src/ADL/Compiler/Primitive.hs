@@ -20,7 +20,7 @@ import qualified Data.ByteString.Base64 as B64
 import ADL.Utils.Format
 
 data PrimitiveType = P_Void
-                   | P_Bool  
+                   | P_Bool
                    | P_Int8
                    | P_Int16
                    | P_Int32
@@ -35,7 +35,6 @@ data PrimitiveType = P_Void
                    | P_String
                    | P_Vector
                    | P_StringMap
-                   | P_Sink
   deriving (Eq,Ord,Show)
 
 instance Format PrimitiveType where
@@ -65,7 +64,6 @@ primitiveDetails =
   , PrimitiveDetails P_String "String" 0 isString
   , PrimitiveDetails P_Vector "Vector" 1 (const False)
   , PrimitiveDetails P_StringMap "StringMap" 1 (const False)
-  , PrimitiveDetails P_Sink "Sink" 1 (const False)
   ]
 
 isVoid JSON.Null = True
@@ -93,9 +91,9 @@ isBytes (JSON.String s) = case B64.decode (T.encodeUtf8 s) of
   (Right _) -> True
 isBytes _ = False
 
-map1 = Map.fromList  [  (pd_type p, p) | p <- primitiveDetails ] 
+map1 = Map.fromList  [  (pd_type p, p) | p <- primitiveDetails ]
 map2 = Map.fromList [ (pd_ident p, p) | p <- primitiveDetails ]
-    
+
 
 ptFromText :: T.Text -> Maybe PrimitiveType
 ptFromText i = case Map.lookup i map2 of
@@ -119,4 +117,3 @@ ptValidateLiteral p v =
 plookup p = case Map.lookup p map1 of
   (Just pd) -> pd
   Nothing -> error ("Missing details for primitive type " ++ show p)
-  

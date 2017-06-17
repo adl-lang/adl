@@ -535,7 +535,6 @@ literalForTypeExpr te v = litForTE Map.empty te v
       Just err -> Left err
     litForTE m te@(TypeExpr (RT_Primitive P_Vector) [te0]) v = (Literal te . LVector) <$> vecLiteral m te0 v
     litForTE m te@(TypeExpr (RT_Primitive P_StringMap) [te0]) v = (Literal te . LStringMap) <$> stringMapLiteral m te0 v
-    litForTE m (TypeExpr (RT_Primitive P_Sink) [te]) v = Left "literals not allowed for sinks"
     litForTE m (TypeExpr (RT_Primitive _) _) v =
       error "BUG: found primitive type with incorrect number of type parameters"
 
