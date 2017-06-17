@@ -64,28 +64,6 @@ export function texprMaybe<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Maybe<T>
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Maybe"}}, parameters : [texprT.value]}};
 }
 
-interface Nullable_Just<T> {
-  kind: 'just';
-  value: T;
-}
-interface Nullable_Nothing<T> {
-  kind: 'nothing';
-}
-
-/**
- * Nullable<T> is isomorphic to Maybe<T> but with an alternative
- * json serialisation, where the null_ branch is represented by a
- * json null Value.
- */
-export type Nullable<T> = Nullable_Just<T> | Nullable_Nothing<T>;
-
-const Nullable_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"nothing","default":{"kind":"nothing"},"name":"nothing","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"just","default":{"kind":"nothing"},"name":"just","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Nullable","version":{"kind":"nothing"}}};
-
-export function texprNullable<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Nullable<T>> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Nullable"}}, parameters : [texprT.value]}};
-}
-
 export interface Pair<T1, T2> {
   v1: T1;
   v2: T2;
@@ -124,7 +102,6 @@ export const _AST_MAP = {
   "sys.types.Error" : Error_AST,
   "sys.types.Map" : Map_AST,
   "sys.types.Maybe" : Maybe_AST,
-  "sys.types.Nullable" : Nullable_AST,
   "sys.types.Pair" : Pair_AST,
   "sys.types.Set" : Set_AST
 };

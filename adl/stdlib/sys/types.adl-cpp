@@ -150,31 +150,4 @@ annotation Pair CppCustomType {
     ]
 };
 
-annotation Nullable CppCustomType {
-    "cppname" : "Nullable",
-    "cppincludes" : [
-    ],
-    "declarationCode" : [
-        "template <class T>",
-        "struct Nullable",
-        "{",
-        "    // TODO: Flesh this out",
-        "    Maybe<T> value;",
-        "};"
-     ],
-    "serialisationCode" : [
-        "template <class T>",
-        "struct Serialisable<Nullable<T>>",
-        "{",
-        "    typedef Nullable<T> N;",
-        "",
-        "    static typename Serialiser<N>::Ptr serialiser(const SerialiserFlags &sf)",
-        "    {",
-        "        // TODO: Implement this",
-        "        throw json_parse_failure(\"unimplemented\");",
-        "    }",
-        "};"
-    ]
-};
-
 };

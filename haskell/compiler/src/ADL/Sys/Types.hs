@@ -4,7 +4,6 @@ module ADL.Sys.Types(
     Error,
     Map,
     Maybe,
-    Nullable,
     Pair,
     Set,
 ) where
@@ -30,7 +29,6 @@ type Map k v = Map.Map k v
 
 
 type Maybe = Prelude.Maybe
-
 
 
 type Pair a b = (a,b)

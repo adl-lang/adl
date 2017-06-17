@@ -76,13 +76,6 @@ export function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr,
     return primitiveJsonBinding(dresolver, texpr.typeRef.value, texpr.parameters, boundTypeParams);
   } else if (texpr.typeRef.kind === "reference") {
     const ast = dresolver(texpr.typeRef.value);
-
-    // Special case for nullable, as we don't have custom types  yet
-    // (and perhaps Nullable<> should become a primitive anyway)
-    if (isNullable(texpr)) {
-      return nullableJsonBinding(dresolver, texpr.parameters[0], boundTypeParams);
-    }
-
     if (ast.decl.type_.kind === "struct_") {
       return structJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
     } else if (ast.decl.type_.kind === "union_") {
@@ -116,6 +109,7 @@ function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params :
   else if (ptype === "Bytes")      { return bytesJsonBinding(); }
   else if (ptype === "Vector")     { return vectorJsonBinding(dresolver, params[0], boundTypeParams); }
   else if (ptype === "StringMap")  { return stringMapJsonBinding(dresolver, params[0], boundTypeParams); }
+  else if (ptype === "Nullable")   { return nullableJsonBinding(dresolver, params[0], boundTypeParams); }
   else throw new Error("Unimplemented json binding for primitive " + ptype);
 };
 
@@ -209,6 +203,26 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
   return {toJson, fromJson};
 }
 
+function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding<any> {
+  const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
+
+  function toJson(v : any) : any {
+    if (v === null) {
+      return null;
+    }
+    return elementBinding().toJson(v);
+  }
+
+  function fromJson(json : any) : any {
+    if (json === null) {
+      return null;
+    }
+    return elementBinding().fromJson(json);
+  }
+
+  return {toJson,fromJson};
+}
+
 interface StructFieldDetails {
   field : AST.Field,
   jsonBinding : () => JsonBinding<any>,
@@ -221,10 +235,6 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
   struct.fields.forEach( (field) => {
     let buildDefault = once( () => {
       if (field.default.kind === "just")  {
-        // Special case for nullable, as we don't have custom types.
-        if (isNullable(field.typeExpr)) {
-          return { 'value' : nullableFromLiteral(field.default.value) };
-        }
         const json = jsonFromLiteral(field.default.value);
         return { 'value' : buildJsonBinding(dresolver, field.typeExpr, newBoundTypeParams).fromJson(json)};
       } else {
@@ -299,26 +309,6 @@ function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params :
       throw jsonParseException("invalid string for enum: " + json);
     }
     return result;
-  }
-
-  return {toJson, fromJson};
-}
-
-function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding<any> {
-  const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams))
-
-  function toJson(v : any) : any {
-    if (v == null) {
-      return v;
-    };
-    return elementBinding().toJson(v);
-  }
-
-  function fromJson(json : any) : any {
-    if (json == null) {
-      return json;
-    };
-    return elementBinding().fromJson(json);
   }
 
   return {toJson, fromJson};
@@ -429,13 +419,6 @@ function isVoid(texpr : AST.TypeExpr) : boolean {
   return false;
 }
 
-function isNullable(texpr : AST.TypeExpr) : boolean {
-  if (texpr.typeRef.kind === "reference") {
-    return texpr.typeRef.value.moduleName === "sys.types" && texpr.typeRef.value.name === "Nullable";
-  }
-  return false;
-}
-
 /**
  *  Convert a ADLAST literal to a json value.
  *
@@ -462,15 +445,6 @@ function jsonFromLiteral(literal : AST.Literal) : any {
     });
     return result;
   }
-}
-
-function nullableFromLiteral(literal : AST.Literal) : any {
-  if (literal.kind === "string" && literal.value === "nothing") {
-    return null;
-  } else if(literal.kind === "object") {
-    return jsonFromLiteral(literal.value[0].v2);
-  }
-  throw new Error("Invalid literal for nullable");
 }
 
 /**

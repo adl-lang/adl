@@ -4,14 +4,12 @@ module ADL.Sys.Types(
     Error,
     Map,
     Maybe,
-    Nullable,
     Pair,
     Set,
 ) where
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
-import qualified ADL.Core
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Map
@@ -31,7 +29,6 @@ type Map k v = Data.Map.Map k v
 
 
 type Maybe = Prelude.Maybe
-
 
 
 type Pair a b = (a,b)

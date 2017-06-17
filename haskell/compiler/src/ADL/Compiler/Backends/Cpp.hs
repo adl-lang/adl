@@ -347,6 +347,9 @@ cSerializerExpr :: TypeExpr CResolvedType -> Gen T.Text
 cSerializerExpr (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   t <- cTypeExpr True te
   return (template "stringMapSerialiser<$1>" [t])
+cSerializerExpr (TypeExpr (RT_Primitive P_Nullable) [te]) = do
+  t <- cTypeExpr True te
+  return (template "nullableSerialiser<$1>" [t])
 cSerializerExpr te = do
   t <- cTypeExpr True te
   return (template "Serialisable<$1>::serialiser" [t])
@@ -1259,6 +1262,8 @@ cPrimitiveType P_StringMap targs = do
   includeStd ifile "string"
   includeStd ifile "map"
   return (template "std::map<std::string,$1>" targs)
+cPrimitiveType P_Nullable targs = do
+  return (template "nullable<$1>" targs)
 cPrimitiveType P_String targs = do
   includeStd ifile "string"
   return "std::string"
@@ -1279,6 +1284,7 @@ cPrimitiveDefault P_Double = Just "0.0"
 cPrimitiveDefault P_ByteVector = Nothing
 cPrimitiveDefault P_Vector = Nothing
 cPrimitiveDefault P_StringMap = Nothing
+cPrimitiveDefault P_Nullable = Nothing
 cPrimitiveDefault P_String = Nothing
 
 cPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
@@ -1302,5 +1308,6 @@ cPrimitiveLiteral P_ByteVector (JSON.String s) = template "ByteVector::fromLiter
       (Right s) -> s
 cPrimitiveLiteral P_Vector _ = "????" -- never called
 cPrimitiveLiteral P_StringMap _ = "????" -- never called
+cPrimitiveLiteral P_Nullable _ = "????" -- never called
 cPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
 cPrimitiveLiteral _ _ = error "BUG: invalid json literal for primitive"

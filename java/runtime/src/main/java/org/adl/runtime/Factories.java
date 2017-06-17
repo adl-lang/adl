@@ -2,6 +2,7 @@ package org.adl.runtime;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -100,6 +101,18 @@ public class Factories {
     };
   }
 
+  public static <T> Factory<Optional<T>> nullable(final Factory<T> factoryT) {
+    return new Factory<Optional<T>>() {
+      public Optional<T> create() {
+        return java.util.Optional.<T>empty();
+      }
+
+      public Optional<T> create(Optional<T> other) {
+        return other.map(factoryT::create);
+      }
+    };
+  }
+
   public static <T> HashMap<String,T> stringMap() {
     return new HashMap<String,T>();
   }
@@ -115,5 +128,5 @@ public class Factories {
     }
     return result;
   }
-  
+
 };

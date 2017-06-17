@@ -12,7 +12,6 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import org.adl.runtime.MaybeHelpers;
-import org.adl.runtime.NullableHelpers;
 import org.adl.sys.types.Either;
 import org.adl.sys.types.Error;
 import org.adl.sys.types.Pair;
@@ -57,8 +56,8 @@ public class S {
     this.f_set = HashSetHelpers.factory(Factories.STRING).create();
     this.f_mstring = MaybeHelpers.factory(Factories.STRING).create();
     this.f_mstring2 = MaybeHelpers.just("sukpeepolup");
-    this.f_nstring = NullableHelpers.factory(Factories.STRING).create();
-    this.f_nstring2 = NullableHelpers.just("abcde");
+    this.f_nstring = Optional.<String>empty();
+    this.f_nstring2 = Optional.<String>of("abcde");
   }
 
   public S(S other) {
@@ -69,8 +68,8 @@ public class S {
     this.f_set = HashSetHelpers.factory(Factories.STRING).create(other.f_set);
     this.f_mstring = MaybeHelpers.factory(Factories.STRING).create(other.f_mstring);
     this.f_mstring2 = MaybeHelpers.factory(Factories.STRING).create(other.f_mstring2);
-    this.f_nstring = NullableHelpers.factory(Factories.STRING).create(other.f_nstring);
-    this.f_nstring2 = NullableHelpers.factory(Factories.STRING).create(other.f_nstring2);
+    this.f_nstring = Factories.nullable(Factories.STRING).create(other.f_nstring);
+    this.f_nstring2 = Factories.nullable(Factories.STRING).create(other.f_nstring2);
   }
 
   /* Accessors and mutators */
@@ -203,8 +202,8 @@ public class S {
     final Lazy<JsonBinding<HashSet<String>>> f_set = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> f_mstring = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> f_mstring2 = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
-    final Lazy<JsonBinding<Optional<String>>> f_nstring = new Lazy<>(() -> NullableHelpers.jsonBinding(JsonBindings.STRING));
-    final Lazy<JsonBinding<Optional<String>>> f_nstring2 = new Lazy<>(() -> NullableHelpers.jsonBinding(JsonBindings.STRING));
+    final Lazy<JsonBinding<Optional<String>>> f_nstring = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.STRING));
+    final Lazy<JsonBinding<Optional<String>>> f_nstring2 = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.STRING));
     final Factory<S> _factory = FACTORY;
 
     return new JsonBinding<S>() {
@@ -237,7 +236,7 @@ public class S {
           JsonBindings.fieldFromJson(_obj, "f_mstring", f_mstring.get()),
           _obj.has("f_mstring2") ? JsonBindings.fieldFromJson(_obj, "f_mstring2", f_mstring2.get()) : MaybeHelpers.just("sukpeepolup"),
           JsonBindings.fieldFromJson(_obj, "f_nstring", f_nstring.get()),
-          _obj.has("f_nstring2") ? JsonBindings.fieldFromJson(_obj, "f_nstring2", f_nstring2.get()) : NullableHelpers.just("abcde")
+          _obj.has("f_nstring2") ? JsonBindings.fieldFromJson(_obj, "f_nstring2", f_nstring2.get()) : Optional.<String>of("abcde")
         );
       }
     };

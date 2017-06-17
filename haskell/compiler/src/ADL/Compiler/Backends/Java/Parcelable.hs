@@ -24,7 +24,7 @@ generateStructParcelable codeProfile decl struct fieldDetails = do
   addImplements idParcelable
 
   addMethod (cline "/* Android Parcelable implementation */")
-        
+
   addMethod $ coverride "public int describeContents()" (
     cline "return 0;"
     )
@@ -64,7 +64,7 @@ generateUnionParcelable codeProfile decl union fieldDetails = do
   addImplements "Parcelable"
 
   addMethod (cline "/* Android Parcelable implementation */")
-        
+
   addMethod $ coverride "public int describeContents()" (
     cline "return 0;"
     )
@@ -118,7 +118,7 @@ generateUnionParcelable codeProfile decl union fieldDetails = do
       ctemplate "return new $1[size];" [className]
       )
     )
-    
+
 
 writeToParcel :: TypeExpr CResolvedType -> Ident -> Ident -> Ident -> CState Code
 writeToParcel te to from flags = return $ case te of
@@ -138,6 +138,7 @@ writeToParcel te to from flags = return $ case te of
   (TypeExpr (RT_Primitive P_String) _) -> ctemplate "$1.writeString($2);" [to,from]
   (TypeExpr (RT_Primitive P_Vector) _) -> ctemplate "$1.writeList($2);" [to,from]
   (TypeExpr (RT_Primitive P_StringMap) _) -> ctemplate "$1.writeStringMap($2);" [to,from]
+  (TypeExpr (RT_Primitive P_Nullable) _) -> ctemplate "$1.writeNullable($2);" [to,from]
   _ -> ctemplate "$1.writeToParcel($2, $3);" [from,to,flags]
 
 
@@ -173,6 +174,7 @@ readFromParcel te mtotype tovar from = do
         ctemplate "$1.readList($2, $3.class.getClassLoader());" [from,tovar,typeExprStr]
         )
     (TypeExpr (RT_Primitive P_StringMap) _) -> return $ ctemplate "$1 = $2.readStringMap();" [to,from]
+    (TypeExpr (RT_Primitive P_Nullable) _) -> return $ ctemplate "$1 = $2.readNullable();" [to,from]
     _ -> do
       typeExprStr <- genTypeExprB TypeBoxed te
       return (

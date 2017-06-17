@@ -5,7 +5,6 @@ module ADL.Core.Value(
   ParseResult(..),
   AdlValue(..),
   StringMap(..),
-  Nullable(..),
 
   adlToJson,
   adlFromJson,
@@ -357,20 +356,3 @@ instance (Ord v, AdlValue v) => AdlValue (S.Set v) where
   atype _ = atype (Proxy :: Proxy [v])
   jsonGen = JsonGen (adlToJson . S.toList)
   jsonParser = S.fromList <$> jsonParser
-
-newtype Nullable t = Nullable (Maybe t)
-  deriving (Eq,Ord,Show)
-
-instance (AdlValue t) => AdlValue (Nullable t) where
-  atype _ = T.concat
-        [ "sys.types.Nullable"
-        , "<", atype (Proxy :: Proxy t)
-        , ">" ]
-
-  jsonGen = JsonGen $ \v -> case v of
-    (Nullable Nothing) -> JS.Null
-    (Nullable (Just v1)) -> adlToJson v1
-
-  jsonParser = JsonParser $ \ctx jv -> case jv of
-    JS.Null -> pure (Nullable Nothing)
-    _ -> runJsonParser jsonParser ctx jv

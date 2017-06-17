@@ -35,21 +35,6 @@ interface Maybe_Nothing<T> {
 
 export type Maybe<T> = Maybe_Just<T> | Maybe_Nothing<T>;
 
-interface Nullable_Just<T> {
-  kind: 'just';
-  value: T;
-}
-interface Nullable_Nothing<T> {
-  kind: 'nothing';
-}
-
-/**
- * Nullable<T> is isomorphic to Maybe<T> but with an alternative
- * json serialisation, where the null_ branch is represented by a
- * json null Value.
- */
-export type Nullable<T> = Nullable_Just<T> | Nullable_Nothing<T>;
-
 export interface Pair<T1, T2> {
   v1: T1;
   v2: T2;

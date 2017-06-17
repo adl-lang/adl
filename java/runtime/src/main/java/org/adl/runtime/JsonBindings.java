@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Map;
 import java.util.Set;
 
@@ -245,6 +246,29 @@ public class JsonBindings
       }
     };
   }
+
+  public static <T> JsonBinding<Optional<T>> nullable(final JsonBinding<T> factoryT) {
+    return new JsonBinding<Optional<T>>() {
+      public Factory<Optional<T>> factory() {
+        return Factories.nullable(factoryT.factory());
+      }
+      public JsonElement toJson(Optional<T> value) {
+        if (value.isPresent()) {
+          return factoryT.toJson(value.get());
+        } else {
+          return JsonNull.INSTANCE;
+        }
+      }
+      public Optional<T> fromJson(JsonElement json) {
+        if (json.isJsonNull()) {
+          return Optional.<T>empty();
+        } else {
+          return Optional.<T>of(factoryT.fromJson(json));
+        }
+      }
+    };
+  }
+
 
   public static <T> JsonElement unionToJson(String name, T value, JsonBinding<T> jsonBinding) {
     if(value == null) {

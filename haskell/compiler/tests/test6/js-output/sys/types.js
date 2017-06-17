@@ -89,39 +89,6 @@ const Maybe = {
   ]
 };
 
-const Nullable = {
-  name : "Nullable",
-  module : "sys.types",
-  kind : "union",
-  typevars : [["T"]],
-  fields : [
-    {
-      name : "nothing",
-      type : {"primitive":"Void"},
-      defaultv : null,
-      annotations : [
-      ]
-    },
-    {
-      name : "just",
-      type : {"var":"T"},
-      defaultv : null,
-      annotations : [
-      ]
-    }
-  ],
-  annotations : [
-    {
-      type : "sys.annotations.CustomSerialization",
-      value : true
-    },
-    {
-      type : "sys.annotations.Doc",
-      value : "Nullable<T> is isomorphic to Maybe<T> but with an alternative\njson serialisation, where the null_ branch is represented by a\njson null Value.\n"
-    }
-  ]
-};
-
 const Pair = {
   name : "Pair",
   module : "sys.types",
@@ -161,7 +128,6 @@ const Set = {
 export const _ADL_TYPES = {
   "sys.types.Set" : Set,
   "sys.types.Pair" : Pair,
-  "sys.types.Nullable" : Nullable,
   "sys.types.Maybe" : Maybe,
   "sys.types.Map" : Map,
   "sys.types.Error" : Error,

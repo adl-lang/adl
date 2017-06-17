@@ -48,14 +48,4 @@ getCustomType scopedName _ = Map.lookup scopedName customTypes
          "Set.fromList"
          Map.empty
          Nothing)
-      , (ScopedName (ModuleName ["sys","types"]) "Nullable",
-         CustomType "Nullable" []
-         []
-         ""
-         (Map.fromList [("left", "Prelude.Left"), ("right", "Prelude.Right")])
-         Nothing )
       ]
-    
-    
-
-

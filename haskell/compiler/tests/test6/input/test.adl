@@ -10,11 +10,11 @@ module test
 
        Map<String,Double> f_map;
        Set<String> f_set;
-   
+
        Maybe<String> f_mstring;
        Maybe<String> f_mstring2 = {"just" : "sukpeepolup" };
 
        Nullable<String> f_nstring;
-       Nullable<String> f_nstring2 = {"just" : "abcde" };
+       Nullable<String> f_nstring2 = "abcde";
    };
 };

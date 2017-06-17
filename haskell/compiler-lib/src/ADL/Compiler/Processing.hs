@@ -523,6 +523,7 @@ data LiteralType te
   | LUnion Ident (Literal te)
   | LVector [Literal te]
   | LStringMap (Map.Map T.Text (Literal te))
+  | LNullable (Maybe (Literal te))
   | LPrimitive JSON.Value
   deriving (Show)
 
@@ -535,6 +536,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
       Just err -> Left err
     litForTE m te@(TypeExpr (RT_Primitive P_Vector) [te0]) v = (Literal te . LVector) <$> vecLiteral m te0 v
     litForTE m te@(TypeExpr (RT_Primitive P_StringMap) [te0]) v = (Literal te . LStringMap) <$> stringMapLiteral m te0 v
+    litForTE m te@(TypeExpr (RT_Primitive P_Nullable) [te0]) v = (Literal te . LNullable) <$> nullableLiteral m te0 v
     litForTE m (TypeExpr (RT_Primitive _) _) v =
       error "BUG: found primitive type with incorrect number of type parameters"
 
@@ -557,6 +559,11 @@ literalForTypeExpr te v = litForTE Map.empty te v
            lit <- litForTE m te jv
            return (key,lit)
     stringMapLiteral _ _ _ = Left "expected an object"
+
+    nullableLiteral m te JSON.Null = Right Nothing
+    nullableLiteral m te jv = do
+      lit <- litForTE m te jv
+      Right (Just lit)
 
     structFields :: Map.Map Ident (TypeExprRT c)
       -> Decl c (ResolvedTypeT c) -> Struct (ResolvedTypeT c) -> [TypeExprRT c]

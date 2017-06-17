@@ -61,11 +61,12 @@ genTypeExpr (TypeExpr (RT_Primitive P_StringMap) [texpr]) = do
   return (template "{[key: string]: $1}" [texprStr])
 genTypeExpr (TypeExpr (RT_Primitive P_StringMap) _) = error "BUG: StringMap must have 1 type parameter"
 
-genTypeExpr (TypeExpr (RT_Param parameterName) _) = return parameterName
+genTypeExpr (TypeExpr (RT_Primitive P_Nullable) [texpr]) = do
+  texprStr <- genTypeExpr texpr
+  return (template "($1|null)" [texprStr])
+genTypeExpr (TypeExpr (RT_Primitive P_Nullable) _) = error "BUG: Nullable must have 1 type parameter"
 
-genTypeExpr (TypeExpr (RT_Named (scopedName, _)) nullableTypeExpr) | isNullable scopedName = do
-    nonNullableTypeExpr <- genTypeExpr $ L.head nullableTypeExpr
-    return ("(" <> nonNullableTypeExpr <> "|null)")
+genTypeExpr (TypeExpr (RT_Param parameterName) _) = return parameterName
 
 genTypeExpr (TypeExpr (RT_Named (ScopedName moduleName name, _)) parameters) = do
     parametersExpressions <- mapM genTypeExpr parameters
@@ -124,7 +125,11 @@ genLiteralValue (TypeExpr (RT_Primitive p) tparams) btv jv = case p of
          [template "$1 : $2" [k, genLiteralValue texpr btv v] | (k,v) <- HM.toList hm]
         ]
       _ -> error "BUG: expected an object literal for StringMap"
-    _ -> error "BUG: expected a single type parameter for StringMap"
+  P_Nullable -> case tparams of
+    [texpr] -> case jv of
+      JS.Null -> "null"
+      _ -> genLiteralValue texpr btv jv
+    _ -> error "BUG: expected a single type parameter for Nullable"
   where
     toNumber (JS.Number n) = litNumber n
     toNumber _ = error "BUG: expected a number literal"
@@ -148,13 +153,11 @@ genLiteralValue (TypeExpr (RT_Named (scopedName, Decl{d_type=Decl_Union union}))
     JS.String v ->
       case findUnionField v (u_fields union) of
         (i,f) | isUnionEnum union -> T.pack (show i)
-              | isNullable scopedName && v == "nothing" -> "null"
               | otherwise -> template "{kind : \"$1\"}" [f_name f]
     JS.Object hm -> case HM.toList hm of
       [(k,value)] ->
         case findUnionField k (u_fields union) of
-          (i,f) | isNullable scopedName -> genLiteralValue (f_type f) btv' value
-                | otherwise -> template "{kind : \"$1\", value : $2}" [f_name f, genLiteralValue (f_type f) btv' value]
+          (i,f) -> template "{kind : \"$1\", value : $2}" [f_name f, genLiteralValue (f_type f) btv' value]
       _ -> error "BUG: union literal should be a single element object"
     _ -> error "BUG: expected a string or object literal for union"
   where
@@ -416,6 +419,3 @@ isUnionEnum u = all (isVoid . f_type) (u_fields u)
 isVoid :: CTypeExpr -> Bool
 isVoid (TypeExpr (RT_Primitive P_Void) _)  = True
 isVoid _ = False
-
-isNullable :: ScopedName -> Bool
-isNullable sn = sn_moduleName sn == ModuleName ["sys","types"] && sn_name sn == "Nullable"

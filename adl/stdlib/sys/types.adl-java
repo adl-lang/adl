@@ -17,11 +17,4 @@ annotation Maybe JavaCustomType {
   "javaname" : "java.util.Optional",
   "helpers" : "org.adl.runtime.MaybeHelpers"
   };
-
-annotation Nullable JavaCustomType {
-  "javaname" : "java.util.Optional",
-  "helpers" : "org.adl.runtime.NullableHelpers"
-  };
-
 };
-

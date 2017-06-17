@@ -35,6 +35,7 @@ data PrimitiveType = P_Void
                    | P_String
                    | P_Vector
                    | P_StringMap
+                   | P_Nullable
   deriving (Eq,Ord,Show)
 
 instance Format PrimitiveType where
@@ -64,6 +65,7 @@ primitiveDetails =
   , PrimitiveDetails P_String "String" 0 isString
   , PrimitiveDetails P_Vector "Vector" 1 (const False)
   , PrimitiveDetails P_StringMap "StringMap" 1 (const False)
+  , PrimitiveDetails P_Nullable "Nullable" 1 (const False)
   ]
 
 isVoid JSON.Null = True

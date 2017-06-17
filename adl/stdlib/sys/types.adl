@@ -30,15 +30,4 @@ newtype Map<K,V> = Vector<Pair<K,V>>;
 
 newtype Set<T> = Vector<T>;
 
-/// Nullable<T> is isomorphic to Maybe<T> but with an alternative
-/// json serialisation, where the null_ branch is represented by a
-/// json null Value.
-union Nullable<T>
-{
-    Void nothing;
-    T just;
-};
-
-annotation Nullable CustomSerialization true;
-
 };

@@ -316,3 +316,4 @@ primJsonBinding cgp pt = do
     bindingName P_String = "STRING"
     bindingName P_Vector = "arrayList"
     bindingName P_StringMap = "stringMap"
+    bindingName P_Nullable = "nullable"

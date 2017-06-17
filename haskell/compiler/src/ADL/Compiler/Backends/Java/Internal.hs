@@ -531,6 +531,32 @@ getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
       factories <- addImport (javaClass rtpackage "Factories")
       return (template "$1.stringMap($2)" [factories,commaSep kvlits])
 
+getTypeDetails (RT_Primitive P_Nullable) = TypeDetails
+  { td_type = \_ args -> do
+       optionalI <- addImport "java.util.Optional"
+       return (withTypeArgs optionalI (args))
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = True
+  , td_factory = primitiveFactory "nullable"
+  , td_hashfn = \from -> template "$1.hashCode()" [from]
+  }
+  where
+    genLiteralText' (Literal te LDefault) = do
+      (optionalI,typeExpr) <- otypes te
+      return (template "$1.<$2>empty()" [optionalI,typeExpr])
+    genLiteralText' (Literal te (LNullable Nothing)) = do
+      (optionalI,typeExpr) <- otypes te
+      return (template "$1.<$2>empty()" [optionalI,typeExpr])
+    genLiteralText' (Literal te (LNullable (Just v))) = do
+      (optionalI,typeExpr) <- otypes te
+      lit <- genLiteralText v
+      return (template "$1.<$2>of($3)" [optionalI,typeExpr,lit])
+
+    otypes (TypeExpr te [te0]) = do
+      optionalI <- addImport "java.util.Optional"
+      typeExpr <- genTypeExpr te0
+      return (optionalI,typeExpr)
+
 getTypeDetails (RT_Primitive P_String) = TypeDetails
   { td_type = \_ _ -> return "String"
   , td_genLiteralText = genLiteralText'
