@@ -75,6 +75,9 @@ struct S<T>
        "a" : 45,
        "b" : 47
     };
-}; 
+
+    Json f_json1 = null;
+    Json f_json2 = [{"v1" : 27, "v2" : "abcde"}, true];
+};
 
 };

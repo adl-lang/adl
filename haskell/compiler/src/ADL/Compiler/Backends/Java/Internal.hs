@@ -491,6 +491,27 @@ getTypeDetails (RT_Primitive P_ByteVector) = TypeDetails
       (Left _) -> "???"
       (Right s) -> s
 
+getTypeDetails (RT_Primitive P_Json) = TypeDetails
+  { td_type = \_ _ -> do
+      jsonElementI <- addImport "com.google.gson.JsonElement"
+      return jsonElementI
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = \_ -> do
+      rtpackage <- getRuntimePackage
+      jsonBindingI <- addImport (javaClass rtpackage "JsonBindings")
+      return (jsonBindingI <> ".JSON_FACTORY")
+  , td_hashfn = \from -> template "$1.hashCode()" [from]
+  }
+  where
+    genLiteralText' (Literal _ LDefault) = do
+      nullI <- addImport "com.google.gson.JsonNull"
+      return (nullI <> ".INSTANCE")
+    genLiteralText' (Literal _ (LPrimitive jv)) = do
+      rtpackage <- getRuntimePackage
+      helpersI <- addImport (javaClass rtpackage "JsonHelpers")
+      return (template "$1.jsonFromString($2)" [helpersI, T.pack (show (JSON.encode jv))])
+
 getTypeDetails (RT_Primitive P_Vector) = TypeDetails
   { td_type = \_ args -> do
        arrayListI <- addImport "java.util.ArrayList"

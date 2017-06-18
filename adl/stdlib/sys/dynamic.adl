@@ -1,0 +1,13 @@
+module sys.dynamic
+{
+// Definitions to support dynamic typing
+
+import sys.adlast.TypeExpr;
+
+/// A serialised value along with  its type
+struct Dynamic
+{
+    TypeExpr typeExpr;
+    Json value;
+};
+};

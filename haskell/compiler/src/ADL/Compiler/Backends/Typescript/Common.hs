@@ -50,6 +50,7 @@ genTypeExpr (TypeExpr (RT_Primitive P_Word64) _) = return "number"
 genTypeExpr (TypeExpr (RT_Primitive P_Bool) _) = return "boolean"
 genTypeExpr (TypeExpr (RT_Primitive P_Void) _) = return "null"
 genTypeExpr (TypeExpr (RT_Primitive P_ByteVector) _) = return "Uint8Array"
+genTypeExpr (TypeExpr (RT_Primitive P_Json) _) = return "any"
 
 genTypeExpr (TypeExpr (RT_Primitive P_Vector) [texpr]) = do
   texprStr <- genTypeExpr texpr
@@ -102,6 +103,7 @@ genLiteralValue (TypeExpr (RT_Primitive p) tparams) btv jv = case p of
   P_Word16 -> toNumber jv
   P_Word32 -> toNumber jv
   P_Word64 -> toNumber jv
+  P_Json -> jsonToText jv
   P_String -> case jv of
     JS.String v -> template "'$1'" [v]
     _ -> error "BUG: expected a string literal"
@@ -125,6 +127,7 @@ genLiteralValue (TypeExpr (RT_Primitive p) tparams) btv jv = case p of
          [template "$1 : $2" [k, genLiteralValue texpr btv v] | (k,v) <- HM.toList hm]
         ]
       _ -> error "BUG: expected an object literal for StringMap"
+    _ -> error "BUG: expected a single type parameter for Nullable"
   P_Nullable -> case tparams of
     [texpr] -> case jv of
       JS.Null -> "null"

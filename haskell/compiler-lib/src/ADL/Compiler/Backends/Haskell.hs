@@ -181,33 +181,37 @@ hPrimitiveType P_Word32 = wordType "Data.Word.Word32"
 hPrimitiveType P_Word64 = wordType "Data.Word.Word64"
 hPrimitiveType P_Float = return "Prelude.Float"
 hPrimitiveType P_Double = return "Prelude.Double"
+hPrimitiveType P_Json = return "JS.Value"
 hPrimitiveType P_ByteVector = importByteString >> return "B.ByteString"
 hPrimitiveType P_Vector = return "[]" -- never called
 hPrimitiveType P_StringMap = return "???" -- never called
 hPrimitiveType P_Nullable = return "???" -- never called
 hPrimitiveType P_String = importText >> return "T.Text"
 
-hPrimitiveLiteral :: PrimitiveType -> JS.Value -> T.Text
-hPrimitiveLiteral P_Void JS.Null = "()"
-hPrimitiveLiteral P_Bool (JS.Bool True) = "Prelude.True"
-hPrimitiveLiteral P_Bool (JS.Bool False) = "Prelude.False"
-hPrimitiveLiteral P_Int8 (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Int16 (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Int32 (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Int64 (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Word8 (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Word16 (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Word32 (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Word64 (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Float (JS.Number n) = litNumber n
-hPrimitiveLiteral P_Double (JS.Number n) = litNumber n
-hPrimitiveLiteral P_ByteVector (JS.String s) = T.pack (show (decode s))
+hPrimitiveLiteral :: PrimitiveType -> JS.Value -> HGen T.Text
+hPrimitiveLiteral P_Void JS.Null = return "()"
+hPrimitiveLiteral P_Bool (JS.Bool True) = return "Prelude.True"
+hPrimitiveLiteral P_Bool (JS.Bool False) = return "Prelude.False"
+hPrimitiveLiteral P_Int8 (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Int16 (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Int32 (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Int64 (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Word8 (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Word16 (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Word32 (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Word64 (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Float (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Double (JS.Number n) = return (litNumber n)
+hPrimitiveLiteral P_Json js = do
+  importQualifiedModule (HaskellModule "Data.Maybe")
+  return (template "Data.Maybe.fromJust (JS.decode $1)" [T.pack (show (JS.encode js))])
+hPrimitiveLiteral P_ByteVector (JS.String s) = return (T.pack (show (decode s)))
   where
     decode s = case B64.decode (T.encodeUtf8 s) of
       (Left _) -> "???"
       (Right s) -> s
-hPrimitiveLiteral P_Vector _ = "undefined" -- never called
-hPrimitiveLiteral P_String (JS.String s) = T.pack (show s)
+hPrimitiveLiteral P_Vector _ = return "undefined" -- never called
+hPrimitiveLiteral P_String (JS.String s) = return (T.pack (show s))
 
 litNumber :: S.Scientific -> T.Text
 litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)
@@ -474,7 +478,7 @@ generateLiteral te v =  generateLV Map.empty te v
     -- We only need to match the appropriate JSON cases here, as the JSON value
     -- has already been validated by the compiler
     generateLV :: TypeBindingMap -> TypeExpr CResolvedType -> JS.Value -> HGen T.Text
-    generateLV m (TypeExpr (RT_Primitive pt) []) v = return (hPrimitiveLiteral pt v)
+    generateLV m (TypeExpr (RT_Primitive pt) []) v = hPrimitiveLiteral pt v
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
     generateLV m (TypeExpr (RT_Primitive P_StringMap) [te]) v = generateStringMap m te v
     generateLV m (TypeExpr (RT_Primitive P_Nullable) [te]) v = generateNullable m te v

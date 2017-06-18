@@ -312,6 +312,7 @@ primJsonBinding cgp pt = do
     bindingName P_Word64 = "LONG"
     bindingName P_Float = "FLOAT"
     bindingName P_Double = "DOUBLE"
+    bindingName P_Json = "JSON"
     bindingName P_ByteVector = "BYTE_ARRAY"
     bindingName P_String = "STRING"
     bindingName P_Vector = "arrayList"

@@ -1,11 +1,13 @@
 import {DeclResolver,ATypeExpr} from './adl';
 import * as AST from './sys/adlast';
+import {Dynamic} from './sys/dynamic';
 import * as b64 from 'base64-js';
 
 /**
  * A JsonBinding is a de/serialiser for a give ADL type
  */
 export interface JsonBinding<T> {
+  typeExpr : AST.TypeExpr;
   toJson (t : T): any;
   fromJson(json : any) : T;
 };
@@ -14,7 +16,8 @@ export interface JsonBinding<T> {
  * Construct a JsonBinding for an arbitrary type expression
  */
 export function createJsonBinding<T>(dresolver : DeclResolver, texpr : ATypeExpr<T>) : JsonBinding<T> {
-  return buildJsonBinding(dresolver, texpr.value, {});
+  const jb0 =  buildJsonBinding(dresolver, texpr.value, {});
+  return {typeExpr : texpr.value, toJson:jb0.toJson, fromJson:jb0.fromJson};
 };
 
 /**
@@ -67,11 +70,33 @@ export function isJsonParseException(exception: {}): exception is JsonParseExcep
   return (<JsonParseException> exception).kind === 'JsonParseException';
 }
 
-interface BoundTypeParams {
-  [key: string]: JsonBinding<any>;
+/**
+ * Convert an ADL value to a dynamically typed value
+ */
+export function toDynamic<T>(jsonBinding : JsonBinding<T>, value : T) : Dynamic {
+  return {typeExpr: jsonBinding.typeExpr, value : jsonBinding.toJson(value)};
 }
 
-export function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding<any> {
+/**
+ * Convert an ADL value to a dynamically typed value
+ */
+export function fromDynamic<T>(jsonBinding : JsonBinding<T>, dynamic : Dynamic) : (T|null) {
+  if (typeExprsEqual(jsonBinding.typeExpr, dynamic.typeExpr)) {
+    return jsonBinding.fromJson(dynamic.value);
+  }
+  return null;
+}
+
+interface JsonBinding0<T> {
+  toJson (t : T): any;
+  fromJson(json : any) : T;
+};
+
+interface BoundTypeParams {
+  [key: string]: JsonBinding0<any>;
+}
+
+function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<any> {
   if (texpr.typeRef.kind === "primitive") {
     return primitiveJsonBinding(dresolver, texpr.typeRef.value, texpr.parameters, boundTypeParams);
   } else if (texpr.typeRef.kind === "reference") {
@@ -91,7 +116,7 @@ export function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr,
   throw new Error("buildJsonBinding : unimplemented ADL type");
 };
 
-function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
+function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<any> {
   if      (ptype === "String")     { return identityJsonBinding("a string", (v) => typeof(v) === 'string'); }
   else if (ptype === "Int8")       { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
   else if (ptype === "Void")       { return identityJsonBinding("a null", (v) => v === null); }
@@ -113,7 +138,7 @@ function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params :
   else throw new Error("Unimplemented json binding for primitive " + ptype);
 };
 
-function identityJsonBinding(expected : string, predicate : (json : any) => boolean) : JsonBinding<any>{
+function identityJsonBinding(expected : string, predicate : (json : any) => boolean) : JsonBinding0<any>{
 
   function toJson(v : any) : any {
     return v;
@@ -129,7 +154,7 @@ function identityJsonBinding(expected : string, predicate : (json : any) => bool
   return {toJson, fromJson};
 }
 
-function bytesJsonBinding() : JsonBinding<any> {
+function bytesJsonBinding() : JsonBinding0<any> {
   function toJson(v : any) : any {
     return b64.fromByteArray(v);
   }
@@ -144,7 +169,7 @@ function bytesJsonBinding() : JsonBinding<any> {
   return {toJson, fromJson};
 }
 
-function vectorJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding<any> {
+function vectorJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<any> {
   const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
 
   function toJson(v : any) : any {
@@ -172,7 +197,7 @@ function vectorJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bound
   return {toJson, fromJson};
 }
 
-function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding<any> {
+function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<any> {
   const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
 
   function toJson(v : any) : any {
@@ -203,7 +228,7 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
   return {toJson, fromJson};
 }
 
-function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding<any> {
+function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<any> {
   const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
 
   function toJson(v : any) : any {
@@ -225,11 +250,11 @@ function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bou
 
 interface StructFieldDetails {
   field : AST.Field,
-  jsonBinding : () => JsonBinding<any>,
+  jsonBinding : () => JsonBinding0<any>,
   buildDefault : () => { value : any } | null
 };
 
-function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
+function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<any> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, struct.typeParams, params, boundTypeParams);
   const fieldDetails : StructFieldDetails[] = [];
   struct.fields.forEach( (field) => {
@@ -288,7 +313,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
   return {toJson, fromJson};
 }
 
-function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params : AST.TypeExpr[], _boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
+function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params : AST.TypeExpr[], _boundTypeParams : BoundTypeParams ) : JsonBinding0<any> {
   const fieldSerializedNames : string[] = [];
   const fieldNumbers = {};
   union.fields.forEach( (field,i) => {
@@ -314,7 +339,7 @@ function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params :
   return {toJson, fromJson};
 }
 
-function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
+function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<any> {
 
   // Enums are a special union case
   if (isEnum(union)) {
@@ -384,12 +409,12 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
   return {toJson, fromJson};
 }
 
-function newtypeJsonBinding(dresolver : DeclResolver, newtype : AST.NewType, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
+function newtypeJsonBinding(dresolver : DeclResolver, newtype : AST.NewType, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<any> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, newtype.typeParams, params, boundTypeParams);
   return buildJsonBinding(dresolver, newtype.typeExpr, newBoundTypeParams);
 }
 
-function typedefJsonBinding(dresolver : DeclResolver, typedef : AST.TypeDef, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding<any> {
+function typedefJsonBinding(dresolver : DeclResolver, typedef : AST.TypeDef, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<any> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, typedef.typeParams, params, boundTypeParams);
   return buildJsonBinding(dresolver, typedef.typeExpr, newBoundTypeParams);
 }
@@ -417,6 +442,32 @@ function isVoid(texpr : AST.TypeExpr) : boolean {
     return texpr.typeRef.value === "Void";
   }
   return false;
+}
+
+function typeExprsEqual(texpr1 : AST.TypeExpr, texpr2 : AST.TypeExpr) : boolean {
+  if (!typeRefsEqual(texpr1.typeRef, texpr2.typeRef)) {
+    return false;
+  }
+  if (texpr1.parameters.length != texpr2.parameters.length) {
+    return false;
+  }
+  for (let i = 0; i < texpr1.parameters.length; i++) {
+    if(typeExprsEqual(texpr1.parameters[i], texpr2.parameters[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function typeRefsEqual(tref1 : AST.TypeRef, tref2 : AST.TypeRef) : boolean {
+  if (tref1.kind === "primitive" && tref2.kind === "primitive") {
+    return tref1.value === tref2.value;
+  } else if (tref1.kind === "typeParam" && tref2.kind === "typeParam") {
+    return tref1.value === tref2.value;
+  } else if (tref1.kind === "reference" && tref2.kind === "reference") {
+    return tref1.value.moduleName === tref2.value.moduleName &&
+      tref1.value.name === tref2.value.name;
+  }
 }
 
 /**

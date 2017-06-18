@@ -162,6 +162,27 @@ public class JsonBindings
     }
   };
 
+  // The JSON factory class lives here (and not in Factories.java) as we
+  // don't want to force a dependency on gson if json serialization is not
+  // used
+
+  public static final Factory<JsonElement> JSON_FACTORY = new Factory<JsonElement>() {
+    public JsonElement create() { return JsonNull.INSTANCE; }
+    public JsonElement create(JsonElement other) { return other; }
+  };
+
+  public static final JsonBinding<JsonElement> JSON = new JsonBinding<JsonElement>() {
+    public Factory<JsonElement> factory() {
+      return JSON_FACTORY;
+    }
+    public JsonElement toJson(JsonElement value) {
+      return value;
+    }
+    public JsonElement fromJson(JsonElement json) {
+      return json;
+    }
+  };
+
   public static final JsonBinding<ByteArray> BYTE_ARRAY = new JsonBinding<ByteArray>() {
     public Factory<ByteArray> factory() {
       return Factories.BYTE_ARRAY;

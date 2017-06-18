@@ -1254,6 +1254,7 @@ cPrimitiveType P_Word32 _ = intType "uint32_t"
 cPrimitiveType P_Word64 _ = intType "uint64_t"
 cPrimitiveType P_Float _ = return "float"
 cPrimitiveType P_Double _ = return "double"
+cPrimitiveType P_Json _ = return "JsonValue"
 cPrimitiveType P_ByteVector _ = return "ByteVector"
 cPrimitiveType P_Vector targs = do
   includeStd ifile "vector"
@@ -1281,6 +1282,7 @@ cPrimitiveDefault P_Word32 = Just "0"
 cPrimitiveDefault P_Word64 = Just "0"
 cPrimitiveDefault P_Float = Just "0.0"
 cPrimitiveDefault P_Double = Just "0.0"
+cPrimitiveDefault P_Json = Just "JsonValue::null"
 cPrimitiveDefault P_ByteVector = Nothing
 cPrimitiveDefault P_Vector = Nothing
 cPrimitiveDefault P_StringMap = Nothing
@@ -1301,6 +1303,7 @@ cPrimitiveLiteral P_Word32 (JSON.Number n) = litNumber n
 cPrimitiveLiteral P_Word64 (JSON.Number n) = litNumber n
 cPrimitiveLiteral P_Float (JSON.Number n) = litNumber n
 cPrimitiveLiteral P_Double (JSON.Number n) = litNumber n
+cPrimitiveLiteral P_Json (jv) = template "JsonValue.parseString($1)" [T.pack (show (JSON.encode jv))]
 cPrimitiveLiteral P_ByteVector (JSON.String s) = template "ByteVector::fromLiteral($1)" [T.pack (show (decode s))]
   where
     decode s = case B64.decode (T.encodeUtf8 s) of

@@ -9,6 +9,7 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.runtime.JsonHelpers;
 import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,10 +41,12 @@ public class S<T> {
   private T f_t;
   private B<Short> f_bint16;
   private HashMap<String, Integer> f_smap;
+  private JsonElement f_json1;
+  private JsonElement f_json2;
 
   /* Constructors */
 
-  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, ArrayList<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, HashMap<String, Integer> f_smap) {
+  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, ArrayList<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, HashMap<String, Integer> f_smap, JsonElement f_json1, JsonElement f_json2) {
     this.f_void = f_void;
     this.f_bool = f_bool;
     this.f_int8 = f_int8;
@@ -66,6 +69,8 @@ public class S<T> {
     this.f_t = Objects.requireNonNull(f_t);
     this.f_bint16 = Objects.requireNonNull(f_bint16);
     this.f_smap = Objects.requireNonNull(f_smap);
+    this.f_json1 = Objects.requireNonNull(f_json1);
+    this.f_json2 = Objects.requireNonNull(f_json2);
   }
 
   /* Accessors and mutators */
@@ -246,6 +251,22 @@ public class S<T> {
     this.f_smap = Objects.requireNonNull(f_smap);
   }
 
+  public JsonElement getF_json1() {
+    return f_json1;
+  }
+
+  public void setF_json1(JsonElement f_json1) {
+    this.f_json1 = Objects.requireNonNull(f_json1);
+  }
+
+  public JsonElement getF_json2() {
+    return f_json2;
+  }
+
+  public void setF_json2(JsonElement f_json2) {
+    this.f_json2 = Objects.requireNonNull(f_json2);
+  }
+
   /* Object level helpers */
 
   @Override
@@ -276,7 +297,9 @@ public class S<T> {
       f_e.equals(other.f_e) &&
       f_t.equals(other.f_t) &&
       f_bint16.equals(other.f_bint16) &&
-      f_smap.equals(other.f_smap);
+      f_smap.equals(other.f_smap) &&
+      f_json1.equals(other.f_json1) &&
+      f_json2.equals(other.f_json2);
   }
 
   @Override
@@ -304,6 +327,8 @@ public class S<T> {
     _result = _result * 37 + f_t.hashCode();
     _result = _result * 37 + f_bint16.hashCode();
     _result = _result * 37 + f_smap.hashCode();
+    _result = _result * 37 + f_json1.hashCode();
+    _result = _result * 37 + f_json2.hashCode();
     return _result;
   }
 
@@ -333,6 +358,8 @@ public class S<T> {
       final Lazy<Factory<T>> f_t = new Lazy<>(() -> factoryT);
       final Lazy<Factory<B<Short>>> f_bint16 = new Lazy<>(() -> B.factory(Factories.SHORT));
       final Lazy<Factory<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> Factories.stringMap(Factories.INTEGER));
+      final Lazy<Factory<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
+      final Lazy<Factory<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
 
       public S<T> create() {
         return new S<T>(
@@ -357,7 +384,9 @@ public class S<T> {
           E.V2,
           f_t.get().create(),
           new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
-          Factories.stringMap("a", 45, "b", 47)
+          Factories.stringMap("a", 45, "b", 47),
+          JsonHelpers.jsonFromString("null"),
+          JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]")
           );
       }
 
@@ -384,7 +413,9 @@ public class S<T> {
           f_e.get().create(other.getF_e()),
           f_t.get().create(other.getF_t()),
           f_bint16.get().create(other.getF_bint16()),
-          f_smap.get().create(other.getF_smap())
+          f_smap.get().create(other.getF_smap()),
+          other.getF_json1(),
+          other.getF_json2()
           );
       }
     };
@@ -415,6 +446,8 @@ public class S<T> {
     final Lazy<JsonBinding<T>> f_t = new Lazy<>(() -> bindingT);
     final Lazy<JsonBinding<B<Short>>> f_bint16 = new Lazy<>(() -> B.jsonBinding(JsonBindings.SHORT));
     final Lazy<JsonBinding<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.INTEGER));
+    final Lazy<JsonBinding<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON);
+    final Lazy<JsonBinding<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<S<T>> _factory = factory(bindingT.factory());
 
@@ -447,6 +480,8 @@ public class S<T> {
         _result.add("f_t", f_t.get().toJson(_value.f_t));
         _result.add("f_bint16", f_bint16.get().toJson(_value.f_bint16));
         _result.add("f_smap", f_smap.get().toJson(_value.f_smap));
+        _result.add("f_json1", f_json1.get().toJson(_value.f_json1));
+        _result.add("f_json2", f_json2.get().toJson(_value.f_json2));
         return _result;
       }
 
@@ -474,7 +509,9 @@ public class S<T> {
           _obj.has("f_e") ? JsonBindings.fieldFromJson(_obj, "f_e", f_e.get()) : E.V2,
           JsonBindings.fieldFromJson(_obj, "f_t", f_t.get()),
           _obj.has("f_bint16") ? JsonBindings.fieldFromJson(_obj, "f_bint16", f_bint16.get()) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
-          _obj.has("f_smap") ? JsonBindings.fieldFromJson(_obj, "f_smap", f_smap.get()) : Factories.stringMap("a", 45, "b", 47)
+          _obj.has("f_smap") ? JsonBindings.fieldFromJson(_obj, "f_smap", f_smap.get()) : Factories.stringMap("a", 45, "b", 47),
+          _obj.has("f_json1") ? JsonBindings.fieldFromJson(_obj, "f_json1", f_json1.get()) : JsonHelpers.jsonFromString("null"),
+          _obj.has("f_json2") ? JsonBindings.fieldFromJson(_obj, "f_json2", f_json2.get()) : JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]")
         );
       }
     };
