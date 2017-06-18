@@ -31,6 +31,7 @@ data PrimitiveType = P_Void
                    | P_Word64
                    | P_Float
                    | P_Double
+                   | P_Json
                    | P_ByteVector
                    | P_String
                    | P_Vector
@@ -61,6 +62,7 @@ primitiveDetails =
   , PrimitiveDetails P_Word64 "Word64" 0 (isWord (maxBound::Word64))
   , PrimitiveDetails P_Float "Float" 0 isFloat
   , PrimitiveDetails P_Double "Double" 0 isFloat
+  , PrimitiveDetails P_Json "Json" 0 (const True)
   , PrimitiveDetails P_ByteVector "Bytes" 0 isBytes
   , PrimitiveDetails P_String "String" 0 isString
   , PrimitiveDetails P_Vector "Vector" 1 (const False)

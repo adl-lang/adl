@@ -1,8 +1,9 @@
 /// <reference path="node_modules/@types/jest/index.d.ts" />
 import {DeclResolver,declResolver} from './build/runtime/adl'
-import {JsonBinding,createJsonBinding} from './build/runtime/json'
+import {JsonBinding,createJsonBinding, fromDynamic, toDynamic} from './build/runtime/json'
 import * as example from './build/example'
 import * as sys_types from './build/sys/types'
+import {Dynamic} from './build/sys/dynamic'
 
 const dresolver : DeclResolver = declResolver(
   example._AST_MAP,
@@ -171,4 +172,22 @@ describe('StructWithDefaults', () => {
     expect(structWithDefaultsJsonBinding.fromJson({}).field3.name).toEqual("Mike");
     expect(structWithDefaultsJsonBinding.fromJson({}).field3.age).toEqual(50);
   })
+});
+
+//----------------------------------------------------------------------
+
+
+
+describe('Dynamic Values', () => {
+  it( 'can roundtrip values successfully', () => {
+    const dynamic : Dynamic = toDynamic(personJsonBinding, person1);
+    const person2 : example.Person = fromDynamic(personJsonBinding, dynamic);
+    expect(person2.name).toEqual("Joe");
+    expect(person2.age).toEqual(142);
+  });
+  it( 'fails with null when extracting the wrong type', () => {
+    const dynamic : Dynamic = toDynamic(personJsonBinding, person1);
+    const itree : example.IntTree = fromDynamic(intTreeJsonBinding, dynamic);
+    expect(itree).toBeNull();
+  });
 });

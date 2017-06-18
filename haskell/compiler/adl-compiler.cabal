@@ -12,6 +12,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 data-files:          lib/adl/sys/adlast.adl
+                     lib/adl/sys/dynamic.adl
                      lib/adl/sys/types.adl
                      lib/adl/sys/types.adl-java
                      lib/adl/sys/types.adl-hs
@@ -37,6 +38,7 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/typescript/runtime/json.ts
                      lib/typescript/runtime/sys/types.ts
                      lib/typescript/runtime/sys/adlast.ts
+                     lib/typescript/runtime/sys/dynamic.ts
 
 executable adlc
   hs-source-dirs:      src
