@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Compiler.Backends.Typescript.Common where
+module ADL.Compiler.Backends.Typescript.Internal where
 
 import qualified Data.Aeson as JS
 import qualified Data.Aeson.Text as JS
@@ -13,7 +13,6 @@ import qualified Data.Text.Lazy as LT
 import qualified Data.Vector as V
 
 import ADL.Compiler.AST
-import ADL.Compiler.Backends.Typescript.DataTypes
 import ADL.Compiler.Primitive
 import ADL.Compiler.Processing
 import ADL.Utils.Format(template,formatText)
@@ -24,6 +23,81 @@ import Control.Monad.Trans.State.Strict
 import Data.Maybe(fromMaybe)
 import Data.Monoid
 import Data.Scientific(isInteger)
+
+-- | Command line flags to control the backend.
+-- (once we have them)
+data TypescriptFlags = TypescriptFlags {
+  tsLibDir :: FilePath,
+  tsIncludeRuntime :: Bool,
+  tsExcludeAst :: Bool,
+  tsRuntimeDir :: FilePath
+}
+
+-- A variant of the AST that carries custom type
+-- information. A `CModule` value is the input to
+-- our code generation process
+
+type CModule = Module (Maybe CustomType) CResolvedType
+type CResolvedType = ResolvedTypeT (Maybe CustomType)
+type CTypeExpr = TypeExpr CResolvedType
+type CDecl = Decl (Maybe CustomType) CResolvedType
+type CAnnotations = Annotations CResolvedType
+type CStruct = Struct CResolvedType
+type CField = Field CResolvedType
+
+type InterfaceName = T.Text
+type ParameterNames = [Ident]
+
+-- ... but currently we don't support custom types, but when we do,
+-- they would go here (see the java backend as an example)
+
+data CustomType = CustomType
+  deriving (Show)
+
+data CodeGenProfile = CodeGenProfile {
+  cgp_includeAst :: Bool
+}
+
+-- We use a state monad to accumulate details of the typescript file
+-- corresponding to each ADL module
+type CState a = State ModuleFile a
+
+data ModuleFile = ModuleFile {
+  mfModuleName   :: ModuleName,
+
+  -- The imports upon which this module depends
+  mfImports      :: M.Map Ident TSImport,
+
+  -- The code
+  mfDeclarations :: [Code],
+
+  -- Details to control the code generate
+  mfCodeGenProfile :: CodeGenProfile
+}
+
+data TSImport = TSImport {
+  iAsName       :: Ident,
+  iModulePath :: [Ident]
+} deriving (Eq, Show, Ord)
+
+-- data structure to capture all of the details
+-- we need for a field
+
+data FieldDetails = FieldDetails {
+  fdField       :: Field CResolvedType,
+  fdName        :: T.Text,
+  fdTypeExprStr :: T.Text,
+  fdOptional    :: Bool,
+  fdDefValue    :: Maybe T.Text
+};
+
+-- | The key functions needed to plug a type into the
+-- code generator
+newtype TypeDetails = TypeDetails {
+  -- | Generate the json representation of the type,
+  -- given the representation of the type arguments.
+  tdType :: [T.Text] -> CState T.Text
+}
 
 addDeclaration :: Code -> CState ()
 addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
@@ -199,7 +273,7 @@ renderInterface name typeParams fields isPrivate =
   where
     export = if isPrivate then "" else "export "
     renderedFields = mconcat [renderFieldDeclaration fd ";"| fd <- sortedFds]
-    sortedFds = L.sort fields
+    sortedFds = L.sortOn fdName fields
 
     renderFieldDeclaration :: FieldDetails -> T.Text -> Code
     renderFieldDeclaration fd endChar
@@ -217,7 +291,7 @@ renderFactory name typeParams fds = function
       <> cline (template "): $1$2 {" [name, tparams])
       <> indent fieldInitialisations
       <> cline "}"
-    sortedFds = L.sort fds
+    sortedFds = L.sortOn fdName fds
     tparams = typeParamsExpr typeParams
     factoryInputVariable = renderFactoryInput sortedFds
     fieldInitialisations = renderFieldInitialisations sortedFds

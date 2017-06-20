@@ -56,12 +56,7 @@ executable adlc
                      , ADL.Compiler.Backends.Java.Parcelable
                      , ADL.Compiler.Backends.Javascript
                      , ADL.Compiler.Backends.Typescript
-                     , ADL.Compiler.Backends.Typescript.Common
-                     , ADL.Compiler.Backends.Typescript.DataTypes
-                     , ADL.Compiler.Backends.Typescript.Newtype
-                     , ADL.Compiler.Backends.Typescript.Struct
-                     , ADL.Compiler.Backends.Typescript.Typedef
-                     , ADL.Compiler.Backends.Typescript.Union
+                     , ADL.Compiler.Backends.Typescript.Internal
                      , ADL.Compiler.DataFiles
                      , ADL.Sys.Adlast
                      , ADL.Sys.Types
@@ -91,12 +86,7 @@ test-suite adlc-tests
                      , ADL.Compiler.Backends.Java.Parcelable
                      , ADL.Compiler.Backends.Javascript
                      , ADL.Compiler.Backends.Typescript
-                     , ADL.Compiler.Backends.Typescript.Common
-                     , ADL.Compiler.Backends.Typescript.DataTypes
-                     , ADL.Compiler.Backends.Typescript.Newtype
-                     , ADL.Compiler.Backends.Typescript.Struct
-                     , ADL.Compiler.Backends.Typescript.Typedef
-                     , ADL.Compiler.Backends.Typescript.Union
+                     , ADL.Compiler.Backends.Typescript.Internal
                      , ADL.Sys.Adlast
                      , ADL.Sys.Types
                      , ADL.Compiler.DataFiles

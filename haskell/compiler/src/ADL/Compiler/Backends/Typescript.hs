@@ -12,8 +12,9 @@ module ADL.Compiler.Backends.Typescript(
   ) where
 
 import           ADL.Compiler.AST
-import           ADL.Compiler.Backends.Typescript.DataTypes
+import           ADL.Compiler.Primitive
 import           ADL.Utils.FileDiff                         (dirContents)
+import           ADL.Utils.Format(template,formatText)
 import qualified Data.ByteString.Lazy                       as LBS
 import qualified Data.Map                                   as Map
 import qualified Data.Text                                  as T
@@ -27,18 +28,14 @@ import           Control.Monad                              (when)
 import           Control.Monad.Trans                        (liftIO)
 import           Control.Monad.Trans.State.Strict
 import           Data.Foldable                              (for_)
-import           Data.List                                  (intersperse)
+import           Data.List                                  (intersperse,sortOn)
 import           Data.Monoid
 import           Data.Traversable                           (for)
 import           System.FilePath                            (joinPath,
                                                              takeDirectory,
                                                              (<.>), (</>))
 
-import           ADL.Compiler.Backends.Typescript.Newtype   (genNewtype)
-import           ADL.Compiler.Backends.Typescript.Struct    (genStruct)
-import           ADL.Compiler.Backends.Typescript.Typedef   (genTypedef)
-import           ADL.Compiler.Backends.Typescript.Union     (genUnion)
-import           ADL.Compiler.Backends.Typescript.Common    (addImport,addAstMap)
+import           ADL.Compiler.Backends.Typescript.Internal
 import           ADL.Compiler.DataFiles
 
 -- | Run this backend on a list of ADL modules. Check each module
@@ -114,6 +111,109 @@ genImport intoModule TSImport{iAsName=asName, iModulePath=importPath} = ctemplat
     relativePath [] ps2 = ps2
     relativePath (p1:ps1) (p2:ps2) | p1 == p2 = relativePath ps1 ps2
     relativePath ps1 ps2 = (map (const "..") ps1) <> ps2
+
+genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
+genStruct m decl struct@Struct{s_typeParams=parameters} = do
+  fds <- mapM genFieldDetails (s_fields struct)
+  let structName = capitalise (d_name decl)
+
+  addDeclaration $ renderCommentsForDeclaration decl <> renderInterface structName parameters fds False
+  addDeclaration $ renderFactory structName (s_typeParams struct) fds
+  addAstDeclaration m decl
+
+genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
+genUnion  m decl union@Union{u_typeParams=parameters} = do
+  genUnionWithDiscriminate m decl union
+  addAstDeclaration m decl
+
+genUnionWithDiscriminate :: CModule -> CDecl -> Union CResolvedType -> CState ()
+genUnionWithDiscriminate  m decl union
+  | isUnionEnum union = genUnionEnum m decl union
+  | otherwise = genUnionInterface m decl union
+
+genUnionEnum :: CModule -> CDecl -> Union CResolvedType -> CState ()
+genUnionEnum _ decl enum = do
+  fds <- mapM genFieldDetails (u_fields enum)
+  let enumName = capitalise (d_name decl)
+      enumFields = mconcat [ctemplate "$1," [fdName fd] | fd <- fds]
+      enumDecl = cblock (template "export enum $1" [enumName]) enumFields
+  addDeclaration enumDecl
+
+genUnionInterface :: CModule -> CDecl -> Union CResolvedType -> CState ()
+genUnionInterface _ decl union@Union{u_typeParams=parameters} = do
+  fds <- mapM genFieldDetails (u_fields union)
+  let unionName = d_name decl
+      sortedFds = sortOn fdName fds
+  addDeclaration (renderUnionFieldsAsInterfaces unionName parameters sortedFds)
+  addDeclaration (renderUnionChoice decl unionName parameters sortedFds)
+
+renderUnionChoice :: CDecl -> T.Text -> [Ident] -> [FieldDetails] -> Code
+renderUnionChoice decl unionName typeParams fds =
+  CAppend renderedComments (ctemplate "export type $1$2 = $3;" [unionName, renderedParameters, T.intercalate " | " [getChoiceName fd | fd <- fds]])
+  where
+    getChoiceName fd = unionName <> "_" <> capitalise (fdName fd) <> renderedParameters
+    renderedComments = renderCommentsForDeclaration decl
+    renderedParameters = typeParamsExpr typeParams
+
+renderUnionFieldsAsInterfaces :: T.Text -> [Ident] -> [FieldDetails] -> Code
+renderUnionFieldsAsInterfaces unionName parameters (fd:xs) =
+  CAppend renderedInterface (renderUnionFieldsAsInterfaces unionName parameters xs)
+    where
+      renderedInterface = CAppend (renderInterface interfaceName parameters fieldDetails True) CEmpty
+      interfaceName = unionName <> "_" <> capitalise (fdName fd)
+      fieldDetails = constructUnionFieldDetailsFromField fd
+renderUnionFieldsAsInterfaces _ _ [] = CEmpty
+
+constructUnionFieldDetailsFromField :: FieldDetails -> [FieldDetails]
+constructUnionFieldDetailsFromField fd@FieldDetails{fdField=Field{f_type=(TypeExpr (RT_Primitive P_Void) _)}}
+ = [FieldDetails{
+  fdName="kind",
+  fdField=Field{
+    f_name="kind",
+    f_serializedName="kind",
+    f_type=TypeExpr (RT_Primitive P_String) [],
+    f_default=Nothing,
+    f_annotations=Map.empty},
+  fdTypeExprStr="'" <> fdName fd <> "'",
+  fdOptional=False,
+  fdDefValue=Nothing}]
+constructUnionFieldDetailsFromField fd = [FieldDetails{
+  fdName="kind",
+  fdField=Field{
+    f_name="kind",
+    f_serializedName="kind",
+    f_type=TypeExpr (RT_Primitive P_String) [],
+    f_default=Nothing,
+    f_annotations=Map.empty},
+  fdTypeExprStr="'" <> fdName fd <> "'",
+  fdOptional=False,
+  fdDefValue=Nothing},
+  FieldDetails{fdName="value",
+  fdField=Field{
+    f_name="value",
+    f_serializedName="value",
+    f_type=TypeExpr (RT_Primitive P_String) [],
+    f_default=Nothing,
+    f_annotations=Map.empty},
+  fdTypeExprStr=fdTypeExprStr fd,
+  fdOptional=False,
+  fdDefValue=Nothing}]
+
+genNewtype :: CModule -> CDecl -> Newtype CResolvedType -> CState ()
+genNewtype  m declaration ntype@Newtype{n_typeParams=typeParams} = do
+  typeExprOutput <- genTypeExpr (n_typeExpr ntype)
+  let
+    typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, typeParamsExpr typeParams, typeExprOutput]
+  addDeclaration typeDecl
+  addAstDeclaration m declaration
+
+genTypedef :: CModule -> CDecl -> Typedef CResolvedType -> CState ()
+genTypedef m declaration typedef@Typedef{t_typeParams=typeParams} = do
+  typeExprOutput <- genTypeExpr (t_typeExpr typedef)
+  let
+    typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, typeParamsExpr typeParams, typeExprOutput]
+  addDeclaration typeDecl
+  addAstDeclaration m declaration
 
 emptyModuleFile :: ModuleName -> CodeGenProfile -> ModuleFile
 emptyModuleFile mn cgp = ModuleFile mn Map.empty [] cgp
