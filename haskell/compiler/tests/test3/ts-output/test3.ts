@@ -127,10 +127,10 @@ export function makeS<T>(
   }
 ): S<T> {
   return {
-    f_a: input.f_a === undefined ? {f_int : 0, f_string : 'xyz', f_bool : false} : input.f_a,
-    f_bint16: input.f_bint16 === undefined ? {f_t : 56, f_string : 'yikes', f_tvec : [1, 2, 3], f_xy : {x : 5, y : 5}} : input.f_bint16,
+    f_a: input.f_a === undefined ? {f_int : 0, f_string : "xyz", f_bool : false} : input.f_a,
+    f_bint16: input.f_bint16 === undefined ? {f_t : 56, f_string : "yikes", f_tvec : [1, 2, 3], f_xy : {x : 5, y : 5}} : input.f_bint16,
     f_bool: input.f_bool === undefined ? true : input.f_bool,
-    f_bytes: input.f_bytes === undefined ? b64.toByteArray('aGVsbG8=') : input.f_bytes,
+    f_bytes: input.f_bytes === undefined ? b64.toByteArray("aGVsbG8=") : input.f_bytes,
     f_double: input.f_double === undefined ? 0.45 : input.f_double,
     f_e: input.f_e === undefined ? 1 : input.f_e,
     f_float: input.f_float === undefined ? 0.5 : input.f_float,
@@ -141,12 +141,12 @@ export function makeS<T>(
     f_json1: input.f_json1 === undefined ? null : input.f_json1,
     f_json2: input.f_json2 === undefined ? [{"v1":27,"v2":"abcde"},true] : input.f_json2,
     f_smap: input.f_smap === undefined ? {a : 45, b : 47} : input.f_smap,
-    f_string: input.f_string === undefined ? 'abcd' : input.f_string,
+    f_string: input.f_string === undefined ? "abcd" : input.f_string,
     f_t: input.f_t,
     f_u: input.f_u === undefined ? {kind : "f_int", value : 45} : input.f_u,
     f_u1: input.f_u1 === undefined ? {kind : "f_void"} : input.f_u1,
     f_void: input.f_void === undefined ? null : input.f_void,
-    f_vstring: input.f_vstring === undefined ? ['xy', 'ab'] : input.f_vstring,
+    f_vstring: input.f_vstring === undefined ? ["xy", "ab"] : input.f_vstring,
     f_word16: input.f_word16 === undefined ? 50000 : input.f_word16,
     f_word32: input.f_word32 === undefined ? 124456 : input.f_word32,
     f_word64: input.f_word64 === undefined ? 2344 : input.f_word64,

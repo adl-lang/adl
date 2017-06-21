@@ -326,14 +326,8 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
       lit <- genLiteralText l
       case te of
        te | refEnumeration te -> return (template "$1.$2" [typeExpr, discriminatorName0 ctor])
-          | isVoid l -> return (template "$1.$2()" [typeExpr, ctor])
+          | isVoidLiteral l -> return (template "$1.$2()" [typeExpr, ctor])
           | otherwise -> return (template "$1.$2($3)" [typeExpr, ctor, lit ])
-       where
-         isVoid (Literal _ (LPrimitive JSON.Null)) = True
-         isVoid _ = False
-
-    refEnumeration (TypeExpr (RT_Named (_,Decl{d_type=Decl_Union u})) []) = isEnumeration u
-    refEnumeration _ = False
 
 -- a custom type
 getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetails

@@ -93,10 +93,14 @@ data FieldDetails = FieldDetails {
 
 -- | The key functions needed to plug a type into the
 -- code generator
-newtype TypeDetails = TypeDetails {
+data TypeDetails = TypeDetails {
   -- | Generate the json representation of the type,
   -- given the representation of the type arguments.
-  tdType :: [T.Text] -> CState T.Text
+  td_type :: [T.Text] -> CState T.Text,
+
+  -- | Generate a typescript literal value
+  td_genLiteralText :: Literal CTypeExpr -> CState T.Text
+
 }
 
 addDeclaration :: Code -> CState ()
@@ -104,54 +108,132 @@ addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
 
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails field = do
-  typeExprStr <- genTypeExpr (f_type field)
-  let defValueStr = fmap (genLiteralValue (f_type field) M.empty) (f_default field)
+  let te = f_type field
+  typeExprStr <- genTypeExpr te
+  defValueStr <- case f_default field of
+    (Just v) -> case literalForTypeExpr te v of
+      Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
+      Right litv -> fmap Just (genLiteralText litv)
+    Nothing -> return Nothing
   return (FieldDetails field (f_name field) typeExprStr False defValueStr)
 
 -- | Generate the typescript type given an ADL type expression
 genTypeExpr :: CTypeExpr -> CState T.Text
-genTypeExpr (TypeExpr (RT_Primitive P_Double) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Float) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_String) _) = return "string"
-genTypeExpr (TypeExpr (RT_Primitive P_Int8) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Int16) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Int32) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Int64) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Word8) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Word16) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Word32) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Word64) _) = return "number"
-genTypeExpr (TypeExpr (RT_Primitive P_Bool) _) = return "boolean"
-genTypeExpr (TypeExpr (RT_Primitive P_Void) _) = return "null"
-genTypeExpr (TypeExpr (RT_Primitive P_ByteVector) _) = return "Uint8Array"
-genTypeExpr (TypeExpr (RT_Primitive P_Json) _) = return "any"
+genTypeExpr (TypeExpr rt params) = do
+  rtParamsStr <- mapM genTypeExpr  params
+  td_type (getTypeDetails rt) rtParamsStr
 
-genTypeExpr (TypeExpr (RT_Primitive P_Vector) [texpr]) = do
-  texprStr <- genTypeExpr texpr
-  return (texprStr <> "[]")
-genTypeExpr (TypeExpr (RT_Primitive P_Vector) _) = error "BUG: Vector must have 1 type parameter"
+-- | Generate an expression to construct a literal value.
+genLiteralText :: Literal CTypeExpr -> CState T.Text
+genLiteralText lit@(Literal (TypeExpr rt _) _) = td_genLiteralText (getTypeDetails rt) lit
 
-genTypeExpr (TypeExpr (RT_Primitive P_StringMap) [texpr]) = do
-  texprStr <- genTypeExpr texpr
-  return (template "{[key: string]: $1}" [texprStr])
-genTypeExpr (TypeExpr (RT_Primitive P_StringMap) _) = error "BUG: StringMap must have 1 type parameter"
+-- | Get the TypeDetails record for any resolved type.
+getTypeDetails :: CResolvedType -> TypeDetails
 
-genTypeExpr (TypeExpr (RT_Primitive P_Nullable) [texpr]) = do
-  texprStr <- genTypeExpr texpr
-  return (template "($1|null)" [texprStr])
-genTypeExpr (TypeExpr (RT_Primitive P_Nullable) _) = error "BUG: Nullable must have 1 type parameter"
+-- each primitive
+getTypeDetails (RT_Primitive pt) =
+  case pt of
+    P_String -> primTypeDetails "string" toString
+    P_Double -> primTypeDetails "number" toNumber
+    P_Float -> primTypeDetails "number" toNumber
+    P_Int8 -> primTypeDetails "number" toNumber
+    P_Int16 -> primTypeDetails "number" toNumber
+    P_Int32 -> primTypeDetails "number" toNumber
+    P_Int64 -> primTypeDetails "number" toNumber
+    P_Word8 -> primTypeDetails "number" toNumber
+    P_Word16 -> primTypeDetails "number" toNumber
+    P_Word32 -> primTypeDetails "number" toNumber
+    P_Word64 -> primTypeDetails "number" toNumber
+    P_Bool -> primTypeDetails "boolean" toBool
+    P_Void -> primTypeDetails "null" (const (return "null"))
+    P_ByteVector -> primTypeDetails "Uint8Array" toByteVector
+    P_Json -> primTypeDetails "any" toAny
+    P_Vector -> vectorTypeDetails
+    P_StringMap -> stringMapTypeDetails
+    P_Nullable -> nullableTypeDetails
+  where
+    primTypeDetails t convf = TypeDetails (const (return t)) convf
 
-genTypeExpr (TypeExpr (RT_Param parameterName) _) = return parameterName
+    toString (Literal _ (LPrimitive (JS.String s))) = return (T.pack (show s))
+    toString _ = error "BUG: expected a string literal"
 
-genTypeExpr (TypeExpr (RT_Named (ScopedName moduleName name, _)) parameters) = do
-    parametersExpressions <- mapM genTypeExpr parameters
-    currentModuleName <- fmap mfModuleName get
-    let modules =  if moduleName == currentModuleName then [] else unModuleName moduleName
-    addModulesImport modules name
-    return (modulePrefix modules <> name <> typeParamsExpr parametersExpressions)
+    toNumber (Literal _ (LPrimitive (JS.Number n))) = return (litNumber n)
+    toNumber _ = error "BUG: expected a number literal"
 
-genAnnotation :: ScopedName -> JS.Value -> CState T.Text
-genAnnotation _ _ = error "FIXME: genAnnotation not implemented"
+    toBool (Literal _ (LPrimitive (JS.Bool True))) = return "true"
+    toBool (Literal _ (LPrimitive (JS.Bool False))) = return "false"
+    toBool _ = error "BUG: expected a boolean literal"
+
+    toByteVector (Literal _ (LPrimitive (JS.String v))) =  return (template "b64.toByteArray(\"$1\")" [v])
+    toByteVector _ = error "BUG: expected a string literal for ByteVector"
+
+    toAny (Literal _ (LPrimitive jv)) = return (jsonToText jv)
+    toAny _ = error "BUG: expected a json literal for JSson"
+
+    vectorTypeDetails = TypeDetails typeExpr literalText
+      where
+        typeExpr [texpr] = return (texpr <> "[]")
+        typeExpr _ = error "BUG: expected a single type param for Vector"
+        literalText (Literal te (LVector ls)) = do
+          lits <- mapM genLiteralText ls
+          return (template "[$1]" [T.intercalate ", " lits])
+        literalText _ = error "BUG: invalid literal for Vector"
+
+    stringMapTypeDetails = TypeDetails typeExpr literalText
+      where
+        typeExpr [texpr] = return (template "{[key: string]: $1}" [texpr])
+        typeExpr _ = error "BUG: expected a single type param for StringMap"
+        literalText (Literal _ (LStringMap m)) = do
+          m' <- traverse genLiteralText m
+          return (template "{$1}" [T.intercalate ", " [ template "$1 : $2" [k,v] | (k,v) <- M.toList m']])
+        literalText _ = error "BUG: invalid literal for StringMap"
+
+    nullableTypeDetails = TypeDetails typeExpr literalText
+      where
+        typeExpr [texpr] = return (template "($1|null)" [texpr])
+        typeExpr _ = error "BUG: expected a single type param for StringMap"
+        literalText (Literal _ (LNullable Nothing)) = return "null"
+        literalText (Literal _ (LNullable (Just l))) = genLiteralText l
+        literalText _ = error "BUG: invalid literal for Nullable"
+
+-- a type defined through a regular ADL declaration
+getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText
+  where
+    (ScopedName moduleName name) = scopedName
+    typeExpr typeArgs = do
+      currentModuleName <- fmap mfModuleName get
+      let modules =  if moduleName == currentModuleName then [] else unModuleName moduleName
+      addModulesImport modules name
+      return (modulePrefix modules <> name <> typeParamsExpr typeArgs)
+    literalText (Literal te LDefault) = error "BUG: literal defaults shouldn't be needed"
+    literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) _) (LCtor ls)) = do
+      lvs <- mapM genLiteralText ls
+      return (template "{$1}" [T.intercalate ", " [template "$1 : $2" [f_name f,v] | (f,v) <- zip (s_fields struct) lvs]])
+    literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Newtype _})) _) (LCtor [l])) = do
+      genLiteralText l
+    literalText (Literal te@(TypeExpr (RT_Named (_, Decl{d_type=Decl_Union union})) _) (LUnion ctor l)) = do
+      lv <- genLiteralText l
+      case te of
+       te | refEnumeration te -> let (i,f) = findUnionField ctor (u_fields union)
+                                 in return (T.pack (show i))
+          | isVoidLiteral l -> return (template "{kind : \"$1\"}" [ctor])
+          | otherwise -> return (template "{kind : \"$1\", value : $2}" [ctor,lv])
+    literalText l = error ("BUG: missing RT_Named literalText definition (" <> show l <> ")")
+
+-- a custom type
+getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) =
+  error "BUG: custom types not implemented"
+
+-- a type variable
+getTypeDetails (RT_Param typeVar) = TypeDetails typeExpr literalText
+  where
+    typeExpr _ = return typeVar
+    literalText _ = error "BUG: literal values for type variables shouldn't be needed"
+
+findUnionField :: T.Text -> [Field CResolvedType] -> (Int,Field CResolvedType)
+findUnionField fname fs = case L.find (\(_,f) -> f_name f == fname) (zip [0,1..] fs) of
+  (Just v) -> v
+  Nothing -> error ("BUG: invalid literal " <> show fname <> "for union")
 
 addImport :: Ident -> TSImport -> CState ()
 addImport moduleIdentity tsImport = modify (\mf->mf{mfImports=M.insert moduleIdentity tsImport (mfImports mf)})
@@ -162,106 +244,6 @@ addModulesImport modules _ = addImport importAsName tsImport
     where
       tsImport = TSImport{iAsName=importAsName, iModulePath=modules}
       importAsName = T.intercalate "_" modules
-
-type BoundTypeVariables = M.Map Ident CTypeExpr
-
-genLiteralValue :: CTypeExpr -> BoundTypeVariables -> JS.Value -> T.Text
-genLiteralValue (TypeExpr (RT_Primitive p) tparams) btv jv = case p of
-  P_Double -> toNumber jv
-  P_Float -> toNumber jv
-  P_Int8 -> toNumber jv
-  P_Int16 -> toNumber jv
-  P_Int32 -> toNumber jv
-  P_Int64 -> toNumber jv
-  P_Word8 -> toNumber jv
-  P_Word16 -> toNumber jv
-  P_Word32 -> toNumber jv
-  P_Word64 -> toNumber jv
-  P_Json -> jsonToText jv
-  P_String -> case jv of
-    JS.String v -> template "'$1'" [v]
-    _ -> error "BUG: expected a string literal"
-  P_Bool -> case jv of
-    JS.Bool True -> "true"
-    JS.Bool False -> "false"
-    _ -> error "BUG: expected a boolean literal"
-  P_Void -> "null"
-  P_Vector -> case tparams of
-    [texpr] -> case jv of
-      JS.Array values -> template "[$1]" [T.intercalate ", " (map (genLiteralValue texpr btv) (V.toList values))]
-      _ -> error "BUG: expected an array literal for Vector"
-    _ -> error "BUG: expected a single type parameter for Vector"
-  P_ByteVector -> case jv of
-    JS.String v -> template "b64.toByteArray('$1')" [v]
-    _ -> error "BUG: expected a string literal for bytevector"
-  P_StringMap -> case tparams of
-    [texpr] -> case jv of
-      JS.Object hm -> template "{$1}"
-        [T.intercalate ", "
-         [template "$1 : $2" [k, genLiteralValue texpr btv v] | (k,v) <- HM.toList hm]
-        ]
-      _ -> error "BUG: expected an object literal for StringMap"
-    _ -> error "BUG: expected a single type parameter for Nullable"
-  P_Nullable -> case tparams of
-    [texpr] -> case jv of
-      JS.Null -> "null"
-      _ -> genLiteralValue texpr btv jv
-    _ -> error "BUG: expected a single type parameter for Nullable"
-  where
-    toNumber (JS.Number n) = litNumber n
-    toNumber _ = error "BUG: expected a number literal"
-
-genLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) tparams) btv jv =
-  case jv of
-    JS.Object hm -> template "{$1}" [T.intercalate ", " (map (renderField hm) (s_fields struct))]
-    _ -> error "BUG: expected an object literal for struct"
-  where
-    btv' = createBoundTypeVariables btv (s_typeParams struct)  tparams
-    renderField hm f = template "$1 : $2" [f_name f, genLiteralValue (f_type f) btv' value]
-      where
-        value = case HM.lookup (f_name f) hm of
-          Nothing -> case f_default f of
-            Nothing -> error ("BUG: missing default value for " <> T.unpack (f_name f))
-            (Just value) -> value
-          (Just value) -> value
-
-genLiteralValue (TypeExpr (RT_Named (scopedName, Decl{d_type=Decl_Union union})) tparams) btv value =
-  case value of
-    JS.String v ->
-      case findUnionField v (u_fields union) of
-        (i,f) | isUnionEnum union -> T.pack (show i)
-              | otherwise -> template "{kind : \"$1\"}" [f_name f]
-    JS.Object hm -> case HM.toList hm of
-      [(k,value)] ->
-        case findUnionField k (u_fields union) of
-          (i,f) -> template "{kind : \"$1\", value : $2}" [f_name f, genLiteralValue (f_type f) btv' value]
-      _ -> error "BUG: union literal should be a single element object"
-    _ -> error "BUG: expected a string or object literal for union"
-  where
-    btv' = createBoundTypeVariables btv (u_typeParams union)  tparams
-
-genLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Typedef typedef})) tparams) btv value =
-  genLiteralValue (t_typeExpr typedef) btv' value
-  where
-    btv' = createBoundTypeVariables btv (t_typeParams typedef)  tparams
-
-genLiteralValue (TypeExpr (RT_Named (_, Decl{d_type=Decl_Newtype ntype})) tparams) btv value =
-  genLiteralValue (n_typeExpr ntype) btv' value
-  where
-    btv' = createBoundTypeVariables btv (n_typeParams ntype)  tparams
-
-genLiteralValue (TypeExpr (RT_Param param) _) btv value =
-  case M.lookup param btv of
-    Nothing -> error ("BUG: unable to resolve type variable " <> T.unpack param)
-    Just texpr -> genLiteralValue texpr btv value
-
-createBoundTypeVariables :: BoundTypeVariables -> [Ident] -> [CTypeExpr] -> BoundTypeVariables
-createBoundTypeVariables btv names types = M.union btv (M.fromList (zip names types))
-
-findUnionField :: T.Text -> [Field CResolvedType] -> (Int,Field CResolvedType)
-findUnionField fname fs = case L.find (\(_,f) -> f_name f == fname) (zip [0,1..] fs) of
-  (Just v) -> v
-  Nothing -> error ("BUG: invalid literal " <> show fname <> "for union")
 
 modulePrefix :: [Ident] -> T.Text
 modulePrefix [] = T.pack ""
@@ -314,11 +296,8 @@ renderFactory name typeParams fds = function
         cspan (cspan (ctemplate "$1: input.$1 === undefined ? " [fdName fd]) (cline defaultValue)) (ctemplate " : input.$1," [fdName fd])
 
 renderCommentsForDeclaration :: CDecl -> Code
-renderCommentsForDeclaration decl = renderComments $ M.elems (d_annotations decl)
+renderCommentsForDeclaration decl = mconcat $ map renderComment $ M.elems (d_annotations decl)
   where
-    renderComments :: [(CResolvedType, JS.Value)] -> Code
-    renderComments = L.foldr (CAppend . renderComment) CEmpty
-
     renderComment :: (CResolvedType, JS.Value) -> Code
     renderComment (RT_Named (ScopedName{sn_name="Doc"}, _), JS.String commentValue) = clineN commentLinesStarred
       where
@@ -326,14 +305,12 @@ renderCommentsForDeclaration decl = renderComments $ M.elems (d_annotations decl
         commentLinesBroken = L.filter (/= "") (T.splitOn "\n" commentValue)
     renderComment _ = CEmpty
 
-
 typeParamsExpr :: [T.Text] -> T.Text
 typeParamsExpr []         = T.pack ""
 typeParamsExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
 
 capitalise :: T.Text -> T.Text
 capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)
-
 
 addAstDeclaration :: CModule -> CDecl -> CState ()
 addAstDeclaration m decl = do

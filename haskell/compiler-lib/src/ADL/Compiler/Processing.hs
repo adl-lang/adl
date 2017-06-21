@@ -277,6 +277,10 @@ isVoidType _ = False
 isEnumeration :: Union (ResolvedTypeT t) -> Bool
 isEnumeration u = null (u_typeParams u) && all (isVoidType . f_type)  (u_fields u)
 
+refEnumeration :: TypeExpr (ResolvedTypeT a) -> Bool
+refEnumeration (TypeExpr (RT_Named (_,Decl{d_type=Decl_Union u})) []) = isEnumeration u
+refEnumeration _ = False
+
 -- Naming Scope
     -- Decls in referenced modules (imported and explicitly referenced)
     -- Decls in current modules
@@ -623,6 +627,9 @@ litNumber n = T.pack s
      (Left r) -> show n
      (Right i) -> show (i::Integer)
 
+isVoidLiteral :: Literal te -> Bool
+isVoidLiteral (Literal _ (LPrimitive JSON.Null)) = True
+isVoidLiteral _ = False
 
 namescopeForModule :: SModule -> NameScope -> NameScope
 namescopeForModule m ns = ns
