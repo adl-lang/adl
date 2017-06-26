@@ -1,8 +1,12 @@
 module ADL.Compiler.EIO where
 
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+
 import Control.Exception
 import Control.Monad.Trans
-import qualified Data.Text as T
+import System.Exit(exitWith,ExitCode(..))
+import System.IO(stderr)
 
 newtype EIO e a = EIO { unEIO :: IO (Either e a) }
 
@@ -52,3 +56,11 @@ catchAllExceptions a = eioHandle handler $ a
    handler :: SomeException -> EIO T.Text a
    handler e = eioError (T.pack (show e))
 
+exitOnError :: EIO T.Text a -> IO a
+exitOnError eio = do
+  eresult <- unEIO eio
+  case eresult of
+   Left err -> do
+     T.hPutStrLn stderr err
+     exitWith (ExitFailure 1)
+   Right v -> return v

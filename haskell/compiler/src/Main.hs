@@ -6,6 +6,7 @@ import Control.Monad.Trans
 import System.Exit
 import System.Environment (getArgs)
 import System.FilePath(joinPath)
+import Data.Monoid
 import Data.List(intercalate,partition)
 import Data.String(IsString(..))
 import Data.Version(showVersion)
@@ -14,6 +15,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
+import ADL.Compiler.Flags
 import ADL.Compiler.Backends.Verify as V
 import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.AST as A
@@ -28,35 +30,12 @@ import HaskellCustomTypes
 
 import qualified Paths_adl_compiler as P
 
-searchDirOption ufn =
-  Option "I" ["searchdir"]
-    (ReqArg ufn "DIR")
-    "Add the specifed directory to the ADL searchpath"
-
-mergeFileExtensionOption ufn =
-  Option "" ["merge-adlext"]
-    (ReqArg ufn "EXT")
-    "Add the specifed adl file extension to merged on loading"
-
-includePrefixOption ufn =
-  Option "" ["include-prefix"]
-    (ReqArg ufn "DIR")
-    "The prefix to be used to generate/reference include files"
-
-verboseOption ufn =
-  Option "" ["verbose"]
-    (NoArg ufn)
-    "Print extra diagnostic information, especially about files being read/written"
-
-outputDirOption ufn =
-  Option "O" ["outputdir"]
-    (ReqArg ufn "DIR")
-    "Set the directory where generated code is written"
-
-noOverwriteOption ufn =
-  Option "" ["no-overwrite"]
-    (NoArg ufn)
-    "Don't update files that haven't changed"
+stdAdlFlags :: FilePath -> [String] -> AdlFlags
+stdAdlFlags libDir mergeFileExtensions =
+  defaultAdlFlags
+   { af_searchPath=[systemAdlDir libDir]
+   , af_mergeFileExtensions=mergeFileExtensions
+   }
 
 outputPackageOption ufn =
   Option "" ["package"]
@@ -73,103 +52,11 @@ includeRuntimePackageOption ufn =
     (NoArg ufn)
     "Generate the runtime code"
 
-javaGenerateParcelable ufn =
-  Option "" ["parcelable"]
-    (NoArg ufn)
-    "Generated java code will include android parcellable implementations"
-
-javaGenerateJson ufn =
-  Option "" ["json"]
-    (NoArg ufn)
-    "Generated java code will include gson json serialization"
-
-javaHeaderComment ufn =
-  Option "" ["header-comment"]
-    (ReqArg ufn "PACKAGE")
-    "A comment to be placed at the start of each java file"
-
-javaHungarianNaming ufn =
-  Option "" ["hungarian-naming"]
-    (NoArg ufn)
-    "Use hungarian naming conventions"
-
-javaMaxLineLength ufn =
-  Option "" ["max-line-length"]
-    (ReqArg ufn "PACKAGE")
-    "The maximum length of the generated code lines"
-
-tsIncludeRuntimePackageOption ufn =
-  Option "" ["include-rt"]
-    (NoArg ufn)
-    "Generate the runtime code"
-
-tsExcludeAstOption ufn =
-  Option "" ["exclude-ast"]
-    (NoArg ufn)
-    "Exclude the generated ASTs"
-
-tsRuntimeDirectoryOption ufn =
-  Option "R" ["runtime-dir"]
-    (ReqArg ufn "DIR")
-    "Set the directory where runtime code is written"
-
-getAdlFlags :: [String] -> EIO T.Text (AdlFlags)
-getAdlFlags mergeFileExtensions = do
-  systemAdlDir <- liftIO (systemAdlDir <$> getLibDir)
-  return defaultAdlFlags
-     { af_searchPath=[systemAdlDir]
-     , af_mergeFileExtensions=mergeFileExtensions
-     }
-
-defaultOutputArgs :: OutputArgs
-defaultOutputArgs = OutputArgs {
-  oa_log = const (return ()),
-  oa_noOverwrite = True,
-  oa_outputPath = "."
-  }
-
--- Hold a set of flags for the adl frontend, a given backend
--- and the output writer
-data Flags b = Flags {
-  f_adl :: AdlFlags,
-  f_output :: OutputArgs,
-  f_backend :: b
-  }
-
-updateAdlFlags :: (AdlFlags -> AdlFlags) -> Flags b -> Flags b
-updateAdlFlags fn flags = flags{f_adl=fn (f_adl flags)}
-
-updateOutputArgs :: (OutputArgs -> OutputArgs) -> Flags b -> Flags b
-updateOutputArgs fn flags = flags{f_output=fn (f_output flags)}
-
-updateBackendFlags :: (b -> b) -> Flags b -> Flags b
-updateBackendFlags fn flags = flags{f_backend=fn (f_backend flags)}
-
-addToSearchPath :: FilePath -> Flags b -> Flags b
-addToSearchPath path = updateAdlFlags (\af-> af{af_searchPath=path:af_searchPath af})
-
-addToMergeFileExtensions :: String -> Flags b -> Flags b
-addToMergeFileExtensions ext = updateAdlFlags (\af-> af{af_mergeFileExtensions=ext:af_mergeFileExtensions af})
-
-setOutputDir :: FilePath -> Flags b -> Flags b
-setOutputDir dir = updateOutputArgs (\oa -> oa{oa_outputPath=dir})
-
-setNoOverwrite :: Flags b -> Flags b
-setNoOverwrite = updateOutputArgs (\oa-> oa{oa_noOverwrite=True})
-
-setVerbose :: Flags b -> Flags b
-setVerbose = updateOutputArgs (\oa-> oa{oa_log=putStrLn})
-           . updateAdlFlags (\af-> af{af_log=putStrLn})
-
--- | Combine an initial set of AdlFlags and appropriate backend
--- flags with command line arguments.
-buildFlags :: AdlFlags -> b -> [Flags b -> Flags b] -> Flags b
-buildFlags af0 b0 opts = ((foldl (.) id opts) (Flags af0 defaultOutputArgs b0))
-
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      af <- getAdlFlags []
+      libDir <- liftIO $ getLibDir
+      let af = stdAdlFlags libDir []
       let flags = buildFlags af () opts
       V.verify (f_adl flags) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
@@ -184,28 +71,22 @@ runVerify args0 =
 runAst args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
-      af <- getAdlFlags []
+      libDir <- liftIO $ getLibDir
+      let af = stdAdlFlags libDir ["adl-hs"]
       let flags = buildFlags af () opts
       A.generate (f_adl flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl ast [OPTION...] files..."
 
-    optDescs =
-      [ searchDirOption addToSearchPath
-      , outputDirOption setOutputDir
-      , mergeFileExtensionOption addToMergeFileExtensions
-      ]
+    optDescs = standardOptions
 
-runHaskell args0 = do
+
+runHaskell args = do
   libDir <- liftIO $ getLibDir
-  let optDescs = mkOptDescs libDir
-  case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> do
-        af <- getAdlFlags ["adl-hs"]
-        let flags = buildFlags af (flags0 libDir) opts
-        H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomType args
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+  let af = stdAdlFlags libDir ["adl-hs"]
+  (flags,paths) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
+  H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomType paths
   where
     header = "Usage: adl haskell [OPTION...] files..."
 
@@ -216,24 +97,17 @@ runHaskell args0 = do
       }
 
     mkOptDescs libDir =
-      [ searchDirOption addToSearchPath
-      , mergeFileExtensionOption addToMergeFileExtensions
-      , outputDirOption setOutputDir
-      , noOverwriteOption setNoOverwrite
-      , verboseOption setVerbose
-      , outputPackageOption (\s -> updateBackendFlags (\hf -> hf{hf_modulePrefix=s}))
+      standardOptions <>
+      [ outputPackageOption (\s -> updateBackendFlags (\hf -> hf{hf_modulePrefix=s}))
       , includeRuntimePackageOption (updateBackendFlags (\hf ->hf{hf_includeRuntime=Just (haskellRuntimeDir libDir)}))
       , runtimePackageOption (\s -> updateBackendFlags (\hf -> hf{hf_runtimePackage=T.pack s}))
       ]
 
-runCpp args0 =
-  case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> do
-        libDir <- liftIO $ getLibDir
-        af <- getAdlFlags ["adl-cpp"]
-        let flags = buildFlags af (flags0 libDir) opts
-        C.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+runCpp args = do
+  libDir <- liftIO $ getLibDir
+  let af = stdAdlFlags libDir ["adl-cpp"]
+  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  C.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
     header = "Usage: adl cpp [OPTION...] files..."
 
@@ -243,22 +117,20 @@ runCpp args0 =
       }
 
     optDescs =
-      [ searchDirOption addToSearchPath
-      , mergeFileExtensionOption addToMergeFileExtensions
-      , outputDirOption setOutputDir
-      , noOverwriteOption setNoOverwrite
-      , verboseOption setVerbose
-      , includePrefixOption (\s -> updateBackendFlags (\cf -> cf{cf_incFilePrefix=s}))
+      standardOptions <>
+      [ includePrefixOption (\s -> updateBackendFlags (\cf -> cf{cf_incFilePrefix=s}))
       ]
 
-runJava args0 =
-  case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> do
-        libDir <- liftIO $ getLibDir
-        af <- getAdlFlags ["adl-java"]
-        let flags = buildFlags af (flags0 libDir) opts
-        J.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+    includePrefixOption ufn =
+      Option "" ["include-prefix"]
+        (ReqArg ufn "DIR")
+        "The prefix to be used to generate/reference include files"
+
+runJava args = do
+  libDir <- liftIO $ getLibDir
+  let af = stdAdlFlags libDir ["adl-java"]
+  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  J.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
     header = "Usage: adl java [OPTION...] files..."
 
@@ -270,12 +142,8 @@ runJava args0 =
     }
 
     optDescs =
-      [ searchDirOption addToSearchPath
-      , mergeFileExtensionOption addToMergeFileExtensions
-      , outputDirOption setOutputDir
-      , noOverwriteOption setNoOverwrite
-      , verboseOption setVerbose
-      , outputPackageOption (\s -> updateBackendFlags (\jf -> jf{jf_package=javaPackage (T.pack s)}))
+      standardOptions <>
+      [ outputPackageOption (\s -> updateBackendFlags (\jf -> jf{jf_package=javaPackage (T.pack s)}))
       , includeRuntimePackageOption (updateBackendFlags (\jf ->jf{jf_includeRuntime=True}))
       , runtimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{cgp_runtimePackage=fromString s}))
       , javaGenerateParcelable (updateCodeGenProfile (\cgp->cgp{cgp_parcelable=True}))
@@ -285,37 +153,51 @@ runJava args0 =
       , javaHeaderComment (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_header=T.pack s})))
       ]
 
+    javaGenerateParcelable ufn =
+      Option "" ["parcelable"]
+        (NoArg ufn)
+        "Generated java code will include android parcellable implementations"
+
+    javaGenerateJson ufn =
+      Option "" ["json"]
+        (NoArg ufn)
+        "Generated java code will include gson json serialization"
+
+    javaHeaderComment ufn =
+      Option "" ["header-comment"]
+        (ReqArg ufn "PACKAGE")
+        "A comment to be placed at the start of each java file"
+
+    javaHungarianNaming ufn =
+      Option "" ["hungarian-naming"]
+        (NoArg ufn)
+        "Use hungarian naming conventions"
+
+    javaMaxLineLength ufn =
+      Option "" ["max-line-length"]
+        (ReqArg ufn "PACKAGE")
+        "The maximum length of the generated code lines"
+
     updateCodeGenProfile f = updateBackendFlags (\jf ->jf{jf_codeGenProfile=f (jf_codeGenProfile jf)})
 
-runJavascript args0 =
-  case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> do
-        libDir <- liftIO $ getLibDir
-        af <- getAdlFlags ["adl-js"]
-        let flags = buildFlags af (flags0 libDir) opts
-        JS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+runJavascript args = do
+  libDir <- liftIO $ getLibDir
+  let af = stdAdlFlags libDir ["adl-js"]
+  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  JS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
     header = "Usage: adl javascript [OPTION...] files..."
 
     flags0 libDir = JS.JavascriptFlags {
     }
 
-    optDescs =
-      [ searchDirOption addToSearchPath
-      , outputDirOption setOutputDir
-      , noOverwriteOption setNoOverwrite
-      , verboseOption setVerbose
-      ]
+    optDescs = standardOptions
 
-runTypescript args0 =
-  case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> do
-        libDir <- liftIO getLibDir
-        af <- getAdlFlags ["adl-ts"]
-        let flags = buildFlags af (flags0 libDir) opts
-        TS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) args
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+runTypescript args = do
+  libDir <- liftIO $ getLibDir
+  let af = stdAdlFlags libDir ["adl-js"]
+  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  TS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
     header = "Usage: adl typescript [OPTION...] files..."
 
@@ -327,14 +209,26 @@ runTypescript args0 =
     }
 
     optDescs =
-      [ searchDirOption addToSearchPath
-      , outputDirOption setOutputDir
-      , noOverwriteOption setNoOverwrite
-      , verboseOption setVerbose
-      , tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{tsIncludeRuntime=True}))
+      standardOptions <>
+      [ tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{tsIncludeRuntime=True}))
       , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{tsExcludeAst=True}))
       , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{tsRuntimeDir=path}))
       ]
+
+    tsIncludeRuntimePackageOption ufn =
+      Option "" ["include-rt"]
+        (NoArg ufn)
+        "Generate the runtime code"
+
+    tsExcludeAstOption ufn =
+      Option "" ["exclude-ast"]
+        (NoArg ufn)
+        "Exclude the generated ASTs"
+
+    tsRuntimeDirectoryOption ufn =
+      Option "R" ["runtime-dir"]
+        (ReqArg ufn "DIR")
+        "Set the directory where runtime code is written"
 
 runShow args0 =
   case args0 of
