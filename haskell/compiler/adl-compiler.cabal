@@ -58,8 +58,6 @@ executable adlc
                      , ADL.Compiler.Backends.Typescript
                      , ADL.Compiler.Backends.Typescript.Internal
                      , ADL.Compiler.DataFiles
-                     , ADL.Sys.Adlast
-                     , ADL.Sys.Types
                      , ADL.Adlc.Config.Cpp
                      , ADL.Adlc.Config.Haskell
                      , ADL.Adlc.Config.Java
@@ -87,8 +85,6 @@ test-suite adlc-tests
                      , ADL.Compiler.Backends.Javascript
                      , ADL.Compiler.Backends.Typescript
                      , ADL.Compiler.Backends.Typescript.Internal
-                     , ADL.Sys.Adlast
-                     , ADL.Sys.Types
                      , ADL.Compiler.DataFiles
                      , ADL.Adlc.Config.Cpp
                      , ADL.Adlc.Config.Haskell
