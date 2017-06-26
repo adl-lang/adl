@@ -19,7 +19,7 @@ compile compiler args adldir outdir path0 = do
   let path = adldir </> path0
   system
     (  "stack exec " <> compiler <> " -- haskell "
-    <> "--moduleprefix=ADL "
+    <> "--package=ADL "
     <> "--no-overwrite "
     <> "-O " <> outdir <> " "
     <> "-I " <> adldir <> " "

@@ -69,7 +69,7 @@ runHaskell args0 =
 
     optDescs =
       [ searchDirOption (\s (af,hf,o)-> (af{af_searchPath=s:af_searchPath af},hf,o))
-      , Option "" ["moduleprefix"]
+      , Option "" ["package"]
         (ReqArg (\s (af,hf,o)-> (af,hf{hf_modulePrefix=s},o)) "PREFIX")
         "Set module name prefix for generated code "
       , outputDirOption (\s (af,hf,o)-> (af,hf,o{oa_outputPath=s}))
