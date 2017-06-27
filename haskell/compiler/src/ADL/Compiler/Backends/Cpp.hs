@@ -1209,6 +1209,7 @@ literalLValue (Literal (TypeExpr _ [te]) (LStringMap map)) = do
     return (template ".add(\"$1\",$2)" [k,litv])
   return (template "MapBuilder<std::string,$1>()$2.result()" [t, T.intercalate "" adds])
 literalLValue (Literal (TypeExpr (RT_Primitive pt) _) (LPrimitive  jv)) = return (cPrimitiveLiteral pt jv)
+literalLValue _ = error "BUG: literalLValue: unexpected literal value"
 
 literalPValue :: (Literal CTypeExpr) -> Gen T.Text
 literalPValue (Literal te@(TypeExpr (RT_Primitive pt) []) LDefault) = do
@@ -1230,6 +1231,7 @@ literalPValue l@(Literal _ (LStringMap _)) = literalLValue l
 literalPValue (Literal (TypeExpr (RT_Primitive pt) _) (LPrimitive jv)) = do
   t <- cPrimitiveType pt []
   return (template "$1($2)" [t, cPrimitiveLiteral pt jv])
+literalPValue _ = error "BUG: literalPValue: unexpected literal value"
 
 literalNeedsInit :: Literal CTypeExpr -> Bool
 literalNeedsInit (Literal  (TypeExpr (RT_Primitive pt) _) LDefault) = isJust (cPrimitiveDefault pt)

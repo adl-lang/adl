@@ -328,6 +328,7 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
        te | refEnumeration te -> return (template "$1.$2" [typeExpr, discriminatorName0 ctor])
           | isVoidLiteral l -> return (template "$1.$2()" [typeExpr, ctor])
           | otherwise -> return (template "$1.$2($3)" [typeExpr, ctor, lit ])
+    genLiteralText' lit = error ("BUG: getTypeDetails1: unexpected literal:" ++ show lit)
 
 -- a custom type
 getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetails
@@ -355,6 +356,7 @@ getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetail
       idHelpers <- getHelpers customType
       lit <- genLiteralText l
       return (template "$1.$2($3)" [idHelpers, ctor, lit ])
+    genLiteralText' lit = error ("BUG: getTypeDetails2: unexpected literal:" ++ show lit)
 
 -- a type variable
 getTypeDetails (RT_Param typeVar) = TypeDetails
@@ -369,6 +371,7 @@ getTypeDetails (RT_Param typeVar) = TypeDetails
     genLiteralText' (Literal te LDefault) = do
       typeExpr <- genTypeExpr te
       return (template "$1.create()" [factoryTypeArg typeVar])
+    genLiteralText' lit = error ("BUG: getTypeDetails3: unexpected literal:" ++ show lit)
 
 -- each primitive
 getTypeDetails (RT_Primitive P_Void) = TypeDetails
@@ -390,6 +393,7 @@ getTypeDetails (RT_Primitive P_Bool) = TypeDetails
     genLiteralText' (Literal _ LDefault) = return "false"
     genLiteralText' (Literal _ (LPrimitive (JSON.Bool False))) = return "false"
     genLiteralText' (Literal _ (LPrimitive (JSON.Bool True))) = return "true"
+    genLiteralText' lit = error ("BUG: getTypeDetails4: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Int8) = TypeDetails
   { td_type = unboxedPrimitive "byte" "Byte"
@@ -401,6 +405,7 @@ getTypeDetails (RT_Primitive P_Int8) = TypeDetails
   where
     genLiteralText' (Literal _ LDefault) = return "(byte)0"
     genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return ("(byte)" <> litNumber n)
+    genLiteralText' lit = error ("BUG: getTypeDetails5: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Int16) = TypeDetails
   { td_type = unboxedPrimitive "short" "Short"
@@ -412,6 +417,7 @@ getTypeDetails (RT_Primitive P_Int16) = TypeDetails
   where
     genLiteralText' (Literal _ LDefault) = return "(short)0"
     genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return ("(short)" <> litNumber n)
+    genLiteralText' lit = error ("BUG: getTypeDetails6: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Int32) = TypeDetails
   { td_type = unboxedPrimitive "int" "Integer"
@@ -423,6 +429,7 @@ getTypeDetails (RT_Primitive P_Int32) = TypeDetails
   where
     genLiteralText' (Literal _ LDefault) = return "0"
     genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n)
+    genLiteralText' lit = error ("BUG: getTypeDetails7: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Int64) = TypeDetails
   { td_type = unboxedPrimitive "long" "Long"
@@ -434,6 +441,7 @@ getTypeDetails (RT_Primitive P_Int64) = TypeDetails
   where
     genLiteralText' (Literal _ LDefault) = return "0L"
     genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n <> "L")
+    genLiteralText' lit = error ("BUG: getTypeDetails8: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Float) = TypeDetails
   { td_type = unboxedPrimitive "float" "Float"
@@ -445,6 +453,7 @@ getTypeDetails (RT_Primitive P_Float) = TypeDetails
   where
     genLiteralText' (Literal _ LDefault) = return "0.0F"
     genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n <> "F")
+    genLiteralText' lit = error ("BUG: getTypeDetails9: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Double) = TypeDetails
   { td_type = unboxedPrimitive "double" "Double"
@@ -456,6 +465,7 @@ getTypeDetails (RT_Primitive P_Double) = TypeDetails
   where
     genLiteralText' (Literal _ LDefault) = return "0.0"
     genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n)
+    genLiteralText' lit = error ("BUG: getTypeDetails10: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Word8) = getTypeDetails (RT_Primitive P_Int8)
 getTypeDetails (RT_Primitive P_Word16) = getTypeDetails (RT_Primitive P_Int16)
@@ -480,6 +490,7 @@ getTypeDetails (RT_Primitive P_ByteVector) = TypeDetails
     genLiteralText' (Literal _ (LPrimitive (JSON.String s))) = do
       iByteArray <- getType
       return (template "new $1($2.getBytes())" [iByteArray,T.pack (show (decode s))])
+    genLiteralText' lit = error ("BUG: getTypeDetails11: unexpected literal:" ++ show lit)
 
     decode s = case B64.decode (T.encodeUtf8 s) of
       (Left _) -> "???"
@@ -505,6 +516,7 @@ getTypeDetails (RT_Primitive P_Json) = TypeDetails
       rtpackage <- getRuntimePackage
       helpersI <- addImport (javaClass rtpackage "JsonHelpers")
       return (template "$1.jsonFromString($2)" [helpersI, T.pack (show (JSON.encode jv))])
+    genLiteralText' lit = error ("BUG: getTypeDetails12: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Vector) = TypeDetails
   { td_type = \_ args -> do
@@ -524,6 +536,7 @@ getTypeDetails (RT_Primitive P_Vector) = TypeDetails
       rtpackage <- getRuntimePackage
       factories <- addImport (javaClass rtpackage "Factories")
       return (template "$1.arrayList($2)" [factories,commaSep lits])
+    genLiteralText' lit = error ("BUG: getTypeDetails13: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
   { td_type = \_ args -> do
@@ -545,6 +558,7 @@ getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
       rtpackage <- getRuntimePackage
       factories <- addImport (javaClass rtpackage "Factories")
       return (template "$1.stringMap($2)" [factories,commaSep kvlits])
+    genLiteralText' lit = error ("BUG: getTypeDetails14: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Nullable) = TypeDetails
   { td_type = \_ args -> do
@@ -566,11 +580,13 @@ getTypeDetails (RT_Primitive P_Nullable) = TypeDetails
       (optionalI,typeExpr) <- otypes te
       lit <- genLiteralText v
       return (template "$1.<$2>of($3)" [optionalI,typeExpr,lit])
+    genLiteralText' lit = error ("BUG: getTypeDetails15: unexpected literal:" ++ show lit)
 
     otypes (TypeExpr te [te0]) = do
       optionalI <- addImport "java.util.Optional"
       typeExpr <- genTypeExpr te0
       return (optionalI,typeExpr)
+    otypes lit = error "BUG: optional type should have a single type parameter"
 
 getTypeDetails (RT_Primitive P_String) = TypeDetails
   { td_type = \_ _ -> return "String"
@@ -582,6 +598,7 @@ getTypeDetails (RT_Primitive P_String) = TypeDetails
   where
     genLiteralText' (Literal _ LDefault) = return "\"\"";
     genLiteralText' (Literal _ (LPrimitive (JSON.String s))) = return (T.pack (show s))
+    genLiteralText' lit = error ("BUG: getTypeDetails16: unexpected literal:" ++ show lit)
 
 primitiveFactory :: Ident -> [T.Text] -> CState T.Text
 primitiveFactory name params =  do

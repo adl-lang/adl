@@ -5,7 +5,7 @@ module ADL.Compiler.Backends.Javascript(
   ) where
 
 import qualified Data.Aeson as JSON
-import qualified Data.Aeson.Encode as JSON
+import qualified Data.Aeson.Text as JSON
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -280,6 +280,7 @@ getTypeDetails (RT_Primitive P_Word64) = monomorphicPrimitive "Word64"
 getTypeDetails (RT_Primitive P_Double) = monomorphicPrimitive "Double"
 getTypeDetails (RT_Primitive P_Float) = monomorphicPrimitive "Double"
 getTypeDetails (RT_Primitive P_Bool) = monomorphicPrimitive "Bool"
+getTypeDetails (RT_Primitive P_Json) = monomorphicPrimitive "Json"
 getTypeDetails (RT_Primitive P_ByteVector) = monomorphicPrimitive "ByteVector"
 getTypeDetails (RT_Primitive P_Vector) = polymorphicPrimitive "Vector"
 getTypeDetails (RT_Primitive P_StringMap) = polymorphicPrimitive "StringMap"
