@@ -301,7 +301,43 @@ declareAType gname tvars = do
       wt "$1 atype (Data.Proxy.Proxy :: Data.Proxy.Proxy $2)" [p, hTypeParamName tv]
     wl ", \">\" ]"
 
-derivingStdClasses = wl "deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)"
+type StdTypeClasses = Set.Set T.Text
+
+defaultStdClasses :: StdTypeClasses
+defaultStdClasses = Set.fromList ["Eq","Ord","Show"]
+
+-- | Determine which standard typeclasses instances exist for
+-- a given type expression
+--
+stdClassesFor :: TypeExpr CResolvedType -> StdTypeClasses
+stdClassesFor = stdClassesFor1 Set.empty
+
+stdClassesFor1 :: Set.Set ScopedName -> TypeExpr CResolvedType -> StdTypeClasses
+stdClassesFor1 sns (TypeExpr (RT_Primitive P_Vector) [te]) = stdClassesFor1 sns te
+stdClassesFor1 sns (TypeExpr (RT_Primitive P_StringMap) [te]) = stdClassesFor1 sns te
+stdClassesFor1 sns (TypeExpr (RT_Primitive P_Nullable) [te]) = stdClassesFor1 sns te
+stdClassesFor1 sns (TypeExpr (RT_Primitive P_Json) []) = Set.fromList ["Eq","Show"]
+stdClassesFor1 sns (TypeExpr (RT_Primitive _) _) = defaultStdClasses
+stdClassesFor1 sns (TypeExpr (RT_Param _) _) = defaultStdClasses
+stdClassesFor1 sns (TypeExpr (RT_Named (sn,decl)) _) = case Set.member sn sns of
+  True -> defaultStdClasses
+  False ->
+    let sns' = Set.insert sn sns in
+    case decl of
+      Decl{d_type=Decl_Struct s} -> stdClassesForFields1 sns' (s_fields s)
+      Decl{d_type=Decl_Union u} -> stdClassesForFields1 sns' (u_fields u)
+      Decl{d_type=Decl_Typedef t} -> stdClassesFor1 sns' (t_typeExpr t)
+      Decl{d_type=Decl_Newtype n} -> stdClassesFor1 sns' (n_typeExpr n)
+
+stdClassesForFields1 :: Set.Set ScopedName -> [Field CResolvedType] -> StdTypeClasses
+stdClassesForFields1 sns fields = foldr Set.intersection defaultStdClasses [stdClassesFor1 sns (f_type f) | f <- fields]
+
+stdClassesForFields :: [Field CResolvedType] -> StdTypeClasses
+stdClassesForFields = stdClassesForFields1 Set.empty
+
+derivingStdClasses ::  StdTypeClasses -> HGen ()
+derivingStdClasses stdClasses = wt "deriving ($1)" [T.intercalate "," (map ("Prelude." <>) (Set.toList stdClasses))]
+
 
 generateDecl :: Ident -> CDecl -> HGen ()
 
@@ -338,7 +374,8 @@ generateDecl lname d@(Decl{d_type=(Decl_Newtype n)}) = do
     mn <- fmap ms_name get
     ts <- hTypeExpr (n_typeExpr n)
     wt "newtype $1$2 = $1 { un$1 :: $3 }" [lname,hTParams (n_typeParams n),ts]
-    indent $ derivingStdClasses
+    let stdClasses = stdClassesFor (n_typeExpr n)
+    indent $ derivingStdClasses stdClasses
     nl
     generateNewtypeADLInstance lname mn d n
 
@@ -364,7 +401,7 @@ generateStructDataType lname mn d s = do
                             hFieldName (d_name d) (f_name f),
                            t ]
         wl "}"
-        derivingStdClasses
+        derivingStdClasses (stdClassesForFields (s_fields s))
 
 generateMkStructFunction :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateMkStructFunction lname mn d s = do
@@ -389,7 +426,7 @@ generateMkStructFunction lname mn d s = do
 generateNullStructDataType :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
 generateNullStructDataType lname mn d s = do
     wt "data $1$2 = $1" [lname,hTParams (s_typeParams s)]
-    indent derivingStdClasses
+    indent (derivingStdClasses defaultStdClasses)
 
 
 generateStructADLInstance :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
@@ -434,7 +471,7 @@ generateUnionDataType lname mn d u = do
           else do
             t <- hTypeExpr (f_type f)
             wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
-      derivingStdClasses
+      derivingStdClasses (stdClassesForFields (u_fields u))
 
 generateUnionADLInstance :: Ident -> ModuleName -> CDecl -> Union CResolvedType -> HGen ()
 generateUnionADLInstance lname mn d u = do

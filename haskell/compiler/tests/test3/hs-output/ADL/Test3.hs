@@ -119,7 +119,7 @@ data S t = S
     , s_f_json1 :: JS.Value
     , s_f_json2 :: JS.Value
     }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
 mkS :: t -> S t
 mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.False) (U_f_int 45) U_f_void E_v2 f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)]) Data.Maybe.fromJust (JS.decode "null") Data.Maybe.fromJust (JS.decode "[{\"v1\":27,\"v2\":\"abcde\"},true]")
