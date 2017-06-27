@@ -356,3 +356,8 @@ instance (Ord v, AdlValue v) => AdlValue (S.Set v) where
   atype _ = atype (Proxy :: Proxy [v])
   jsonGen = JsonGen (adlToJson . S.toList)
   jsonParser = S.fromList <$> jsonParser
+
+instance AdlValue JS.Value where
+  atype _ = "Json"
+  jsonGen = JsonGen id
+  jsonParser = JsonParser (\_ v -> ParseSuccess v)
