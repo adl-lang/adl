@@ -15,7 +15,7 @@ library
   hs-source-dirs:    src
   exposed-modules:   ADL.Compiler.AST, ADL.Compiler.Primitive, ADL.Compiler.ParserP,
                      ADL.Compiler.Utils, ADL.Compiler.EIO, ADL.Compiler.Processing,
-                     ADL.Compiler.Flags
+                     ADL.Compiler.Flags, ADL.Compiler.ExternalAST,
                      ADL.Compiler.Backends.Verify,
                      ADL.Compiler.Backends.Haskell
   build-depends:     base, text, containers, bytestring,
@@ -23,5 +23,5 @@ library
                      filepath, directory, unordered-containers, vector,
                      base64-bytestring,
                      attoparsec, aeson, scientific,
-                     adl-utils
+                     adl-utils, adl-runtime
   ghc-options:       -fwarn-incomplete-patterns
