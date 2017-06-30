@@ -468,6 +468,7 @@ function typeRefsEqual(tref1 : AST.TypeRef, tref2 : AST.TypeRef) : boolean {
     return tref1.value.moduleName === tref2.value.moduleName &&
       tref1.value.name === tref2.value.name;
   }
+  return false;
 }
 
 /**
