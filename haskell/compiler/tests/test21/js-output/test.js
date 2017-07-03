@@ -48,6 +48,16 @@ const Ann3 = {
   ]
 };
 
+const Ann4 = {
+  name : "Ann4",
+  module : "test",
+  kind : "typedef",
+  typevars : [],
+  type : {"primitive":"Void"},
+  annotations : [
+  ]
+};
+
 const MyStruct = {
   name : "MyStruct",
   module : "test",
@@ -81,6 +91,10 @@ const MyStruct = {
       type : {"primitive":"String"},
       defaultv : null,
       annotations : [
+        {
+          type : "test.Ann4",
+          value : null
+        }
       ]
     }
   ],
@@ -98,6 +112,7 @@ const MyStruct = {
 
 export const _ADL_TYPES = {
   "test.MyStruct" : MyStruct,
+  "test.Ann4" : Ann4,
   "test.Ann3" : Ann3,
   "test.Ann2" : Ann2,
   "test.Ann1" : Ann1

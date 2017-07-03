@@ -148,7 +148,7 @@ annotations = Map.fromList <$> many (ann1 <|> ann2)
     ann1 = do
       token "@"
       n <- scopedName
-      jv <- jsonValue
+      jv <- P.option JSON.Null jsonValue
       return (n,(n,jv))
     ann2  = do
       ds <- docstring
@@ -187,7 +187,7 @@ importP = token "import" *> (P.try importAll <|> import1 )
   where
     importAll = (Import_Module . ModuleName) <$> star
       where
-        star = (:) <$> ident0 <*> star2 
+        star = (:) <$> ident0 <*> star2
         star2 = P.char '.' *> ((P.char '*' *> pure []) <|> star)
 
     import1  = Import_ScopedName <$> scopedName
@@ -202,14 +202,14 @@ moduleP = token "module" *> (
 ----------------------------------------------------------------------
 jsonValue :: P.Parser JSON.Value
 jsonValue =  p_null <|> p_true <|> p_false <|> p_string <|> p_number <|> p_array <|> p_object
-          
+
   where
     p_null = JSON.Null <$ token "null"
     p_true = JSON.Bool True <$ token "true"
     p_false = JSON.Bool False <$ token "false"
     p_string = JSON.String <$> p_string0
 
-    p_string0 :: P.Parser T.Text           
+    p_string0 :: P.Parser T.Text
     p_string0 = T.pack <$> (P.char '"' *> P.many p_char <* P.char '"' <* whiteSpace)
 
     p_char :: P.Parser Char
@@ -260,7 +260,7 @@ parseDouble = pread reads <* whiteSpace P.<?> "number"
 
 moduleFile :: P.Parser (Module0 Decl0)
 moduleFile = whiteSpace *> moduleP <* ctoken ';'
-    
+
 
 fromFile :: P.Parser a -> FilePath -> IO (Either P.ParseError a)
 fromFile p fpath = do
@@ -269,4 +269,3 @@ fromFile p fpath = do
 
 fromString :: P.Parser a -> FilePath -> Either P.ParseError a
 fromString p s = P.parse p "string" (T.pack s)
-

@@ -11,6 +11,8 @@ module test
         String f2;
     };
 
+    type Ann4 = Void;
+
     @Ann2 "asdfa"
     struct MyStruct
     {
@@ -20,8 +22,9 @@ module test
         /// The Y coordinate
         Int32 y;
 
-        String name;        
+        @Ann4
+        String name;
     };
 
     annotation MyStruct Ann1 42;
-};          
+};

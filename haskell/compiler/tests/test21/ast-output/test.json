@@ -78,6 +78,25 @@
             }
         },
         {
+            "v1": "Ann4",
+            "v2": {
+                "annotations": [],
+                "name": "Ann4",
+                "type_": {
+                    "type_": {
+                        "typeExpr": {
+                            "parameters": [],
+                            "typeRef": {
+                                "primitive": "Void"
+                            }
+                        },
+                        "typeParams": []
+                    }
+                },
+                "version": "nothing"
+            }
+        },
+        {
             "v1": "MyStruct",
             "v2": {
                 "annotations": [
@@ -171,6 +190,13 @@
                                                 }
                                             ]
                                         }
+                                    },
+                                    {
+                                        "v1": {
+                                            "moduleName": "",
+                                            "name": "Ann4"
+                                        },
+                                        "v2": "null"
                                     }
                                 ],
                                 "default": "nothing",
