@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 /**
@@ -21,10 +22,36 @@ public class JsonHelpers
     .create();
 
   /**
+   * Convert an ADL value to a string
+   */
+  public static <T> String toString(JsonBinding<T> binding, T value) {
+    return gson.toJson(binding.toJson(value));
+  }
+
+  /**
+   *  Parse an ADL value from a string
+   */
+  public static <T> T fromString(JsonBinding<T> binding, String value) {
+    return binding.fromJson(gson.fromJson(value, JsonElement.class));
+  }
+
+  /**
    * Read an ADL value from a json file
    */
   public static <T> T fromFile(JsonBinding<T> binding, String path) throws IOException {
     return binding.fromJson(gson.fromJson(new FileReader(path), JsonElement.class));
+  }
+
+  /**
+   * Write an ADL value to a json file
+   */
+  public static <T> void toFile(JsonBinding<T> binding, T value, String path) throws IOException {
+    FileWriter writer = new FileWriter(path);
+    try {
+      gson.toJson( binding.toJson(value), writer );
+    } finally {
+      writer.close();
+    }
   }
 
   /**
