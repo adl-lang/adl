@@ -353,6 +353,9 @@ runTests = do
     it "Generates the correct code for the picture demo" $ do
       collectResults (runTsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/ts-output")
         `shouldReturn` MatchOutput
+    it "Expands anonymous fields" $ do
+      collectResults (runTsBackend [stdsrc] ["test22/input/test.adl"] "test22/ts-output")
+        `shouldReturn` MatchOutput
   where
     collectResults1 resultvar test = do
       r <- test

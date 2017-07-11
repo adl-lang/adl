@@ -1,0 +1,19 @@
+module test
+{
+   struct Foo
+   {
+       Double field1;
+       Double field2;
+   };
+
+   struct Bar
+   {
+       String name;
+   };
+
+   struct Baz
+   {
+       Foo;
+       Bar;
+   };
+};

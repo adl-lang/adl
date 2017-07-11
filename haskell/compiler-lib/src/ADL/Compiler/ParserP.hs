@@ -5,6 +5,7 @@ import Data.Char
 
 import Data.Char
 import Data.Maybe
+import Data.Monoid
 import Numeric(readHex)
 import Control.Applicative
 
@@ -90,14 +91,27 @@ field :: P.Parser (Field ScopedName)
 field = do
     anns0 <- annotations
     te <- typeExpression
-    n <- name
-    mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
+    mn <- P.optionMaybe name
+
+    (n,mdefault) <- case mn of
+      -- Regular field
+      Just n -> do
+        mdefault <- P.optionMaybe (ctoken '=' *> jsonValue)
+        return (n,mdefault)
+
+      -- Anonymous field
+      -- (defaults not currently supported)
+      Nothing -> return (anonFieldPrefix <> T.pack (show te),Nothing)
+
     let serializedNameAttr = ScopedName (ModuleName []) "SerializedName"
     (anns,serializedName) <- case Map.lookup serializedNameAttr anns0 of
           Nothing -> return (anns0,n)
           (Just (_,JSON.String s)) -> return (Map.delete serializedNameAttr anns0,s)
           _ -> fail "need a String value for SerializedName attribute"
     return (Field n serializedName te mdefault anns)
+
+anonFieldPrefix :: T.Text
+anonFieldPrefix = "__anonfield:"
 
 mversion :: P.Parser MVersion
 mversion =   (Just . fromIntegral) <$> (ctoken '#' *> parseInt)

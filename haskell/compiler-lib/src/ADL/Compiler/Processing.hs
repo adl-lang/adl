@@ -676,7 +676,8 @@ loadAndCheckModule af modulePath = do
       (Just mmSorted) -> do
         ns <- resolveN mmSorted emptyNameScope
         (_,rm) <- resolve1 m ns
-        return rm
+        rm' <- expandAnonymousFields rm
+        return rm'
 
   where
     loadModule1 :: EIOT (SModule, SModuleMap)
@@ -730,6 +731,26 @@ topologicalSort idf depf as = fmap (map fst) (sort1 (addDeps as) Set.empty)
         sofar' = Set.unions (sofar:map (Set.singleton . idf . fst) ok)
 
     addDeps as = map (\a -> (a,depf a)) as
+
+-- Expand any anonymous fields by injecting
+-- the fields from the referenced types
+expandAnonymousFields :: RModule -> EIOT RModule
+expandAnonymousFields rm = exModule rm
+  where
+  exModule :: RModule -> EIOT RModule
+  exModule mod@Module{m_decls=ds} = (\decls -> mod{m_decls=decls}) <$> mapM exDecl ds
+  exDecl decl@Decl{d_type=d} = (\dtype -> decl{d_type=dtype}) <$> exDeclType d
+  exDeclType (Decl_Struct s) = Decl_Struct <$> exStruct s
+  exDeclType (Decl_Union u) = Decl_Union <$> exUnion u
+  exDeclType decl = return decl
+  exStruct struct@Struct{s_fields=fs} = (\fields -> struct{s_fields=concat fields}) <$> mapM exField fs
+  exUnion union@Union{u_fields=fs} = (\fields -> union{u_fields=concat fields}) <$> mapM exField fs
+  exField field = if T.isPrefixOf P.anonFieldPrefix (f_name field) then expandAnonField field else return [field]
+  expandAnonField field = do
+    case f_type field of
+     (TypeExpr (RT_Named (_,Decl{d_type=Decl_Struct struct})) tes) -> return (s_fields struct)
+     (TypeExpr (RT_Named (_,Decl{d_type=Decl_Union union})) tes) -> return (u_fields union)
+     _ -> eioError "Anonymous field must be a struct or union"
 
 -- | expand all of the typedefs in a module
 expandModuleTypedefs :: RModule -> RModule
