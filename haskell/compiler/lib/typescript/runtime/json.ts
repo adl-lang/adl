@@ -131,6 +131,7 @@ function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params :
   else if (ptype === "Word64")     { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
   else if (ptype === "Float")      { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
   else if (ptype === "Double")     { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
+  else if (ptype === "Json")       { return identityJsonBinding("a json value", (_v) => true); }
   else if (ptype === "Bytes")      { return bytesJsonBinding(); }
   else if (ptype === "Vector")     { return vectorJsonBinding(dresolver, params[0], boundTypeParams); }
   else if (ptype === "StringMap")  { return stringMapJsonBinding(dresolver, params[0], boundTypeParams); }
