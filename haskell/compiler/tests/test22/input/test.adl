@@ -11,9 +11,21 @@ module test
        String name;
    };
 
+   struct Point<T>
+   {
+       T px;
+       T py;
+   };
+
    struct Baz
    {
        Foo;
        Bar;
+       Point<Int32>;
+   };
+
+   struct Baz2<U>
+   {
+       Point<U>;
    };
 };

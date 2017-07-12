@@ -748,9 +748,16 @@ expandAnonymousFields rm = exModule rm
   exField field = if T.isPrefixOf P.anonFieldPrefix (f_name field) then expandAnonField field else return [field]
   expandAnonField field = do
     case f_type field of
-     (TypeExpr (RT_Named (_,Decl{d_type=Decl_Struct struct})) tes) -> return (s_fields struct)
-     (TypeExpr (RT_Named (_,Decl{d_type=Decl_Union union})) tes) -> return (u_fields union)
+     (TypeExpr (RT_Named (_,Decl{d_type=Decl_Struct s})) tes) -> mapM (withTypeParams (s_typeParams s) tes) (s_fields s)
+     (TypeExpr (RT_Named (_,Decl{d_type=Decl_Union u})) tes) -> mapM (withTypeParams (u_typeParams u) tes) (u_fields u)
      _ -> eioError "Anonymous field must be a struct or union"
+
+  withTypeParams typeParams typeExprs field = do
+    let paramMap = Map.fromList (zip typeParams typeExprs)
+    type' <- case substTypeParams paramMap (f_type field) of
+      Left err -> eioError ("in anonymous field: " <> err)
+      Right t -> return t
+    return field{f_type=type'}
 
 -- | expand all of the typedefs in a module
 expandModuleTypedefs :: RModule -> RModule

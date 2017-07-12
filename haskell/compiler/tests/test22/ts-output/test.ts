@@ -27,6 +27,8 @@ export interface Baz {
   field1: number;
   field2: number;
   name: string;
+  px: number;
+  py: number;
 }
 
 export function makeBaz(
@@ -34,20 +36,48 @@ export function makeBaz(
     field1: number,
     field2: number,
     name: string,
+    px: number,
+    py: number,
   }
 ): Baz {
   return {
     field1: input.field1,
     field2: input.field2,
     name: input.name,
+    px: input.px,
+    py: input.py,
   };
 }
 
 const Baz_AST : ADL.ScopedDecl =
-  {"moduleName":"test","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"field1","default":{"kind":"nothing"},"name":"field1","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"field2","default":{"kind":"nothing"},"name":"field2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"name","default":{"kind":"nothing"},"name":"name","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"Baz","version":{"kind":"nothing"}}};
+  {"moduleName":"test","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"field1","default":{"kind":"nothing"},"name":"field1","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"field2","default":{"kind":"nothing"},"name":"field2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"name","default":{"kind":"nothing"},"name":"name","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"px","default":{"kind":"nothing"},"name":"px","typeExpr":{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}},{"annotations":[],"serializedName":"py","default":{"kind":"nothing"},"name":"py","typeExpr":{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}}]}},"name":"Baz","version":{"kind":"nothing"}}};
 
 export function texprBaz(): ADL.ATypeExpr<Baz> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test",name : "Baz"}}, parameters : []}};
+}
+
+export interface Baz2<U> {
+  px: U;
+  py: U;
+}
+
+export function makeBaz2<U>(
+  input: {
+    px: U,
+    py: U,
+  }
+): Baz2<U> {
+  return {
+    px: input.px,
+    py: input.py,
+  };
+}
+
+const Baz2_AST : ADL.ScopedDecl =
+  {"moduleName":"test","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["U"],"fields":[{"annotations":[],"serializedName":"px","default":{"kind":"nothing"},"name":"px","typeExpr":{"typeRef":{"kind":"typeParam","value":"U"},"parameters":[]}},{"annotations":[],"serializedName":"py","default":{"kind":"nothing"},"name":"py","typeExpr":{"typeRef":{"kind":"typeParam","value":"U"},"parameters":[]}}]}},"name":"Baz2","version":{"kind":"nothing"}}};
+
+export function texprBaz2<U>(texprU : ADL.ATypeExpr<U>): ADL.ATypeExpr<Baz2<U>> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test",name : "Baz2"}}, parameters : [texprU.value]}};
 }
 
 export interface Foo {
@@ -74,8 +104,34 @@ export function texprFoo(): ADL.ATypeExpr<Foo> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test",name : "Foo"}}, parameters : []}};
 }
 
+export interface Point<T> {
+  px: T;
+  py: T;
+}
+
+export function makePoint<T>(
+  input: {
+    px: T,
+    py: T,
+  }
+): Point<T> {
+  return {
+    px: input.px,
+    py: input.py,
+  };
+}
+
+const Point_AST : ADL.ScopedDecl =
+  {"moduleName":"test","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"px","default":{"kind":"nothing"},"name":"px","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"py","default":{"kind":"nothing"},"name":"py","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Point","version":{"kind":"nothing"}}};
+
+export function texprPoint<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Point<T>> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test",name : "Point"}}, parameters : [texprT.value]}};
+}
+
 export const _AST_MAP = {
   "test.Bar" : Bar_AST,
   "test.Baz" : Baz_AST,
-  "test.Foo" : Foo_AST
+  "test.Baz2" : Baz2_AST,
+  "test.Foo" : Foo_AST,
+  "test.Point" : Point_AST
 };
