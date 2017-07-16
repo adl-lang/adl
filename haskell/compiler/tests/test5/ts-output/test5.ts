@@ -26,15 +26,15 @@ export function texprCell<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Cell<T>> 
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "Cell"}}, parameters : [texprT.value]}};
 }
 
+interface List_Null<T> {
+  kind: 'null';
+}
 interface List_Cell<T> {
   kind: 'cell';
   value: Cell<T>;
 }
-interface List_Null<T> {
-  kind: 'null';
-}
 
-export type List<T> = List_Cell<T> | List_Null<T>;
+export type List<T> = List_Null<T> | List_Cell<T>;
 
 const List_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"null","default":{"kind":"nothing"},"name":"null","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"cell","default":{"kind":"nothing"},"name":"cell","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"Cell"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"List","version":{"kind":"nothing"}}};

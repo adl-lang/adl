@@ -254,8 +254,7 @@ renderInterface name typeParams fields isPrivate =
   cblock (template "$1interface $2$3" [export, name, typeParamsExpr typeParams]) renderedFields
   where
     export = if isPrivate then "" else "export "
-    renderedFields = mconcat [renderFieldDeclaration fd ";"| fd <- sortedFds]
-    sortedFds = L.sortOn fdName fields
+    renderedFields = mconcat [renderFieldDeclaration fd ";"| fd <- fields]
 
     renderFieldDeclaration :: FieldDetails -> T.Text -> Code
     renderFieldDeclaration fd endChar
@@ -273,10 +272,9 @@ renderFactory name typeParams fds = function
       <> cline (template "): $1$2 {" [name, tparams])
       <> indent fieldInitialisations
       <> cline "}"
-    sortedFds = L.sortOn fdName fds
     tparams = typeParamsExpr typeParams
-    factoryInputVariable = renderFactoryInput sortedFds
-    fieldInitialisations = renderFieldInitialisations sortedFds
+    factoryInputVariable = renderFactoryInput fds
+    fieldInitialisations = renderFieldInitialisations fds
 
     renderFactoryInput fds = cblock "input:" fields
       where

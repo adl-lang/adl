@@ -28,7 +28,7 @@ import           Control.Monad                              (when)
 import           Control.Monad.Trans                        (liftIO)
 import           Control.Monad.Trans.State.Strict
 import           Data.Foldable                              (for_)
-import           Data.List                                  (intersperse,sortOn)
+import           Data.List                                  (intersperse)
 import           Data.Monoid
 import           Data.Traversable                           (for)
 import           System.FilePath                            (joinPath,
@@ -143,9 +143,8 @@ genUnionInterface :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnionInterface _ decl union@Union{u_typeParams=parameters} = do
   fds <- mapM genFieldDetails (u_fields union)
   let unionName = d_name decl
-      sortedFds = sortOn fdName fds
-  addDeclaration (renderUnionFieldsAsInterfaces unionName parameters sortedFds)
-  addDeclaration (renderUnionChoice decl unionName parameters sortedFds)
+  addDeclaration (renderUnionFieldsAsInterfaces unionName parameters fds)
+  addDeclaration (renderUnionChoice decl unionName parameters fds)
 
 renderUnionChoice :: CDecl -> T.Text -> [Ident] -> [FieldDetails] -> Code
 renderUnionChoice decl unionName typeParams fds =

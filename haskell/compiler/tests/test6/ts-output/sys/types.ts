@@ -20,16 +20,16 @@ export function texprEither<T1, T2>(texprT1 : ADL.ATypeExpr<T1>, texprT2 : ADL.A
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Either"}}, parameters : [texprT1.value, texprT2.value]}};
 }
 
-interface Error_Error<T> {
-  kind: 'error';
-  value: string;
-}
 interface Error_Value<T> {
   kind: 'value';
   value: T;
 }
+interface Error_Error<T> {
+  kind: 'error';
+  value: string;
+}
 
-export type Error<T> = Error_Error<T> | Error_Value<T>;
+export type Error<T> = Error_Value<T> | Error_Error<T>;
 
 const Error_AST : ADL.ScopedDecl =
   {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"value","default":{"kind":"nothing"},"name":"value","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"error","default":{"kind":"nothing"},"name":"error","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"Error","version":{"kind":"nothing"}}};
@@ -47,15 +47,15 @@ export function texprMap<K, V>(texprK : ADL.ATypeExpr<K>, texprV : ADL.ATypeExpr
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Map"}}, parameters : [texprK.value, texprV.value]}};
 }
 
+interface Maybe_Nothing<T> {
+  kind: 'nothing';
+}
 interface Maybe_Just<T> {
   kind: 'just';
   value: T;
 }
-interface Maybe_Nothing<T> {
-  kind: 'nothing';
-}
 
-export type Maybe<T> = Maybe_Just<T> | Maybe_Nothing<T>;
+export type Maybe<T> = Maybe_Nothing<T> | Maybe_Just<T>;
 
 const Maybe_AST : ADL.ScopedDecl =
   {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"nothing","default":{"kind":"nothing"},"name":"nothing","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"just","default":{"kind":"nothing"},"name":"just","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Maybe","version":{"kind":"nothing"}}};

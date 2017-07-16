@@ -27,20 +27,20 @@ interface Picture_Circle {
   kind: 'circle';
   value: Circle;
 }
-interface Picture_Composed {
-  kind: 'composed';
-  value: Picture[];
-}
 interface Picture_Rectangle {
   kind: 'rectangle';
   value: Rectangle;
+}
+interface Picture_Composed {
+  kind: 'composed';
+  value: Picture[];
 }
 interface Picture_Translated {
   kind: 'translated';
   value: Translated<Picture>;
 }
 
-export type Picture = Picture_Circle | Picture_Composed | Picture_Rectangle | Picture_Translated;
+export type Picture = Picture_Circle | Picture_Rectangle | Picture_Composed | Picture_Translated;
 
 const Picture_AST : ADL.ScopedDecl =
   {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"circle","default":{"kind":"nothing"},"name":"circle","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Circle"}},"parameters":[]}},{"annotations":[],"serializedName":"rectangle","default":{"kind":"nothing"},"name":"rectangle","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Rectangle"}},"parameters":[]}},{"annotations":[],"serializedName":"composed","default":{"kind":"nothing"},"name":"composed","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}},"parameters":[]}]}},{"annotations":[],"serializedName":"translated","default":{"kind":"nothing"},"name":"translated","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Translated"}},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}},"parameters":[]}]}}]}},"name":"Picture","version":{"kind":"nothing"}}};
@@ -50,19 +50,19 @@ export function texprPicture(): ADL.ATypeExpr<Picture> {
 }
 
 export interface Rectangle {
-  height: number;
   width: number;
+  height: number;
 }
 
 export function makeRectangle(
   input: {
-    height: number,
     width: number,
+    height: number,
   }
 ): Rectangle {
   return {
-    height: input.height,
     width: input.width,
+    height: input.height,
   };
 }
 
@@ -74,22 +74,22 @@ export function texprRectangle(): ADL.ATypeExpr<Rectangle> {
 }
 
 export interface Translated<T> {
-  object: T;
   xoffset: number;
   yoffset: number;
+  object: T;
 }
 
 export function makeTranslated<T>(
   input: {
-    object: T,
     xoffset?: number,
     yoffset?: number,
+    object: T,
   }
 ): Translated<T> {
   return {
-    object: input.object,
     xoffset: input.xoffset === undefined ? 0 : input.xoffset,
     yoffset: input.yoffset === undefined ? 0 : input.yoffset,
+    object: input.object,
   };
 }
 

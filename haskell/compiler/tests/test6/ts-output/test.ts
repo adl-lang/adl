@@ -4,40 +4,40 @@ import * as ADL from './runtime/adl';
 import * as sys_types from './sys/types';
 
 export interface S {
+  f_pair: sys_types.Pair<number, number>;
   f_either: sys_types.Either<string, number>;
   f_error: sys_types.Error<number>;
   f_map: sys_types.Map<string, number>;
+  f_set: sys_types.Set<string>;
   f_mstring: sys_types.Maybe<string>;
   f_mstring2: sys_types.Maybe<string>;
   f_nstring: (string|null);
   f_nstring2: (string|null);
-  f_pair: sys_types.Pair<number, number>;
-  f_set: sys_types.Set<string>;
 }
 
 export function makeS(
   input: {
+    f_pair: sys_types.Pair<number, number>,
     f_either: sys_types.Either<string, number>,
     f_error: sys_types.Error<number>,
     f_map: sys_types.Map<string, number>,
+    f_set: sys_types.Set<string>,
     f_mstring: sys_types.Maybe<string>,
     f_mstring2?: sys_types.Maybe<string>,
     f_nstring: (string|null),
     f_nstring2?: (string|null),
-    f_pair: sys_types.Pair<number, number>,
-    f_set: sys_types.Set<string>,
   }
 ): S {
   return {
+    f_pair: input.f_pair,
     f_either: input.f_either,
     f_error: input.f_error,
     f_map: input.f_map,
+    f_set: input.f_set,
     f_mstring: input.f_mstring,
     f_mstring2: input.f_mstring2 === undefined ? {kind : "just", value : "sukpeepolup"} : input.f_mstring2,
     f_nstring: input.f_nstring,
     f_nstring2: input.f_nstring2 === undefined ? "abcde" : input.f_nstring2,
-    f_pair: input.f_pair,
-    f_set: input.f_set,
   };
 }
 

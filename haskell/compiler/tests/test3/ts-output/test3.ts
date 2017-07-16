@@ -3,22 +3,22 @@
 import * as ADL from './runtime/adl';
 
 export interface A {
-  f_bool: boolean;
   f_int: number;
   f_string: string;
+  f_bool: boolean;
 }
 
 export function makeA(
   input: {
-    f_bool?: boolean,
     f_int: number,
     f_string: string,
+    f_bool?: boolean,
   }
 ): A {
   return {
-    f_bool: input.f_bool === undefined ? false : input.f_bool,
     f_int: input.f_int,
     f_string: input.f_string,
+    f_bool: input.f_bool === undefined ? false : input.f_bool,
   };
 }
 
@@ -30,23 +30,23 @@ export function texprA(): ADL.ATypeExpr<A> {
 }
 
 export interface B<T> {
-  f_string: string;
   f_t: T;
+  f_string: string;
   f_tvec: T[];
   f_xy: XY<T>;
 }
 
 export function makeB<T>(
   input: {
-    f_string: string,
     f_t: T,
+    f_string: string,
     f_tvec: T[],
     f_xy: XY<T>,
   }
 ): B<T> {
   return {
-    f_string: input.f_string,
     f_t: input.f_t,
+    f_string: input.f_string,
     f_tvec: input.f_tvec,
     f_xy: input.f_xy,
   };
@@ -72,85 +72,85 @@ export function texprE(): ADL.ATypeExpr<E> {
 }
 
 export interface S<T> {
-  f_a: A;
-  f_bint16: B<number>;
+  f_void: null;
   f_bool: boolean;
-  f_bytes: Uint8Array;
-  f_double: number;
-  f_e: E;
-  f_float: number;
+  f_int8: number;
   f_int16: number;
   f_int32: number;
   f_int64: number;
-  f_int8: number;
-  f_json1: any;
-  f_json2: any;
-  f_smap: {[key: string]: number};
-  f_string: string;
-  f_t: T;
-  f_u: U;
-  f_u1: U;
-  f_void: null;
-  f_vstring: string[];
+  f_word8: number;
   f_word16: number;
   f_word32: number;
   f_word64: number;
-  f_word8: number;
+  f_float: number;
+  f_double: number;
+  f_bytes: Uint8Array;
+  f_string: string;
+  f_vstring: string[];
+  f_a: A;
+  f_u: U;
+  f_u1: U;
+  f_e: E;
+  f_t: T;
+  f_bint16: B<number>;
+  f_smap: {[key: string]: number};
+  f_json1: any;
+  f_json2: any;
 }
 
 export function makeS<T>(
   input: {
-    f_a?: A,
-    f_bint16?: B<number>,
+    f_void?: null,
     f_bool?: boolean,
-    f_bytes?: Uint8Array,
-    f_double?: number,
-    f_e?: E,
-    f_float?: number,
+    f_int8?: number,
     f_int16?: number,
     f_int32?: number,
     f_int64?: number,
-    f_int8?: number,
-    f_json1?: any,
-    f_json2?: any,
-    f_smap?: {[key: string]: number},
-    f_string?: string,
-    f_t: T,
-    f_u?: U,
-    f_u1?: U,
-    f_void?: null,
-    f_vstring?: string[],
+    f_word8?: number,
     f_word16?: number,
     f_word32?: number,
     f_word64?: number,
-    f_word8?: number,
+    f_float?: number,
+    f_double?: number,
+    f_bytes?: Uint8Array,
+    f_string?: string,
+    f_vstring?: string[],
+    f_a?: A,
+    f_u?: U,
+    f_u1?: U,
+    f_e?: E,
+    f_t: T,
+    f_bint16?: B<number>,
+    f_smap?: {[key: string]: number},
+    f_json1?: any,
+    f_json2?: any,
   }
 ): S<T> {
   return {
-    f_a: input.f_a === undefined ? {f_int : 0, f_string : "xyz", f_bool : false} : input.f_a,
-    f_bint16: input.f_bint16 === undefined ? {f_t : 56, f_string : "yikes", f_tvec : [1, 2, 3], f_xy : {x : 5, y : 5}} : input.f_bint16,
+    f_void: input.f_void === undefined ? null : input.f_void,
     f_bool: input.f_bool === undefined ? true : input.f_bool,
-    f_bytes: input.f_bytes === undefined ? b64.toByteArray("aGVsbG8=") : input.f_bytes,
-    f_double: input.f_double === undefined ? 0.45 : input.f_double,
-    f_e: input.f_e === undefined ? 1 : input.f_e,
-    f_float: input.f_float === undefined ? 0.5 : input.f_float,
+    f_int8: input.f_int8 === undefined ? -5 : input.f_int8,
     f_int16: input.f_int16 === undefined ? -10000 : input.f_int16,
     f_int32: input.f_int32 === undefined ? 56 : input.f_int32,
     f_int64: input.f_int64 === undefined ? 40000 : input.f_int64,
-    f_int8: input.f_int8 === undefined ? -5 : input.f_int8,
-    f_json1: input.f_json1 === undefined ? null : input.f_json1,
-    f_json2: input.f_json2 === undefined ? [{"v1":27,"v2":"abcde"},true] : input.f_json2,
-    f_smap: input.f_smap === undefined ? {a : 45, b : 47} : input.f_smap,
-    f_string: input.f_string === undefined ? "abcd" : input.f_string,
-    f_t: input.f_t,
-    f_u: input.f_u === undefined ? {kind : "f_int", value : 45} : input.f_u,
-    f_u1: input.f_u1 === undefined ? {kind : "f_void"} : input.f_u1,
-    f_void: input.f_void === undefined ? null : input.f_void,
-    f_vstring: input.f_vstring === undefined ? ["xy", "ab"] : input.f_vstring,
+    f_word8: input.f_word8 === undefined ? 32 : input.f_word8,
     f_word16: input.f_word16 === undefined ? 50000 : input.f_word16,
     f_word32: input.f_word32 === undefined ? 124456 : input.f_word32,
     f_word64: input.f_word64 === undefined ? 2344 : input.f_word64,
-    f_word8: input.f_word8 === undefined ? 32 : input.f_word8,
+    f_float: input.f_float === undefined ? 0.5 : input.f_float,
+    f_double: input.f_double === undefined ? 0.45 : input.f_double,
+    f_bytes: input.f_bytes === undefined ? b64.toByteArray("aGVsbG8=") : input.f_bytes,
+    f_string: input.f_string === undefined ? "abcd" : input.f_string,
+    f_vstring: input.f_vstring === undefined ? ["xy", "ab"] : input.f_vstring,
+    f_a: input.f_a === undefined ? {f_int : 0, f_string : "xyz", f_bool : false} : input.f_a,
+    f_u: input.f_u === undefined ? {kind : "f_int", value : 45} : input.f_u,
+    f_u1: input.f_u1 === undefined ? {kind : "f_void"} : input.f_u1,
+    f_e: input.f_e === undefined ? 1 : input.f_e,
+    f_t: input.f_t,
+    f_bint16: input.f_bint16 === undefined ? {f_t : 56, f_string : "yikes", f_tvec : [1, 2, 3], f_xy : {x : 5, y : 5}} : input.f_bint16,
+    f_smap: input.f_smap === undefined ? {a : 45, b : 47} : input.f_smap,
+    f_json1: input.f_json1 === undefined ? null : input.f_json1,
+    f_json2: input.f_json2 === undefined ? [{"v1":27,"v2":"abcde"},true] : input.f_json2,
   };
 }
 

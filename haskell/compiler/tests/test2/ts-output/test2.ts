@@ -148,19 +148,19 @@ export function texprS4<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<S4<T>> {
 }
 
 export interface Tree<T> {
-  children: Tree<T>[];
   value: T;
+  children: Tree<T>[];
 }
 
 export function makeTree<T>(
   input: {
-    children: Tree<T>[],
     value: T,
+    children: Tree<T>[],
   }
 ): Tree<T> {
   return {
-    children: input.children,
     value: input.value,
+    children: input.children,
   };
 }
 
