@@ -3,10 +3,17 @@
 The ADL compiler reads and checks ADL definitions, and generates code
 in a target programming language.
 
-    adlc verify [OPTION...] <adlfile>..
-    adlc haskell [OPTION...] <adlfile>..
-    adlc cpp [OPTION..] <adlfile>..
-    adlc ast [OPTION..] <adlfile>..
+```
+Usage: adlc verify [OPTION..] <modulePath>...
+       adlc ast [OPTION..] <modulePath>...
+       adlc haskell [OPTION..] <modulePath>...
+       adlc cpp [OPTION..] <modulePath>...
+       adlc java [OPTION..] <modulePath>...
+       adlc javascript [OPTION..] <modulePath>...
+       adlc typescript [OPTION..] <modulePath>...
+       adlc show --version
+       adlc show --adlstdlib
+```
 
 # 2. Usage
 ## verify backend
@@ -16,7 +23,10 @@ in a target programming language.
 The verify backend parses and checks the supplied ADL files, but
 doesn't generate any code. It supports the following options:
 
-    --searchdir <dir> | -I <dir>
+```
+-I DIR  --searchdir=DIR
+        --merge-adlext=EXT
+```
 
 ## haskell backend
 
@@ -134,13 +144,3 @@ in JSON, with schemas given by:
 
 * *haskell* : adlc/config/haskell.adl
 * *c++*     : adlc/config/cpp.adl
-
-    
-
-
-
-
-
-
-
-
