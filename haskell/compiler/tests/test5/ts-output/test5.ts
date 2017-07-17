@@ -13,7 +13,7 @@ export function texprU1(): ADL.ATypeExpr<U1> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U1"}}, parameters : []}};
 }
 
-interface U2_V {
+export interface U2_V {
   kind: 'v';
   value: number;
 }
@@ -27,7 +27,7 @@ export function texprU2(): ADL.ATypeExpr<U2> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U2"}}, parameters : []}};
 }
 
-interface U3_V {
+export interface U3_V {
   kind: 'v';
   value: number;
 }
@@ -62,7 +62,7 @@ export function texprS1(): ADL.ATypeExpr<S1> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "S1"}}, parameters : []}};
 }
 
-interface U4_V {
+export interface U4_V {
   kind: 'v';
   value: S1;
 }
@@ -76,7 +76,7 @@ export function texprU4(): ADL.ATypeExpr<U4> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U4"}}, parameters : []}};
 }
 
-interface U5_V {
+export interface U5_V {
   kind: 'v';
   value: S1;
 }
@@ -90,7 +90,7 @@ export function texprU5(): ADL.ATypeExpr<U5> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U5"}}, parameters : []}};
 }
 
-interface U6_V {
+export interface U6_V {
   kind: 'v';
   value: U3;
 }
@@ -104,7 +104,7 @@ export function texprU6(): ADL.ATypeExpr<U6> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U6"}}, parameters : []}};
 }
 
-interface U7_V {
+export interface U7_V {
   kind: 'v';
   value: U3;
 }
@@ -118,11 +118,11 @@ export function texprU7(): ADL.ATypeExpr<U7> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U7"}}, parameters : []}};
 }
 
-interface U8_V1 {
+export interface U8_V1 {
   kind: 'v1';
   value: S1;
 }
-interface U8_V2 {
+export interface U8_V2 {
   kind: 'v2';
   value: number;
 }
@@ -136,11 +136,11 @@ export function texprU8(): ADL.ATypeExpr<U8> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U8"}}, parameters : []}};
 }
 
-interface U9_V1<T> {
+export interface U9_V1<T> {
   kind: 'v1';
   value: T;
 }
-interface U9_V2<T> {
+export interface U9_V2<T> {
   kind: 'v2';
   value: number;
 }
@@ -154,10 +154,10 @@ export function texprU9<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<U9<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U9"}}, parameters : [texprT.value]}};
 }
 
-interface List_Null<T> {
+export interface List_Null<T> {
   kind: 'null';
 }
-interface List_Cell<T> {
+export interface List_Cell<T> {
   kind: 'cell';
   value: Cell<T>;
 }
@@ -195,7 +195,7 @@ export function texprCell<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Cell<T>> 
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "Cell"}}, parameters : [texprT.value]}};
 }
 
-export const _AST_MAP = {
+export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test5.U1" : U1_AST,
   "test5.U2" : U2_AST,
   "test5.U3" : U3_AST,

@@ -2,19 +2,19 @@
 
 import * as ADL from './runtime/adl';
 
-interface Picture_Circle {
+export interface Picture_Circle {
   kind: 'circle';
   value: Circle;
 }
-interface Picture_Rectangle {
+export interface Picture_Rectangle {
   kind: 'rectangle';
   value: Rectangle;
 }
-interface Picture_Composed {
+export interface Picture_Composed {
   kind: 'composed';
   value: Picture[];
 }
-interface Picture_Translated {
+export interface Picture_Translated {
   kind: 'translated';
   value: Translated<Picture>;
 }
@@ -100,7 +100,7 @@ export function texprTranslated<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Tra
   return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Translated"}}, parameters : [texprT.value]}};
 }
 
-export const _AST_MAP = {
+export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "picture.Picture" : Picture_AST,
   "picture.Circle" : Circle_AST,
   "picture.Rectangle" : Rectangle_AST,

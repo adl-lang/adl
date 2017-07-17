@@ -341,7 +341,7 @@ astVariableName decl = capitalise (d_name decl) <> "_AST"
 addAstMap :: CModule -> CState ()
 addAstMap m = do
   addDeclaration $
-    cline "export const _AST_MAP = {"
+    cline "export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {"
     <> indent (mconcat [ctemplate "\"$1\" : $2$3" [scopedName m decl, astVariableName decl, mcomma]
                        | (decl,mcomma) <- withCommas (getOrderedDecls m)])
     <> cline "};"

@@ -48,6 +48,6 @@ export function texprS(): ADL.ATypeExpr<S> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test",name : "S"}}, parameters : []}};
 }
 
-export const _AST_MAP = {
+export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test.S" : S_AST
 };

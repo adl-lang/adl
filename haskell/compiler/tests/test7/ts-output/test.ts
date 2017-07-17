@@ -179,7 +179,7 @@ export function texprPoint2<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Point2<
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test",name : "Point2"}}, parameters : [texprX.value]}};
 }
 
-export const _AST_MAP = {
+export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test.Point" : Point_AST,
   "test.Int1" : Int1_AST,
   "test.Int2" : Int2_AST,

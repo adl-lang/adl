@@ -158,7 +158,7 @@ renderUnionFieldsAsInterfaces :: T.Text -> [Ident] -> [FieldDetails] -> Code
 renderUnionFieldsAsInterfaces unionName parameters (fd:xs) =
   CAppend renderedInterface (renderUnionFieldsAsInterfaces unionName parameters xs)
     where
-      renderedInterface = CAppend (renderInterface interfaceName parameters fieldDetails True) CEmpty
+      renderedInterface = CAppend (renderInterface interfaceName parameters fieldDetails False) CEmpty
       interfaceName = unionName <> "_" <> capitalise (fdName fd)
       fieldDetails = constructUnionFieldDetailsFromField fd
 renderUnionFieldsAsInterfaces _ _ [] = CEmpty

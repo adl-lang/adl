@@ -26,11 +26,11 @@ export function texprPair<T1, T2>(texprT1 : ADL.ATypeExpr<T1>, texprT2 : ADL.ATy
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Pair"}}, parameters : [texprT1.value, texprT2.value]}};
 }
 
-interface Either_Left<T1, T2> {
+export interface Either_Left<T1, T2> {
   kind: 'left';
   value: T1;
 }
-interface Either_Right<T1, T2> {
+export interface Either_Right<T1, T2> {
   kind: 'right';
   value: T2;
 }
@@ -44,10 +44,10 @@ export function texprEither<T1, T2>(texprT1 : ADL.ATypeExpr<T1>, texprT2 : ADL.A
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Either"}}, parameters : [texprT1.value, texprT2.value]}};
 }
 
-interface Maybe_Nothing<T> {
+export interface Maybe_Nothing<T> {
   kind: 'nothing';
 }
-interface Maybe_Just<T> {
+export interface Maybe_Just<T> {
   kind: 'just';
   value: T;
 }
@@ -61,11 +61,11 @@ export function texprMaybe<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Maybe<T>
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Maybe"}}, parameters : [texprT.value]}};
 }
 
-interface Error_Value<T> {
+export interface Error_Value<T> {
   kind: 'value';
   value: T;
 }
-interface Error_Error<T> {
+export interface Error_Error<T> {
   kind: 'error';
   value: string;
 }
@@ -97,7 +97,7 @@ export function texprSet<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Set<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Set"}}, parameters : [texprT.value]}};
 }
 
-export const _AST_MAP = {
+export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "sys.types.Pair" : Pair_AST,
   "sys.types.Either" : Either_AST,
   "sys.types.Maybe" : Maybe_AST,

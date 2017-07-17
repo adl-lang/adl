@@ -171,7 +171,7 @@ export function texprIntTree(): ADL.ATypeExpr<IntTree> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "IntTree"}}, parameters : []}};
 }
 
-export const _AST_MAP = {
+export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test2.S0" : S0_AST,
   "test2.S1" : S1_AST,
   "test2.S2" : S2_AST,

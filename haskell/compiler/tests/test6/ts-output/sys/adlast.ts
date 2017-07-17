@@ -54,30 +54,30 @@ export function texprScopedName(): ADL.ATypeExpr<ScopedName> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.adlast",name : "ScopedName"}}, parameters : []}};
 }
 
-interface Literal_Null {
+export interface Literal_Null {
   kind: 'null';
 }
-interface Literal_Integer {
+export interface Literal_Integer {
   kind: 'integer';
   value: number;
 }
-interface Literal_Double {
+export interface Literal_Double {
   kind: 'double';
   value: number;
 }
-interface Literal_String {
+export interface Literal_String {
   kind: 'string';
   value: string;
 }
-interface Literal_Boolean {
+export interface Literal_Boolean {
   kind: 'boolean';
   value: boolean;
 }
-interface Literal_Array {
+export interface Literal_Array {
   kind: 'array';
   value: Literal[];
 }
-interface Literal_Object {
+export interface Literal_Object {
   kind: 'object';
   value: sys_types.Map<string, Literal>;
 }
@@ -91,15 +91,15 @@ export function texprLiteral(): ADL.ATypeExpr<Literal> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.adlast",name : "Literal"}}, parameters : []}};
 }
 
-interface TypeRef_Primitive {
+export interface TypeRef_Primitive {
   kind: 'primitive';
   value: Ident;
 }
-interface TypeRef_TypeParam {
+export interface TypeRef_TypeParam {
   kind: 'typeParam';
   value: Ident;
 }
-interface TypeRef_Reference {
+export interface TypeRef_Reference {
   kind: 'reference';
   value: ScopedName;
 }
@@ -269,19 +269,19 @@ export function texprNewType(): ADL.ATypeExpr<NewType> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.adlast",name : "NewType"}}, parameters : []}};
 }
 
-interface DeclType_Struct_ {
+export interface DeclType_Struct_ {
   kind: 'struct_';
   value: Struct;
 }
-interface DeclType_Union_ {
+export interface DeclType_Union_ {
   kind: 'union_';
   value: Union;
 }
-interface DeclType_Type_ {
+export interface DeclType_Type_ {
   kind: 'type_';
   value: TypeDef;
 }
-interface DeclType_Newtype_ {
+export interface DeclType_Newtype_ {
   kind: 'newtype_';
   value: NewType;
 }
@@ -358,11 +358,11 @@ export function texprDeclVersions(): ADL.ATypeExpr<DeclVersions> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.adlast",name : "DeclVersions"}}, parameters : []}};
 }
 
-interface Import_ModuleName {
+export interface Import_ModuleName {
   kind: 'moduleName';
   value: ModuleName;
 }
-interface Import_ScopedName {
+export interface Import_ScopedName {
   kind: 'scopedName';
   value: ScopedName;
 }
@@ -403,7 +403,7 @@ export function texprModule(): ADL.ATypeExpr<Module> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.adlast",name : "Module"}}, parameters : []}};
 }
 
-export const _AST_MAP = {
+export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "sys.adlast.ModuleName" : ModuleName_AST,
   "sys.adlast.Ident" : Ident_AST,
   "sys.adlast.Annotations" : Annotations_AST,

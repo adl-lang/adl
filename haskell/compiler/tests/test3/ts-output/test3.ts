@@ -83,15 +83,15 @@ export function texprB<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<B<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "B"}}, parameters : [texprT.value]}};
 }
 
-interface U_F_int {
+export interface U_F_int {
   kind: 'f_int';
   value: number;
 }
-interface U_F_string {
+export interface U_F_string {
   kind: 'f_string';
   value: string;
 }
-interface U_F_void {
+export interface U_F_void {
   kind: 'f_void';
 }
 
@@ -206,7 +206,7 @@ export function texprS<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<S<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "S"}}, parameters : [texprT.value]}};
 }
 
-export const _AST_MAP = {
+export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test3.A" : A_AST,
   "test3.XY" : XY_AST,
   "test3.B" : B_AST,
