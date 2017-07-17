@@ -5,5 +5,6 @@ packages:
 - compiler-bootstrap
 - runtime
 - compiler
+- generated-haskell
 extra-deps:
 resolver: lts-8.5
