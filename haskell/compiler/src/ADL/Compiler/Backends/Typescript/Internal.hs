@@ -343,7 +343,7 @@ addAstMap m = do
   addDeclaration $
     cline "export const _AST_MAP = {"
     <> indent (mconcat [ctemplate "\"$1\" : $2$3" [scopedName m decl, astVariableName decl, mcomma]
-                       | (decl,mcomma) <- withCommas (M.elems (m_decls m))])
+                       | (decl,mcomma) <- withCommas (getOrderedDecls m)])
     <> cline "};"
   where
 

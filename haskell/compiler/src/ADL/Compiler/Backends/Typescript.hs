@@ -80,7 +80,7 @@ genModule m = do
     addImport "ADL" (TSImport "ADL" ["runtime","adl"])
 
   -- Generate each declaration
-  for_ (Map.elems (m_decls m)) $ \decl ->
+  for_ (getOrderedDecls m) $ \decl ->
     case d_type decl of
      (Decl_Struct struct)   -> genStruct m decl struct
      (Decl_Union union)     -> genUnion m decl union

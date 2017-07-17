@@ -2,68 +2,6 @@
 
 import * as ADL from './runtime/adl';
 
-export interface Cell<T> {
-  head: T;
-  tail: List<T>;
-}
-
-export function makeCell<T>(
-  input: {
-    head: T,
-    tail: List<T>,
-  }
-): Cell<T> {
-  return {
-    head: input.head,
-    tail: input.tail,
-  };
-}
-
-const Cell_AST : ADL.ScopedDecl =
-  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"head","default":{"kind":"nothing"},"name":"head","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"tail","default":{"kind":"nothing"},"name":"tail","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"List"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"Cell","version":{"kind":"nothing"}}};
-
-export function texprCell<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Cell<T>> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "Cell"}}, parameters : [texprT.value]}};
-}
-
-interface List_Null<T> {
-  kind: 'null';
-}
-interface List_Cell<T> {
-  kind: 'cell';
-  value: Cell<T>;
-}
-
-export type List<T> = List_Null<T> | List_Cell<T>;
-
-const List_AST : ADL.ScopedDecl =
-  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"null","default":{"kind":"nothing"},"name":"null","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"cell","default":{"kind":"nothing"},"name":"cell","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"Cell"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"List","version":{"kind":"nothing"}}};
-
-export function texprList<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<List<T>> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "List"}}, parameters : [texprT.value]}};
-}
-
-export interface S1 {
-  f: number;
-}
-
-export function makeS1(
-  input: {
-    f?: number,
-  }
-): S1 {
-  return {
-    f: input.f === undefined ? 100 : input.f,
-  };
-}
-
-const S1_AST : ADL.ScopedDecl =
-  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f","default":{"kind":"just","value":{"kind":"integer","value":100}},"name":"f","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
-
-export function texprS1(): ADL.ATypeExpr<S1> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "S1"}}, parameters : []}};
-}
-
 export enum U1 {
   v,
 }
@@ -101,6 +39,27 @@ const U3_AST : ADL.ScopedDecl =
 
 export function texprU3(): ADL.ATypeExpr<U3> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U3"}}, parameters : []}};
+}
+
+export interface S1 {
+  f: number;
+}
+
+export function makeS1(
+  input: {
+    f?: number,
+  }
+): S1 {
+  return {
+    f: input.f === undefined ? 100 : input.f,
+  };
+}
+
+const S1_AST : ADL.ScopedDecl =
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f","default":{"kind":"just","value":{"kind":"integer","value":100}},"name":"f","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
+
+export function texprS1(): ADL.ATypeExpr<S1> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "S1"}}, parameters : []}};
 }
 
 interface U4_V {
@@ -195,17 +154,58 @@ export function texprU9<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<U9<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U9"}}, parameters : [texprT.value]}};
 }
 
+interface List_Null<T> {
+  kind: 'null';
+}
+interface List_Cell<T> {
+  kind: 'cell';
+  value: Cell<T>;
+}
+
+export type List<T> = List_Null<T> | List_Cell<T>;
+
+const List_AST : ADL.ScopedDecl =
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"null","default":{"kind":"nothing"},"name":"null","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"cell","default":{"kind":"nothing"},"name":"cell","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"Cell"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"List","version":{"kind":"nothing"}}};
+
+export function texprList<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<List<T>> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "List"}}, parameters : [texprT.value]}};
+}
+
+export interface Cell<T> {
+  head: T;
+  tail: List<T>;
+}
+
+export function makeCell<T>(
+  input: {
+    head: T,
+    tail: List<T>,
+  }
+): Cell<T> {
+  return {
+    head: input.head,
+    tail: input.tail,
+  };
+}
+
+const Cell_AST : ADL.ScopedDecl =
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"head","default":{"kind":"nothing"},"name":"head","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"tail","default":{"kind":"nothing"},"name":"tail","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"List"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"Cell","version":{"kind":"nothing"}}};
+
+export function texprCell<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Cell<T>> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "Cell"}}, parameters : [texprT.value]}};
+}
+
 export const _AST_MAP = {
-  "test5.Cell" : Cell_AST,
-  "test5.List" : List_AST,
-  "test5.S1" : S1_AST,
   "test5.U1" : U1_AST,
   "test5.U2" : U2_AST,
   "test5.U3" : U3_AST,
+  "test5.S1" : S1_AST,
   "test5.U4" : U4_AST,
   "test5.U5" : U5_AST,
   "test5.U6" : U6_AST,
   "test5.U7" : U7_AST,
   "test5.U8" : U8_AST,
-  "test5.U9" : U9_AST
+  "test5.U9" : U9_AST,
+  "test5.List" : List_AST,
+  "test5.Cell" : Cell_AST
 };

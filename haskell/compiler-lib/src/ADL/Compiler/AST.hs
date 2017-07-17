@@ -5,6 +5,7 @@ module ADL.Compiler.AST where
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
+import Data.Maybe(catMaybes)
 
 import qualified Data.Text as T
 import qualified Data.Aeson as JSON
@@ -30,7 +31,7 @@ data ScopedName = ScopedName {
 
 instance Format ScopedName where
   formatText sn = T.intercalate "." ((unModuleName (sn_moduleName sn) ++ [sn_name sn]))
-  
+
 
 data Field r = Field {
   f_name :: Ident,
@@ -43,12 +44,12 @@ data Field r = Field {
 data Struct r = Struct {
   s_typeParams :: [Ident],
   s_fields :: [Field r]
-} deriving (Show)  
+} deriving (Show)
 
 data Union r = Union {
   u_typeParams :: [Ident],
   u_fields :: [Field r]
-} deriving (Show)  
+} deriving (Show)
 
 data Typedef r = Typedef {
   t_typeParams :: [Ident],
@@ -62,7 +63,7 @@ data Newtype r = Newtype {
 } deriving (Show)
 
 data TypeExpr r = TypeExpr r [TypeExpr r]
-  deriving (Show)                  
+  deriving (Show)
 
 data DeclType r = Decl_Struct (Struct r)
                 | Decl_Union (Union r)
@@ -99,7 +100,7 @@ data Import = Import_Module ModuleName
   deriving (Show)
 
 iModule :: Import -> ModuleName
-iModule (Import_Module m) = m           
+iModule (Import_Module m) = m
 iModule (Import_ScopedName sn) = sn_moduleName sn
 
 -- Module after we've parsed it.
@@ -107,7 +108,7 @@ data Module0 d = Module0 {
   m0_name :: ModuleName,
   m0_imports :: [Import],
   m0_decls :: [d]
-  }  
+  }
   deriving (Show)
 
 -- Module after we've:
@@ -118,8 +119,9 @@ data Module0 d = Module0 {
 data Module ct r = Module {
   m_name :: ModuleName,
   m_imports :: [Import],
-  m_decls :: Map.Map Ident (Decl ct r)
-  }  
+  m_decls :: Map.Map Ident (Decl ct r),
+  m_declOrder :: [Ident]
+  }
   deriving (Show)
 
 instance Foldable TypeExpr where
@@ -146,7 +148,7 @@ instance Foldable (Module ct) where
 
 mapAnnotations :: (a -> b) -> Annotations a -> Annotations b
 mapAnnotations f = fmap (\(a,v) -> (f a,v))
-  
+
 mapTypeExpr :: (a -> b) -> TypeExpr a -> TypeExpr b
 mapTypeExpr f (TypeExpr t ts) = TypeExpr (f t) (fmap (mapTypeExpr f) ts)
 
@@ -183,6 +185,8 @@ mapDecl f decl@Decl{d_type=d,d_annotations=as} = decl
 mapModule :: (a -> b) -> Module ct a -> Module ct b
 mapModule f mod@Module{m_decls=ds} = mod{m_decls=(fmap.mapDecl) f ds}
 
+getOrderedDecls :: Module ct a -> [Decl ct a]
+getOrderedDecls m = catMaybes [ Map.lookup ident (m_decls m)| ident <- m_declOrder m]
 
 getReferencedModules :: Module ct ScopedName -> Set.Set ModuleName
 getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` foldMap ref m
@@ -190,7 +194,7 @@ getReferencedModules m = Set.fromList (map iModule (m_imports m)) `Set.union` fo
     ref :: ScopedName -> Set.Set ModuleName
     ref ScopedName{sn_moduleName=ModuleName []} = Set.empty
     ref sn = Set.singleton (sn_moduleName sn)
-    
+
 getTypeParams :: DeclType t -> [Ident]
 getTypeParams (Decl_Struct s) = s_typeParams s
 getTypeParams (Decl_Union u) = u_typeParams u

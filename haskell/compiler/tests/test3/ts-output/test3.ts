@@ -29,6 +29,30 @@ export function texprA(): ADL.ATypeExpr<A> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "A"}}, parameters : []}};
 }
 
+export interface XY<T> {
+  x: T;
+  y: T;
+}
+
+export function makeXY<T>(
+  input: {
+    x: T,
+    y: T,
+  }
+): XY<T> {
+  return {
+    x: input.x,
+    y: input.y,
+  };
+}
+
+const XY_AST : ADL.ScopedDecl =
+  {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"x","default":{"kind":"nothing"},"name":"x","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"y","default":{"kind":"nothing"},"name":"y","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"XY","version":{"kind":"nothing"}}};
+
+export function texprXY<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<XY<T>> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "XY"}}, parameters : [texprT.value]}};
+}
+
 export interface B<T> {
   f_t: T;
   f_string: string;
@@ -57,6 +81,27 @@ const B_AST : ADL.ScopedDecl =
 
 export function texprB<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<B<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "B"}}, parameters : [texprT.value]}};
+}
+
+interface U_F_int {
+  kind: 'f_int';
+  value: number;
+}
+interface U_F_string {
+  kind: 'f_string';
+  value: string;
+}
+interface U_F_void {
+  kind: 'f_void';
+}
+
+export type U = U_F_int | U_F_string | U_F_void;
+
+const U_AST : ADL.ScopedDecl =
+  {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f_int","default":{"kind":"nothing"},"name":"f_int","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"f_string","default":{"kind":"nothing"},"name":"f_string","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f_void","default":{"kind":"nothing"},"name":"f_void","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U","version":{"kind":"nothing"}}};
+
+export function texprU(): ADL.ATypeExpr<U> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "U"}}, parameters : []}};
 }
 
 export enum E {
@@ -161,56 +206,11 @@ export function texprS<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<S<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "S"}}, parameters : [texprT.value]}};
 }
 
-interface U_F_int {
-  kind: 'f_int';
-  value: number;
-}
-interface U_F_string {
-  kind: 'f_string';
-  value: string;
-}
-interface U_F_void {
-  kind: 'f_void';
-}
-
-export type U = U_F_int | U_F_string | U_F_void;
-
-const U_AST : ADL.ScopedDecl =
-  {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f_int","default":{"kind":"nothing"},"name":"f_int","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"f_string","default":{"kind":"nothing"},"name":"f_string","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f_void","default":{"kind":"nothing"},"name":"f_void","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U","version":{"kind":"nothing"}}};
-
-export function texprU(): ADL.ATypeExpr<U> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "U"}}, parameters : []}};
-}
-
-export interface XY<T> {
-  x: T;
-  y: T;
-}
-
-export function makeXY<T>(
-  input: {
-    x: T,
-    y: T,
-  }
-): XY<T> {
-  return {
-    x: input.x,
-    y: input.y,
-  };
-}
-
-const XY_AST : ADL.ScopedDecl =
-  {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"x","default":{"kind":"nothing"},"name":"x","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"y","default":{"kind":"nothing"},"name":"y","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"XY","version":{"kind":"nothing"}}};
-
-export function texprXY<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<XY<T>> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "XY"}}, parameters : [texprT.value]}};
-}
-
 export const _AST_MAP = {
   "test3.A" : A_AST,
+  "test3.XY" : XY_AST,
   "test3.B" : B_AST,
-  "test3.E" : E_AST,
-  "test3.S" : S_AST,
   "test3.U" : U_AST,
-  "test3.XY" : XY_AST
+  "test3.E" : E_AST,
+  "test3.S" : S_AST
 };

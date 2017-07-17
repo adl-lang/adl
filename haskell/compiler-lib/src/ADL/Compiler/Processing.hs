@@ -14,7 +14,7 @@ import qualified Data.Traversable as T
 import System.FilePath(joinPath,replaceExtension)
 import System.Directory(doesFileExist)
 import Data.Ord(comparing)
-import Data.List(find,partition,sortBy)
+import Data.List(find,partition,sortBy,nub)
 import Data.Foldable(foldMap)
 import Data.Traversable(for)
 import Data.Monoid
@@ -108,8 +108,9 @@ parseAndCheckFile log file extraFiles = do
     checkDeclarations :: Module0 SDecl -> EIO T.Text SModule
     checkDeclarations (Module0 n i decls0) = do
       let declMap = foldr (\d -> Map.insertWith (++)  (d_name d) [d]) Map.empty decls0
+          declOrder = nub (fmap d_name decls0)
       declMap' <- T.mapM checkDeclList declMap
-      return (Module  n i declMap')
+      return (Module  n i declMap' declOrder)
 
     -- Ensure that for all the decls associated with a name, either
     --    * we have one unversioned decl

@@ -2,27 +2,6 @@
 
 import * as ADL from './runtime/adl';
 
-export interface Circle {
-  radius: number;
-}
-
-export function makeCircle(
-  input: {
-    radius: number,
-  }
-): Circle {
-  return {
-    radius: input.radius,
-  };
-}
-
-const Circle_AST : ADL.ScopedDecl =
-  {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"radius","default":{"kind":"nothing"},"name":"radius","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}}]}},"name":"Circle","version":{"kind":"nothing"}}};
-
-export function texprCircle(): ADL.ATypeExpr<Circle> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Circle"}}, parameters : []}};
-}
-
 interface Picture_Circle {
   kind: 'circle';
   value: Circle;
@@ -47,6 +26,27 @@ const Picture_AST : ADL.ScopedDecl =
 
 export function texprPicture(): ADL.ATypeExpr<Picture> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Picture"}}, parameters : []}};
+}
+
+export interface Circle {
+  radius: number;
+}
+
+export function makeCircle(
+  input: {
+    radius: number,
+  }
+): Circle {
+  return {
+    radius: input.radius,
+  };
+}
+
+const Circle_AST : ADL.ScopedDecl =
+  {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"radius","default":{"kind":"nothing"},"name":"radius","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}}]}},"name":"Circle","version":{"kind":"nothing"}}};
+
+export function texprCircle(): ADL.ATypeExpr<Circle> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Circle"}}, parameters : []}};
 }
 
 export interface Rectangle {
@@ -101,8 +101,8 @@ export function texprTranslated<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Tra
 }
 
 export const _AST_MAP = {
-  "picture.Circle" : Circle_AST,
   "picture.Picture" : Picture_AST,
+  "picture.Circle" : Circle_AST,
   "picture.Rectangle" : Rectangle_AST,
   "picture.Translated" : Translated_AST
 };

@@ -2,15 +2,6 @@
 
 import * as ADL from './runtime/adl';
 
-export type IntTree = Tree<number>;
-
-const IntTree_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"Tree"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}}},"name":"IntTree","version":{"kind":"nothing"}}};
-
-export function texprIntTree(): ADL.ATypeExpr<IntTree> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "IntTree"}}, parameters : []}};
-}
-
 /**
  * An empty structure.
  */
@@ -171,12 +162,21 @@ export function texprTree<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Tree<T>> 
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "Tree"}}, parameters : [texprT.value]}};
 }
 
+export type IntTree = Tree<number>;
+
+const IntTree_AST : ADL.ScopedDecl =
+  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"Tree"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}}},"name":"IntTree","version":{"kind":"nothing"}}};
+
+export function texprIntTree(): ADL.ATypeExpr<IntTree> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "IntTree"}}, parameters : []}};
+}
+
 export const _AST_MAP = {
-  "test2.IntTree" : IntTree_AST,
   "test2.S0" : S0_AST,
   "test2.S1" : S1_AST,
   "test2.S2" : S2_AST,
   "test2.S3" : S3_AST,
   "test2.S4" : S4_AST,
-  "test2.Tree" : Tree_AST
+  "test2.Tree" : Tree_AST,
+  "test2.IntTree" : IntTree_AST
 };
