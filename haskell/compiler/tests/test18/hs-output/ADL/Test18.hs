@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Test(
+module ADL.Test18(
     X1(..),
     X2(..),
     Y1(..),
@@ -20,7 +20,7 @@ data X1
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue X1 where
-    atype _ = "test.X1"
+    atype _ = "test18.X1"
     
     jsonGen = genUnion (\jv -> case jv of
         X1_f1 v -> genUnionValue "f1" v
@@ -42,7 +42,7 @@ mkX2 :: Prelude.Double -> [Y2] -> X2
 mkX2 f1 f2 = X2 f1 f2
 
 instance AdlValue X2 where
-    atype _ = "test.X2"
+    atype _ = "test18.X2"
     
     jsonGen = genObject
         [ genField "f1" x2_f1
@@ -59,7 +59,7 @@ data Y1
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue Y1 where
-    atype _ = "test.Y1"
+    atype _ = "test18.Y1"
     
     jsonGen = genUnion (\jv -> case jv of
         Y1_f1 v -> genUnionValue "f1" v
@@ -81,7 +81,7 @@ mkY2 :: T.Text -> [X2] -> Y2
 mkY2 f1 f2 = Y2 f1 f2
 
 instance AdlValue Y2 where
-    atype _ = "test.Y2"
+    atype _ = "test18.Y2"
     
     jsonGen = genObject
         [ genField "f1" y2_f1

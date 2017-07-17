@@ -1,6 +1,6 @@
-/* Code generated from adl module test */
+/* Code generated from adl module test6 */
 
-package org.adl.test;
+package org.adl.test6;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

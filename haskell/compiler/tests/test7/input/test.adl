@@ -1,4 +1,4 @@
-module test
+module test7
 {
 
 struct Point<T>
@@ -32,4 +32,3 @@ newtype Point2<X> = Point<X>;
 
 
 };
-

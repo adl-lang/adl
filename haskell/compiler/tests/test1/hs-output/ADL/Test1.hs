@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Test(
+module ADL.Test1(
 ) where
 
 import ADL.Core

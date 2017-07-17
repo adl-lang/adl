@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Test(
+module ADL.Test6(
     S(..),
 ) where
 
@@ -31,7 +31,7 @@ mkS :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double) -> (ADL.Sys.Types.Eith
 mkS f_pair f_either f_error f_map f_set f_mstring f_nstring = S f_pair f_either f_error f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (Prelude.Just "abcde")
 
 instance AdlValue S where
-    atype _ = "test.S"
+    atype _ = "test6.S"
     
     jsonGen = genObject
         [ genField "f_pair" s_f_pair

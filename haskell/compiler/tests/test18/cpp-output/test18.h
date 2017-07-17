@@ -1,11 +1,11 @@
-#ifndef TEST_H
-#define TEST_H
+#ifndef TEST18_H
+#define TEST18_H
 #include <adl/adl.h>
 #include <string>
 #include <vector>
 
 namespace ADL {
-namespace test {
+namespace test18 {
 
 struct X1;
 
@@ -167,33 +167,33 @@ struct Y2
 bool operator<( const Y2 &a, const Y2 &b );
 bool operator==( const Y2 &a, const Y2 &b );
 
-}}; // ADL::test
+}}; // ADL::test18
 
 namespace ADL {
 
 template <>
-struct Serialisable<ADL::test::X1>
+struct Serialisable<ADL::test18::X1>
 {
-    static Serialiser<ADL::test::X1>::Ptr serialiser(const SerialiserFlags &);
+    static Serialiser<ADL::test18::X1>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct Serialisable<ADL::test::X2>
+struct Serialisable<ADL::test18::X2>
 {
-    static Serialiser<ADL::test::X2>::Ptr serialiser(const SerialiserFlags &);
+    static Serialiser<ADL::test18::X2>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct Serialisable<ADL::test::Y1>
+struct Serialisable<ADL::test18::Y1>
 {
-    static Serialiser<ADL::test::Y1>::Ptr serialiser(const SerialiserFlags &);
+    static Serialiser<ADL::test18::Y1>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
-struct Serialisable<ADL::test::Y2>
+struct Serialisable<ADL::test18::Y2>
 {
-    static Serialiser<ADL::test::Y2>::Ptr serialiser(const SerialiserFlags &);
+    static Serialiser<ADL::test18::Y2>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL
-#endif // TEST_H
+#endif // TEST18_H

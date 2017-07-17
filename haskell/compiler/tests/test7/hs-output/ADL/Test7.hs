@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
-module ADL.Test(
+module ADL.Test7(
     Int1,
     Int2(..),
     Int3(..),
@@ -35,7 +35,7 @@ newtype Int2 = Int2 { unInt2 :: Data.Int.Int64 }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue Int2 where
-    atype _ = "test.Int2"
+    atype _ = "test7.Int2"
     
     jsonGen = JsonGen (\(Int2 v) -> adlToJson v)
     
@@ -45,7 +45,7 @@ newtype Int3 = Int3 { unInt3 :: Data.Int.Int64 }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue Int3 where
-    atype _ = "test.Int3"
+    atype _ = "test7.Int3"
     
     jsonGen = JsonGen (\(Int3 v) -> adlToJson v)
     
@@ -58,7 +58,7 @@ newtype Int5 x = Int5 { unInt5 :: Data.Int.Int64 }
 
 instance (AdlValue x) => AdlValue (Int5 x) where
     atype _ = T.concat
-        [ "test.Int5"
+        [ "test7.Int5"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
@@ -71,7 +71,7 @@ newtype Int6 x = Int6 { unInt6 :: Data.Int.Int64 }
 
 instance (AdlValue x) => AdlValue (Int6 x) where
     atype _ = T.concat
-        [ "test.Int6"
+        [ "test7.Int6"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
@@ -85,7 +85,7 @@ newtype IntPoint2 = IntPoint2 { unIntPoint2 :: (Point Data.Int.Int64) }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue IntPoint2 where
-    atype _ = "test.IntPoint2"
+    atype _ = "test7.IntPoint2"
     
     jsonGen = JsonGen (\(IntPoint2 v) -> adlToJson v)
     
@@ -95,7 +95,7 @@ newtype IntPoint3 = IntPoint3 { unIntPoint3 :: (Point Data.Int.Int64) }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue IntPoint3 where
-    atype _ = "test.IntPoint3"
+    atype _ = "test7.IntPoint3"
     
     jsonGen = JsonGen (\(IntPoint3 v) -> adlToJson v)
     
@@ -112,7 +112,7 @@ mkPoint x y = Point x y
 
 instance (AdlValue t) => AdlValue (Point t) where
     atype _ = T.concat
-        [ "test.Point"
+        [ "test7.Point"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
         , ">" ]
     
@@ -132,7 +132,7 @@ newtype Point2 x = Point2 { unPoint2 :: (Point x) }
 
 instance (AdlValue x) => AdlValue (Point2 x) where
     atype _ = T.concat
-        [ "test.Point2"
+        [ "test7.Point2"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
@@ -146,7 +146,7 @@ newtype String2 = String2 { unString2 :: T.Text }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue String2 where
-    atype _ = "test.String2"
+    atype _ = "test7.String2"
     
     jsonGen = JsonGen (\(String2 v) -> adlToJson v)
     
@@ -156,7 +156,7 @@ newtype String3 = String3 { unString3 :: T.Text }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue String3 where
-    atype _ = "test.String3"
+    atype _ = "test7.String3"
     
     jsonGen = JsonGen (\(String3 v) -> adlToJson v)
     
@@ -169,7 +169,7 @@ newtype String5 x = String5 { unString5 :: T.Text }
 
 instance (AdlValue x) => AdlValue (String5 x) where
     atype _ = T.concat
-        [ "test.String5"
+        [ "test7.String5"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     
@@ -182,7 +182,7 @@ newtype String6 x = String6 { unString6 :: T.Text }
 
 instance (AdlValue x) => AdlValue (String6 x) where
     atype _ = T.concat
-        [ "test.String6"
+        [ "test7.String6"
         , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy x)
         , ">" ]
     

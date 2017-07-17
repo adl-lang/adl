@@ -1,4 +1,4 @@
-module test
+module test18
 {
    // Test some mutually recursive data structures
    // These are problematic in c++
@@ -30,5 +30,5 @@ module test
       String f1;
       Vector<X2> f2;
    };
-    
+
 };

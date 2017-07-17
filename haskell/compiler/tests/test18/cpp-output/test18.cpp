@@ -1,7 +1,7 @@
-#include "test.h"
+#include "test18.h"
 
 namespace ADL {
-namespace test {
+namespace test18 {
 
 X1::X1()
     : d_(F1), p_(new double(0.0))
@@ -290,14 +290,14 @@ operator==( const Y2 &a, const Y2 &b )
         a.f2 == b.f2 ;
 }
 
-}}; // ADL::test
+}}; // ADL::test18
 
 namespace ADL {
 
-typename Serialiser<ADL::test::X1>::Ptr
-Serialisable<ADL::test::X1>::serialiser( const SerialiserFlags &sf )
+typename Serialiser<ADL::test18::X1>::Ptr
+Serialisable<ADL::test18::X1>::serialiser( const SerialiserFlags &sf )
 {
-    typedef ADL::test::X1 _T;
+    typedef ADL::test18::X1 _T;
     
     struct S_ : public Serialiser<_T>
     {
@@ -307,7 +307,7 @@ Serialisable<ADL::test::X1>::serialiser( const SerialiserFlags &sf )
         
         SerialiserFlags sf_;
         mutable typename Serialiser<double>::Ptr f1_;
-        mutable typename Serialiser<ADL::test::Y1>::Ptr f2_;
+        mutable typename Serialiser<ADL::test18::Y1>::Ptr f2_;
         
         typename Serialiser<double>::Ptr f1_s() const
         {
@@ -316,10 +316,10 @@ Serialisable<ADL::test::X1>::serialiser( const SerialiserFlags &sf )
             return f1_;
         }
         
-        typename Serialiser<ADL::test::Y1>::Ptr f2_s() const
+        typename Serialiser<ADL::test18::Y1>::Ptr f2_s() const
         {
             if( !f2_ )
-                f2_ = Serialisable<ADL::test::Y1>::serialiser(sf_);
+                f2_ = Serialisable<ADL::test18::Y1>::serialiser(sf_);
             return f2_;
         }
         
@@ -328,8 +328,8 @@ Serialisable<ADL::test::X1>::serialiser( const SerialiserFlags &sf )
             json.startObject();
             switch( v.d() )
             {
-                case ADL::test::X1::F1: writeField( json, f1_s(), "f1", v.f1() ); break;
-                case ADL::test::X1::F2: writeField( json, f2_s(), "f2", v.f2() ); break;
+                case ADL::test18::X1::F1: writeField( json, f1_s(), "f1", v.f1() ); break;
+                case ADL::test18::X1::F2: writeField( json, f2_s(), "f2", v.f2() ); break;
             }
             json.endObject();
         }
@@ -359,27 +359,27 @@ Serialisable<ADL::test::X1>::serialiser( const SerialiserFlags &sf )
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
-typename Serialiser<ADL::test::X2>::Ptr
-Serialisable<ADL::test::X2>::serialiser( const SerialiserFlags &sf )
+typename Serialiser<ADL::test18::X2>::Ptr
+Serialisable<ADL::test18::X2>::serialiser( const SerialiserFlags &sf )
 {
-    typedef ADL::test::X2 _T;
+    typedef ADL::test18::X2 _T;
     
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
             : f1_s( Serialisable<double>::serialiser(sf) )
-            , f2_s( Serialisable<std::vector<ADL::test::Y2> >::serialiser(sf) )
+            , f2_s( Serialisable<std::vector<ADL::test18::Y2> >::serialiser(sf) )
             {}
         
         
         typename Serialiser<double>::Ptr f1_s;
-        typename Serialiser<std::vector<ADL::test::Y2> >::Ptr f2_s;
+        typename Serialiser<std::vector<ADL::test18::Y2> >::Ptr f2_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             writeField<double>( json, f1_s, "f1", v.f1 );
-            writeField<std::vector<ADL::test::Y2> >( json, f2_s, "f2", v.f2 );
+            writeField<std::vector<ADL::test18::Y2> >( json, f2_s, "f2", v.f2 );
             json.endObject();
         }
         
@@ -398,10 +398,10 @@ Serialisable<ADL::test::X2>::serialiser( const SerialiserFlags &sf )
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 };
 
-typename Serialiser<ADL::test::Y1>::Ptr
-Serialisable<ADL::test::Y1>::serialiser( const SerialiserFlags &sf )
+typename Serialiser<ADL::test18::Y1>::Ptr
+Serialisable<ADL::test18::Y1>::serialiser( const SerialiserFlags &sf )
 {
-    typedef ADL::test::Y1 _T;
+    typedef ADL::test18::Y1 _T;
     
     struct S_ : public Serialiser<_T>
     {
@@ -411,7 +411,7 @@ Serialisable<ADL::test::Y1>::serialiser( const SerialiserFlags &sf )
         
         SerialiserFlags sf_;
         mutable typename Serialiser<std::string>::Ptr f1_;
-        mutable typename Serialiser<ADL::test::X1>::Ptr f2_;
+        mutable typename Serialiser<ADL::test18::X1>::Ptr f2_;
         
         typename Serialiser<std::string>::Ptr f1_s() const
         {
@@ -420,10 +420,10 @@ Serialisable<ADL::test::Y1>::serialiser( const SerialiserFlags &sf )
             return f1_;
         }
         
-        typename Serialiser<ADL::test::X1>::Ptr f2_s() const
+        typename Serialiser<ADL::test18::X1>::Ptr f2_s() const
         {
             if( !f2_ )
-                f2_ = Serialisable<ADL::test::X1>::serialiser(sf_);
+                f2_ = Serialisable<ADL::test18::X1>::serialiser(sf_);
             return f2_;
         }
         
@@ -432,8 +432,8 @@ Serialisable<ADL::test::Y1>::serialiser( const SerialiserFlags &sf )
             json.startObject();
             switch( v.d() )
             {
-                case ADL::test::Y1::F1: writeField( json, f1_s(), "f1", v.f1() ); break;
-                case ADL::test::Y1::F2: writeField( json, f2_s(), "f2", v.f2() ); break;
+                case ADL::test18::Y1::F1: writeField( json, f1_s(), "f1", v.f1() ); break;
+                case ADL::test18::Y1::F2: writeField( json, f2_s(), "f2", v.f2() ); break;
             }
             json.endObject();
         }
@@ -463,27 +463,27 @@ Serialisable<ADL::test::Y1>::serialiser( const SerialiserFlags &sf )
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
-typename Serialiser<ADL::test::Y2>::Ptr
-Serialisable<ADL::test::Y2>::serialiser( const SerialiserFlags &sf )
+typename Serialiser<ADL::test18::Y2>::Ptr
+Serialisable<ADL::test18::Y2>::serialiser( const SerialiserFlags &sf )
 {
-    typedef ADL::test::Y2 _T;
+    typedef ADL::test18::Y2 _T;
     
     struct S_ : public Serialiser<_T>
     {
         S_( const SerialiserFlags & sf )
             : f1_s( Serialisable<std::string>::serialiser(sf) )
-            , f2_s( Serialisable<std::vector<ADL::test::X2> >::serialiser(sf) )
+            , f2_s( Serialisable<std::vector<ADL::test18::X2> >::serialiser(sf) )
             {}
         
         
         typename Serialiser<std::string>::Ptr f1_s;
-        typename Serialiser<std::vector<ADL::test::X2> >::Ptr f2_s;
+        typename Serialiser<std::vector<ADL::test18::X2> >::Ptr f2_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             writeField<std::string>( json, f1_s, "f1", v.f1 );
-            writeField<std::vector<ADL::test::X2> >( json, f2_s, "f2", v.f2 );
+            writeField<std::vector<ADL::test18::X2> >( json, f2_s, "f2", v.f2 );
             json.endObject();
         }
         

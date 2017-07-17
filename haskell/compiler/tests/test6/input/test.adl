@@ -1,4 +1,4 @@
-module test
+module test6
 {
    import sys.types.*;
 

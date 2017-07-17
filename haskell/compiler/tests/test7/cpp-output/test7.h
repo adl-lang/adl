@@ -1,11 +1,11 @@
-#ifndef TEST_H
-#define TEST_H
+#ifndef TEST7_H
+#define TEST7_H
 #include <adl/adl.h>
 #include <stdint.h>
 #include <string>
 
 namespace ADL {
-namespace test {
+namespace test7 {
 
 using Int1 = int64_t;
 
@@ -224,23 +224,23 @@ bool operator<( const Point2<X> &a, const Point2<X> &b ) { return a.value < b.va
 template <class X>
 bool operator==( const Point2<X> &a, const Point2<X> &b ) { return a.value == b.value; }
 
-}}; // ADL::test
+}}; // ADL::test7
 
 namespace ADL {
 
 template <>
-struct Serialisable<ADL::test::Int2>
+struct Serialisable<ADL::test7::Int2>
 {
-    struct S : public Serialiser<ADL::test::Int2>
+    struct S : public Serialiser<ADL::test7::Int2>
     {
         S( typename Serialiser<int64_t>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::Int2 & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::Int2 & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::Int2 &v, JsonReader &json ) const
+        void fromJson( ADL::test7::Int2 &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -248,25 +248,25 @@ struct Serialisable<ADL::test::Int2>
         typename Serialiser<int64_t>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::Int2>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::Int2>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::Int2>::Ptr(new S(Serialisable<int64_t>::serialiser(sf)));
+        return typename Serialiser<ADL::test7::Int2>::Ptr(new S(Serialisable<int64_t>::serialiser(sf)));
     }
 };
 
 template <>
-struct Serialisable<ADL::test::Int3>
+struct Serialisable<ADL::test7::Int3>
 {
-    struct S : public Serialiser<ADL::test::Int3>
+    struct S : public Serialiser<ADL::test7::Int3>
     {
         S( typename Serialiser<int64_t>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::Int3 & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::Int3 & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::Int3 &v, JsonReader &json ) const
+        void fromJson( ADL::test7::Int3 &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -274,25 +274,25 @@ struct Serialisable<ADL::test::Int3>
         typename Serialiser<int64_t>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::Int3>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::Int3>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::Int3>::Ptr(new S(Serialisable<int64_t>::serialiser(sf)));
+        return typename Serialiser<ADL::test7::Int3>::Ptr(new S(Serialisable<int64_t>::serialiser(sf)));
     }
 };
 
 template <class X>
-struct Serialisable<ADL::test::Int5<X>>
+struct Serialisable<ADL::test7::Int5<X>>
 {
-    struct S : public Serialiser<ADL::test::Int5<X>>
+    struct S : public Serialiser<ADL::test7::Int5<X>>
     {
         S( typename Serialiser<int64_t>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::Int5<X> & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::Int5<X> & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::Int5<X> &v, JsonReader &json ) const
+        void fromJson( ADL::test7::Int5<X> &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -300,25 +300,25 @@ struct Serialisable<ADL::test::Int5<X>>
         typename Serialiser<int64_t>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::Int5<X>>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::Int5<X>>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::Int5<X>>::Ptr(new S(Serialisable<int64_t>::serialiser(sf)));
+        return typename Serialiser<ADL::test7::Int5<X>>::Ptr(new S(Serialisable<int64_t>::serialiser(sf)));
     }
 };
 
 template <class X>
-struct Serialisable<ADL::test::Int6<X>>
+struct Serialisable<ADL::test7::Int6<X>>
 {
-    struct S : public Serialiser<ADL::test::Int6<X>>
+    struct S : public Serialiser<ADL::test7::Int6<X>>
     {
         S( typename Serialiser<int64_t>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::Int6<X> & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::Int6<X> & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::Int6<X> &v, JsonReader &json ) const
+        void fromJson( ADL::test7::Int6<X> &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -326,23 +326,23 @@ struct Serialisable<ADL::test::Int6<X>>
         typename Serialiser<int64_t>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::Int6<X>>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::Int6<X>>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::Int6<X>>::Ptr(new S(Serialisable<int64_t>::serialiser(sf)));
+        return typename Serialiser<ADL::test7::Int6<X>>::Ptr(new S(Serialisable<int64_t>::serialiser(sf)));
     }
 };
 
 template <class T>
-struct Serialisable<ADL::test::Point<T>>
+struct Serialisable<ADL::test7::Point<T>>
 {
-    static typename Serialiser<ADL::test::Point<T>>::Ptr serialiser(const SerialiserFlags &);
+    static typename Serialiser<ADL::test7::Point<T>>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>
-typename Serialiser<ADL::test::Point<T>>::Ptr
-Serialisable<ADL::test::Point<T>>::serialiser( const SerialiserFlags &sf )
+typename Serialiser<ADL::test7::Point<T>>::Ptr
+Serialisable<ADL::test7::Point<T>>::serialiser( const SerialiserFlags &sf )
 {
-    typedef ADL::test::Point<T> _T;
+    typedef ADL::test7::Point<T> _T;
     
     struct S_ : public Serialiser<_T>
     {
@@ -379,18 +379,18 @@ Serialisable<ADL::test::Point<T>>::serialiser( const SerialiserFlags &sf )
 };
 
 template <>
-struct Serialisable<ADL::test::String2>
+struct Serialisable<ADL::test7::String2>
 {
-    struct S : public Serialiser<ADL::test::String2>
+    struct S : public Serialiser<ADL::test7::String2>
     {
         S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::String2 & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::String2 & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::String2 &v, JsonReader &json ) const
+        void fromJson( ADL::test7::String2 &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -398,25 +398,25 @@ struct Serialisable<ADL::test::String2>
         typename Serialiser<std::string>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::String2>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::String2>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::String2>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
+        return typename Serialiser<ADL::test7::String2>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
 };
 
 template <>
-struct Serialisable<ADL::test::String3>
+struct Serialisable<ADL::test7::String3>
 {
-    struct S : public Serialiser<ADL::test::String3>
+    struct S : public Serialiser<ADL::test7::String3>
     {
         S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::String3 & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::String3 & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::String3 &v, JsonReader &json ) const
+        void fromJson( ADL::test7::String3 &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -424,25 +424,25 @@ struct Serialisable<ADL::test::String3>
         typename Serialiser<std::string>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::String3>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::String3>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::String3>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
+        return typename Serialiser<ADL::test7::String3>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
 };
 
 template <class X>
-struct Serialisable<ADL::test::String5<X>>
+struct Serialisable<ADL::test7::String5<X>>
 {
-    struct S : public Serialiser<ADL::test::String5<X>>
+    struct S : public Serialiser<ADL::test7::String5<X>>
     {
         S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::String5<X> & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::String5<X> & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::String5<X> &v, JsonReader &json ) const
+        void fromJson( ADL::test7::String5<X> &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -450,25 +450,25 @@ struct Serialisable<ADL::test::String5<X>>
         typename Serialiser<std::string>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::String5<X>>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::String5<X>>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::String5<X>>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
+        return typename Serialiser<ADL::test7::String5<X>>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
 };
 
 template <class X>
-struct Serialisable<ADL::test::String6<X>>
+struct Serialisable<ADL::test7::String6<X>>
 {
-    struct S : public Serialiser<ADL::test::String6<X>>
+    struct S : public Serialiser<ADL::test7::String6<X>>
     {
         S( typename Serialiser<std::string>::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::String6<X> & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::String6<X> & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::String6<X> &v, JsonReader &json ) const
+        void fromJson( ADL::test7::String6<X> &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
@@ -476,89 +476,89 @@ struct Serialisable<ADL::test::String6<X>>
         typename Serialiser<std::string>::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::String6<X>>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::String6<X>>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::String6<X>>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
+        return typename Serialiser<ADL::test7::String6<X>>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
 };
 
 template <>
-struct Serialisable<ADL::test::IntPoint2>
+struct Serialisable<ADL::test7::IntPoint2>
 {
-    struct S : public Serialiser<ADL::test::IntPoint2>
+    struct S : public Serialiser<ADL::test7::IntPoint2>
     {
-        S( typename Serialiser<ADL::test::Point<int64_t> >::Ptr s_ ) : s(s_) {}
+        S( typename Serialiser<ADL::test7::Point<int64_t> >::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::IntPoint2 & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::IntPoint2 & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::IntPoint2 &v, JsonReader &json ) const
+        void fromJson( ADL::test7::IntPoint2 &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
         
-        typename Serialiser<ADL::test::Point<int64_t> >::Ptr s;
+        typename Serialiser<ADL::test7::Point<int64_t> >::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::IntPoint2>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::IntPoint2>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::IntPoint2>::Ptr(new S(Serialisable<ADL::test::Point<int64_t> >::serialiser(sf)));
+        return typename Serialiser<ADL::test7::IntPoint2>::Ptr(new S(Serialisable<ADL::test7::Point<int64_t> >::serialiser(sf)));
     }
 };
 
 template <>
-struct Serialisable<ADL::test::IntPoint3>
+struct Serialisable<ADL::test7::IntPoint3>
 {
-    struct S : public Serialiser<ADL::test::IntPoint3>
+    struct S : public Serialiser<ADL::test7::IntPoint3>
     {
-        S( typename Serialiser<ADL::test::Point<int64_t> >::Ptr s_ ) : s(s_) {}
+        S( typename Serialiser<ADL::test7::Point<int64_t> >::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::IntPoint3 & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::IntPoint3 & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::IntPoint3 &v, JsonReader &json ) const
+        void fromJson( ADL::test7::IntPoint3 &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
         
-        typename Serialiser<ADL::test::Point<int64_t> >::Ptr s;
+        typename Serialiser<ADL::test7::Point<int64_t> >::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::IntPoint3>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::IntPoint3>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::IntPoint3>::Ptr(new S(Serialisable<ADL::test::Point<int64_t> >::serialiser(sf)));
+        return typename Serialiser<ADL::test7::IntPoint3>::Ptr(new S(Serialisable<ADL::test7::Point<int64_t> >::serialiser(sf)));
     }
 };
 
 template <class X>
-struct Serialisable<ADL::test::Point2<X>>
+struct Serialisable<ADL::test7::Point2<X>>
 {
-    struct S : public Serialiser<ADL::test::Point2<X>>
+    struct S : public Serialiser<ADL::test7::Point2<X>>
     {
-        S( typename Serialiser<ADL::test::Point<X> >::Ptr s_ ) : s(s_) {}
+        S( typename Serialiser<ADL::test7::Point<X> >::Ptr s_ ) : s(s_) {}
         
-        void toJson( JsonWriter &json, const ADL::test::Point2<X> & v ) const
+        void toJson( JsonWriter &json, const ADL::test7::Point2<X> & v ) const
         {
             s->toJson( json, v.value );
         }
         
-        void fromJson( ADL::test::Point2<X> &v, JsonReader &json ) const
+        void fromJson( ADL::test7::Point2<X> &v, JsonReader &json ) const
         {
             s->fromJson( v.value, json );
         }
         
-        typename Serialiser<ADL::test::Point<X> >::Ptr s;
+        typename Serialiser<ADL::test7::Point<X> >::Ptr s;
     };
     
-    static typename Serialiser<ADL::test::Point2<X>>::Ptr serialiser(const SerialiserFlags &sf)
+    static typename Serialiser<ADL::test7::Point2<X>>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        return typename Serialiser<ADL::test::Point2<X>>::Ptr(new S(Serialisable<ADL::test::Point<X> >::serialiser(sf)));
+        return typename Serialiser<ADL::test7::Point2<X>>::Ptr(new S(Serialisable<ADL::test7::Point<X> >::serialiser(sf)));
     }
 };
 
 }; // ADL
-#endif // TEST_H
+#endif // TEST7_H
