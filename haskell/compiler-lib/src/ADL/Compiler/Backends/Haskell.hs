@@ -204,7 +204,7 @@ hPrimitiveLiteral P_Float (JS.Number n) = return (litNumber n)
 hPrimitiveLiteral P_Double (JS.Number n) = return (litNumber n)
 hPrimitiveLiteral P_Json js = do
   importQualifiedModule (HaskellModule "Data.Maybe")
-  return (template "Data.Maybe.fromJust (JS.decode $1)" [T.pack (show (JS.encode js))])
+  return (template "(Data.Maybe.fromJust (JS.decode $1))" [T.pack (show (JS.encode js))])
 hPrimitiveLiteral P_ByteVector (JS.String s) = return (T.pack (show (decode s)))
   where
     decode s = case B64.decode (T.encodeUtf8 s) of

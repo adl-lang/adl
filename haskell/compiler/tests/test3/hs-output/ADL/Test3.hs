@@ -122,7 +122,7 @@ data S t = S
     deriving (Prelude.Eq,Prelude.Show)
 
 mkS :: t -> S t
-mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.False) (U_f_int 45) U_f_void E_v2 f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)]) Data.Maybe.fromJust (JS.decode "null") Data.Maybe.fromJust (JS.decode "[{\"v1\":27,\"v2\":\"abcde\"},true]")
+mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.False) (U_f_int 45) U_f_void E_v2 f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)]) (Data.Maybe.fromJust (JS.decode "null")) (Data.Maybe.fromJust (JS.decode "[{\"v1\":27,\"v2\":\"abcde\"},true]"))
 
 instance (AdlValue t) => AdlValue (S t) where
     atype _ = T.concat
@@ -180,8 +180,8 @@ instance (AdlValue t) => AdlValue (S t) where
         <*> parseField "f_t"
         <*> parseFieldDef "f_bint16" (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5))
         <*> parseFieldDef "f_smap" (stringMapFromList [("a", 45), ("b", 47)])
-        <*> parseFieldDef "f_json1" Data.Maybe.fromJust (JS.decode "null")
-        <*> parseFieldDef "f_json2" Data.Maybe.fromJust (JS.decode "[{\"v1\":27,\"v2\":\"abcde\"},true]")
+        <*> parseFieldDef "f_json1" (Data.Maybe.fromJust (JS.decode "null"))
+        <*> parseFieldDef "f_json2" (Data.Maybe.fromJust (JS.decode "[{\"v1\":27,\"v2\":\"abcde\"},true]"))
 
 data U
     = U_f_int Data.Int.Int16
