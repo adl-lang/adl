@@ -60,7 +60,7 @@ public class Translated<T> {
     if (!(other0 instanceof Translated)) {
       return false;
     }
-    Translated other = (Translated) other0;
+    Translated<?> other = (Translated<?>) other0;
     return
       xoffset == other.xoffset &&
       yoffset == other.yoffset &&

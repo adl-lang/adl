@@ -610,6 +610,9 @@ withTypeArgs :: T.Text -> [T.Text] -> T.Text
 withTypeArgs ts [] = ts
 withTypeArgs ts tsargs = template "$1<$2>" [ts,T.intercalate ", " tsargs]
 
+withUnboundedTypeArgs :: T.Text -> [a] -> T.Text
+withUnboundedTypeArgs ts tsargs = withTypeArgs ts (replicate (length tsargs) "?")
+
 withParams :: T.Text -> [T.Text] -> T.Text
 withParams v [] = v
 withParams f args = template "$1($2)" [f,T.intercalate ", " args]

@@ -83,7 +83,7 @@ public class Error<T> {
     if (!(other0 instanceof Error)) {
       return false;
     }
-    Error other = (Error) other0;
+    Error<?> other = (Error<?>) other0;
     return disc == other.disc && value.equals(other.value);
   }
 

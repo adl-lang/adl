@@ -50,7 +50,7 @@ public class S4<T> {
     if (!(other0 instanceof S4)) {
       return false;
     }
-    S4 other = (S4) other0;
+    S4<?> other = (S4<?>) other0;
     return
       f1.equals(other.f1) &&
       f2.equals(other.f2);

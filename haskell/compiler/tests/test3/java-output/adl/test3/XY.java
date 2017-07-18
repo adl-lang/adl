@@ -49,7 +49,7 @@ public class XY<T> {
     if (!(other0 instanceof XY)) {
       return false;
     }
-    XY other = (XY) other0;
+    XY<?> other = (XY<?>) other0;
     return
       x.equals(other.x) &&
       y.equals(other.y);

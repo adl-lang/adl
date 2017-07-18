@@ -71,7 +71,7 @@ public class B<T> {
     if (!(other0 instanceof B)) {
       return false;
     }
-    B other = (B) other0;
+    B<?> other = (B<?>) other0;
     return
       f_t.equals(other.f_t) &&
       f_string.equals(other.f_string) &&

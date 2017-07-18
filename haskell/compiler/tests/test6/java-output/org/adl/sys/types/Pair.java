@@ -49,7 +49,7 @@ public class Pair<T1, T2> {
     if (!(other0 instanceof Pair)) {
       return false;
     }
-    Pair other = (Pair) other0;
+    Pair<?, ?> other = (Pair<?, ?>) other0;
     return
       v1.equals(other.v1) &&
       v2.equals(other.v2);

@@ -51,7 +51,7 @@ public class Tree<T> {
     if (!(other0 instanceof Tree)) {
       return false;
     }
-    Tree other = (Tree) other0;
+    Tree<?> other = (Tree<?>) other0;
     return
       value.equals(other.value) &&
       children.equals(other.children);

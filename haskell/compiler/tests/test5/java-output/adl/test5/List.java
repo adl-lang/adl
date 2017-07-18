@@ -76,7 +76,7 @@ public class List<T> {
     if (!(other0 instanceof List)) {
       return false;
     }
-    List other = (List) other0;
+    List<?> other = (List<?>) other0;
     switch (disc) {
       case NULL_:
         return disc == other.disc;

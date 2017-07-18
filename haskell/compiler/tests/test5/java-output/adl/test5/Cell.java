@@ -49,7 +49,7 @@ public class Cell<T> {
     if (!(other0 instanceof Cell)) {
       return false;
     }
-    Cell other = (Cell) other0;
+    Cell<?> other = (Cell<?>) other0;
     return
       head.equals(other.head) &&
       tail.equals(other.tail);

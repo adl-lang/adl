@@ -74,7 +74,7 @@ public class S3<T> {
     if (!(other0 instanceof S3)) {
       return false;
     }
-    S3 other = (S3) other0;
+    S3<?> other = (S3<?>) other0;
     return
       f1.equals(other.f1) &&
       f2 == other.f2 &&

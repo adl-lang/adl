@@ -274,7 +274,7 @@ public class S<T> {
     if (!(other0 instanceof S)) {
       return false;
     }
-    S other = (S) other0;
+    S<?> other = (S<?>) other0;
     return
       true &&
       f_bool == other.f_bool &&

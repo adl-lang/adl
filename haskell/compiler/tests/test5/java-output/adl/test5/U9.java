@@ -83,7 +83,7 @@ public class U9<T> {
     if (!(other0 instanceof U9)) {
       return false;
     }
-    U9 other = (U9) other0;
+    U9<?> other = (U9<?>) other0;
     return disc == other.disc && value.equals(other.value);
   }
 

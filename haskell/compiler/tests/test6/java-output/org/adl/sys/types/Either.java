@@ -82,7 +82,7 @@ public class Either<T1, T2> {
     if (!(other0 instanceof Either)) {
       return false;
     }
-    Either other = (Either) other0;
+    Either<?, ?> other = (Either<?, ?>) other0;
     return disc == other.disc && value.equals(other.value);
   }
 

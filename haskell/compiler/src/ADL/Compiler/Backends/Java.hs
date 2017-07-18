@@ -243,7 +243,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
               cline "return false;"
               )
             <>
-            ctemplate "$1 other = ($1) other0;" [className]
+            ctemplate "$1 other = ($1) other0;" [withUnboundedTypeArgs className (s_typeParams struct)]
             <>
             cline "return"
             <>
@@ -470,7 +470,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
           cline "return false;"
           )
         <>
-        ctemplate "$1 other = ($1) other0;" [className]
+        ctemplate "$1 other = ($1) other0;" [withUnboundedTypeArgs className (u_typeParams union)]
         <>
         case unionType of
           NoVoids -> ctemplate "return $1 == other.$1 && $2.equals(other.$2);" [discVar,valueVar]
