@@ -158,9 +158,12 @@ public class Picture {
   /* Factory for construction of generic values */
 
   public static final Factory<Picture> FACTORY = new Factory<Picture>() {
+    @Override
     public Picture create() {
       return new Picture();
     }
+
+    @Override
     public Picture create(Picture other) {
       return new Picture(other);
     }
@@ -180,6 +183,7 @@ public class Picture {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Picture _value) {
         switch (_value.getDisc()) {
           case CIRCLE:
@@ -194,6 +198,7 @@ public class Picture {
         return null;
       }
 
+      @Override
       public Picture fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("circle")) {

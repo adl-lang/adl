@@ -71,6 +71,7 @@ public class S4<T> {
       final Lazy<Factory<S3<String>>> f1 = new Lazy<>(() -> S3.factory(Factories.STRING));
       final Lazy<Factory<S3<T>>> f2 = new Lazy<>(() -> S3.factory(factoryT));
 
+      @Override
       public S4<T> create() {
         return new S4<T>(
           f1.get().create(),
@@ -78,6 +79,7 @@ public class S4<T> {
           );
       }
 
+      @Override
       public S4<T> create(S4<T> other) {
         return new S4<T>(
           f1.get().create(other.getF1()),
@@ -100,6 +102,7 @@ public class S4<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(S4<T> _value) {
         JsonObject _result = new JsonObject();
         _result.add("f1", f1.get().toJson(_value.f1));
@@ -107,6 +110,7 @@ public class S4<T> {
         return _result;
       }
 
+      @Override
       public S4<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S4<T>(

@@ -227,9 +227,12 @@ public class S {
   /* Factory for construction of generic values */
 
   public static final Factory<S> FACTORY = new Factory<S>() {
+    @Override
     public S create() {
       return new S();
     }
+
+    @Override
     public S create(S other) {
       return new S(other);
     }
@@ -257,6 +260,7 @@ public class S {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(S _value) {
         JsonObject _result = new JsonObject();
         _result.add("v1", v1.get().toJson(_value.v1));
@@ -274,6 +278,7 @@ public class S {
         return _result;
       }
 
+      @Override
       public S fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S(

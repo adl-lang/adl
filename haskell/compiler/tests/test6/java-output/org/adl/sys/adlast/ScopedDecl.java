@@ -77,9 +77,12 @@ public class ScopedDecl {
   /* Factory for construction of generic values */
 
   public static final Factory<ScopedDecl> FACTORY = new Factory<ScopedDecl>() {
+    @Override
     public ScopedDecl create() {
       return new ScopedDecl();
     }
+
+    @Override
     public ScopedDecl create(ScopedDecl other) {
       return new ScopedDecl(other);
     }
@@ -97,6 +100,7 @@ public class ScopedDecl {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(ScopedDecl _value) {
         JsonObject _result = new JsonObject();
         _result.add("moduleName", moduleName.get().toJson(_value.moduleName));
@@ -104,6 +108,7 @@ public class ScopedDecl {
         return _result;
       }
 
+      @Override
       public ScopedDecl fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new ScopedDecl(

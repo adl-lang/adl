@@ -104,10 +104,12 @@ public class U9<T> {
       final Lazy<Factory<T>> v1 = new Lazy<>(() -> factoryT);
       final Lazy<Factory<Short>> v2 = new Lazy<>(() -> Factories.SHORT);
 
+      @Override
       public U9<T> create() {
         return new U9<T>(Disc.V1,v1.get().create());
       }
 
+      @Override
       public U9<T> create(U9<T> other) {
         switch (other.disc) {
           case V1:
@@ -133,6 +135,7 @@ public class U9<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(U9<T> _value) {
         switch (_value.getDisc()) {
           case V1:
@@ -143,6 +146,7 @@ public class U9<T> {
         return null;
       }
 
+      @Override
       public U9<T> fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("v1")) {

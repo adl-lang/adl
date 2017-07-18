@@ -98,6 +98,7 @@ public class B<T> {
       final Lazy<Factory<ArrayList<T>>> f_tvec = new Lazy<>(() -> Factories.arrayList(factoryT));
       final Lazy<Factory<XY<T>>> f_xy = new Lazy<>(() -> XY.factory(factoryT));
 
+      @Override
       public B<T> create() {
         return new B<T>(
           f_t.get().create(),
@@ -107,6 +108,7 @@ public class B<T> {
           );
       }
 
+      @Override
       public B<T> create(B<T> other) {
         return new B<T>(
           f_t.get().create(other.getF_t()),
@@ -133,6 +135,7 @@ public class B<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(B<T> _value) {
         JsonObject _result = new JsonObject();
         _result.add("f_t", f_t.get().toJson(_value.f_t));
@@ -142,6 +145,7 @@ public class B<T> {
         return _result;
       }
 
+      @Override
       public B<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new B<T>(

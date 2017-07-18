@@ -112,9 +112,12 @@ public class Import {
   /* Factory for construction of generic values */
 
   public static final Factory<Import> FACTORY = new Factory<Import>() {
+    @Override
     public Import create() {
       return new Import();
     }
+
+    @Override
     public Import create(Import other) {
       return new Import(other);
     }
@@ -132,6 +135,7 @@ public class Import {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Import _value) {
         switch (_value.getDisc()) {
           case MODULENAME:
@@ -142,6 +146,7 @@ public class Import {
         return null;
       }
 
+      @Override
       public Import fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("moduleName")) {

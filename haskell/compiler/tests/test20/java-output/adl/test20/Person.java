@@ -105,9 +105,12 @@ public class Person {
   /* Factory for construction of generic values */
 
   public static final Factory<Person> FACTORY = new Factory<Person>() {
+    @Override
     public Person create() {
       return new Person();
     }
+
+    @Override
     public Person create(Person other) {
       return new Person(other);
     }
@@ -127,6 +130,7 @@ public class Person {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Person _value) {
         JsonObject _result = new JsonObject();
         _result.add("fn", firstName.get().toJson(_value.firstName));
@@ -136,6 +140,7 @@ public class Person {
         return _result;
       }
 
+      @Override
       public Person fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Person(

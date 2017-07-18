@@ -70,6 +70,7 @@ public class Cell<T> {
       final Lazy<Factory<T>> head = new Lazy<>(() -> factoryT);
       final Lazy<Factory<List<T>>> tail = new Lazy<>(() -> List.factory(factoryT));
 
+      @Override
       public Cell<T> create() {
         return new Cell<T>(
           head.get().create(),
@@ -77,6 +78,7 @@ public class Cell<T> {
           );
       }
 
+      @Override
       public Cell<T> create(Cell<T> other) {
         return new Cell<T>(
           head.get().create(other.getHead()),
@@ -99,6 +101,7 @@ public class Cell<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Cell<T> _value) {
         JsonObject _result = new JsonObject();
         _result.add("head", head.get().toJson(_value.head));
@@ -106,6 +109,7 @@ public class Cell<T> {
         return _result;
       }
 
+      @Override
       public Cell<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Cell<T>(

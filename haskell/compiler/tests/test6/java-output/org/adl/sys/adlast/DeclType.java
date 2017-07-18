@@ -151,9 +151,12 @@ public class DeclType {
   /* Factory for construction of generic values */
 
   public static final Factory<DeclType> FACTORY = new Factory<DeclType>() {
+    @Override
     public DeclType create() {
       return new DeclType();
     }
+
+    @Override
     public DeclType create(DeclType other) {
       return new DeclType(other);
     }
@@ -173,6 +176,7 @@ public class DeclType {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(DeclType _value) {
         switch (_value.getDisc()) {
           case STRUCT_:
@@ -187,6 +191,7 @@ public class DeclType {
         return null;
       }
 
+      @Override
       public DeclType fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("struct_")) {

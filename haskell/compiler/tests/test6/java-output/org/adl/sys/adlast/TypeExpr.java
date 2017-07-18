@@ -78,9 +78,12 @@ public class TypeExpr {
   /* Factory for construction of generic values */
 
   public static final Factory<TypeExpr> FACTORY = new Factory<TypeExpr>() {
+    @Override
     public TypeExpr create() {
       return new TypeExpr();
     }
+
+    @Override
     public TypeExpr create(TypeExpr other) {
       return new TypeExpr(other);
     }
@@ -98,6 +101,7 @@ public class TypeExpr {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(TypeExpr _value) {
         JsonObject _result = new JsonObject();
         _result.add("typeRef", typeRef.get().toJson(_value.typeRef));
@@ -105,6 +109,7 @@ public class TypeExpr {
         return _result;
       }
 
+      @Override
       public TypeExpr fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new TypeExpr(

@@ -245,9 +245,12 @@ public class Literal {
   /* Factory for construction of generic values */
 
   public static final Factory<Literal> FACTORY = new Factory<Literal>() {
+    @Override
     public Literal create() {
       return new Literal();
     }
+
+    @Override
     public Literal create(Literal other) {
       return new Literal(other);
     }
@@ -270,6 +273,7 @@ public class Literal {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Literal _value) {
         switch (_value.getDisc()) {
           case NULL_:
@@ -290,6 +294,7 @@ public class Literal {
         return null;
       }
 
+      @Override
       public Literal fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("null")) {

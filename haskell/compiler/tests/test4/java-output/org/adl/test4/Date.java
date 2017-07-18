@@ -62,9 +62,12 @@ public class Date {
   /* Factory for construction of generic values */
 
   public static final Factory<Date> FACTORY = new Factory<Date>() {
+    @Override
     public Date create() {
       return new Date();
     }
+
+    @Override
     public Date create(Date other) {
       return new Date(other);
     }
@@ -81,10 +84,12 @@ public class Date {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Date _value) {
         return _binding.toJson(_value.value);
       }
 
+      @Override
       public Date fromJson(JsonElement _json) {
         return new Date(_binding.fromJson(_json));
       }

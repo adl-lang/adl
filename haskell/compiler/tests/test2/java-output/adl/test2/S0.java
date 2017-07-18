@@ -40,9 +40,12 @@ public class S0 {
   /* Factory for construction of generic values */
 
   public static final Factory<S0> FACTORY = new Factory<S0>() {
+    @Override
     public S0 create() {
       return new S0();
     }
+
+    @Override
     public S0 create(S0 other) {
       return new S0(other);
     }
@@ -58,11 +61,13 @@ public class S0 {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(S0 _value) {
         JsonObject _result = new JsonObject();
         return _result;
       }
 
+      @Override
       public S0 fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S0(

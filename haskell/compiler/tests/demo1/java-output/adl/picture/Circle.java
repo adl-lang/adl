@@ -63,9 +63,12 @@ public class Circle {
   /* Factory for construction of generic values */
 
   public static final Factory<Circle> FACTORY = new Factory<Circle>() {
+    @Override
     public Circle create() {
       return new Circle();
     }
+
+    @Override
     public Circle create(Circle other) {
       return new Circle(other);
     }
@@ -82,12 +85,14 @@ public class Circle {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Circle _value) {
         JsonObject _result = new JsonObject();
         _result.add("radius", radius.get().toJson(_value.radius));
         return _result;
       }
 
+      @Override
       public Circle fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Circle(

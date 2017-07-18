@@ -78,9 +78,12 @@ public class TypeDef {
   /* Factory for construction of generic values */
 
   public static final Factory<TypeDef> FACTORY = new Factory<TypeDef>() {
+    @Override
     public TypeDef create() {
       return new TypeDef();
     }
+
+    @Override
     public TypeDef create(TypeDef other) {
       return new TypeDef(other);
     }
@@ -98,6 +101,7 @@ public class TypeDef {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(TypeDef _value) {
         JsonObject _result = new JsonObject();
         _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
@@ -105,6 +109,7 @@ public class TypeDef {
         return _result;
       }
 
+      @Override
       public TypeDef fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new TypeDef(

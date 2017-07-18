@@ -141,9 +141,12 @@ public class U {
   /* Factory for construction of generic values */
 
   public static final Factory<U> FACTORY = new Factory<U>() {
+    @Override
     public U create() {
       return new U();
     }
+
+    @Override
     public U create(U other) {
       return new U(other);
     }
@@ -162,6 +165,7 @@ public class U {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(U _value) {
         switch (_value.getDisc()) {
           case F_INT:
@@ -174,6 +178,7 @@ public class U {
         return null;
       }
 
+      @Override
       public U fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("f_int")) {

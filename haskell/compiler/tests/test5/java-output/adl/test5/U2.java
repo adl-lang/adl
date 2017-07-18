@@ -92,9 +92,12 @@ public class U2 {
   /* Factory for construction of generic values */
 
   public static final Factory<U2> FACTORY = new Factory<U2>() {
+    @Override
     public U2 create() {
       return new U2();
     }
+
+    @Override
     public U2 create(U2 other) {
       return new U2(other);
     }
@@ -111,6 +114,7 @@ public class U2 {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(U2 _value) {
         switch (_value.getDisc()) {
           case V:
@@ -119,6 +123,7 @@ public class U2 {
         return null;
       }
 
+      @Override
       public U2 fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("v")) {

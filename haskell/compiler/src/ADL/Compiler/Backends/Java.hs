@@ -73,7 +73,7 @@ generateModule jf fileWriter mCodeGetProfile m0 = do
       javaPackageFn mn = jf_package jf <> JavaPackage (unModuleName mn)
 
   checkCustomSerializations m
-  
+
   imports <- for decls $ \decl -> do
     let codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
         maxLineLength = cgp_maxLineLength codeProfile
@@ -104,7 +104,7 @@ generateStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) ->
 generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen state0
   where
     className = unreserveWord (d_name decl)
-    state0 = classFile codeProfile moduleName javaPackageFn classDecl 
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl
     isEmpty = null (s_fields struct)
     classDecl = "public class " <> className <> typeArgs
     typeArgs = case s_typeParams struct of
@@ -125,10 +125,10 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
 
 generateNewtype :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Newtype CResolvedType -> ClassFile
 generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState gen state0
-  where 
+  where
     className = unreserveWord (d_name decl)
     classDecl = "public class " <> className <> typeArgs
-    state0 = classFile codeProfile moduleName javaPackageFn classDecl 
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl
     typeArgs = case s_typeParams struct of
       [] -> ""
       args -> "<" <> commaSep (map unreserveWord args) <> ">"
@@ -164,7 +164,7 @@ generateCoreStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage
 generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails =  gen
   where
     className = unreserveWord (d_name decl)
-    state0 = classFile codeProfile moduleName javaPackageFn classDecl 
+    state0 = classFile codeProfile moduleName javaPackageFn classDecl
     isEmpty = null (s_fields struct)
     classDecl = "public class " <> className <> typeArgs
     typeArgs = case s_typeParams struct of
@@ -176,7 +176,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       preventImport className
       for_ fieldDetails (\fd -> preventImport (fd_memberVarName fd))
       for_ fieldDetails (\fd -> preventImport (fd_varName fd))
-      
+
       objectsClass <- addImport "java.util.Objects"
 
       -- Fields
@@ -190,7 +190,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       -- Constructors
       let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_varName fd | fd <- fieldDetails]
           isGeneric = length (s_typeParams struct) > 0
-          
+
           ctor1 =
             cblock (template "public $1($2)" [className,ctorArgs]) (
               clineN [
@@ -219,7 +219,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
 
       -- Getters/Setters
       when (not isEmpty) (addMethod (cline "/* Accessors and mutators */"))
-      
+
       when (not (cgp_publicMembers codeProfile)) $ do
         for_ fieldDetails $ \fd -> do
           let getter =
@@ -270,11 +270,13 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       -- factory
       let factory =
             cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (
-              cblock (template "public $1 create()" [className]) (
+              coverride (template "public $1 create()" [className]) (
                  ctemplate "return new $1();" [className]
               )
               <>
-              cblock (template "public $1 create($1 other)" [className]) (
+              cline ""
+              <>
+              coverride (template "public $1 create($1 other)" [className]) (
                  ctemplate "return new $1(other);" [className]
               )
             )
@@ -288,7 +290,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
                 <>
                 cline ""
                 <>
-                cblock (template "public $1$2 create()" [className,typeArgs]) (
+                coverride (template "public $1$2 create()" [className,typeArgs]) (
                    ctemplate "return new $1$2(" [className,typeArgs]
                    <>
                    indent (clineN (addTerminators "," "," ""  ctor1Args) <> cline ");")
@@ -296,7 +298,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
                 <>
                 cline ""
                 <>
-                cblock (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
+                coverride (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
                    ctemplate "return new $1$2(" [className,typeArgs]
                    <>
                    indent (clineN (addTerminators "," "," ""  ctor2Args) <> cline ");")
@@ -345,7 +347,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
     unionType = if and voidTypes then AllVoids else if or voidTypes then Mixed else NoVoids
       where
         voidTypes = [isVoidType (f_type f) | f <- u_fields union]
-    
+
     gen = do
       setDocString (generateDocString (d_annotations decl))
       fieldDetails <- mapM genFieldDetails (u_fields union)
@@ -358,7 +360,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       for_ fieldDetails (\fd -> preventImport (fd_varName fd))
       preventImport discVar
       preventImport valueVar
-        
+
       objectsClass <- addImport "java.util.Objects"
 
       -- Fields
@@ -379,7 +381,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
 
       -- constructors
       addMethod (cline "/* Constructors */")
-      
+
       for_ fieldDetails $ \fd -> do
         let checkedv = if needsNullCheck fd then template "$1.requireNonNull(v)" [objectsClass] else "v"
             ctor = cblock (template "public static$1 $2$3 $4($5 v)" [leadSpace typeArgs, className, typeArgs, fd_unionCtorName fd, fd_typeExprStr fd]) (
@@ -445,7 +447,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       -- mutators
       addMethod (cline "/* Mutators */")
 
-      when (cgp_mutable codeProfile) $ do 
+      when (cgp_mutable codeProfile) $ do
         for_ fieldDetails $ \fd -> do
           let checkedv = if needsNullCheck fd then template "$1.requireNonNull(v)" [objectsClass] else "v"
               mtor = cblock (template "public void set$1($2 v)" [javaCapsFieldName (fd_field fd), fd_typeExprStr fd]) (
@@ -486,7 +488,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                 | fd <- fieldDetails]
             )
             <>
-            cline "throw new IllegalStateException();" 
+            cline "throw new IllegalStateException();"
        )
 
       addMethod $ coverride "public int hashCode()" (
@@ -521,14 +523,16 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
 
       -- factory
       factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
-      
+
       let factory =
             cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (
-              cblock (template "public $1 create()" [className]) (
+              coverride (template "public $1 create()" [className]) (
                  ctemplate "return new $1();" [className]
               )
               <>
-              cblock (template "public $1 create($1 other)" [className]) (
+              cline ""
+              <>
+              coverride (template "public $1 create($1 other)" [className]) (
                  ctemplate "return new $1(other);" [className]
               )
             )
@@ -541,7 +545,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                 <>
                 cline ""
                 <>
-                cblock (template "public $1$2 create()" [className,typeArgs]) (
+                coverride (template "public $1$2 create()" [className,typeArgs]) (
                   let val = case f_default (fd_field fieldDetail0) of
                         Nothing -> template "$1.get().create()" [fd_varName fieldDetail0]
                         (Just _) -> fd_defValue fieldDetail0
@@ -550,7 +554,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                 <>
                 cline ""
                 <>
-                cblock (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
+                coverride (template "public $1$2 create($1$2 other)" [className,typeArgs]) (
                   cblock (template "switch (other.$1)" [discVar]) (
                     mconcat [
                       ctemplate "case $1:" [discriminatorName fd]
@@ -568,7 +572,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                       | fd <- fieldDetails]
                     )
                   <>
-                  cline "throw new IllegalArgumentException();" 
+                  cline "throw new IllegalArgumentException();"
                   )
                 )
               )
@@ -605,7 +609,7 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
         [] -> error "BUG: unions with no fields are illegal"
         (fd:_) -> return fd
       factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
-      
+
       let terminators = replicate (length fieldDetails-1) "," <> [";"]
       mapM_ addField [ctemplate "$1$2" [discriminatorName fd,term] | (fd,term) <- zip fieldDetails terminators]
 
@@ -615,7 +619,7 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
            )
         <> cline "throw new IllegalArgumentException();"
         )
-    
+
       addMethod $ cblock (template "public static $1 fromString(String s)" [className]) (
         mconcat [cblock (template "if (s.equals(\"$1\"))" [fd_serializedName fd]) (
                     ctemplate "return $1;" [discriminatorName fd]
@@ -625,11 +629,11 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
         )
 
       addMethod $ cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface])
-        (  cblock (template "public $1 create()" [className])
+        ( coverride (template "public $1 create()" [className])
             ( ctemplate "return $1;" [discriminatorName fieldDetail0]
             )
         <> cline ""
-        <> cblock (template "public $1 create($1 other)" [className])
+        <> coverride (template "public $1 create($1 other)" [className])
             ( cline "return other;"
             )
         )
@@ -653,7 +657,7 @@ generateRuntime jf fileWriter imports = do
                   then Set.fromList
                     [ javaClass rtpackage "JsonParseException"
                     , javaClass rtpackage "JsonHelpers"
-                    ]      
+                    ]
                   else mempty
                )
             <> (Set.fromList
@@ -668,11 +672,10 @@ generateRuntime jf fileWriter imports = do
   where
     runtimedir =  javaRuntimeDir (jf_libDir jf)
     rtpackage = cgp_runtimePackage (jf_codeGenProfile jf)
-    
+
     adjustContent :: LBS.ByteString -> LBS.ByteString
     adjustContent origLBS = LBS.fromStrict (T.encodeUtf8 newT)
       where origT = T.decodeUtf8 (LBS.toStrict origLBS)
             newT = T.replace "org.adl.runtime" (genJavaPackage rtpackage)
                  . T.replace "org.adl.sys" (genJavaPackage (jf_package jf <> javaPackage "sys"))
                  $ origT
-      

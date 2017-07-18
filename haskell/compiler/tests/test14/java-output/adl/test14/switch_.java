@@ -118,9 +118,12 @@ public class switch_ {
   /* Factory for construction of generic values */
 
   public static final Factory<switch_> FACTORY = new Factory<switch_>() {
+    @Override
     public switch_ create() {
       return new switch_();
     }
+
+    @Override
     public switch_ create(switch_ other) {
       return new switch_(other);
     }
@@ -141,6 +144,7 @@ public class switch_ {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(switch_ _value) {
         JsonObject _result = new JsonObject();
         _result.add("double", double_.get().toJson(_value.double_));
@@ -151,6 +155,7 @@ public class switch_ {
         return _result;
       }
 
+      @Override
       public switch_ fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new switch_(

@@ -78,9 +78,12 @@ public class Union {
   /* Factory for construction of generic values */
 
   public static final Factory<Union> FACTORY = new Factory<Union>() {
+    @Override
     public Union create() {
       return new Union();
     }
+
+    @Override
     public Union create(Union other) {
       return new Union(other);
     }
@@ -98,6 +101,7 @@ public class Union {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Union _value) {
         JsonObject _result = new JsonObject();
         _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
@@ -105,6 +109,7 @@ public class Union {
         return _result;
       }
 
+      @Override
       public Union fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Union(

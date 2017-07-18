@@ -91,9 +91,12 @@ public class U7 {
   /* Factory for construction of generic values */
 
   public static final Factory<U7> FACTORY = new Factory<U7>() {
+    @Override
     public U7 create() {
       return new U7();
     }
+
+    @Override
     public U7 create(U7 other) {
       return new U7(other);
     }
@@ -110,6 +113,7 @@ public class U7 {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(U7 _value) {
         switch (_value.getDisc()) {
           case V:
@@ -118,6 +122,7 @@ public class U7 {
         return null;
       }
 
+      @Override
       public U7 fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("v")) {

@@ -94,9 +94,12 @@ public class NewType {
   /* Factory for construction of generic values */
 
   public static final Factory<NewType> FACTORY = new Factory<NewType>() {
+    @Override
     public NewType create() {
       return new NewType();
     }
+
+    @Override
     public NewType create(NewType other) {
       return new NewType(other);
     }
@@ -115,6 +118,7 @@ public class NewType {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(NewType _value) {
         JsonObject _result = new JsonObject();
         _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
@@ -123,6 +127,7 @@ public class NewType {
         return _result;
       }
 
+      @Override
       public NewType fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new NewType(

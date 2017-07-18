@@ -84,6 +84,7 @@ public class Translated<T> {
       final Lazy<Factory<Double>> yoffset = new Lazy<>(() -> Factories.DOUBLE);
       final Lazy<Factory<T>> object = new Lazy<>(() -> factoryT);
 
+      @Override
       public Translated<T> create() {
         return new Translated<T>(
           0,
@@ -92,6 +93,7 @@ public class Translated<T> {
           );
       }
 
+      @Override
       public Translated<T> create(Translated<T> other) {
         return new Translated<T>(
           other.getXoffset(),
@@ -116,6 +118,7 @@ public class Translated<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Translated<T> _value) {
         JsonObject _result = new JsonObject();
         _result.add("xoffset", xoffset.get().toJson(_value.xoffset));
@@ -124,6 +127,7 @@ public class Translated<T> {
         return _result;
       }
 
+      @Override
       public Translated<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Translated<T>(

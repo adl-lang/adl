@@ -61,9 +61,12 @@ public class X {
   /* Factory for construction of generic values */
 
   public static final Factory<X> FACTORY = new Factory<X>() {
+    @Override
     public X create() {
       return new X();
     }
+
+    @Override
     public X create(X other) {
       return new X(other);
     }
@@ -80,10 +83,12 @@ public class X {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(X _value) {
         return _binding.toJson(_value.value);
       }
 
+      @Override
       public X fromJson(JsonElement _json) {
         return new X(_binding.fromJson(_json));
       }

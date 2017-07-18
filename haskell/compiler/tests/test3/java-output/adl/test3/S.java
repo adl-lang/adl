@@ -361,6 +361,7 @@ public class S<T> {
       final Lazy<Factory<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
       final Lazy<Factory<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
 
+      @Override
       public S<T> create() {
         return new S<T>(
           null,
@@ -390,6 +391,7 @@ public class S<T> {
           );
       }
 
+      @Override
       public S<T> create(S<T> other) {
         return new S<T>(
           other.getF_void(),
@@ -456,6 +458,7 @@ public class S<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(S<T> _value) {
         JsonObject _result = new JsonObject();
         _result.add("f_void", f_void.get().toJson(_value.f_void));
@@ -485,6 +488,7 @@ public class S<T> {
         return _result;
       }
 
+      @Override
       public S<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S<T>(

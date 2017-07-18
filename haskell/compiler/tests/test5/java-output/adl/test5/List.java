@@ -109,10 +109,12 @@ public class List<T> {
       final Lazy<Factory<Void>> null_ = new Lazy<>(() -> Factories.VOID);
       final Lazy<Factory<Cell<T>>> cell = new Lazy<>(() -> Cell.factory(factoryT));
 
+      @Override
       public List<T> create() {
         return new List<T>(Disc.NULL_,null_.get().create());
       }
 
+      @Override
       public List<T> create(List<T> other) {
         switch (other.disc) {
           case NULL_:
@@ -138,6 +140,7 @@ public class List<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(List<T> _value) {
         switch (_value.getDisc()) {
           case NULL_:
@@ -148,6 +151,7 @@ public class List<T> {
         return null;
       }
 
+      @Override
       public List<T> fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("null")) {

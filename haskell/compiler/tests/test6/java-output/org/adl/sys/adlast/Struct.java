@@ -78,9 +78,12 @@ public class Struct {
   /* Factory for construction of generic values */
 
   public static final Factory<Struct> FACTORY = new Factory<Struct>() {
+    @Override
     public Struct create() {
       return new Struct();
     }
+
+    @Override
     public Struct create(Struct other) {
       return new Struct(other);
     }
@@ -98,6 +101,7 @@ public class Struct {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Struct _value) {
         JsonObject _result = new JsonObject();
         _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
@@ -105,6 +109,7 @@ public class Struct {
         return _result;
       }
 
+      @Override
       public Struct fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Struct(

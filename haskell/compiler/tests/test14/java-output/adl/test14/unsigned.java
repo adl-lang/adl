@@ -31,10 +31,12 @@ public enum unsigned {
   }
 
   public static final Factory<unsigned> FACTORY = new Factory<unsigned>() {
+    @Override
     public unsigned create() {
       return NULL_;
     }
 
+    @Override
     public unsigned create(unsigned other) {
       return other;
     }
@@ -48,10 +50,12 @@ public enum unsigned {
         return FACTORY;
       }
 
+      @Override
       public JsonElement toJson(unsigned _value) {
         return new JsonPrimitive(_value.toString());
       }
 
+      @Override
       public unsigned fromJson(JsonElement _json) {
         try {
           return fromString(_json.getAsString());

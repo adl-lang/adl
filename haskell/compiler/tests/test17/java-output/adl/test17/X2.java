@@ -218,9 +218,12 @@ public class X2 {
   /* Factory for construction of generic values */
 
   public static final Factory<X2> FACTORY = new Factory<X2>() {
+    @Override
     public X2 create() {
       return new X2();
     }
+
+    @Override
     public X2 create(X2 other) {
       return new X2(other);
     }
@@ -243,6 +246,7 @@ public class X2 {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(X2 _value) {
         switch (_value.getDisc()) {
           case F1:
@@ -263,6 +267,7 @@ public class X2 {
         return null;
       }
 
+      @Override
       public X2 fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("f1")) {

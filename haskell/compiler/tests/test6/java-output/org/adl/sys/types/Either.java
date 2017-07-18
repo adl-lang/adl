@@ -103,10 +103,12 @@ public class Either<T1, T2> {
       final Lazy<Factory<T1>> left = new Lazy<>(() -> factoryT1);
       final Lazy<Factory<T2>> right = new Lazy<>(() -> factoryT2);
 
+      @Override
       public Either<T1, T2> create() {
         return new Either<T1, T2>(Disc.LEFT,left.get().create());
       }
 
+      @Override
       public Either<T1, T2> create(Either<T1, T2> other) {
         switch (other.disc) {
           case LEFT:
@@ -133,6 +135,7 @@ public class Either<T1, T2> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Either<T1, T2> _value) {
         switch (_value.getDisc()) {
           case LEFT:
@@ -143,6 +146,7 @@ public class Either<T1, T2> {
         return null;
       }
 
+      @Override
       public Either<T1, T2> fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("left")) {

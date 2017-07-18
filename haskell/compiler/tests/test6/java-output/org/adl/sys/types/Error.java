@@ -104,10 +104,12 @@ public class Error<T> {
       final Lazy<Factory<T>> value = new Lazy<>(() -> factoryT);
       final Lazy<Factory<String>> error = new Lazy<>(() -> Factories.STRING);
 
+      @Override
       public Error<T> create() {
         return new Error<T>(Disc.VALUE,value.get().create());
       }
 
+      @Override
       public Error<T> create(Error<T> other) {
         switch (other.disc) {
           case VALUE:
@@ -133,6 +135,7 @@ public class Error<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Error<T> _value) {
         switch (_value.getDisc()) {
           case VALUE:
@@ -143,6 +146,7 @@ public class Error<T> {
         return null;
       }
 
+      @Override
       public Error<T> fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("value")) {

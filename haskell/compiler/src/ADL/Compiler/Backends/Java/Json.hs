@@ -62,7 +62,7 @@ generateStructJson cgp decl struct fieldDetails = do
                 <>
                 cline ""
                 <>
-                cblock (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
+                coverride (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
                   ctemplate "$1 _result = new $1();" [jsonObjectI]
                   <>
                   clineN
@@ -74,7 +74,7 @@ generateStructJson cgp decl struct fieldDetails = do
                 <>
                 cline ""
                 <>
-                cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
+                coverride (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
                   ctemplate "$1 _obj = $2.objectFromJson(_json);" [jsonObjectI,jsonBindingsI]
                   <>
                   ( ctemplate "return new $1(" [className]
@@ -137,13 +137,13 @@ generateNewtypeJson cgp decl newtype_ memberVarName = do
                 <>
                 cline ""
                 <>
-                cblock (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
+                coverride (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
                   ctemplate "return _binding.toJson(_value.$1);" [memberVarName]
                   )
                 <>
                 cline ""
                 <>
-                cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
+                coverride (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
                   ctemplate "return new $1(_binding.fromJson(_json));" [className]
                   )
                 )
@@ -196,7 +196,7 @@ generateUnionJson cgp decl union fieldDetails = do
                 <>
                 cline ""
                 <>
-                cblock (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
+                coverride (template "public $1 toJson($2 _value)" [jsonElementI,className]) (
                   cblock "switch (_value.getDisc())" (
                     mconcat [
                        ctemplate "case $1:" [discriminatorName fd]
@@ -216,7 +216,7 @@ generateUnionJson cgp decl union fieldDetails = do
                 <>
                 cline ""
                 <>
-                cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
+                coverride (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
                   ctemplate "String _key = $1.unionNameFromJson(_json);" [jsonBindingsI]
                   <>
                   let returnStatements = [
@@ -261,11 +261,11 @@ generateEnumJson cgp decl union fieldDetails = do
               (  cline "return FACTORY;"
               )
            <> cline ""
-           <> cblock (template "public $1 toJson($2 _value)" [jsonElementI,className])
+           <> coverride (template "public $1 toJson($2 _value)" [jsonElementI,className])
               (  ctemplate "return new $1(_value.toString());" [jsonPrimitiveI]
               )
            <> cline ""
-           <> cblock (template "public $1 fromJson($2 _json)" [className,jsonElementI])
+           <> coverride (template "public $1 fromJson($2 _json)" [className,jsonElementI])
               (  cline "try {"
               <> indent (cline "return fromString(_json.getAsString());")
               <> cline "} catch (IllegalArgumentException e) {"

@@ -109,9 +109,12 @@ public class Decl {
   /* Factory for construction of generic values */
 
   public static final Factory<Decl> FACTORY = new Factory<Decl>() {
+    @Override
     public Decl create() {
       return new Decl();
     }
+
+    @Override
     public Decl create(Decl other) {
       return new Decl(other);
     }
@@ -131,6 +134,7 @@ public class Decl {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Decl _value) {
         JsonObject _result = new JsonObject();
         _result.add("name", name.get().toJson(_value.name));
@@ -140,6 +144,7 @@ public class Decl {
         return _result;
       }
 
+      @Override
       public Decl fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Decl(

@@ -72,6 +72,7 @@ public class Tree<T> {
       final Lazy<Factory<T>> value = new Lazy<>(() -> factoryT);
       final Lazy<Factory<ArrayList<Tree<T>>>> children = new Lazy<>(() -> Factories.arrayList(Tree.factory(factoryT)));
 
+      @Override
       public Tree<T> create() {
         return new Tree<T>(
           value.get().create(),
@@ -79,6 +80,7 @@ public class Tree<T> {
           );
       }
 
+      @Override
       public Tree<T> create(Tree<T> other) {
         return new Tree<T>(
           value.get().create(other.getValue()),
@@ -101,6 +103,7 @@ public class Tree<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Tree<T> _value) {
         JsonObject _result = new JsonObject();
         _result.add("value", value.get().toJson(_value.value));
@@ -108,6 +111,7 @@ public class Tree<T> {
         return _result;
       }
 
+      @Override
       public Tree<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Tree<T>(

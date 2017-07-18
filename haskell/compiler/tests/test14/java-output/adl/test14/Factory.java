@@ -61,9 +61,12 @@ public class Factory {
   /* Factory for construction of generic values */
 
   public static final org.adl.runtime.Factory<Factory> FACTORY = new org.adl.runtime.Factory<Factory>() {
+    @Override
     public Factory create() {
       return new Factory();
     }
+
+    @Override
     public Factory create(Factory other) {
       return new Factory(other);
     }
@@ -80,10 +83,12 @@ public class Factory {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Factory _value) {
         return _binding.toJson(_value.value);
       }
 
+      @Override
       public Factory fromJson(JsonElement _json) {
         return new Factory(_binding.fromJson(_json));
       }

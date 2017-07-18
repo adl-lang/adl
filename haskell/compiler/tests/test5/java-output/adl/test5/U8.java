@@ -112,9 +112,12 @@ public class U8 {
   /* Factory for construction of generic values */
 
   public static final Factory<U8> FACTORY = new Factory<U8>() {
+    @Override
     public U8 create() {
       return new U8();
     }
+
+    @Override
     public U8 create(U8 other) {
       return new U8(other);
     }
@@ -132,6 +135,7 @@ public class U8 {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(U8 _value) {
         switch (_value.getDisc()) {
           case V1:
@@ -142,6 +146,7 @@ public class U8 {
         return null;
       }
 
+      @Override
       public U8 fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("v1")) {

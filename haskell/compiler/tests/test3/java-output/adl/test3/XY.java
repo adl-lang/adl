@@ -70,6 +70,7 @@ public class XY<T> {
       final Lazy<Factory<T>> x = new Lazy<>(() -> factoryT);
       final Lazy<Factory<T>> y = new Lazy<>(() -> factoryT);
 
+      @Override
       public XY<T> create() {
         return new XY<T>(
           x.get().create(),
@@ -77,6 +78,7 @@ public class XY<T> {
           );
       }
 
+      @Override
       public XY<T> create(XY<T> other) {
         return new XY<T>(
           x.get().create(other.getX()),
@@ -99,6 +101,7 @@ public class XY<T> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(XY<T> _value) {
         JsonObject _result = new JsonObject();
         _result.add("x", x.get().toJson(_value.x));
@@ -106,6 +109,7 @@ public class XY<T> {
         return _result;
       }
 
+      @Override
       public XY<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new XY<T>(

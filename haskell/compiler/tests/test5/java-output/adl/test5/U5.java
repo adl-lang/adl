@@ -91,9 +91,12 @@ public class U5 {
   /* Factory for construction of generic values */
 
   public static final Factory<U5> FACTORY = new Factory<U5>() {
+    @Override
     public U5 create() {
       return new U5();
     }
+
+    @Override
     public U5 create(U5 other) {
       return new U5(other);
     }
@@ -110,6 +113,7 @@ public class U5 {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(U5 _value) {
         switch (_value.getDisc()) {
           case V:
@@ -118,6 +122,7 @@ public class U5 {
         return null;
       }
 
+      @Override
       public U5 fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("v")) {

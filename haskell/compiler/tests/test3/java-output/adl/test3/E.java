@@ -36,10 +36,12 @@ public enum E {
   }
 
   public static final Factory<E> FACTORY = new Factory<E>() {
+    @Override
     public E create() {
       return V1;
     }
 
+    @Override
     public E create(E other) {
       return other;
     }
@@ -53,10 +55,12 @@ public enum E {
         return FACTORY;
       }
 
+      @Override
       public JsonElement toJson(E _value) {
         return new JsonPrimitive(_value.toString());
       }
 
+      @Override
       public E fromJson(JsonElement _json) {
         try {
           return fromString(_json.getAsString());

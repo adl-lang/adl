@@ -41,10 +41,12 @@ public enum Role {
   }
 
   public static final Factory<Role> FACTORY = new Factory<Role>() {
+    @Override
     public Role create() {
       return UNDERLING;
     }
 
+    @Override
     public Role create(Role other) {
       return other;
     }
@@ -58,10 +60,12 @@ public enum Role {
         return FACTORY;
       }
 
+      @Override
       public JsonElement toJson(Role _value) {
         return new JsonPrimitive(_value.toString());
       }
 
+      @Override
       public Role fromJson(JsonElement _json) {
         try {
           return fromString(_json.getAsString());

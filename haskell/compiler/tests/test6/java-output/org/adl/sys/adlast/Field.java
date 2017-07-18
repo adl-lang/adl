@@ -123,9 +123,12 @@ public class Field {
   /* Factory for construction of generic values */
 
   public static final Factory<Field> FACTORY = new Factory<Field>() {
+    @Override
     public Field create() {
       return new Field();
     }
+
+    @Override
     public Field create(Field other) {
       return new Field(other);
     }
@@ -146,6 +149,7 @@ public class Field {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Field _value) {
         JsonObject _result = new JsonObject();
         _result.add("name", name.get().toJson(_value.name));
@@ -156,6 +160,7 @@ public class Field {
         return _result;
       }
 
+      @Override
       public Field fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Field(

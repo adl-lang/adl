@@ -70,6 +70,7 @@ public class Pair<A, B> {
       final Lazy<Factory<A>> v1 = new Lazy<>(() -> factoryA);
       final Lazy<Factory<B>> v2 = new Lazy<>(() -> factoryB);
 
+      @Override
       public Pair<A, B> create() {
         return new Pair<A, B>(
           v1.get().create(),
@@ -77,6 +78,7 @@ public class Pair<A, B> {
           );
       }
 
+      @Override
       public Pair<A, B> create(Pair<A, B> other) {
         return new Pair<A, B>(
           v1.get().create(other.getV1()),
@@ -100,6 +102,7 @@ public class Pair<A, B> {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Pair<A, B> _value) {
         JsonObject _result = new JsonObject();
         _result.add("v1", v1.get().toJson(_value.v1));
@@ -107,6 +110,7 @@ public class Pair<A, B> {
         return _result;
       }
 
+      @Override
       public Pair<A, B> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Pair<A, B>(

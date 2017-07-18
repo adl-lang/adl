@@ -77,9 +77,12 @@ public class Rectangle {
   /* Factory for construction of generic values */
 
   public static final Factory<Rectangle> FACTORY = new Factory<Rectangle>() {
+    @Override
     public Rectangle create() {
       return new Rectangle();
     }
+
+    @Override
     public Rectangle create(Rectangle other) {
       return new Rectangle(other);
     }
@@ -97,6 +100,7 @@ public class Rectangle {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Rectangle _value) {
         JsonObject _result = new JsonObject();
         _result.add("width", width.get().toJson(_value.width));
@@ -104,6 +108,7 @@ public class Rectangle {
         return _result;
       }
 
+      @Override
       public Rectangle fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Rectangle(

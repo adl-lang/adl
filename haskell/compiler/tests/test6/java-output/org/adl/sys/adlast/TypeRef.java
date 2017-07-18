@@ -132,9 +132,12 @@ public class TypeRef {
   /* Factory for construction of generic values */
 
   public static final Factory<TypeRef> FACTORY = new Factory<TypeRef>() {
+    @Override
     public TypeRef create() {
       return new TypeRef();
     }
+
+    @Override
     public TypeRef create(TypeRef other) {
       return new TypeRef(other);
     }
@@ -153,6 +156,7 @@ public class TypeRef {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(TypeRef _value) {
         switch (_value.getDisc()) {
           case PRIMITIVE:
@@ -165,6 +169,7 @@ public class TypeRef {
         return null;
       }
 
+      @Override
       public TypeRef fromJson(JsonElement _json) {
         String _key = JsonBindings.unionNameFromJson(_json);
         if (_key.equals("primitive")) {

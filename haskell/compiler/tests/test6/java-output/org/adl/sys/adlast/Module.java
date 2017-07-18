@@ -94,9 +94,12 @@ public class Module {
   /* Factory for construction of generic values */
 
   public static final Factory<Module> FACTORY = new Factory<Module>() {
+    @Override
     public Module create() {
       return new Module();
     }
+
+    @Override
     public Module create(Module other) {
       return new Module(other);
     }
@@ -115,6 +118,7 @@ public class Module {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(Module _value) {
         JsonObject _result = new JsonObject();
         _result.add("name", name.get().toJson(_value.name));
@@ -123,6 +127,7 @@ public class Module {
         return _result;
       }
 
+      @Override
       public Module fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Module(

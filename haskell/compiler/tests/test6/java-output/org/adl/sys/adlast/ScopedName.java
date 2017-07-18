@@ -77,9 +77,12 @@ public class ScopedName {
   /* Factory for construction of generic values */
 
   public static final Factory<ScopedName> FACTORY = new Factory<ScopedName>() {
+    @Override
     public ScopedName create() {
       return new ScopedName();
     }
+
+    @Override
     public ScopedName create(ScopedName other) {
       return new ScopedName(other);
     }
@@ -97,6 +100,7 @@ public class ScopedName {
         return _factory;
       }
 
+      @Override
       public JsonElement toJson(ScopedName _value) {
         JsonObject _result = new JsonObject();
         _result.add("moduleName", moduleName.get().toJson(_value.moduleName));
@@ -104,6 +108,7 @@ public class ScopedName {
         return _result;
       }
 
+      @Override
       public ScopedName fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new ScopedName(
