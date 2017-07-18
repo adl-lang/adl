@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
 public class Decl {
 
   /* Members */

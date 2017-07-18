@@ -16,6 +16,7 @@ import java.util.Objects;
  * 
  * It has two fields: an integer x and a String y.
  */
+@SuppressWarnings("unused")
 public class S1 {
 
   /* Members */

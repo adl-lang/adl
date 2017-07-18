@@ -185,6 +185,8 @@ classFileCode content =
   <>
   cf_docString content
   <>
+  csuppressWarnings ["unused"]
+  <>
   cblock decl (
     cline ""
     <>
@@ -821,6 +823,10 @@ javaCapsFieldName f = case T.uncons (f_name f) of
 
 factoryTypeArg :: Ident -> Ident
 factoryTypeArg n = "factory" <> n
+
+csuppressWarnings :: [T.Text] -> Code
+csuppressWarnings [wkey] = ctemplate "@SuppressWarnings($1)" [T.pack (show wkey)]
+csuppressWarnings wkeys = ctemplate "@SuppressWarnings({$1})" [T.intercalate "," [T.pack (show wkey) | wkey <- wkeys]]
 
 classFromScopedName :: ScopedName -> JavaClass
 classFromScopedName scopedName = javaClass (JavaPackage (unModuleName (sn_moduleName scopedName))) (sn_name scopedName)

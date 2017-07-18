@@ -15,6 +15,7 @@ import java.util.Objects;
 /**
  * A structure containing a vector.
  */
+@SuppressWarnings("unused")
 public class S2 {
 
   /* Members */

@@ -13,6 +13,7 @@ import java.util.Objects;
 /**
  * An empty structure.
  */
+@SuppressWarnings("unused")
 public class S0 {
 
 

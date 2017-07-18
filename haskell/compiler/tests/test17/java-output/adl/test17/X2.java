@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 public class X2 {
 
   /* Members */

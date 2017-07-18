@@ -10,6 +10,7 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 public class Pair<T1, T2> {
 
   /* Members */

@@ -15,6 +15,7 @@ import java.util.Objects;
 /**
  * A generic structure.
  */
+@SuppressWarnings("unused")
 public class S3<T> {
 
   /* Members */

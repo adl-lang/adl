@@ -13,6 +13,7 @@ import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 public class Either<T1, T2> {
 
   /* Members */

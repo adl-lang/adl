@@ -9,6 +9,7 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 public class X {
 
   /* Members */

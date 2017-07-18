@@ -10,6 +10,7 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 
+@SuppressWarnings("unused")
 public class switch_ {
 
   /* Members */

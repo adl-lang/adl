@@ -13,6 +13,7 @@ import org.adl.runtime.Lazy;
 import java.util.Map;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 public class DeclType {
 
   /* Members */

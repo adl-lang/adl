@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
 public class S {
 
   /* Members */

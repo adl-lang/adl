@@ -9,6 +9,7 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonParseException;
 
+@SuppressWarnings("unused")
 public enum E {
 
   /* Members */
