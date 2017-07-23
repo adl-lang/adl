@@ -4,35 +4,14 @@ module test4
 import adlc.config.haskell.HaskellCustomType;
 
 annotation Date HaskellCustomType {
-    "haskellname" : "Day",
+    "haskellname" : "Date",
     "haskellimports" : [
-        "Prelude((.))",
-        "Data.Time.Calendar(Day)",
-        "Data.Time.Format(parseTimeM,formatTime,defaultTimeLocale)",
-        "qualified Data.Aeson",
-        "qualified Data.Maybe",
-        "qualified Data.Text"
+        "qualified Date"
      ],
     "insertCode" : [
-        "type Date = Day",
-        "",
-        "dateFromText :: Data.Text.Text -> Prelude.Maybe Day",
-        "dateFromText s = parseTimeM Prelude.True defaultTimeLocale \"%F\" (T.unpack s)",
-        "",
-        "dateToText :: Day -> Data.Text.Text",
-        "dateToText d = T.pack (formatTime defaultTimeLocale \"%F\" d)",
-        "",
-        "instance AdlValue Day where",
-        "  atype _ = \"test4.Date\"",
-        "  jsonGen = JsonGen (adlToJson . dateToText)",
-        "  jsonParser = JsonParser (\\ctx jv -> case jv of ",
-        "    Data.Aeson.String s -> case dateFromText s of",
-        "      Prelude.Nothing -> ParseFailure \"expected a date\" ctx",
-        "      (Prelude.Just d) -> ParseSuccess d",
-        "    _ -> ParseFailure \"expected a date\" ctx",
-        "    )"
+        "type Date = Date.Date"
     ],
-    "structConstructor" : "(Data.Maybe.fromJust . dateFromText)"
+    "structConstructor" : "Date.fromText"
 };
 
 };

@@ -17,6 +17,7 @@ library
                      , ../compiler/tests/test1/hs-output
                      , ../compiler/tests/test2/hs-output
                      , ../compiler/tests/test3/hs-output
+                     , ../compiler/tests/test4/input
                      , ../compiler/tests/test4/hs-output
                      , ../compiler/tests/test5/hs-output
 --                     , ../compiler/tests/test6/hs-output  -- redundant as code already in the runtime
