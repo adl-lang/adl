@@ -109,6 +109,7 @@ struct Module
     ModuleName name;
     Vector<Import> imports;
     Map<Ident,Decl> decls;
+    Annotations annotations;
 };
 
 };

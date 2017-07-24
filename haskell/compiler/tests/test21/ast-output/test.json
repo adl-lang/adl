@@ -1,4 +1,24 @@
 {
+    "annotations": [
+        {
+            "v1": {
+                "moduleName": "",
+                "name": "Ann1"
+            },
+            "v2": {
+                "integer": 100
+            }
+        },
+        {
+            "v1": {
+                "moduleName": "",
+                "name": "Ann2"
+            },
+            "v2": {
+                "string": "module stuff"
+            }
+        }
+    ],
     "decls": [
         {
             "v1": "Ann1",

@@ -87,9 +87,15 @@ data Decl0 = Decl0_Decl (Decl () ScopedName)
            | Decl0_Annotation Annotation0
   deriving (Show)
 
+data Annotation0Target
+  = ATModule
+  | ATDecl Ident
+  | ATField Ident Ident
+  deriving (Show,Eq,Ord)
+
+
 data Annotation0 = Annotation0 {
-  a0_declName :: Ident,
-  a0_fieldName :: Maybe Ident,
+  a0_target :: Annotation0Target,
   a0_annotationName :: ScopedName,
   a0_value :: JSON.Value
   }
@@ -107,7 +113,8 @@ iModule (Import_ScopedName sn) = sn_moduleName sn
 data Module0 d = Module0 {
   m0_name :: ModuleName,
   m0_imports :: [Import],
-  m0_decls :: [d]
+  m0_decls :: [d],
+  m0_annotations :: Annotations ScopedName
   }
   deriving (Show)
 
@@ -120,7 +127,9 @@ data Module ct r = Module {
   m_name :: ModuleName,
   m_imports :: [Import],
   m_decls :: Map.Map Ident (Decl ct r),
-  m_declOrder :: [Ident]
+  m_declOrder :: [Ident],
+  m_annotations :: Annotations r
+
   }
   deriving (Show)
 
@@ -183,7 +192,7 @@ mapDecl f decl@Decl{d_type=d,d_annotations=as} = decl
   }
 
 mapModule :: (a -> b) -> Module ct a -> Module ct b
-mapModule f mod@Module{m_decls=ds} = mod{m_decls=(fmap.mapDecl) f ds}
+mapModule f mod@Module{m_decls=ds} = mod{m_decls=(fmap.mapDecl) f ds, m_annotations=mapAnnotations f (m_annotations mod)}
 
 getOrderedDecls :: Module ct a -> [Decl ct a]
 getOrderedDecls m = catMaybes [ Map.lookup ident (m_decls m)| ident <- m_declOrder m]

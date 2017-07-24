@@ -173,11 +173,12 @@ data Module = Module
     { module_name :: ModuleName
     , module_imports :: [Import]
     , module_decls :: (ADL.Sys.Types.Map Ident Decl)
+    , module_annotations :: Annotations
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-mkModule :: ModuleName -> [Import] -> (ADL.Sys.Types.Map Ident Decl) -> Module
-mkModule name imports decls = Module name imports decls
+mkModule :: ModuleName -> [Import] -> (ADL.Sys.Types.Map Ident Decl) -> Annotations -> Module
+mkModule name imports decls annotations = Module name imports decls annotations
 
 instance AdlValue Module where
     atype _ = "sys.adlast.Module"
@@ -186,12 +187,14 @@ instance AdlValue Module where
         [ genField "name" module_name
         , genField "imports" module_imports
         , genField "decls" module_decls
+        , genField "annotations" module_annotations
         ]
     
     jsonParser = Module
         <$> parseField "name"
         <*> parseField "imports"
         <*> parseField "decls"
+        <*> parseField "annotations"
 
 type ModuleName = T.Text
 

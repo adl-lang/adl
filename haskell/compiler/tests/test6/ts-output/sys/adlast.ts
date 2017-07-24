@@ -380,6 +380,7 @@ export interface Module {
   name: ModuleName;
   imports: Import[];
   decls: sys_types.Map<Ident, Decl>;
+  annotations: Annotations;
 }
 
 export function makeModule(
@@ -387,17 +388,19 @@ export function makeModule(
     name: ModuleName,
     imports: Import[],
     decls: sys_types.Map<Ident, Decl>,
+    annotations: Annotations,
   }
 ): Module {
   return {
     name: input.name,
     imports: input.imports,
     decls: input.decls,
+    annotations: input.annotations,
   };
 }
 
 const Module_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"name","default":{"kind":"nothing"},"name":"name","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}},"parameters":[]}},{"annotations":[],"serializedName":"imports","default":{"kind":"nothing"},"name":"imports","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Import"}},"parameters":[]}]}},{"annotations":[],"serializedName":"decls","default":{"kind":"nothing"},"name":"decls","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Map"}},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]},{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Decl"}},"parameters":[]}]}}]}},"name":"Module","version":{"kind":"nothing"}}};
+  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"name","default":{"kind":"nothing"},"name":"name","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}},"parameters":[]}},{"annotations":[],"serializedName":"imports","default":{"kind":"nothing"},"name":"imports","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Import"}},"parameters":[]}]}},{"annotations":[],"serializedName":"decls","default":{"kind":"nothing"},"name":"decls","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Map"}},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]},{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Decl"}},"parameters":[]}]}},{"annotations":[],"serializedName":"annotations","default":{"kind":"nothing"},"name":"annotations","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Annotations"}},"parameters":[]}}]}},"name":"Module","version":{"kind":"nothing"}}};
 
 export function texprModule(): ADL.ATypeExpr<Module> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.adlast",name : "Module"}}, parameters : []}};

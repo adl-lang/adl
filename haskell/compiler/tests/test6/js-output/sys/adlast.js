@@ -269,6 +269,13 @@ const Module = {
       defaultv : null,
       annotations : [
       ]
+    },
+    {
+      name : "annotations",
+      type : {"ref":"sys.adlast.Annotations"},
+      defaultv : null,
+      annotations : [
+      ]
     }
   ],
   annotations : [

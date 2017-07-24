@@ -1,4 +1,6 @@
 module test
 {
+    annotation Ann2 "module stuff";
+
     annotation MyStruct::name Ann3 {"f1": "a", "f2": "b"};
 };

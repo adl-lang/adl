@@ -924,11 +924,13 @@ Module::Module()
 Module::Module(
     const ModuleName & name_,
     const std::vector<Import>  & imports_,
-    const std::map<Ident,Decl>  & decls_
+    const std::map<Ident,Decl>  & decls_,
+    const Annotations & annotations_
     )
     : name(name_)
     , imports(imports_)
     , decls(decls_)
+    , annotations(annotations_)
 {
 }
 
@@ -941,6 +943,8 @@ operator<( const Module &a, const Module &b )
     if( b.imports < a.imports ) return false;
     if( a.decls < b.decls ) return true;
     if( b.decls < a.decls ) return false;
+    if( a.annotations < b.annotations ) return true;
+    if( b.annotations < a.annotations ) return false;
     return false;
 }
 
@@ -950,7 +954,8 @@ operator==( const Module &a, const Module &b )
     return
         a.name == b.name &&
         a.imports == b.imports &&
-        a.decls == b.decls ;
+        a.decls == b.decls &&
+        a.annotations == b.annotations ;
 }
 
 ScopedDecl::ScopedDecl()
@@ -1690,12 +1695,14 @@ Serialisable<ADL::sys::adlast::Module>::serialiser( const SerialiserFlags &sf )
             : name_s( Serialisable<ADL::sys::adlast::ModuleName>::serialiser(sf) )
             , imports_s( Serialisable<std::vector<ADL::sys::adlast::Import> >::serialiser(sf) )
             , decls_s( Serialisable<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >::serialiser(sf) )
+            , annotations_s( Serialisable<ADL::sys::adlast::Annotations>::serialiser(sf) )
             {}
         
         
         typename Serialiser<ADL::sys::adlast::ModuleName>::Ptr name_s;
         typename Serialiser<std::vector<ADL::sys::adlast::Import> >::Ptr imports_s;
         typename Serialiser<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >::Ptr decls_s;
+        typename Serialiser<ADL::sys::adlast::Annotations>::Ptr annotations_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
@@ -1703,6 +1710,7 @@ Serialisable<ADL::sys::adlast::Module>::serialiser( const SerialiserFlags &sf )
             writeField<ADL::sys::adlast::ModuleName>( json, name_s, "name", v.name );
             writeField<std::vector<ADL::sys::adlast::Import> >( json, imports_s, "imports", v.imports );
             writeField<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >( json, decls_s, "decls", v.decls );
+            writeField<ADL::sys::adlast::Annotations>( json, annotations_s, "annotations", v.annotations );
             json.endObject();
         }
         
@@ -1714,6 +1722,7 @@ Serialisable<ADL::sys::adlast::Module>::serialiser( const SerialiserFlags &sf )
                 readField( name_s, v.name, "name", json ) ||
                 readField( imports_s, v.imports, "imports", json ) ||
                 readField( decls_s, v.decls, "decls", json ) ||
+                readField( annotations_s, v.annotations, "annotations", json ) ||
                 ignoreField( json );
             }
         }

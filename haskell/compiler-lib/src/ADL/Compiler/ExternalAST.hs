@@ -28,11 +28,12 @@ import qualified ADL.Sys.Adlast as A2
 -- | Convert the internal AST into an external one, suitable for serialisation.
 
 moduleToA2 :: RModule -> A2.Module
-moduleToA2 m = A2.Module name imports decls
+moduleToA2 m = A2.Module name imports decls annotations
   where
     name = moduleNameToA2 (m_name m)
     imports = map importToA2 (m_imports m)
     decls = Map.map declToA2 (m_decls m)
+    annotations = annotationsToA2 (m_annotations m)
 
 importToA2 :: Import -> A2.Import
 importToA2 (Import_Module mname) = A2.Import_moduleName (moduleNameToA2 mname)

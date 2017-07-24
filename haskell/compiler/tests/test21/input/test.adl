@@ -1,3 +1,4 @@
+@Ann1 100
 module test
 {
     // Some annotation types;

@@ -172,11 +172,22 @@ decl =  do
 annotation0 :: P.Parser Annotation0
 annotation0 = do
   token "annotation"
-  declName <- name
-  fieldName <- P.optionMaybe (token "::" *> name)
-  annotationName <- scopedName
+  (target,annotationName) <- P.try fieldAnnP <|> P.try declAnnP <|> moduleAnnP
   value <- jsonValue
-  return (Annotation0 declName fieldName annotationName value)
+  return (Annotation0 target annotationName value)
+  where
+    fieldAnnP = do
+      dname <- name
+      fname <- token "::" *> name
+      sname <- scopedName
+      return (ATField dname fname,sname)
+    declAnnP = do
+      dname <- name
+      sname <- scopedName
+      return (ATDecl dname,sname)
+    moduleAnnP = do
+      sname <- scopedName
+      return (ATModule,sname)
 
 decl0 :: P.Parser Decl0
 decl0 =  Decl0_Decl <$> decl
@@ -193,10 +204,13 @@ importP = token "import" *> (P.try importAll <|> import1 )
     import1  = Import_ScopedName <$> scopedName
 
 moduleP :: P.Parser (Module0 Decl0)
-moduleP = token "module" *> (
+moduleP = do
+  anns0 <- annotations
+  token "module" *> (
     Module0 <$> ( moduleName <* ctoken '{' )
             <*> P.many (importP <* ctoken ';')
             <*> P.many (decl0 <* ctoken ';')
+            <*> (pure anns0)
     ) <* ctoken '}'
 
 ----------------------------------------------------------------------

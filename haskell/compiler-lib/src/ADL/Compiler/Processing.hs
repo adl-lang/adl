@@ -103,14 +103,18 @@ parseAndCheckFile log file extraFiles = do
                          [T.intercalate ", " (map (formatText.m0_name) badms), formatText (m0_name m)])
       where
         merge :: Module0 Decl0 -> Module0 Decl0 -> Module0 Decl0
-        merge ma mb = ma{m0_imports=m0_imports ma <> m0_imports mb,m0_decls=m0_decls ma <> m0_decls mb}
+        merge ma mb = ma
+          { m0_imports=m0_imports ma <> m0_imports mb
+          , m0_decls=m0_decls ma <> m0_decls mb
+          , m0_annotations=m0_annotations ma <> m0_annotations mb
+          }
 
     checkDeclarations :: Module0 SDecl -> EIO T.Text SModule
-    checkDeclarations (Module0 n i decls0) = do
+    checkDeclarations (Module0 n i decls0 anns) = do
       let declMap = foldr (\d -> Map.insertWith (++)  (d_name d) [d]) Map.empty decls0
           declOrder = nub (fmap d_name decls0)
       declMap' <- T.mapM checkDeclList declMap
-      return (Module  n i declMap' declOrder)
+      return (Module  n i declMap' declOrder anns)
 
     -- Ensure that for all the decls associated with a name, either
     --    * we have one unversioned decl
@@ -174,7 +178,7 @@ checkDuplicates m = structErrors ++ unionErrors ++ typedefErrors ++ newtypeError
     findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) (T.toCaseFold a) 1) Map.empty as),
                           n > (1::Int) ]
 
-type AnnotationMap = (Map.Map (Either Ident (Ident,Ident)) (Map.Map ScopedName Annotation0))
+type AnnotationMap = (Map.Map Annotation0Target (Map.Map ScopedName Annotation0))
 type MAState = State AnnotationMap
 
 -- | Generates a module where the the annotation declarations have been
@@ -186,27 +190,26 @@ mergeAnnotations m0 = (m,unusedAnnotation)
     (m,unusedMap) = runState (mergeModule m0) annotationMap
 
     annotationMap :: AnnotationMap
-    annotationMap = foldr addAnnotation Map.empty [ (annKey a, a0_annotationName a, a) | Decl0_Annotation a <- m0_decls m0]
+    annotationMap = foldr addAnnotation Map.empty [ (a0_target a, a0_annotationName a, a) | Decl0_Annotation a <- m0_decls m0]
       where
-        addAnnotation :: (Either Ident (Ident,Ident),ScopedName, Annotation0) -> AnnotationMap -> AnnotationMap
+        addAnnotation :: (Annotation0Target,ScopedName, Annotation0) -> AnnotationMap -> AnnotationMap
         addAnnotation (key,name,ann) = Map.insertWith Map.union key (Map.singleton name ann)
-
-        annKey ann@Annotation0{a0_fieldName=Just fieldName} = Right (a0_declName ann,fieldName)
-        annKey ann = Left (a0_declName ann)
 
     unusedAnnotation = map annText (Map.keys unusedMap)
       where
-        annText (Left decl) = decl
-        annText (Right (decl,field)) = template "$1:$2" [decl,field]
+        annText ATModule = error "BUG: A module annotation can't be unused"
+        annText (ATDecl decl) = decl
+        annText (ATField decl field) = template "$1:$2" [decl,field]
 
     mergeModule :: Module0 Decl0 -> MAState (Module0 SDecl)
     mergeModule m0 = do
+      anns <- pullAnnotations ATModule
       decls' <-  mapM mergeDecl [d | Decl0_Decl d <- m0_decls m0]
-      return m0{m0_decls=decls'}
+      return m0{m0_decls=decls',m0_annotations=insertAnnotations anns (m0_annotations m0)}
 
     mergeDecl :: SDecl -> MAState SDecl
     mergeDecl decl = do
-      anns <- pullAnnotations (Left (d_name decl))
+      anns <- pullAnnotations (ATDecl (d_name decl))
       let decl1 = decl{d_annotations=insertAnnotations anns (d_annotations decl)}
       declType <- mergeDeclType (d_name decl1) (d_type decl1)
       return decl1{d_type=declType}
@@ -223,10 +226,10 @@ mergeAnnotations m0 = (m,unusedAnnotation)
 
     mergeField :: Ident -> Field ScopedName -> MAState (Field ScopedName)
     mergeField declName field  = do
-      anns <- pullAnnotations (Right (declName,f_name field))
+      anns <- pullAnnotations (ATField declName (f_name field))
       return field{f_annotations=insertAnnotations anns (f_annotations field)}
 
-    pullAnnotations :: (Either Ident (Ident,Ident)) -> MAState (Map.Map ScopedName Annotation0)
+    pullAnnotations :: Annotation0Target -> MAState (Map.Map ScopedName Annotation0)
     pullAnnotations key = do
       map <- get
       case Map.lookup key map of
@@ -326,7 +329,7 @@ instance Format UndefinedName where
   formatText (UndefinedName sn) = T.intercalate " " ["undefined type", formatText sn]
 
 undefinedNames :: SModule -> NameScope -> [UndefinedName]
-undefinedNames m ns0 = foldMap checkDecl (m_decls m)
+undefinedNames m ns0 = checkAnnotations (m_annotations m) <> foldMap checkDecl (m_decls m)
     where
       ns = namescopeForModule m ns0
 
@@ -362,7 +365,7 @@ undefinedNames m ns0 = foldMap checkDecl (m_decls m)
 -- Resolve all type references in a module. This assumes that all types
 -- are resolvable, ie there are no undefined names
 resolveModule :: SModule -> NameScope -> RModule
-resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m)}
+resolveModule m ns0 = m{m_decls=Map.map (resolveDecl ns) (m_decls m), m_annotations=resolveAnnotations ns (m_annotations m)}
   where
     ns = namescopeForModule m ns0
 
@@ -499,6 +502,7 @@ checkModuleAnnotations m = execWriter checkModule
   where
     checkModule :: Writer [GeneralError] ()
     checkModule = do
+      checkAnnotations "module" (m_annotations m)
       forM_ (Map.elems (m_decls m)) $ \decl -> do
         checkAnnotations (d_name decl) (d_annotations decl)
         case decl of
@@ -792,21 +796,23 @@ fullyScopedModule m = m{m_decls=decls'}
 --
 -- The given function determines the custom type value (presumably
 -- from the annotations).
-associateCustomTypes :: (ScopedName -> RDecl -> ct) -> ModuleName -> RModule -> Module ct (ResolvedTypeT ct)
-associateCustomTypes getCustomType mname m = m{m_decls=decls'}
+associateCustomTypes :: forall ct . (ScopedName -> RDecl -> ct) -> ModuleName -> Module () (ResolvedTypeT ()) -> Module ct (ResolvedTypeT ct)
+associateCustomTypes getCustomType mname m = m{m_decls=decls',m_annotations=anns'}
   where
-    decls' = Map.mapWithKey assocItem (m_decls m)
+    decls' = Map.mapWithKey assocDeclItem (m_decls m)
+    anns' = Map.mapWithKey assocAnnotationItem (m_annotations m)
 
-    assocItem ident  decl = assocDecl (ScopedName mname ident) decl
+    assocDeclItem ident  decl = assocDecl (ScopedName mname ident) decl
+
+    assocAnnotationItem scopedName (rt,jv) = (assocf rt,jv)
 
     assocDecl scopedName decl = (mapDecl assocf decl){d_customType=customType}
       where
         customType = getCustomType scopedName decl
 
-        assocf (RT_Named (sn,decl))  = RT_Named (sn,assocDecl sn decl)
-        assocf (RT_Param i) = RT_Param i
-        assocf (RT_Primitive pt) = RT_Primitive pt
-
+    assocf (RT_Named (sn,decl))  = RT_Named (sn,assocDecl sn decl)
+    assocf (RT_Param i) = RT_Param i
+    assocf (RT_Primitive pt) = RT_Primitive pt
 
 -- | Check that all declarations that are annotated with CustomSerialization
 -- actual have custom types. Returns the failing declarations
