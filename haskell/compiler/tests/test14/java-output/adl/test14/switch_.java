@@ -10,7 +10,6 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 
-@SuppressWarnings("unused")
 public class switch_ {
 
   /* Members */
@@ -141,6 +140,7 @@ public class switch_ {
     final Factory<switch_> _factory = FACTORY;
 
     return new JsonBinding<switch_>() {
+      @Override
       public Factory<switch_> factory() {
         return _factory;
       }

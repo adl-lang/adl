@@ -151,6 +151,7 @@ runJava args = do
       , javaHungarianNaming (updateCodeGenProfile (\cgp->cgp{cgp_hungarianNaming=True}))
       , javaMaxLineLength (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_maxLineLength=read s})))
       , javaHeaderComment (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_header=T.pack s})))
+      , javaSuppressWarningsAnnotation (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_supressWarnings=T.splitOn "," (T.pack s)})))
       ]
 
     javaGenerateParcelable ufn =
@@ -177,6 +178,11 @@ runJava args = do
       Option "" ["max-line-length"]
         (ReqArg ufn "PACKAGE")
         "The maximum length of the generated code lines"
+
+    javaSuppressWarningsAnnotation ufn =
+      Option "" ["suppress-warnings-annotation"]
+        (ReqArg ufn "WARNINGS")
+        "The @SuppressWarnings annotation to be generated (comma separated)"
 
     updateCodeGenProfile f = updateBackendFlags (\jf ->jf{jf_codeGenProfile=f (jf_codeGenProfile jf)})
 

@@ -9,7 +9,6 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Factory {
 
   /* Members */
@@ -80,6 +79,7 @@ public class Factory {
     final org.adl.runtime.Factory<Factory> _factory = FACTORY;
 
     return new JsonBinding<Factory>() {
+      @Override
       public org.adl.runtime.Factory<Factory> factory() {
         return _factory;
       }

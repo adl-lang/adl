@@ -12,7 +12,6 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Struct {
 
   /* Members */
@@ -98,6 +97,7 @@ public class Struct {
     final Factory<Struct> _factory = FACTORY;
 
     return new JsonBinding<Struct>() {
+      @Override
       public Factory<Struct> factory() {
         return _factory;
       }

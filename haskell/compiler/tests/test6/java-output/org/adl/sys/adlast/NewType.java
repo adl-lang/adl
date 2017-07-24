@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 
-@SuppressWarnings("unused")
 public class NewType {
 
   /* Members */
@@ -115,6 +114,7 @@ public class NewType {
     final Factory<NewType> _factory = FACTORY;
 
     return new JsonBinding<NewType>() {
+      @Override
       public Factory<NewType> factory() {
         return _factory;
       }

@@ -3,8 +3,6 @@
 package org.adl.sys.adlast;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
@@ -14,10 +12,8 @@ import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Literal {
 
   /* Members */
@@ -270,6 +266,7 @@ public class Literal {
     final Factory<Literal> _factory = FACTORY;
 
     return new JsonBinding<Literal>() {
+      @Override
       public Factory<Literal> factory() {
         return _factory;
       }

@@ -11,7 +11,6 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class ScopedDecl {
 
   /* Members */
@@ -97,6 +96,7 @@ public class ScopedDecl {
     final Factory<ScopedDecl> _factory = FACTORY;
 
     return new JsonBinding<ScopedDecl>() {
+      @Override
       public Factory<ScopedDecl> factory() {
         return _factory;
       }

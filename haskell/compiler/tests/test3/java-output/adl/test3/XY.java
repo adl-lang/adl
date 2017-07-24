@@ -10,7 +10,6 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class XY<T> {
 
   /* Members */
@@ -98,6 +97,7 @@ public class XY<T> {
     final Factory<XY<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<XY<T>>() {
+      @Override
       public Factory<XY<T>> factory() {
         return _factory;
       }

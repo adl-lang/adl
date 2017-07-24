@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class S<T> {
 
   /* Members */
@@ -455,6 +454,7 @@ public class S<T> {
     final Factory<S<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<S<T>>() {
+      @Override
       public Factory<S<T>> factory() {
         return _factory;
       }

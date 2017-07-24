@@ -12,7 +12,6 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class X1 {
 
   /* Members */
@@ -173,6 +172,7 @@ public class X1 {
     final Factory<X1> _factory = FACTORY;
 
     return new JsonBinding<X1>() {
+      @Override
       public Factory<X1> factory() {
         return _factory;
       }

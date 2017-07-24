@@ -15,7 +15,6 @@ import java.util.Objects;
 /**
  * A generic structure.
  */
-@SuppressWarnings("unused")
 public class S3<T> {
 
   /* Members */
@@ -135,6 +134,7 @@ public class S3<T> {
     final Factory<S3<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<S3<T>>() {
+      @Override
       public Factory<S3<T>> factory() {
         return _factory;
       }

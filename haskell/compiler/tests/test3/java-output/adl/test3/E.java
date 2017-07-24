@@ -9,7 +9,6 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonParseException;
 
-@SuppressWarnings("unused")
 public enum E {
 
   /* Members */
@@ -52,6 +51,7 @@ public enum E {
 
   public static JsonBinding<E> jsonBinding() {
     return new JsonBinding<E>() {
+      @Override
       public Factory<E> factory() {
         return FACTORY;
       }

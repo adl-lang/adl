@@ -3,17 +3,13 @@
 package org.adl.sys.types;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
-import java.util.Map;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Either<T1, T2> {
 
   /* Members */
@@ -132,6 +128,7 @@ public class Either<T1, T2> {
     final Factory<Either<T1, T2>> _factory = factory(bindingT1.factory(), bindingT2.factory());
 
     return new JsonBinding<Either<T1, T2>>() {
+      @Override
       public Factory<Either<T1, T2>> factory() {
         return _factory;
       }

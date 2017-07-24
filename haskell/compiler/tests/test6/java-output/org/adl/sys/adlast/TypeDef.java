@@ -12,7 +12,6 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class TypeDef {
 
   /* Members */
@@ -98,6 +97,7 @@ public class TypeDef {
     final Factory<TypeDef> _factory = FACTORY;
 
     return new JsonBinding<TypeDef>() {
+      @Override
       public Factory<TypeDef> factory() {
         return _factory;
       }

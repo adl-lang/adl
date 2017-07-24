@@ -6,7 +6,6 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -20,12 +19,18 @@ import java.util.Set;
 public class JsonBindings
 {
   public static final JsonBinding<Void> VOID = new JsonBinding<Void>() {
+
+    @Override
     public Factory<Void> factory() {
       return Factories.VOID;
     }
+
+    @Override
     public JsonElement toJson(Void value) {
       return JsonNull.INSTANCE;
     }
+
+    @Override
     public Void fromJson(JsonElement json) {
       if (json.isJsonNull()) {
         return null;
@@ -35,12 +40,18 @@ public class JsonBindings
   };
 
   public static final JsonBinding<Boolean> BOOLEAN = new JsonBinding<Boolean>() {
+
+    @Override
     public Factory<Boolean> factory() {
       return Factories.BOOLEAN;
     }
+
+    @Override
     public JsonElement toJson(Boolean value) {
       return new JsonPrimitive(value);
     }
+
+    @Override
     public Boolean fromJson(JsonElement json) {
       try {
         return json.getAsBoolean();
@@ -51,12 +62,18 @@ public class JsonBindings
   };
 
   public static final JsonBinding<Byte> BYTE = new JsonBinding<Byte>() {
+
+    @Override
     public Factory<Byte> factory() {
       return Factories.BYTE;
     }
+
+    @Override
     public JsonElement toJson(Byte value) {
       return new JsonPrimitive(value);
     }
+
+    @Override
     public Byte fromJson(JsonElement json) {
       try {
         return json.getAsNumber().byteValue();
@@ -67,12 +84,18 @@ public class JsonBindings
   };
 
   public static final JsonBinding<Short> SHORT = new JsonBinding<Short>() {
+
+    @Override
     public Factory<Short> factory() {
       return Factories.SHORT;
     }
+
+    @Override
     public JsonElement toJson(Short value) {
       return new JsonPrimitive(value);
     }
+
+    @Override
     public Short fromJson(JsonElement json) {
       try {
         return json.getAsNumber().shortValue();
@@ -83,12 +106,18 @@ public class JsonBindings
   };
 
   public static final JsonBinding<Integer> INTEGER = new JsonBinding<Integer>() {
+
+    @Override
     public Factory<Integer> factory() {
       return Factories.INTEGER;
     }
+
+    @Override
     public JsonElement toJson(Integer value) {
       return new JsonPrimitive(value);
     }
+
+    @Override
     public Integer fromJson(JsonElement json) {
       try {
         return json.getAsNumber().intValue();
@@ -99,12 +128,18 @@ public class JsonBindings
   };
 
   public static final JsonBinding<Long> LONG = new JsonBinding<Long>() {
+
+    @Override
     public Factory<Long> factory() {
       return Factories.LONG;
     }
+
+    @Override
     public JsonElement toJson(Long value) {
       return new JsonPrimitive(value);
     }
+
+    @Override
     public Long fromJson(JsonElement json) {
       try {
         return json.getAsNumber().longValue();
@@ -115,12 +150,18 @@ public class JsonBindings
   };
 
   public static final JsonBinding<Float> FLOAT = new JsonBinding<Float>() {
+
+    @Override
     public Factory<Float> factory() {
       return Factories.FLOAT;
     }
+
+    @Override
     public JsonElement toJson(Float value) {
       return new JsonPrimitive(value);
     }
+
+    @Override
     public Float fromJson(JsonElement json) {
       try {
         return json.getAsNumber().floatValue();
@@ -131,12 +172,18 @@ public class JsonBindings
   };
 
   public static final JsonBinding<Double> DOUBLE = new JsonBinding<Double>() {
+
+    @Override
     public Factory<Double> factory() {
       return Factories.DOUBLE;
     }
+
+    @Override
     public JsonElement toJson(Double value) {
       return new JsonPrimitive(value);
     }
+
+    @Override
     public Double fromJson(JsonElement json) {
       try {
         return json.getAsNumber().doubleValue();
@@ -147,12 +194,18 @@ public class JsonBindings
   };
 
   public static final JsonBinding<String> STRING = new JsonBinding<String>() {
+
+    @Override
     public Factory<String> factory() {
       return Factories.STRING;
     }
+
+    @Override
     public JsonElement toJson(String value) {
       return new JsonPrimitive(value);
     }
+
+    @Override
     public String fromJson(JsonElement json) {
       if (json.isJsonPrimitive() && json.getAsJsonPrimitive().isString()) {
         return json.getAsString();
@@ -167,29 +220,43 @@ public class JsonBindings
   // used
 
   public static final Factory<JsonElement> JSON_FACTORY = new Factory<JsonElement>() {
+    @Override
     public JsonElement create() { return JsonNull.INSTANCE; }
+    @Override
     public JsonElement create(JsonElement other) { return other; }
   };
 
   public static final JsonBinding<JsonElement> JSON = new JsonBinding<JsonElement>() {
+
+    @Override
     public Factory<JsonElement> factory() {
       return JSON_FACTORY;
     }
+
+    @Override
     public JsonElement toJson(JsonElement value) {
       return value;
     }
+
+    @Override
     public JsonElement fromJson(JsonElement json) {
       return json;
     }
   };
 
   public static final JsonBinding<ByteArray> BYTE_ARRAY = new JsonBinding<ByteArray>() {
+
+    @Override
     public Factory<ByteArray> factory() {
       return Factories.BYTE_ARRAY;
     }
+
+    @Override
     public JsonElement toJson(ByteArray value) {
       return new JsonPrimitive(new String(Base64.getEncoder().encode(value.getValue())));
     }
+
+    @Override
     public ByteArray fromJson(JsonElement json) {
       try {
         return new ByteArray(Base64.getDecoder().decode(json.getAsString().getBytes()));
@@ -203,9 +270,13 @@ public class JsonBindings
 
   public static <T> JsonBinding<ArrayList<T>> arrayList(final JsonBinding<T> factoryT) {
     return new JsonBinding<ArrayList<T>>() {
+
+      @Override
       public Factory<ArrayList<T>> factory() {
         return Factories.arrayList(factoryT.factory());
       }
+
+      @Override
       public JsonElement toJson(ArrayList<T> value) {
         JsonArray result = new JsonArray();
         for (T v : value) {
@@ -213,8 +284,10 @@ public class JsonBindings
         }
         return result;
       }
+
+      @Override
       public ArrayList<T> fromJson(JsonElement json) {
-        ArrayList<T> result = new ArrayList<T>();
+        ArrayList<T> result = new ArrayList<>();
         JsonArray jarray;
         try {
           jarray = json.getAsJsonArray();
@@ -237,9 +310,13 @@ public class JsonBindings
 
   public static <T> JsonBinding<HashMap<String,T>> stringMap(final JsonBinding<T> factoryT) {
     return new JsonBinding<HashMap<String,T>>() {
+
+      @Override
       public Factory<HashMap<String,T>> factory() {
         return Factories.stringMap(factoryT.factory());
       }
+
+      @Override
       public JsonElement toJson(HashMap<String,T> value) {
         JsonObject result = new JsonObject();
         for (Map.Entry<String,T> e : value.entrySet()) {
@@ -247,6 +324,8 @@ public class JsonBindings
         }
         return result;
       }
+
+      @Override
       public HashMap<String,T> fromJson(JsonElement json) {
         JsonObject jobj;
         try {
@@ -254,7 +333,7 @@ public class JsonBindings
         } catch (UnsupportedOperationException | ClassCastException e) {
           throw new JsonParseException("expected an object");
         }
-        HashMap<String,T> result = new HashMap<String,T>();
+        HashMap<String,T> result = new HashMap<>();
         for (Map.Entry<String,JsonElement> e : jobj.entrySet()) {
           try {
             result.put(e.getKey(), factoryT.fromJson(e.getValue()));
@@ -270,9 +349,13 @@ public class JsonBindings
 
   public static <T> JsonBinding<Optional<T>> nullable(final JsonBinding<T> factoryT) {
     return new JsonBinding<Optional<T>>() {
+
+      @Override
       public Factory<Optional<T>> factory() {
         return Factories.nullable(factoryT.factory());
       }
+
+      @Override
       public JsonElement toJson(Optional<T> value) {
         if (value.isPresent()) {
           return factoryT.toJson(value.get());
@@ -280,6 +363,8 @@ public class JsonBindings
           return JsonNull.INSTANCE;
         }
       }
+
+      @Override
       public Optional<T> fromJson(JsonElement json) {
         if (json.isJsonNull()) {
           return Optional.<T>empty();

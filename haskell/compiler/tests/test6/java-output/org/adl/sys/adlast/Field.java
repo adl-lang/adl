@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 
-@SuppressWarnings("unused")
 public class Field {
 
   /* Members */
@@ -146,6 +145,7 @@ public class Field {
     final Factory<Field> _factory = FACTORY;
 
     return new JsonBinding<Field>() {
+      @Override
       public Factory<Field> factory() {
         return _factory;
       }

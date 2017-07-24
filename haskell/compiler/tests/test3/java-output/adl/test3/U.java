@@ -3,18 +3,14 @@
 package adl.test3;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
-import java.util.Map;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class U {
 
   /* Members */
@@ -162,6 +158,7 @@ public class U {
     final Factory<U> _factory = FACTORY;
 
     return new JsonBinding<U>() {
+      @Override
       public Factory<U> factory() {
         return _factory;
       }

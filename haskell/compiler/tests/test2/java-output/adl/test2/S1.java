@@ -16,7 +16,6 @@ import java.util.Objects;
  * 
  * It has two fields: an integer x and a String y.
  */
-@SuppressWarnings("unused")
 public class S1 {
 
   /* Members */
@@ -102,6 +101,7 @@ public class S1 {
     final Factory<S1> _factory = FACTORY;
 
     return new JsonBinding<S1>() {
+      @Override
       public Factory<S1> factory() {
         return _factory;
       }

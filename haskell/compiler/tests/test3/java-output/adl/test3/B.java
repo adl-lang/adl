@@ -12,7 +12,6 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class B<T> {
 
   /* Members */
@@ -132,6 +131,7 @@ public class B<T> {
     final Factory<B<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<B<T>>() {
+      @Override
       public Factory<B<T>> factory() {
         return _factory;
       }

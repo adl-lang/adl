@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 
-@SuppressWarnings("unused")
 public class Decl {
 
   /* Members */
@@ -131,6 +130,7 @@ public class Decl {
     final Factory<Decl> _factory = FACTORY;
 
     return new JsonBinding<Decl>() {
+      @Override
       public Factory<Decl> factory() {
         return _factory;
       }

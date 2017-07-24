@@ -15,7 +15,6 @@ import java.util.Objects;
 /**
  * A structure containing a vector.
  */
-@SuppressWarnings("unused")
 public class S2 {
 
   /* Members */
@@ -116,6 +115,7 @@ public class S2 {
     final Factory<S2> _factory = FACTORY;
 
     return new JsonBinding<S2>() {
+      @Override
       public Factory<S2> factory() {
         return _factory;
       }

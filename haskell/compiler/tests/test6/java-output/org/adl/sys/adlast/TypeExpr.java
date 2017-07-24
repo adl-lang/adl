@@ -12,7 +12,6 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class TypeExpr {
 
   /* Members */
@@ -98,6 +97,7 @@ public class TypeExpr {
     final Factory<TypeExpr> _factory = FACTORY;
 
     return new JsonBinding<TypeExpr>() {
+      @Override
       public Factory<TypeExpr> factory() {
         return _factory;
       }

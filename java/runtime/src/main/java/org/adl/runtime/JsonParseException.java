@@ -15,6 +15,7 @@ public class JsonParseException extends com.google.gson.JsonParseException
     this.context = new ArrayList<>();
   }
 
+  @Override
   public String getMessage() {
     return this.message + " at " + contextString();
   }

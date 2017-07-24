@@ -13,7 +13,6 @@ import java.util.Objects;
 /**
  * An empty structure.
  */
-@SuppressWarnings("unused")
 public class S0 {
 
 
@@ -58,6 +57,7 @@ public class S0 {
     final Factory<S0> _factory = FACTORY;
 
     return new JsonBinding<S0>() {
+      @Override
       public Factory<S0> factory() {
         return _factory;
       }

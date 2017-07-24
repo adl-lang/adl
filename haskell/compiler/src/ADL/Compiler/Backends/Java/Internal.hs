@@ -131,7 +131,8 @@ data CodeGenProfile = CodeGenProfile {
   cgp_genericFactories :: Bool,
   cgp_json :: Bool,
   cgp_parcelable :: Bool,
-  cgp_runtimePackage :: JavaPackage
+  cgp_runtimePackage :: JavaPackage,
+  cgp_supressWarnings :: [T.Text]
 }
 
 defaultCodeGenProfile = CodeGenProfile {
@@ -143,7 +144,8 @@ defaultCodeGenProfile = CodeGenProfile {
   cgp_genericFactories = False,
   cgp_json = False,
   cgp_parcelable = False,
-  cgp_runtimePackage = javaPackage "org.adl.runtime"
+  cgp_runtimePackage = javaPackage "org.adl.runtime",
+  cgp_supressWarnings = []
 }
 
 data ClassFile = ClassFile {
@@ -185,7 +187,7 @@ classFileCode content =
   <>
   cf_docString content
   <>
-  csuppressWarnings ["unused"]
+  csuppressWarnings (cgp_supressWarnings (cf_codeProfile content))
   <>
   cblock decl (
     cline ""
@@ -825,6 +827,7 @@ factoryTypeArg :: Ident -> Ident
 factoryTypeArg n = "factory" <> n
 
 csuppressWarnings :: [T.Text] -> Code
+csuppressWarnings [] = CEmpty
 csuppressWarnings [wkey] = ctemplate "@SuppressWarnings($1)" [T.pack (show wkey)]
 csuppressWarnings wkeys = ctemplate "@SuppressWarnings({$1})" [T.intercalate "," [T.pack (show wkey) | wkey <- wkeys]]
 

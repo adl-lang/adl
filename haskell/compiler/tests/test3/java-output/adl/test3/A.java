@@ -11,7 +11,6 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class A {
 
   /* Members */
@@ -112,6 +111,7 @@ public class A {
     final Factory<A> _factory = FACTORY;
 
     return new JsonBinding<A>() {
+      @Override
       public Factory<A> factory() {
         return _factory;
       }

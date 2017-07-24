@@ -3,18 +3,14 @@
 package org.adl.sys.adlast;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
-import java.util.Map;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class TypeRef {
 
   /* Members */
@@ -153,6 +149,7 @@ public class TypeRef {
     final Factory<TypeRef> _factory = FACTORY;
 
     return new JsonBinding<TypeRef>() {
+      @Override
       public Factory<TypeRef> factory() {
         return _factory;
       }

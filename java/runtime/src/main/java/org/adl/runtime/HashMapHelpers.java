@@ -21,7 +21,7 @@ public class HashMapHelpers
 
       @Override
       public HashMap<K,V> create(HashMap<K,V> other) {
-        HashMap<K,V> result = new HashMap<K,V>();
+        HashMap<K,V> result = new HashMap<>();
         for (Map.Entry<K,V> e : other.entrySet()) {
           result.put(keyFactory.create(e.getKey()), valueFactory.create(e.getValue()));
         }
@@ -31,7 +31,7 @@ public class HashMapHelpers
   }
 
   public static <K,V> HashMap<K,V> create(ArrayList<Pair<K,V>> vals) {
-    HashMap<K,V> result = new HashMap<K,V>();
+    HashMap<K,V> result = new HashMap<>();
     for (Pair<K,V> p : vals) {
       result.put(p.getV1(),p.getV2());
     }
@@ -43,10 +43,12 @@ public class HashMapHelpers
     final Factory<HashMap<K,V>> _factory = factory(bindingK.factory(), bindingV.factory());
 
     return new JsonBinding<HashMap<K,V>>() {
+      @Override
       public Factory<HashMap<K,V>> factory() {
         return _factory;
       };
 
+      @Override
       public JsonElement toJson(HashMap<K,V> value) {
         JsonArray result = new JsonArray();
         for (Map.Entry<K,V> entry : value.entrySet()) {
@@ -58,6 +60,7 @@ public class HashMapHelpers
         return result;
       }
 
+      @Override
       public HashMap<K,V> fromJson(JsonElement json) {
         if (!json.isJsonArray()) {
           throw new JsonParseException("expected an array");

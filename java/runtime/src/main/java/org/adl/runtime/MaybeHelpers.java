@@ -22,7 +22,7 @@ public class MaybeHelpers
     };
   }
 
-  public static <T> Optional<T> nothing(Void value) {
+  public static <T> Optional<T> nothing(@SuppressWarnings("unused") Void value) {
     return Optional.empty();
   }
 
@@ -30,15 +30,17 @@ public class MaybeHelpers
     return Optional.of(value);
   }
 
-  
+
   public static <T> JsonBinding<Optional<T>> jsonBinding(final JsonBinding<T> bindingT) {
     final Factory<Optional<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<Optional<T>>() {
+      @Override
       public Factory<Optional<T>> factory() {
         return _factory;
       };
 
+      @Override
       public JsonElement toJson(Optional<T> value) {
         if (value.isPresent()) {
           JsonObject result = new JsonObject();
@@ -49,6 +51,7 @@ public class MaybeHelpers
         }
       }
 
+      @Override
       public Optional<T> fromJson(JsonElement json) {
         String name = JsonBindings.unionNameFromJson(json);
         if (name.equals("nothing")) {

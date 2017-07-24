@@ -10,7 +10,6 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Date {
 
   /* Members */
@@ -81,6 +80,7 @@ public class Date {
     final Factory<Date> _factory = FACTORY;
 
     return new JsonBinding<Date>() {
+      @Override
       public Factory<Date> factory() {
         return _factory;
       }

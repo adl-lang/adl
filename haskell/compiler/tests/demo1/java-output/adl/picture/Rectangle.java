@@ -11,7 +11,6 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Rectangle {
 
   /* Members */
@@ -97,6 +96,7 @@ public class Rectangle {
     final Factory<Rectangle> _factory = FACTORY;
 
     return new JsonBinding<Rectangle>() {
+      @Override
       public Factory<Rectangle> factory() {
         return _factory;
       }

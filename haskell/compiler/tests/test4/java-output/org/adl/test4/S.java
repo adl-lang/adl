@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 
-@SuppressWarnings("unused")
 public class S {
 
   /* Members */
@@ -257,6 +256,7 @@ public class S {
     final Factory<S> _factory = FACTORY;
 
     return new JsonBinding<S>() {
+      @Override
       public Factory<S> factory() {
         return _factory;
       }

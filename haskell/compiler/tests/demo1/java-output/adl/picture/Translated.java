@@ -11,7 +11,6 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Translated<T> {
 
   /* Members */
@@ -115,6 +114,7 @@ public class Translated<T> {
     final Factory<Translated<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<Translated<T>>() {
+      @Override
       public Factory<Translated<T>> factory() {
         return _factory;
       }

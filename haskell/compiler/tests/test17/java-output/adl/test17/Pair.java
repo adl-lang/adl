@@ -10,7 +10,6 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Pair<A, B> {
 
   /* Members */
@@ -99,6 +98,7 @@ public class Pair<A, B> {
     final Factory<Pair<A, B>> _factory = factory(bindingA.factory(), bindingB.factory());
 
     return new JsonBinding<Pair<A, B>>() {
+      @Override
       public Factory<Pair<A, B>> factory() {
         return _factory;
       }

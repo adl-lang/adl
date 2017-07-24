@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Module {
 
   /* Members */
@@ -115,6 +114,7 @@ public class Module {
     final Factory<Module> _factory = FACTORY;
 
     return new JsonBinding<Module>() {
+      @Override
       public Factory<Module> factory() {
         return _factory;
       }

@@ -11,7 +11,6 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Circle {
 
   /* Members */
@@ -82,6 +81,7 @@ public class Circle {
     final Factory<Circle> _factory = FACTORY;
 
     return new JsonBinding<Circle>() {
+      @Override
       public Factory<Circle> factory() {
         return _factory;
       }

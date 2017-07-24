@@ -12,7 +12,6 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Union {
 
   /* Members */
@@ -98,6 +97,7 @@ public class Union {
     final Factory<Union> _factory = FACTORY;
 
     return new JsonBinding<Union>() {
+      @Override
       public Factory<Union> factory() {
         return _factory;
       }

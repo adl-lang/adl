@@ -2,8 +2,6 @@ package org.adl.runtime;
 
 import com.google.gson.JsonElement;
 
-import java.io.IOException;
-
 /**
  *  Interface for GSON based serialisation.
  */
@@ -21,4 +19,3 @@ public interface JsonBinding<T>
     return fromJson(JsonHelpers.gson.fromJson(str, JsonElement.class));
   }
 };
-

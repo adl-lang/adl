@@ -12,7 +12,6 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Tree<T> {
 
   /* Members */
@@ -100,6 +99,7 @@ public class Tree<T> {
     final Factory<Tree<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<Tree<T>>() {
+      @Override
       public Factory<Tree<T>> factory() {
         return _factory;
       }

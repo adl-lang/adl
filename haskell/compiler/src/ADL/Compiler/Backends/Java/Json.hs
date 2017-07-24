@@ -56,7 +56,7 @@ generateStructJson cgp decl struct fieldDetails = do
               cline ""
               <>
               cblock1 (template "return new $1<$2>()" [jsonBindingI,className]) (
-                cblock (template "public $1<$2> factory()" [factoryI,className]) (
+                coverride (template "public $1<$2> factory()" [factoryI,className]) (
                   cline "return _factory;"
                   )
                 <>
@@ -131,7 +131,7 @@ generateNewtypeJson cgp decl newtype_ memberVarName = do
               cline ""
               <>
               cblock1 (template "return new $1<$2>()" [jsonBindingI,className]) (
-                cblock (template "public $1<$2> factory()" [factoryI,className]) (
+                coverride (template "public $1<$2> factory()" [factoryI,className]) (
                   cline "return _factory;"
                   )
                 <>
@@ -165,10 +165,7 @@ generateUnionJson cgp decl union fieldDetails = do
   jsonBindingI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBinding")
   jsonBindingsI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBindings")
   jsonElementI <- addImport "com.google.gson.JsonElement"
-  jsonObjectI <- addImport "com.google.gson.JsonObject"
-  jsonPrimitiveI <- addImport "com.google.gson.JsonPrimitive"
   jsonParseExceptionI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonParseException")
-  mapI <- addImport "java.util.Map"
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
 
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- u_typeParams union]
@@ -190,7 +187,7 @@ generateUnionJson cgp decl union fieldDetails = do
               cline ""
               <>
               cblock1 (template "return new $1<$2>()" [jsonBindingI,className]) (
-                cblock (template "public $1<$2> factory()" [factoryI,className]) (
+                coverride (template "public $1<$2> factory()" [factoryI,className]) (
                   cline "return _factory;"
                   )
                 <>
@@ -257,7 +254,7 @@ generateEnumJson cgp decl union fieldDetails = do
   let className = unreserveWord (d_name decl)
       factory = cblock (template "public static $1<$2> jsonBinding()" [jsonBindingI,className])
         (  cblock1 (template "return new $1<$2>()" [jsonBindingI,className])
-           (  cblock (template "public $1<$2> factory()" [factoryI,className])
+           (  coverride (template "public $1<$2> factory()" [factoryI,className])
               (  cline "return FACTORY;"
               )
            <> cline ""
