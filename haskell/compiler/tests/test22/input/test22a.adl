@@ -1,0 +1,10 @@
+
+@JavaPackage "com.custom.adl.test22a"
+module test22a
+{
+   import adlc.config.java.JavaPackage;
+
+   struct X {
+      String field;
+   };
+};

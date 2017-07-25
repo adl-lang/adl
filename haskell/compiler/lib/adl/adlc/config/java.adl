@@ -1,8 +1,13 @@
 module adlc.config.java {
 
+/// ADL module annotation to specify a target java package.
+type JavaPackage = String;
+
+/// ADL declaration annotation to specify that a custom type
+/// should be used
 struct JavaCustomType
 {
-    // The fully scoped java name of the type to be used    
+    // The fully scoped java name of the type to be used
     String javaname;
 
     // The fully scoped name of the class containing

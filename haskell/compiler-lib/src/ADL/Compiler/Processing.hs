@@ -673,16 +673,18 @@ defaultAdlFlags = AdlFlags
   }
 
 loadAndCheckModule :: AdlFlags -> FilePath -> EIOT RModule
-loadAndCheckModule af modulePath = do
+loadAndCheckModule af modulePath = fst <$> loadAndCheckModule1 af modulePath
+
+loadAndCheckModule1 :: AdlFlags -> FilePath -> EIOT (RModule,[RModule])
+loadAndCheckModule1 af modulePath = do
     (m,mm) <- loadModule1
     mapM_ checkModuleForDuplicates (m:Map.elems mm)
     case sortByDeps (Map.elems mm) of
       Nothing -> eioError (template "Mutually dependent modules are not allowed: $1" [T.intercalate ", " (map formatText (Map.keys mm))])
       (Just mmSorted) -> do
-        ns <- resolveN mmSorted emptyNameScope
+        (ns,rms) <- resolveN mmSorted emptyNameScope
         (_,rm) <- resolve1 m ns
-        return rm
-
+        return (rm,rms)
   where
     loadModule1 :: EIOT (SModule, SModuleMap)
     loadModule1 = loadModule (af_log af) modulePath (moduleFinder (af_searchPath af)) (fileSetGenerator (af_mergeFileExtensions af)) Map.empty
@@ -690,11 +692,12 @@ loadAndCheckModule af modulePath = do
     checkModuleForDuplicates :: SModule -> EIOT ()
     checkModuleForDuplicates m = failOnErrors m (checkDuplicates m)
 
-    resolveN :: [SModule] -> NameScope -> EIOT NameScope
-    resolveN [] ns = return ns
+    resolveN :: [SModule] -> NameScope -> EIOT (NameScope,[RModule])
+    resolveN [] ns = return (ns,[])
     resolveN (m:ms) ns = do
-        (ns',rm) <- resolve1 m ns
-        resolveN ms ns'
+        (ns1,rm) <- resolve1 m ns
+        (ns2,rms) <- resolveN ms ns1
+        return (ns2,rm:rms)
 
     resolve1 :: SModule -> NameScope -> EIOT (NameScope,RModule)
     resolve1 m ns = do

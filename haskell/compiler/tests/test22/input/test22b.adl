@@ -1,0 +1,11 @@
+
+@JavaPackage "com.custom2.adl.test22b"
+module test22b
+{
+   import adlc.config.java.JavaPackage;
+   import test22a.X;
+
+   struct Y {
+      X field;
+   };
+};

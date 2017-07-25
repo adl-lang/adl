@@ -321,6 +321,13 @@ runTests = do
     it "Correctly uses specified serialisation field names" $ do
       collectResults (runJavaBackend1 "test20/input/test.adl")
         `shouldReturn` MatchOutput
+    it "generates to packages controlled by annotations" $ do
+      collectResults (runJavaBackend
+          ["test22/input",stdsrc] ["test22/input/test22a.adl","test22/input/test22b.adl"]
+          "test22/java-output"
+          (withJavaOutputPackage "org.adl")
+          )
+        `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runJavaBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput

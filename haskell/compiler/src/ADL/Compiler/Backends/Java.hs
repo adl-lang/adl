@@ -23,9 +23,9 @@ import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
 import qualified Data.Aeson as JSON
 import Data.Char(toUpper)
-import Data.Maybe(fromMaybe,isJust)
 import Data.Foldable(for_,fold)
 import Data.List(intersperse,replicate,sort)
+import Data.Maybe(catMaybes)
 import Data.Monoid
 import Data.String(IsString(..))
 import Data.Traversable(for)
@@ -45,14 +45,17 @@ import ADL.Core.Value
 import ADL.Utils.FileDiff(dirContents)
 import ADL.Utils.Format
 
+type JavaPackageFn = ModuleName -> JavaPackage
+
 generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do
   let cgp = (jf_codeGenProfile jf)
   imports <- for modulePaths $ \modulePath -> do
-    m <- loadAndCheckModule af modulePath
+    (mod,moddeps) <- loadAndCheckModule1 af modulePath
     generateModule jf fileWriter
                    (const cgp)
-                   m
+                   (mkJavaPackageFn (mod:moddeps) (jf_package jf))
+                   mod
   when (jf_includeRuntime jf) $ liftIO $ do
     generateRuntime jf fileWriter (mconcat imports)
 
@@ -61,24 +64,23 @@ generate af jf fileWriter modulePaths = catchAllExceptions  $ do
 generateModule :: JavaFlags ->
                   FileWriter ->
                   (ScopedName -> CodeGenProfile) ->
+                  JavaPackageFn ->
                   RModule ->
                   EIO T.Text (Set.Set JavaClass)
-generateModule jf fileWriter mCodeGetProfile m0 = do
+generateModule jf fileWriter mCodeGetProfile javaPackageFn m0 = do
   let moduleName = m_name m
       m = ( associateCustomTypes getCustomType moduleName
           . removeModuleTypedefs
           . expandModuleTypedefs
           ) m0
       decls = Map.elems (m_decls m)
-      javaPackageFn mn = jf_package jf <> JavaPackage (unModuleName mn)
 
   checkCustomSerializations m
 
   imports <- for decls $ \decl -> do
     let codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
         maxLineLength = cgp_maxLineLength codeProfile
-        klass  = javaClass (JavaPackage (unModuleName moduleName)) (d_name decl)
-        filePath = javaClassFilePath (withPackagePrefix (jf_package jf) klass)
+        filePath = javaClassFilePath (javaClass (javaPackageFn moduleName) (d_name decl))
         generateType = case d_customType decl of
           Nothing -> True
           (Just ct) -> ct_generateType ct
@@ -100,7 +102,7 @@ generateModule jf fileWriter mCodeGetProfile m0 = do
         return mempty
   return (mconcat imports)
 
-generateStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Struct CResolvedType -> ClassFile
+generateStruct :: CodeGenProfile -> ModuleName -> JavaPackageFn -> CDecl -> Struct CResolvedType -> ClassFile
 generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen state0
   where
     className = unreserveWord (d_name decl)
@@ -123,7 +125,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
       when (cgp_parcelable codeProfile) $ do
         generateStructParcelable codeProfile decl struct fieldDetails
 
-generateNewtype :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Newtype CResolvedType -> ClassFile
+generateNewtype :: CodeGenProfile -> ModuleName -> JavaPackageFn -> CDecl -> Newtype CResolvedType -> ClassFile
 generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState gen state0
   where
     className = unreserveWord (d_name decl)
@@ -159,7 +161,7 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState g
       when (cgp_parcelable codeProfile) $ do
         generateStructParcelable codeProfile decl struct fieldDetails
 
-generateCoreStruct :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage)
+generateCoreStruct :: CodeGenProfile -> ModuleName -> JavaPackageFn
                    -> CDecl -> Struct CResolvedType -> [FieldDetails] -> CState ()
 generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails =  gen
   where
@@ -327,7 +329,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
 
 data UnionType = AllVoids | NoVoids | Mixed
 
-generateUnion :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Union CResolvedType -> ClassFile
+generateUnion :: CodeGenProfile -> ModuleName -> JavaPackageFn -> CDecl -> Union CResolvedType -> ClassFile
 generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen state0
   where
     className = unreserveWord (d_name decl)
@@ -595,7 +597,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
       when (cgp_parcelable codeProfile) $ do
         generateUnionParcelable codeProfile decl union fieldDetails
 
-generateEnum :: CodeGenProfile -> ModuleName -> (ModuleName -> JavaPackage) -> CDecl -> Union CResolvedType -> ClassFile
+generateEnum :: CodeGenProfile -> ModuleName -> JavaPackageFn -> CDecl -> Union CResolvedType -> ClassFile
 generateEnum codeProfile moduleName javaPackageFn decl union = execState gen state0
   where
     className = unreserveWord (d_name decl)
@@ -679,3 +681,21 @@ generateRuntime jf fileWriter imports = do
             newT = T.replace "org.adl.runtime" (genJavaPackage rtpackage)
                  . T.replace "org.adl.sys" (genJavaPackage (jf_package jf <> javaPackage "sys"))
                  $ origT
+
+-- Use the default output package and any
+-- @JavaPackage annotation to create a mapping from
+-- adl module names to java packages
+
+mkJavaPackageFn :: [RModule] -> JavaPackage -> JavaPackageFn
+mkJavaPackageFn mods defJavaPackage = \modName -> case Map.lookup modName packageMap of
+  Nothing -> defJavaPackage <> JavaPackage (unModuleName modName)
+  (Just pkg) -> pkg
+ where
+   packageMap = mconcat (map getCustomJavaPackage mods)
+
+   getCustomJavaPackage :: RModule -> Map.Map ModuleName JavaPackage
+   getCustomJavaPackage mod = case Map.lookup snJavaPackage (m_annotations mod) of
+     Just (_,JSON.String s) -> Map.singleton (m_name mod) (javaPackage s)
+     _ -> Map.empty
+
+   snJavaPackage = ScopedName (ModuleName ["adlc","config","java"]) "JavaPackage"
