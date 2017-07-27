@@ -14,8 +14,12 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import org.adl.runtime.MaybeHelpers;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
 import org.adl.sys.types.Pair;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
@@ -63,10 +67,10 @@ public class S {
     this.v5 = MaybeHelpers.factory(Factories.STRING).create();
     this.v5a = MaybeHelpers.nothing(null);
     this.v5b = MaybeHelpers.just("hello");
-    this.v6 = Pair.factory(Factories.STRING, Factories.INTEGER).create();
+    this.v6 = Pair.factory(Factories.STRING, Factories.INT32).create();
     this.v7 = HashSetHelpers.create(Factories.arrayList(1, 2, 3));
-    this.v7a = HashSetHelpers.factory(Factories.INTEGER).create();
-    this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create();
+    this.v7a = HashSetHelpers.factory(Factories.INT32).create();
+    this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INT32).create();
     this.v8a = HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)));
   }
 
@@ -78,11 +82,11 @@ public class S {
     this.v5 = MaybeHelpers.factory(Factories.STRING).create(other.v5);
     this.v5a = MaybeHelpers.factory(Factories.STRING).create(other.v5a);
     this.v5b = MaybeHelpers.factory(Factories.STRING).create(other.v5b);
-    this.v6 = Pair.factory(Factories.STRING, Factories.INTEGER).create(other.v6);
-    this.v7 = HashSetHelpers.factory(Factories.INTEGER).create(other.v7);
-    this.v7a = HashSetHelpers.factory(Factories.INTEGER).create(other.v7a);
-    this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(other.v8);
-    this.v8a = HashMapHelpers.factory(Factories.STRING, Factories.INTEGER).create(other.v8a);
+    this.v6 = Pair.factory(Factories.STRING, Factories.INT32).create(other.v6);
+    this.v7 = HashSetHelpers.factory(Factories.INT32).create(other.v7);
+    this.v7a = HashSetHelpers.factory(Factories.INT32).create(other.v7a);
+    this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INT32).create(other.v8);
+    this.v8a = HashMapHelpers.factory(Factories.STRING, Factories.INT32).create(other.v8a);
   }
 
   /* Accessors and mutators */
@@ -236,6 +240,13 @@ public class S {
     public S create(S other) {
       return new S(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("test4", "S");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */
@@ -248,11 +259,11 @@ public class S {
     final Lazy<JsonBinding<Optional<String>>> v5 = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> v5a = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> v5b = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
-    final Lazy<JsonBinding<Pair<String, Integer>>> v6 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
-    final Lazy<JsonBinding<HashSet<Integer>>> v7 = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INTEGER));
-    final Lazy<JsonBinding<HashSet<Integer>>> v7a = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INTEGER));
-    final Lazy<JsonBinding<HashMap<String, Integer>>> v8 = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
-    final Lazy<JsonBinding<HashMap<String, Integer>>> v8a = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
+    final Lazy<JsonBinding<Pair<String, Integer>>> v6 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
+    final Lazy<JsonBinding<HashSet<Integer>>> v7 = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INT32));
+    final Lazy<JsonBinding<HashSet<Integer>>> v7a = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INT32));
+    final Lazy<JsonBinding<HashMap<String, Integer>>> v8 = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
+    final Lazy<JsonBinding<HashMap<String, Integer>>> v8a = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
     final Factory<S> _factory = FACTORY;
 
     return new JsonBinding<S>() {

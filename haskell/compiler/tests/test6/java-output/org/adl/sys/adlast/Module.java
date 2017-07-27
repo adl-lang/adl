@@ -117,6 +117,13 @@ public class Module {
     public Module create(Module other) {
       return new Module(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("sys.adlast", "Module");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */

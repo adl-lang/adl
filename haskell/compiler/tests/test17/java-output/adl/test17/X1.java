@@ -9,6 +9,9 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -39,7 +42,7 @@ public class X1 {
   public X1() {
     this.f1 = 0;
     this.f2 = 0;
-    this.f3 = Pair.factory(Factories.STRING, Factories.INTEGER).create();
+    this.f3 = Pair.factory(Factories.STRING, Factories.INT32).create();
     this.f4 = Pair.factory(Factories.STRING, Factories.STRING).create();
     this.f5 = new ArrayList<Integer>();
     this.f6 = new ArrayList<Pair<String, Integer>>();
@@ -49,10 +52,10 @@ public class X1 {
   public X1(X1 other) {
     this.f1 = other.f1;
     this.f2 = other.f2;
-    this.f3 = Pair.factory(Factories.STRING, Factories.INTEGER).create(other.f3);
+    this.f3 = Pair.factory(Factories.STRING, Factories.INT32).create(other.f3);
     this.f4 = Pair.factory(Factories.STRING, Factories.STRING).create(other.f4);
-    this.f5 = Factories.arrayList(Factories.INTEGER).create(other.f5);
-    this.f6 = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INTEGER)).create(other.f6);
+    this.f5 = Factories.arrayList(Factories.INT32).create(other.f5);
+    this.f6 = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INT32)).create(other.f6);
     this.f7 = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(other.f7);
   }
 
@@ -157,17 +160,24 @@ public class X1 {
     public X1 create(X1 other) {
       return new X1(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("test17", "X1");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */
 
   public static JsonBinding<X1> jsonBinding() {
-    final Lazy<JsonBinding<Integer>> f1 = new Lazy<>(() -> JsonBindings.INTEGER);
-    final Lazy<JsonBinding<Integer>> f2 = new Lazy<>(() -> JsonBindings.INTEGER);
-    final Lazy<JsonBinding<Pair<String, Integer>>> f3 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
+    final Lazy<JsonBinding<Integer>> f1 = new Lazy<>(() -> JsonBindings.INT32);
+    final Lazy<JsonBinding<Integer>> f2 = new Lazy<>(() -> JsonBindings.INT32);
+    final Lazy<JsonBinding<Pair<String, Integer>>> f3 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
     final Lazy<JsonBinding<Pair<String, String>>> f4 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING));
-    final Lazy<JsonBinding<ArrayList<Integer>>> f5 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INTEGER));
-    final Lazy<JsonBinding<ArrayList<Pair<String, Integer>>>> f6 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER)));
+    final Lazy<JsonBinding<ArrayList<Integer>>> f5 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INT32));
+    final Lazy<JsonBinding<ArrayList<Pair<String, Integer>>>> f6 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32)));
     final Lazy<JsonBinding<ArrayList<Pair<String, String>>>> f7 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING)));
     final Factory<X1> _factory = FACTORY;
 

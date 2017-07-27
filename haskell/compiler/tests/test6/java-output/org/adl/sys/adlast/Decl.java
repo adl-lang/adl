@@ -11,6 +11,7 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import org.adl.runtime.MaybeHelpers;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,14 +36,14 @@ public class Decl {
 
   public Decl() {
     this.name = "";
-    this.version = MaybeHelpers.factory(Factories.INTEGER).create();
+    this.version = MaybeHelpers.factory(Factories.WORD32).create();
     this.type_ = new DeclType();
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create();
   }
 
   public Decl(Decl other) {
     this.name = other.name;
-    this.version = MaybeHelpers.factory(Factories.INTEGER).create(other.version);
+    this.version = MaybeHelpers.factory(Factories.WORD32).create(other.version);
     this.type_ = DeclType.FACTORY.create(other.type_);
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create(other.annotations);
   }
@@ -118,13 +119,20 @@ public class Decl {
     public Decl create(Decl other) {
       return new Decl(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("sys.adlast", "Decl");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */
 
   public static JsonBinding<Decl> jsonBinding() {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
-    final Lazy<JsonBinding<Optional<Integer>>> version = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.INTEGER));
+    final Lazy<JsonBinding<Optional<Integer>>> version = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.WORD32));
     final Lazy<JsonBinding<DeclType>> type_ = new Lazy<>(() -> DeclType.jsonBinding());
     final Lazy<JsonBinding<HashMap<ScopedName, Literal>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), Literal.jsonBinding()));
     final Factory<Decl> _factory = FACTORY;

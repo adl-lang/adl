@@ -1,5 +1,8 @@
 package org.adl.runtime;
 
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Map;
@@ -14,6 +17,8 @@ public class Factories {
     public Void create() { return null; }
     @Override
     public Void create(Void other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Void"); }
   };
 
   public static final Factory<Boolean> BOOLEAN = new Factory<Boolean>() {
@@ -21,34 +26,80 @@ public class Factories {
     public Boolean create() { return false; }
     @Override
     public Boolean create(Boolean other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Boolean"); }
   };
 
-  public static final Factory<Byte> BYTE = new Factory<Byte>() {
+  public static final Factory<Byte> INT8 = new Factory<Byte>() {
     @Override
     public Byte create() { return 0; }
     @Override
     public Byte create(Byte other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Int8"); }
   };
 
-  public static final Factory<Short> SHORT = new Factory<Short>() {
+  public static final Factory<Short> INT16 = new Factory<Short>() {
     @Override
     public Short create() { return 0; }
     @Override
     public Short create(Short other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Int16"); }
   };
 
-  public static final Factory<Integer> INTEGER = new Factory<Integer>() {
+  public static final Factory<Integer> INT32 = new Factory<Integer>() {
     @Override
     public Integer create() { return 0; }
     @Override
     public Integer create(Integer other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Int32"); }
   };
 
-  public static final Factory<Long> LONG = new Factory<Long>() {
+  public static final Factory<Long> INT64 = new Factory<Long>() {
     @Override
     public Long create() { return 0L; }
     @Override
     public Long create(Long other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Int64"); }
+  };
+
+  public static final Factory<Byte> WORD8 = new Factory<Byte>() {
+    @Override
+    public Byte create() { return 0; }
+    @Override
+    public Byte create(Byte other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Word8"); }
+  };
+
+  public static final Factory<Short> WORD16 = new Factory<Short>() {
+    @Override
+    public Short create() { return 0; }
+    @Override
+    public Short create(Short other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Word16"); }
+  };
+
+  public static final Factory<Integer> WORD32 = new Factory<Integer>() {
+    @Override
+    public Integer create() { return 0; }
+    @Override
+    public Integer create(Integer other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Word32"); }
+  };
+
+  public static final Factory<Long> WORD64 = new Factory<Long>() {
+    @Override
+    public Long create() { return 0L; }
+    @Override
+    public Long create(Long other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Word64"); }
   };
 
   public static final Factory<Float> FLOAT = new Factory<Float>() {
@@ -56,6 +107,8 @@ public class Factories {
     public Float create() { return 0F; }
     @Override
     public Float create(Float other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Float"); }
   };
 
   public static final Factory<Double> DOUBLE = new Factory<Double>() {
@@ -63,6 +116,8 @@ public class Factories {
     public Double create() { return 0.0; }
     @Override
     public Double create(Double other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Double"); }
   };
 
   public static final Factory<String> STRING = new Factory<String>() {
@@ -70,6 +125,8 @@ public class Factories {
     public String create() { return ""; }
     @Override
     public String create(String other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("String"); }
   };
 
   public static final Factory<ByteArray> BYTE_ARRAY = new Factory<ByteArray>() {
@@ -77,6 +134,8 @@ public class Factories {
     public ByteArray create() { return new ByteArray(); }
     @Override
     public ByteArray create(ByteArray other) { return new ByteArray(other); }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("ByteVector"); }
   };
 
   public static <T> Factory<ArrayList<T>> arrayList(final Factory<T> factoryT) {
@@ -93,6 +152,11 @@ public class Factories {
           result.add(factoryT.create(v));
         }
         return result;
+      }
+
+      @Override
+      public TypeExpr typeExpr() {
+        return primTypeExpr("Vector", factoryT.typeExpr());
       }
     };
   }
@@ -121,6 +185,11 @@ public class Factories {
         }
         return result;
       }
+
+      @Override
+      public TypeExpr typeExpr() {
+        return primTypeExpr("StringMap", factoryT.typeExpr());
+      }
     };
   }
 
@@ -134,6 +203,11 @@ public class Factories {
       @Override
       public Optional<T> create(Optional<T> other) {
         return other.map(factoryT::create);
+      }
+
+      @Override
+      public TypeExpr typeExpr() {
+        return primTypeExpr("Nullable", factoryT.typeExpr());
       }
     };
   }
@@ -152,6 +226,16 @@ public class Factories {
       result.put(k, v);
     }
     return result;
+  }
+
+  private static TypeExpr primTypeExpr(String primitive) {
+    return new TypeExpr(TypeRef.primitive(primitive), new ArrayList<>());
+  }
+
+  private static TypeExpr primTypeExpr(String primitive, TypeExpr param1) {
+    ArrayList<TypeExpr> params = new ArrayList<>();
+    params.add(param1);
+    return new TypeExpr(TypeRef.primitive(primitive), params);
   }
 
 };

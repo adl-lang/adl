@@ -9,6 +9,7 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class Import {
@@ -117,6 +118,13 @@ public class Import {
     @Override
     public Import create(Import other) {
       return new Import(other);
+    }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("sys.adlast", "Import");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
     }
   };
 

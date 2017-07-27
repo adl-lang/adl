@@ -9,6 +9,9 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -163,6 +166,13 @@ public class Picture {
     @Override
     public Picture create(Picture other) {
       return new Picture(other);
+    }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("picture", "Picture");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
     }
   };
 

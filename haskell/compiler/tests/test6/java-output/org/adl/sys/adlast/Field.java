@@ -11,6 +11,7 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import org.adl.runtime.MaybeHelpers;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
@@ -131,6 +132,13 @@ public class Field {
     @Override
     public Field create(Field other) {
       return new Field(other);
+    }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("sys.adlast", "Field");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
     }
   };
 

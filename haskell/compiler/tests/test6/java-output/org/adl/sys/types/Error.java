@@ -9,6 +9,10 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class Error<T> {
@@ -115,6 +119,14 @@ public class Error<T> {
             return new Error<T>(other.disc,other.value);
         }
         throw new IllegalArgumentException();
+      }
+
+      @Override
+      public TypeExpr typeExpr() {
+        ScopedName scopedName = new ScopedName("sys.types", "Error");
+        ArrayList<TypeExpr> params = new ArrayList<>();
+        params.add(factoryT.typeExpr());
+        return new TypeExpr(TypeRef.reference(scopedName), params);
       }
     };
   }

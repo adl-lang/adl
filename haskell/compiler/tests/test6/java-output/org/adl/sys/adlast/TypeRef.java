@@ -9,6 +9,7 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class TypeRef {
@@ -137,6 +138,13 @@ public class TypeRef {
     @Override
     public TypeRef create(TypeRef other) {
       return new TypeRef(other);
+    }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("sys.adlast", "TypeRef");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(org.adl.sys.adlast.TypeRef.reference(scopedName), params);
     }
   };
 

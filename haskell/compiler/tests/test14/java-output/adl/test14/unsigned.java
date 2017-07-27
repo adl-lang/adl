@@ -8,6 +8,10 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonParseException;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import java.util.ArrayList;
 
 public enum unsigned {
 
@@ -39,6 +43,13 @@ public enum unsigned {
     @Override
     public unsigned create(unsigned other) {
       return other;
+    }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("test14", "unsigned");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
     }
   };
 

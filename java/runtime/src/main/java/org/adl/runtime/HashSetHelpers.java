@@ -3,6 +3,11 @@ package org.adl.runtime;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import org.adl.sys.adlast.ScopedName;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +28,14 @@ public class HashSetHelpers
           result.add(valueFactory.create(v));
         }
         return result;
+      }
+
+      @Override
+      public TypeExpr typeExpr() {
+        ScopedName scopedName = new ScopedName("sys.types", "Set");
+        ArrayList<TypeExpr> params = new ArrayList<>();
+        params.add(valueFactory.typeExpr());
+        return new TypeExpr(TypeRef.reference(scopedName), params);
       }
     };
   }

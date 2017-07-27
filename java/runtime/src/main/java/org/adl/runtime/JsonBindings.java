@@ -6,6 +6,9 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -61,11 +64,11 @@ public class JsonBindings
     }
   };
 
-  public static final JsonBinding<Byte> BYTE = new JsonBinding<Byte>() {
+  public static final JsonBinding<Byte> INT8 = new JsonBinding<Byte>() {
 
     @Override
     public Factory<Byte> factory() {
-      return Factories.BYTE;
+      return Factories.INT8;
     }
 
     @Override
@@ -83,11 +86,11 @@ public class JsonBindings
     }
   };
 
-  public static final JsonBinding<Short> SHORT = new JsonBinding<Short>() {
+  public static final JsonBinding<Short> INT16 = new JsonBinding<Short>() {
 
     @Override
     public Factory<Short> factory() {
-      return Factories.SHORT;
+      return Factories.INT16;
     }
 
     @Override
@@ -105,11 +108,11 @@ public class JsonBindings
     }
   };
 
-  public static final JsonBinding<Integer> INTEGER = new JsonBinding<Integer>() {
+  public static final JsonBinding<Integer> INT32 = new JsonBinding<Integer>() {
 
     @Override
     public Factory<Integer> factory() {
-      return Factories.INTEGER;
+      return Factories.INT32;
     }
 
     @Override
@@ -127,11 +130,99 @@ public class JsonBindings
     }
   };
 
-  public static final JsonBinding<Long> LONG = new JsonBinding<Long>() {
+  public static final JsonBinding<Long> INT64 = new JsonBinding<Long>() {
 
     @Override
     public Factory<Long> factory() {
-      return Factories.LONG;
+      return Factories.INT64;
+    }
+
+    @Override
+    public JsonElement toJson(Long value) {
+      return new JsonPrimitive(value);
+    }
+
+    @Override
+    public Long fromJson(JsonElement json) {
+      try {
+        return json.getAsNumber().longValue();
+      } catch (UnsupportedOperationException | ClassCastException | NumberFormatException e) {
+        throw new JsonParseException("expected a number");
+      }
+    }
+  };
+
+  public static final JsonBinding<Byte> WORD8 = new JsonBinding<Byte>() {
+
+    @Override
+    public Factory<Byte> factory() {
+      return Factories.WORD8;
+    }
+
+    @Override
+    public JsonElement toJson(Byte value) {
+      return new JsonPrimitive(value);
+    }
+
+    @Override
+    public Byte fromJson(JsonElement json) {
+      try {
+        return json.getAsNumber().byteValue();
+      } catch (UnsupportedOperationException | ClassCastException e) {
+        throw new JsonParseException("expected a number");
+      }
+    }
+  };
+
+  public static final JsonBinding<Short> WORD16 = new JsonBinding<Short>() {
+
+    @Override
+    public Factory<Short> factory() {
+      return Factories.WORD16;
+    }
+
+    @Override
+    public JsonElement toJson(Short value) {
+      return new JsonPrimitive(value);
+    }
+
+    @Override
+    public Short fromJson(JsonElement json) {
+      try {
+        return json.getAsNumber().shortValue();
+      } catch (UnsupportedOperationException | ClassCastException | NumberFormatException e) {
+        throw new JsonParseException("expected a number");
+      }
+    }
+  };
+
+  public static final JsonBinding<Integer> WORD32 = new JsonBinding<Integer>() {
+
+    @Override
+    public Factory<Integer> factory() {
+      return Factories.WORD32;
+    }
+
+    @Override
+    public JsonElement toJson(Integer value) {
+      return new JsonPrimitive(value);
+    }
+
+    @Override
+    public Integer fromJson(JsonElement json) {
+      try {
+        return json.getAsNumber().intValue();
+      } catch (UnsupportedOperationException | ClassCastException | NumberFormatException e) {
+        throw new JsonParseException("expected a number");
+      }
+    }
+  };
+
+  public static final JsonBinding<Long> WORD64 = new JsonBinding<Long>() {
+
+    @Override
+    public Factory<Long> factory() {
+      return Factories.WORD64;
     }
 
     @Override
@@ -224,6 +315,8 @@ public class JsonBindings
     public JsonElement create() { return JsonNull.INSTANCE; }
     @Override
     public JsonElement create(JsonElement other) { return other; }
+    @Override
+    public TypeExpr typeExpr() { return new TypeExpr(TypeRef.primitive("Json"), new ArrayList<>()); }
   };
 
   public static final JsonBinding<JsonElement> JSON = new JsonBinding<JsonElement>() {

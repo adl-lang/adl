@@ -174,7 +174,7 @@ stdsrc :: FilePath
 stdsrc = "../../../haskell/compiler/lib/adl"
 
 stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
-stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/adlast.adl"]
+stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/adlast.adl", "sys/dynamic.adl"]
 stdHsCustomTypes = ["../../compiler/lib/adl/sys/types/hs-custom-types.json"]
 stdCppCustomTypes = ["../../compiler/lib/adl/sys/types/cpp-custom-types.json"]
 
@@ -304,8 +304,7 @@ runTests = do
       collectResults (runJavaBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
-      let srcs = ["test6/input/test.adl"]
-               <> map (combine stdsrc) ["sys/types.adl","sys/adlast.adl"]
+      let srcs = ["test6/input/test.adl"] <> stdfiles
       collectResults (runJavaBackend [stdsrc] srcs "test6/java-output"
                       (withJavaOutputPackage "org.adl"))
         `shouldReturn` MatchOutput

@@ -11,6 +11,9 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonHelpers;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -338,14 +341,14 @@ public class S<T> {
     return new Factory<S<T>>() {
       final Lazy<Factory<Void>> f_void = new Lazy<>(() -> Factories.VOID);
       final Lazy<Factory<Boolean>> f_bool = new Lazy<>(() -> Factories.BOOLEAN);
-      final Lazy<Factory<Byte>> f_int8 = new Lazy<>(() -> Factories.BYTE);
-      final Lazy<Factory<Short>> f_int16 = new Lazy<>(() -> Factories.SHORT);
-      final Lazy<Factory<Integer>> f_int32 = new Lazy<>(() -> Factories.INTEGER);
-      final Lazy<Factory<Long>> f_int64 = new Lazy<>(() -> Factories.LONG);
-      final Lazy<Factory<Byte>> f_word8 = new Lazy<>(() -> Factories.BYTE);
-      final Lazy<Factory<Short>> f_word16 = new Lazy<>(() -> Factories.SHORT);
-      final Lazy<Factory<Integer>> f_word32 = new Lazy<>(() -> Factories.INTEGER);
-      final Lazy<Factory<Long>> f_word64 = new Lazy<>(() -> Factories.LONG);
+      final Lazy<Factory<Byte>> f_int8 = new Lazy<>(() -> Factories.INT8);
+      final Lazy<Factory<Short>> f_int16 = new Lazy<>(() -> Factories.INT16);
+      final Lazy<Factory<Integer>> f_int32 = new Lazy<>(() -> Factories.INT32);
+      final Lazy<Factory<Long>> f_int64 = new Lazy<>(() -> Factories.INT64);
+      final Lazy<Factory<Byte>> f_word8 = new Lazy<>(() -> Factories.WORD8);
+      final Lazy<Factory<Short>> f_word16 = new Lazy<>(() -> Factories.WORD16);
+      final Lazy<Factory<Integer>> f_word32 = new Lazy<>(() -> Factories.WORD32);
+      final Lazy<Factory<Long>> f_word64 = new Lazy<>(() -> Factories.WORD64);
       final Lazy<Factory<Float>> f_float = new Lazy<>(() -> Factories.FLOAT);
       final Lazy<Factory<Double>> f_double = new Lazy<>(() -> Factories.DOUBLE);
       final Lazy<Factory<ByteArray>> f_bytes = new Lazy<>(() -> Factories.BYTE_ARRAY);
@@ -356,8 +359,8 @@ public class S<T> {
       final Lazy<Factory<U>> f_u1 = new Lazy<>(() -> U.FACTORY);
       final Lazy<Factory<E>> f_e = new Lazy<>(() -> E.FACTORY);
       final Lazy<Factory<T>> f_t = new Lazy<>(() -> factoryT);
-      final Lazy<Factory<B<Short>>> f_bint16 = new Lazy<>(() -> B.factory(Factories.SHORT));
-      final Lazy<Factory<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> Factories.stringMap(Factories.INTEGER));
+      final Lazy<Factory<B<Short>>> f_bint16 = new Lazy<>(() -> B.factory(Factories.INT16));
+      final Lazy<Factory<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> Factories.stringMap(Factories.INT32));
       final Lazy<Factory<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
       final Lazy<Factory<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
 
@@ -420,6 +423,14 @@ public class S<T> {
           other.getF_json2()
           );
       }
+
+      @Override
+      public TypeExpr typeExpr() {
+        ScopedName scopedName = new ScopedName("test3", "S");
+        ArrayList<TypeExpr> params = new ArrayList<>();
+        params.add(factoryT.typeExpr());
+        return new TypeExpr(TypeRef.reference(scopedName), params);
+      }
     };
   }
 
@@ -428,14 +439,14 @@ public class S<T> {
   public static<T> JsonBinding<S<T>> jsonBinding(JsonBinding<T> bindingT) {
     final Lazy<JsonBinding<Void>> f_void = new Lazy<>(() -> JsonBindings.VOID);
     final Lazy<JsonBinding<Boolean>> f_bool = new Lazy<>(() -> JsonBindings.BOOLEAN);
-    final Lazy<JsonBinding<Byte>> f_int8 = new Lazy<>(() -> JsonBindings.BYTE);
-    final Lazy<JsonBinding<Short>> f_int16 = new Lazy<>(() -> JsonBindings.SHORT);
-    final Lazy<JsonBinding<Integer>> f_int32 = new Lazy<>(() -> JsonBindings.INTEGER);
-    final Lazy<JsonBinding<Long>> f_int64 = new Lazy<>(() -> JsonBindings.LONG);
-    final Lazy<JsonBinding<Byte>> f_word8 = new Lazy<>(() -> JsonBindings.BYTE);
-    final Lazy<JsonBinding<Short>> f_word16 = new Lazy<>(() -> JsonBindings.SHORT);
-    final Lazy<JsonBinding<Integer>> f_word32 = new Lazy<>(() -> JsonBindings.INTEGER);
-    final Lazy<JsonBinding<Long>> f_word64 = new Lazy<>(() -> JsonBindings.LONG);
+    final Lazy<JsonBinding<Byte>> f_int8 = new Lazy<>(() -> JsonBindings.INT8);
+    final Lazy<JsonBinding<Short>> f_int16 = new Lazy<>(() -> JsonBindings.INT16);
+    final Lazy<JsonBinding<Integer>> f_int32 = new Lazy<>(() -> JsonBindings.INT32);
+    final Lazy<JsonBinding<Long>> f_int64 = new Lazy<>(() -> JsonBindings.INT64);
+    final Lazy<JsonBinding<Byte>> f_word8 = new Lazy<>(() -> JsonBindings.WORD8);
+    final Lazy<JsonBinding<Short>> f_word16 = new Lazy<>(() -> JsonBindings.WORD16);
+    final Lazy<JsonBinding<Integer>> f_word32 = new Lazy<>(() -> JsonBindings.WORD32);
+    final Lazy<JsonBinding<Long>> f_word64 = new Lazy<>(() -> JsonBindings.WORD64);
     final Lazy<JsonBinding<Float>> f_float = new Lazy<>(() -> JsonBindings.FLOAT);
     final Lazy<JsonBinding<Double>> f_double = new Lazy<>(() -> JsonBindings.DOUBLE);
     final Lazy<JsonBinding<ByteArray>> f_bytes = new Lazy<>(() -> JsonBindings.BYTE_ARRAY);
@@ -446,8 +457,8 @@ public class S<T> {
     final Lazy<JsonBinding<U>> f_u1 = new Lazy<>(() -> U.jsonBinding());
     final Lazy<JsonBinding<E>> f_e = new Lazy<>(() -> E.jsonBinding());
     final Lazy<JsonBinding<T>> f_t = new Lazy<>(() -> bindingT);
-    final Lazy<JsonBinding<B<Short>>> f_bint16 = new Lazy<>(() -> B.jsonBinding(JsonBindings.SHORT));
-    final Lazy<JsonBinding<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.INTEGER));
+    final Lazy<JsonBinding<B<Short>>> f_bint16 = new Lazy<>(() -> B.jsonBinding(JsonBindings.INT16));
+    final Lazy<JsonBinding<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.INT32));
     final Lazy<JsonBinding<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON);
     final Lazy<JsonBinding<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON);
     final Factory<T> factoryT = bindingT.factory();

@@ -251,13 +251,20 @@ public class Literal {
     public Literal create(Literal other) {
       return new Literal(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("sys.adlast", "Literal");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */
 
   public static JsonBinding<Literal> jsonBinding() {
     final Lazy<JsonBinding<Void>> null_ = new Lazy<>(() -> JsonBindings.VOID);
-    final Lazy<JsonBinding<Long>> integer = new Lazy<>(() -> JsonBindings.LONG);
+    final Lazy<JsonBinding<Long>> integer = new Lazy<>(() -> JsonBindings.INT64);
     final Lazy<JsonBinding<Double>> double_ = new Lazy<>(() -> JsonBindings.DOUBLE);
     final Lazy<JsonBinding<String>> string = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<Boolean>> boolean_ = new Lazy<>(() -> JsonBindings.BOOLEAN);

@@ -403,7 +403,7 @@ getTypeDetails (RT_Primitive P_Int8) = TypeDetails
   { td_type = unboxedPrimitive "byte" "Byte"
   , td_genLiteralText = genLiteralText'
   , td_mutable = False
-  , td_factory = primitiveFactory "BYTE"
+  , td_factory = primitiveFactory "INT8"
   , td_hashfn = \from -> template "(int) $1" [from]
   }
   where
@@ -415,7 +415,7 @@ getTypeDetails (RT_Primitive P_Int16) = TypeDetails
   { td_type = unboxedPrimitive "short" "Short"
   , td_genLiteralText = genLiteralText'
   , td_mutable = False
-  , td_factory = primitiveFactory "SHORT"
+  , td_factory = primitiveFactory "INT16"
   , td_hashfn = \from -> template "(int) $1" [from]
   }
   where
@@ -427,7 +427,7 @@ getTypeDetails (RT_Primitive P_Int32) = TypeDetails
   { td_type = unboxedPrimitive "int" "Integer"
   , td_genLiteralText = genLiteralText'
   , td_mutable = False
-  , td_factory = primitiveFactory "INTEGER"
+  , td_factory = primitiveFactory "INT32"
   , td_hashfn = id
   }
   where
@@ -439,13 +439,18 @@ getTypeDetails (RT_Primitive P_Int64) = TypeDetails
   { td_type = unboxedPrimitive "long" "Long"
   , td_genLiteralText = genLiteralText'
   , td_mutable = False
-  , td_factory = primitiveFactory "LONG"
+  , td_factory = primitiveFactory "INT64"
   , td_hashfn = \from -> template "(int) ($1 ^ ($1 >>> 32))" [from]
   }
   where
     genLiteralText' (Literal _ LDefault) = return "0L"
     genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n <> "L")
     genLiteralText' lit = error ("BUG: getTypeDetails8: unexpected literal:" ++ show lit)
+
+getTypeDetails (RT_Primitive P_Word8)  = (getTypeDetails (RT_Primitive P_Int8)){td_factory=primitiveFactory "WORD8"}
+getTypeDetails (RT_Primitive P_Word16) = (getTypeDetails (RT_Primitive P_Int16)){td_factory=primitiveFactory "WORD16"}
+getTypeDetails (RT_Primitive P_Word32) = (getTypeDetails (RT_Primitive P_Int32)){td_factory=primitiveFactory "WORD32"}
+getTypeDetails (RT_Primitive P_Word64) = (getTypeDetails (RT_Primitive P_Int64)){td_factory=primitiveFactory "WORD64"}
 
 getTypeDetails (RT_Primitive P_Float) = TypeDetails
   { td_type = unboxedPrimitive "float" "Float"
@@ -470,11 +475,6 @@ getTypeDetails (RT_Primitive P_Double) = TypeDetails
     genLiteralText' (Literal _ LDefault) = return "0.0"
     genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n)
     genLiteralText' lit = error ("BUG: getTypeDetails10: unexpected literal:" ++ show lit)
-
-getTypeDetails (RT_Primitive P_Word8) = getTypeDetails (RT_Primitive P_Int8)
-getTypeDetails (RT_Primitive P_Word16) = getTypeDetails (RT_Primitive P_Int16)
-getTypeDetails (RT_Primitive P_Word32) = getTypeDetails (RT_Primitive P_Int32)
-getTypeDetails (RT_Primitive P_Word64) = getTypeDetails (RT_Primitive P_Int64)
 
 getTypeDetails (RT_Primitive P_ByteVector) = TypeDetails
   { td_type = \_ _ -> getType

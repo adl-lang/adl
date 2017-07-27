@@ -8,6 +8,7 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class DeclType {
@@ -156,6 +157,13 @@ public class DeclType {
     @Override
     public DeclType create(DeclType other) {
       return new DeclType(other);
+    }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("sys.adlast", "DeclType");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
     }
   };
 

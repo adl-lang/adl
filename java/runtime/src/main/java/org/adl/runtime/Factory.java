@@ -1,5 +1,7 @@
 package org.adl.runtime;
 
+import org.adl.sys.adlast.TypeExpr;
+
 /**
  * A generic factory class for constructing generic instances.
  *
@@ -16,4 +18,9 @@ public interface Factory<T> {
    * copied.
    */
   T create(T other);
+
+  /**
+   * Return a type expression describing the type of T
+   */
+  TypeExpr typeExpr();
 };

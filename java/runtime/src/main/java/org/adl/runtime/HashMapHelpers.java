@@ -5,6 +5,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.adl.sys.types.Pair;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import org.adl.sys.adlast.ScopedName;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +30,16 @@ public class HashMapHelpers
         }
         return result;
       }
+
+      @Override
+      public TypeExpr typeExpr() {
+        ScopedName scopedName = new ScopedName("sys.types", "Map");
+        ArrayList<TypeExpr> params = new ArrayList<>();
+        params.add(keyFactory.typeExpr());
+        params.add(valueFactory.typeExpr());
+        return new TypeExpr(TypeRef.reference(scopedName), params);
+      }
+
     };
   }
 

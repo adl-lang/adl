@@ -9,6 +9,10 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class U9<T> {
@@ -99,7 +103,7 @@ public class U9<T> {
   public static <T> Factory<U9 <T>> factory(Factory<T> factoryT) {
     return new Factory<U9<T>>() {
       final Lazy<Factory<T>> v1 = new Lazy<>(() -> factoryT);
-      final Lazy<Factory<Short>> v2 = new Lazy<>(() -> Factories.SHORT);
+      final Lazy<Factory<Short>> v2 = new Lazy<>(() -> Factories.INT16);
 
       @Override
       public U9<T> create() {
@@ -116,6 +120,14 @@ public class U9<T> {
         }
         throw new IllegalArgumentException();
       }
+
+      @Override
+      public TypeExpr typeExpr() {
+        ScopedName scopedName = new ScopedName("test5", "U9");
+        ArrayList<TypeExpr> params = new ArrayList<>();
+        params.add(factoryT.typeExpr());
+        return new TypeExpr(TypeRef.reference(scopedName), params);
+      }
     };
   }
 
@@ -123,7 +135,7 @@ public class U9<T> {
 
   public static<T> JsonBinding<U9<T>> jsonBinding(JsonBinding<T> bindingT) {
     final Lazy<JsonBinding<T>> v1 = new Lazy<>(() -> bindingT);
-    final Lazy<JsonBinding<Short>> v2 = new Lazy<>(() -> JsonBindings.SHORT);
+    final Lazy<JsonBinding<Short>> v2 = new Lazy<>(() -> JsonBindings.INT16);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<U9<T>> _factory = factory(bindingT.factory());
 

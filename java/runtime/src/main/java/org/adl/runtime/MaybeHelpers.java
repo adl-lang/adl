@@ -4,6 +4,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonObject;
 
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import org.adl.sys.adlast.ScopedName;
+
+import java.util.ArrayList;
 import java.util.Optional;
 
 public class MaybeHelpers
@@ -18,6 +23,14 @@ public class MaybeHelpers
       @Override
       public Optional<T> create(Optional<T> other) {
         return other.map( tFactory::create );
+      }
+
+      @Override
+      public TypeExpr typeExpr() {
+        ScopedName scopedName = new ScopedName("sys.types", "Maybe");
+        ArrayList<TypeExpr> params = new ArrayList<>();
+        params.add(tFactory.typeExpr());
+        return new TypeExpr(TypeRef.reference(scopedName), params);
       }
     };
   }

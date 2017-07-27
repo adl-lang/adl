@@ -268,6 +268,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
         )
 
       factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
+      typeExprMethodCode <- genTypeExprMethod codeProfile moduleName decl
 
       -- factory
       let factory =
@@ -281,6 +282,10 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
               coverride (template "public $1 create($1 other)" [className]) (
                  ctemplate "return new $1(other);" [className]
               )
+              <>
+              cline ""
+              <>
+              typeExprMethodCode
             )
 
       let factoryg lazyC =
@@ -305,8 +310,12 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
                    <>
                    indent (clineN (addTerminators "," "," ""  ctor2Args) <> cline ");")
                    )
-                )
+                <>
+                cline ""
+                <>
+                typeExprMethodCode
               )
+            )
 
           factoryArgs = commaSep [template "$1<$2> $3" [factoryInterface,arg,factoryTypeArg arg] | arg <- s_typeParams struct]
           ctor1Args = [case f_default (fd_field fd) of
@@ -525,6 +534,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
 
       -- factory
       factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
+      typeExprMethodCode <- genTypeExprMethod codeProfile moduleName decl
 
       let factory =
             cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (
@@ -537,6 +547,10 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
               coverride (template "public $1 create($1 other)" [className]) (
                  ctemplate "return new $1(other);" [className]
               )
+              <>
+              cline ""
+              <>
+              typeExprMethodCode
             )
 
       let factoryg lazyC =
@@ -576,6 +590,10 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                   <>
                   cline "throw new IllegalArgumentException();"
                   )
+                  <>
+                  cline ""
+                  <>
+                  typeExprMethodCode
                 )
               )
 
@@ -630,6 +648,8 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
         <> cline "throw new IllegalArgumentException(\"illegal value: \" + s);"
         )
 
+      typeExprMethodCode <- genTypeExprMethod codeProfile moduleName decl
+
       addMethod $ cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface])
         ( coverride (template "public $1 create()" [className])
             ( ctemplate "return $1;" [discriminatorName fieldDetail0]
@@ -638,6 +658,8 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
         <> coverride (template "public $1 create($1 other)" [className])
             ( cline "return other;"
             )
+        <> cline ""
+        <> typeExprMethodCode
         )
 
       -- Json
@@ -659,6 +681,7 @@ generateRuntime jf fileWriter imports = do
                   then Set.fromList
                     [ javaClass rtpackage "JsonParseException"
                     , javaClass rtpackage "JsonHelpers"
+                    , javaClass rtpackage "DynamicHelpers"
                     ]
                   else mempty
                )
@@ -699,3 +722,26 @@ mkJavaPackageFn mods defJavaPackage = \modName -> case Map.lookup modName packag
      _ -> Map.empty
 
    snJavaPackage = ScopedName (ModuleName ["adlc","config","java"]) "JavaPackage"
+
+
+genTypeExprMethod :: CodeGenProfile -> ModuleName -> CDecl -> CState Code
+genTypeExprMethod cgp moduleName decl = do
+  let adlastPackage = getAdlAstPackage cgp
+      className = unreserveWord (d_name decl)
+  typeExprI <- addImport (javaClass adlastPackage "TypeExpr")
+  typeRefI <- addImport (javaClass adlastPackage "TypeRef")
+  scopedNameI <- addImport (javaClass adlastPackage "ScopedName")
+  arrayListI <- addImport "java.util.ArrayList"
+  return $ coverride  (template "public $1 typeExpr()" [typeExprI])
+    (  ctemplate "$1 scopedName = new $1(\"$2\", \"$3\");" [scopedNameI,formatText moduleName,className]
+       <> ctemplate "$1<$2> params = new $1<>();" [arrayListI,typeExprI]
+       <> (mconcat [ ctemplate "params.add(factory$1.typeExpr());" [tparam] | tparam <- getTypeParams (d_type decl)])
+       <> ctemplate "return new $1($2.reference(scopedName), params);" [typeExprI,typeRefI]
+    )
+
+
+-- FIXME
+getAdlAstPackage :: CodeGenProfile -> JavaPackage
+getAdlAstPackage cgp = JavaPackage (init idents <> ["sys","adlast"])
+  where
+    (JavaPackage idents) =  cgp_runtimePackage cgp

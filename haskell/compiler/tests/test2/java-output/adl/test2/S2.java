@@ -9,6 +9,9 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -40,7 +43,7 @@ public class S2 {
   public S2(S2 other) {
     this.f1 = other.f1;
     this.f2 = other.f2;
-    this.f3 = Factories.arrayList(Factories.INTEGER).create(other.f3);
+    this.f3 = Factories.arrayList(Factories.INT32).create(other.f3);
   }
 
   /* Accessors and mutators */
@@ -104,6 +107,13 @@ public class S2 {
     public S2 create(S2 other) {
       return new S2(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("test2", "S2");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */
@@ -111,7 +121,7 @@ public class S2 {
   public static JsonBinding<S2> jsonBinding() {
     final Lazy<JsonBinding<String>> f1 = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<Double>> f2 = new Lazy<>(() -> JsonBindings.DOUBLE);
-    final Lazy<JsonBinding<ArrayList<Integer>>> f3 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INTEGER));
+    final Lazy<JsonBinding<ArrayList<Integer>>> f3 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INT32));
     final Factory<S2> _factory = FACTORY;
 
     return new JsonBinding<S2>() {

@@ -87,6 +87,13 @@ public class TypeExpr {
     public TypeExpr create(TypeExpr other) {
       return new TypeExpr(other);
     }
+
+    @Override
+    public org.adl.sys.adlast.TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("sys.adlast", "TypeExpr");
+      ArrayList<org.adl.sys.adlast.TypeExpr> params = new ArrayList<>();
+      return new org.adl.sys.adlast.TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */

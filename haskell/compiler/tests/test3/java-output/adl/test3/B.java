@@ -9,6 +9,9 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -116,6 +119,14 @@ public class B<T> {
           f_tvec.get().create(other.getF_tvec()),
           f_xy.get().create(other.getF_xy())
           );
+      }
+
+      @Override
+      public TypeExpr typeExpr() {
+        ScopedName scopedName = new ScopedName("test3", "B");
+        ArrayList<TypeExpr> params = new ArrayList<>();
+        params.add(factoryT.typeExpr());
+        return new TypeExpr(TypeRef.reference(scopedName), params);
       }
     };
   }

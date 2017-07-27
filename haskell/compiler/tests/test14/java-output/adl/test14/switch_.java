@@ -9,6 +9,10 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import java.util.ArrayList;
 
 public class switch_ {
 
@@ -127,13 +131,20 @@ public class switch_ {
     public switch_ create(switch_ other) {
       return new switch_(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("test14", "switch_");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */
 
   public static JsonBinding<switch_> jsonBinding() {
     final Lazy<JsonBinding<Double>> double_ = new Lazy<>(() -> JsonBindings.DOUBLE);
-    final Lazy<JsonBinding<Integer>> int_ = new Lazy<>(() -> JsonBindings.INTEGER);
+    final Lazy<JsonBinding<Integer>> int_ = new Lazy<>(() -> JsonBindings.INT32);
     final Lazy<JsonBinding<String>> string = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<Boolean>> for_ = new Lazy<>(() -> JsonBindings.BOOLEAN);
     final Lazy<JsonBinding<String>> Objects = new Lazy<>(() -> JsonBindings.STRING);

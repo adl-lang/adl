@@ -12,9 +12,13 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import org.adl.runtime.MaybeHelpers;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
 import org.adl.sys.types.Either;
 import org.adl.sys.types.Error;
 import org.adl.sys.types.Pair;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
@@ -49,9 +53,9 @@ public class S {
   }
 
   public S() {
-    this.f_pair = Pair.factory(Factories.INTEGER, Factories.DOUBLE).create();
-    this.f_either = Either.factory(Factories.STRING, Factories.INTEGER).create();
-    this.f_error = Error.factory(Factories.INTEGER).create();
+    this.f_pair = Pair.factory(Factories.INT32, Factories.DOUBLE).create();
+    this.f_either = Either.factory(Factories.STRING, Factories.INT32).create();
+    this.f_error = Error.factory(Factories.INT32).create();
     this.f_map = HashMapHelpers.factory(Factories.STRING, Factories.DOUBLE).create();
     this.f_set = HashSetHelpers.factory(Factories.STRING).create();
     this.f_mstring = MaybeHelpers.factory(Factories.STRING).create();
@@ -61,9 +65,9 @@ public class S {
   }
 
   public S(S other) {
-    this.f_pair = Pair.factory(Factories.INTEGER, Factories.DOUBLE).create(other.f_pair);
-    this.f_either = Either.factory(Factories.STRING, Factories.INTEGER).create(other.f_either);
-    this.f_error = Error.factory(Factories.INTEGER).create(other.f_error);
+    this.f_pair = Pair.factory(Factories.INT32, Factories.DOUBLE).create(other.f_pair);
+    this.f_either = Either.factory(Factories.STRING, Factories.INT32).create(other.f_either);
+    this.f_error = Error.factory(Factories.INT32).create(other.f_error);
     this.f_map = HashMapHelpers.factory(Factories.STRING, Factories.DOUBLE).create(other.f_map);
     this.f_set = HashSetHelpers.factory(Factories.STRING).create(other.f_set);
     this.f_mstring = MaybeHelpers.factory(Factories.STRING).create(other.f_mstring);
@@ -193,14 +197,21 @@ public class S {
     public S create(S other) {
       return new S(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("test6", "S");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */
 
   public static JsonBinding<S> jsonBinding() {
-    final Lazy<JsonBinding<Pair<Integer, Double>>> f_pair = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.INTEGER, JsonBindings.DOUBLE));
-    final Lazy<JsonBinding<Either<String, Integer>>> f_either = new Lazy<>(() -> Either.jsonBinding(JsonBindings.STRING, JsonBindings.INTEGER));
-    final Lazy<JsonBinding<Error<Integer>>> f_error = new Lazy<>(() -> Error.jsonBinding(JsonBindings.INTEGER));
+    final Lazy<JsonBinding<Pair<Integer, Double>>> f_pair = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.INT32, JsonBindings.DOUBLE));
+    final Lazy<JsonBinding<Either<String, Integer>>> f_either = new Lazy<>(() -> Either.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
+    final Lazy<JsonBinding<Error<Integer>>> f_error = new Lazy<>(() -> Error.jsonBinding(JsonBindings.INT32));
     final Lazy<JsonBinding<HashMap<String, Double>>> f_map = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.DOUBLE));
     final Lazy<JsonBinding<HashSet<String>>> f_set = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> f_mstring = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));

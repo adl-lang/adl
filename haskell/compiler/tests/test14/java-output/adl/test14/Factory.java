@@ -7,6 +7,10 @@ import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class Factory {
@@ -69,6 +73,13 @@ public class Factory {
     @Override
     public Factory create(Factory other) {
       return new Factory(other);
+    }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("test14", "Factory");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
     }
   };
 

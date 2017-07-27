@@ -9,6 +9,10 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.JsonParseException;
 import org.adl.runtime.Lazy;
+import org.adl.sys.adlast.ScopedName;
+import org.adl.sys.adlast.TypeExpr;
+import org.adl.sys.adlast.TypeRef;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class U2 {
@@ -98,12 +102,19 @@ public class U2 {
     public U2 create(U2 other) {
       return new U2(other);
     }
+
+    @Override
+    public TypeExpr typeExpr() {
+      ScopedName scopedName = new ScopedName("test5", "U2");
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
+    }
   };
 
   /* Json serialization */
 
   public static JsonBinding<U2> jsonBinding() {
-    final Lazy<JsonBinding<Short>> v = new Lazy<>(() -> JsonBindings.SHORT);
+    final Lazy<JsonBinding<Short>> v = new Lazy<>(() -> JsonBindings.INT16);
     final Factory<U2> _factory = FACTORY;
 
     return new JsonBinding<U2>() {
