@@ -81,6 +81,23 @@ class AdlValue a where
 
 [adlvalue]:../haskell/runtime/src/ADL/Core/Value.hs#L63
 
+# Primitive Types
+
+The ADL primitive types are mapped to haskell types as follows:
+
+| ADL Type                   | Haskell Type               |
+|----------------------------+----------------------------|
+| Int8,Int16,Int32,Int64     | Int8,Int16,Int32,Int64     |
+| Word8,Word16,Word32,Word64 | Word8,Word16,Word32,Word64 |
+| Bool                       | Bool                       |
+| Void                       | ()                         |
+| Float,Double               | Float,Double               |
+| String                     | Data.Text                  |
+| ByteVector                 | Data.ByteString            |
+| `Vector<T>`                | [t]                        |
+| `StringMap<T>`             | Data.Map Data.Text t       |
+| `Nullable<T>`              | Maybe t                    |
+
 # Runtime
 
 The generated code depends upon a small runtime. The location of the
@@ -188,7 +205,20 @@ annotation Date HaskellCustomType {
 };
 ```
 
+## Standard Custom Types
+
+There are predefined haskell custom type mappings for the following
+declarations in the [adl standard library][stdlib]:
+
+| ADL Type               | Haskell Type   |
+|------------------------|----------------|
+| sys.types.Pair<T1,T2>  | (,)            |
+| sys.types.Map<K,V>     | Data.Map.Map   |
+| sys.types.Set<V>       | Data.Set.Set   |
+| sys.types.Maybe<T>     | prelude.Maybe  |
+| sys.types.Either<T1,T> | prelude.Either |
 
 
 [dayhs]: http://hackage.haskell.org/package/time-1.1.2.1/docs/Data-Time-Calendar.html#t%3ADay
 [datehs]:../haskell/compiler/tests/test4/input/Date.hs
+[stdlib]:../adl/stdlib

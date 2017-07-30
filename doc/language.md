@@ -32,7 +32,7 @@ declarations, and then a list of type definitions:
         import sys.types.*;
         import demo.types.Foo;
 
-        ... type definitions ...        
+        ... type definitions ...
     };
 
 Import declations bring type definitions from other modules into the
@@ -58,8 +58,10 @@ ADL supports the following primitive types:
 | Void                         | The unary or "null" type                               |
 | Float,Double                 | floating point values                                  |
 | String                       | A unicode text string                                  |
+| ByteVector                   | A packed array of bytes                                |
 | `Vector<T>`                  | A vector/array of type T                               |
-| `StringMap<T>`                | A map with string keys and values of type T           |
+| `StringMap<T>`               | A map with string keys and values of type T            |
+| `Nullable<T>`                | An optional value                                      |
 
 # Type Definitions
 
@@ -152,7 +154,7 @@ it's standard library, appropriate custom mappings are used.
 [stdlib]:https://github.com/timbod7/adl/blob/master/adl/stdlib/sys/types.adl
 
 # Default Values
- 
+
 Default values can specified for fields. Such fields then become optional
 in serialized values, and hence facilitate backwards compatibility. Default
 literal values are specified in appropriate places in
@@ -181,7 +183,7 @@ it's fields:
     {
          Int x;
          String y = "hi";         // the default discriminator
-         Pair<Double,Double> z; 
+         Pair<Double,Double> z;
     };
 
 ## newtype default overrides
@@ -200,7 +202,7 @@ following regular expression:
       [A-Za-z][A-Za-z0-9_]*
 
 The reserved words are:
- 
+
       module
       import
       struct
@@ -218,4 +220,3 @@ standard library, and are recommended:
      CamelCase conventions.
   3. Field names start with a lower case letter, and follow
      camelCase conventions.
-
