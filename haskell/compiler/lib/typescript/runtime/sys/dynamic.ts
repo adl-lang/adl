@@ -7,13 +7,13 @@ import * as sys_adlast from './adlast';
  */
 export interface Dynamic {
   typeExpr: sys_adlast.TypeExpr;
-  value: any;
+  value: {};
 }
 
 export function makeDynamic(
   input: {
     typeExpr: sys_adlast.TypeExpr,
-    value: any,
+    value: {},
   }
 ): Dynamic {
   return {
