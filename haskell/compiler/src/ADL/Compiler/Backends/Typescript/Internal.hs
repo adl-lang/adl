@@ -147,7 +147,7 @@ getTypeDetails (RT_Primitive pt) =
     P_Bool -> primTypeDetails "boolean" toBool
     P_Void -> primTypeDetails "null" (const (return "null"))
     P_ByteVector -> primTypeDetails "Uint8Array" toByteVector
-    P_Json -> primTypeDetails "{}" toAny
+    P_Json -> primTypeDetails "{}|null" toAny
     P_Vector -> vectorTypeDetails
     P_StringMap -> stringMapTypeDetails
     P_Nullable -> nullableTypeDetails

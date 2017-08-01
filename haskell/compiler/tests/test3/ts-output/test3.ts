@@ -139,8 +139,8 @@ export interface S<T> {
   f_t: T;
   f_bint16: B<number>;
   f_smap: {[key: string]: number};
-  f_json1: {};
-  f_json2: {};
+  f_json1: any;
+  f_json2: any;
 }
 
 export function makeS<T>(
@@ -167,8 +167,8 @@ export function makeS<T>(
     f_t: T,
     f_bint16?: B<number>,
     f_smap?: {[key: string]: number},
-    f_json1?: {},
-    f_json2?: {},
+    f_json1?: any,
+    f_json2?: any,
   }
 ): S<T> {
   return {
