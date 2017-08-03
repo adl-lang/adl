@@ -24,7 +24,7 @@ export function typeExprsEqual(texpr1 : AST.TypeExpr, texpr2 : AST.TypeExpr) : b
     return false;
   }
   for (let i = 0; i < texpr1.parameters.length; i++) {
-    if(typeExprsEqual(texpr1.parameters[i], texpr2.parameters[i])) {
+    if(!typeExprsEqual(texpr1.parameters[i], texpr2.parameters[i])) {
       return false;
     }
   }
