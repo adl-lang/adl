@@ -39,6 +39,8 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/haskell/runtime/ADL/Core/Value.hs
                      lib/typescript/runtime/adl.ts
                      lib/typescript/runtime/json.ts
+                     lib/typescript/runtime/utils.ts
+                     lib/typescript/runtime/dynamic.ts
                      lib/typescript/runtime/sys/types.ts
                      lib/typescript/runtime/sys/adlast.ts
                      lib/typescript/runtime/sys/dynamic.ts

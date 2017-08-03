@@ -1,6 +1,12 @@
 module example
 {
 
+// A structured annotation
+struct Ann {
+  String label;
+  Int32 index;
+};
+
 // An enum
 
 union Gender {
@@ -53,8 +59,12 @@ struct StructWithDefaults
     Nullable<String> field1 = null;
     Nullable<String> field2 = "hello";
     Person field3 = { "name" : "Mike", "gender" : "male" };
+
+    @Ann {"label":"X", "index":10 }
     DataSource src1 = "implicit";
+
     DataSource src2 = {"file" : "/dev/null"};
+
     DataSource src3 = {"inline" :
        { "encoding" : "utf8", "content" : "some stuff"}
      };
