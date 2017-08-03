@@ -201,7 +201,7 @@ runJavascript args = do
 
 runTypescript args = do
   libDir <- liftIO $ getLibDir
-  let af = stdAdlFlags libDir ["adl-js"]
+  let af = stdAdlFlags libDir ["adl-ts"]
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
   TS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where

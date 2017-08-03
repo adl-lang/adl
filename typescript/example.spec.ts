@@ -1,6 +1,7 @@
 /// <reference path="node_modules/@types/jest/index.d.ts" />
 import {DeclResolver,declResolver} from './build/runtime/adl'
-import {JsonBinding,createJsonBinding, fromDynamic, toDynamic} from './build/runtime/json'
+import {JsonBinding,createJsonBinding} from './build/runtime/json'
+import {fromDynamic, toDynamic} from './build/runtime/dynamic'
 import * as example from './build/example'
 import * as sys_types from './build/sys/types'
 import {Dynamic} from './build/sys/dynamic'

@@ -405,7 +405,12 @@ fieldAst f = JS.object
  ]
 
 annotationsAst :: Annotations CResolvedType -> JS.Value
-annotationsAst a = JS.toJSON ([]::[()]) -- FIXME and implement
+annotationsAst as = mapAst scopedNameAst literalAst [(k,v) | (k,(_,v)) <- (M.toList as)]
+
+mapAst :: (k -> JS.Value) -> (v -> JS.Value) -> [(k,v)] -> JS.Value
+mapAst kf vf kvs = JS.toJSON [ kvAst (kf k) (vf v) | (k,v) <- kvs]
+  where
+    kvAst kjv vjv = JS.object [ ("v1", kjv), ("v2", vjv) ]
 
 typeExprAst :: TypeExpr CResolvedType -> JS.Value
 typeExprAst (TypeExpr tr tes) = JS.object

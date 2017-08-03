@@ -1,7 +1,7 @@
 import {DeclResolver,ATypeExpr} from './adl';
 import * as AST from './sys/adlast';
-import {Dynamic} from './sys/dynamic';
 import * as b64 from 'base64-js';
+import {isVoid, isEnum} from './utils';
 
 type Json = {}|null;
 
@@ -70,23 +70,6 @@ export function jsonParseException(message: string): JsonParseException {
  */
 export function isJsonParseException(exception: {}): exception is JsonParseException {
   return (<JsonParseException> exception).kind === 'JsonParseException';
-}
-
-/**
- * Convert an ADL value to a dynamically typed value
- */
-export function toDynamic<T>(jsonBinding : JsonBinding<T>, value : T) : Dynamic {
-  return {typeExpr: jsonBinding.typeExpr, value : jsonBinding.toJson(value)};
-}
-
-/**
- * Convert an ADL value to a dynamically typed value
- */
-export function fromDynamic<T>(jsonBinding : JsonBinding<T>, dynamic : Dynamic) : (T|null) {
-  if (typeExprsEqual(jsonBinding.typeExpr, dynamic.typeExpr)) {
-    return jsonBinding.fromJson(dynamic.value);
-  }
-  return null;
 }
 
 interface JsonBinding0<T> {
@@ -430,49 +413,6 @@ function createBoundTypeParams(dresolver : DeclResolver, paramNames : string[], 
     result[paramName] = buildJsonBinding(dresolver,paramTypes[i], boundTypeParams);
   });
   return result;
-}
-
-function isEnum(union : AST.Union) : boolean {
-  for (let field of union.fields) {
-    if (!isVoid(field.typeExpr)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function isVoid(texpr : AST.TypeExpr) : boolean {
-  if (texpr.typeRef.kind === "primitive") {
-    return texpr.typeRef.value === "Void";
-  }
-  return false;
-}
-
-function typeExprsEqual(texpr1 : AST.TypeExpr, texpr2 : AST.TypeExpr) : boolean {
-  if (!typeRefsEqual(texpr1.typeRef, texpr2.typeRef)) {
-    return false;
-  }
-  if (texpr1.parameters.length != texpr2.parameters.length) {
-    return false;
-  }
-  for (let i = 0; i < texpr1.parameters.length; i++) {
-    if(typeExprsEqual(texpr1.parameters[i], texpr2.parameters[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function typeRefsEqual(tref1 : AST.TypeRef, tref2 : AST.TypeRef) : boolean {
-  if (tref1.kind === "primitive" && tref2.kind === "primitive") {
-    return tref1.value === tref2.value;
-  } else if (tref1.kind === "typeParam" && tref2.kind === "typeParam") {
-    return tref1.value === tref2.value;
-  } else if (tref1.kind === "reference" && tref2.kind === "reference") {
-    return tref1.value.moduleName === tref2.value.moduleName &&
-      tref1.value.name === tref2.value.name;
-  }
-  return false;
 }
 
 /**
