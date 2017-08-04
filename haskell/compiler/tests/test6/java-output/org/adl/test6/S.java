@@ -37,10 +37,12 @@ public class S {
   private Optional<String> f_mstring2;
   private Optional<String> f_nstring;
   private Optional<String> f_nstring2;
+  private Optional<Long> f_int;
+  private Optional<Long> f_int2;
 
   /* Constructors */
 
-  public S(Pair<Integer, Double> f_pair, Either<String, Integer> f_either, Error<Integer> f_error, HashMap<String, Double> f_map, HashSet<String> f_set, Optional<String> f_mstring, Optional<String> f_mstring2, Optional<String> f_nstring, Optional<String> f_nstring2) {
+  public S(Pair<Integer, Double> f_pair, Either<String, Integer> f_either, Error<Integer> f_error, HashMap<String, Double> f_map, HashSet<String> f_set, Optional<String> f_mstring, Optional<String> f_mstring2, Optional<String> f_nstring, Optional<String> f_nstring2, Optional<Long> f_int, Optional<Long> f_int2) {
     this.f_pair = Objects.requireNonNull(f_pair);
     this.f_either = Objects.requireNonNull(f_either);
     this.f_error = Objects.requireNonNull(f_error);
@@ -50,6 +52,8 @@ public class S {
     this.f_mstring2 = Objects.requireNonNull(f_mstring2);
     this.f_nstring = Objects.requireNonNull(f_nstring);
     this.f_nstring2 = Objects.requireNonNull(f_nstring2);
+    this.f_int = Objects.requireNonNull(f_int);
+    this.f_int2 = Objects.requireNonNull(f_int2);
   }
 
   public S() {
@@ -62,6 +66,8 @@ public class S {
     this.f_mstring2 = MaybeHelpers.just("sukpeepolup");
     this.f_nstring = Optional.<String>empty();
     this.f_nstring2 = Optional.<String>of("abcde");
+    this.f_int = Optional.<Long>empty();
+    this.f_int2 = Optional.<Long>of(100L);
   }
 
   public S(S other) {
@@ -74,6 +80,8 @@ public class S {
     this.f_mstring2 = MaybeHelpers.factory(Factories.STRING).create(other.f_mstring2);
     this.f_nstring = Factories.nullable(Factories.STRING).create(other.f_nstring);
     this.f_nstring2 = Factories.nullable(Factories.STRING).create(other.f_nstring2);
+    this.f_int = Factories.nullable(Factories.INT64).create(other.f_int);
+    this.f_int2 = Factories.nullable(Factories.INT64).create(other.f_int2);
   }
 
   /* Accessors and mutators */
@@ -150,6 +158,22 @@ public class S {
     this.f_nstring2 = Objects.requireNonNull(f_nstring2);
   }
 
+  public Optional<Long> getF_int() {
+    return f_int;
+  }
+
+  public void setF_int(Optional<Long> f_int) {
+    this.f_int = Objects.requireNonNull(f_int);
+  }
+
+  public Optional<Long> getF_int2() {
+    return f_int2;
+  }
+
+  public void setF_int2(Optional<Long> f_int2) {
+    this.f_int2 = Objects.requireNonNull(f_int2);
+  }
+
   /* Object level helpers */
 
   @Override
@@ -167,7 +191,9 @@ public class S {
       f_mstring.equals(other.f_mstring) &&
       f_mstring2.equals(other.f_mstring2) &&
       f_nstring.equals(other.f_nstring) &&
-      f_nstring2.equals(other.f_nstring2);
+      f_nstring2.equals(other.f_nstring2) &&
+      f_int.equals(other.f_int) &&
+      f_int2.equals(other.f_int2);
   }
 
   @Override
@@ -182,6 +208,8 @@ public class S {
     _result = _result * 37 + f_mstring2.hashCode();
     _result = _result * 37 + f_nstring.hashCode();
     _result = _result * 37 + f_nstring2.hashCode();
+    _result = _result * 37 + f_int.hashCode();
+    _result = _result * 37 + f_int2.hashCode();
     return _result;
   }
 
@@ -218,6 +246,8 @@ public class S {
     final Lazy<JsonBinding<Optional<String>>> f_mstring2 = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> f_nstring = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> f_nstring2 = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.STRING));
+    final Lazy<JsonBinding<Optional<Long>>> f_int = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.INT64));
+    final Lazy<JsonBinding<Optional<Long>>> f_int2 = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.INT64));
     final Factory<S> _factory = FACTORY;
 
     return new JsonBinding<S>() {
@@ -238,6 +268,8 @@ public class S {
         _result.add("f_mstring2", f_mstring2.get().toJson(_value.f_mstring2));
         _result.add("f_nstring", f_nstring.get().toJson(_value.f_nstring));
         _result.add("f_nstring2", f_nstring2.get().toJson(_value.f_nstring2));
+        _result.add("f_int", f_int.get().toJson(_value.f_int));
+        _result.add("f_int2", f_int2.get().toJson(_value.f_int2));
         return _result;
       }
 
@@ -253,7 +285,9 @@ public class S {
           JsonBindings.fieldFromJson(_obj, "f_mstring", f_mstring.get()),
           _obj.has("f_mstring2") ? JsonBindings.fieldFromJson(_obj, "f_mstring2", f_mstring2.get()) : MaybeHelpers.just("sukpeepolup"),
           JsonBindings.fieldFromJson(_obj, "f_nstring", f_nstring.get()),
-          _obj.has("f_nstring2") ? JsonBindings.fieldFromJson(_obj, "f_nstring2", f_nstring2.get()) : Optional.<String>of("abcde")
+          _obj.has("f_nstring2") ? JsonBindings.fieldFromJson(_obj, "f_nstring2", f_nstring2.get()) : Optional.<String>of("abcde"),
+          JsonBindings.fieldFromJson(_obj, "f_int", f_int.get()),
+          _obj.has("f_int2") ? JsonBindings.fieldFromJson(_obj, "f_int2", f_int2.get()) : Optional.<Long>of(100L)
         );
       }
     };

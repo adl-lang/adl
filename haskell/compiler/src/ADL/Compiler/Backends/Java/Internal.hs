@@ -588,7 +588,7 @@ getTypeDetails (RT_Primitive P_Nullable) = TypeDetails
 
     otypes (TypeExpr te [te0]) = do
       optionalI <- addImport "java.util.Optional"
-      typeExpr <- genTypeExpr te0
+      typeExpr <- genTypeExprB TypeBoxed te0
       return (optionalI,typeExpr)
     otypes lit = error "BUG: optional type should have a single type parameter"
 
