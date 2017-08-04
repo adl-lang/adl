@@ -24,11 +24,13 @@ data S = S
     , s_f_mstring2 :: (ADL.Sys.Types.Maybe T.Text)
     , s_f_nstring :: Maybe (T.Text)
     , s_f_nstring2 :: Maybe (T.Text)
+    , s_f_int :: Maybe (Data.Int.Int64)
+    , s_f_int2 :: Maybe (Data.Int.Int64)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-mkS :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double) -> (ADL.Sys.Types.Either T.Text Data.Int.Int32) -> (ADL.Sys.Types.Error Data.Int.Int32) -> (ADL.Sys.Types.Map T.Text Prelude.Double) -> (ADL.Sys.Types.Set T.Text) -> (ADL.Sys.Types.Maybe T.Text) -> Maybe (T.Text) -> S
-mkS f_pair f_either f_error f_map f_set f_mstring f_nstring = S f_pair f_either f_error f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (Prelude.Just "abcde")
+mkS :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double) -> (ADL.Sys.Types.Either T.Text Data.Int.Int32) -> (ADL.Sys.Types.Error Data.Int.Int32) -> (ADL.Sys.Types.Map T.Text Prelude.Double) -> (ADL.Sys.Types.Set T.Text) -> (ADL.Sys.Types.Maybe T.Text) -> Maybe (T.Text) -> Maybe (Data.Int.Int64) -> S
+mkS f_pair f_either f_error f_map f_set f_mstring f_nstring f_int = S f_pair f_either f_error f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (Prelude.Just "abcde") f_int (Prelude.Just 100)
 
 instance AdlValue S where
     atype _ = "test6.S"
@@ -43,6 +45,8 @@ instance AdlValue S where
         , genField "f_mstring2" s_f_mstring2
         , genField "f_nstring" s_f_nstring
         , genField "f_nstring2" s_f_nstring2
+        , genField "f_int" s_f_int
+        , genField "f_int2" s_f_int2
         ]
     
     jsonParser = S
@@ -55,3 +59,5 @@ instance AdlValue S where
         <*> parseFieldDef "f_mstring2" (Prelude.Just "sukpeepolup")
         <*> parseField "f_nstring"
         <*> parseFieldDef "f_nstring2" (Prelude.Just "abcde")
+        <*> parseField "f_int"
+        <*> parseFieldDef "f_int2" (Prelude.Just 100)

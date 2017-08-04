@@ -16,5 +16,8 @@ module test6
 
        Nullable<String> f_nstring;
        Nullable<String> f_nstring2 = "abcde";
+
+       Nullable<Int64> f_int;
+       Nullable<Int64> f_int2 = 100;
    };
 };
