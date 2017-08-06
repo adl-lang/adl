@@ -18,72 +18,41 @@ Usage: adlc verify [OPTION..] <modulePath>...
 # 2. Usage
 ## verify backend
 
-    adlc verify [OPTION...] <adlfile>..
+```
+Usage: adlc verify [OPTION...] files...
+  -I DIR  --searchdir=DIR     Add the specifed directory to the ADL searchpath
+          --merge-adlext=EXT  Add the specifed adl file extension to merged on loading
+```
 
 The verify backend parses and checks the supplied ADL files, but
-doesn't generate any code. It supports the following options:
-
-```
--I DIR  --searchdir=DIR
-        --merge-adlext=EXT
-```
+doesn't generate any code.
 
 ## haskell backend
 
-    adlc haskell [OPTION...] <adlfile>..
-
-The haskell backend generates parses and checks the supplied ADL
-files, and generates corresponding haskell code. It supports the
-following options:
-
-    --searchdir <dir> | -I <dir>
-    --outputdir <dir> | -O <dir>
-    --no-overwrite
-    --custom-types <file>
-    --moduleprefix <prefix>
-
-When generating haskell code, the module prefix is used to control
-where in the haskell namespace hierarchy the generated code sits. For
-example, if the module prefix is "MyApp.adl", the code for adl module
-a.b will be generated with a haskell module declaration:
-
-    module MyApp.adl.a.b
+See the [haskell backend guide][backend-haskell].
 
 ## java backend
 
-    adlc java [OPTION...] <adlfile>..
+See the [java backend guide][backend-java].
 
-The java backend parses and checks the supplied ADL files, and
-then generates corresponding java code. The available options are:
+## typescript backend
 
-```
-  -I DIR  --searchdir=DIR            Add the specifed directory to the ADL searchpath
-  -O DIR  --outputdir=DIR            Set the directory where generated code is written
-          --custom-types=FILE        Read custom type mapping from the specified file
-          --no-overwrite             Don't update files that haven't changed
-          --package=PACKAGE          The java package into which the generated ADL code will be placed
-          --rtpackage=PACKAGE        The java package where the ADL runtime is located
-          --include-rt               Generate the runtime code
-          --parcelable               Generated java code will include android parcellable implementations
-          --json                     Generated java code will include gson json serialization
-          --hungarian-naming         Use hungarian naming conventions
-          --max-line-length=PACKAGE  The maximum length of the generated code lines
-          --header-comment=PACKAGE   A comment to be placed at the start of each java file
-```
+See the [typescript backend guide][backend-typescript].
 
 ## cpp backend
 
-    adlc cpp [OPTION..] <adlfile>..
+```
+Usage: adlc cpp [OPTION...] files...
+  -I DIR  --searchdir=DIR       Add the specifed directory to the ADL searchpath
+  -O DIR  --outputdir=DIR       Set the directory where generated code is written
+          --merge-adlext=EXT    Add the specifed adl file extension to merged on loading
+          --verbose             Print extra diagnostic information, especially about files being read/written
+          --no-overwrite        Don't update files that haven't changed
+          --include-prefix=DIR  The prefix to be used to generate/reference include files
+```
 
 The cpp backend generates parses and checks the supplied ADL
-files, and generates corresponding c++ code. It supports the
-following options:
-
-    --searchdir <dir> | -I <dir>
-    --include-prefix <prefix>
-    --outputdir <dir> | -O <dir>
-    --no-overwrite
-    --custom-types <file>
+files, and generates corresponding c++ code.
 
 The C++ code generator will produce the code for module a.b in the
 c++ namespace ADL.a.b, and write it to files:
@@ -95,16 +64,22 @@ C++ code is generated according to the C++11 standard.
 
 ## ast backend
 
-    adlc ast [OPTION..] <adlfile>..
+```
+Usage: adlc ast [OPTION...] files...
+  -I DIR  --searchdir=DIR     Add the specifed directory to the ADL searchpath
+  -O DIR  --outputdir=DIR     Set the directory where generated code is written
+          --merge-adlext=EXT  Add the specifed adl file extension to merged on loading
+          --verbose           Print extra diagnostic information, especially about files being read/written
+          --no-overwrite      Don't update files that haven't changed
+```
 
 The ast backend generates parses and checks the supplied ADL files,
 and generates JSON values corresponding to the adl syntax tree. The
 generated JSON matches the schema defined in stdlib/sys/adlast.adl.
-The ast backend supports the following options:
-
-    --searchdir <dir> | -I <dir>
 
 # 3. Common Options
+
+The following options are common to most code generation backends.
 
 ## searchdir
 
@@ -133,14 +108,25 @@ This option specifies that existing generated files should be left
 untouched if the generated code is unchanged. This can be useful from
 within build systems, to avoid unnecessary recompilation.
 
-## custom-types
+## merge-adlext
 
-    --custom-types <file>
+    --merge-adlext=EXT
 
-Certain backends allow user specified "custom" types to be used in
-place of those generated in the standard way from ADL.  This option
-makes available custom type definitions to the compiler. The files are
-in JSON, with schemas given by:
+Most commonly, an ADL module is specified in a single file. However,
+the compiler has the facility to merge multiple files to construct
+a single module. This is most commonly used to allow annotations for
+a module to be provided in different files. By default the compiler
+will search for, and merge files with the following extensions:
 
-* *haskell* : adlc/config/haskell.adl
-* *c++*     : adlc/config/cpp.adl
+| adl backend | merged extension |
+|-------------|------------------|
+| haskell     | .adl-hs          |
+| java        | .adl-java        |
+| typescript  | .adl-ts          |
+
+This means that when the haskell file reads an adl file `foo.adl` it
+will also load and merge the declarations from the file `foo.adl-hs`
+if that file exists.
+
+[backend-haskell]: backend-haskell.md
+[backend-java]: backend-java.md

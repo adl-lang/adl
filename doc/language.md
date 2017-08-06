@@ -4,13 +4,15 @@ ADL (Algebraic Data Language) is the domain specific language at
 the core of the ADL framework. It is used to describe application
 level data types and communication protocols.
 
-The language:
+The language supports:
 
-   * uses a data model based upon [algebraic data types](http://en.wikipedia.org/wiki/Algebraic_data_types)
+   * a data model based upon [algebraic data types](http://en.wikipedia.org/wiki/Algebraic_data_types)
 
-   * supports parameterised data types
+   * parameterised data types
 
-   * supports field defaulting with comprehensive literal support.
+   * field defaulting with comprehensive literal support.
+
+   * typed annotations
 
 Together these features facilitate the interoperation between a
 variety of object oriented and functional programming languages.  The
@@ -192,6 +194,113 @@ A newtype definition may override the default value through a
 (slightly awkward) "double equals" syntax:
 
     newtype Date = String = "2000-01-01";
+
+# Annotations
+
+When generating code, an ADL backend or custom code generator will
+often need additional information about a type or
+declaration. Annotations serve this purpose, by associating a typed
+value with a module, declaration or field.
+
+Annotation types are declared as any other ADL type. Consider
+for example, annotations describing how a type is to be mapped
+into a relational database:
+
+```
+module demo.dbannotations {
+
+struct DbTable
+{
+  String tableName;
+  Vector<String> primaryKey;
+};
+
+type DbField = String;
+};
+```
+
+Then, annotation values can be associated with ADL definitions. The
+values are json, using the ADL serialization schema.  The values
+provided for annotations are checked againt the annotation types, and
+the compilation will fail if they are incorrect. As shown below, there
+are two annotation syntaxes. They can be provided as prefixes, using
+the `@` syntax, or via an explicit annotation declaration.
+
+```
+module demo.model
+{
+
+import demo.dbannotations.*;
+
+@DbTable {
+  "tableName" : "demo.users",
+  "primaryKey" : ["email"]
+}
+struct User
+{
+   @DbField "email"
+   String email;
+
+   @DbField "full_name"
+   String fullName;
+};
+
+struct Address
+{
+   Int id;
+   Vector<String> details;
+};
+
+annotation Address DbTable {
+  "tableName" : "demo.address",
+  "primaryKey" : ["id"]
+};
+annotation Address.id DbField "id";
+annotation Address.details DbField "details";
+
+};
+```
+
+Whilst either syntax can be used, prefix annotations can be useful for
+short annotations (typically of primitive types), whilst explicit
+declarations are preferable for more complex types.
+
+Explicit annotations have the benefit that they can be stored in files
+other than the main adl source. This is desirable when a given ADL
+definition has many annotations (for different language backends,
+special purpose processing etc). Whenever an ADL file is parsed, the
+compiler will look for additional files containing annotations, and,
+if found, they will be merged into the ADL source. By default the
+compiler will look for annotations with a backend specific file
+suffix: eg, when loading `demo/model.adl` the java backend will try to
+load `demo/model.adl-java`. Additional extensions can be added to the
+search with the `--merge-adlext` command line flag.
+
+## Builtin annotation types
+
+The ADL system understands several builtin annotation types.
+
+### `sys.annotations.Doc`
+
+The `Doc` annotation associates a documentation string with an ADL
+module, declaration or field. There is special syntax support for
+this: comments that being with triple slashes (ie `///`) are
+automatically promoted to `Doc` annotations. The standard annotation
+syntax is still supported. The `Doc` strings are used by language
+backends to comment the generated code.
+
+### `sys.annotations.SerializedName`
+
+Normally the when serializing unions and structures, the adl field
+name is used. The `SerializedName` field annotation overrides this.
+This is useful where shortened names are required; and also when the
+name of an ADL field is changed, but the serialized form must be
+preserved.
+
+### `HaskellCustomType`, `JavaCustomType`, `CppCustomType`
+
+Annotations are used to specify custom type mappings. Refer to the
+language specific backend for details.
 
 # Naming Conventions
 

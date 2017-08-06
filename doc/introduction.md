@@ -1,9 +1,25 @@
 # Introduction
 
-ADL (Algebraic Data Language) is a framework for building multi language systems. It consists of
-a domain specific language (DSL) for describing algebraic data types,
-code generators for several target languages, and runtimes for these
-languages. Langage interoperability is ensured through a consistent json serialisation schema.
+ADL (Algebraic Data Language) is a framework for building multi
+language systems. It consists of a domain specific language (DSL) for
+describing algebraic data types, code generators for several target
+languages, and runtimes for these languages. Language interoperability
+is ensured through a consistent json serialisation schema.
+
+In addition to supporting several target languages, a general purpose
+"ast" backend is available. This produces a checked, machine readable
+syntax tree suitable for custom processing and code generation in any
+programming language.
+
+# Applications
+
+Intended applications for ADL include:
+
+* strongly typed http APIs
+* strongly typed configuration files
+* automatically derived database schemas and binding code
+* automatically derived UI code for editing complex values
+
 
 # Example
 
@@ -52,7 +68,7 @@ adlc java --json picture.adl
 
 will generate [these java classes][examplejava] (which include json
 serialization functions). The command to generate the corresponding
-[haskell types][examplehaskell] is 
+[haskell types][examplehaskell] is
 
 ```
 adlc haskell picture.adl

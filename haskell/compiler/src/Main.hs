@@ -61,7 +61,7 @@ runVerify args0 =
       V.verify (f_adl flags) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
-    header = "Usage: adl verify [OPTION...] files..."
+    header = "Usage: adlc verify [OPTION...] files..."
 
     optDescs =
       [ searchDirOption addToSearchPath
@@ -77,7 +77,7 @@ runAst args0 =
       A.generate (f_adl flags) (writeOutputFile (f_output flags)) args
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
-    header = "Usage: adl ast [OPTION...] files..."
+    header = "Usage: adlc ast [OPTION...] files..."
 
     optDescs = standardOptions
 
@@ -88,7 +88,7 @@ runHaskell args = do
   (flags,paths) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
   H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomType paths
   where
-    header = "Usage: adl haskell [OPTION...] files..."
+    header = "Usage: adlc haskell [OPTION...] files..."
 
     flags0 libDir = H.HaskellFlags
       { hf_modulePrefix="ADL.Generated"
@@ -109,7 +109,7 @@ runCpp args = do
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
   C.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
-    header = "Usage: adl cpp [OPTION...] files..."
+    header = "Usage: adlc cpp [OPTION...] files..."
 
     flags0 libDir = C.CppFlags {
       cf_incFilePrefix="",
@@ -132,7 +132,7 @@ runJava args = do
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
   J.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
-    header = "Usage: adl java [OPTION...] files..."
+    header = "Usage: adlc java [OPTION...] files..."
 
     flags0 libDir = J.JavaFlags {
       jf_libDir=libDir,
@@ -192,7 +192,7 @@ runJavascript args = do
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
   JS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
-    header = "Usage: adl javascript [OPTION...] files..."
+    header = "Usage: adlc javascript [OPTION...] files..."
 
     flags0 libDir = JS.JavascriptFlags {
     }
@@ -205,7 +205,7 @@ runTypescript args = do
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
   TS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
-    header = "Usage: adl typescript [OPTION...] files..."
+    header = "Usage: adlc typescript [OPTION...] files..."
 
     flags0 libDir = TS.TypescriptFlags {
       tsLibDir=libDir,
@@ -243,7 +243,7 @@ runShow args0 =
       putStrLn systemAdlDir
     ["--version"] -> liftIO $ do
       putStrLn (showVersion P.version)
-    _ -> eioError "Usage: adl show [OPTION...]"
+    _ -> eioError "Usage: adlc show [OPTION...]"
 
 usage = T.intercalate "\n"
   [ "Usage: adlc verify [OPTION..] <modulePath>..."

@@ -5,8 +5,8 @@ sourceSets {
     java {
       srcDir '../../haskell/compiler/tests/test2/java-output'
       srcDir '../../haskell/compiler/tests/test3/java-output'
-// Need to write helper classes for custom mappings
-//      srcDir '../../haskell/compiler/tests/test4/java-output'
+      srcDir '../../haskell/compiler/tests/test4/java-output'
+      srcDir '../../haskell/compiler/tests/test4/input'
       srcDir '../../haskell/compiler/tests/test5/java-output'
       srcDir '../../haskell/compiler/tests/test6/java-output'
       srcDir '../../haskell/compiler/tests/test14/java-output'
