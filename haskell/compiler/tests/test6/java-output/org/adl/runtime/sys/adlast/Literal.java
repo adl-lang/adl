@@ -1,6 +1,6 @@
 /* Code generated from adl module sys.adlast */
 
-package org.adl.sys.adlast;
+package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import org.adl.runtime.Factories;
@@ -268,8 +268,8 @@ public class Literal {
     final Lazy<JsonBinding<Double>> double_ = new Lazy<>(() -> JsonBindings.DOUBLE);
     final Lazy<JsonBinding<String>> string = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<Boolean>> boolean_ = new Lazy<>(() -> JsonBindings.BOOLEAN);
-    final Lazy<JsonBinding<ArrayList<Literal>>> array = new Lazy<>(() -> JsonBindings.arrayList(org.adl.sys.adlast.Literal.jsonBinding()));
-    final Lazy<JsonBinding<HashMap<String, Literal>>> object = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, org.adl.sys.adlast.Literal.jsonBinding()));
+    final Lazy<JsonBinding<ArrayList<Literal>>> array = new Lazy<>(() -> JsonBindings.arrayList(org.adl.runtime.sys.adlast.Literal.jsonBinding()));
+    final Lazy<JsonBinding<HashMap<String, Literal>>> object = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, org.adl.runtime.sys.adlast.Literal.jsonBinding()));
     final Factory<Literal> _factory = FACTORY;
 
     return new JsonBinding<Literal>() {

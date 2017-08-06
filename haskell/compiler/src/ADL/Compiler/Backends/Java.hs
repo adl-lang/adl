@@ -49,15 +49,27 @@ type JavaPackageFn = ModuleName -> JavaPackage
 
 generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do
+  imports1 <- generateModules af jf fileWriter modulePaths
+  when (jf_includeRuntime jf) $ do
+    sysModulePaths <- getSystemModulePaths
+    imports2 <- generateModules af jf fileWriter sysModulePaths
+    generateRuntime jf fileWriter (imports1 <> imports2)
+  where
+    getSystemModulePaths = liftIO $ do
+      libDir <- getLibDir
+      return [systemAdlDir libDir </> adl | adl <- sysModules]
+
+generateModules :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT (Set.Set JavaClass)
+generateModules af jf fileWriter modulePaths = do
   let cgp = (jf_codeGenProfile jf)
   imports <- for modulePaths $ \modulePath -> do
     (mod,moddeps) <- loadAndCheckModule1 af modulePath
     generateModule jf fileWriter
                    (const cgp)
-                   (mkJavaPackageFn (mod:moddeps) (jf_package jf))
+                   (mkJavaPackageFn cgp (mod:moddeps) (jf_package jf))
                    mod
-  when (jf_includeRuntime jf) $ liftIO $ do
-    generateRuntime jf fileWriter (mconcat imports)
+  return (mconcat imports)
+
 
 -- | Generate and write the java code for a single ADL module
 -- The result value is the set of all java imports.
@@ -670,8 +682,8 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
       when (cgp_parcelable codeProfile) $ do
         error "Unimplemented: Parcellable for enums"
 
-generateRuntime :: JavaFlags -> FileWriter -> Set.Set JavaClass -> IO ()
-generateRuntime jf fileWriter imports = do
+generateRuntime :: JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
+generateRuntime jf fileWriter imports = liftIO $ do
     files <- dirContents runtimedir
     for_ files $ \inpath -> do
       let cls = javaClass rtpackage (T.pack (dropExtensions (takeFileName inpath)))
@@ -701,16 +713,15 @@ generateRuntime jf fileWriter imports = do
     adjustContent :: LBS.ByteString -> LBS.ByteString
     adjustContent origLBS = LBS.fromStrict (T.encodeUtf8 newT)
       where origT = T.decodeUtf8 (LBS.toStrict origLBS)
-            newT = T.replace "org.adl.runtime" (genJavaPackage rtpackage)
-                 . T.replace "org.adl.sys" (genJavaPackage (jf_package jf <> javaPackage "sys"))
+            newT = T.replace (genJavaPackage defaultRuntimePackage) (genJavaPackage rtpackage)
                  $ origT
 
 -- Use the default output package and any
 -- @JavaPackage annotation to create a mapping from
 -- adl module names to java packages
 
-mkJavaPackageFn :: [RModule] -> JavaPackage -> JavaPackageFn
-mkJavaPackageFn mods defJavaPackage = \modName -> case Map.lookup modName packageMap of
+mkJavaPackageFn :: CodeGenProfile -> [RModule] -> JavaPackage -> JavaPackageFn
+mkJavaPackageFn cgp mods defJavaPackage = \modName -> case Map.lookup modName packageMap of
   Nothing -> defJavaPackage <> JavaPackage (unModuleName modName)
   (Just pkg) -> pkg
  where
@@ -718,11 +729,10 @@ mkJavaPackageFn mods defJavaPackage = \modName -> case Map.lookup modName packag
 
    getCustomJavaPackage :: RModule -> Map.Map ModuleName JavaPackage
    getCustomJavaPackage mod = case Map.lookup snJavaPackage (m_annotations mod) of
-     Just (_,JSON.String s) -> Map.singleton (m_name mod) (javaPackage s)
+     Just (_,JSON.String s) -> Map.singleton (m_name mod) (fixRuntimePackage cgp (javaPackage s))
      _ -> Map.empty
 
    snJavaPackage = ScopedName (ModuleName ["adlc","config","java"]) "JavaPackage"
-
 
 genTypeExprMethod :: CodeGenProfile -> ModuleName -> CDecl -> CState Code
 genTypeExprMethod cgp moduleName decl = do
@@ -739,9 +749,9 @@ genTypeExprMethod cgp moduleName decl = do
        <> ctemplate "return new $1($2.reference(scopedName), params);" [typeExprI,typeRefI]
     )
 
-
--- FIXME
 getAdlAstPackage :: CodeGenProfile -> JavaPackage
-getAdlAstPackage cgp = JavaPackage (init idents <> ["sys","adlast"])
-  where
-    (JavaPackage idents) =  cgp_runtimePackage cgp
+getAdlAstPackage cgp = cgp_runtimePackage cgp <> JavaPackage ["sys","adlast"]
+
+
+sysModules :: [FilePath]
+sysModules = ["sys/types.adl", "sys/dynamic.adl", "sys/adlast.adl"]

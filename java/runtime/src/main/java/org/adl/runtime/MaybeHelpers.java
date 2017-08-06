@@ -4,9 +4,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonObject;
 
-import org.adl.sys.adlast.TypeExpr;
-import org.adl.sys.adlast.TypeRef;
-import org.adl.sys.adlast.ScopedName;
+import org.adl.runtime.sys.adlast.TypeExpr;
+import org.adl.runtime.sys.adlast.TypeRef;
+import org.adl.runtime.sys.adlast.ScopedName;
 
 import java.util.ArrayList;
 import java.util.Optional;

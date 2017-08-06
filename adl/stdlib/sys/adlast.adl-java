@@ -1,0 +1,7 @@
+module sys.adlast
+{
+
+import adlc.config.java.JavaPackage;
+
+annotation JavaPackage "org.adl.runtime.sys.adlast";
+};

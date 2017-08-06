@@ -1,6 +1,6 @@
 package org.adl.runtime;
 
-import org.adl.sys.adlast.TypeExpr;
+import org.adl.runtime.sys.adlast.TypeExpr;
 
 /**
  * A generic factory class for constructing generic instances.

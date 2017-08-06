@@ -1,6 +1,6 @@
 /* Code generated from adl module sys.adlast */
 
-package org.adl.sys.adlast;
+package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,28 +12,28 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class ScopedDecl {
+public class ScopedName {
 
   /* Members */
 
   private String moduleName;
-  private Decl decl;
+  private String name;
 
   /* Constructors */
 
-  public ScopedDecl(String moduleName, Decl decl) {
+  public ScopedName(String moduleName, String name) {
     this.moduleName = Objects.requireNonNull(moduleName);
-    this.decl = Objects.requireNonNull(decl);
+    this.name = Objects.requireNonNull(name);
   }
 
-  public ScopedDecl() {
+  public ScopedName() {
     this.moduleName = "";
-    this.decl = new Decl();
+    this.name = "";
   }
 
-  public ScopedDecl(ScopedDecl other) {
+  public ScopedName(ScopedName other) {
     this.moduleName = other.moduleName;
-    this.decl = Decl.FACTORY.create(other.decl);
+    this.name = other.name;
   }
 
   /* Accessors and mutators */
@@ -46,51 +46,51 @@ public class ScopedDecl {
     this.moduleName = Objects.requireNonNull(moduleName);
   }
 
-  public Decl getDecl() {
-    return decl;
+  public String getName() {
+    return name;
   }
 
-  public void setDecl(Decl decl) {
-    this.decl = Objects.requireNonNull(decl);
+  public void setName(String name) {
+    this.name = Objects.requireNonNull(name);
   }
 
   /* Object level helpers */
 
   @Override
   public boolean equals(Object other0) {
-    if (!(other0 instanceof ScopedDecl)) {
+    if (!(other0 instanceof ScopedName)) {
       return false;
     }
-    ScopedDecl other = (ScopedDecl) other0;
+    ScopedName other = (ScopedName) other0;
     return
       moduleName.equals(other.moduleName) &&
-      decl.equals(other.decl);
+      name.equals(other.name);
   }
 
   @Override
   public int hashCode() {
     int _result = 1;
     _result = _result * 37 + moduleName.hashCode();
-    _result = _result * 37 + decl.hashCode();
+    _result = _result * 37 + name.hashCode();
     return _result;
   }
 
   /* Factory for construction of generic values */
 
-  public static final Factory<ScopedDecl> FACTORY = new Factory<ScopedDecl>() {
+  public static final Factory<ScopedName> FACTORY = new Factory<ScopedName>() {
     @Override
-    public ScopedDecl create() {
-      return new ScopedDecl();
+    public ScopedName create() {
+      return new ScopedName();
     }
 
     @Override
-    public ScopedDecl create(ScopedDecl other) {
-      return new ScopedDecl(other);
+    public ScopedName create(ScopedName other) {
+      return new ScopedName(other);
     }
 
     @Override
     public TypeExpr typeExpr() {
-      ScopedName scopedName = new ScopedName("sys.adlast", "ScopedDecl");
+      org.adl.runtime.sys.adlast.ScopedName scopedName = new org.adl.runtime.sys.adlast.ScopedName("sys.adlast", "ScopedName");
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
@@ -98,31 +98,31 @@ public class ScopedDecl {
 
   /* Json serialization */
 
-  public static JsonBinding<ScopedDecl> jsonBinding() {
+  public static JsonBinding<ScopedName> jsonBinding() {
     final Lazy<JsonBinding<String>> moduleName = new Lazy<>(() -> JsonBindings.STRING);
-    final Lazy<JsonBinding<Decl>> decl = new Lazy<>(() -> Decl.jsonBinding());
-    final Factory<ScopedDecl> _factory = FACTORY;
+    final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
+    final Factory<ScopedName> _factory = FACTORY;
 
-    return new JsonBinding<ScopedDecl>() {
+    return new JsonBinding<ScopedName>() {
       @Override
-      public Factory<ScopedDecl> factory() {
+      public Factory<ScopedName> factory() {
         return _factory;
       }
 
       @Override
-      public JsonElement toJson(ScopedDecl _value) {
+      public JsonElement toJson(ScopedName _value) {
         JsonObject _result = new JsonObject();
         _result.add("moduleName", moduleName.get().toJson(_value.moduleName));
-        _result.add("decl", decl.get().toJson(_value.decl));
+        _result.add("name", name.get().toJson(_value.name));
         return _result;
       }
 
       @Override
-      public ScopedDecl fromJson(JsonElement _json) {
+      public ScopedName fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
-        return new ScopedDecl(
+        return new ScopedName(
           JsonBindings.fieldFromJson(_obj, "moduleName", moduleName.get()),
-          JsonBindings.fieldFromJson(_obj, "decl", decl.get())
+          JsonBindings.fieldFromJson(_obj, "name", name.get())
         );
       }
     };

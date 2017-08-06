@@ -6,8 +6,8 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import org.adl.sys.adlast.TypeExpr;
-import org.adl.sys.adlast.TypeRef;
+import org.adl.runtime.sys.adlast.TypeExpr;
+import org.adl.runtime.sys.adlast.TypeRef;
 
 import java.util.ArrayList;
 import java.util.Base64;

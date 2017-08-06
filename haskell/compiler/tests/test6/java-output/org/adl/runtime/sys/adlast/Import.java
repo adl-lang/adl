@@ -1,6 +1,6 @@
 /* Code generated from adl module sys.adlast */
 
-package org.adl.sys.adlast;
+package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import org.adl.runtime.Factories;

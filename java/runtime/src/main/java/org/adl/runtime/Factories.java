@@ -1,7 +1,7 @@
 package org.adl.runtime;
 
-import org.adl.sys.adlast.TypeExpr;
-import org.adl.sys.adlast.TypeRef;
+import org.adl.runtime.sys.adlast.TypeExpr;
+import org.adl.runtime.sys.adlast.TypeRef;
 
 import java.util.ArrayList;
 import java.util.Optional;

@@ -20,7 +20,7 @@ import qualified Data.Aeson as JSON
 import Data.Char(toUpper)
 import Data.Maybe(fromMaybe,isJust)
 import Data.Foldable(for_,fold)
-import Data.List(intersperse,replicate,sort)
+import Data.List(intersperse,replicate,sort,stripPrefix)
 import Data.Monoid
 import Data.String(IsString(..))
 import Data.Traversable(for)
@@ -144,9 +144,12 @@ defaultCodeGenProfile = CodeGenProfile {
   cgp_genericFactories = False,
   cgp_json = False,
   cgp_parcelable = False,
-  cgp_runtimePackage = javaPackage "org.adl.runtime",
+  cgp_runtimePackage = defaultRuntimePackage,
   cgp_supressWarnings = []
 }
+
+defaultRuntimePackage :: JavaPackage
+defaultRuntimePackage = javaPackage "org.adl.runtime"
 
 data ClassFile = ClassFile {
    cf_codeProfile :: CodeGenProfile,
@@ -843,6 +846,16 @@ discriminatorName = discriminatorName0 . f_name . fd_field
 leadSpace :: T.Text -> T.Text
 leadSpace "" = ""
 leadSpace t = " " <> t
+
+-- The default location for the the runtime package is org.adl.runtime.
+-- Update it if necessary to reflect it's configured location.
+fixRuntimePackage :: CodeGenProfile -> JavaPackage -> JavaPackage
+fixRuntimePackage cgp jp@(JavaPackage ids) = case stripPrefix defRtPrefix ids of
+  Nothing -> jp
+  (Just ids') -> JavaPackage (rtPrefix <> ids')
+  where
+    (JavaPackage defRtPrefix) = defaultRuntimePackage
+    (JavaPackage rtPrefix) = cgp_runtimePackage cgp
 
 -- | If a javaclass refers to the default standard library location, update
 --   it reference the configured standard library location

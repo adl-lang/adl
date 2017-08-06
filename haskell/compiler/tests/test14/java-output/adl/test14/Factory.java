@@ -7,9 +7,9 @@ import com.google.gson.JsonObject;
 import org.adl.runtime.Factories;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
-import org.adl.sys.adlast.ScopedName;
-import org.adl.sys.adlast.TypeExpr;
-import org.adl.sys.adlast.TypeRef;
+import org.adl.runtime.sys.adlast.ScopedName;
+import org.adl.runtime.sys.adlast.TypeExpr;
+import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.Objects;
 

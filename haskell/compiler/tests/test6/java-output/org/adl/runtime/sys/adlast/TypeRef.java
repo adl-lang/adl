@@ -1,6 +1,6 @@
 /* Code generated from adl module sys.adlast */
 
-package org.adl.sys.adlast;
+package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import org.adl.runtime.Factories;
@@ -144,7 +144,7 @@ public class TypeRef {
     public TypeExpr typeExpr() {
       ScopedName scopedName = new ScopedName("sys.adlast", "TypeRef");
       ArrayList<TypeExpr> params = new ArrayList<>();
-      return new TypeExpr(org.adl.sys.adlast.TypeRef.reference(scopedName), params);
+      return new TypeExpr(org.adl.runtime.sys.adlast.TypeRef.reference(scopedName), params);
     }
   };
 

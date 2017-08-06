@@ -1,10 +1,10 @@
 package org.adl.runtime;
 
 import org.adl.runtime.JsonBinding;
-import org.adl.sys.adlast.ScopedName;
-import org.adl.sys.adlast.TypeExpr;
-import org.adl.sys.adlast.TypeRef;
-import org.adl.sys.dynamic.Dynamic;
+import org.adl.runtime.sys.adlast.ScopedName;
+import org.adl.runtime.sys.adlast.TypeExpr;
+import org.adl.runtime.sys.adlast.TypeRef;
+import org.adl.runtime.sys.dynamic.Dynamic;
 import java.util.Optional;
 
 public class DynamicHelpers

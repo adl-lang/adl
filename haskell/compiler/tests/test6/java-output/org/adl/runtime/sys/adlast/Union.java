@@ -1,6 +1,6 @@
 /* Code generated from adl module sys.adlast */
 
-package org.adl.sys.adlast;
+package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,28 +12,28 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class TypeDef {
+public class Union {
 
   /* Members */
 
   private ArrayList<String> typeParams;
-  private TypeExpr typeExpr;
+  private ArrayList<Field> fields;
 
   /* Constructors */
 
-  public TypeDef(ArrayList<String> typeParams, TypeExpr typeExpr) {
+  public Union(ArrayList<String> typeParams, ArrayList<Field> fields) {
     this.typeParams = Objects.requireNonNull(typeParams);
-    this.typeExpr = Objects.requireNonNull(typeExpr);
+    this.fields = Objects.requireNonNull(fields);
   }
 
-  public TypeDef() {
+  public Union() {
     this.typeParams = new ArrayList<String>();
-    this.typeExpr = new TypeExpr();
+    this.fields = new ArrayList<Field>();
   }
 
-  public TypeDef(TypeDef other) {
+  public Union(Union other) {
     this.typeParams = Factories.arrayList(Factories.STRING).create(other.typeParams);
-    this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
+    this.fields = Factories.arrayList(Field.FACTORY).create(other.fields);
   }
 
   /* Accessors and mutators */
@@ -46,51 +46,51 @@ public class TypeDef {
     this.typeParams = Objects.requireNonNull(typeParams);
   }
 
-  public TypeExpr getTypeExpr() {
-    return typeExpr;
+  public ArrayList<Field> getFields() {
+    return fields;
   }
 
-  public void setTypeExpr(TypeExpr typeExpr) {
-    this.typeExpr = Objects.requireNonNull(typeExpr);
+  public void setFields(ArrayList<Field> fields) {
+    this.fields = Objects.requireNonNull(fields);
   }
 
   /* Object level helpers */
 
   @Override
   public boolean equals(Object other0) {
-    if (!(other0 instanceof TypeDef)) {
+    if (!(other0 instanceof Union)) {
       return false;
     }
-    TypeDef other = (TypeDef) other0;
+    Union other = (Union) other0;
     return
       typeParams.equals(other.typeParams) &&
-      typeExpr.equals(other.typeExpr);
+      fields.equals(other.fields);
   }
 
   @Override
   public int hashCode() {
     int _result = 1;
     _result = _result * 37 + typeParams.hashCode();
-    _result = _result * 37 + typeExpr.hashCode();
+    _result = _result * 37 + fields.hashCode();
     return _result;
   }
 
   /* Factory for construction of generic values */
 
-  public static final Factory<TypeDef> FACTORY = new Factory<TypeDef>() {
+  public static final Factory<Union> FACTORY = new Factory<Union>() {
     @Override
-    public TypeDef create() {
-      return new TypeDef();
+    public Union create() {
+      return new Union();
     }
 
     @Override
-    public TypeDef create(TypeDef other) {
-      return new TypeDef(other);
+    public Union create(Union other) {
+      return new Union(other);
     }
 
     @Override
     public TypeExpr typeExpr() {
-      ScopedName scopedName = new ScopedName("sys.adlast", "TypeDef");
+      ScopedName scopedName = new ScopedName("sys.adlast", "Union");
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
@@ -98,31 +98,31 @@ public class TypeDef {
 
   /* Json serialization */
 
-  public static JsonBinding<TypeDef> jsonBinding() {
+  public static JsonBinding<Union> jsonBinding() {
     final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
-    final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
-    final Factory<TypeDef> _factory = FACTORY;
+    final Lazy<JsonBinding<ArrayList<Field>>> fields = new Lazy<>(() -> JsonBindings.arrayList(Field.jsonBinding()));
+    final Factory<Union> _factory = FACTORY;
 
-    return new JsonBinding<TypeDef>() {
+    return new JsonBinding<Union>() {
       @Override
-      public Factory<TypeDef> factory() {
+      public Factory<Union> factory() {
         return _factory;
       }
 
       @Override
-      public JsonElement toJson(TypeDef _value) {
+      public JsonElement toJson(Union _value) {
         JsonObject _result = new JsonObject();
         _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
-        _result.add("typeExpr", typeExpr.get().toJson(_value.typeExpr));
+        _result.add("fields", fields.get().toJson(_value.fields));
         return _result;
       }
 
       @Override
-      public TypeDef fromJson(JsonElement _json) {
+      public Union fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
-        return new TypeDef(
+        return new Union(
           JsonBindings.fieldFromJson(_obj, "typeParams", typeParams.get()),
-          JsonBindings.fieldFromJson(_obj, "typeExpr", typeExpr.get())
+          JsonBindings.fieldFromJson(_obj, "fields", fields.get())
         );
       }
     };

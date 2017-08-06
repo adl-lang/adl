@@ -1,0 +1,7 @@
+module sys.dynamic
+{
+
+import adlc.config.java.*;
+
+annotation JavaPackage "org.adl.runtime.sys.dynamic";
+};

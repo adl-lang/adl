@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 
-import org.adl.sys.adlast.Module;
+import org.adl.runtime.sys.adlast.Module;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;

@@ -8,9 +8,9 @@ import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonParseException;
-import org.adl.sys.adlast.ScopedName;
-import org.adl.sys.adlast.TypeExpr;
-import org.adl.sys.adlast.TypeRef;
+import org.adl.runtime.sys.adlast.ScopedName;
+import org.adl.runtime.sys.adlast.TypeExpr;
+import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
 
 public enum unsigned {

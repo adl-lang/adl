@@ -1,7 +1,9 @@
 module sys.types
 {
 
-import adlc.config.java.JavaCustomType;
+import adlc.config.java.*;
+
+annotation JavaPackage "org.adl.runtime.sys.types";
 
 annotation Set JavaCustomType {
   "javaname" : "java.util.HashSet",

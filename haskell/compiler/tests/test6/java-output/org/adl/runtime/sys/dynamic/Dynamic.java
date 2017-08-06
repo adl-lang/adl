@@ -1,6 +1,6 @@
 /* Code generated from adl module sys.dynamic */
 
-package org.adl.sys.dynamic;
+package org.adl.runtime.sys.dynamic;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -9,9 +9,9 @@ import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
-import org.adl.sys.adlast.ScopedName;
-import org.adl.sys.adlast.TypeExpr;
-import org.adl.sys.adlast.TypeRef;
+import org.adl.runtime.sys.adlast.ScopedName;
+import org.adl.runtime.sys.adlast.TypeExpr;
+import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.Objects;
 

@@ -1,6 +1,6 @@
 /* Code generated from adl module sys.adlast */
 
-package org.adl.sys.adlast;
+package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,7 +12,7 @@ import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class Union {
+public class Struct {
 
   /* Members */
 
@@ -21,17 +21,17 @@ public class Union {
 
   /* Constructors */
 
-  public Union(ArrayList<String> typeParams, ArrayList<Field> fields) {
+  public Struct(ArrayList<String> typeParams, ArrayList<Field> fields) {
     this.typeParams = Objects.requireNonNull(typeParams);
     this.fields = Objects.requireNonNull(fields);
   }
 
-  public Union() {
+  public Struct() {
     this.typeParams = new ArrayList<String>();
     this.fields = new ArrayList<Field>();
   }
 
-  public Union(Union other) {
+  public Struct(Struct other) {
     this.typeParams = Factories.arrayList(Factories.STRING).create(other.typeParams);
     this.fields = Factories.arrayList(Field.FACTORY).create(other.fields);
   }
@@ -58,10 +58,10 @@ public class Union {
 
   @Override
   public boolean equals(Object other0) {
-    if (!(other0 instanceof Union)) {
+    if (!(other0 instanceof Struct)) {
       return false;
     }
-    Union other = (Union) other0;
+    Struct other = (Struct) other0;
     return
       typeParams.equals(other.typeParams) &&
       fields.equals(other.fields);
@@ -77,20 +77,20 @@ public class Union {
 
   /* Factory for construction of generic values */
 
-  public static final Factory<Union> FACTORY = new Factory<Union>() {
+  public static final Factory<Struct> FACTORY = new Factory<Struct>() {
     @Override
-    public Union create() {
-      return new Union();
+    public Struct create() {
+      return new Struct();
     }
 
     @Override
-    public Union create(Union other) {
-      return new Union(other);
+    public Struct create(Struct other) {
+      return new Struct(other);
     }
 
     @Override
     public TypeExpr typeExpr() {
-      ScopedName scopedName = new ScopedName("sys.adlast", "Union");
+      ScopedName scopedName = new ScopedName("sys.adlast", "Struct");
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
@@ -98,19 +98,19 @@ public class Union {
 
   /* Json serialization */
 
-  public static JsonBinding<Union> jsonBinding() {
+  public static JsonBinding<Struct> jsonBinding() {
     final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
     final Lazy<JsonBinding<ArrayList<Field>>> fields = new Lazy<>(() -> JsonBindings.arrayList(Field.jsonBinding()));
-    final Factory<Union> _factory = FACTORY;
+    final Factory<Struct> _factory = FACTORY;
 
-    return new JsonBinding<Union>() {
+    return new JsonBinding<Struct>() {
       @Override
-      public Factory<Union> factory() {
+      public Factory<Struct> factory() {
         return _factory;
       }
 
       @Override
-      public JsonElement toJson(Union _value) {
+      public JsonElement toJson(Struct _value) {
         JsonObject _result = new JsonObject();
         _result.add("typeParams", typeParams.get().toJson(_value.typeParams));
         _result.add("fields", fields.get().toJson(_value.fields));
@@ -118,9 +118,9 @@ public class Union {
       }
 
       @Override
-      public Union fromJson(JsonElement _json) {
+      public Struct fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
-        return new Union(
+        return new Struct(
           JsonBindings.fieldFromJson(_obj, "typeParams", typeParams.get()),
           JsonBindings.fieldFromJson(_obj, "fields", fields.get())
         );
