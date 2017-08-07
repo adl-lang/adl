@@ -112,8 +112,7 @@ runCpp args = do
     header = "Usage: adlc cpp [OPTION...] files..."
 
     flags0 libDir = C.CppFlags {
-      cf_incFilePrefix="",
-      cf_fileWriter= \_ _ -> return ()
+      cf_incFilePrefix=""
       }
 
     optDescs =

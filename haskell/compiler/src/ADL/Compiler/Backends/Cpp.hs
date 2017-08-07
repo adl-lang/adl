@@ -1120,9 +1120,7 @@ writeModuleFile mNamespace mIncFile mFile fileWriter m = do
 data CppFlags = CppFlags {
   -- all include files will be generated and referenced
   -- with this path prefix
-  cf_incFilePrefix :: FilePath,
-
-  cf_fileWriter :: FilePath -> LBS.ByteString -> IO ()
+  cf_incFilePrefix :: FilePath
   }
 
 
