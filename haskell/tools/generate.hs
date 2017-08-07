@@ -47,7 +47,7 @@ main = do
     <> "--no-overwrite "
     <> "--exclude-ast "
     <> "--verbose "
-    <> "-O compiler/lib/typescript/runtime "
+    <> "-O ../typescript/runtime "
     <> "-I compiler/lib/adl "
     <> "compiler/lib/adl/sys/types.adl compiler/lib/adl/sys/adlast.adl compiler/lib/adl/sys/dynamic.adl"
     )
