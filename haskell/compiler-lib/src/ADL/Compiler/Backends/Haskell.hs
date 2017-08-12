@@ -222,6 +222,9 @@ litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)
 
 type TypeBindingMap = Map.Map Ident (TypeExpr CResolvedType)
 
+withTypeBindings :: [Ident] -> [TypeExpr CResolvedType] -> TypeBindingMap -> TypeBindingMap
+withTypeBindings ids tes m = Map.union m (Map.fromList (zip ids tes))
+
 hTypeExpr :: TypeExpr CResolvedType -> HGen T.Text
 hTypeExpr = hTypeExprB Map.empty
 
@@ -310,30 +313,32 @@ defaultStdClasses = Set.fromList ["Eq","Ord","Show"]
 -- a given type expression
 --
 stdClassesFor :: TypeExpr CResolvedType -> StdTypeClasses
-stdClassesFor = stdClassesFor1 Set.empty
+stdClassesFor = stdClassesFor1 Set.empty Map.empty
 
-stdClassesFor1 :: Set.Set ScopedName -> TypeExpr CResolvedType -> StdTypeClasses
-stdClassesFor1 sns (TypeExpr (RT_Primitive P_Vector) [te]) = stdClassesFor1 sns te
-stdClassesFor1 sns (TypeExpr (RT_Primitive P_StringMap) [te]) = stdClassesFor1 sns te
-stdClassesFor1 sns (TypeExpr (RT_Primitive P_Nullable) [te]) = stdClassesFor1 sns te
-stdClassesFor1 sns (TypeExpr (RT_Primitive P_Json) []) = Set.fromList ["Eq","Show"]
-stdClassesFor1 sns (TypeExpr (RT_Primitive _) _) = defaultStdClasses
-stdClassesFor1 sns (TypeExpr (RT_Param _) _) = defaultStdClasses
-stdClassesFor1 sns (TypeExpr (RT_Named (sn,decl)) _) = case Set.member sn sns of
+stdClassesFor1 :: Set.Set ScopedName -> TypeBindingMap -> TypeExpr CResolvedType -> StdTypeClasses
+stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_Vector) [te]) = stdClassesFor1 sns tbmap te
+stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_StringMap) [te]) = stdClassesFor1 sns tbmap te
+stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_Nullable) [te]) = stdClassesFor1 sns tbmap te
+stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_Json) []) = Set.fromList ["Eq","Show"]
+stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive _) _) = defaultStdClasses
+stdClassesFor1 sns tbmap (TypeExpr (RT_Param tp) _) = case Map.lookup tp tbmap of
+   Nothing -> defaultStdClasses
+   (Just te) -> stdClassesFor1 sns (Map.delete tp tbmap) te
+stdClassesFor1 sns tbmap (TypeExpr (RT_Named (sn,decl)) tes) = case Set.member sn sns of
   True -> defaultStdClasses
   False ->
     let sns' = Set.insert sn sns in
     case decl of
-      Decl{d_type=Decl_Struct s} -> stdClassesForFields1 sns' (s_fields s)
-      Decl{d_type=Decl_Union u} -> stdClassesForFields1 sns' (u_fields u)
-      Decl{d_type=Decl_Typedef t} -> stdClassesFor1 sns' (t_typeExpr t)
-      Decl{d_type=Decl_Newtype n} -> stdClassesFor1 sns' (n_typeExpr n)
+      Decl{d_type=Decl_Struct s} -> stdClassesForFields1 sns' (withTypeBindings (s_typeParams s) tes tbmap) (s_fields s)
+      Decl{d_type=Decl_Union u} -> stdClassesForFields1 sns' (withTypeBindings (u_typeParams u) tes tbmap) (u_fields u)
+      Decl{d_type=Decl_Typedef t} -> stdClassesFor1 sns' (withTypeBindings (t_typeParams t) tes tbmap) (t_typeExpr t)
+      Decl{d_type=Decl_Newtype n} -> stdClassesFor1 sns' (withTypeBindings (n_typeParams n) tes tbmap) (n_typeExpr n)
 
-stdClassesForFields1 :: Set.Set ScopedName -> [Field CResolvedType] -> StdTypeClasses
-stdClassesForFields1 sns fields = foldr Set.intersection defaultStdClasses [stdClassesFor1 sns (f_type f) | f <- fields]
+stdClassesForFields1 :: Set.Set ScopedName -> TypeBindingMap -> [Field CResolvedType] -> StdTypeClasses
+stdClassesForFields1 sns tbmap fields = foldr Set.intersection defaultStdClasses [stdClassesFor1 sns tbmap (f_type f) | f <- fields]
 
 stdClassesForFields :: [Field CResolvedType] -> StdTypeClasses
-stdClassesForFields = stdClassesForFields1 Set.empty
+stdClassesForFields = stdClassesForFields1 Set.empty Map.empty
 
 derivingStdClasses ::  StdTypeClasses -> HGen ()
 derivingStdClasses stdClasses = wt "deriving ($1)" [T.intercalate "," (map ("Prelude." <>) (Set.toList stdClasses))]
@@ -554,7 +559,7 @@ generateLiteral te v =  generateLV Map.empty te v
       ctor <- structCtor d
       return (template "($1 $2)" [ctor,T.intercalate " " fields])
       where
-        m2 = m `Map.union` Map.fromList (zip (s_typeParams s) tes)
+        m2 = withTypeBindings (s_typeParams s) tes m
 
     generateUnion m d u tes (JS.String fname) = do
       unionCtor d fname
@@ -571,18 +576,18 @@ generateLiteral te v =  generateLV Map.empty te v
           [v] -> v
         te = case L.find (\f -> f_name f == fname) (u_fields u) of
           Just f -> f_type f
-        m2 = m `Map.union` Map.fromList (zip (u_typeParams u) tes)
+        m2 = withTypeBindings (u_typeParams u) tes m
 
     generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
       where
-        m2 = m `Map.union` Map.fromList (zip (t_typeParams t) tes)
+        m2 = withTypeBindings (t_typeParams t) tes m
 
     generateNewtype m d n tes v = do
       lit <- generateLV m2 (n_typeExpr n) v
       ctor <- structCtor d
       return (template "($1 $2)" [ctor,lit])
       where
-        m2 = m `Map.union` Map.fromList (zip (n_typeParams n) tes)
+        m2 = withTypeBindings (n_typeParams n) tes m
 
     unionCtor decl fname = case d_customType decl of
       Nothing -> return (hDiscName (d_name decl) fname)
