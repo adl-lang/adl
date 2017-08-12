@@ -35,7 +35,7 @@ export interface U3_V {
 export type U3 = U3_V;
 
 const U3_AST : ADL.ScopedDecl =
-  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":{"kind":"integer","value":100}},"name":"v","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"U3","version":{"kind":"nothing"}}};
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":100},"name":"v","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"U3","version":{"kind":"nothing"}}};
 
 export function texprU3(): ADL.ATypeExpr<U3> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U3"}}, parameters : []}};
@@ -56,7 +56,7 @@ export function makeS1(
 }
 
 const S1_AST : ADL.ScopedDecl =
-  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f","default":{"kind":"just","value":{"kind":"integer","value":100}},"name":"f","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f","default":{"kind":"just","value":100},"name":"f","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
 
 export function texprS1(): ADL.ATypeExpr<S1> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "S1"}}, parameters : []}};
@@ -84,7 +84,7 @@ export interface U5_V {
 export type U5 = U5_V;
 
 const U5_AST : ADL.ScopedDecl =
-  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":{"kind":"object","value":[{"v1":"f","v2":{"kind":"integer","value":200}}]}},"name":"v","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"S1"}},"parameters":[]}}]}},"name":"U5","version":{"kind":"nothing"}}};
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":{"f":200}},"name":"v","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"S1"}},"parameters":[]}}]}},"name":"U5","version":{"kind":"nothing"}}};
 
 export function texprU5(): ADL.ATypeExpr<U5> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U5"}}, parameters : []}};
@@ -112,7 +112,7 @@ export interface U7_V {
 export type U7 = U7_V;
 
 const U7_AST : ADL.ScopedDecl =
-  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":{"kind":"object","value":[{"v1":"v","v2":{"kind":"integer","value":75}}]}},"name":"v","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U3"}},"parameters":[]}}]}},"name":"U7","version":{"kind":"nothing"}}};
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":{"v":75}},"name":"v","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U3"}},"parameters":[]}}]}},"name":"U7","version":{"kind":"nothing"}}};
 
 export function texprU7(): ADL.ATypeExpr<U7> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U7"}}, parameters : []}};

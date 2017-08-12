@@ -276,233 +276,6 @@ operator==( const Import &a, const Import &b )
     return false;
 }
 
-Literal::Literal()
-    : d_(NULL_), p_(0)
-{
-}
-
-Literal Literal::mk_null_()
-{
-    return Literal( NULL_, 0 );
-}
-
-Literal Literal::mk_integer( const int64_t & v )
-{
-    return Literal( INTEGER, new int64_t(v) );
-}
-
-Literal Literal::mk_double_( const double & v )
-{
-    return Literal( DOUBLE_, new double(v) );
-}
-
-Literal Literal::mk_string( const std::string & v )
-{
-    return Literal( STRING, new std::string(v) );
-}
-
-Literal Literal::mk_boolean( const bool & v )
-{
-    return Literal( BOOLEAN, new bool(v) );
-}
-
-Literal Literal::mk_array( const std::vector<Literal>  & v )
-{
-    return Literal( ARRAY, new std::vector<Literal> (v) );
-}
-
-Literal Literal::mk_object( const std::map<std::string,Literal>  & v )
-{
-    return Literal( OBJECT, new std::map<std::string,Literal> (v) );
-}
-
-Literal::Literal( const Literal & v )
-    : d_(v.d_), p_(copy(v.d_,v.p_))
-{
-}
-
-Literal::~Literal()
-{
-    free(d_,p_);
-}
-
-Literal & Literal::operator=( const Literal & o )
-{
-    free(d_,p_);
-    d_ = o.d_;
-    p_ = copy( o.d_, o.p_ );
-    return *this;
-}
-
-void Literal::set_null_()
-{
-    if( d_ != NULL_ )
-    {
-        free(d_,p_);
-        d_ = NULL_;
-        p_ = 0;
-    }
-}
-
-const int64_t & Literal::set_integer(const int64_t &v)
-{
-    if( d_ == INTEGER )
-    {
-        *(int64_t *)p_ = v;
-    }
-    else
-    {
-        free(d_,p_);
-        d_ = INTEGER;
-        p_ = new int64_t(v);
-    }
-    return *(int64_t *)p_;
-}
-
-const double & Literal::set_double_(const double &v)
-{
-    if( d_ == DOUBLE_ )
-    {
-        *(double *)p_ = v;
-    }
-    else
-    {
-        free(d_,p_);
-        d_ = DOUBLE_;
-        p_ = new double(v);
-    }
-    return *(double *)p_;
-}
-
-const std::string & Literal::set_string(const std::string &v)
-{
-    if( d_ == STRING )
-    {
-        *(std::string *)p_ = v;
-    }
-    else
-    {
-        free(d_,p_);
-        d_ = STRING;
-        p_ = new std::string(v);
-    }
-    return *(std::string *)p_;
-}
-
-const bool & Literal::set_boolean(const bool &v)
-{
-    if( d_ == BOOLEAN )
-    {
-        *(bool *)p_ = v;
-    }
-    else
-    {
-        free(d_,p_);
-        d_ = BOOLEAN;
-        p_ = new bool(v);
-    }
-    return *(bool *)p_;
-}
-
-const std::vector<Literal>  & Literal::set_array(const std::vector<Literal>  &v)
-{
-    if( d_ == ARRAY )
-    {
-        *(std::vector<Literal>  *)p_ = v;
-    }
-    else
-    {
-        free(d_,p_);
-        d_ = ARRAY;
-        p_ = new std::vector<Literal> (v);
-    }
-    return *(std::vector<Literal>  *)p_;
-}
-
-const std::map<std::string,Literal>  & Literal::set_object(const std::map<std::string,Literal>  &v)
-{
-    if( d_ == OBJECT )
-    {
-        *(std::map<std::string,Literal>  *)p_ = v;
-    }
-    else
-    {
-        free(d_,p_);
-        d_ = OBJECT;
-        p_ = new std::map<std::string,Literal> (v);
-    }
-    return *(std::map<std::string,Literal>  *)p_;
-}
-
-Literal::Literal(DiscType d, void *p)
-    : d_(d), p_(p)
-{
-}
-
-void Literal::free(DiscType d, void *p)
-{
-    switch( d )
-    {
-        case NULL_: return;
-        case INTEGER: delete (int64_t *)p; return;
-        case DOUBLE_: delete (double *)p; return;
-        case STRING: delete (std::string *)p; return;
-        case BOOLEAN: delete (bool *)p; return;
-        case ARRAY: delete (std::vector<Literal>  *)p; return;
-        case OBJECT: delete (std::map<std::string,Literal>  *)p; return;
-    }
-}
-
-void * Literal::copy( DiscType d, void *p )
-{
-    switch( d )
-    {
-        case NULL_: return 0;
-        case INTEGER: return new int64_t(*(int64_t *)p);
-        case DOUBLE_: return new double(*(double *)p);
-        case STRING: return new std::string(*(std::string *)p);
-        case BOOLEAN: return new bool(*(bool *)p);
-        case ARRAY: return new std::vector<Literal> (*(std::vector<Literal>  *)p);
-        case OBJECT: return new std::map<std::string,Literal> (*(std::map<std::string,Literal>  *)p);
-    }
-    return 0;
-}
-
-bool
-operator<( const Literal &a, const Literal &b )
-{
-    if( a.d() < b.d() ) return true;
-    if( b.d() < a.d()) return false;
-    switch( a.d() )
-    {
-        case Literal::NULL_: return false;
-        case Literal::INTEGER: return a.integer() < b.integer();
-        case Literal::DOUBLE_: return a.double_() < b.double_();
-        case Literal::STRING: return a.string() < b.string();
-        case Literal::BOOLEAN: return a.boolean() < b.boolean();
-        case Literal::ARRAY: return a.array() < b.array();
-        case Literal::OBJECT: return a.object() < b.object();
-    }
-    return false;
-}
-
-bool
-operator==( const Literal &a, const Literal &b )
-{
-    if( a.d() != b.d() ) return false;
-    switch( a.d() )
-    {
-        case Literal::NULL_: return true;
-        case Literal::INTEGER: return a.integer() == b.integer();
-        case Literal::DOUBLE_: return a.double_() == b.double_();
-        case Literal::STRING: return a.string() == b.string();
-        case Literal::BOOLEAN: return a.boolean() == b.boolean();
-        case Literal::ARRAY: return a.array() == b.array();
-        case Literal::OBJECT: return a.object() == b.object();
-    }
-    return false;
-}
-
 Struct_::Struct_()
 {
 }
@@ -770,7 +543,7 @@ NewType::NewType()
 NewType::NewType(
     const std::vector<std::string>  & typeParams_,
     const TypeExpr & typeExpr_,
-    const ADL::sys::types::Maybe<Literal>  & default__
+    const ADL::sys::types::Maybe<JsonValue>  & default__
     )
     : typeParams(typeParams_)
     , typeExpr(typeExpr_)
@@ -879,7 +652,7 @@ Field::Field(
     const Ident & name_,
     const Ident & serializedName_,
     const TypeExpr & typeExpr_,
-    const ADL::sys::types::Maybe<Literal>  & default__,
+    const ADL::sys::types::Maybe<JsonValue>  & default__,
     const Annotations & annotations_
     )
     : name(name_)
@@ -1145,133 +918,6 @@ Serialisable<ADL::sys::adlast::Import>::serialiser( const SerialiserFlags &sf )
     return typename Serialiser<_T>::Ptr( new S_(sf) );
 }
 
-typename Serialiser<ADL::sys::adlast::Literal>::Ptr
-Serialisable<ADL::sys::adlast::Literal>::serialiser( const SerialiserFlags &sf )
-{
-    typedef ADL::sys::adlast::Literal _T;
-    
-    struct S_ : public Serialiser<_T>
-    {
-        S_( const SerialiserFlags & sf )
-            : sf_(sf)
-            {}
-        
-        SerialiserFlags sf_;
-        mutable typename Serialiser<Void>::Ptr null_;
-        mutable typename Serialiser<int64_t>::Ptr integer_;
-        mutable typename Serialiser<double>::Ptr double_;
-        mutable typename Serialiser<std::string>::Ptr string_;
-        mutable typename Serialiser<bool>::Ptr boolean_;
-        mutable typename Serialiser<std::vector<ADL::sys::adlast::Literal> >::Ptr array_;
-        mutable typename Serialiser<std::map<std::string,ADL::sys::adlast::Literal> >::Ptr object_;
-        
-        typename Serialiser<Void>::Ptr null_s() const
-        {
-            if( !null_ )
-                null_ = Serialisable<Void>::serialiser(sf_);
-            return null_;
-        }
-        
-        typename Serialiser<int64_t>::Ptr integer_s() const
-        {
-            if( !integer_ )
-                integer_ = Serialisable<int64_t>::serialiser(sf_);
-            return integer_;
-        }
-        
-        typename Serialiser<double>::Ptr double_s() const
-        {
-            if( !double_ )
-                double_ = Serialisable<double>::serialiser(sf_);
-            return double_;
-        }
-        
-        typename Serialiser<std::string>::Ptr string_s() const
-        {
-            if( !string_ )
-                string_ = Serialisable<std::string>::serialiser(sf_);
-            return string_;
-        }
-        
-        typename Serialiser<bool>::Ptr boolean_s() const
-        {
-            if( !boolean_ )
-                boolean_ = Serialisable<bool>::serialiser(sf_);
-            return boolean_;
-        }
-        
-        typename Serialiser<std::vector<ADL::sys::adlast::Literal> >::Ptr array_s() const
-        {
-            if( !array_ )
-                array_ = Serialisable<std::vector<ADL::sys::adlast::Literal> >::serialiser(sf_);
-            return array_;
-        }
-        
-        typename Serialiser<std::map<std::string,ADL::sys::adlast::Literal> >::Ptr object_s() const
-        {
-            if( !object_ )
-                object_ = Serialisable<std::map<std::string,ADL::sys::adlast::Literal> >::serialiser(sf_);
-            return object_;
-        }
-        
-        void toJson( JsonWriter &json, const _T & v ) const
-        {
-            json.startObject();
-            switch( v.d() )
-            {
-                case ADL::sys::adlast::Literal::NULL_: json.stringV( "null" ); break;
-                case ADL::sys::adlast::Literal::INTEGER: writeField( json, integer_s(), "integer", v.integer() ); break;
-                case ADL::sys::adlast::Literal::DOUBLE_: writeField( json, double_s(), "double", v.double_() ); break;
-                case ADL::sys::adlast::Literal::STRING: writeField( json, string_s(), "string", v.string() ); break;
-                case ADL::sys::adlast::Literal::BOOLEAN: writeField( json, boolean_s(), "boolean", v.boolean() ); break;
-                case ADL::sys::adlast::Literal::ARRAY: writeField( json, array_s(), "array", v.array() ); break;
-                case ADL::sys::adlast::Literal::OBJECT: writeField( json, object_s(), "object", v.object() ); break;
-            }
-            json.endObject();
-        }
-        
-        void fromJson( _T &v, JsonReader &json ) const
-        {
-            if( json.type() == JsonReader::STRING )
-            {
-                if( json.stringV() == "null" )
-                    v.set_null_();
-                else
-                    throw json_parse_failure();
-                json.next();
-                return;
-            }
-            if( json.type() == JsonReader::START_OBJECT )
-            {
-                match( json, JsonReader::START_OBJECT );
-                if( json.type() == JsonReader::END_OBJECT )
-                    throw json_parse_failure();
-                while( !match0( json, JsonReader::END_OBJECT ) )
-                {
-                    if( matchField0( "integer", json ) )
-                        v.set_integer(integer_s()->fromJson( json ));
-                    else if( matchField0( "double", json ) )
-                        v.set_double_(double_s()->fromJson( json ));
-                    else if( matchField0( "string", json ) )
-                        v.set_string(string_s()->fromJson( json ));
-                    else if( matchField0( "boolean", json ) )
-                        v.set_boolean(boolean_s()->fromJson( json ));
-                    else if( matchField0( "array", json ) )
-                        v.set_array(array_s()->fromJson( json ));
-                    else if( matchField0( "object", json ) )
-                        v.set_object(object_s()->fromJson( json ));
-                    else
-                        throw json_parse_failure();
-                }
-                return;
-            }
-            throw json_parse_failure();
-        }
-    };
-    
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
-}
-
 typename Serialiser<ADL::sys::adlast::Struct_>::Ptr
 Serialisable<ADL::sys::adlast::Struct_>::serialiser( const SerialiserFlags &sf )
 {
@@ -1514,20 +1160,20 @@ Serialisable<ADL::sys::adlast::NewType>::serialiser( const SerialiserFlags &sf )
         S_( const SerialiserFlags & sf )
             : typeParams_s( Serialisable<std::vector<std::string> >::serialiser(sf) )
             , typeExpr_s( Serialisable<ADL::sys::adlast::TypeExpr>::serialiser(sf) )
-            , default__s( Serialisable<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::serialiser(sf) )
+            , default__s( Serialisable<ADL::sys::types::Maybe<JsonValue> >::serialiser(sf) )
             {}
         
         
         typename Serialiser<std::vector<std::string> >::Ptr typeParams_s;
         typename Serialiser<ADL::sys::adlast::TypeExpr>::Ptr typeExpr_s;
-        typename Serialiser<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::Ptr default__s;
+        typename Serialiser<ADL::sys::types::Maybe<JsonValue> >::Ptr default__s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             writeField<std::vector<std::string> >( json, typeParams_s, "typeParams", v.typeParams );
             writeField<ADL::sys::adlast::TypeExpr>( json, typeExpr_s, "typeExpr", v.typeExpr );
-            writeField<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >( json, default__s, "default", v.default_ );
+            writeField<ADL::sys::types::Maybe<JsonValue> >( json, default__s, "default", v.default_ );
             json.endObject();
         }
         
@@ -1644,7 +1290,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
             : name_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
             , serializedName_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
             , typeExpr_s( Serialisable<ADL::sys::adlast::TypeExpr>::serialiser(sf) )
-            , default__s( Serialisable<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::serialiser(sf) )
+            , default__s( Serialisable<ADL::sys::types::Maybe<JsonValue> >::serialiser(sf) )
             , annotations_s( Serialisable<ADL::sys::adlast::Annotations>::serialiser(sf) )
             {}
         
@@ -1652,7 +1298,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<ADL::sys::adlast::Ident>::Ptr name_s;
         typename Serialiser<ADL::sys::adlast::Ident>::Ptr serializedName_s;
         typename Serialiser<ADL::sys::adlast::TypeExpr>::Ptr typeExpr_s;
-        typename Serialiser<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >::Ptr default__s;
+        typename Serialiser<ADL::sys::types::Maybe<JsonValue> >::Ptr default__s;
         typename Serialiser<ADL::sys::adlast::Annotations>::Ptr annotations_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
@@ -1661,7 +1307,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
             writeField<ADL::sys::adlast::Ident>( json, name_s, "name", v.name );
             writeField<ADL::sys::adlast::Ident>( json, serializedName_s, "serializedName", v.serializedName );
             writeField<ADL::sys::adlast::TypeExpr>( json, typeExpr_s, "typeExpr", v.typeExpr );
-            writeField<ADL::sys::types::Maybe<ADL::sys::adlast::Literal> >( json, default__s, "default", v.default_ );
+            writeField<ADL::sys::types::Maybe<JsonValue> >( json, default__s, "default", v.default_ );
             writeField<ADL::sys::adlast::Annotations>( json, annotations_s, "annotations", v.annotations );
             json.endObject();
         }

@@ -21,11 +21,11 @@ public class Module {
   private String name;
   private ArrayList<Import> imports;
   private HashMap<String, Decl> decls;
-  private HashMap<ScopedName, Literal> annotations;
+  private HashMap<ScopedName, JsonElement> annotations;
 
   /* Constructors */
 
-  public Module(String name, ArrayList<Import> imports, HashMap<String, Decl> decls, HashMap<ScopedName, Literal> annotations) {
+  public Module(String name, ArrayList<Import> imports, HashMap<String, Decl> decls, HashMap<ScopedName, JsonElement> annotations) {
     this.name = Objects.requireNonNull(name);
     this.imports = Objects.requireNonNull(imports);
     this.decls = Objects.requireNonNull(decls);
@@ -36,14 +36,14 @@ public class Module {
     this.name = "";
     this.imports = new ArrayList<Import>();
     this.decls = HashMapHelpers.factory(Factories.STRING, Decl.FACTORY).create();
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create();
+    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create();
   }
 
   public Module(Module other) {
     this.name = other.name;
     this.imports = Factories.arrayList(Import.FACTORY).create(other.imports);
     this.decls = HashMapHelpers.factory(Factories.STRING, Decl.FACTORY).create(other.decls);
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create(other.annotations);
+    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create(other.annotations);
   }
 
   /* Accessors and mutators */
@@ -72,11 +72,11 @@ public class Module {
     this.decls = Objects.requireNonNull(decls);
   }
 
-  public HashMap<ScopedName, Literal> getAnnotations() {
+  public HashMap<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(HashMap<ScopedName, Literal> annotations) {
+  public void setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
@@ -132,7 +132,7 @@ public class Module {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<ArrayList<Import>>> imports = new Lazy<>(() -> JsonBindings.arrayList(Import.jsonBinding()));
     final Lazy<JsonBinding<HashMap<String, Decl>>> decls = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, Decl.jsonBinding()));
-    final Lazy<JsonBinding<HashMap<ScopedName, Literal>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), Literal.jsonBinding()));
+    final Lazy<JsonBinding<HashMap<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
     final Factory<Module> _factory = FACTORY;
 
     return new JsonBinding<Module>() {

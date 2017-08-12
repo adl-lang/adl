@@ -6,7 +6,7 @@ export type ModuleName = string;
 
 export type Ident = string;
 
-export type Annotations = sys_types.Map<ScopedName, Literal>;
+export type Annotations = sys_types.Map<ScopedName, {}|null>;
 
 export interface ScopedName {
   moduleName: ModuleName;
@@ -24,36 +24,6 @@ export function makeScopedName(
     name: input.name,
   };
 }
-
-export interface Literal_Null {
-  kind: 'null';
-}
-export interface Literal_Integer {
-  kind: 'integer';
-  value: number;
-}
-export interface Literal_Double {
-  kind: 'double';
-  value: number;
-}
-export interface Literal_String {
-  kind: 'string';
-  value: string;
-}
-export interface Literal_Boolean {
-  kind: 'boolean';
-  value: boolean;
-}
-export interface Literal_Array {
-  kind: 'array';
-  value: Literal[];
-}
-export interface Literal_Object {
-  kind: 'object';
-  value: sys_types.Map<string, Literal>;
-}
-
-export type Literal = Literal_Null | Literal_Integer | Literal_Double | Literal_String | Literal_Boolean | Literal_Array | Literal_Object;
 
 export interface TypeRef_Primitive {
   kind: 'primitive';
@@ -91,7 +61,7 @@ export interface Field {
   name: Ident;
   serializedName: Ident;
   typeExpr: TypeExpr;
-  default: sys_types.Maybe<Literal>;
+  default: sys_types.Maybe<{}|null>;
   annotations: Annotations;
 }
 
@@ -100,7 +70,7 @@ export function makeField(
     name: Ident,
     serializedName: Ident,
     typeExpr: TypeExpr,
-    default: sys_types.Maybe<Literal>,
+    default: sys_types.Maybe<{}|null>,
     annotations: Annotations,
   }
 ): Field {
@@ -167,14 +137,14 @@ export function makeTypeDef(
 export interface NewType {
   typeParams: Ident[];
   typeExpr: TypeExpr;
-  default: sys_types.Maybe<Literal>;
+  default: sys_types.Maybe<{}|null>;
 }
 
 export function makeNewType(
   input: {
     typeParams: Ident[],
     typeExpr: TypeExpr,
-    default: sys_types.Maybe<Literal>,
+    default: sys_types.Maybe<{}|null>,
   }
 ): NewType {
   return {

@@ -9,7 +9,7 @@ const Annotations = {
   module : "sys.adlast",
   kind : "typedef",
   typevars : [],
-  type : {"args":[{"ref":"sys.adlast.ScopedName"},{"ref":"sys.adlast.Literal"}],"app":{"ref":"sys.types.Map"}},
+  type : {"args":[{"ref":"sys.adlast.ScopedName"},{"primitive":"Json"}],"app":{"ref":"sys.types.Map"}},
   annotations : [
   ]
 };
@@ -131,7 +131,7 @@ const Field = {
     },
     {
       name : "default",
-      type : {"args":[{"ref":"sys.adlast.Literal"}],"app":{"ref":"sys.types.Maybe"}},
+      type : {"args":[{"primitive":"Json"}],"app":{"ref":"sys.types.Maybe"}},
       defaultv : null,
       annotations : [
       ]
@@ -174,66 +174,6 @@ const Import = {
     {
       name : "scopedName",
       type : {"ref":"sys.adlast.ScopedName"},
-      defaultv : null,
-      annotations : [
-      ]
-    }
-  ],
-  annotations : [
-  ]
-};
-
-const Literal = {
-  name : "Literal",
-  module : "sys.adlast",
-  kind : "union",
-  typevars : [[]],
-  fields : [
-    {
-      name : "null",
-      type : {"primitive":"Void"},
-      defaultv : null,
-      annotations : [
-      ]
-    },
-    {
-      name : "integer",
-      type : {"primitive":"Int64"},
-      defaultv : null,
-      annotations : [
-      ]
-    },
-    {
-      name : "double",
-      type : {"primitive":"Double"},
-      defaultv : null,
-      annotations : [
-      ]
-    },
-    {
-      name : "string",
-      type : {"primitive":"String"},
-      defaultv : null,
-      annotations : [
-      ]
-    },
-    {
-      name : "boolean",
-      type : {"primitive":"Bool"},
-      defaultv : null,
-      annotations : [
-      ]
-    },
-    {
-      name : "array",
-      type : {"args":[{"ref":"sys.adlast.Literal"}],"app":{"primitive":"Vector"}},
-      defaultv : null,
-      annotations : [
-      ]
-    },
-    {
-      name : "object",
-      type : {"args":[{"primitive":"String"},{"ref":"sys.adlast.Literal"}],"app":{"ref":"sys.types.Map"}},
       defaultv : null,
       annotations : [
       ]
@@ -314,7 +254,7 @@ const NewType = {
     },
     {
       name : "default",
-      type : {"args":[{"ref":"sys.adlast.Literal"}],"app":{"ref":"sys.types.Maybe"}},
+      type : {"args":[{"primitive":"Json"}],"app":{"ref":"sys.types.Maybe"}},
       defaultv : null,
       annotations : [
       ]
@@ -517,7 +457,6 @@ export const _ADL_TYPES = {
   "sys.adlast.NewType" : NewType,
   "sys.adlast.ModuleName" : ModuleName,
   "sys.adlast.Module" : Module,
-  "sys.adlast.Literal" : Literal,
   "sys.adlast.Import" : Import,
   "sys.adlast.Ident" : Ident,
   "sys.adlast.Field" : Field,

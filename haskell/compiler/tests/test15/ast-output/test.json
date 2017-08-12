@@ -10,9 +10,7 @@
                             "moduleName": "sys.annotations",
                             "name": "Doc"
                         },
-                        "v2": {
-                            "string": "A monomorphic struct\n"
-                        }
+                        "v2": "A monomorphic struct\n"
                     }
                 ],
                 "name": "A",
@@ -59,9 +57,7 @@
                             "moduleName": "sys.annotations",
                             "name": "Doc"
                         },
-                        "v2": {
-                            "string": "A polymorphic union\n"
-                        }
+                        "v2": "A polymorphic union\n"
                     }
                 ],
                 "name": "B",

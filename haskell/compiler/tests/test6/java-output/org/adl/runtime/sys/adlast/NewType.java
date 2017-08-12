@@ -20,11 +20,11 @@ public class NewType {
 
   private ArrayList<String> typeParams;
   private TypeExpr typeExpr;
-  private Optional<Literal> default_;
+  private Optional<JsonElement> default_;
 
   /* Constructors */
 
-  public NewType(ArrayList<String> typeParams, TypeExpr typeExpr, Optional<Literal> default_) {
+  public NewType(ArrayList<String> typeParams, TypeExpr typeExpr, Optional<JsonElement> default_) {
     this.typeParams = Objects.requireNonNull(typeParams);
     this.typeExpr = Objects.requireNonNull(typeExpr);
     this.default_ = Objects.requireNonNull(default_);
@@ -33,13 +33,13 @@ public class NewType {
   public NewType() {
     this.typeParams = new ArrayList<String>();
     this.typeExpr = new TypeExpr();
-    this.default_ = MaybeHelpers.factory(Literal.FACTORY).create();
+    this.default_ = MaybeHelpers.factory(JsonBindings.JSON_FACTORY).create();
   }
 
   public NewType(NewType other) {
     this.typeParams = Factories.arrayList(Factories.STRING).create(other.typeParams);
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
-    this.default_ = MaybeHelpers.factory(Literal.FACTORY).create(other.default_);
+    this.default_ = MaybeHelpers.factory(JsonBindings.JSON_FACTORY).create(other.default_);
   }
 
   /* Accessors and mutators */
@@ -60,11 +60,11 @@ public class NewType {
     this.typeExpr = Objects.requireNonNull(typeExpr);
   }
 
-  public Optional<Literal> getDefault() {
+  public Optional<JsonElement> getDefault() {
     return default_;
   }
 
-  public void setDefault(Optional<Literal> default_) {
+  public void setDefault(Optional<JsonElement> default_) {
     this.default_ = Objects.requireNonNull(default_);
   }
 
@@ -117,7 +117,7 @@ public class NewType {
   public static JsonBinding<NewType> jsonBinding() {
     final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
     final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
-    final Lazy<JsonBinding<Optional<Literal>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(Literal.jsonBinding()));
+    final Lazy<JsonBinding<Optional<JsonElement>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.JSON));
     final Factory<NewType> _factory = FACTORY;
 
     return new JsonBinding<NewType>() {

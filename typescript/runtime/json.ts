@@ -251,7 +251,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
   struct.fields.forEach( (field) => {
     let buildDefault = once( () => {
       if (field.default.kind === "just")  {
-        const json = jsonFromLiteral(field.default.value);
+        const json = field.default.value;
         return { 'value' : buildJsonBinding(dresolver, field.typeExpr, newBoundTypeParams).fromJson(json)};
       } else {
         return null;
@@ -413,34 +413,6 @@ function createBoundTypeParams(dresolver : DeclResolver, paramNames : string[], 
     result[paramName] = buildJsonBinding(dresolver,paramTypes[i], boundTypeParams);
   });
   return result;
-}
-
-/**
- *  Convert a ADLAST literal to a json value.
- *
- *  This will be unnecessary when this is addressed:
- *      https://github.com/timbod7/adl/issues/42
- */
-function jsonFromLiteral(literal : AST.Literal) : any {
-  if (literal.kind === "null") {
-    return null;
-  } else if (literal.kind === "string") {
-    return literal.value;
-  } else if (literal.kind === "integer") {
-    return literal.value;
-  } else if (literal.kind === "double") {
-    return literal.value;
-  } else if (literal.kind === "boolean") {
-    return literal.value;
-  } else if (literal.kind === "array") {
-    return literal.value.map(jsonFromLiteral);
-  } else if (literal.kind === "object") {
-    const result = {};
-    literal.value.forEach( (pair) => {
-      result[pair.v1] = jsonFromLiteral(pair.v2);
-    });
-    return result;
-  }
 }
 
 /**

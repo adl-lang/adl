@@ -47,7 +47,7 @@ export function texprInt2(): ADL.ATypeExpr<Int2> {
 export type Int3 = number;
 
 const Int3_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":{"kind":"integer","value":42}},"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int3","version":{"kind":"nothing"}}};
+  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":42},"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int3","version":{"kind":"nothing"}}};
 
 export function texprInt3(): ADL.ATypeExpr<Int3> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test7",name : "Int3"}}, parameters : []}};
@@ -74,7 +74,7 @@ export function texprInt5<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Int5<X>> 
 export type Int6<X> = number;
 
 const Int6_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"just","value":{"kind":"integer","value":43}},"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int6","version":{"kind":"nothing"}}};
+  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"just","value":43},"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int6","version":{"kind":"nothing"}}};
 
 export function texprInt6<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Int6<X>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test7",name : "Int6"}}, parameters : [texprX.value]}};
@@ -101,7 +101,7 @@ export function texprString2(): ADL.ATypeExpr<String2> {
 export type String3 = string;
 
 const String3_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":{"kind":"string","value":"hello"}},"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String3","version":{"kind":"nothing"}}};
+  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":"hello"},"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String3","version":{"kind":"nothing"}}};
 
 export function texprString3(): ADL.ATypeExpr<String3> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test7",name : "String3"}}, parameters : []}};
@@ -128,7 +128,7 @@ export function texprString5<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<String
 export type String6<X> = string;
 
 const String6_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"just","value":{"kind":"string","value":"goodbye"}},"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String6","version":{"kind":"nothing"}}};
+  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"just","value":"goodbye"},"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String6","version":{"kind":"nothing"}}};
 
 export function texprString6<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<String6<X>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test7",name : "String6"}}, parameters : [texprX.value]}};
@@ -155,7 +155,7 @@ export function texprIntPoint2(): ADL.ATypeExpr<IntPoint2> {
 export type IntPoint3 = Point<number>;
 
 const IntPoint3_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":{"kind":"object","value":[{"v1":"x","v2":{"kind":"integer","value":5}},{"v1":"y","v2":{"kind":"integer","value":27}}]}},"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}]}}},"name":"IntPoint3","version":{"kind":"nothing"}}};
+  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":{"x":5,"y":27}},"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}]}}},"name":"IntPoint3","version":{"kind":"nothing"}}};
 
 export function texprIntPoint3(): ADL.ATypeExpr<IntPoint3> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test7",name : "IntPoint3"}}, parameters : []}};

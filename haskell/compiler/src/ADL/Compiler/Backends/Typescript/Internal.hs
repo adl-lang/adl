@@ -392,7 +392,7 @@ newtypeAst :: Newtype CResolvedType -> JS.Value
 newtypeAst n = JS.object
   [ ("typeExpr", typeExprAst (n_typeExpr n))
   , ("typeParams", JS.toJSON (n_typeParams n))
-  , ("default", mkMaybe (fmap literalAst (n_default n)))
+  , ("default", mkMaybe (n_default n))
   ]
 
 fieldAst :: Field CResolvedType -> JS.Value
@@ -400,12 +400,12 @@ fieldAst f = JS.object
  [ ("name", JS.toJSON (f_name f))
  , ("serializedName", JS.toJSON (f_serializedName f))
  , ("typeExpr", typeExprAst (f_type f))
- , ("default", mkMaybe (fmap literalAst (f_default f)))
+ , ("default", mkMaybe (f_default f))
  , ("annotations", annotationsAst (f_annotations f))
  ]
 
 annotationsAst :: Annotations CResolvedType -> JS.Value
-annotationsAst as = mapAst scopedNameAst literalAst [(k,v) | (k,(_,v)) <- (M.toList as)]
+annotationsAst as = mapAst scopedNameAst id [(k,v) | (k,(_,v)) <- (M.toList as)]
 
 mapAst :: (k -> JS.Value) -> (v -> JS.Value) -> [(k,v)] -> JS.Value
 mapAst kf vf kvs = JS.toJSON [ kvAst (kf k) (vf v) | (k,v) <- kvs]

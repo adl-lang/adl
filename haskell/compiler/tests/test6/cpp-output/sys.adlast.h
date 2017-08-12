@@ -177,121 +177,6 @@ inline ScopedName & Import::scopedName() const
     throw invalid_union_access();
 }
 
-class Literal
-{
-public:
-    Literal();
-    static Literal mk_null_();
-    static Literal mk_integer( const int64_t & v );
-    static Literal mk_double_( const double & v );
-    static Literal mk_string( const std::string & v );
-    static Literal mk_boolean( const bool & v );
-    static Literal mk_array( const std::vector<Literal>  & v );
-    static Literal mk_object( const std::map<std::string,Literal>  & v );
-    
-    Literal( const Literal & );
-    ~Literal();
-    Literal & operator=( const Literal & );
-    
-    enum DiscType
-    {
-        NULL_,
-        INTEGER,
-        DOUBLE_,
-        STRING,
-        BOOLEAN,
-        ARRAY,
-        OBJECT
-    };
-    
-    DiscType d() const;
-    int64_t & integer() const;
-    double & double_() const;
-    std::string & string() const;
-    bool & boolean() const;
-    std::vector<Literal>  & array() const;
-    std::map<std::string,Literal>  & object() const;
-    
-    void set_null_();
-    const int64_t & set_integer(const int64_t & );
-    const double & set_double_(const double & );
-    const std::string & set_string(const std::string & );
-    const bool & set_boolean(const bool & );
-    const std::vector<Literal>  & set_array(const std::vector<Literal>  & );
-    const std::map<std::string,Literal>  & set_object(const std::map<std::string,Literal>  & );
-    
-private:
-    Literal( DiscType d, void * v);
-    
-    DiscType d_;
-    void *p_;
-    
-    static void free( DiscType d, void *v );
-    static void *copy( DiscType d, void *v );
-};
-
-bool operator<( const Literal &a, const Literal &b );
-bool operator==( const Literal &a, const Literal &b );
-
-inline Literal::DiscType Literal::d() const
-{
-    return d_;
-}
-
-inline int64_t & Literal::integer() const
-{
-    if( d_ == INTEGER )
-    {
-        return *(int64_t *)p_;
-    }
-    throw invalid_union_access();
-}
-
-inline double & Literal::double_() const
-{
-    if( d_ == DOUBLE_ )
-    {
-        return *(double *)p_;
-    }
-    throw invalid_union_access();
-}
-
-inline std::string & Literal::string() const
-{
-    if( d_ == STRING )
-    {
-        return *(std::string *)p_;
-    }
-    throw invalid_union_access();
-}
-
-inline bool & Literal::boolean() const
-{
-    if( d_ == BOOLEAN )
-    {
-        return *(bool *)p_;
-    }
-    throw invalid_union_access();
-}
-
-inline std::vector<Literal>  & Literal::array() const
-{
-    if( d_ == ARRAY )
-    {
-        return *(std::vector<Literal>  *)p_;
-    }
-    throw invalid_union_access();
-}
-
-inline std::map<std::string,Literal>  & Literal::object() const
-{
-    if( d_ == OBJECT )
-    {
-        return *(std::map<std::string,Literal>  *)p_;
-    }
-    throw invalid_union_access();
-}
-
 using ModuleName = std::string;
 
 struct Struct_
@@ -431,7 +316,7 @@ struct TypeExpr
 bool operator<( const TypeExpr &a, const TypeExpr &b );
 bool operator==( const TypeExpr &a, const TypeExpr &b );
 
-using Annotations = std::map<ScopedName,Literal> ;
+using Annotations = std::map<ScopedName,JsonValue> ;
 
 struct NewType
 {
@@ -440,12 +325,12 @@ struct NewType
     NewType(
         const std::vector<std::string>  & typeParams,
         const TypeExpr & typeExpr,
-        const ADL::sys::types::Maybe<Literal>  & default_
+        const ADL::sys::types::Maybe<JsonValue>  & default_
         );
     
     std::vector<std::string>  typeParams;
     TypeExpr typeExpr;
-    ADL::sys::types::Maybe<Literal>  default_;
+    ADL::sys::types::Maybe<JsonValue>  default_;
 };
 
 bool operator<( const NewType &a, const NewType &b );
@@ -495,14 +380,14 @@ struct Field
         const Ident & name,
         const Ident & serializedName,
         const TypeExpr & typeExpr,
-        const ADL::sys::types::Maybe<Literal>  & default_,
+        const ADL::sys::types::Maybe<JsonValue>  & default_,
         const Annotations & annotations
         );
     
     Ident name;
     Ident serializedName;
     TypeExpr typeExpr;
-    ADL::sys::types::Maybe<Literal>  default_;
+    ADL::sys::types::Maybe<JsonValue>  default_;
     Annotations annotations;
 };
 
@@ -559,12 +444,6 @@ template <>
 struct Serialisable<ADL::sys::adlast::Import>
 {
     static Serialiser<ADL::sys::adlast::Import>::Ptr serialiser(const SerialiserFlags &);
-};
-
-template <>
-struct Serialisable<ADL::sys::adlast::Literal>
-{
-    static Serialiser<ADL::sys::adlast::Literal>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>

@@ -7,24 +7,13 @@ import sys.types.*;
 type ModuleName = String;
 type Ident = String;
 
-type Annotations = Map<ScopedName,Literal>;
+type Annotations = Map<ScopedName,Json>;
 
 
 struct ScopedName
 {
     ModuleName moduleName;
     Ident name;
-};
-
-union Literal
-{
-    Void null;
-    Int64 integer;
-    Double double;
-    String string;
-    Bool boolean;
-    Vector<Literal> array;
-    Map<String,Literal> object;
 };
 
 union TypeRef
@@ -45,7 +34,7 @@ struct Field
     Ident name;
     Ident serializedName;
     TypeExpr typeExpr;
-    Maybe<Literal> default;
+    Maybe<Json> default;
     Annotations annotations;
 };
 
@@ -71,7 +60,7 @@ struct NewType
 {
     Vector<Ident> typeParams;
     TypeExpr typeExpr;
-    Maybe<Literal> default;
+    Maybe<Json> default;
 };
 
 union DeclType

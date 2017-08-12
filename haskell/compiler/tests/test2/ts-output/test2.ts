@@ -17,7 +17,7 @@ export function makeS0(
 }
 
 const S0_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[{"v1":{"moduleName":"sys.annotations","name":"Doc"},"v2":{"kind":"string","value":"An empty structure."}}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[]}},"name":"S0","version":{"kind":"nothing"}}};
+  {"moduleName":"test2","decl":{"annotations":[{"v1":{"moduleName":"sys.annotations","name":"Doc"},"v2":"An empty structure."}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[]}},"name":"S0","version":{"kind":"nothing"}}};
 
 export function texprS0(): ADL.ATypeExpr<S0> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S0"}}, parameters : []}};
@@ -45,7 +45,7 @@ export function makeS1(
 }
 
 const S1_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[{"v1":{"moduleName":"sys.annotations","name":"Doc"},"v2":{"kind":"string","value":"A structure containing primitives.\n\nIt has two fields: an integer x and a String y.\n"}}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"x","default":{"kind":"nothing"},"name":"x","typeExpr":{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}},{"annotations":[],"serializedName":"y","default":{"kind":"nothing"},"name":"y","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
+  {"moduleName":"test2","decl":{"annotations":[{"v1":{"moduleName":"sys.annotations","name":"Doc"},"v2":"A structure containing primitives.\n\nIt has two fields: an integer x and a String y.\n"}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"x","default":{"kind":"nothing"},"name":"x","typeExpr":{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}},{"annotations":[],"serializedName":"y","default":{"kind":"nothing"},"name":"y","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
 
 export function texprS1(): ADL.ATypeExpr<S1> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S1"}}, parameters : []}};
@@ -75,7 +75,7 @@ export function makeS2(
 }
 
 const S2_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[{"v1":{"moduleName":"sys.annotations","name":"Doc"},"v2":{"kind":"string","value":"A structure containing a vector."}}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f3","default":{"kind":"nothing"},"name":"f3","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}}]}},"name":"S2","version":{"kind":"nothing"}}};
+  {"moduleName":"test2","decl":{"annotations":[{"v1":{"moduleName":"sys.annotations","name":"Doc"},"v2":"A structure containing a vector."}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f3","default":{"kind":"nothing"},"name":"f3","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}}]}},"name":"S2","version":{"kind":"nothing"}}};
 
 export function texprS2(): ADL.ATypeExpr<S2> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S2"}}, parameters : []}};
@@ -108,7 +108,7 @@ export function makeS3<T>(
 }
 
 const S3_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[{"v1":{"moduleName":"sys.annotations","name":"Doc"},"v2":{"kind":"string","value":"A generic structure."}}],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f3","default":{"kind":"nothing"},"name":"f3","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"f4","default":{"kind":"nothing"},"name":"f4","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"S3","version":{"kind":"nothing"}}};
+  {"moduleName":"test2","decl":{"annotations":[{"v1":{"moduleName":"sys.annotations","name":"Doc"},"v2":"A generic structure."}],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f3","default":{"kind":"nothing"},"name":"f3","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"f4","default":{"kind":"nothing"},"name":"f4","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"S3","version":{"kind":"nothing"}}};
 
 export function texprS3<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<S3<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S3"}}, parameters : [texprT.value]}};

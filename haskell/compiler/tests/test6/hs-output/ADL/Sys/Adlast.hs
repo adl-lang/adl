@@ -7,7 +7,6 @@ module ADL.Sys.Adlast(
     Field(..),
     Ident,
     Import(..),
-    Literal(..),
     Module(..),
     ModuleName,
     NewType(..),
@@ -25,13 +24,12 @@ import Control.Applicative( (<$>), (<*>), (<|>) )
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
-import qualified Data.Int
 import qualified Data.Proxy
 import qualified Data.Text as T
 import qualified Data.Word
 import qualified Prelude
 
-type Annotations = (ADL.Sys.Types.Map ScopedName Literal)
+type Annotations = (ADL.Sys.Types.Map ScopedName JS.Value)
 
 data Decl = Decl
     { decl_name :: Ident
@@ -39,7 +37,7 @@ data Decl = Decl
     , decl_type_ :: DeclType
     , decl_annotations :: Annotations
     }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
 mkDecl :: Ident -> (ADL.Sys.Types.Maybe Data.Word.Word32) -> DeclType -> Annotations -> Decl
 mkDecl name version type_ annotations = Decl name version type_ annotations
@@ -65,7 +63,7 @@ data DeclType
     | DeclType_union_ Union
     | DeclType_type_ TypeDef
     | DeclType_newtype_ NewType
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
 instance AdlValue DeclType where
     atype _ = "sys.adlast.DeclType"
@@ -90,12 +88,12 @@ data Field = Field
     { field_name :: Ident
     , field_serializedName :: Ident
     , field_typeExpr :: TypeExpr
-    , field_default :: (ADL.Sys.Types.Maybe Literal)
+    , field_default :: (ADL.Sys.Types.Maybe JS.Value)
     , field_annotations :: Annotations
     }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
-mkField :: Ident -> Ident -> TypeExpr -> (ADL.Sys.Types.Maybe Literal) -> Annotations -> Field
+mkField :: Ident -> Ident -> TypeExpr -> (ADL.Sys.Types.Maybe JS.Value) -> Annotations -> Field
 mkField name serializedName typeExpr default_ annotations = Field name serializedName typeExpr default_ annotations
 
 instance AdlValue Field where
@@ -136,46 +134,13 @@ instance AdlValue Import where
         <|> parseUnionValue "scopedName" Import_scopedName
         <|> parseFail "expected a Import"
 
-data Literal
-    = Literal_null
-    | Literal_integer Data.Int.Int64
-    | Literal_double Prelude.Double
-    | Literal_string T.Text
-    | Literal_boolean Prelude.Bool
-    | Literal_array [Literal]
-    | Literal_object (ADL.Sys.Types.Map T.Text Literal)
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
-
-instance AdlValue Literal where
-    atype _ = "sys.adlast.Literal"
-    
-    jsonGen = genUnion (\jv -> case jv of
-        Literal_null -> genUnionVoid "null"
-        Literal_integer v -> genUnionValue "integer" v
-        Literal_double v -> genUnionValue "double" v
-        Literal_string v -> genUnionValue "string" v
-        Literal_boolean v -> genUnionValue "boolean" v
-        Literal_array v -> genUnionValue "array" v
-        Literal_object v -> genUnionValue "object" v
-        )
-    
-    jsonParser
-        =   parseUnionVoid "null" Literal_null
-        <|> parseUnionValue "integer" Literal_integer
-        <|> parseUnionValue "double" Literal_double
-        <|> parseUnionValue "string" Literal_string
-        <|> parseUnionValue "boolean" Literal_boolean
-        <|> parseUnionValue "array" Literal_array
-        <|> parseUnionValue "object" Literal_object
-        <|> parseFail "expected a Literal"
-
 data Module = Module
     { module_name :: ModuleName
     , module_imports :: [Import]
     , module_decls :: (ADL.Sys.Types.Map Ident Decl)
     , module_annotations :: Annotations
     }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
 mkModule :: ModuleName -> [Import] -> (ADL.Sys.Types.Map Ident Decl) -> Annotations -> Module
 mkModule name imports decls annotations = Module name imports decls annotations
@@ -201,11 +166,11 @@ type ModuleName = T.Text
 data NewType = NewType
     { newType_typeParams :: [Ident]
     , newType_typeExpr :: TypeExpr
-    , newType_default :: (ADL.Sys.Types.Maybe Literal)
+    , newType_default :: (ADL.Sys.Types.Maybe JS.Value)
     }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
-mkNewType :: [Ident] -> TypeExpr -> (ADL.Sys.Types.Maybe Literal) -> NewType
+mkNewType :: [Ident] -> TypeExpr -> (ADL.Sys.Types.Maybe JS.Value) -> NewType
 mkNewType typeParams typeExpr default_ = NewType typeParams typeExpr default_
 
 instance AdlValue NewType where
@@ -226,7 +191,7 @@ data ScopedDecl = ScopedDecl
     { scopedDecl_moduleName :: ModuleName
     , scopedDecl_decl :: Decl
     }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
 mkScopedDecl :: ModuleName -> Decl -> ScopedDecl
 mkScopedDecl moduleName decl = ScopedDecl moduleName decl
@@ -268,7 +233,7 @@ data Struct = Struct
     { struct_typeParams :: [Ident]
     , struct_fields :: [Field]
     }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
 mkStruct :: [Ident] -> [Field] -> Struct
 mkStruct typeParams fields = Struct typeParams fields
@@ -352,7 +317,7 @@ data Union = Union
     { union_typeParams :: [Ident]
     , union_fields :: [Field]
     }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+    deriving (Prelude.Eq,Prelude.Show)
 
 mkUnion :: [Ident] -> [Field] -> Union
 mkUnion typeParams fields = Union typeParams fields

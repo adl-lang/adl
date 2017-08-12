@@ -5,18 +5,14 @@
                 "moduleName": "",
                 "name": "Ann1"
             },
-            "v2": {
-                "integer": 100
-            }
+            "v2": 100
         },
         {
             "v1": {
                 "moduleName": "",
                 "name": "Ann2"
             },
-            "v2": {
-                "string": "module stuff"
-            }
+            "v2": "module stuff"
         }
     ],
     "decls": [
@@ -125,18 +121,14 @@
                             "moduleName": "",
                             "name": "Ann1"
                         },
-                        "v2": {
-                            "integer": 42
-                        }
+                        "v2": 42
                     },
                     {
                         "v1": {
                             "moduleName": "",
                             "name": "Ann2"
                         },
-                        "v2": {
-                            "string": "asdfa"
-                        }
+                        "v2": "asdfa"
                     }
                 ],
                 "name": "MyStruct",
@@ -150,9 +142,7 @@
                                             "moduleName": "sys.annotations",
                                             "name": "Doc"
                                         },
-                                        "v2": {
-                                            "string": "The X coordinate\n"
-                                        }
+                                        "v2": "The X coordinate\n"
                                     }
                                 ],
                                 "default": "nothing",
@@ -172,9 +162,7 @@
                                             "moduleName": "sys.annotations",
                                             "name": "Doc"
                                         },
-                                        "v2": {
-                                            "string": "The Y coordinate\n"
-                                        }
+                                        "v2": "The Y coordinate\n"
                                     }
                                 ],
                                 "default": "nothing",
@@ -195,20 +183,8 @@
                                             "name": "Ann3"
                                         },
                                         "v2": {
-                                            "object": [
-                                                {
-                                                    "v1": "f1",
-                                                    "v2": {
-                                                        "string": "a"
-                                                    }
-                                                },
-                                                {
-                                                    "v1": "f2",
-                                                    "v2": {
-                                                        "string": "b"
-                                                    }
-                                                }
-                                            ]
+                                            "f1": "a",
+                                            "f2": "b"
                                         }
                                     },
                                     {
@@ -216,7 +192,7 @@
                                             "moduleName": "",
                                             "name": "Ann4"
                                         },
-                                        "v2": "null"
+                                        "v2": null
                                     }
                                 ],
                                 "default": "nothing",

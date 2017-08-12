@@ -23,12 +23,12 @@ public class Field {
   private String name;
   private String serializedName;
   private TypeExpr typeExpr;
-  private Optional<Literal> default_;
-  private HashMap<ScopedName, Literal> annotations;
+  private Optional<JsonElement> default_;
+  private HashMap<ScopedName, JsonElement> annotations;
 
   /* Constructors */
 
-  public Field(String name, String serializedName, TypeExpr typeExpr, Optional<Literal> default_, HashMap<ScopedName, Literal> annotations) {
+  public Field(String name, String serializedName, TypeExpr typeExpr, Optional<JsonElement> default_, HashMap<ScopedName, JsonElement> annotations) {
     this.name = Objects.requireNonNull(name);
     this.serializedName = Objects.requireNonNull(serializedName);
     this.typeExpr = Objects.requireNonNull(typeExpr);
@@ -40,16 +40,16 @@ public class Field {
     this.name = "";
     this.serializedName = "";
     this.typeExpr = new TypeExpr();
-    this.default_ = MaybeHelpers.factory(Literal.FACTORY).create();
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create();
+    this.default_ = MaybeHelpers.factory(JsonBindings.JSON_FACTORY).create();
+    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create();
   }
 
   public Field(Field other) {
     this.name = other.name;
     this.serializedName = other.serializedName;
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
-    this.default_ = MaybeHelpers.factory(Literal.FACTORY).create(other.default_);
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create(other.annotations);
+    this.default_ = MaybeHelpers.factory(JsonBindings.JSON_FACTORY).create(other.default_);
+    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create(other.annotations);
   }
 
   /* Accessors and mutators */
@@ -78,19 +78,19 @@ public class Field {
     this.typeExpr = Objects.requireNonNull(typeExpr);
   }
 
-  public Optional<Literal> getDefault() {
+  public Optional<JsonElement> getDefault() {
     return default_;
   }
 
-  public void setDefault(Optional<Literal> default_) {
+  public void setDefault(Optional<JsonElement> default_) {
     this.default_ = Objects.requireNonNull(default_);
   }
 
-  public HashMap<ScopedName, Literal> getAnnotations() {
+  public HashMap<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(HashMap<ScopedName, Literal> annotations) {
+  public void setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
@@ -148,8 +148,8 @@ public class Field {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<String>> serializedName = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
-    final Lazy<JsonBinding<Optional<Literal>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(Literal.jsonBinding()));
-    final Lazy<JsonBinding<HashMap<ScopedName, Literal>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), Literal.jsonBinding()));
+    final Lazy<JsonBinding<Optional<JsonElement>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.JSON));
+    final Lazy<JsonBinding<HashMap<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
     final Factory<Field> _factory = FACTORY;
 
     return new JsonBinding<Field>() {

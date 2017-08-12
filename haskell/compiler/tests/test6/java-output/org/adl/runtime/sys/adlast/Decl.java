@@ -23,11 +23,11 @@ public class Decl {
   private String name;
   private Optional<Integer> version;
   private DeclType type_;
-  private HashMap<ScopedName, Literal> annotations;
+  private HashMap<ScopedName, JsonElement> annotations;
 
   /* Constructors */
 
-  public Decl(String name, Optional<Integer> version, DeclType type_, HashMap<ScopedName, Literal> annotations) {
+  public Decl(String name, Optional<Integer> version, DeclType type_, HashMap<ScopedName, JsonElement> annotations) {
     this.name = Objects.requireNonNull(name);
     this.version = Objects.requireNonNull(version);
     this.type_ = Objects.requireNonNull(type_);
@@ -38,14 +38,14 @@ public class Decl {
     this.name = "";
     this.version = MaybeHelpers.factory(Factories.WORD32).create();
     this.type_ = new DeclType();
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create();
+    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create();
   }
 
   public Decl(Decl other) {
     this.name = other.name;
     this.version = MaybeHelpers.factory(Factories.WORD32).create(other.version);
     this.type_ = DeclType.FACTORY.create(other.type_);
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, Literal.FACTORY).create(other.annotations);
+    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create(other.annotations);
   }
 
   /* Accessors and mutators */
@@ -74,11 +74,11 @@ public class Decl {
     this.type_ = Objects.requireNonNull(type_);
   }
 
-  public HashMap<ScopedName, Literal> getAnnotations() {
+  public HashMap<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(HashMap<ScopedName, Literal> annotations) {
+  public void setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
@@ -134,7 +134,7 @@ public class Decl {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<Optional<Integer>>> version = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.WORD32));
     final Lazy<JsonBinding<DeclType>> type_ = new Lazy<>(() -> DeclType.jsonBinding());
-    final Lazy<JsonBinding<HashMap<ScopedName, Literal>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), Literal.jsonBinding()));
+    final Lazy<JsonBinding<HashMap<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
     final Factory<Decl> _factory = FACTORY;
 
     return new JsonBinding<Decl>() {

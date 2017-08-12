@@ -94,7 +94,7 @@ export function makeTranslated<T>(
 }
 
 const Translated_AST : ADL.ScopedDecl =
-  {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"xoffset","default":{"kind":"just","value":{"kind":"integer","value":0}},"name":"xoffset","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"yoffset","default":{"kind":"just","value":{"kind":"integer","value":0}},"name":"yoffset","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"object","default":{"kind":"nothing"},"name":"object","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Translated","version":{"kind":"nothing"}}};
+  {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"xoffset","default":{"kind":"just","value":0},"name":"xoffset","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"yoffset","default":{"kind":"just","value":0},"name":"yoffset","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"object","default":{"kind":"nothing"},"name":"object","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Translated","version":{"kind":"nothing"}}};
 
 export function texprTranslated<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Translated<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Translated"}}, parameters : [texprT.value]}};
