@@ -1,0 +1,26 @@
+{
+    "name": "adl",
+    "displayName": "adl",
+    "description": "Helix ADL Language",
+    "version": "0.0.1",
+    "publisher": "anuraags",
+    "engines": {
+        "vscode": "^1.14.0"
+    },
+    "categories": [
+        "Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "adl",
+            "aliases": ["ADL", "adl"],
+            "extensions": [".adl"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "adl",
+            "scopeName": "source.adl",
+            "path": "./syntaxes/adl.tmLanguage.json"
+        }]
+    }
+}

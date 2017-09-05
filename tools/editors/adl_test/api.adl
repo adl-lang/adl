@@ -1,0 +1,381 @@
+// The structure of all the API Request/Responses
+
+// The App model that maps to the DB model
+
+module pingdata.api
+{
+import sys.types.Nullable;
+import sys.types.Map;
+
+import common.*;
+import common.db.*;
+
+import pingdata.db.Bank;
+import pingdata.db.Barcode;
+import pingdata.db.BasketItem;
+import pingdata.db.Category;
+import pingdata.db.Consumer;
+import pingdata.db.Currency;
+import pingdata.db.CurrencyCode;
+import pingdata.db.FeedbackQuestion;
+import pingdata.db.FeedbackSet;
+import pingdata.db.Gender;
+import pingdata.db.GpsPositon;
+import pingdata.db.LoyaltyCardTransaction;
+import pingdata.db.MerchantLink;
+import pingdata.db.MerchantType;
+import pingdata.db.Offer;
+import pingdata.db.OfferSet;
+import pingdata.db.OpeningHours;
+import pingdata.db.StreetAddress;
+import pingdata.db.PaymentInfo;
+import pingdata.db.Server;
+import pingdata.db.Purchaser;
+import pingdata.db.Receipt;
+import pingdata.db.SubCategory;
+import pingdata.db.Terminal;
+import pingdata.db.UserRole;
+
+
+/// Generic structure in which we pack paginated data
+struct Paginated<T> {
+  // TODO(jeeva): We should have some kind of 'next_query' item instead, to make it easy to paginate a given set of query params
+
+  /// The offset used for this query
+  Int64 current_offset;
+
+  /// The next offset the caller should use, to get the next page of data
+  Int64 next_offset;
+
+  /// The returned paginated items
+  Vector<T> items;
+};
+
+/// All physical stores. Every merchant will have at least one
+struct Store {
+  PK id = null;
+  DbKey<Merchant> merchant;
+
+  /// API Client provided ID for the given merchant
+  String store_id;
+
+  String short_name;
+  String name;
+  String trading_name;
+  
+  Nullable<String> logo_url = null;
+  Nullable<String> phone_number = null;
+  Nullable<String> email = null;
+  StreetAddress address;
+  Nullable<String> location_description = null;
+  GpsPositon location;
+  String timezone;
+
+  /// TODO(Jeeva) we need to add a timezone to properly display the opening hours
+  Vector<OpeningHours> opening_hours = [];
+
+  /// All terminal IDs associated with this store. TIDs must be unique for a given merchant
+  Vector<String> tids;
+};
+
+struct Merchant {
+  PK id = null;
+
+  /// Client provided ID for the given merchant
+  Nullable<String> mid = null;
+
+  /// TODO(jeeva): document this/link to existing doco
+  MerchantType record_type;
+
+  /// Parent record. Only the 'root' merchant doesn't need to have an associated parent
+  Nullable<DbKey<Merchant>> parent = null;
+
+  String short_name;
+  String trading_name;
+
+  /// If a logo isn't provided, we use the parent's logo
+  Nullable<String> logo_url = null;
+
+  /// Various provided services, for example livechat, customer service etc.
+  Vector<MerchantLink> external_links = [];
+
+  /// Number by which the merchant is contacted
+  String customer_service_number;
+  Nullable<String> return_policy = null;
+
+  /// Current API is very Australia specific, we reflect this by directly exposing (and mandating) that merchants have an ABN
+  String abn;
+
+  DbKey<Category> category;
+  DbKey<SubCategory> subcategory;
+
+  Int64 default_return_period = 0;
+
+  //  Uncomment when we implement this for the bank
+  // Vector<WebHook> webhooks;
+};
+
+struct ReceiptSummary {
+  String id;
+
+  /// API Client provided ID for the given receipt. (externalId, merchant) must
+  /// always be unique
+  String external_id;
+
+  /// Receipts sometimes replace existing entries in the system (for example, in the
+  /// case of refunds)
+  Nullable<DbKey<Receipt>> replacement_for = null;
+
+  /// If this receipt was replaced, link to the new version
+  Nullable<DbKey<Receipt>> replaced_by = null;
+
+  /// Exactly when this receipt was issued
+  Instant issued_at;
+
+  /// The merchant from who this receipt originated (externalId, merchant)
+  /// must always be unique
+  DbKey<Merchant> merchant;
+
+  /// Which store the receipt originated from
+  DbKey<Store> store;
+
+  /// Can this receipt be treated as a tax invoice?
+  Bool is_tax_invoice;
+
+  /// The total tax, as sent to us from the issuer. We can't derive this simply from
+  /// the basket data, as the basket data is often wrong.
+  Currency total_tax;
+
+  /// The total amount paid, as sent to us from the issuer. We can't derive this
+  /// simply from the basket data, as the basket data may be wrong
+  Currency total_price;
+
+  /// The total amount paid, as sent to us from the issuer. We can't derive this
+  /// simply from the basket data, as the basket data may be wrong
+  DbKey<CurrencyCode> currency_code;
+
+  /// If provided, the barcode for the entire receipt
+  Nullable<Barcode> barcode;
+};
+
+struct MerchantReceiptDetail {
+  PK id = null;
+
+  /// The merchant from who this receipt originated (externalId, merchant)
+  /// must always be unique. It can be nullable, as (on creation and update) integrators will *always*
+  /// have the ID of the merchant they are operating on sent up as part of the HTTP headers
+  Nullable<DbKey<Merchant>> merchant = null;
+
+  /// Which store the receipt originated from. We expect this to be merchant provided store ID and must exist in your store setup.
+  String store_id = "";
+
+  /// ID of the pos device (terminal or software) (eg. pos-123).
+  Nullable<String> pos_id = null;
+
+  /// The terminal this transaction originated from within a store. This ID must exist in your store setup.
+  String tid = "";
+
+  /// API Client provided ID for the given receipt. (externalId, merchant) must
+  /// always be unique
+  String external_id = "";
+
+  /// Receipts sometimes replace existing entries in the system (for example, in the
+  /// case of refunds)
+  Nullable<DbKey<Receipt>> replacement_for = null;
+
+  /// If this receipt was replaced, link to the new version
+  Nullable<DbKey<Receipt>> replaced_by = null;
+
+  /// Basket items.
+  Vector<BasketItem> basket_items;
+
+  /// Raw basket items. This field is for create/update requests only (never returned)
+  Nullable<String> raw_basket_items = null;
+
+  /// Information on the actual payment, this is what we expect will be most useful
+  /// when attempting to reconcile a receipt to a particular consumer
+  Vector<PaymentInfo> payment_data;
+
+  /// The raw representation of the payment data. We want to store this, as we
+  /// aren't sure how well this will be parsed into the above structure by
+  /// integrators
+  Nullable<String> raw_payment_data = null;
+
+  /// Purchaser details if supplied at checkout or linked to a specific tranaction by the POS
+  Nullable<Purchaser> purchaser = null;
+
+  /// Capture any usage of points/points awarded for a given loyalty card.
+  Vector<LoyaltyCardTransaction> loyalty_card_transactions = [];
+
+  /// Exactly when this receipt was issued
+  Instant issued_at;
+
+  /// Can this receipt be treated as a tax invoice?
+  Bool is_tax_invoice;
+
+  /// The total tax, as sent to us from the issuer. We can't derive this simply from
+  /// the basket data, as the basket data. This is *exactly* what was billed to the associated card
+  Currency total_tax;
+
+  /// The total amount paid, as sent to us from the issuer. We can't derive this
+  /// simply from the basket data, as the basket data may be wrong
+  Currency total_price;
+
+  /// The currency used for payment.
+  DbKey<CurrencyCode> currency_code;
+
+  /// If provided, the barcode for the entire receipt
+  Nullable<Barcode> barcode;
+
+  /// Arbitrary metadata provided by the integrator
+  String metadata;
+
+  // Discussed, and leaving the following out for now
+  //  - allow duplicate receiptid
+  //  - price_includes_tax (for our own sanity, the price should always equal exactly what was shown at the till)
+  //  - price_adjustments (captured at the basket item level, all use cases discussed could be handled)
+
+  OfferSet offers = "default_campaign";
+  FeedbackSet feedback = "default_survey";
+
+  /// Who served the customer today. eg "Jessica"
+  Nullable<Server> served_by = null;
+
+  /// Is this a test receipt.
+  Bool is_test = false;
+
+  /// Return period for all basket items assocaited with this receipt
+  Int64 return_period = 0;
+};
+
+struct ConsumerReceiptDetail {
+  PK id = null;
+
+  /// API Client provided ID for the given receipt. (externalId, merchant) must
+  /// always be unique
+  String external_id = "";
+
+  /// Receipts sometimes replace existing entries in the system (for example, in the
+  /// case of refunds)
+  Nullable<DbKey<Receipt>> replacement_for = null;
+
+  /// If this receipt was replaced, link to the new version
+  Nullable<DbKey<Receipt>> replaced_by = null;
+
+  /// Basket items.
+  Vector<BasketItem> basket_items;
+
+  /// Exactly when this receipt was issued
+  Instant issued_at;
+
+  /// The merchant from who this receipt originated
+  Merchant merchant;
+
+  /// Which store the receipt originated from. We expect this to be merchant provided storeId
+  Store store;
+
+  /// Optionally the terminal within a store.
+  String tid = "";
+
+  /// Can this receipt be treated as a tax invoice?
+  Bool is_tax_invoice;
+
+  /// The total tax, as sent to us from the issuer. We can't derive this simply from
+  /// the basket data, as the basket data. This is *exactly* what was billed to the associated card
+  Currency total_tax;
+
+  /// The total amount paid, as sent to us from the issuer. We can't derive this
+  /// simply from the basket data, as the basket data may be wrong
+  Currency total_price;
+
+  /// The currency used for payment.
+  DbKey<CurrencyCode> currency_code;
+
+  /// If provided, the barcode for the entire receipt
+  Nullable<Barcode> barcode;
+
+  /// Arbitrary metadata provided by the integrator
+  String metadata;
+
+  /// Purchaser details if supplied at checkout or linked to a specific tranaction by the POS
+  Nullable<Purchaser> purchaser = null;
+
+  /// Capture any usage of points/points awarded for a given loyalty card.
+  Vector<LoyaltyCardTransaction> loyalty_card_transactions = [];
+
+  /// Who served the customer today. eg "Jessica"
+  Nullable<Server> served_by = null;
+
+  Vector<Offer> offers;
+  Vector<FeedbackQuestion> feedback;
+
+  /// Return period for all basket items assocaited with this receipt
+  Int64 return_period = 0;
+};
+
+/// Details of a transaction as received from a bank.
+struct Transaction {
+  PK id = null;
+  String external_id;
+  DbKey<Bank> bank;
+  DbKey<Consumer> consumer;
+  PaymentInfo payment_data;
+  Bool is_test = false;
+};
+
+struct MatchedTransaction {
+  PK id = null;
+  String external_id;
+  DbKey<Bank> bank;
+  DbKey<Consumer> consumer;
+  DbKey<Receipt> receipt;
+  Bool is_test;
+};
+
+union BankWebhook {
+  MatchedTransaction matched_transaction;
+  String new_merchant;
+};
+
+struct MatchedReceipt {
+  String id;
+  Nullable<String> external_id;
+  Bool is_test;
+};
+
+union MerchantWebhook {
+  MatchedReceipt receipt_created;
+  MatchedReceipt receipt_matched;
+};
+
+/// The request body passed to the authentication endpoint
+struct AuthRequest
+{
+   String apiKey;
+   UserRole requiredRole;
+};
+
+/// Response returned (the JWT token)
+struct AuthResponse
+{
+   String jwt_token;
+};
+
+union Event {
+  Void all;
+  Void receipt_created;
+  Void merchant_created;
+  Void new_merchant;
+  Void transaction_mached;
+};
+
+struct WebHook {
+  // URL We will POST to
+  String url;
+
+  // Secret we use to sign our HMAC SHA256 the payload body, returned as an X-SIG Header
+  String secret;
+  Vector<Event> events;
+};
+
+};
