@@ -1,5 +1,10 @@
 module adlc.config.haskell {
 
+/// Annotation to override the field prefix for structs
+/// and unions. It may be applied to the struct or union
+/// declaration or to individual fields.
+type HaskellFieldPrefix = String;
+
 struct UnionConstructor
 {
     String fieldName;
@@ -8,7 +13,7 @@ struct UnionConstructor
 
 struct HaskellCustomType
 {
-    // The name in haskell of the type to be used    
+    // The name in haskell of the type to be used
     String haskellname;
 
     // The imports required to use the haskell type

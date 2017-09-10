@@ -1,0 +1,6 @@
+module test2
+{
+import adlc.config.haskell.HaskellFieldPrefix;
+
+annotation Tree HaskellFieldPrefix "t_";
+};

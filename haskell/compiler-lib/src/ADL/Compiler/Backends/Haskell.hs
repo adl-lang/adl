@@ -16,6 +16,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
 import Data.Attoparsec.Number
 import Data.Foldable(for_)
+import Data.Maybe(fromMaybe)
 import Data.Monoid
 import Data.Ord (comparing)
 import System.FilePath(takeDirectory,joinPath,addExtension, splitDirectories, splitExtension, (</>))
@@ -73,6 +74,7 @@ data CustomType = CustomType {
 type CResolvedType = ResolvedTypeT (Maybe CustomType)
 type CModule = Module (Maybe CustomType) CResolvedType
 type CDecl = Decl (Maybe CustomType) CResolvedType
+type CField = Field CResolvedType
 
 data MState = MState {
    ms_name :: ModuleName,
@@ -158,11 +160,22 @@ hTypeName sn = upper1 sn
 hTypeParamName :: Ident -> Ident
 hTypeParamName sn = lower1 sn
 
-hFieldName :: Ident -> Ident -> Ident
-hFieldName sn fn = T.concat [lower1 sn,"_",fn]
+hFieldName :: CDecl -> CField -> Ident
+hFieldName decl field = T.concat [lower1 (getFieldPrefix decl field), f_name field]
 
-hDiscName :: Ident -> Ident -> Ident
-hDiscName sn fn = T.concat [upper1 sn,"_",fn]
+hDiscName :: CDecl -> CField -> Ident
+hDiscName decl field = T.concat [upper1 (getFieldPrefix decl field), f_name field]
+
+getFieldPrefix :: CDecl -> CField -> Ident
+getFieldPrefix decl field =  fromMaybe (d_name decl <> "_")
+  (   getStringAnnotation fieldPrefixAnn (f_annotations field)
+  <|> getStringAnnotation fieldPrefixAnn (d_annotations decl)
+  )
+  where
+    fieldPrefixAnn = ScopedName (ModuleName ["adlc", "config", "haskell"]) "HaskellFieldPrefix"
+    getStringAnnotation scopedName anns = case Map.lookup scopedName anns of
+      Just (_,JS.String s) -> Just s
+      _ -> Nothing
 
 intType, wordType :: T.Text -> HGen T.Text
 intType s = importQualifiedModule (HaskellModule "Data.Int") >> return s
@@ -403,7 +416,7 @@ generateStructDataType lname mn d s = do
         forM_ (zip ("{":commas) (s_fields s)) $ \(fp,f) -> do
           t <- hTypeExpr (f_type f)
           wt "$1 $2 :: $3" [fp,
-                            hFieldName (d_name d) (f_name f),
+                            hFieldName d f,
                            t ]
         wl "}"
         derivingStdClasses (stdClassesForFields (s_fields s))
@@ -443,7 +456,7 @@ generateStructADLInstance lname mn d s = do
         wl "jsonGen = genObject"
         indent $ do
           forM_ (zip listPrefixes (s_fields s)) $ \(prefix,f) -> do
-            wt "$1 genField \"$2\" $3" [prefix, f_serializedName f, hFieldName (d_name d) (f_name f)]
+            wt "$1 genField \"$2\" $3" [prefix, f_serializedName f, hFieldName d f]
           wl "]"
         nl
         wt "jsonParser = $1" [lname]
@@ -472,10 +485,10 @@ generateUnionDataType lname mn d u = do
     indent $ do
       forM_ (zip prefixes (u_fields u)) $ \(fp,f) -> do
         if isVoidType (f_type f)
-          then wt "$1 $2" [fp,hDiscName (d_name d) (f_name f)]
+          then wt "$1 $2" [fp,hDiscName d f]
           else do
             t <- hTypeExpr (f_type f)
-            wt "$1 $2 $3" [fp,hDiscName (d_name d) (f_name f),t]
+            wt "$1 $2 $3" [fp,hDiscName d f,t]
       derivingStdClasses (stdClassesForFields (u_fields u))
 
 generateUnionADLInstance :: Ident -> ModuleName -> CDecl -> Union CResolvedType -> HGen ()
@@ -488,7 +501,7 @@ generateUnionADLInstance lname mn d u = do
         wl "jsonGen = genUnion (\\jv -> case jv of"
         indent $ do
             forM_ (u_fields u) $ \f -> do
-              let dn = hDiscName (d_name d) (f_name f)
+              let dn = hDiscName d f
               if isVoidType (f_type f)
                 then wt "$1 -> genUnionVoid \"$2\"" [dn, f_serializedName f]
                 else wt "$1 v -> genUnionValue \"$2\" v" [dn, f_serializedName f]
@@ -497,7 +510,7 @@ generateUnionADLInstance lname mn d u = do
         wl "jsonParser"
         indent $ do
             forM_ (zip altPrefixes (u_fields u)) $ \(prefix,f) -> do
-              let dn = hDiscName (d_name d) (f_name f)
+              let dn = hDiscName d f
               if isVoidType (f_type f)
                 then wt "$1 parseUnionVoid \"$2\" $3" [prefix, f_serializedName f, dn]
                 else wt "$1 parseUnionValue \"$2\" $3" [prefix, f_serializedName f, dn]
@@ -562,10 +575,10 @@ generateLiteral te v =  generateLV Map.empty te v
         m2 = withTypeBindings (s_typeParams s) tes m
 
     generateUnion m d u tes (JS.String fname) = do
-      unionCtor d fname
+      unionCtor d u fname
 
     generateUnion m d u tes (JS.Object hm) = do
-      ctor <- unionCtor d fname
+      ctor <- unionCtor d u fname
       if isVoidType te
         then return ctor
         else do
@@ -589,8 +602,14 @@ generateLiteral te v =  generateLV Map.empty te v
       where
         m2 = withTypeBindings (n_typeParams n) tes m
 
-    unionCtor decl fname = case d_customType decl of
-      Nothing -> return (hDiscName (d_name decl) fname)
+    unionCtor :: CDecl -> Union CResolvedType -> T.Text -> HGen Ident
+    unionCtor decl union fname = case d_customType decl of
+      Nothing -> do
+        let field :: CField
+            field = case L.find ((==fname) . f_name) (u_fields union) of
+              Just field -> field
+              Nothing -> undefined
+        return (hDiscName decl field)
       Just ct -> do
         importsForCustomType ct
         case Map.lookup fname (ct_unionConstructors ct) of

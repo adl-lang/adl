@@ -1,0 +1,7 @@
+module test5 {
+
+import adlc.config.haskell.HaskellFieldPrefix;
+
+annotation List HaskellFieldPrefix "l_";
+
+};

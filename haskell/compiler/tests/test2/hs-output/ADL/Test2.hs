@@ -132,8 +132,8 @@ instance (AdlValue t) => AdlValue (S4 t) where
         <*> parseField "f2"
 
 data Tree t = Tree
-    { tree_value :: t
-    , tree_children :: [(Tree t)]
+    { t_value :: t
+    , t_children :: [(Tree t)]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -147,8 +147,8 @@ instance (AdlValue t) => AdlValue (Tree t) where
         , ">" ]
     
     jsonGen = genObject
-        [ genField "value" tree_value
-        , genField "children" tree_children
+        [ genField "value" t_value
+        , genField "children" t_children
         ]
     
     jsonParser = Tree

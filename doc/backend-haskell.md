@@ -143,6 +143,15 @@ The haskell backend merges annotations from files with an `.adl-hs`
 suffix: eg when loading `demo/model.adl` it will automatically merge
 `demo/model.adl-hs` if found.
 
+In order to avoid naming conflicts, the adl compiler generates haskell
+data definitions with a prefix for each field and constructor. As
+shown in the example above the default prefix is the name of the type
+with an underscore suffix (see the `Picture` and `Rectangle` examples
+above.  The [HaskellFieldPrefix][] can be applied to declarations or
+individual fields to customize this prefix.
+
+[HaskellFieldPrefix][../haskell/compiler/lib/adl/adlc/config/haskell.adl]
+
 # Custom types
 
 When a type is defined in ADL, a (language independent) serialisation

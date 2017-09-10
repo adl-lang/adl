@@ -48,8 +48,8 @@ instance (AdlValue t) => AdlValue (Cell t) where
         <*> parseField "tail"
 
 data List t
-    = List_null
-    | List_cell (Cell t)
+    = L_null
+    | L_cell (Cell t)
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance (AdlValue t) => AdlValue (List t) where
@@ -59,13 +59,13 @@ instance (AdlValue t) => AdlValue (List t) where
         , ">" ]
     
     jsonGen = genUnion (\jv -> case jv of
-        List_null -> genUnionVoid "null"
-        List_cell v -> genUnionValue "cell" v
+        L_null -> genUnionVoid "null"
+        L_cell v -> genUnionValue "cell" v
         )
     
     jsonParser
-        =   parseUnionVoid "null" List_null
-        <|> parseUnionValue "cell" List_cell
+        =   parseUnionVoid "null" L_null
+        <|> parseUnionValue "cell" L_cell
         <|> parseFail "expected a List"
 
 data S1 = S1
