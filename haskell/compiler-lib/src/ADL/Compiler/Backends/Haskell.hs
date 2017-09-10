@@ -14,7 +14,6 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.State.Strict
-import Data.Attoparsec.Number
 import Data.Foldable(for_)
 import Data.Maybe(fromMaybe)
 import Data.Monoid
@@ -225,6 +224,7 @@ hPrimitiveLiteral P_ByteVector (JS.String s) = return (T.pack (show (decode s)))
       (Right s) -> s
 hPrimitiveLiteral P_Vector _ = return "undefined" -- never called
 hPrimitiveLiteral P_String (JS.String s) = return (T.pack (show s))
+hPrimitiveLiteral p _ = error ("BUG: invalid literal type for primitive " ++ show p)
 
 litNumber :: S.Scientific -> T.Text
 litNumber n = T.pack (if n < 0 then "(" ++ s ++ ")" else s)
@@ -533,10 +533,11 @@ generateLiteral te v =  generateLV Map.empty te v
     -- We only need to match the appropriate JSON cases here, as the JSON value
     -- has already been validated by the compiler
     generateLV :: TypeBindingMap -> TypeExpr CResolvedType -> JS.Value -> HGen T.Text
-    generateLV m (TypeExpr (RT_Primitive pt) []) v = hPrimitiveLiteral pt v
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
     generateLV m (TypeExpr (RT_Primitive P_StringMap) [te]) v = generateStringMap m te v
     generateLV m (TypeExpr (RT_Primitive P_Nullable) [te]) v = generateNullable m te v
+    generateLV m (TypeExpr (RT_Primitive pt) []) v = hPrimitiveLiteral pt v
+    generateLV m (TypeExpr (RT_Primitive pt) _) v = error "BUG: primitive literal with unexpected type params"
     generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
       (Decl_Struct s) -> generateStruct m te0 decl s tes v
       (Decl_Union u) -> generateUnion m decl u tes v
@@ -544,10 +545,11 @@ generateLiteral te v =  generateLV Map.empty te v
       (Decl_Newtype n) -> generateNewtype m decl n tes v
     generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
          (Just te) -> generateLV m te v
-
+         Nothing -> error "BUG: unresolved type variable in literal"
     generateVec m te (JS.Array v) = do
       vals <- mapM (generateLV m te) (V.toList v)
       return (template "[ $1 ]" [T.intercalate ", " vals])
+    generateVec m te _ = error "BUG: vector literal requires a json array"
 
     generateStringMap m te (JS.Object hm) = do
       pairs <- mapM genPair (HM.toList hm)
@@ -556,6 +558,7 @@ generateLiteral te v =  generateLV Map.empty te v
         genPair (k,jv) = do
           v <- generateLV m te jv
           return (template "(\"$1\", $2)" [k,v])
+    generateStringMap m te _ = error "BUG: stringmap literal requires a json object"
 
     generateNullable m te JS.Null = return "Nothing"
     generateNullable m te js = do
@@ -573,10 +576,10 @@ generateLiteral te v =  generateLV Map.empty te v
       return (template "($1 $2)" [ctor,T.intercalate " " fields])
       where
         m2 = withTypeBindings (s_typeParams s) tes m
+    generateStruct m te0 d s tes _ = error "BUG: struct literal is not an object"
 
     generateUnion m d u tes (JS.String fname) = do
       unionCtor d u fname
-
     generateUnion m d u tes (JS.Object hm) = do
       ctor <- unionCtor d u fname
       if isVoidType te
@@ -587,9 +590,12 @@ generateLiteral te v =  generateLV Map.empty te v
       where
         (fname,v) = case HM.toList hm of
           [v] -> v
+          _ -> error "BUG: union literal must have a single key"
         te = case L.find (\f -> f_name f == fname) (u_fields u) of
           Just f -> f_type f
+          Nothing -> error "BUG: union literal key must be a field"
         m2 = withTypeBindings (u_typeParams u) tes m
+    generateUnion m d u tes _ = error "BUG: union literal expects a json string or object"
 
     generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
       where
