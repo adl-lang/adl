@@ -1,34 +1,32 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import System.Console.GetOpt
-import Control.Monad.Trans
-import System.Exit
-import System.Environment (getArgs)
-import System.FilePath(joinPath)
-import Data.Monoid
-import Data.List(intercalate,partition)
-import Data.String(IsString(..))
-import Data.Version(showVersion)
-
+import qualified ADL.Compiler.Backends.Verify as V
+import qualified ADL.Compiler.Backends.Haskell as H
+import qualified ADL.Compiler.Backends.AST as A
+import qualified ADL.Compiler.Backends.Cpp as C
+import qualified ADL.Compiler.Backends.Java as J
+import qualified ADL.Compiler.Backends.Javascript as JS
+import qualified ADL.Compiler.Backends.Typescript as TS
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import qualified Paths_adl_compiler as P
 
+import ADL.Compiler.DataFiles
 import ADL.Compiler.EIO
 import ADL.Compiler.Flags
-import ADL.Compiler.Backends.Verify as V
-import ADL.Compiler.Backends.Haskell as H
-import ADL.Compiler.Backends.AST as A
-import ADL.Compiler.Backends.Cpp as C
-import ADL.Compiler.Backends.Java as J
-import ADL.Compiler.Backends.Javascript as JS
-import ADL.Compiler.Backends.Typescript as TS
-import ADL.Compiler.DataFiles
-import ADL.Compiler.Utils
 import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
+import ADL.Compiler.Utils
+import Control.Monad.Trans
+import Data.List(intercalate,partition)
+import Data.Monoid
+import Data.String(IsString(..))
+import Data.Version(showVersion)
 import HaskellCustomTypes
-
-import qualified Paths_adl_compiler as P
+import System.Console.GetOpt
+import System.Environment (getArgs)
+import System.Exit
+import System.FilePath(joinPath)
 
 stdAdlFlags :: FilePath -> [String] -> AdlFlags
 stdAdlFlags libDir mergeFileExtensions =
@@ -91,16 +89,16 @@ runHaskell args = do
     header = "Usage: adlc haskell [OPTION...] files..."
 
     flags0 libDir = H.HaskellFlags
-      { hf_modulePrefix="ADL.Generated"
-      , hf_includeRuntime=Nothing
-      , hf_runtimePackage="ADL.Core"
+      { H.hf_modulePrefix="ADL.Generated"
+      , H.hf_includeRuntime=Nothing
+      , H.hf_runtimePackage="ADL.Core"
       }
 
     mkOptDescs libDir =
       standardOptions <>
-      [ outputPackageOption (\s -> updateBackendFlags (\hf -> hf{hf_modulePrefix=s}))
-      , includeRuntimePackageOption (updateBackendFlags (\hf ->hf{hf_includeRuntime=Just (haskellRuntimeDir libDir)}))
-      , runtimePackageOption (\s -> updateBackendFlags (\hf -> hf{hf_runtimePackage=T.pack s}))
+      [ outputPackageOption (\s -> updateBackendFlags (\hf -> hf{H.hf_modulePrefix=s}))
+      , includeRuntimePackageOption (updateBackendFlags (\hf ->hf{H.hf_includeRuntime=Just (haskellRuntimeDir libDir)}))
+      , runtimePackageOption (\s -> updateBackendFlags (\hf -> hf{H.hf_runtimePackage=T.pack s}))
       ]
 
 runCpp args = do
@@ -112,12 +110,12 @@ runCpp args = do
     header = "Usage: adlc cpp [OPTION...] files..."
 
     flags0 libDir = C.CppFlags {
-      cf_incFilePrefix=""
+      C.cf_incFilePrefix=""
       }
 
     optDescs =
       standardOptions <>
-      [ includePrefixOption (\s -> updateBackendFlags (\cf -> cf{cf_incFilePrefix=s}))
+      [ includePrefixOption (\s -> updateBackendFlags (\cf -> cf{C.cf_incFilePrefix=s}))
       ]
 
     includePrefixOption ufn =
@@ -134,23 +132,23 @@ runJava args = do
     header = "Usage: adlc java [OPTION...] files..."
 
     flags0 libDir = J.JavaFlags {
-      jf_libDir=libDir,
-      jf_package = "adl",
-      jf_includeRuntime = False,
-      jf_codeGenProfile = J.defaultCodeGenProfile
+      J.jf_libDir=libDir,
+      J.jf_package = "adl",
+      J.jf_includeRuntime = False,
+      J.jf_codeGenProfile = J.defaultCodeGenProfile
     }
 
     optDescs =
       standardOptions <>
-      [ outputPackageOption (\s -> updateBackendFlags (\jf -> jf{jf_package=javaPackage (T.pack s)}))
-      , includeRuntimePackageOption (updateBackendFlags (\jf ->jf{jf_includeRuntime=True}))
-      , runtimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{cgp_runtimePackage=fromString s}))
-      , javaGenerateParcelable (updateCodeGenProfile (\cgp->cgp{cgp_parcelable=True}))
-      , javaGenerateJson (updateCodeGenProfile (\cgp->cgp{cgp_json=True}))
-      , javaHungarianNaming (updateCodeGenProfile (\cgp->cgp{cgp_hungarianNaming=True}))
-      , javaMaxLineLength (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_maxLineLength=read s})))
-      , javaHeaderComment (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_header=T.pack s})))
-      , javaSuppressWarningsAnnotation (\s -> (updateCodeGenProfile (\cgp -> cgp{cgp_supressWarnings=T.splitOn "," (T.pack s)})))
+      [ outputPackageOption (\s -> updateBackendFlags (\jf -> jf{J.jf_package=J.javaPackage (T.pack s)}))
+      , includeRuntimePackageOption (updateBackendFlags (\jf ->jf{J.jf_includeRuntime=True}))
+      , runtimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{J.cgp_runtimePackage=fromString s}))
+      , javaGenerateParcelable (updateCodeGenProfile (\cgp->cgp{J.cgp_parcelable=True}))
+      , javaGenerateJson (updateCodeGenProfile (\cgp->cgp{J.cgp_json=True}))
+      , javaHungarianNaming (updateCodeGenProfile (\cgp->cgp{J.cgp_hungarianNaming=True}))
+      , javaMaxLineLength (\s -> (updateCodeGenProfile (\cgp -> cgp{J.cgp_maxLineLength=read s})))
+      , javaHeaderComment (\s -> (updateCodeGenProfile (\cgp -> cgp{J.cgp_header=T.pack s})))
+      , javaSuppressWarningsAnnotation (\s -> (updateCodeGenProfile (\cgp -> cgp{J.cgp_supressWarnings=T.splitOn "," (T.pack s)})))
       ]
 
     javaGenerateParcelable ufn =
@@ -183,7 +181,7 @@ runJava args = do
         (ReqArg ufn "WARNINGS")
         "The @SuppressWarnings annotation to be generated (comma separated)"
 
-    updateCodeGenProfile f = updateBackendFlags (\jf ->jf{jf_codeGenProfile=f (jf_codeGenProfile jf)})
+    updateCodeGenProfile f = updateBackendFlags (\jf ->jf{J.jf_codeGenProfile=f (J.jf_codeGenProfile jf)})
 
 runJavascript args = do
   libDir <- liftIO $ getLibDir
@@ -207,17 +205,17 @@ runTypescript args = do
     header = "Usage: adlc typescript [OPTION...] files..."
 
     flags0 libDir = TS.TypescriptFlags {
-      tsLibDir=libDir,
-      tsIncludeRuntime=False,
-      tsExcludeAst=False,
-      tsRuntimeDir=""
+      TS.tsLibDir=libDir,
+      TS.tsIncludeRuntime=False,
+      TS.tsExcludeAst=False,
+      TS.tsRuntimeDir=""
     }
 
     optDescs =
       standardOptions <>
-      [ tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{tsIncludeRuntime=True}))
-      , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{tsExcludeAst=True}))
-      , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{tsRuntimeDir=path}))
+      [ tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeRuntime=True}))
+      , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{TS.tsExcludeAst=True}))
+      , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{TS.tsRuntimeDir=path}))
       ]
 
     tsIncludeRuntimePackageOption ufn =
