@@ -197,6 +197,8 @@ Then, an annotation tells the ADL compiler to subsitute this custom
 definition in place of the automatically generated one:
 
 ```
+import adlc.config.haskell.HaskellCustomType;
+
 newtype Date = String;   // dates are serialised as ISO-8601 strings.
 
 annotation Date HaskellCustomType {
