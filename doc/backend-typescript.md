@@ -63,7 +63,24 @@ typescript backend will also generate:
 * a type expression function (returning a value of type [ATypeExpr<T>][ts-atypeexpr])
 
 Together with a standard [`DeclResolver`][ts-declresolver] interface,
-these are sufficient to provide runtime access to ADL type information.
+these are sufficient to provide runtime access to ADL type
+information. In order to build a `DeclResolver`, each generated ADL
+modules contains an `_AST_MAP` value, which can be passed to
+a runtime provided [helper function][ts-declresolverhelper]. One
+generally has a single global `DeclResolver` instance for an
+application, that can resolve all available ADL definitions. For
+example:
+
+```
+import * as adl    from "./adlgen/runtime/adl";
+import * as common from './adlgen/common';
+import * as ui     from './adlgen/common/ui';
+
+export const DECL_RESOLVER = adl.declResolver({
+  ...common._AST_MAP,
+  ...ui._AST_MAP
+});
+```
 
 # Serialization
 
@@ -98,6 +115,7 @@ This approach works for arbitrary ADL Types, including generics.
 [ts-picture]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L22
 [ts-advancedtypes]:https://www.typescriptlang.org/docs/handbook/advanced-types.html
 [ts-scopeddecl]:../adl/stdlib/sys/adlast.adl#L93
-[ts-atypeexpr]:../haskell/compiler/lib/typescript/runtime/adl.ts#5
-[ts-declresolver]:../haskell/compiler/lib/typescript/runtime/adl.ts#10
-[ts-json]:../haskell/compiler/lib/typescript/runtime/json.ts
+[ts-atypeexpr]:../typescript/runtime/adl.ts#5
+[ts-declresolver]:../typescript/runtime/adl.ts#10
+[ts-declresolverhelper]:../typescript/runtime/adl.ts#14
+[ts-json]:../typescript/runtime/json.ts
