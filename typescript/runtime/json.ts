@@ -265,7 +265,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
     });
   });
 
-  function toJson(v) {
+  function toJson(v: any) {
     const json = {};
     fieldDetails.forEach( (fd) => {
       json[fd.field.serializedName] = fd.jsonBinding().toJson(v[fd.field.name]);
@@ -273,7 +273,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
     return json;
   }
 
-  function fromJson(json) {
+  function fromJson(json: any) {
     if (!(json instanceof Object)) {
       throw jsonParseException("expected an object");
     }
