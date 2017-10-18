@@ -3,9 +3,14 @@ package org.adl.runtime;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-import java.io.FileReader;
-import java.io.FileWriter;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 
 /**
  * Simple functions to reduce boilerplate in working with json for ADL values
@@ -36,17 +41,29 @@ public class JsonHelpers
   }
 
   /**
-   * Read an ADL value from a json file
+   * Read an ADL value from a UTF-8 encoded json file
    */
   public static <T> T fromFile(JsonBinding<T> binding, String path) throws IOException {
-    return binding.fromJson(gson.fromJson(new FileReader(path), JsonElement.class));
+    InputStreamReader utf8Reader = getUtf8Reader(path);
+    try {
+      return binding.fromJson(gson.fromJson(utf8Reader, JsonElement.class));
+    } finally {
+      utf8Reader.close();
+    }
   }
 
   /**
-   * Write an ADL value to a json file
+   * Gets the InputStreamReader for a file using the UTF-8 charset
+   */
+  private static InputStreamReader getUtf8Reader(String path) throws FileNotFoundException {
+    return new InputStreamReader(new FileInputStream(path), Charset.forName("UTF-8"));
+  }
+
+  /**
+   * Write an ADL value to a UTF-8 json file
    */
   public static <T> void toFile(JsonBinding<T> binding, T value, String path) throws IOException {
-    FileWriter writer = new FileWriter(path);
+    OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(path), Charset.forName("UTF-8"));
     try {
       gson.toJson( binding.toJson(value), writer );
     } finally {
@@ -55,13 +72,18 @@ public class JsonHelpers
   }
 
   /**
-   * Read an ADL value from a leniently formatted json file.
+   * Read an ADL value from a leniently formatted UTF-8 json file.
    *
    * (See `setLenient` at
    *  https://static.javadoc.io/com.google.code.gson/gson/2.6.2/com/google/gson/stream/JsonReader.html)
    */
   public static <T> T fromLenientFile(JsonBinding<T> binding, String path) throws IOException {
-    return binding.fromJson(lenientGson.fromJson(new FileReader(path), JsonElement.class));
+    InputStreamReader utf8Reader = getUtf8Reader(path);
+    try {
+      return binding.fromJson(lenientGson.fromJson(utf8Reader, JsonElement.class));
+    } finally {
+      utf8Reader.close();
+    }
   }
 
   /**
