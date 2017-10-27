@@ -224,6 +224,22 @@ bool operator<( const Point2<X> &a, const Point2<X> &b ) { return a.value < b.va
 template <class X>
 bool operator==( const Point2<X> &a, const Point2<X> &b ) { return a.value == b.value; }
 
+using IntPoint1A = IntPoint1;
+
+struct S
+{
+    S();
+    
+    S(
+        const IntPoint1A & f1
+        );
+    
+    IntPoint1A f1;
+};
+
+bool operator<( const S &a, const S &b );
+bool operator==( const S &a, const S &b );
+
 }}; // ADL::test7
 
 namespace ADL {
@@ -558,6 +574,12 @@ struct Serialisable<ADL::test7::Point2<X>>
     {
         return typename Serialiser<ADL::test7::Point2<X>>::Ptr(new S(Serialisable<ADL::test7::Point<X> >::serialiser(sf)));
     }
+};
+
+template <>
+struct Serialisable<ADL::test7::S>
+{
+    static Serialiser<ADL::test7::S>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL

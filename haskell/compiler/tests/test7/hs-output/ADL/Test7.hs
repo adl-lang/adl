@@ -7,11 +7,13 @@ module ADL.Test7(
     Int5(..),
     Int6(..),
     IntPoint1,
+    IntPoint1A,
     IntPoint2(..),
     IntPoint3(..),
     Point(..),
     Point1,
     Point2(..),
+    S(..),
     String1,
     String2(..),
     String3(..),
@@ -81,6 +83,8 @@ instance (AdlValue x) => AdlValue (Int6 x) where
 
 type IntPoint1 = (Point Data.Int.Int64)
 
+type IntPoint1A = IntPoint1
+
 newtype IntPoint2 = IntPoint2 { unIntPoint2 :: (Point Data.Int.Int64) }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
@@ -139,6 +143,24 @@ instance (AdlValue x) => AdlValue (Point2 x) where
     jsonGen = JsonGen (\(Point2 v) -> adlToJson v)
     
     jsonParser = Point2 <$> jsonParser
+
+data S = S
+    { s_f1 :: IntPoint1A
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS :: IntPoint1A -> S
+mkS f1 = S f1
+
+instance AdlValue S where
+    atype _ = "test7.S"
+    
+    jsonGen = genObject
+        [ genField "f1" s_f1
+        ]
+    
+    jsonParser = S
+        <$> parseField "f1"
 
 type String1 = T.Text
 

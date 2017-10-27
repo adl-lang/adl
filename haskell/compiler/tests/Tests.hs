@@ -227,7 +227,7 @@ runTests = do
       let srcs = stdfiles <> ["test6/input/test.adl"]
       collectResults (runHaskellBackend [stdsrc] srcs "test6/hs-output")
           `shouldReturn` MatchOutput
-    it "generates expected code type aliases and newtypes" $ do
+    it "generates expected code for type aliases and newtypes" $ do
       collectResults (runHaskellBackend1 "test7/input/test.adl")
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
@@ -303,6 +303,9 @@ runTests = do
     it "generates expected code for various unions" $ do
       collectResults (runJavaBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
+    it "generates expected code for type aliases and newtypes" $ do
+      collectResults (runJavaBackend1 "test7/input/test.adl")
+        `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
       let srcs = ["test6/input/test.adl"] <> stdfiles
       collectResults (runJavaBackend [stdsrc] srcs "test6/java-output"
@@ -353,7 +356,7 @@ runTests = do
       let srcs = stdfiles <> ["test6/input/test.adl"]
       collectResults (runTsBackend [stdsrc] srcs "test6/ts-output")
           `shouldReturn` MatchOutput
-    it "generates expected code type aliases and newtypes" $ do
+    it "generates expected code for type aliases and newtypes" $ do
       collectResults (runTsBackend [stdsrc] ["test7/input/test.adl"] "test7/ts-output")
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do

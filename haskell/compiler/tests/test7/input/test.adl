@@ -30,5 +30,11 @@ newtype IntPoint3 = Point<Int64> = { "x" : 5, "y" : 27 };
 type Point1<X> = Point<X>;
 newtype Point2<X> = Point<X>;
 
+type IntPoint1A = IntPoint1;
+
+struct S
+{
+    IntPoint1A f1;
+};
 
 };

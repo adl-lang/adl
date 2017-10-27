@@ -770,7 +770,7 @@ expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
     typeExpr (RT_Named (_,Decl{d_type=Decl_Typedef t})) ts =
       case substTypeParams (Map.fromList (zip (t_typeParams t) ts)) (t_typeExpr t) of
         Left err -> error ("BUG: " ++ T.unpack err)
-        Right te -> te
+        Right te -> expandTypedefs te
     typeExpr t ts = TypeExpr t ts
 
 substTypeParams :: Map.Map Ident (TypeExprRT c) -> TypeExprRT c -> Either T.Text (TypeExprRT c)

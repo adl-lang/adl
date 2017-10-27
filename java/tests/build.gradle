@@ -9,6 +9,7 @@ sourceSets {
       srcDir '../../haskell/compiler/tests/test4/input'
       srcDir '../../haskell/compiler/tests/test5/java-output'
       srcDir '../../haskell/compiler/tests/test6/java-output'
+      srcDir '../../haskell/compiler/tests/test7/java-output'
       srcDir '../../haskell/compiler/tests/test14/java-output'
       srcDir '../../haskell/compiler/tests/test16/java-output'
       srcDir '../../haskell/compiler/tests/test17/java-output'

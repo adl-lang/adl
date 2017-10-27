@@ -179,6 +179,36 @@ export function texprPoint2<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Point2<
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test7",name : "Point2"}}, parameters : [texprX.value]}};
 }
 
+export type IntPoint1A = IntPoint1;
+
+const IntPoint1A_AST : ADL.ScopedDecl =
+  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"IntPoint1"}},"parameters":[]}}},"name":"IntPoint1A","version":{"kind":"nothing"}}};
+
+export function texprIntPoint1A(): ADL.ATypeExpr<IntPoint1A> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test7",name : "IntPoint1A"}}, parameters : []}};
+}
+
+export interface S {
+  f1: IntPoint1A;
+}
+
+export function makeS(
+  input: {
+    f1: IntPoint1A,
+  }
+): S {
+  return {
+    f1: input.f1,
+  };
+}
+
+const S_AST : ADL.ScopedDecl =
+  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"IntPoint1A"}},"parameters":[]}}]}},"name":"S","version":{"kind":"nothing"}}};
+
+export function texprS(): ADL.ATypeExpr<S> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "test7",name : "S"}}, parameters : []}};
+}
+
 export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test7.Point" : Point_AST,
   "test7.Int1" : Int1_AST,
@@ -197,5 +227,7 @@ export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test7.IntPoint2" : IntPoint2_AST,
   "test7.IntPoint3" : IntPoint3_AST,
   "test7.Point1" : Point1_AST,
-  "test7.Point2" : Point2_AST
+  "test7.Point2" : Point2_AST,
+  "test7.IntPoint1A" : IntPoint1A_AST,
+  "test7.S" : S_AST
 };
