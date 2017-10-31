@@ -42,3 +42,32 @@ export function typeRefsEqual(tref1 : AST.TypeRef, tref2 : AST.TypeRef) : boolea
   }
   return false;
 }
+
+function typeExprToStringImpl(te: AST.TypeExpr, withScopedNames: boolean) : string {
+  let result = "";
+  if (te.typeRef.kind == "primitive") {
+    result = te.typeRef.value;
+  } else if (te.typeRef.kind == "typeParam") {
+    result = te.typeRef.value;
+  } else if (te.typeRef.kind == "reference") {
+    result = withScopedNames
+      ? te.typeRef.value.moduleName + "." + te.typeRef.value.name
+      : te.typeRef.value.name;
+  }
+  if (te.parameters.length > 0) {
+    result = result + "<" + te.parameters.map(p => typeExprToStringImpl(p, withScopedNames)) + ">";
+  }
+  return result;
+}
+
+/* Convert a type expression to a string, with fully scoped names */
+
+export function typeExprToString(te: AST.TypeExpr) : string {
+  return typeExprToStringImpl(te, true);
+}
+
+/* Convert a type expression to a string, with unscoped names */
+
+export function typeExprToStringUnscoped(te: AST.TypeExpr) : string {
+  return typeExprToStringImpl(te, false);
+}
