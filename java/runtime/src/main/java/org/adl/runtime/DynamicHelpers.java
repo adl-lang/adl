@@ -1,9 +1,6 @@
 package org.adl.runtime;
 
 import org.adl.runtime.JsonBinding;
-import org.adl.runtime.sys.adlast.ScopedName;
-import org.adl.runtime.sys.adlast.TypeExpr;
-import org.adl.runtime.sys.adlast.TypeRef;
 import org.adl.runtime.sys.dynamic.Dynamic;
 import java.util.Optional;
 
@@ -25,6 +22,11 @@ public class DynamicHelpers
     } else {
       return Optional.empty();
     }
+  }
+
+  /** Returns a Dynamic representing a null value. */
+  public static Dynamic getNullInstance() {
+    return DynamicHelpers.toDynamic(JsonBindings.VOID, null);
   }
 
 };
