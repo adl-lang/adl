@@ -340,7 +340,7 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
     const details = {
       field : field,
       isVoid : isVoid(field.typeExpr),
-      jsonBinding : buildJsonBinding(dresolver, field.typeExpr, newBoundTypeParams)
+      jsonBinding : once(() => buildJsonBinding(dresolver, field.typeExpr, newBoundTypeParams))
     };
     detailsByName[field.name] = details;
     detailsBySerializedName[field.serializedName] = details;
@@ -352,7 +352,7 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
       return details.field.serializedName;
     } else {
       const result = {};
-      result[details.field.serializedName] = details.jsonBinding.toJson(v.value);
+      result[details.field.serializedName] = details.jsonBinding().toJson(v.value);
       return result;
     }
   }
@@ -378,7 +378,7 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
         try {
           return {
             kind : details.field.name,
-            value : details.jsonBinding.fromJson(json[k])
+            value : details.jsonBinding().fromJson(json[k])
           }
         } catch(e) {
           if (isJsonParseException(e)) {
