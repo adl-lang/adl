@@ -10,8 +10,16 @@ type Json = {}|null;
  */
 export interface JsonBinding<T> {
   typeExpr : AST.TypeExpr;
+
+  // Convert a value of type T to Json
   toJson (t : T): Json;
+
+  // Parse a json blob into a value of type T. Throws
+  // JsonParseExceptions on failure.
   fromJson(json : Json) : T;
+
+  // Variant of fromJson that throws Errors on failure
+  fromJsonE(json : Json) : T;
 };
 
 /**
@@ -19,7 +27,14 @@ export interface JsonBinding<T> {
  */
 export function createJsonBinding<T>(dresolver : DeclResolver, texpr : ATypeExpr<T>) : JsonBinding<T> {
   const jb0 = buildJsonBinding(dresolver, texpr.value, {});
-  return {typeExpr : texpr.value, toJson:jb0.toJson, fromJson:jb0.fromJson};
+  function fromJsonE(json :Json): T {
+    try {
+      return jb0.fromJson(json);
+    } catch (e) {
+      throw mapJsonException(e);
+    }
+  }
+  return {typeExpr : texpr.value, toJson:jb0.toJson, fromJson:jb0.fromJson, fromJsonE};
 };
 
 /**
@@ -34,6 +49,16 @@ export interface JsonParseException {
   pushField(fieldName: string): void;
   pushIndex(index: number): void;
   toString(): string;
+}
+
+// Map a JsonException to an Error value
+export function mapJsonException(exception:any): any {
+  if (exception && exception.kind == "JsonParseException") {
+    const jserr: JsonParseException = exception;
+    return new Error(jserr.getMessage());
+  } else {
+    return exception;
+  }
 }
 
 /** Convenience function for generating a json parse exception.
