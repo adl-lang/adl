@@ -155,6 +155,11 @@ module api.rest
 would result in java classes being generated in package
 `com.mycompany.adl.api.rest`.
 
+The [`JavaGenerate`][java-annotations] annotation can be applied to
+modules or declarations to disable code generation. This is useful if
+you have a large tree of ADL only some of which needs generated java
+code.
+
 # Custom types
 
 When a type is defined in ADL, a (language independent) serialisation

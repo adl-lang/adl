@@ -1,6 +1,6 @@
 *~
 .make/
-haskell/.stack-work/
+.stack-work
 
 ext/
 

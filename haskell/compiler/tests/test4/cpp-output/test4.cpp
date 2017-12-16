@@ -42,6 +42,33 @@ operator==( const CDate &a, const CDate &b )
         a.day == b.day ;
 }
 
+S2::S2()
+    : intv(0)
+{
+}
+
+S2::S2(
+    const int32_t & intv_
+    )
+    : intv(intv_)
+{
+}
+
+bool
+operator<( const S2 &a, const S2 &b )
+{
+    if( a.intv < b.intv ) return true;
+    if( b.intv < a.intv ) return false;
+    return false;
+}
+
+bool
+operator==( const S2 &a, const S2 &b )
+{
+    return
+        a.intv == b.intv ;
+}
+
 S::S()
     : v2(Date("2000-01-01"))
     , v4(CDate(2000,1,1))
@@ -168,6 +195,41 @@ Serialisable<ADL::test4::CDate>::serialiser( const SerialiserFlags &sf )
                 readField( year_s, v.year, "year", json ) ||
                 readField( month_s, v.month, "month", json ) ||
                 readField( day_s, v.day, "day", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
+
+typename Serialiser<ADL::test4::S2>::Ptr
+Serialisable<ADL::test4::S2>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test4::S2 _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : intv_s( Serialisable<int32_t>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<int32_t>::Ptr intv_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<int32_t>( json, intv_s, "intv", v.intv );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( intv_s, v.intv, "intv", json ) ||
                 ignoreField( json );
             }
         }

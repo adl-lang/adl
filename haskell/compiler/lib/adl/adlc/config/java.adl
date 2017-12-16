@@ -3,6 +3,12 @@ module adlc.config.java {
 /// ADL module annotation to specify a target java package.
 type JavaPackage = String;
 
+/// ADL module or declaration annotation to control
+/// whether code is actually generated.
+
+type JavaGenerate = Bool;
+
+
 /// ADL declaration annotation to specify that a custom type
 /// should be used
 struct JavaCustomType

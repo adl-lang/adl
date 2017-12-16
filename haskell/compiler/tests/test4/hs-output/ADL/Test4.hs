@@ -3,6 +3,7 @@ module ADL.Test4(
     CDate(..),
     Date,
     S(..),
+    S2(..),
 ) where
 
 import ADL.Core
@@ -95,3 +96,21 @@ instance AdlValue S where
         <*> parseField "v7a"
         <*> parseField "v8"
         <*> parseFieldDef "v8a" (Data.Map.fromList [ ((,) "X" 1), ((,) "Y" 2) ])
+
+data S2 = S2
+    { s2_intv :: Data.Int.Int32
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS2 :: Data.Int.Int32 -> S2
+mkS2 intv = S2 intv
+
+instance AdlValue S2 where
+    atype _ = "test4.S2"
+    
+    jsonGen = genObject
+        [ genField "intv" s2_intv
+        ]
+    
+    jsonParser = S2
+        <$> parseField "intv"

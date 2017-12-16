@@ -35,7 +35,7 @@ struct S
     Maybe<String> v5b = { "just" : "hello" };
 
 
-    Pair<String,Int32> v6; 
+    Pair<String,Int32> v6;
 
     Set<Int32> v7 = [1,2,3];
 
@@ -47,6 +47,11 @@ struct S
       { "v1" : "X", "v2" : 1 },
       { "v1" : "Y", "v2" : 2 }
       ];
+};
+
+struct S2
+{
+    Int32 intv;
 };
 
 };

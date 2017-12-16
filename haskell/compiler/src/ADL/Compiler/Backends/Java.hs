@@ -64,10 +64,12 @@ generateModules af jf fileWriter modulePaths = do
   let cgp = (jf_codeGenProfile jf)
   imports <- for modulePaths $ \modulePath -> do
     (mod,moddeps) <- loadAndCheckModule1 af modulePath
-    generateModule jf fileWriter
-                   (const cgp)
-                   (mkJavaPackageFn cgp (mod:moddeps) (jf_package jf))
-                   mod
+    if generateCode (m_annotations mod)
+      then generateModule jf fileWriter
+                          (const cgp)
+                          (mkJavaPackageFn cgp (mod:moddeps) (jf_package jf))
+                          mod
+      else return Set.empty
   return (mconcat imports)
 
 
@@ -94,7 +96,7 @@ generateModule jf fileWriter mCodeGetProfile javaPackageFn m0 = do
         maxLineLength = cgp_maxLineLength codeProfile
         filePath = javaClassFilePath (javaClass (javaPackageFn moduleName) (d_name decl))
         generateType = case d_customType decl of
-          Nothing -> True
+          Nothing ->  generateCode (d_annotations decl)
           (Just ct) -> ct_generateType ct
 
     if generateType
@@ -732,7 +734,6 @@ mkJavaPackageFn cgp mods defJavaPackage = \modName -> case Map.lookup modName pa
      Just (_,JSON.String s) -> Map.singleton (m_name mod) (fixRuntimePackage cgp (javaPackage s))
      _ -> Map.empty
 
-   snJavaPackage = ScopedName (ModuleName ["adlc","config","java"]) "JavaPackage"
 
 genTypeExprMethod :: CodeGenProfile -> ModuleName -> CDecl -> CState Code
 genTypeExprMethod cgp moduleName decl = do
@@ -749,9 +750,19 @@ genTypeExprMethod cgp moduleName decl = do
        <> ctemplate "return new $1($2.reference(scopedName), params);" [typeExprI,typeRefI]
     )
 
+generateCode :: Annotations t -> Bool
+generateCode annotations = case Map.lookup snJavaGenerate annotations of
+  Just (_,JSON.Bool gen) -> gen
+  _ -> True
+
 getAdlAstPackage :: CodeGenProfile -> JavaPackage
 getAdlAstPackage cgp = cgp_runtimePackage cgp <> JavaPackage ["sys","adlast"]
 
+snJavaPackage :: ScopedName
+snJavaPackage = ScopedName (ModuleName ["adlc","config","java"]) "JavaPackage"
+
+snJavaGenerate :: ScopedName
+snJavaGenerate = ScopedName (ModuleName ["adlc","config","java"]) "JavaGenerate"
 
 sysModules :: [FilePath]
 sysModules = ["sys/types.adl", "sys/dynamic.adl", "sys/adlast.adl"]

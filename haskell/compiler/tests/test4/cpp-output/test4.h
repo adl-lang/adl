@@ -46,6 +46,20 @@ bool operator<( const DateO &a, const DateO &b ) { return a.value < b.value; }
 inline
 bool operator==( const DateO &a, const DateO &b ) { return a.value == b.value; }
 
+struct S2
+{
+    S2();
+    
+    S2(
+        const int32_t & intv
+        );
+    
+    int32_t intv;
+};
+
+bool operator<( const S2 &a, const S2 &b );
+bool operator==( const S2 &a, const S2 &b );
+
 struct S
 {
     S();
@@ -116,6 +130,12 @@ struct Serialisable<ADL::test4::DateO>
     {
         return typename Serialiser<ADL::test4::DateO>::Ptr(new S(Serialisable<std::string>::serialiser(sf)));
     }
+};
+
+template <>
+struct Serialisable<ADL::test4::S2>
+{
+    static Serialiser<ADL::test4::S2>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
