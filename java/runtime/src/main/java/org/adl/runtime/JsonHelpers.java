@@ -15,8 +15,8 @@ import java.nio.charset.Charset;
 /**
  * Simple functions to reduce boilerplate in working with json for ADL values
  */
-public class JsonHelpers
-{
+public class JsonHelpers {
+
   static Gson gson = new GsonBuilder()
     .serializeNulls()
     .create();
@@ -27,21 +27,31 @@ public class JsonHelpers
     .create();
 
   /**
-   * Convert an ADL value to a string
+   * Converts an ADL value to a string
    */
   public static <T> String toString(JsonBinding<T> binding, T value) {
     return gson.toJson(binding.toJson(value));
   }
 
   /**
-   *  Parse an ADL value from a string
+   *  Parses an ADL value from a string
    */
   public static <T> T fromString(JsonBinding<T> binding, String value) {
     return binding.fromJson(gson.fromJson(value, JsonElement.class));
   }
 
   /**
-   * Read an ADL value from a UTF-8 encoded json file
+   *  Parses an ADL value from a leniently formatted json string.
+   *
+   * (See `setLenient` at
+   *  https://static.javadoc.io/com.google.code.gson/gson/2.6.2/com/google/gson/stream/JsonReader.html)
+   */
+  public static <T> T fromLenientString(JsonBinding<T> binding, String value) {
+    return binding.fromJson(lenientGson.fromJson(value, JsonElement.class));
+  }
+
+  /**
+   * Reads an ADL value from a UTF-8 encoded json file
    */
   public static <T> T fromFile(JsonBinding<T> binding, String path) throws IOException {
     InputStreamReader utf8Reader = getUtf8Reader(path);
@@ -60,7 +70,7 @@ public class JsonHelpers
   }
 
   /**
-   * Write an ADL value to a UTF-8 json file
+   * Writes an ADL value to a UTF-8 json file
    */
   public static <T> void toFile(JsonBinding<T> binding, T value, String path) throws IOException {
     OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(path), Charset.forName("UTF-8"));
@@ -72,7 +82,7 @@ public class JsonHelpers
   }
 
   /**
-   * Read an ADL value from a leniently formatted UTF-8 json file.
+   * Reads an ADL value from a leniently formatted UTF-8 json file.
    *
    * (See `setLenient` at
    *  https://static.javadoc.io/com.google.code.gson/gson/2.6.2/com/google/gson/stream/JsonReader.html)
@@ -87,7 +97,7 @@ public class JsonHelpers
   }
 
   /**
-   * Parse json element from a string
+   * Parses a json element from a string
    */
   public static JsonElement jsonFromString(String s) {
     return gson.fromJson(s, JsonElement.class);
