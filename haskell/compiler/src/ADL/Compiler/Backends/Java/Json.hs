@@ -3,7 +3,8 @@ module ADL.Compiler.Backends.Java.Json(
   generateStructJson,
   generateNewtypeJson,
   generateUnionJson,
-  generateEnumJson
+  generateEnumJson,
+  genJsonBindingExpr
   ) where
 
 import Control.Monad(when)

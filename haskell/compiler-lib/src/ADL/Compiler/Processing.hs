@@ -281,9 +281,15 @@ isVoidType _ = False
 isEnumeration :: Union (ResolvedTypeT t) -> Bool
 isEnumeration u = null (u_typeParams u) && all (isVoidType . f_type)  (u_fields u)
 
+-- Return true if the type expression references an enumeration
 refEnumeration :: TypeExpr (ResolvedTypeT a) -> Bool
 refEnumeration (TypeExpr (RT_Named (_,Decl{d_type=Decl_Union u})) []) = isEnumeration u
 refEnumeration _ = False
+
+-- If a type expression references a newtype, return it
+refNewtype :: TypeExpr (ResolvedTypeT a) -> Maybe (Newtype (ResolvedTypeT a))
+refNewtype (TypeExpr (RT_Named (_,Decl{d_type=Decl_Newtype n})) []) = Just n
+refNewtype _ = Nothing
 
 -- Naming Scope
     -- Decls in referenced modules (imported and explicitly referenced)

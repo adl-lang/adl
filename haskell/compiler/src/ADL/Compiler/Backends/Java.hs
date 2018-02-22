@@ -4,7 +4,9 @@ module ADL.Compiler.Backends.Java(
   JavaFlags(..),
   CodeGenProfile(..),
   defaultCodeGenProfile,
-  javaPackage
+  javaPackage,
+  mkJavaPackageFn,
+  JavaPackageFn,
   ) where
 
 import qualified Data.ByteString.Base64 as B64

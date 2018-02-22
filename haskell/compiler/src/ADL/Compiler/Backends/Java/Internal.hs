@@ -821,7 +821,7 @@ unreserveWord :: Ident -> Ident
 unreserveWord n | Set.member n reservedWords = T.append n "_"
                 | otherwise = n
 
-javaCapsFieldName :: Field CResolvedType -> Ident
+javaCapsFieldName :: Field r -> Ident
 javaCapsFieldName f = case T.uncons (f_name f) of
   Nothing -> ""
   (Just (c,t)) -> T.cons (toUpper c) t
