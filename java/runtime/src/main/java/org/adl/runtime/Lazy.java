@@ -18,7 +18,7 @@ public class Lazy<T> implements Supplier<T>
   }
 
   @Override
-  public T get() {
+  public synchronized T get() {
     if(supplier != null) {
       this.value = supplier.get();
       this.supplier = null;
