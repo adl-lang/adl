@@ -4,6 +4,7 @@ package adl.test5;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
@@ -65,6 +66,34 @@ public class Cell<T> {
     _result = _result * 37 + head.hashCode();
     _result = _result * 37 + tail.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder<T> {
+    private T head;
+    private List<T> tail;
+
+    public Builder() {
+      this.head = null;
+      this.tail = null;
+    }
+
+    public Builder<T> setHead(T head) {
+      this.head = Objects.requireNonNull(head);
+      return this;
+    }
+
+    public Builder<T> setTail(List<T> tail) {
+      this.tail = Objects.requireNonNull(tail);
+      return this;
+    }
+
+    public Cell<T> create() {
+      Builders.checkFieldInitialized("Cell", "head", head);
+      Builders.checkFieldInitialized("Cell", "tail", tail);
+      return new Cell<T>(head, tail);
+    }
   }
 
   /* Factory for construction of generic values */

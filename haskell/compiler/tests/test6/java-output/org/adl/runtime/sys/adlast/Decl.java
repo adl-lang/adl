@@ -4,6 +4,7 @@ package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
@@ -105,6 +106,50 @@ public class Decl {
     _result = _result * 37 + type_.hashCode();
     _result = _result * 37 + annotations.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private String name;
+    private Optional<Integer> version;
+    private DeclType type_;
+    private HashMap<ScopedName, JsonElement> annotations;
+
+    public Builder() {
+      this.name = null;
+      this.version = null;
+      this.type_ = null;
+      this.annotations = null;
+    }
+
+    public Builder setName(String name) {
+      this.name = Objects.requireNonNull(name);
+      return this;
+    }
+
+    public Builder setVersion(Optional<Integer> version) {
+      this.version = Objects.requireNonNull(version);
+      return this;
+    }
+
+    public Builder setType_(DeclType type_) {
+      this.type_ = Objects.requireNonNull(type_);
+      return this;
+    }
+
+    public Builder setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+      this.annotations = Objects.requireNonNull(annotations);
+      return this;
+    }
+
+    public Decl create() {
+      Builders.checkFieldInitialized("Decl", "name", name);
+      Builders.checkFieldInitialized("Decl", "version", version);
+      Builders.checkFieldInitialized("Decl", "type_", type_);
+      Builders.checkFieldInitialized("Decl", "annotations", annotations);
+      return new Decl(name, version, type_, annotations);
+    }
   }
 
   /* Factory for construction of generic values */

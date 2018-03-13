@@ -4,6 +4,7 @@ package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -73,6 +74,34 @@ public class ScopedDecl {
     _result = _result * 37 + moduleName.hashCode();
     _result = _result * 37 + decl.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private String moduleName;
+    private Decl decl;
+
+    public Builder() {
+      this.moduleName = null;
+      this.decl = null;
+    }
+
+    public Builder setModuleName(String moduleName) {
+      this.moduleName = Objects.requireNonNull(moduleName);
+      return this;
+    }
+
+    public Builder setDecl(Decl decl) {
+      this.decl = Objects.requireNonNull(decl);
+      return this;
+    }
+
+    public ScopedDecl create() {
+      Builders.checkFieldInitialized("ScopedDecl", "moduleName", moduleName);
+      Builders.checkFieldInitialized("ScopedDecl", "decl", decl);
+      return new ScopedDecl(moduleName, decl);
+    }
   }
 
   /* Factory for construction of generic values */

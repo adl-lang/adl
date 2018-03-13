@@ -4,6 +4,7 @@ package adl.test3;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -90,6 +91,41 @@ public class A {
     _result = _result * 37 + f_string.hashCode();
     _result = _result * 37 + (f_bool ? 0 : 1);
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private Short f_int;
+    private String f_string;
+    private Boolean f_bool;
+
+    public Builder() {
+      this.f_int = null;
+      this.f_string = null;
+      this.f_bool = false;
+    }
+
+    public Builder setF_int(Short f_int) {
+      this.f_int = Objects.requireNonNull(f_int);
+      return this;
+    }
+
+    public Builder setF_string(String f_string) {
+      this.f_string = Objects.requireNonNull(f_string);
+      return this;
+    }
+
+    public Builder setF_bool(Boolean f_bool) {
+      this.f_bool = Objects.requireNonNull(f_bool);
+      return this;
+    }
+
+    public A create() {
+      Builders.checkFieldInitialized("A", "f_int", f_int);
+      Builders.checkFieldInitialized("A", "f_string", f_string);
+      return new A(f_int, f_string, f_bool);
+    }
   }
 
   /* Factory for construction of generic values */

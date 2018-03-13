@@ -4,6 +4,7 @@ package adl.test3;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.ByteArray;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
@@ -335,6 +336,187 @@ public class S<T> {
     return _result;
   }
 
+  /* Builder */
+
+  public static class Builder<T> {
+    private Void f_void;
+    private Boolean f_bool;
+    private Byte f_int8;
+    private Short f_int16;
+    private Integer f_int32;
+    private Long f_int64;
+    private Byte f_word8;
+    private Short f_word16;
+    private Integer f_word32;
+    private Long f_word64;
+    private Float f_float;
+    private Double f_double;
+    private ByteArray f_bytes;
+    private String f_string;
+    private ArrayList<String> f_vstring;
+    private A f_a;
+    private U f_u;
+    private U f_u1;
+    private E f_e;
+    private T f_t;
+    private B<Short> f_bint16;
+    private HashMap<String, Integer> f_smap;
+    private JsonElement f_json1;
+    private JsonElement f_json2;
+
+    public Builder() {
+      this.f_void = null;
+      this.f_bool = true;
+      this.f_int8 = (byte)-5;
+      this.f_int16 = (short)-10000;
+      this.f_int32 = 56;
+      this.f_int64 = 40000L;
+      this.f_word8 = (byte)32;
+      this.f_word16 = (short)50000;
+      this.f_word32 = 124456;
+      this.f_word64 = 2344L;
+      this.f_float = 0.5F;
+      this.f_double = 0.45D;
+      this.f_bytes = new ByteArray("hello".getBytes());
+      this.f_string = "abcd";
+      this.f_vstring = Factories.arrayList("xy", "ab");
+      this.f_a = new A((short)0, "xyz", false);
+      this.f_u = U.f_int((short)45);
+      this.f_u1 = U.f_void();
+      this.f_e = E.V2;
+      this.f_t = null;
+      this.f_bint16 = new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5));
+      this.f_smap = Factories.stringMap("a", 45, "b", 47);
+      this.f_json1 = JsonHelpers.jsonFromString("null");
+      this.f_json2 = JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]");
+    }
+
+    public Builder<T> setF_void(Void f_void) {
+      this.f_void = Objects.requireNonNull(f_void);
+      return this;
+    }
+
+    public Builder<T> setF_bool(Boolean f_bool) {
+      this.f_bool = Objects.requireNonNull(f_bool);
+      return this;
+    }
+
+    public Builder<T> setF_int8(Byte f_int8) {
+      this.f_int8 = Objects.requireNonNull(f_int8);
+      return this;
+    }
+
+    public Builder<T> setF_int16(Short f_int16) {
+      this.f_int16 = Objects.requireNonNull(f_int16);
+      return this;
+    }
+
+    public Builder<T> setF_int32(Integer f_int32) {
+      this.f_int32 = Objects.requireNonNull(f_int32);
+      return this;
+    }
+
+    public Builder<T> setF_int64(Long f_int64) {
+      this.f_int64 = Objects.requireNonNull(f_int64);
+      return this;
+    }
+
+    public Builder<T> setF_word8(Byte f_word8) {
+      this.f_word8 = Objects.requireNonNull(f_word8);
+      return this;
+    }
+
+    public Builder<T> setF_word16(Short f_word16) {
+      this.f_word16 = Objects.requireNonNull(f_word16);
+      return this;
+    }
+
+    public Builder<T> setF_word32(Integer f_word32) {
+      this.f_word32 = Objects.requireNonNull(f_word32);
+      return this;
+    }
+
+    public Builder<T> setF_word64(Long f_word64) {
+      this.f_word64 = Objects.requireNonNull(f_word64);
+      return this;
+    }
+
+    public Builder<T> setF_float(Float f_float) {
+      this.f_float = Objects.requireNonNull(f_float);
+      return this;
+    }
+
+    public Builder<T> setF_double(Double f_double) {
+      this.f_double = Objects.requireNonNull(f_double);
+      return this;
+    }
+
+    public Builder<T> setF_bytes(ByteArray f_bytes) {
+      this.f_bytes = Objects.requireNonNull(f_bytes);
+      return this;
+    }
+
+    public Builder<T> setF_string(String f_string) {
+      this.f_string = Objects.requireNonNull(f_string);
+      return this;
+    }
+
+    public Builder<T> setF_vstring(ArrayList<String> f_vstring) {
+      this.f_vstring = Objects.requireNonNull(f_vstring);
+      return this;
+    }
+
+    public Builder<T> setF_a(A f_a) {
+      this.f_a = Objects.requireNonNull(f_a);
+      return this;
+    }
+
+    public Builder<T> setF_u(U f_u) {
+      this.f_u = Objects.requireNonNull(f_u);
+      return this;
+    }
+
+    public Builder<T> setF_u1(U f_u1) {
+      this.f_u1 = Objects.requireNonNull(f_u1);
+      return this;
+    }
+
+    public Builder<T> setF_e(E f_e) {
+      this.f_e = Objects.requireNonNull(f_e);
+      return this;
+    }
+
+    public Builder<T> setF_t(T f_t) {
+      this.f_t = Objects.requireNonNull(f_t);
+      return this;
+    }
+
+    public Builder<T> setF_bint16(B<Short> f_bint16) {
+      this.f_bint16 = Objects.requireNonNull(f_bint16);
+      return this;
+    }
+
+    public Builder<T> setF_smap(HashMap<String, Integer> f_smap) {
+      this.f_smap = Objects.requireNonNull(f_smap);
+      return this;
+    }
+
+    public Builder<T> setF_json1(JsonElement f_json1) {
+      this.f_json1 = Objects.requireNonNull(f_json1);
+      return this;
+    }
+
+    public Builder<T> setF_json2(JsonElement f_json2) {
+      this.f_json2 = Objects.requireNonNull(f_json2);
+      return this;
+    }
+
+    public S<T> create() {
+      Builders.checkFieldInitialized("S", "f_t", f_t);
+      return new S<T>(f_void, f_bool, f_int8, f_int16, f_int32, f_int64, f_word8, f_word16, f_word32, f_word64, f_float, f_double, f_bytes, f_string, f_vstring, f_a, f_u, f_u1, f_e, f_t, f_bint16, f_smap, f_json1, f_json2);
+    }
+  }
+
   /* Factory for construction of generic values */
 
   public static <T> Factory<S<T>> factory(Factory<T> factoryT) {
@@ -378,7 +560,7 @@ public class S<T> {
           124456,
           2344L,
           0.5F,
-          0.45,
+          0.45D,
           new ByteArray("hello".getBytes()),
           "abcd",
           Factories.arrayList("xy", "ab"),
@@ -515,7 +697,7 @@ public class S<T> {
           _obj.has("f_word32") ? JsonBindings.fieldFromJson(_obj, "f_word32", f_word32.get()) : 124456,
           _obj.has("f_word64") ? JsonBindings.fieldFromJson(_obj, "f_word64", f_word64.get()) : 2344L,
           _obj.has("f_float") ? JsonBindings.fieldFromJson(_obj, "f_float", f_float.get()) : 0.5F,
-          _obj.has("f_double") ? JsonBindings.fieldFromJson(_obj, "f_double", f_double.get()) : 0.45,
+          _obj.has("f_double") ? JsonBindings.fieldFromJson(_obj, "f_double", f_double.get()) : 0.45D,
           _obj.has("f_bytes") ? JsonBindings.fieldFromJson(_obj, "f_bytes", f_bytes.get()) : new ByteArray("hello".getBytes()),
           _obj.has("f_string") ? JsonBindings.fieldFromJson(_obj, "f_string", f_string.get()) : "abcd",
           _obj.has("f_vstring") ? JsonBindings.fieldFromJson(_obj, "f_vstring", f_vstring.get()) : Factories.arrayList("xy", "ab"),

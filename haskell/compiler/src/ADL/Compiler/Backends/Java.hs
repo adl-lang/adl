@@ -286,6 +286,42 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
       typeExprMethodCode <- genTypeExprMethod codeProfile moduleName decl
 
+      -- builder if enabled and we have more than one field
+      when (cgp_builder codeProfile && length fieldDetails > 1) $ do
+        buildersI <- addImport (javaClass (cgp_runtimePackage codeProfile) "Builders")
+        let initialValue fd = if hasDefault fd then fd_defValue fd else "null"
+            hasDefault fd = case f_default (fd_field fd) of
+              Nothing -> False
+              Just _ -> True
+
+            setter fd = cblock (template "public Builder$1 $2($3 $4)"
+                                [typeArgs, fd_mutatorName fd, fd_boxedTypeExprStr fd, fd_varName fd])
+              (  ctemplate "this.$1 = $2.requireNonNull($3);" [fd_memberVarName fd,objectsClass,fd_varName fd]
+              <> cline "return this;"
+              )
+
+            checkField fd = ctemplate "$1.checkFieldInitialized(\"$2\", \"$3\", $3);"
+                [buildersI,className,fd_memberVarName fd]
+
+            builder = cblock (template "public static class Builder$1" [typeArgs])
+              (  mconcat [ctemplate "private $1 $2;" [fd_boxedTypeExprStr fd,fd_memberVarName fd]
+                         | fd <- fieldDetails]
+              <> cline ""
+              <> cblock "public Builder()"
+                (  mconcat [ctemplate "this.$1 = $2;" [fd_memberVarName fd, initialValue fd]
+                           | fd <- fieldDetails]
+                )
+              <> mconcat [cline "" <> setter fd | fd <- fieldDetails]
+              <> cline ""
+              <> cblock (template "public $1$2 create()" [className, typeArgs])
+                (  mconcat [checkField fd | fd <- fieldDetails, not (hasDefault fd)]
+                <> ctemplate "return new $1$2($3);" [className, typeArgs, T.intercalate ", " (map fd_memberVarName fieldDetails)]
+                )
+              )
+
+        addMethod (cline "/* Builder */")
+        addMethod builder
+
       -- factory
       let factory =
             cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (

@@ -5,6 +5,7 @@ package org.adl.runtime.sys.dynamic;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
@@ -79,6 +80,34 @@ public class Dynamic {
     _result = _result * 37 + typeExpr.hashCode();
     _result = _result * 37 + value.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private TypeExpr typeExpr;
+    private JsonElement value;
+
+    public Builder() {
+      this.typeExpr = null;
+      this.value = null;
+    }
+
+    public Builder setTypeExpr(TypeExpr typeExpr) {
+      this.typeExpr = Objects.requireNonNull(typeExpr);
+      return this;
+    }
+
+    public Builder setValue(JsonElement value) {
+      this.value = Objects.requireNonNull(value);
+      return this;
+    }
+
+    public Dynamic create() {
+      Builders.checkFieldInitialized("Dynamic", "typeExpr", typeExpr);
+      Builders.checkFieldInitialized("Dynamic", "value", value);
+      return new Dynamic(typeExpr, value);
+    }
   }
 
   /* Factory for construction of generic values */

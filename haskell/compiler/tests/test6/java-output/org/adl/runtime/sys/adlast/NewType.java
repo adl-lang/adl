@@ -4,6 +4,7 @@ package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -89,6 +90,42 @@ public class NewType {
     _result = _result * 37 + typeExpr.hashCode();
     _result = _result * 37 + default_.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private ArrayList<String> typeParams;
+    private TypeExpr typeExpr;
+    private Optional<JsonElement> default_;
+
+    public Builder() {
+      this.typeParams = null;
+      this.typeExpr = null;
+      this.default_ = null;
+    }
+
+    public Builder setTypeParams(ArrayList<String> typeParams) {
+      this.typeParams = Objects.requireNonNull(typeParams);
+      return this;
+    }
+
+    public Builder setTypeExpr(TypeExpr typeExpr) {
+      this.typeExpr = Objects.requireNonNull(typeExpr);
+      return this;
+    }
+
+    public Builder setDefault(Optional<JsonElement> default_) {
+      this.default_ = Objects.requireNonNull(default_);
+      return this;
+    }
+
+    public NewType create() {
+      Builders.checkFieldInitialized("NewType", "typeParams", typeParams);
+      Builders.checkFieldInitialized("NewType", "typeExpr", typeExpr);
+      Builders.checkFieldInitialized("NewType", "default_", default_);
+      return new NewType(typeParams, typeExpr, default_);
+    }
   }
 
   /* Factory for construction of generic values */

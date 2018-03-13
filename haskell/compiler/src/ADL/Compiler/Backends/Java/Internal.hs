@@ -129,6 +129,7 @@ data CodeGenProfile = CodeGenProfile {
   cgp_hungarianNaming :: Bool,
   cgp_publicMembers :: Bool,
   cgp_genericFactories :: Bool,
+  cgp_builder :: Bool,
   cgp_json :: Bool,
   cgp_parcelable :: Bool,
   cgp_runtimePackage :: JavaPackage,
@@ -142,6 +143,7 @@ defaultCodeGenProfile = CodeGenProfile {
   cgp_hungarianNaming = False,
   cgp_publicMembers = False,
   cgp_genericFactories = False,
+  cgp_builder = True,
   cgp_json = False,
   cgp_parcelable = False,
   cgp_runtimePackage = defaultRuntimePackage,
@@ -476,7 +478,7 @@ getTypeDetails (RT_Primitive P_Double) = TypeDetails
   }
   where
     genLiteralText' (Literal _ LDefault) = return "0.0"
-    genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n)
+    genLiteralText' (Literal _ (LPrimitive (JSON.Number n))) = return (litNumber n <> "D")
     genLiteralText' lit = error ("BUG: getTypeDetails10: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_ByteVector) = TypeDetails

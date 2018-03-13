@@ -4,6 +4,7 @@ package adl.test20;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -104,6 +105,50 @@ public class Person {
     _result = _result * 37 + (int) age;
     _result = _result * 37 + role.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private String firstName;
+    private String lastName;
+    private Short age;
+    private Role role;
+
+    public Builder() {
+      this.firstName = null;
+      this.lastName = null;
+      this.age = null;
+      this.role = null;
+    }
+
+    public Builder setFirstName(String firstName) {
+      this.firstName = Objects.requireNonNull(firstName);
+      return this;
+    }
+
+    public Builder setLastName(String lastName) {
+      this.lastName = Objects.requireNonNull(lastName);
+      return this;
+    }
+
+    public Builder setAge(Short age) {
+      this.age = Objects.requireNonNull(age);
+      return this;
+    }
+
+    public Builder setRole(Role role) {
+      this.role = Objects.requireNonNull(role);
+      return this;
+    }
+
+    public Person create() {
+      Builders.checkFieldInitialized("Person", "firstName", firstName);
+      Builders.checkFieldInitialized("Person", "lastName", lastName);
+      Builders.checkFieldInitialized("Person", "age", age);
+      Builders.checkFieldInitialized("Person", "role", role);
+      return new Person(firstName, lastName, age, role);
+    }
   }
 
   /* Factory for construction of generic values */

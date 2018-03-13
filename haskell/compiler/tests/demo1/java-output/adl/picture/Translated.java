@@ -4,6 +4,7 @@ package adl.picture;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -80,6 +81,40 @@ public class Translated<T> {
     return _result;
   }
 
+  /* Builder */
+
+  public static class Builder<T> {
+    private Double xoffset;
+    private Double yoffset;
+    private T object;
+
+    public Builder() {
+      this.xoffset = 0D;
+      this.yoffset = 0D;
+      this.object = null;
+    }
+
+    public Builder<T> setXoffset(Double xoffset) {
+      this.xoffset = Objects.requireNonNull(xoffset);
+      return this;
+    }
+
+    public Builder<T> setYoffset(Double yoffset) {
+      this.yoffset = Objects.requireNonNull(yoffset);
+      return this;
+    }
+
+    public Builder<T> setObject(T object) {
+      this.object = Objects.requireNonNull(object);
+      return this;
+    }
+
+    public Translated<T> create() {
+      Builders.checkFieldInitialized("Translated", "object", object);
+      return new Translated<T>(xoffset, yoffset, object);
+    }
+  }
+
   /* Factory for construction of generic values */
 
   public static <T> Factory<Translated<T>> factory(Factory<T> factoryT) {
@@ -91,8 +126,8 @@ public class Translated<T> {
       @Override
       public Translated<T> create() {
         return new Translated<T>(
-          0,
-          0,
+          0D,
+          0D,
           object.get().create()
           );
       }
@@ -144,8 +179,8 @@ public class Translated<T> {
       public Translated<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Translated<T>(
-          _obj.has("xoffset") ? JsonBindings.fieldFromJson(_obj, "xoffset", xoffset.get()) : 0,
-          _obj.has("yoffset") ? JsonBindings.fieldFromJson(_obj, "yoffset", yoffset.get()) : 0,
+          _obj.has("xoffset") ? JsonBindings.fieldFromJson(_obj, "xoffset", xoffset.get()) : 0D,
+          _obj.has("yoffset") ? JsonBindings.fieldFromJson(_obj, "yoffset", yoffset.get()) : 0D,
           JsonBindings.fieldFromJson(_obj, "object", object.get())
         );
       }

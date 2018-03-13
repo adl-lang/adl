@@ -4,6 +4,7 @@ package adl.test2;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -66,6 +67,34 @@ public class Tree<T> {
     _result = _result * 37 + value.hashCode();
     _result = _result * 37 + children.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder<T> {
+    private T value;
+    private ArrayList<Tree<T>> children;
+
+    public Builder() {
+      this.value = null;
+      this.children = null;
+    }
+
+    public Builder<T> setValue(T value) {
+      this.value = Objects.requireNonNull(value);
+      return this;
+    }
+
+    public Builder<T> setChildren(ArrayList<Tree<T>> children) {
+      this.children = Objects.requireNonNull(children);
+      return this;
+    }
+
+    public Tree<T> create() {
+      Builders.checkFieldInitialized("Tree", "value", value);
+      Builders.checkFieldInitialized("Tree", "children", children);
+      return new Tree<T>(value, children);
+    }
   }
 
   /* Factory for construction of generic values */

@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import helpers.CDateHelpers;
 import helpers.DateHelpers;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
@@ -226,6 +227,108 @@ public class S {
     _result = _result * 37 + v8.hashCode();
     _result = _result * 37 + v8a.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private LocalDate v1;
+    private LocalDate v2;
+    private LocalDate v3;
+    private LocalDate v4;
+    private Optional<String> v5;
+    private Optional<String> v5a;
+    private Optional<String> v5b;
+    private Pair<String, Integer> v6;
+    private HashSet<Integer> v7;
+    private HashSet<Integer> v7a;
+    private HashMap<String, Integer> v8;
+    private HashMap<String, Integer> v8a;
+
+    public Builder() {
+      this.v1 = null;
+      this.v2 = DateHelpers.create("2000-01-01");
+      this.v3 = null;
+      this.v4 = CDateHelpers.create((short)2000, (short)1, (short)1);
+      this.v5 = null;
+      this.v5a = MaybeHelpers.nothing(null);
+      this.v5b = MaybeHelpers.just("hello");
+      this.v6 = null;
+      this.v7 = HashSetHelpers.create(Factories.arrayList(1, 2, 3));
+      this.v7a = null;
+      this.v8 = null;
+      this.v8a = HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)));
+    }
+
+    public Builder setV1(LocalDate v1) {
+      this.v1 = Objects.requireNonNull(v1);
+      return this;
+    }
+
+    public Builder setV2(LocalDate v2) {
+      this.v2 = Objects.requireNonNull(v2);
+      return this;
+    }
+
+    public Builder setV3(LocalDate v3) {
+      this.v3 = Objects.requireNonNull(v3);
+      return this;
+    }
+
+    public Builder setV4(LocalDate v4) {
+      this.v4 = Objects.requireNonNull(v4);
+      return this;
+    }
+
+    public Builder setV5(Optional<String> v5) {
+      this.v5 = Objects.requireNonNull(v5);
+      return this;
+    }
+
+    public Builder setV5a(Optional<String> v5a) {
+      this.v5a = Objects.requireNonNull(v5a);
+      return this;
+    }
+
+    public Builder setV5b(Optional<String> v5b) {
+      this.v5b = Objects.requireNonNull(v5b);
+      return this;
+    }
+
+    public Builder setV6(Pair<String, Integer> v6) {
+      this.v6 = Objects.requireNonNull(v6);
+      return this;
+    }
+
+    public Builder setV7(HashSet<Integer> v7) {
+      this.v7 = Objects.requireNonNull(v7);
+      return this;
+    }
+
+    public Builder setV7a(HashSet<Integer> v7a) {
+      this.v7a = Objects.requireNonNull(v7a);
+      return this;
+    }
+
+    public Builder setV8(HashMap<String, Integer> v8) {
+      this.v8 = Objects.requireNonNull(v8);
+      return this;
+    }
+
+    public Builder setV8a(HashMap<String, Integer> v8a) {
+      this.v8a = Objects.requireNonNull(v8a);
+      return this;
+    }
+
+    public S create() {
+      Builders.checkFieldInitialized("S", "v1", v1);
+      Builders.checkFieldInitialized("S", "v3", v3);
+      Builders.checkFieldInitialized("S", "v5", v5);
+      Builders.checkFieldInitialized("S", "v6", v6);
+      Builders.checkFieldInitialized("S", "v7a", v7a);
+      Builders.checkFieldInitialized("S", "v8", v8);
+      return new S(v1, v2, v3, v4, v5, v5a, v5b, v6, v7, v7a, v8, v8a);
+    }
   }
 
   /* Factory for construction of generic values */

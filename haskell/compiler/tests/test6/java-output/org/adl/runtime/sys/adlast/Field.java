@@ -4,6 +4,7 @@ package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
@@ -119,6 +120,58 @@ public class Field {
     _result = _result * 37 + default_.hashCode();
     _result = _result * 37 + annotations.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private String name;
+    private String serializedName;
+    private TypeExpr typeExpr;
+    private Optional<JsonElement> default_;
+    private HashMap<ScopedName, JsonElement> annotations;
+
+    public Builder() {
+      this.name = null;
+      this.serializedName = null;
+      this.typeExpr = null;
+      this.default_ = null;
+      this.annotations = null;
+    }
+
+    public Builder setName(String name) {
+      this.name = Objects.requireNonNull(name);
+      return this;
+    }
+
+    public Builder setSerializedName(String serializedName) {
+      this.serializedName = Objects.requireNonNull(serializedName);
+      return this;
+    }
+
+    public Builder setTypeExpr(TypeExpr typeExpr) {
+      this.typeExpr = Objects.requireNonNull(typeExpr);
+      return this;
+    }
+
+    public Builder setDefault(Optional<JsonElement> default_) {
+      this.default_ = Objects.requireNonNull(default_);
+      return this;
+    }
+
+    public Builder setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+      this.annotations = Objects.requireNonNull(annotations);
+      return this;
+    }
+
+    public Field create() {
+      Builders.checkFieldInitialized("Field", "name", name);
+      Builders.checkFieldInitialized("Field", "serializedName", serializedName);
+      Builders.checkFieldInitialized("Field", "typeExpr", typeExpr);
+      Builders.checkFieldInitialized("Field", "default_", default_);
+      Builders.checkFieldInitialized("Field", "annotations", annotations);
+      return new Field(name, serializedName, typeExpr, default_, annotations);
+    }
   }
 
   /* Factory for construction of generic values */

@@ -4,6 +4,7 @@ package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -73,6 +74,34 @@ public class Union {
     _result = _result * 37 + typeParams.hashCode();
     _result = _result * 37 + fields.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private ArrayList<String> typeParams;
+    private ArrayList<Field> fields;
+
+    public Builder() {
+      this.typeParams = null;
+      this.fields = null;
+    }
+
+    public Builder setTypeParams(ArrayList<String> typeParams) {
+      this.typeParams = Objects.requireNonNull(typeParams);
+      return this;
+    }
+
+    public Builder setFields(ArrayList<Field> fields) {
+      this.fields = Objects.requireNonNull(fields);
+      return this;
+    }
+
+    public Union create() {
+      Builders.checkFieldInitialized("Union", "typeParams", typeParams);
+      Builders.checkFieldInitialized("Union", "fields", fields);
+      return new Union(typeParams, fields);
+    }
   }
 
   /* Factory for construction of generic values */

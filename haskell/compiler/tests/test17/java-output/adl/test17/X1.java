@@ -4,6 +4,7 @@ package adl.test17;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -146,6 +147,74 @@ public class X1 {
     _result = _result * 37 + f6.hashCode();
     _result = _result * 37 + f7.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private Integer f1;
+    private Integer f2;
+    private Pair<String, Integer> f3;
+    private Pair<String, String> f4;
+    private ArrayList<Integer> f5;
+    private ArrayList<Pair<String, Integer>> f6;
+    private ArrayList<Pair<String, String>> f7;
+
+    public Builder() {
+      this.f1 = null;
+      this.f2 = null;
+      this.f3 = null;
+      this.f4 = null;
+      this.f5 = null;
+      this.f6 = null;
+      this.f7 = null;
+    }
+
+    public Builder setF1(Integer f1) {
+      this.f1 = Objects.requireNonNull(f1);
+      return this;
+    }
+
+    public Builder setF2(Integer f2) {
+      this.f2 = Objects.requireNonNull(f2);
+      return this;
+    }
+
+    public Builder setF3(Pair<String, Integer> f3) {
+      this.f3 = Objects.requireNonNull(f3);
+      return this;
+    }
+
+    public Builder setF4(Pair<String, String> f4) {
+      this.f4 = Objects.requireNonNull(f4);
+      return this;
+    }
+
+    public Builder setF5(ArrayList<Integer> f5) {
+      this.f5 = Objects.requireNonNull(f5);
+      return this;
+    }
+
+    public Builder setF6(ArrayList<Pair<String, Integer>> f6) {
+      this.f6 = Objects.requireNonNull(f6);
+      return this;
+    }
+
+    public Builder setF7(ArrayList<Pair<String, String>> f7) {
+      this.f7 = Objects.requireNonNull(f7);
+      return this;
+    }
+
+    public X1 create() {
+      Builders.checkFieldInitialized("X1", "f1", f1);
+      Builders.checkFieldInitialized("X1", "f2", f2);
+      Builders.checkFieldInitialized("X1", "f3", f3);
+      Builders.checkFieldInitialized("X1", "f4", f4);
+      Builders.checkFieldInitialized("X1", "f5", f5);
+      Builders.checkFieldInitialized("X1", "f6", f6);
+      Builders.checkFieldInitialized("X1", "f7", f7);
+      return new X1(f1, f2, f3, f4, f5, f6, f7);
+    }
   }
 
   /* Factory for construction of generic values */

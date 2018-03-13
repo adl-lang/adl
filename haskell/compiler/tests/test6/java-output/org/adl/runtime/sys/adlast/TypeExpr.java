@@ -4,6 +4,7 @@ package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -73,6 +74,34 @@ public class TypeExpr {
     _result = _result * 37 + typeRef.hashCode();
     _result = _result * 37 + parameters.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private TypeRef typeRef;
+    private ArrayList<TypeExpr> parameters;
+
+    public Builder() {
+      this.typeRef = null;
+      this.parameters = null;
+    }
+
+    public Builder setTypeRef(TypeRef typeRef) {
+      this.typeRef = Objects.requireNonNull(typeRef);
+      return this;
+    }
+
+    public Builder setParameters(ArrayList<TypeExpr> parameters) {
+      this.parameters = Objects.requireNonNull(parameters);
+      return this;
+    }
+
+    public TypeExpr create() {
+      Builders.checkFieldInitialized("TypeExpr", "typeRef", typeRef);
+      Builders.checkFieldInitialized("TypeExpr", "parameters", parameters);
+      return new TypeExpr(typeRef, parameters);
+    }
   }
 
   /* Factory for construction of generic values */

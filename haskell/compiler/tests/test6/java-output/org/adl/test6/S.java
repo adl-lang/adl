@@ -4,6 +4,7 @@ package org.adl.test6;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
@@ -211,6 +212,103 @@ public class S {
     _result = _result * 37 + f_int.hashCode();
     _result = _result * 37 + f_int2.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private Pair<Integer, Double> f_pair;
+    private Either<String, Integer> f_either;
+    private Error<Integer> f_error;
+    private HashMap<String, Double> f_map;
+    private HashSet<String> f_set;
+    private Optional<String> f_mstring;
+    private Optional<String> f_mstring2;
+    private Optional<String> f_nstring;
+    private Optional<String> f_nstring2;
+    private Optional<Long> f_int;
+    private Optional<Long> f_int2;
+
+    public Builder() {
+      this.f_pair = null;
+      this.f_either = null;
+      this.f_error = null;
+      this.f_map = null;
+      this.f_set = null;
+      this.f_mstring = null;
+      this.f_mstring2 = MaybeHelpers.just("sukpeepolup");
+      this.f_nstring = null;
+      this.f_nstring2 = Optional.<String>of("abcde");
+      this.f_int = null;
+      this.f_int2 = Optional.<Long>of(100L);
+    }
+
+    public Builder setF_pair(Pair<Integer, Double> f_pair) {
+      this.f_pair = Objects.requireNonNull(f_pair);
+      return this;
+    }
+
+    public Builder setF_either(Either<String, Integer> f_either) {
+      this.f_either = Objects.requireNonNull(f_either);
+      return this;
+    }
+
+    public Builder setF_error(Error<Integer> f_error) {
+      this.f_error = Objects.requireNonNull(f_error);
+      return this;
+    }
+
+    public Builder setF_map(HashMap<String, Double> f_map) {
+      this.f_map = Objects.requireNonNull(f_map);
+      return this;
+    }
+
+    public Builder setF_set(HashSet<String> f_set) {
+      this.f_set = Objects.requireNonNull(f_set);
+      return this;
+    }
+
+    public Builder setF_mstring(Optional<String> f_mstring) {
+      this.f_mstring = Objects.requireNonNull(f_mstring);
+      return this;
+    }
+
+    public Builder setF_mstring2(Optional<String> f_mstring2) {
+      this.f_mstring2 = Objects.requireNonNull(f_mstring2);
+      return this;
+    }
+
+    public Builder setF_nstring(Optional<String> f_nstring) {
+      this.f_nstring = Objects.requireNonNull(f_nstring);
+      return this;
+    }
+
+    public Builder setF_nstring2(Optional<String> f_nstring2) {
+      this.f_nstring2 = Objects.requireNonNull(f_nstring2);
+      return this;
+    }
+
+    public Builder setF_int(Optional<Long> f_int) {
+      this.f_int = Objects.requireNonNull(f_int);
+      return this;
+    }
+
+    public Builder setF_int2(Optional<Long> f_int2) {
+      this.f_int2 = Objects.requireNonNull(f_int2);
+      return this;
+    }
+
+    public S create() {
+      Builders.checkFieldInitialized("S", "f_pair", f_pair);
+      Builders.checkFieldInitialized("S", "f_either", f_either);
+      Builders.checkFieldInitialized("S", "f_error", f_error);
+      Builders.checkFieldInitialized("S", "f_map", f_map);
+      Builders.checkFieldInitialized("S", "f_set", f_set);
+      Builders.checkFieldInitialized("S", "f_mstring", f_mstring);
+      Builders.checkFieldInitialized("S", "f_nstring", f_nstring);
+      Builders.checkFieldInitialized("S", "f_int", f_int);
+      return new S(f_pair, f_either, f_error, f_map, f_set, f_mstring, f_mstring2, f_nstring, f_nstring2, f_int, f_int2);
+    }
   }
 
   /* Factory for construction of generic values */

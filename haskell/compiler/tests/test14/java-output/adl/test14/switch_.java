@@ -4,6 +4,7 @@ package adl.test14;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -117,6 +118,58 @@ public class switch_ {
     _result = _result * 37 + (for_ ? 0 : 1);
     _result = _result * 37 + Objects.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private Double double_;
+    private Integer int_;
+    private String string;
+    private Boolean for_;
+    private String Objects;
+
+    public Builder() {
+      this.double_ = null;
+      this.int_ = null;
+      this.string = null;
+      this.for_ = null;
+      this.Objects = null;
+    }
+
+    public Builder setDouble(Double double_) {
+      this.double_ = java.util.Objects.requireNonNull(double_);
+      return this;
+    }
+
+    public Builder setInt(Integer int_) {
+      this.int_ = java.util.Objects.requireNonNull(int_);
+      return this;
+    }
+
+    public Builder setString(String string) {
+      this.string = java.util.Objects.requireNonNull(string);
+      return this;
+    }
+
+    public Builder setFor(Boolean for_) {
+      this.for_ = java.util.Objects.requireNonNull(for_);
+      return this;
+    }
+
+    public Builder setObjects(String Objects) {
+      this.Objects = java.util.Objects.requireNonNull(Objects);
+      return this;
+    }
+
+    public switch_ create() {
+      Builders.checkFieldInitialized("switch_", "double_", double_);
+      Builders.checkFieldInitialized("switch_", "int_", int_);
+      Builders.checkFieldInitialized("switch_", "string", string);
+      Builders.checkFieldInitialized("switch_", "for_", for_);
+      Builders.checkFieldInitialized("switch_", "Objects", Objects);
+      return new switch_(double_, int_, string, for_, Objects);
+    }
   }
 
   /* Factory for construction of generic values */

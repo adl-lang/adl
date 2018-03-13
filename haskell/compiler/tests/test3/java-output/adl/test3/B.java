@@ -4,6 +4,7 @@ package adl.test3;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -90,6 +91,50 @@ public class B<T> {
     _result = _result * 37 + f_tvec.hashCode();
     _result = _result * 37 + f_xy.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder<T> {
+    private T f_t;
+    private String f_string;
+    private ArrayList<T> f_tvec;
+    private XY<T> f_xy;
+
+    public Builder() {
+      this.f_t = null;
+      this.f_string = null;
+      this.f_tvec = null;
+      this.f_xy = null;
+    }
+
+    public Builder<T> setF_t(T f_t) {
+      this.f_t = Objects.requireNonNull(f_t);
+      return this;
+    }
+
+    public Builder<T> setF_string(String f_string) {
+      this.f_string = Objects.requireNonNull(f_string);
+      return this;
+    }
+
+    public Builder<T> setF_tvec(ArrayList<T> f_tvec) {
+      this.f_tvec = Objects.requireNonNull(f_tvec);
+      return this;
+    }
+
+    public Builder<T> setF_xy(XY<T> f_xy) {
+      this.f_xy = Objects.requireNonNull(f_xy);
+      return this;
+    }
+
+    public B<T> create() {
+      Builders.checkFieldInitialized("B", "f_t", f_t);
+      Builders.checkFieldInitialized("B", "f_string", f_string);
+      Builders.checkFieldInitialized("B", "f_tvec", f_tvec);
+      Builders.checkFieldInitialized("B", "f_xy", f_xy);
+      return new B<T>(f_t, f_string, f_tvec, f_xy);
+    }
   }
 
   /* Factory for construction of generic values */

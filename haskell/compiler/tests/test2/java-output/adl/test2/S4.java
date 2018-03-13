@@ -4,6 +4,7 @@ package adl.test2;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -66,6 +67,34 @@ public class S4<T> {
     _result = _result * 37 + f1.hashCode();
     _result = _result * 37 + f2.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder<T> {
+    private S3<String> f1;
+    private S3<T> f2;
+
+    public Builder() {
+      this.f1 = null;
+      this.f2 = null;
+    }
+
+    public Builder<T> setF1(S3<String> f1) {
+      this.f1 = Objects.requireNonNull(f1);
+      return this;
+    }
+
+    public Builder<T> setF2(S3<T> f2) {
+      this.f2 = Objects.requireNonNull(f2);
+      return this;
+    }
+
+    public S4<T> create() {
+      Builders.checkFieldInitialized("S4", "f1", f1);
+      Builders.checkFieldInitialized("S4", "f2", f2);
+      return new S4<T>(f1, f2);
+    }
   }
 
   /* Factory for construction of generic values */

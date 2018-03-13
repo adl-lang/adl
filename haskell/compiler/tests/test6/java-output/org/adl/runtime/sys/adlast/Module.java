@@ -4,6 +4,7 @@ package org.adl.runtime.sys.adlast;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.HashMapHelpers;
@@ -103,6 +104,50 @@ public class Module {
     _result = _result * 37 + decls.hashCode();
     _result = _result * 37 + annotations.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private String name;
+    private ArrayList<Import> imports;
+    private HashMap<String, Decl> decls;
+    private HashMap<ScopedName, JsonElement> annotations;
+
+    public Builder() {
+      this.name = null;
+      this.imports = null;
+      this.decls = null;
+      this.annotations = null;
+    }
+
+    public Builder setName(String name) {
+      this.name = Objects.requireNonNull(name);
+      return this;
+    }
+
+    public Builder setImports(ArrayList<Import> imports) {
+      this.imports = Objects.requireNonNull(imports);
+      return this;
+    }
+
+    public Builder setDecls(HashMap<String, Decl> decls) {
+      this.decls = Objects.requireNonNull(decls);
+      return this;
+    }
+
+    public Builder setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+      this.annotations = Objects.requireNonNull(annotations);
+      return this;
+    }
+
+    public Module create() {
+      Builders.checkFieldInitialized("Module", "name", name);
+      Builders.checkFieldInitialized("Module", "imports", imports);
+      Builders.checkFieldInitialized("Module", "decls", decls);
+      Builders.checkFieldInitialized("Module", "annotations", annotations);
+      return new Module(name, imports, decls, annotations);
+    }
   }
 
   /* Factory for construction of generic values */

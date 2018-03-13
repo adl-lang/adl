@@ -4,6 +4,7 @@ package adl.test2;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -93,6 +94,50 @@ public class S3<T> {
     _result = _result * 37 + f3.hashCode();
     _result = _result * 37 + f4.hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder<T> {
+    private String f1;
+    private Double f2;
+    private T f3;
+    private ArrayList<T> f4;
+
+    public Builder() {
+      this.f1 = null;
+      this.f2 = null;
+      this.f3 = null;
+      this.f4 = null;
+    }
+
+    public Builder<T> setF1(String f1) {
+      this.f1 = Objects.requireNonNull(f1);
+      return this;
+    }
+
+    public Builder<T> setF2(Double f2) {
+      this.f2 = Objects.requireNonNull(f2);
+      return this;
+    }
+
+    public Builder<T> setF3(T f3) {
+      this.f3 = Objects.requireNonNull(f3);
+      return this;
+    }
+
+    public Builder<T> setF4(ArrayList<T> f4) {
+      this.f4 = Objects.requireNonNull(f4);
+      return this;
+    }
+
+    public S3<T> create() {
+      Builders.checkFieldInitialized("S3", "f1", f1);
+      Builders.checkFieldInitialized("S3", "f2", f2);
+      Builders.checkFieldInitialized("S3", "f3", f3);
+      Builders.checkFieldInitialized("S3", "f4", f4);
+      return new S3<T>(f1, f2, f3, f4);
+    }
   }
 
   /* Factory for construction of generic values */

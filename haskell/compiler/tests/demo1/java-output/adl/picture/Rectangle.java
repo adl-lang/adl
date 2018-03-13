@@ -4,6 +4,7 @@ package adl.picture;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -76,6 +77,34 @@ public class Rectangle {
     _result = _result * 37 + Double.valueOf(width).hashCode();
     _result = _result * 37 + Double.valueOf(height).hashCode();
     return _result;
+  }
+
+  /* Builder */
+
+  public static class Builder {
+    private Double width;
+    private Double height;
+
+    public Builder() {
+      this.width = null;
+      this.height = null;
+    }
+
+    public Builder setWidth(Double width) {
+      this.width = Objects.requireNonNull(width);
+      return this;
+    }
+
+    public Builder setHeight(Double height) {
+      this.height = Objects.requireNonNull(height);
+      return this;
+    }
+
+    public Rectangle create() {
+      Builders.checkFieldInitialized("Rectangle", "width", width);
+      Builders.checkFieldInitialized("Rectangle", "height", height);
+      return new Rectangle(width, height);
+    }
   }
 
   /* Factory for construction of generic values */
