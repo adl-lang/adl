@@ -395,6 +395,7 @@ public class JsonBindings
             e.pushIndex(i);
             throw e;
           }
+          i++;
         }
         return result;
       }
