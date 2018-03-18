@@ -23,18 +23,19 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/adl/adlc/config/haskell.adl
                      lib/adl/adlc/config/cpp.adl
                      lib/adl/adlc/config/java.adl
+                     lib/java/runtime/org/adl/runtime/Builders.java
                      lib/java/runtime/org/adl/runtime/ByteArray.java
+                     lib/java/runtime/org/adl/runtime/DynamicHelpers.java
                      lib/java/runtime/org/adl/runtime/Factories.java
                      lib/java/runtime/org/adl/runtime/Factory.java
                      lib/java/runtime/org/adl/runtime/HashMapHelpers.java
                      lib/java/runtime/org/adl/runtime/HashSetHelpers.java
-                     lib/java/runtime/org/adl/runtime/JsonParseException.java
                      lib/java/runtime/org/adl/runtime/JsonBinding.java
                      lib/java/runtime/org/adl/runtime/JsonBindings.java
                      lib/java/runtime/org/adl/runtime/JsonHelpers.java
-                     lib/java/runtime/org/adl/runtime/MaybeHelpers.java
-                     lib/java/runtime/org/adl/runtime/DynamicHelpers.java
+                     lib/java/runtime/org/adl/runtime/JsonParseException.java
                      lib/java/runtime/org/adl/runtime/Lazy.java
+                     lib/java/runtime/org/adl/runtime/MaybeHelpers.java
                      lib/haskell/runtime/ADL/Core.hs
                      lib/haskell/runtime/ADL/Core/Value.hs
                      lib/typescript/runtime/adl.ts
