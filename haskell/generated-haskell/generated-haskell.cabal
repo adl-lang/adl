@@ -1,7 +1,6 @@
 name:                generated-haskell
 version:             0.1.0.0
 synopsis:            Verify that the haskell runtime and all of the adlc test output builds ok
-homepage:            https://github.com/githubuser/tests#readme
 license:             BSD3
 license-file:        ../../LICENSE
 author:              Tim Docker
@@ -9,7 +8,6 @@ maintainer:          tim@dockerz.net
 copyright:           2017, Tim Docker
 category:            Test
 build-type:          Simple
-extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
@@ -39,15 +37,15 @@ library
                      , ADL.Test20
                      , ADL.Picture
   build-depends:       base >= 4.7 && < 5
-                     , aeson >= 1.0.2.1 && < 1.1
+                     , aeson >= 1.0.2.1 && < 1.3
                      , bytestring >= 0.10.8.1 && < 0.11
                      , base64-bytestring >= 1.0.0.1 && < 1.1
                      , containers >= 0.5.7.1 && < 0.6
                      , scientific >= 0.3.4.10 && < 0.4
                      , text >= 1.2 && < 1.3
-                     , time >= 1.6 && < 1.7
+                     , time >= 1.6 && < 1.9
                      , unordered-containers >= 0.2.7.2 && < 0.3
-                     , vector >= 0.11.0.0 && < 0.12
+                     , vector >= 0.11.0.0 && < 0.13
   default-language:    Haskell2010
 
 source-repository head

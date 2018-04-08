@@ -7,4 +7,4 @@ packages:
 - compiler
 - generated-haskell
 extra-deps:
-resolver: lts-8.5
+resolver: lts-10.10
