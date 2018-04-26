@@ -1,0 +1,32 @@
+module pingdata.config
+{
+import sys.types.*;
+
+/// Configuration for the nodejs backend service
+struct BackendConfig
+{
+    /// The port upon which the http service runs
+    Word16 port = 8081;
+
+    DbConnectionConfig db;
+
+     /// The secret shared for JWT authentication tokens.
+     String jwtSharedSecret;
+
+     /// The access key for rollbar, if rollbar is to be enabled
+     /// (see post_server_item in the project access tokens)
+     Nullable<String> rollbarServerToken = null;
+};
+
+/// Database connection configuration
+struct DbConnectionConfig
+{
+  String host;
+  Int16 port = 5432;
+
+  String dbname;
+  String username;
+  String password;
+};
+
+};

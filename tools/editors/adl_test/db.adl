@@ -1,0 +1,1043 @@
+// The App model that maps to the DB model
+
+module pingdata.db
+{
+import common.*;
+import common.db.*;
+import sys.types.Nullable;
+import sys.types.Map;
+
+type Currency = Double;
+
+/// Type to capture a URL along with a canonnical name.
+/// For example Product Details => https:///ryboi.com/chainsaw
+union ProductLink {
+  String product;
+  String manufacturer;
+  String documentation;
+  NamedLink custom;
+};
+
+/// Type to capture a URL along with a canonnical name.
+/// For example Product Details => https:///ryboi.com/chainsaw
+union MerchantLink {
+  String website;
+  String livechat;
+  String customer_service;
+  String return_policy;
+  String twitter;
+  String facebook;
+  NamedLink custom;
+};
+
+/// Standard country codes for use in addresses
+struct CountryCode {
+  // TODO(jeeva>timbod): Needs to be ID, as otherwise, the FK reference don't work (fix required for generate-schema.hs)
+  PK id;
+};
+
+annotation CountryCode DbTable {
+  "idPrefix" : "CC"
+};
+
+/// Model all standard currency codes (eg. USD , GBP or AUD). Unique
+struct CurrencyCode {
+  PK id;
+  String unicode_symbol;
+  String iso_currency_code;
+  String iso_numeric_code;
+  Int64 decimal_places;
+  String country;
+  String description;
+};
+
+annotation CurrencyCode DbTable {
+  "uniquenessConstraints" : [
+    ["isoCurrencyCode"]
+  ],
+  "idPrefix" : "CC"
+};
+
+/// Standard categories by which a merchant can be lumped into
+struct Category {
+  // TODO(jeeva>timbod): Needs to be ID, as otherwise, the FK reference don't work (fix required for generate-schema.hs)
+  PK id;
+  String description;
+};
+
+annotation Category DbTable {
+  "idPrefix" : "CA"
+};
+
+/// Standard sub-categories by which a merchant can be lumped into
+struct SubCategory {
+  // TODO(jeeva>timbod): Needs to be ID, as otherwise, the FK reference don't work (fix required for generate-schema.hs)
+  PK id;
+  String description;
+};
+
+annotation SubCategory DbTable {
+  "idPrefix" : "SCA"
+};
+
+/// We should capture all expected tax types as part of the app's meta data
+// (eg. AU_GST, UK_VAT)
+/// This will allow a level of consistency across receipts, and the ability to
+// interogate them in an interesting manner (Give me all business expenses with
+// AU_GST)
+struct TaxType {
+  String name;
+  String description;
+};
+
+annotation TaxType DbTable {
+  "withPrimaryKey" : "name",
+  "idPrefix" : "TT"
+};
+
+/// A Single basket item on a consumer's receipt.
+union BasketItem {
+  /// Use if basket item is a product (eg. a chainsaw)
+  Product product;
+
+  /// Use for services (eg. a plumber)
+  Service service;
+
+  /// To model a taxi trip, or any journey.
+  Journey journey;
+
+  /// Useful for arbitrary receipt wide price adjustments (eg. discounts)
+  Adjustment adjustment;
+};
+
+struct Product {
+  /// The order in which we render a list of basket items. Slightly leaky abstraction, as it's only used at the API layer to
+  /// re-order basket items, if it's provided on all basket items (we don't really care about it by the time we save the model
+  /// down)
+  Nullable<Int64> seqno = null;
+
+  /// The code or ID of this item. An example is an SKU or ISBN, etc.
+  Nullable<String> product_code = null;
+
+  /// A short title for this line item
+  String name;
+
+  /// An optional longer description
+  Nullable<String> description = null;
+
+  /// Optional list of product attributes.
+  Vector<ProductAttributes> attributes = [];
+
+  Pricing pricing;
+
+  Int64 quantity_purchased = 1;
+
+  /// Period is in months
+  Int64 warranty_period = 0;
+  Nullable<String> serial_number = null;
+  Nullable<Barcode> barcode = null;
+  Nullable<String> image_url = null;
+
+  // Set of external links. Can't be a map as we care about the order
+  Vector<ProductLink> external_links = [];
+
+  // Categories which apply to this product
+  Vector<String> categories = [];
+};
+
+struct Service {
+  /// The order in which we render a list of basket items. Slightly leaky abstraction, as it's only used at the API layer to
+  /// re-order basket items, if it's provided on all basket items (we don't really care about it by the time we save the model
+  /// down)
+  Nullable<Int64> seqno = null;
+
+  /// A short title for this line item
+  String name;
+
+  /// An optional longer description
+  Nullable<String> description = null;
+
+  /// Optional list of product attributes.
+  Vector<ServiceAttributes> attributes = [];
+
+  Pricing pricing;
+
+  Int64 quantity_purchased = 1;
+
+  /// Period is in months
+  Int64 warranty_period = 0;
+  Nullable<String> image_url = null;
+  Vector<ProductLink> external_links = [];
+};
+
+struct Journey {
+  /// The order in which we render a list of basket items. Slightly leaky abstraction, as it's only used at the API layer to
+  /// re-order basket items, if it's provided on all basket items (we don't really care about it by the time we save the model
+  /// down)
+  Nullable<Int64> seq_no = null;
+
+  /// A short title for this line item
+  String name;
+
+  /// An optional longer description
+  Nullable<String> description;
+
+  Pricing pricing;
+  Location pickup;
+  Location dropoff;
+  Nullable<String> image_url;
+  Vector<ProductLink> external_links;
+};
+
+struct Adjustment {
+  /// The order in which we render a list of basket items. Slightly leaky abstraction, as it's only used at the API layer to
+  /// re-order basket items, if it's provided on all basket items (we don't really care about it by the time we save the model
+  /// down)
+  Nullable<Int64> seqno = null;
+
+  /// A short title for this line item
+  String name;
+
+  /// An optional longer description
+  Nullable<String> description;
+
+  Pricing pricing;
+};
+
+union ProductAttributes {
+  Int64 size;
+  String colour;
+  Int64 width;
+  Int64 height;
+  Int64 length;
+  Int64 netWeight;
+  Int64 grossWeight;
+  Int64 volume;
+  CustomAttribute custom;  
+};
+
+union ServiceAttributes {
+  Int64 length;
+  Int64 setup_time;
+  Int64 cleanup_time;
+  CustomAttribute custom;  
+};
+
+/// Type to capture a custom attribute associated to a product or service.
+struct CustomAttribute {
+  String name;
+  String value;
+  Nullable<String> description;
+};
+
+
+struct Barcode {
+  String id;
+  BarcodeFormat format;
+};
+
+union BarcodeFormat {
+  Void ean13;
+  Void ean8;
+  Void ean5;
+  Void ean2;
+  Void upc;
+  Void upcA;
+  Void itf14;
+  Void itf;
+};
+
+struct Location {
+  /// Human readable name, eg. Home or 7 Hudson Street, Redfern
+  Nullable<String> name;
+
+  /// Optional position, if we know it
+  Nullable<GpsPositon> position;
+};
+
+struct GpsPositon {
+  Double lat;
+  Double lng;
+};
+
+/// Pricing information
+struct Pricing {
+  /// Total price, including taxes and discounts
+  Currency price;
+
+  /// tax (if any) paid
+  Currency tax;
+
+  /// Absolute discount applied
+  Currency discount = 0;
+
+  /// An optional tax code (eg. GST) - used for rendering/informational purposes.
+  /// We'll have a default type for unspecified tax
+  DbKey<TaxType> tax_type;
+
+  /// Currency this line item is denominated in
+  DbKey<CurrencyCode> currency_code;
+};
+
+/// All physical stores. Every merchant will have at least one
+struct Store {
+  /// Not used, as (storeId,merchant) pair is really the primary key.
+  PK id;
+  DbKey<Merchant> merchant;
+
+  /// API Client provided ID for the given merchant
+  String store_id;
+
+  String short_name;
+  String name;
+  String trading_name;
+
+  Nullable<String> logo_url = null;
+  Nullable<String> phone_number = null;
+  Nullable<String> email = null;
+  StreetAddress address;
+  Nullable<String> location_description = null;
+  GpsPositon location;
+  String timezone;
+
+  /// TODO(Jeeva) we need to add a timezone to properly display the opening hours
+  Vector<OpeningHours> opening_hours = [];
+
+  // Following fields have been omitted, and discussed as such
+  //  - opening hours policy
+};
+
+annotation Store DbTable {
+  "uniquenessConstraints" : [
+    ["storeId", "merchant"]
+  ],
+  "idPrefix" : "S"
+};
+
+union OpeningHours {
+  StandardDay sunday;
+  StandardDay monday;
+  StandardDay tuesday;
+  StandardDay wednesday;
+  StandardDay thursday;
+  StandardDay friday;
+  StandardDay saturday;
+  StandardDay default_public_holiday;
+  OverrideDay override_day;
+};
+
+/// opens and closes times may contain a time of day in 24-hour hhmm format. Values are in the range 0000–2359
+struct StandardDay {
+  Int64 opens;
+  Int64 closes;
+};
+
+struct OverrideDay {
+  LocalDate override_date;
+  Int64 opens;
+  Int64 closes;
+};
+
+struct StreetAddress {
+  String street;
+  Nullable<String> street_2 = null;
+  String suburb;
+  String state;
+  String postcode;
+  DbKey<CountryCode> country_code;
+};
+
+/// TODO(Jeeva): add/bug spiro for the right doco here
+union MerchantType {
+  // TODO(jeeva): document each choice below
+
+  Void brand;
+  Void country;
+  Void division;
+  Void group;
+  Void franchise;
+  Void merchant;
+};
+
+/// A merchant is a hierarchy, to handle various levels of the organisation
+struct Merchant {
+  PK id = null;
+
+  /// Client provided ID for the given merchant
+  Nullable<String> mid = null;
+
+  /// TODO(jeeva): document this/link to existing doco
+  MerchantType record_type;
+
+  /// Parent record. Only the 'root' merchant doesn't need to have an associated parent
+  Nullable<DbKey<Merchant>> parent = null;
+
+  String short_name;
+  String trading_name;
+
+  Nullable<String> logo_url = null;
+
+  // Various provided services, for example livechat, customer service etc.
+  Vector<MerchantLink> external_links = [];
+
+  String customer_service_number;
+  Nullable<String> return_policy = null;
+
+  RegionMerchantData region_merchant_data;
+
+  Vector<String> categories = [];
+
+  DbKey<Category> category;
+  DbKey<SubCategory> subcategory;
+
+  /// Period is in days
+  Int64 default_return_period = 0;
+};
+
+union RegionMerchantData {
+  AustralianMerchantData australia;
+};
+
+struct AustralianMerchantData {
+  String abn;
+};
+
+annotation Merchant DbTable {
+  "idPrefix" : "M"
+};
+
+/// All POS terminals. We assume a given (tid, mid) pair is unique
+/// We won't know for sure how this actually pans out
+struct Terminal {
+  PK id = null;
+
+  String tid;
+  DbKey<Merchant> merchant;
+  DbKey<Store> store;
+};
+
+annotation Terminal DbTable {
+  "uniquenessConstraints" : [
+    ["tid", "merchant"]
+  ],
+  "idPrefix" : "T"
+};
+
+/// TODO(jeeva): activity log per user
+
+/// In order to allow efficient access control lookups, Access control implied
+/// by the 'merchant tree' is de-normalised into the following ACL table
+struct MerchantAcl {
+  PK id = null;
+
+  // A user that has assumed this role
+  DbKey<Merchant> merchant_role;
+
+  // ... can access this merchant.
+  DbKey<Merchant> can_access;
+};
+
+annotation MerchantAcl DbTable {
+  "idPrefix" : "MA"
+};
+
+//TODO(jeeva): discuss with Tim how to handle Instants/LocalDateTime robustly
+
+struct Receipt {
+  PK id = null;
+
+  /// API Client provided ID for the given receipt. (externalId, merchant) must
+  /// always be unique
+  String external_id;
+
+  /// Receipts sometimes replace existing entries in the system (for example, in the
+  /// case of refunds)
+  Nullable<DbKey<Receipt>> replacement_for = null;
+
+  /// If this receipt was replaced, link to the new version
+  Nullable<DbKey<Receipt>> replaced_by = null;
+
+  /// Parsed basket items.
+  Vector<BasketItem> basket_items;
+
+  /// The raw representation of the basket items. We want to store this, as we aren't sure how this data will be presente
+  /// to us
+  Nullable<String> raw_basket_items = null;
+
+  /// Exactly when this receipt was issued
+  Instant issued_at;
+
+  /// The merchant from who this receipt originated (externalId, merchant)
+  /// must always be unique
+  DbKey<Merchant> merchant;
+
+  /// Which store the receipt originated from
+  DbKey<Store> store;
+
+  /// ID of the pos device (terminal or software) (eg. pos-123). This isn't used in any rendering or business logic.
+  /// Currently it's captured for information only
+  Nullable<String> pos_id = null;
+
+  /// Optionally the terminal within a store. Ideally, we *just* capture this (as
+  /// it implies a merchant + store). However, given the data may not be complete,
+  /// we store both.
+  String tid;
+
+  /// Information on the actual payment, this is what we expect will be most useful
+  /// when attempting to reconcile a receipt to a particular consumer
+  /// TODO(jeeva): Will we need to use Payment data to filter receipts and only send
+  /// the appropriate receipts to a given issuer/bank?
+  Vector<PaymentInfo> payment_data;
+
+  /// The raw representation of the payment data. We want to store this, as we
+  /// aren't sure how well this will be parsed into the above structure by
+  /// integrators
+  Nullable<String> raw_payment_data = null;
+
+  /// Purchaser details if supplied at checkout or linked to a specific tranaction by the POS
+  Nullable<Purchaser> purchaser = null;
+
+  /// Can this receipt be treated as a tax invoice?
+  Bool is_tax_invoice;
+
+  /// The total tax, as sent to us from the issuer. We can't derive this simply from
+  /// the basket data, as the basket data is often wrong.
+  Currency total_tax;
+
+  /// The total amount paid, as sent to us from the issuer. We can't derive this
+  /// simply from the basket data, as the basket data may be wrong
+  Currency total_price;
+
+  /// The total amount paid, as sent to us from the issuer. We can't derive this
+  /// simply from the basket data, as the basket data may be wrong
+  DbKey<CurrencyCode> currency_code;
+
+  /// If provided, the barcode for the entire receipt
+  Nullable<Barcode> barcode;
+
+  /// Arbitrary metadata provided by the integrator
+  String metadata;
+
+  /// Capture any usage of points/points awarded for a given loyalty card.
+  Vector<LoyaltyCardTransaction> loyalty_card_transactions = [];
+
+  // Discussed, and leaving the following out for now
+  //  - allow duplicate receiptid
+  //  - payment_blob and basket_blob
+  //  - price_includes_tax (for our own sanity, the price should always equal exactly what was shown at the till)
+  //  - price_adjustments (captured at the basket item level, all use cases discussed could be handled)
+
+  OfferSet offers = "default_campaign";
+  FeedbackSet feedback = "default_survey";
+
+  /// Who served the customer today. eg "Jessica"
+  Nullable<Server> served_by = null;
+
+  /// Is this a test receipt.
+  Bool is_test = false;
+
+  /// Return period for all basket items assocaited with this receipt
+  Int64 return_period = 0;
+};
+
+annotation Receipt DbTable {
+  "idPrefix" : "R"
+};
+
+
+struct Server {
+  Nullable<String> external_id = null;
+  Nullable<String> name = null;
+  Nullable<String> position = null;
+  Nullable<String> photo_url = null;    
+};
+
+struct Purchaser {
+  Nullable<String> external_id = null;
+  Nullable<String> name = null;
+  Nullable<String> email = null;
+  Nullable<String> phone = null;
+  Nullable<Gender> gender = null;
+  NotificationMethod notification_method = "none";
+};
+
+union NotificationMethod {
+  Void email;
+  Void sms;
+  Void none;
+};
+
+/// Records the association between Receipts and Consumers. This
+/// will be filled in after the matcing process, after the Receipts
+/// have been created.
+struct ReceiptConsumer {
+  PK id = null;
+  DbKey<Receipt> receipt;
+  DbKey<Consumer> consumer;
+};
+
+annotation ReceiptConsumer DbTable {
+  "idPrefix" : "RC",
+  "uniquenessConstraints": [
+    ["receipt", "consumer"]
+  ]
+};
+
+
+/// All the information we could possibly get associated with a given card payment
+/// We don't yet know how much of this information will be available, so have taken
+/// the approach in the pilot to capture it all
+struct PaymentInfo {
+  /// The id provided by the terminal. eg "34645364"
+  Nullable<String> tid = null;
+
+  /// The brand name for the terminal. eg "COMMONWEALTH BANK EFTPOS"
+  Nullable<String> terminal_name = null;
+
+  /// The trading name for the merchant, as sent in the payment data to the issuer
+  Nullable<String> trading_name = null;
+
+  Nullable<String> address = null;
+
+  /// The merchant ID as sent to the issuer by the acquirer/card network
+  String network_merchant_id;
+
+  /// TODO(jeeva): link to online doco (or better doco)
+  Nullable<String> merchant_category_code = null;
+
+  /// The Card itself, with the PAN masked
+  MaskedCard card;
+
+  /// The acquirer name or label. eg "CBA"
+  Nullable<String> acquirer = null;
+
+  /// TODO(spiro). eg "CBA Credit"
+  Nullable<String> application_label = null;
+
+  /// TODO(spiro) better description: The type of purchase. eg "credit or debit"
+  Nullable<PurchaseType> purchase_type = null;
+
+  /// TODO(spiro) better description: The type of transaction. eg "purchase"
+  Nullable<TransactionType> transaction_type = null;
+
+  /// TODO(spiro) better description: The issuer status code for this transaction. eg "approved"
+  Nullable<PaymentStatus> status = null;
+
+  /// The POS generated transaction reference number. eg "134771".
+  Nullable<String> pos_ref_no = null;
+
+  /// The POS generated transaction reference number.
+  /// This may be the same as pos_ref_no
+  Nullable<String> transaction_reference_number = null;
+
+  /// TODO(spiro) better description: eg "345345".
+  Nullable<String> inv_roc_no = null;
+
+  /// TODO(spiro) better description: eg "004637".
+  Nullable<String> reference_id = null;
+
+  /// TODO(spiro) better description: eg "A0000000041010".
+  Nullable<String> application_id = null;
+
+  /// TODO(spiro) better description: eg "41".
+  Nullable<String> atc = null;
+
+  /// TODO(spiro) better description: eg "01".
+  Nullable<String> csn = null;
+
+  /// The Retrieval Reference Number for the payment
+  /// TODO(jeeva): link to online doco
+  Nullable<String> rrn = null;
+
+  /// The System Trace Audit Number for the payment
+  /// TODO(jeeva): link to online doco
+  Nullable<String> stan = null;
+
+  /// The authorisation code for the payment
+  /// TODO(jeeva): link to online doco
+  Nullable<String> auth_code = null;
+
+  /// The transaction date, stored in exactly the same format it was supplied to us by the integrator
+  /// this may aid matching
+  String transaction_date;
+
+  /// Exactly how much was billed to this particular card
+  /// purchase amount and total are returned in all EFT transaction.
+  /// Unsure where they are not the same. To determine if both required in future.
+  Currency purchase_amount;
+
+  /// TODO(spiro) better description:
+  Currency total;
+
+  /// What currency was this payment made in. For example, Receipt line items may be
+  /// in USD, however, the payment itself was in AUD.
+  Nullable<DbKey<CurrencyCode>> currency_code = null;
+
+  /// Was a pin entered (Maybe, as there are 3 values, true, false and we don't know)
+  Nullable<Bool> pin_entered = null;
+
+  //The tokenised PAN for a given card/transaction pair, as assigned by the issuer or
+  //tokenising card networks (stripe, pin payments, etc.).
+  Nullable<String> card_token = null;
+
+  /// The EMV Unpredictable Number for the payment
+  /// TODO(jeeva): link to online doco
+  Nullable<EMV> emv = null;
+};
+
+///TODO(spiro): define this. also check if needs enum or open string.
+union PurchaseType {
+  Void debit;
+  Void credit;
+};
+
+///TODO(spiro): define this. also check if needs enum or open string.
+union TransactionType {
+  Void purchase;
+};
+
+///TODO(spiro): define this. also check if needs enum or open string.
+union PaymentStatus {
+  Void approved;
+};
+
+///TODO(jeeva): Better doco + link to online doco + validate fields are namsed as
+/// per EMV spec
+struct EMV {
+  /// The Unpredictable Number for the payment
+  String unpredictable_number;
+  String aid;
+  String application_preferred_name;
+  String atc;
+  String tvr;
+  String cryptogram;
+};
+
+/// A credit card, with the PAN masked. Used as part of the payment structure, as
+/// well as being attached to consumers
+struct MaskedCard {
+  /// The masked PAN for the card (includes the first 6 and last 4 digits, with the
+  /// middle digits masked with an 'X'
+  ///TODO(jeeva,timd): We don't always get this information normalised, so we need to
+  ///                  normalise it when we store it down (Replace missing digits with 'X')
+  String mpan;
+
+  //TODO(jeeva>spiro): Ideally this doesn't live on MaskedCard - as it's only required when
+  // masked card is embedded within a consumer (we always expect this to be null when attached
+  // to payment_data)
+  /// Optional card id (provided by the bank)
+  Nullable<String> external_id = null;
+
+  /// The name on the card, may not always line up to the name of the consumer's
+  /// account
+  String name;
+
+  /// Expiry date of the card, Provided in MMYY format
+  String expiry;
+
+  CardType card_type;
+};
+
+union CardType {
+  Void visa;
+  Void mastercard;
+  Void amex;
+  Void eftpos;
+  Void diners;
+};
+
+
+union OfferSet {
+  /// Default, generate offers, excluding those explicitly listed
+  Void default_campaign;
+  Vector<Offer> explicit;
+};
+
+union FeedbackSet {
+  /// Default, generate feedback questions, excluding those explicitly listed
+  Void default_survey;
+  Vector<FeedbackQuestion> explicit;
+};
+
+struct Consumer {
+  PK id = null;
+
+  DbKey<Bank> bank;
+  String external_id;
+
+  String first_name;
+  String last_name;
+  String email;
+  String phone_number;
+  StreetAddress address;
+  LocalDate date_of_birth;
+  Gender gender;
+
+  Vector<ConsumerAccount> accounts;
+
+  // not capturing the following fields (discussed with team)
+  //  - notification prefs
+  //  - OAuth data (easy to add)
+  //  - loyalty card info (capturing on the receipt - will generalise and add to the consumer post-pilot)
+};
+
+/// Accounts associated with a given consumer
+struct ConsumerAccount {
+  /// The issuer's internal ID for this account
+  String account_id;
+
+  /// Is this card enrolled in the smart receipt program? We err on the safe side and say that
+  /// By default it's not enrolled. 
+  Bool is_enrolled = false;
+
+  /// How a consumer is notified about transactions on this card
+  NotificationSettings notification_settings;
+
+  /// What external services can we sync with
+  ExternalServicesSettings external_services;
+
+  MaskedCard card;
+};
+
+struct NotificationSettings {
+  Nullable<Int64> sms_threshold;
+  Nullable<Int64> email_threshold;
+  Nullable<Int64> push_note_threshold;
+};
+
+struct ExternalServicesSettings {
+  Nullable<OathService> dropbox;
+  Nullable<OathService> concur;
+  Nullable<OathService> box;
+};
+
+struct OathService {
+  String refresh_token;
+
+  //TODO(jeeva): What other common info should we capture? I believe this is might be it.
+};
+
+union Gender {
+  Void male;
+  Void female;
+  String self_describe;
+};
+
+annotation Consumer DbTable {
+  "idPrefix" : "C"
+};
+
+struct ConsumerFeedback {
+  PK id = null;
+
+  /// Feedback is always related to a specific receipt;
+  DbKey<Receipt> receipt;
+
+  /// link to the actual feedback table (if it's based on pre-configured feedback)
+  DbKey<FeedbackQuestion> feedback;
+
+  Int64 rating;
+  String comment;
+};
+
+annotation ConsumerFeedback DbTable {
+  "idPrefix" : "CF"
+};
+
+/// TODO(jeeva): expand out if required. Current assumption is
+///   1. All feedback will request the user to provide a rating
+///   2. Rating is always on a consistent scale
+///   3. All feedback will also prompt the user for free-form text
+struct FeedbackQuestion {
+  PK id = null;
+
+  /// Must be provided, and (external_id, merchant) should to be unique (not enforced)
+  String external_id;
+
+  /// Question to ask the consumer. Future work is to allow this to be some kind of template, which is merged with
+  /// the receipt metadata (eg. instead of asking 'How was your sales assistant?' we can ask 'How was Bill?')
+  String question;
+  NpsCategory category;
+
+  DbKey<Merchant> merchant = "";
+
+  /// When this campaign expire
+  Instant campaign_expiry;
+
+  /// Campaign limits. Shared with Offers.
+  Nullable<CampaignLimits> campaign_limits = null;
+
+  /// Once published, a Feedback question can't be modified
+  Bool published = false;
+};
+
+annotation FeedbackQuestion DbTable {
+  "idPrefix" : "FQ"
+};
+
+struct CampaignLimits {
+  /// how many days, post purchase, will this offer be visiable for
+  Int64 post_purchase_visibility;
+
+  /// What is the minimum spend after which this offer is visible
+  Currency min_spend;
+
+  // Other demographics to which the offer is restricted to
+  Vector<Demographics> demographics = [];
+
+};
+
+struct ConsumerAcceptedOffer {
+  PK id = null;
+
+  /// The receipt on which an offer was accepted
+  DbKey<Receipt> receipt;
+
+  /// link to the actual feedback table (if it's based on pre-configured feedback)
+  DbKey<Offer> offer;
+};
+
+annotation ConsumerAcceptedOffer DbTable {
+  "idPrefix" : "CAO"
+};
+
+struct Offer {
+  PK id = null;
+
+  /// Must be provided, and (external_id, merchant) should be unique (not enforced)
+  String external_id;
+
+  String campaign_name;
+
+  DbKey<Merchant> merchant = "";
+
+  /// URL for the offer itself
+  OfferImage offer_image;
+
+  OfferValue value; // eg. percentage, absolute
+
+  String terms_and_conditions; // could be all embedded
+
+  /// When this campaign expire
+  Instant campaign_expiry;
+
+  /// Campaign limits. Shared with Feedback.
+  Nullable<CampaignLimits> campaign_limits = null;
+
+  /// Once published, an offer can't be modified
+  Bool published = false;
+};
+
+annotation Offer DbTable {
+  "idPrefix" : "O"
+};
+
+union OfferImage {
+  /// Certain users can upload their own backgroun images
+  String image;
+
+  /// Most users however will specifiy some copy +
+  OfferImageSpec spec;
+};
+
+struct OfferImageSpec {
+  String description;
+  String background_image;
+};
+
+union OfferValue {
+  Currency absolute;
+  Int64 percentage;
+};
+
+union NpsCategory {
+  Void product;
+  Void recommend;
+  Void service;
+  Void experience;
+  Void value;
+};
+
+struct Demographics {
+  Vector<Gender> gender;
+  Int64 min;
+  Int64 max;
+};
+
+union TransactionStatus {
+  Void open;
+  Void delayed;
+  Void matched;
+  Void expired;
+};
+
+/// Details of a transaction received from a bank.
+/// This drives the receipt/consumer matching process.
+struct Transaction {
+  PK id;
+  DbKey<Bank> bank;
+  DbKey<Consumer> consumer;
+  //TODO(jeeva): Enable these (and fix build)
+  // Nullable<DbKey<Receipt>> receipt;
+  // String external_id;
+  PaymentInfo payment_data;
+  Instant received_at;
+  Nullable<Instant> status_at;
+  TransactionStatus status;
+  Bool is_test = false;
+};
+
+annotation Transaction DbTable {
+  "idPrefix" : "TR"
+};
+
+/// Each bank needs an entry in the table, which
+/// is referenced by an appropriate user role.
+struct Bank {
+   PK id = null;
+   String name;
+
+  //  Uncomment when we implement this for the bank 
+  //  Vector<WebHook> webhooks = [];
+};
+
+annotation Bank DbTable {
+  "idPrefix" : "B"
+};
+
+/// When interacting with the API a user will assume
+/// one of these roles.
+union UserRole {
+  Void admin;
+  DbKey<Bank> bank_default;
+  DbKey<Merchant> merchant_default;
+  DbKey<Consumer> consumer_default;
+};
+
+
+/// Details we know about a given api key
+struct ApiKey {
+  PK id = null;
+  String apiKey;
+  String owner;
+  Vector<UserRole> allowedRoles;
+};
+
+annotation ApiKey DbTable {
+  "uniquenessConstraints" : [
+    ["apiKey"]
+  ],
+  "idPrefix" : "AK"
+};
+
+/// An update/redeem on a loyalty card.
+/// TODO(jeeva): better name
+struct LoyaltyCardTransaction {
+  String name;
+  String number;
+  Nullable<Int64> earned = null;
+  Nullable<Int64> redeemed = null;
+  Nullable<Int64> balance = null;
+};
+
+};
