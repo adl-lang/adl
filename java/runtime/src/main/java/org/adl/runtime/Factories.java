@@ -3,6 +3,9 @@ package org.adl.runtime;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Map;
@@ -136,6 +139,15 @@ public class Factories {
     public ByteArray create(ByteArray other) { return new ByteArray(other); }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("ByteVector"); }
+  };
+
+  public static final Factory<JsonElement> JSON = new Factory<JsonElement>() {
+    @Override
+    public JsonElement create() { return JsonNull.INSTANCE; }
+    @Override
+    public JsonElement create(JsonElement other) { return other.deepCopy(); }
+    @Override
+    public TypeExpr typeExpr() { return primTypeExpr("Json"); }
   };
 
   public static <T> Factory<ArrayList<T>> arrayList(final Factory<T> factoryT) {
