@@ -61,6 +61,7 @@ ADL supports the following primitive types:
 | Float,Double                 | floating point values                                  |
 | String                       | A unicode text string                                  |
 | ByteVector                   | A packed array of bytes                                |
+| Json                         | An opaque json value                                   |
 | `Vector<T>`                  | A vector/array of type T                               |
 | `StringMap<T>`               | A map with string keys and values of type T            |
 | `Nullable<T>`                | An optional value                                      |
