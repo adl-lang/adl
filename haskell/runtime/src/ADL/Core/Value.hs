@@ -3,8 +3,8 @@ module ADL.Core.Value(
   JsonGen(..),
   JsonParser(..),
   ParseResult(..),
+  ParseContextItem(..),
   AdlValue(..),
-  StringMap(..),
 
   adlToJson,
   adlFromJson,
@@ -20,9 +20,9 @@ module ADL.Core.Value(
   parseFieldDef,
   parseUnionValue,
   parseUnionVoid,
-  stringMapFromList,
   parseFail,
-  textFromParseContext
+  textFromParseContext,
+  withJsonObject
 ) where
 
 import qualified Data.Aeson as JS
@@ -285,22 +285,6 @@ instance forall a . (AdlValue a) => AdlValue [a] where
     (JS.Array a) -> let parse (i,jv) = runJsonParser jsonParser (ParseItem i:ctx) jv
                     in traverse parse (zip [0,1..] (V.toList a))
     _ -> ParseFailure "expected an array" ctx
-
-newtype StringMap v = StringMap {unStringMap :: M.Map T.Text v}
-  deriving (Eq,Ord,Show)
-
-stringMapFromList :: [(T.Text,v)] -> StringMap v
-stringMapFromList = StringMap . M.fromList
-
-instance forall a . (AdlValue a) => AdlValue (StringMap a) where
-  atype _ = T.concat ["StringMap<",atype (Proxy :: Proxy a),">"]
-  jsonGen = JsonGen (JS.Object . HM.fromList . (map toPair) . M.toList . unStringMap)
-    where
-      toPair (k,v) = (k,adlToJson v)
-
-  jsonParser = withJsonObject $ \ctx hm ->
-    let parse (k,jv) = (\jv -> (k,jv)) <$> runJsonParser jsonParser (ParseField k:ctx) jv
-    in (StringMap . M.fromList) <$> traverse parse (HM.toList hm)
 
 instance (AdlValue t) => AdlValue (Maybe t) where
   atype _ = T.concat

@@ -255,7 +255,7 @@ hTypeExprB m (TypeExpr (RT_Primitive P_Nullable) [te]) = do
   argt <- hTypeExprB m te
   importMap
   importText
-  return (template "Maybe ($1)" [argt])
+  return (template "Prelude.Maybe ($1)" [argt])
 
 hTypeExprB m (TypeExpr c args) = do
   ct <- hTypeExprB1 m c
@@ -560,7 +560,7 @@ generateLiteral te v =  generateLV Map.empty te v
           return (template "(\"$1\", $2)" [k,v])
     generateStringMap m te _ = error "BUG: stringmap literal requires a json object"
 
-    generateNullable m te JS.Null = return "Nothing"
+    generateNullable m te JS.Null = return "Prelude.Nothing"
     generateNullable m te js = do
       v <- generateLV m te js
       return (template "(Prelude.Just $1)" [v])
