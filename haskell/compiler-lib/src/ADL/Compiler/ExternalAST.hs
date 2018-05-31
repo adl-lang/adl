@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Compiler.ExternalAST(
-  moduleToA2
+  moduleToA2,
+  declToA2,
   ) where
 
 import qualified Data.Map as Map
