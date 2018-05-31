@@ -30,8 +30,6 @@ instance Monoid (StringMap a) where
   mempty = StringMap mempty
   mappend (StringMap m1) (StringMap m2) = mempty
 
-instance
-
 instance forall a . (AdlValue a) => AdlValue (StringMap a) where
   atype _ = T.concat ["StringMap<",atype (Proxy :: Proxy a),">"]
   jsonGen = JsonGen (JS.Object . HM.fromList . (map toPair) . M.toList . toMap)
