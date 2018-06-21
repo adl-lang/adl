@@ -95,7 +95,7 @@ generateModule jf fileWriter mCodeGetProfile javaPackageFn m0 = do
 
   imports <- for decls $ \decl -> do
     let codeProfile = mCodeGetProfile (ScopedName moduleName (d_name decl))
-        maxLineLength = cgp_maxLineLength codeProfile
+        maxLineLength = Just (cgp_maxLineLength codeProfile)
         filePath = javaClassFilePath (javaClass (javaPackageFn moduleName) (d_name decl))
         generateType = case d_customType decl of
           Nothing ->  generateCode (d_annotations decl)

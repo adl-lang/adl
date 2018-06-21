@@ -39,7 +39,7 @@ indentN = CIndent . mconcat
 cblock :: T.Text -> Code -> Code
 cblock "" body = cline "{"  <> indent body <> cline "}"
 cblock intro body =  cline (intro <> " {")  <> indent body <> cline "}"
-  
+
 cblock1 :: T.Text -> Code -> Code
 cblock1 intro body =
   cline (intro <> " {")  <> indent body <> cline "};"
@@ -51,7 +51,7 @@ coverride intro body =
 ctemplate :: T.Text -> [T.Text] -> Code
 ctemplate pattern params = cline $ template pattern params
 
-codeText :: Int -> Code -> [T.Text]
+codeText :: Maybe Int -> Code -> [T.Text]
 codeText maxLineLength c = mkLines "" c
   where
     mkLines i CEmpty = []
@@ -59,7 +59,7 @@ codeText maxLineLength c = mkLines "" c
     mkLines i (CSpan c1 c2) = joinSpannedText i (mkLines i c1) (mkLines i c2)
     mkLines i (CIndent c) = mkLines (indentStr <> i) c
     mkLines i (CLine "") = [""]
-    mkLines i (CLine t) = case breakLine (maxLineLength - T.length i) t of
+    mkLines i (CLine t) = case breakLine ((-) <$> maxLineLength <*> (pure (T.length i))) t of
       [] -> []
       (l1:ls) -> (i <> l1):[i <> i <> l | l <- ls]
     indentStr = "  "
@@ -75,8 +75,9 @@ joinSpannedText prefix list1 list2 =
     (_, lines2HeadUnindented) = T.splitAt (T.length prefix) list2Head
     list2Head = L.head list2
 
-breakLine :: Int -> T.Text -> [T.Text]
-breakLine maxlength t
+breakLine :: Maybe Int -> T.Text -> [T.Text]
+breakLine Nothing t = [t]
+breakLine (Just maxlength) t
   | T.length t < maxlength = [t]
   | otherwise = map (T.strip . T.concat) (assemble 0 [] (lineBreakChunks t))
   where
@@ -91,10 +92,10 @@ breakLine maxlength t
 lineBreakChunks :: T.Text -> [T.Text]
 lineBreakChunks t = map (T.pack . reverse) (chunks "" (T.unpack t))
   where
-    -- We break after ',' '=', or '(', but never within                                                                      
-    -- strings                                                                                                                       
+    -- We break after ',' '=', or '(', but never within
+    -- strings
     chunks cs [] = [cs]
-    chunks cs ('\'':s) = quote1 ('\'':cs) s                                                                                          
+    chunks cs ('\'':s) = quote1 ('\'':cs) s
     chunks cs ('\"':s) = quote2 ('\"':cs) s
     chunks cs (',':s) = (',':cs) : chunks "" s
     chunks cs ('=':s) = ('=':cs) : chunks "" s
@@ -112,7 +113,7 @@ lineBreakChunks t = map (T.pack . reverse) (chunks "" (T.unpack t))
     quote2 cs (c:s) =  quote2 (c:cs) s
 
 -- | Add appropriate  terminators to each of the text values in the
--- given list    
+-- given list
 addTerminators :: T.Text -> T.Text -> T.Text -> [T.Text] -> [T.Text]
 addTerminators first other last ts = map (\(term,t) -> t<>term) (edgeCases first other last ts)
 
@@ -125,4 +126,3 @@ edgeCases first other last bs = add0 bs
     add1 [b] = [(last,b)]
     add1 (b:bs) = ((other,b)):add1 bs
     add1 [] = []
-

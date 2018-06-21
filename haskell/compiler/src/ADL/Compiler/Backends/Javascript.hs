@@ -325,7 +325,7 @@ jsModuleFilePath  :: JSModuleName -> FilePath
 jsModuleFilePath (JSModuleName path name) = joinPath (map T.unpack path) </> T.unpack name <.> "js"
 
 jsModuleCode :: ModuleFile -> LBS.ByteString
-jsModuleCode mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText 10000 code)))
+jsModuleCode mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText Nothing code)))
   where
     code =  ctemplate "// Automatically generated code from adl: $1" [formatText (mf_moduleName mf)]
          <> cline "//"
