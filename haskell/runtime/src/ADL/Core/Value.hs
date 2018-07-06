@@ -8,6 +8,8 @@ module ADL.Core.Value(
 
   adlToJson,
   adlFromJson,
+  adlToByteString,
+  adlFromByteString,
   adlFromJsonFile,
   adlFromJsonFile',
   adlToJsonFile,
@@ -108,18 +110,23 @@ adlToJson = runJsonGen jsonGen
 adlFromJson :: AdlValue a => JS.Value -> ParseResult a
 adlFromJson = runJsonParser jsonParser []
 
+-- Convert an ADL value to a lazy ByteString
+adlToByteString :: AdlValue a => a -> LBS.ByteString
+adlToByteString = JS.encode . runJsonGen jsonGen
+
+-- Convert a lazy ByteString to an ADL value
+adlFromByteString :: AdlValue a => LBS.ByteString -> ParseResult a
+adlFromByteString lbs =  case JS.eitherDecode' lbs of
+  (Left e) -> ParseFailure ("Invalid json:" <> T.pack e) []
+  (Right jv) -> runJsonParser jsonParser [] jv
+
 -- Write an ADL value to a JSON file.
 adlToJsonFile :: AdlValue a => FilePath -> a -> IO ()
-adlToJsonFile file a = LBS.writeFile file lbs
-  where lbs = JS.encode (runJsonGen jsonGen a)
+adlToJsonFile file a = LBS.writeFile file (adlToByteString a)
 
 -- Read and parse an ADL value from a JSON file.
 adlFromJsonFile :: AdlValue a => FilePath -> IO (ParseResult a)
-adlFromJsonFile file = do
-  lbs <- LBS.readFile file
-  case JS.eitherDecode' lbs of
-    (Left e) -> return (ParseFailure ("Invalid json:" <> T.pack e) [])
-    (Right jv) -> return (runJsonParser jsonParser [] jv)
+adlFromJsonFile file = fmap adlFromByteString (LBS.readFile file)
 
 -- Read and parse an ADL value from a JSON file, throwing an exception
 -- on failure.
