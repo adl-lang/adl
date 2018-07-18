@@ -1,9 +1,11 @@
 {
   "dependencies": {
+    "@types/base64-js": "^1.2.5",
     "@types/jest": "^19.2.3",
-    "base64-js": "^1.2.0",
+    "base64-js": "^1.2.3",
     "jest": "^20.0.4",
     "ts-jest": "^20.0.4",
+    "tslint": "^5.11.0",
     "typescript": "^2.3.3"
   },
   "jest": {

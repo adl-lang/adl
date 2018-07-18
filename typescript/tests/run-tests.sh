@@ -19,5 +19,8 @@ cp tsconfig.json $GENDIR
 rm -rf $GENDIR/tsc-out
 ./node_modules/.bin/tsc --outDir $GENDIR/tsc-out -p $GENDIR; rm -rf $GENDIR/tsc-out
 
+# Lint TypeScript source globs
+./node_modules/.bin/tslint -c tslint.json -p $GENDIR
+
 # Run tests
 yarn test
