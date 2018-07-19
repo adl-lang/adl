@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.URL;
 import java.nio.charset.Charset;
 
 /**
@@ -70,6 +71,13 @@ public class JsonHelpers {
   }
 
   /**
+   * Gets the InputStreamReader for a URL resource using the UTF-8 charset
+   */
+  private static InputStreamReader getUtf8Reader(URL file) throws IOException {
+    return new InputStreamReader(file.openStream(), Charset.forName("UTF-8"));
+  }
+
+  /**
    * Writes an ADL value to a UTF-8 json file
    */
   public static <T> void toFile(JsonBinding<T> binding, T value, String path) throws IOException {
@@ -88,11 +96,20 @@ public class JsonHelpers {
    *  https://static.javadoc.io/com.google.code.gson/gson/2.6.2/com/google/gson/stream/JsonReader.html)
    */
   public static <T> T fromLenientFile(JsonBinding<T> binding, String path) throws IOException {
-    InputStreamReader utf8Reader = getUtf8Reader(path);
-    try {
+    try (InputStreamReader utf8Reader = getUtf8Reader(path)) {
       return binding.fromJson(lenientGson.fromJson(utf8Reader, JsonElement.class));
-    } finally {
-      utf8Reader.close();
+    }
+  }
+
+  /**
+   * Reads an ADL value from a leniently formatted UTF-8 json resource.
+   *
+   * (See `setLenient` at
+   *  https://static.javadoc.io/com.google.code.gson/gson/2.6.2/com/google/gson/stream/JsonReader.html)
+   */
+  public static <T> T fromLenientUrl(JsonBinding<T> binding, URL file) throws IOException {
+    try (InputStreamReader utf8Reader = getUtf8Reader(file)) {
+      return binding.fromJson(lenientGson.fromJson(utf8Reader, JsonElement.class));
     }
   }
 
