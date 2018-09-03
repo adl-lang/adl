@@ -13,6 +13,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as LT
 import qualified Data.Vector as V
+import qualified Data.Aeson as JSON
 
 import ADL.Compiler.AST
 import ADL.Compiler.Primitive
@@ -58,7 +59,8 @@ data CustomType = CustomType
   deriving (Show)
 
 data CodeGenProfile = CodeGenProfile {
-  cgp_includeAst :: Bool
+  cgp_includeAst :: Bool,
+  cgp_includeAstAnnotation :: ScopedName -> Bool
 }
 
 -- We use a state monad to accumulate details of the typescript file
@@ -352,11 +354,11 @@ capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)
 
 addAstDeclaration :: CModule -> CDecl -> CState ()
 addAstDeclaration m decl = do
-  includeAst <- fmap (cgp_includeAst . mfCodeGenProfile) get
-  when includeAst $ do
+  cgp <- mfCodeGenProfile <$> get
+  when (cgp_includeAst cgp) $ do
     let astDecl
           =  ctemplate "const $1 : ADL.ScopedDecl =" [astVariableName decl]
-          <> indent (ctemplate "$1;" [jsonToText (scopedDeclAst m decl)])
+          <> indent (ctemplate "$1;" [jsonToText (scopedDeclAst cgp m decl)])
         typeExprFn0
           =  cblock (template "export function texpr$1(): ADL.ATypeExpr<$1>" [d_name decl])
                     (ctemplate "return {value : {typeRef : {kind: \"reference\", value : {moduleName : \"$1\",name : \"$2\"}}, parameters : []}};"
@@ -383,69 +385,70 @@ addAstMap m = do
   addDeclaration $
     cline "export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {"
     <> indent (mconcat [ctemplate "\"$1\" : $2$3" [scopedName m decl, astVariableName decl, mcomma]
-                       | (decl,mcomma) <- withCommas (getOrderedDecls m)])
+                       | (decl,mcomma) <- withCommas includedDecls])
     <> cline "};"
   where
+    includedDecls = filter (\decl-> generateCode (d_annotations decl)) (getOrderedDecls m)
 
 scopedName :: CModule -> CDecl -> T.Text
 scopedName m d = formatText (ScopedName (m_name m) (d_name d))
 
-scopedDeclAst :: CModule -> CDecl -> JS.Value
-scopedDeclAst m decl = JS.object
+scopedDeclAst :: CodeGenProfile -> CModule -> CDecl -> JS.Value
+scopedDeclAst cgp m decl = JS.object
   [ ("moduleName", moduleNameAst (m_name m))
-  , ("decl", declAst decl)
+  , ("decl", declAst cgp decl)
   ]
 
-declAst :: CDecl -> JS.Value
-declAst decl = JS.object
- [ ("annotations", annotationsAst (d_annotations decl))
+declAst :: CodeGenProfile -> CDecl -> JS.Value
+declAst cgp decl = JS.object
+ [ ("annotations", annotationsAst cgp (d_annotations decl))
  , ("name", JS.toJSON (d_name decl))
  , ("version", mkMaybe Nothing)
- , ("type_", (declTypeAst (d_type decl)))
+ , ("type_", (declTypeAst cgp (d_type decl)))
  ]
 
-declTypeAst :: DeclType CResolvedType -> JS.Value
-declTypeAst (Decl_Struct s) = mkUnion "struct_" (structAst s)
-declTypeAst (Decl_Union u) = mkUnion "union_" (unionAst u)
-declTypeAst (Decl_Typedef t) = mkUnion "type_"  (typeAst t)
-declTypeAst (Decl_Newtype n) = mkUnion "newtype_"  (newtypeAst n)
+declTypeAst :: CodeGenProfile -> DeclType CResolvedType -> JS.Value
+declTypeAst cgp (Decl_Struct s) = mkUnion "struct_" (structAst cgp s)
+declTypeAst cgp (Decl_Union u) = mkUnion "union_" (unionAst cgp u)
+declTypeAst cgp (Decl_Typedef t) = mkUnion "type_"  (typeAst cgp t)
+declTypeAst cgp (Decl_Newtype n) = mkUnion "newtype_"  (newtypeAst cgp n)
 
-structAst :: Struct CResolvedType -> JS.Value
-structAst s = JS.object
-  [ ("fields", JS.toJSON (map fieldAst (s_fields s)))
+structAst :: CodeGenProfile -> Struct CResolvedType -> JS.Value
+structAst cgp s = JS.object
+  [ ("fields", JS.toJSON (map (fieldAst cgp) (s_fields s)))
   , ("typeParams", JS.toJSON (s_typeParams s))
   ]
 
-unionAst :: Union CResolvedType -> JS.Value
-unionAst u = JS.object
-  [ ("fields", JS.toJSON (map fieldAst (u_fields u)))
+unionAst :: CodeGenProfile -> Union CResolvedType -> JS.Value
+unionAst cgp u = JS.object
+  [ ("fields", JS.toJSON (map (fieldAst cgp) (u_fields u)))
   , ("typeParams", JS.toJSON (u_typeParams u))
   ]
 
-typeAst :: Typedef CResolvedType -> JS.Value
-typeAst t = JS.object
+typeAst :: CodeGenProfile -> Typedef CResolvedType -> JS.Value
+typeAst cgp t = JS.object
   [ ("typeExpr", typeExprAst (t_typeExpr t))
   , ("typeParams", JS.toJSON (t_typeParams t))
   ]
 
-newtypeAst :: Newtype CResolvedType -> JS.Value
-newtypeAst n = JS.object
+newtypeAst :: CodeGenProfile -> Newtype CResolvedType -> JS.Value
+newtypeAst cgp n = JS.object
   [ ("typeExpr", typeExprAst (n_typeExpr n))
   , ("typeParams", JS.toJSON (n_typeParams n))
   , ("default", mkMaybe (n_default n))
   ]
 
-fieldAst :: Field CResolvedType -> JS.Value
-fieldAst f = JS.object
+fieldAst :: CodeGenProfile -> Field CResolvedType -> JS.Value
+fieldAst cgp f = JS.object
  [ ("name", JS.toJSON (f_name f))
  , ("serializedName", JS.toJSON (f_serializedName f))
  , ("typeExpr", typeExprAst (f_type f))
  , ("default", mkMaybe (f_default f))
- , ("annotations", annotationsAst (f_annotations f))
+ , ("annotations", annotationsAst cgp (f_annotations f))
  ]
 
-annotationsAst :: Annotations CResolvedType -> JS.Value
-annotationsAst as = mapAst scopedNameAst id [(k,v) | (k,(_,v)) <- (M.toList as)]
+annotationsAst :: CodeGenProfile -> Annotations CResolvedType -> JS.Value
+annotationsAst cgp as = mapAst scopedNameAst id [(k,v) | (k,(_,v)) <- (M.toList as), cgp_includeAstAnnotation cgp k]
 
 mapAst :: (k -> JS.Value) -> (v -> JS.Value) -> [(k,v)] -> JS.Value
 mapAst kf vf kvs = JS.toJSON [ kvAst (kf k) (vf v) | (k,v) <- kvs]
@@ -547,3 +550,11 @@ genImport intoModule TSImport{iAsName=asName, iModulePath=importPath} = ctemplat
     relativePath [] ps2 = ps2
     relativePath (p1:ps1) (p2:ps2) | p1 == p2 = relativePath ps1 ps2
     relativePath ps1 ps2 = (map (const "..") ps1) <> ps2
+
+generateCode :: Annotations t -> Bool
+generateCode annotations = case M.lookup snTypescriptGenerate annotations of
+  Just (_,JSON.Bool gen) -> gen
+  _ -> True
+
+snTypescriptGenerate :: ScopedName
+snTypescriptGenerate = ScopedName (ModuleName ["adlc","config","typescript"]) "TypescriptGenerate"

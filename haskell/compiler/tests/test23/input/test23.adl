@@ -1,0 +1,15 @@
+module test23 {
+
+import adlc.config.typescript.*;
+
+/// A docstring
+struct S1 {
+   /// Another docstring
+   String field;
+};
+
+@TypescriptGenerate false
+struct S2 {
+};
+
+};

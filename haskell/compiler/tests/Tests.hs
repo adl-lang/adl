@@ -362,6 +362,9 @@ runTests = do
     it "Generates the correct code for the picture demo" $ do
       collectResults (runTsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/ts-output")
         `shouldReturn` MatchOutput
+    it "Handles annotations and docstrings correctly" $ do
+      collectResults (runTsBackend [stdsrc] ["test23/input/test23.adl"] "test23/ts-output")
+        `shouldReturn` MatchOutput
   where
     collectResults1 resultvar test = do
       r <- test

@@ -19,7 +19,6 @@ import qualified Data.ByteString.Lazy                       as LBS
 import qualified Data.Map                                   as M
 import qualified Data.Text                                  as T
 import qualified Data.Text.Encoding                         as T
-import qualified Data.Aeson                                 as JSON
 
 import           ADL.Compiler.EIO
 import           ADL.Compiler.Processing
@@ -68,7 +67,11 @@ generateModule tf fileWriter m0 = do
   let moduleName = m_name m
       m = associateCustomTypes getCustomType moduleName m0
       cgp = CodeGenProfile {
-        cgp_includeAst = not (tsExcludeAst tf)
+        cgp_includeAst = not (tsExcludeAst tf),
+
+        -- Explicitly leave out docstrings from the AST.
+        -- TODO: make this configurable
+        cgp_includeAstAnnotation = (/=) (ScopedName (ModuleName ["sys", "annotations"]) "Doc")
       }
       mf = execState (genModule m) (emptyModuleFile (m_name m) cgp)
   liftIO $ fileWriter (moduleFilePath (unModuleName moduleName) <.> "ts") (genModuleCode "adlc" mf)
@@ -192,11 +195,3 @@ genTypedef m decl typedef@Typedef{t_typeParams=typeParams} = do
     typeDecl = ctemplate "export type $1$2 = $3;" [d_name decl, typeParamsExpr typeParams, typeExprOutput]
   addDeclaration (renderCommentForDeclaration decl <> typeDecl)
   addAstDeclaration m decl
-
-generateCode :: Annotations t -> Bool
-generateCode annotations = case M.lookup snTypescriptGenerate annotations of
-  Just (_,JSON.Bool gen) -> gen
-  _ -> True
-
-snTypescriptGenerate :: ScopedName
-snTypescriptGenerate = ScopedName (ModuleName ["adlc","config","typescript"]) "TypescriptGenerate"
