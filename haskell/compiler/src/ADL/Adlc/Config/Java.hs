@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Adlc.Config.Java(
     JavaCustomType(..),
+    JavaGenerate,
     JavaPackage,
 ) where
 
@@ -35,5 +36,7 @@ instance AdlValue JavaCustomType where
         <$> parseField "javaname"
         <*> parseField "helpers"
         <*> parseFieldDef "generateType" Prelude.False
+
+type JavaGenerate = Prelude.Bool
 
 type JavaPackage = T.Text

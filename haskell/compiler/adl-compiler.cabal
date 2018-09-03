@@ -23,6 +23,7 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/adl/adlc/config/haskell.adl
                      lib/adl/adlc/config/cpp.adl
                      lib/adl/adlc/config/java.adl
+                     lib/adl/adlc/config/typescript.adl
                      lib/java/runtime/org/adl/runtime/Builders.java
                      lib/java/runtime/org/adl/runtime/ByteArray.java
                      lib/java/runtime/org/adl/runtime/DynamicHelpers.java

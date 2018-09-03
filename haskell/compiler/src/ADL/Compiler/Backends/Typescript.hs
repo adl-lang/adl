@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy                       as LBS
 import qualified Data.Map                                   as M
 import qualified Data.Text                                  as T
 import qualified Data.Text.Encoding                         as T
+import qualified Data.Aeson                                 as JSON
 
 import           ADL.Compiler.EIO
 import           ADL.Compiler.Processing
@@ -41,10 +42,10 @@ import           ADL.Compiler.DataFiles
 -- for validity, and then generate the code for it.
 generate :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af tf fileWriter modulePaths = catchAllExceptions  $ do
-  for modulePaths $ \modulePath -> do
+  for_ modulePaths $ \modulePath -> do
     m <- loadAndCheckModule af modulePath
     let m' = fullyScopedModule m
-    generateModule tf fileWriter m'
+    when (generateCode (m_annotations m')) (generateModule tf fileWriter m')
   when (tsIncludeRuntime tf) (generateRuntime af tf fileWriter modulePaths)
 
 -- JS.generate af (JS.JavascriptFlags {}) fileWriter
@@ -80,11 +81,12 @@ genModule m = do
 
   -- Generate each declaration
   for_ (getOrderedDecls m) $ \decl ->
-    case d_type decl of
-     (Decl_Struct struct)   -> genStruct m decl struct
-     (Decl_Union union)     -> genUnion m decl union
-     (Decl_Typedef typedef) -> genTypedef m decl typedef
-     (Decl_Newtype ntype)   -> genNewtype m decl ntype
+    when (generateCode (d_annotations decl)) $
+      case d_type decl of
+        (Decl_Struct struct)   -> genStruct m decl struct
+        (Decl_Union union)     -> genUnion m decl union
+        (Decl_Typedef typedef) -> genTypedef m decl typedef
+        (Decl_Newtype ntype)   -> genNewtype m decl ntype
 
   when includeAst $ do
     addAstMap m
@@ -190,3 +192,11 @@ genTypedef m decl typedef@Typedef{t_typeParams=typeParams} = do
     typeDecl = ctemplate "export type $1$2 = $3;" [d_name decl, typeParamsExpr typeParams, typeExprOutput]
   addDeclaration (renderCommentForDeclaration decl <> typeDecl)
   addAstDeclaration m decl
+
+generateCode :: Annotations t -> Bool
+generateCode annotations = case M.lookup snTypescriptGenerate annotations of
+  Just (_,JSON.Bool gen) -> gen
+  _ -> True
+
+snTypescriptGenerate :: ScopedName
+snTypescriptGenerate = ScopedName (ModuleName ["adlc","config","typescript"]) "TypescriptGenerate"

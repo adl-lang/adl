@@ -17,7 +17,7 @@ adlstdlibdir = "compiler/lib/adl"
 
 compile compiler args adldir outdir path0 = do
   let path = adldir </> path0
-  system
+  putStrLn
     (  "stack exec " <> compiler <> " -- haskell "
     <> "--package=ADL "
     <> "--no-overwrite "
@@ -32,17 +32,20 @@ adlcb = compile "adlc-bootstrap" ""
 adlc = compile "adlc" "--verbose "
 
 main = do
+  putStrLn "# Run the following:"
+
   -- compiler annotation types
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "haskell.adl"
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "cpp.adl"
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "java.adl"
+  adlcb "compiler/lib/adl/adlc/config" "compiler/src" "typescript.adl"
 
   -- runtime
   adlcb adlstdlibdir "runtime/src" "sys/types.adl"
   adlcb adlstdlibdir "runtime/src" "sys/adlast.adl"
 
   -- typescript runtime
-  system
+  putStrLn
     (  "stack exec adlc -- typescript "
     <> "--no-overwrite "
     <> "--exclude-ast "

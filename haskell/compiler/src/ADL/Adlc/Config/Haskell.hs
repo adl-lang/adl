@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Adlc.Config.Haskell(
     HaskellCustomType(..),
+    HaskellFieldPrefix,
     UnionConstructor(..),
 ) where
 
@@ -44,6 +45,8 @@ instance AdlValue HaskellCustomType where
         <*> parseFieldDef "generateOrigADLType" ""
         <*> parseFieldDef "structConstructor" ""
         <*> parseFieldDef "unionConstructors" [  ]
+
+type HaskellFieldPrefix = T.Text
 
 data UnionConstructor = UnionConstructor
     { unionConstructor_fieldName :: T.Text

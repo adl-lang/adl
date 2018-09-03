@@ -1,0 +1,8 @@
+module adlc.config.typescript {
+
+/// ADL module or declaration annotation to control
+/// whether code is actually generated.
+
+type TypescriptGenerate = Bool;
+
+};

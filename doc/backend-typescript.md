@@ -110,6 +110,20 @@ const seralized = JSON.stringify(pictureJB.toJson(p));
 
 This approach works for arbitrary ADL Types, including generics.
 
+# Annotations
+
+The typescript backend merges annotations from files with an `.adl-ts`
+suffix: eg when loading `demo/model.adl` it will automatically merge
+`demo/model.adl-ts` if found.
+
+Any `Doc` annotations (which can also be specified using `///`
+comments), are included as comments in the generated typescript code.
+
+The [`TypescriptGenerate`][typescript-annotations] annotation can be applied to
+modules or declarations to disable code generation. This is useful if
+you have a large tree of ADL only some of which needs generated typescript
+code.
+
 [ts-rectangle]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L52
 [ts-makerectangle]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L57
 [ts-picture]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L22
@@ -119,3 +133,4 @@ This approach works for arbitrary ADL Types, including generics.
 [ts-declresolver]:../typescript/runtime/adl.ts#10
 [ts-declresolverhelper]:../typescript/runtime/adl.ts#14
 [ts-json]:../typescript/runtime/json.ts
+[typescript-annotations]:../haskell/compiler/lib/adl/adlc/config/typescript.adl
