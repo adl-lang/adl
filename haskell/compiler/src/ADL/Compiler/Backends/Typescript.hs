@@ -94,7 +94,7 @@ genStruct m decl struct@Struct{s_typeParams=parameters} = do
   fds <- mapM genFieldDetails (s_fields struct)
   let structName = capitalise (d_name decl)
 
-  addDeclaration $ renderCommentsForDeclaration decl <> renderInterface structName parameters fds False
+  addDeclaration $ renderCommentForDeclaration decl <> renderInterface structName parameters fds False
   addDeclaration $ renderFactory structName (s_typeParams struct) fds
   addAstDeclaration m decl
 
@@ -128,7 +128,7 @@ renderUnionChoice decl unionName typeParams fds =
   CAppend renderedComments (ctemplate "export type $1$2 = $3;" [unionName, renderedParameters, T.intercalate " | " [getChoiceName fd | fd <- fds]])
   where
     getChoiceName fd = unionName <> "_" <> capitalise (fdName fd) <> renderedParameters
-    renderedComments = renderCommentsForDeclaration decl
+    renderedComments = renderCommentForDeclaration decl
     renderedParameters = typeParamsExpr typeParams
 
 renderUnionFieldsAsInterfaces :: T.Text -> [Ident] -> [FieldDetails] -> Code
@@ -176,17 +176,17 @@ constructUnionFieldDetailsFromField fd = [FieldDetails{
   fdDefValue=Nothing}]
 
 genNewtype :: CModule -> CDecl -> Newtype CResolvedType -> CState ()
-genNewtype  m declaration ntype@Newtype{n_typeParams=typeParams} = do
+genNewtype  m decl ntype@Newtype{n_typeParams=typeParams} = do
   typeExprOutput <- genTypeExpr (n_typeExpr ntype)
   let
-    typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, typeParamsExpr typeParams, typeExprOutput]
-  addDeclaration typeDecl
-  addAstDeclaration m declaration
+    typeDecl = ctemplate "export type $1$2 = $3;" [d_name decl, typeParamsExpr typeParams, typeExprOutput]
+  addDeclaration (renderCommentForDeclaration decl <> typeDecl)
+  addAstDeclaration m decl
 
 genTypedef :: CModule -> CDecl -> Typedef CResolvedType -> CState ()
-genTypedef m declaration typedef@Typedef{t_typeParams=typeParams} = do
+genTypedef m decl typedef@Typedef{t_typeParams=typeParams} = do
   typeExprOutput <- genTypeExpr (t_typeExpr typedef)
   let
-    typeDecl = ctemplate "export type $1$2 = $3;" [d_name declaration, typeParamsExpr typeParams, typeExprOutput]
-  addDeclaration typeDecl
-  addAstDeclaration m declaration
+    typeDecl = ctemplate "export type $1$2 = $3;" [d_name decl, typeParamsExpr typeParams, typeExprOutput]
+  addDeclaration (renderCommentForDeclaration decl <> typeDecl)
+  addAstDeclaration m decl

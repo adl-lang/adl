@@ -285,7 +285,7 @@ renderInterface name typeParams fields isPrivate =
   cblock (template "$1interface $2$3" [export, name, typeParamsExpr typeParams]) renderedFields
   where
     export = if isPrivate then "" else "export "
-    renderedFields = mconcat [renderFieldDeclaration fd ";"| fd <- fields]
+    renderedFields = mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd ";"| fd <- fields]
 
     renderFieldDeclaration :: FieldDetails -> T.Text -> Code
     renderFieldDeclaration fd endChar
@@ -324,15 +324,24 @@ renderFactory name typeParams fds = function
       Just defaultValue ->
         cspan (cspan (ctemplate "$1: input.$1 === undefined ? " [fdName fd]) (cline defaultValue)) (ctemplate " : input.$1," [fdName fd])
 
-renderCommentsForDeclaration :: CDecl -> Code
-renderCommentsForDeclaration decl = mconcat $ map renderComment $ M.elems (d_annotations decl)
+renderCommentForDeclaration :: CDecl -> Code
+renderCommentForDeclaration decl = mconcat $ map renderDeclComment $ M.elems (d_annotations decl)
   where
-    renderComment :: (CResolvedType, JS.Value) -> Code
-    renderComment (RT_Named (ScopedName{sn_name="Doc"}, _), JS.String commentValue) = clineN commentLinesStarred
-      where
-        commentLinesStarred = ["/**"] ++ [" * " <> commentLine | commentLine <- commentLinesBroken] ++ [" */"]
-        commentLinesBroken = L.filter (/= "") (T.splitOn "\n" commentValue)
-    renderComment _ = CEmpty
+    renderDeclComment :: (CResolvedType, JS.Value) -> Code
+    renderDeclComment (RT_Named (ScopedName{sn_name="Doc"}, _), JS.String commentText) = renderComment commentText
+    renderDeclComment _ = CEmpty
+
+renderCommentForField :: CField -> Code
+renderCommentForField field = mconcat $ map renderFieldComment $ M.elems (f_annotations field)
+  where
+    renderFieldComment (RT_Named (ScopedName{sn_name="Doc"}, _), JS.String commentText) = renderComment commentText
+    renderFieldComment _ = CEmpty
+
+renderComment :: T.Text -> Code
+renderComment commentValue = clineN commentLinesStarred
+  where
+    commentLinesStarred = ["/**"] ++ [" * " <> commentLine | commentLine <- commentLinesBroken] ++ [" */"]
+    commentLinesBroken = L.filter (/= "") (T.splitOn "\n" commentValue)
 
 typeParamsExpr :: [T.Text] -> T.Text
 typeParamsExpr []         = T.pack ""
