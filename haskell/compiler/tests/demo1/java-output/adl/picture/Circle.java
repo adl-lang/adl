@@ -1,4 +1,4 @@
-/* Code generated from adl module picture */
+/* @generated from adl module picture */
 
 package adl.picture;
 

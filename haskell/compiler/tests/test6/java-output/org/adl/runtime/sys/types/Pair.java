@@ -1,4 +1,4 @@
-/* Code generated from adl module sys.types */
+/* @generated from adl module sys.types */
 
 package org.adl.runtime.sys.types;
 

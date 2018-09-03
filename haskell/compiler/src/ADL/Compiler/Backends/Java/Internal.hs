@@ -173,7 +173,7 @@ cf_package  cf = cf_javaPackageFn cf (cf_module cf)
 
 classFileCode :: ClassFile -> Code
 classFileCode content =
-  ctemplate "/* Code generated from adl module $1 */" [formatText (cf_module content)]
+  ctemplate "/* $1generated from adl module $2 */" ["@", formatText (cf_module content)]
   <>
   cline ""
   <>

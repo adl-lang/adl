@@ -1,4 +1,4 @@
-/* Code generated from adl module test7 */
+/* @generated from adl module test7 */
 
 package adl.test7;
 

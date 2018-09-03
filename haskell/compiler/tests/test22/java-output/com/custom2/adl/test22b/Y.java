@@ -1,4 +1,4 @@
-/* Code generated from adl module test22b */
+/* @generated from adl module test22b */
 
 package com.custom2.adl.test22b;
 

@@ -1,4 +1,4 @@
-/* Code generated from adl module sys.dynamic */
+/* @generated from adl module sys.dynamic */
 
 package org.adl.runtime.sys.dynamic;
 

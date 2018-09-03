@@ -1,4 +1,4 @@
-/* Code generated from adl module sys.adlast */
+/* @generated from adl module sys.adlast */
 
 package org.adl.runtime.sys.adlast;
 
