@@ -63,7 +63,7 @@ would allow the json value:
 }
 ```
 
-On deserialization, field with declared defaults are allowed to be missing. Missing fields
+On deserialization, fields with declared defaults are allowed to be missing. Missing fields
 are populated with the default value.
 
 ### Unions
