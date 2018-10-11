@@ -11,42 +11,42 @@ category:            Network
 build-type:          Simple
 cabal-version:       >=1.8
 
-data-files:          lib/adl/sys/adlast.adl
-                     lib/adl/sys/adlast.adl-java
-                     lib/adl/sys/dynamic.adl
-                     lib/adl/sys/dynamic.adl-java
-                     lib/adl/sys/types.adl
-                     lib/adl/sys/types.adl-java
-                     lib/adl/sys/types.adl-hs
-                     lib/adl/sys/types.adl-cpp
-                     lib/adl/sys/annotations.adl
+data-files:          ../../adl/stdlib/sys/adlast.adl
+                     ../../adl/stdlib/sys/adlast.adl-java
+                     ../../adl/stdlib/sys/dynamic.adl
+                     ../../adl/stdlib/sys/dynamic.adl-java
+                     ../../adl/stdlib/sys/types.adl
+                     ../../adl/stdlib/sys/types.adl-java
+                     ../../adl/stdlib/sys/types.adl-hs
+                     ../../adl/stdlib/sys/types.adl-cpp
+                     ../../adl/stdlib/sys/annotations.adl
                      lib/adl/adlc/config/haskell.adl
                      lib/adl/adlc/config/cpp.adl
                      lib/adl/adlc/config/java.adl
                      lib/adl/adlc/config/typescript.adl
-                     lib/java/runtime/org/adl/runtime/Builders.java
-                     lib/java/runtime/org/adl/runtime/ByteArray.java
-                     lib/java/runtime/org/adl/runtime/DynamicHelpers.java
-                     lib/java/runtime/org/adl/runtime/Factories.java
-                     lib/java/runtime/org/adl/runtime/Factory.java
-                     lib/java/runtime/org/adl/runtime/HashMapHelpers.java
-                     lib/java/runtime/org/adl/runtime/HashSetHelpers.java
-                     lib/java/runtime/org/adl/runtime/JsonBinding.java
-                     lib/java/runtime/org/adl/runtime/JsonBindings.java
-                     lib/java/runtime/org/adl/runtime/JsonHelpers.java
-                     lib/java/runtime/org/adl/runtime/JsonParseException.java
-                     lib/java/runtime/org/adl/runtime/Lazy.java
-                     lib/java/runtime/org/adl/runtime/MaybeHelpers.java
-                     lib/haskell/runtime/ADL/Core.hs
-                     lib/haskell/runtime/ADL/Core/Value.hs
-                     lib/haskell/runtime/ADL/Core/StringMap.hs
-                     lib/typescript/runtime/adl.ts
-                     lib/typescript/runtime/json.ts
-                     lib/typescript/runtime/utils.ts
-                     lib/typescript/runtime/dynamic.ts
-                     lib/typescript/runtime/sys/types.ts
-                     lib/typescript/runtime/sys/adlast.ts
-                     lib/typescript/runtime/sys/dynamic.ts
+                     ../../java/runtime/src/main/java/org/adl/runtime/Builders.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/ByteArray.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/DynamicHelpers.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/Factories.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/Factory.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/HashMapHelpers.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/HashSetHelpers.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/JsonBinding.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/JsonBindings.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/JsonHelpers.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/JsonParseException.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/Lazy.java
+                     ../../java/runtime/src/main/java/org/adl/runtime/MaybeHelpers.java
+                     ../runtime/src/ADL/Core.hs
+                     ../runtime/src/ADL/Core/Value.hs
+                     ../runtime/src/ADL/Core/StringMap.hs
+                     ../../typescript/runtime/adl.ts
+                     ../../typescript/runtime/json.ts
+                     ../../typescript/runtime/utils.ts
+                     ../../typescript/runtime/dynamic.ts
+                     ../../typescript/runtime/sys/types.ts
+                     ../../typescript/runtime/sys/adlast.ts
+                     ../../typescript/runtime/sys/dynamic.ts
 
 library
   exposed-modules:    ADL.Compiler.Backends.AST
