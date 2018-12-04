@@ -14,11 +14,11 @@ code generators for several target languages, and runtimes for these languages.
     * [typescript][]
 * [install][] - installation instructions
 
-[introduction]:doc/introduction.md
-[language]:doc/language.md
-[compiler]:doc/compiler.md
-[serialization]:doc/serialization.md
-[install]:doc/install.md
-[haskell]:doc/backend-haskell.md
-[typescript]:doc/backend-typescript.md
-[java]:doc/backend-java.md
+[introduction]:docs/introduction.md
+[language]:docs/language.md
+[compiler]:docs/compiler.md
+[serialization]:docs/serialization.md
+[install]:docs/install.md
+[haskell]:docs/backend-haskell.md
+[typescript]:docs/backend-typescript.md
+[java]:docs/backend-java.md
