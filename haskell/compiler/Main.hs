@@ -207,6 +207,7 @@ runTypescript args = do
     flags0 libDir = TS.TypescriptFlags {
       TS.tsLibDir=libDir,
       TS.tsIncludeRuntime=False,
+      TS.tsIncludeResolver=False,
       TS.tsExcludeAst=False,
       TS.tsRuntimeDir=""
     }
@@ -214,6 +215,7 @@ runTypescript args = do
     optDescs =
       standardOptions <>
       [ tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeRuntime=True}))
+      , tsIncludeResolverOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeResolver=True}))
       , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{TS.tsExcludeAst=True}))
       , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{TS.tsRuntimeDir=path}))
       ]
@@ -222,6 +224,11 @@ runTypescript args = do
       Option "" ["include-rt"]
         (NoArg ufn)
         "Generate the runtime code"
+
+    tsIncludeResolverOption ufn =
+      Option "" ["include-resolver"]
+        (NoArg ufn)
+        "Generate the resolver map for all generated adl files"
 
     tsExcludeAstOption ufn =
       Option "" ["exclude-ast"]

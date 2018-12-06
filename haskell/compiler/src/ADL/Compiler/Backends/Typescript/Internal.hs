@@ -33,6 +33,7 @@ import System.FilePath(joinPath)
 data TypescriptFlags = TypescriptFlags {
   tsLibDir :: FilePath,
   tsIncludeRuntime :: Bool,
+  tsIncludeResolver :: Bool,
   tsExcludeAst :: Bool,
   tsRuntimeDir :: FilePath
 }
@@ -529,8 +530,11 @@ getCustomType _ _ = Nothing
 moduleFilePath  :: [Ident] -> FilePath
 moduleFilePath path = joinPath (map T.unpack path)
 
+genCode :: Code -> LBS.ByteString
+genCode code = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText Nothing code)))
+
 genModuleCode :: T.Text -> ModuleFile -> LBS.ByteString
-genModuleCode cmd mf = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText Nothing code)))
+genModuleCode cmd mf = genCode code
   where
     code
       =  ctemplate "/* $1generated from adl module $2 */" ["@", formatText (mfModuleName mf)]

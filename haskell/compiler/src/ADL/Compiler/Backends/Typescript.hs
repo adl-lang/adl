@@ -41,11 +41,13 @@ import           ADL.Compiler.DataFiles
 -- for validity, and then generate the code for it.
 generate :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af tf fileWriter modulePaths = catchAllExceptions  $ do
-  for_ modulePaths $ \modulePath -> do
+  ms <- for modulePaths $ \modulePath -> do
     m <- loadAndCheckModule af modulePath
     let m' = fullyScopedModule m
     when (generateCode (m_annotations m')) (generateModule tf fileWriter m')
+    return m'
   when (tsIncludeRuntime tf) (generateRuntime af tf fileWriter modulePaths)
+  when (tsIncludeResolver tf) (generateResolver af tf fileWriter ms)
 
 -- JS.generate af (JS.JavascriptFlags {}) fileWriter
 generateRuntime :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
@@ -56,6 +58,22 @@ generateRuntime af tf fileWriter modulePaths = do
       fileWriter (tsRuntimeDir tf </> inpath) content
     where
       runtimeLibDir = typescriptRuntimeDir (tsLibDir tf)
+
+generateResolver :: AdlFlags -> TypescriptFlags -> FileWriter -> [RModule] -> EIOT ()
+generateResolver af tf fileWriter ms = do
+  liftIO $ fileWriter "resolver.ts" (genCode code)
+  where
+    code
+      =  ctemplate "import { declResolver, ScopedDecl } from \"./$1/adl\";" [T.pack (tsRuntimeDir tf)]
+      <> mconcat [ctemplate "import { _AST_MAP as $1 } from \"./$2\";" [moduleNameText m, modulePathText m] | m <- ms]
+      <> cline ""
+      <> cline "export const ADL: { [key: string]: ScopedDecl } = {"
+      <> mconcat [ctemplate "  ...$1," [moduleNameText m] | m <- ms]
+      <> cline "};"
+      <> cline ""
+      <> cline "export const RESOLVER = declResolver(ADL);"
+    moduleNameText m = T.intercalate "_" (unModuleName (m_name m))
+    modulePathText m = T.intercalate "/" (unModuleName (m_name m))
 
 -- | Generate and the typescript code for a single ADL module, and
 -- save the resulting code to the apppropriate file

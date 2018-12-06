@@ -157,7 +157,8 @@ runTsBackend ipaths mpaths epath = do
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
       js = TS.TypescriptFlags {
         TS.tsIncludeRuntime=False,
-        TS.tsRuntimeDir=tempDir </> "runtime",
+        TS.tsIncludeResolver=True,
+        TS.tsRuntimeDir="runtime",
         TS.tsLibDir="../../../haskell/compiler/lib",
         TS.tsExcludeAst=False
       }
