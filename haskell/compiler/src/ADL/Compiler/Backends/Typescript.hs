@@ -63,12 +63,13 @@ generateResolver :: AdlFlags -> TypescriptFlags -> FileWriter -> [RModule] -> EI
 generateResolver af tf fileWriter ms = do
   liftIO $ fileWriter "resolver.ts" (genCode code)
   where
+    gms = filter (generateCode . m_annotations) ms
     code
       =  ctemplate "import { declResolver, ScopedDecl } from \"./$1/adl\";" [T.pack (tsRuntimeDir tf)]
-      <> mconcat [ctemplate "import { _AST_MAP as $1 } from \"./$2\";" [moduleNameText m, modulePathText m] | m <- ms]
+      <> mconcat [ctemplate "import { _AST_MAP as $1 } from \"./$2\";" [moduleNameText m, modulePathText m] | m <- gms]
       <> cline ""
       <> cline "export const ADL: { [key: string]: ScopedDecl } = {"
-      <> mconcat [ctemplate "  ...$1," [moduleNameText m] | m <- ms]
+      <> mconcat [ctemplate "  ...$1," [moduleNameText m] | m <- gms]
       <> cline "};"
       <> cline ""
       <> cline "export const RESOLVER = declResolver(ADL);"
