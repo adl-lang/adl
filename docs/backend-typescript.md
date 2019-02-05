@@ -9,6 +9,7 @@ Usage: adlc typescript [OPTION...] files...
           --no-overwrite      Don't update files that haven't changed
           --include-rt        Generate the runtime code
           --exclude-ast       Exclude the generated ASTs
+          --excluded-ast-annotations=SCOPEDNAMES  Set the annotations to be excluded from the ast (comma separated, default=sys.annotations.Doc)
   -R DIR  --runtime-dir=DIR   Set the directory where runtime code is written
 ```
 
