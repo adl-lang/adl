@@ -88,9 +88,9 @@ generateModule tf fileWriter m0 = do
       cgp = CodeGenProfile {
         cgp_includeAst = not (tsExcludeAst tf),
 
-        -- Explicitly leave out docstrings from the AST.
-        -- TODO: make this configurable
-        cgp_includeAstAnnotation = (/=) (ScopedName (ModuleName ["sys", "annotations"]) "Doc")
+        cgp_includeAstAnnotation = case tsExcludedAstAnnotations tf of
+            Nothing  -> (/=) (ScopedName (ModuleName ["sys", "annotations"]) "Doc")
+            (Just sns) -> (\sn -> sn `notElem` sns)
       }
       mf = execState (genModule m) (emptyModuleFile (m_name m) cgp)
   liftIO $ fileWriter (moduleFilePath (unModuleName moduleName) <.> "ts") (genModuleCode "adlc" mf)

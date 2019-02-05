@@ -35,6 +35,7 @@ data TypescriptFlags = TypescriptFlags {
   tsIncludeRuntime :: Bool,
   tsIncludeResolver :: Bool,
   tsExcludeAst :: Bool,
+  tsExcludedAstAnnotations :: Maybe [ScopedName],
   tsRuntimeDir :: FilePath
 }
 

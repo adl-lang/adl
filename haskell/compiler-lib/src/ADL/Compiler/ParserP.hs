@@ -269,6 +269,9 @@ parseInt = pread reads <* whiteSpace P.<?> "number"
 parseDouble :: P.Parser Double
 parseDouble = pread reads <* whiteSpace P.<?> "number"
 
+parseScopedNameList :: P.Parser [ScopedName]
+parseScopedNameList = (P.sepBy scopedName (ctoken ','))
+
 ----------------------------------------------------------------------
 
 
@@ -281,5 +284,5 @@ fromFile p fpath = do
     bs <- BS.readFile fpath
     return (P.parse p fpath (T.decodeUtf8 bs))
 
-fromString :: P.Parser a -> FilePath -> Either P.ParseError a
+fromString :: P.Parser a -> String -> Either P.ParseError a
 fromString p s = P.parse p "string" (T.pack s)

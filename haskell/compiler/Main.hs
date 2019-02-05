@@ -11,10 +11,12 @@ import qualified ADL.Compiler.Backends.Typescript as TS
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Paths_adl_compiler as P
+import qualified ADL.Compiler.ParserP as PP
 
 import ADL.Compiler.DataFiles
 import ADL.Compiler.EIO
 import ADL.Compiler.Flags
+import ADL.Compiler.AST
 import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
 import ADL.Compiler.Utils
 import Control.Monad.Trans
@@ -209,6 +211,7 @@ runTypescript args = do
       TS.tsIncludeRuntime=False,
       TS.tsIncludeResolver=False,
       TS.tsExcludeAst=False,
+      TS.tsExcludedAstAnnotations=Nothing,
       TS.tsRuntimeDir=""
     }
 
@@ -217,6 +220,7 @@ runTypescript args = do
       [ tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeRuntime=True}))
       , tsIncludeResolverOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeResolver=True}))
       , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{TS.tsExcludeAst=True}))
+      , tsExcludedAstAnnotationsOption (\s -> updateBackendFlags (\tsf ->tsf{TS.tsExcludedAstAnnotations=Just (parseScopedNames s)}))
       , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{TS.tsRuntimeDir=path}))
       ]
 
@@ -235,10 +239,20 @@ runTypescript args = do
         (NoArg ufn)
         "Exclude the generated ASTs"
 
+    tsExcludedAstAnnotationsOption ufn =
+      Option "" ["excluded-ast-annotations"]
+        (ReqArg ufn "SCOPEDNAMES")
+        "Set the annotations to be excluded from the ast (comma separated, default=sys.annotations.Doc)"
+
     tsRuntimeDirectoryOption ufn =
       Option "R" ["runtime-dir"]
         (ReqArg ufn "DIR")
         "Set the directory where runtime code is written"
+
+    parseScopedNames :: String -> [ScopedName]
+    parseScopedNames s = case PP.fromString (PP.parseScopedNameList) s of
+      Left e -> error "Unable to parse scoped names"
+      Right sns -> sns
 
 runShow args0 =
   case args0 of
