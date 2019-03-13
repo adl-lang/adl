@@ -229,7 +229,7 @@ export type Import = Import_ModuleName | Import_ScopedName;
 export interface Module {
   name: ModuleName;
   imports: Import[];
-  decls: sys_types.Map<Ident, Decl>;
+  decls: {[key: string]: Decl};
   annotations: Annotations;
 }
 
@@ -237,7 +237,7 @@ export function makeModule(
   input: {
     name: ModuleName,
     imports: Import[],
-    decls: sys_types.Map<Ident, Decl>,
+    decls: {[key: string]: Decl},
     annotations: Annotations,
   }
 ): Module {

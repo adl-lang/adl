@@ -24,6 +24,7 @@ import Control.Applicative( (<$>), (<*>), (<|>) )
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
+import qualified Data.Map as M
 import qualified Data.Proxy
 import qualified Data.Text as T
 import qualified Data.Word
@@ -137,12 +138,12 @@ instance AdlValue Import where
 data Module = Module
     { module_name :: ModuleName
     , module_imports :: [Import]
-    , module_decls :: (ADL.Sys.Types.Map Ident Decl)
+    , module_decls :: StringMap (Decl)
     , module_annotations :: Annotations
     }
     deriving (Prelude.Eq,Prelude.Show)
 
-mkModule :: ModuleName -> [Import] -> (ADL.Sys.Types.Map Ident Decl) -> Annotations -> Module
+mkModule :: ModuleName -> [Import] -> StringMap (Decl) -> Annotations -> Module
 mkModule name imports decls annotations = Module name imports decls annotations
 
 instance AdlValue Module where

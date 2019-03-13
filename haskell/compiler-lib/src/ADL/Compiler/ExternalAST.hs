@@ -12,6 +12,8 @@ import qualified Data.Aeson as JSON
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Scientific as S
+import qualified ADL.Core.StringMap as SM
+
 import Data.Text.Lazy.Builder
 
 import Control.Monad
@@ -34,7 +36,7 @@ moduleToA2 m = A2.Module name imports decls annotations
   where
     name = moduleNameToA2 (m_name m)
     imports = map importToA2 (m_imports m)
-    decls = Map.map declToA2 (m_decls m)
+    decls = SM.StringMap (Map.map declToA2 (m_decls m))
     annotations = annotationsToA2 (m_annotations m)
 
 importToA2 :: Import -> A2.Import

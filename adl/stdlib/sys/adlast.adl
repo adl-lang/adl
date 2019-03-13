@@ -97,7 +97,7 @@ struct Module
 {
     ModuleName name;
     Vector<Import> imports;
-    Map<Ident,Decl> decls;
+    StringMap<Decl> decls;
     Annotations annotations;
 };
 
