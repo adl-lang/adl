@@ -160,7 +160,8 @@ runTsBackend ipaths mpaths epath = do
         TS.tsIncludeResolver=True,
         TS.tsRuntimeDir="runtime",
         TS.tsLibDir="../../../haskell/compiler/lib",
-        TS.tsExcludeAst=False
+        TS.tsExcludeAst=False,
+        TS.tsExcludedAstAnnotations=Nothing
       }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
   er <- unEIO $ TS.generate af js fileWriter mpaths
