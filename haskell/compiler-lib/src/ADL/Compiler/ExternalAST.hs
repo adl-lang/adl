@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Compiler.ExternalAST(
+  moduleNameToA2,
   moduleToA2,
   declToA2,
   ) where

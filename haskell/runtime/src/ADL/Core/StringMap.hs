@@ -7,7 +7,8 @@ module ADL.Core.StringMap(
   delete,
   lookup,
   elems,
-  empty
+  empty,
+  singleton
 ) where
 
 -- Newtype wrapper around a map with Text keys
@@ -28,7 +29,7 @@ newtype StringMap a = StringMap {toMap :: M.Map T.Text a}
 
 instance Monoid (StringMap a) where
   mempty = StringMap mempty
-  mappend (StringMap m1) (StringMap m2) = mempty
+  mappend (StringMap m1) (StringMap m2) = StringMap (mappend m1 m2)
 
 instance forall a . (AdlValue a) => AdlValue (StringMap a) where
   atype _ = T.concat ["StringMap<",atype (Proxy :: Proxy a),">"]
@@ -39,6 +40,9 @@ instance forall a . (AdlValue a) => AdlValue (StringMap a) where
   jsonParser = withJsonObject $ \ctx hm ->
     let parse (k,jv) = (\jv -> (k,jv)) <$> runJsonParser jsonParser (ParseField k:ctx) jv
     in (StringMap . M.fromList) <$> traverse parse (HM.toList hm)
+
+singleton :: T.Text -> a -> StringMap a
+singleton key value = StringMap (M.singleton key value)
 
 lookup :: T.Text -> StringMap a -> Maybe a
 lookup key (StringMap map) = M.lookup key map

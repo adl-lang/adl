@@ -52,6 +52,11 @@ includeRuntimePackageOption ufn =
     (NoArg ufn)
     "Generate the runtime code"
 
+astCombinedOutputFile ufn =
+  Option "" ["combined-output"]
+    (ReqArg ufn "OUTFILE")
+    "The json file to which all adl modules will be written"
+
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
@@ -68,18 +73,22 @@ runVerify args0 =
       , mergeFileExtensionOption addToMergeFileExtensions
       ]
 
-runAst args0 =
-  case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> do
-      libDir <- liftIO $ getLibDir
-      let af = stdAdlFlags libDir ["adl-hs"]
-      let flags = buildFlags af () opts
-      A.generate (f_adl flags) (writeOutputFile (f_output flags)) args
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
+runAst args = do
+  libDir <- liftIO $ getLibDir
+  let af = stdAdlFlags libDir []
+  (flags,paths) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
+  A.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
   where
     header = "Usage: adlc ast [OPTION...] files..."
 
-    optDescs = standardOptions
+    flags0 libDir = A.AstFlags {
+      A.astf_combinedModuleFile = Nothing
+    }
+
+    mkOptDescs libDir =
+      standardOptions <> [
+        astCombinedOutputFile (\f -> updateBackendFlags (\astf -> astf{A.astf_combinedModuleFile=Just f}))
+      ]
 
 
 runHaskell args = do
