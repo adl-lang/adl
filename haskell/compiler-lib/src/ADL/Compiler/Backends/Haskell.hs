@@ -38,7 +38,7 @@ import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
 import ADL.Utils.FileDiff(dirContents)
 
-newtype HaskellModule = HaskellModule T.Text
+newtype HaskellModule = HaskellModule {unHaskellModule :: T.Text}
   deriving Show
 
 instance Format HaskellModule where
@@ -246,6 +246,11 @@ hTypeExprB m (TypeExpr rt []) = hTypeExprB1 m rt
 hTypeExprB m (TypeExpr (RT_Primitive P_Vector) [te]) = do
   argt <- hTypeExprB m te
   return (template "[$1]" [argt])
+hTypeExprB m (TypeExpr (RT_Primitive P_Nullable) [te]) = do
+  argt <- hTypeExprB m te
+  nmod <- nullableModule
+  importQualifiedModule nmod
+  return (template "$1.Nullable ($2)" [unHaskellModule nmod, argt])
 hTypeExprB m (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   argt <- hTypeExprB m te
   importMap
@@ -256,7 +261,6 @@ hTypeExprB m (TypeExpr (RT_Primitive P_Nullable) [te]) = do
   importMap
   importText
   return (template "Prelude.Maybe ($1)" [argt])
-
 hTypeExprB m (TypeExpr c args) = do
   ct <- hTypeExprB1 m c
   argst <- mapM (hTypeExprB m) args
@@ -297,6 +301,11 @@ hInstanceHeader klass sname tps =
     constraints = T.intercalate ", " [template "$1 $2" [klass, hTypeParamName tp]
                                      | tp <- tps ]
 
+
+nullableModule :: HGen HaskellModule
+nullableModule = do
+  ms <- get
+  return (HaskellModule (ms_runtimePackage ms <> ".Nullable"))
 
 enableScopedTypeVariables :: [Ident] -> HGen ()
 enableScopedTypeVariables [] = return ()
@@ -560,10 +569,13 @@ generateLiteral te v =  generateLV Map.empty te v
           return (template "(\"$1\", $2)" [k,v])
     generateStringMap m te _ = error "BUG: stringmap literal requires a json object"
 
-    generateNullable m te JS.Null = return "Prelude.Nothing"
+    generateNullable m te JS.Null = do
+      nmod <- nullableModule
+      return (template "($1.null)" [unHaskellModule nmod])
     generateNullable m te js = do
+      nmod <- nullableModule
       v <- generateLV m te js
-      return (template "(Prelude.Just $1)" [v])
+      return (template "($1.from ($2))" [unHaskellModule nmod, v])
 
     generateStruct m te0 d s tes (JS.Object hm) = do
       fields <- forM (s_fields s) $ \f -> do

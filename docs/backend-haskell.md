@@ -85,18 +85,18 @@ class AdlValue a where
 
 The ADL primitive types are mapped to haskell types as follows:
 
-| ADL Type                     | Haskell Type                 |
-|------------------------------|------------------------------|
-| `Int8,Int16,Int32,Int64`     | `Int8,Int16,Int32,Int64`     |
-| `Word8,Word16,Word32,Word64` | `Word8,Word16,Word32,Word64` |
-| `Bool`                       | `Bool`                       |
-| `Void`                       | `()`                         |
-| `Float,Double`               | `Float,Double`               |
-| `String`                     | `Data.Text`                  |
-| `ByteVector`                 | `Data.ByteString`            |
-| `Vector<T>`                  | `[t]`                        |
-| `StringMap<T>`               | `Data.Map Data.Text t`       |
-| `Nullable<T>`                | `Maybe t`                    |
+| ADL Type                     | Haskell Type                   |
+|------------------------------|--------------------------------|
+| `Int8,Int16,Int32,Int64`     | `Int8,Int16,Int32,Int64`       |
+| `Word8,Word16,Word32,Word64` | `Word8,Word16,Word32,Word64`   |
+| `Bool`                       | `Bool`                         |
+| `Void`                       | `()`                           |
+| `Float,Double`               | `Float,Double`                 |
+| `String`                     | `Data.Text`                    |
+| `ByteVector`                 | `Data.ByteString`              |
+| `Vector<T>`                  | `[t]`                          |
+| `StringMap<T>`               | `Data.Map Data.Text t`         |
+| `Nullable<T>`                | `Adl.Core.Nullable.Nullable t` |
 
 # Runtime
 
