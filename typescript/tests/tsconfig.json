@@ -16,7 +16,7 @@
         "strictNullChecks": true,
         "suppressImplicitAnyIndexErrors": true,
         "noUnusedLocals": false,
-        "noUnusedParameters": true
+        "noUnusedParameters": false
     },
     "exclude": [
         "node_modules",
