@@ -697,7 +697,7 @@ Module::Module()
 Module::Module(
     const ModuleName & name_,
     const std::vector<Import>  & imports_,
-    const std::map<Ident,Decl>  & decls_,
+    const std::map<std::string,Decl> & decls_,
     const Annotations & annotations_
     )
     : name(name_)
@@ -1340,14 +1340,14 @@ Serialisable<ADL::sys::adlast::Module>::serialiser( const SerialiserFlags &sf )
         S_( const SerialiserFlags & sf )
             : name_s( Serialisable<ADL::sys::adlast::ModuleName>::serialiser(sf) )
             , imports_s( Serialisable<std::vector<ADL::sys::adlast::Import> >::serialiser(sf) )
-            , decls_s( Serialisable<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >::serialiser(sf) )
+            , decls_s( stringMapSerialiser<ADL::sys::adlast::Decl>(sf) )
             , annotations_s( Serialisable<ADL::sys::adlast::Annotations>::serialiser(sf) )
             {}
         
         
         typename Serialiser<ADL::sys::adlast::ModuleName>::Ptr name_s;
         typename Serialiser<std::vector<ADL::sys::adlast::Import> >::Ptr imports_s;
-        typename Serialiser<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >::Ptr decls_s;
+        typename Serialiser<std::map<std::string,ADL::sys::adlast::Decl>>::Ptr decls_s;
         typename Serialiser<ADL::sys::adlast::Annotations>::Ptr annotations_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
@@ -1355,7 +1355,7 @@ Serialisable<ADL::sys::adlast::Module>::serialiser( const SerialiserFlags &sf )
             json.startObject();
             writeField<ADL::sys::adlast::ModuleName>( json, name_s, "name", v.name );
             writeField<std::vector<ADL::sys::adlast::Import> >( json, imports_s, "imports", v.imports );
-            writeField<std::map<ADL::sys::adlast::Ident,ADL::sys::adlast::Decl> >( json, decls_s, "decls", v.decls );
+            writeField<std::map<std::string,ADL::sys::adlast::Decl>>( json, decls_s, "decls", v.decls );
             writeField<ADL::sys::adlast::Annotations>( json, annotations_s, "annotations", v.annotations );
             json.endObject();
         }

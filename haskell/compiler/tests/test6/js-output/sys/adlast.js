@@ -205,7 +205,7 @@ const Module = {
     },
     {
       name : "decls",
-      type : {"args":[{"ref":"sys.adlast.Ident"},{"ref":"sys.adlast.Decl"}],"app":{"ref":"sys.types.Map"}},
+      type : {"args":[{"ref":"sys.adlast.Decl"}],"app":{"primitive":"StringMap"}},
       defaultv : null,
       annotations : [
       ]

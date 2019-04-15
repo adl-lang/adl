@@ -1,169 +1,157 @@
 {
     "annotations": [],
-    "decls": [
-        {
-            "v1": "A",
-            "v2": {
-                "annotations": [
-                    {
-                        "v1": {
-                            "moduleName": "sys.annotations",
-                            "name": "Doc"
-                        },
-                        "v2": "A monomorphic struct\n"
-                    }
-                ],
-                "name": "A",
-                "type_": {
-                    "struct_": {
-                        "fields": [
-                            {
-                                "annotations": [],
-                                "default": "nothing",
-                                "name": "x",
-                                "serializedName": "x",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "Int32"
-                                    }
-                                }
-                            },
-                            {
-                                "annotations": [],
-                                "default": "nothing",
-                                "name": "v",
-                                "serializedName": "v",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "String"
-                                    }
+    "decls": {
+        "A": {
+            "annotations": [
+                {
+                    "v1": {
+                        "moduleName": "sys.annotations",
+                        "name": "Doc"
+                    },
+                    "v2": "A monomorphic struct\n"
+                }
+            ],
+            "name": "A",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "x",
+                            "serializedName": "x",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "Int32"
                                 }
                             }
-                        ],
-                        "typeParams": []
-                    }
-                },
-                "version": "nothing"
-            }
-        },
-        {
-            "v1": "B",
-            "v2": {
-                "annotations": [
-                    {
-                        "v1": {
-                            "moduleName": "sys.annotations",
-                            "name": "Doc"
                         },
-                        "v2": "A polymorphic union\n"
-                    }
-                ],
-                "name": "B",
-                "type_": {
-                    "union_": {
-                        "fields": [
-                            {
-                                "annotations": [],
-                                "default": "nothing",
-                                "name": "x",
-                                "serializedName": "x",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "typeParam": "T"
-                                    }
-                                }
-                            },
-                            {
-                                "annotations": [],
-                                "default": "nothing",
-                                "name": "v",
-                                "serializedName": "v",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "String"
-                                    }
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "v",
+                            "serializedName": "v",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "String"
                                 }
                             }
-                        ],
-                        "typeParams": [
-                            "T"
-                        ]
-                    }
-                },
-                "version": "nothing"
-            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
         },
-        {
-            "v1": "X",
-            "v2": {
-                "annotations": [],
-                "name": "X",
+        "B": {
+            "annotations": [
+                {
+                    "v1": {
+                        "moduleName": "sys.annotations",
+                        "name": "Doc"
+                    },
+                    "v2": "A polymorphic union\n"
+                }
+            ],
+            "name": "B",
+            "type_": {
+                "union_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "x",
+                            "serializedName": "x",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "typeParam": "T"
+                                }
+                            }
+                        },
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "v",
+                            "serializedName": "v",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "String"
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": [
+                        "T"
+                    ]
+                }
+            },
+            "version": "nothing"
+        },
+        "X": {
+            "annotations": [],
+            "name": "X",
+            "type_": {
                 "type_": {
-                    "type_": {
-                        "typeExpr": {
-                            "parameters": [
-                                {
-                                    "parameters": [
-                                        {
-                                            "parameters": [],
-                                            "typeRef": {
-                                                "primitive": "String"
-                                            }
+                    "typeExpr": {
+                        "parameters": [
+                            {
+                                "parameters": [
+                                    {
+                                        "parameters": [],
+                                        "typeRef": {
+                                            "primitive": "String"
                                         }
-                                    ],
-                                    "typeRef": {
-                                        "primitive": "Vector"
                                     }
-                                }
-                            ],
-                            "typeRef": {
-                                "reference": {
-                                    "moduleName": "",
-                                    "name": "B"
+                                ],
+                                "typeRef": {
+                                    "primitive": "Vector"
                                 }
                             }
-                        },
-                        "typeParams": []
-                    }
-                },
-                "version": "nothing"
-            }
+                        ],
+                        "typeRef": {
+                            "reference": {
+                                "moduleName": "",
+                                "name": "B"
+                            }
+                        }
+                    },
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
         },
-        {
-            "v1": "Y",
-            "v2": {
-                "annotations": [],
-                "name": "Y",
-                "type_": {
-                    "newtype_": {
-                        "default": "nothing",
-                        "typeExpr": {
-                            "parameters": [
-                                {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "Float"
-                                    }
-                                }
-                            ],
-                            "typeRef": {
-                                "reference": {
-                                    "moduleName": "",
-                                    "name": "B"
+        "Y": {
+            "annotations": [],
+            "name": "Y",
+            "type_": {
+                "newtype_": {
+                    "default": "nothing",
+                    "typeExpr": {
+                        "parameters": [
+                            {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "Float"
                                 }
                             }
-                        },
-                        "typeParams": []
-                    }
-                },
-                "version": "nothing"
-            }
+                        ],
+                        "typeRef": {
+                            "reference": {
+                                "moduleName": "",
+                                "name": "B"
+                            }
+                        }
+                    },
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
         }
-    ],
+    },
     "imports": [
         {
             "moduleName": "sys.annotations"

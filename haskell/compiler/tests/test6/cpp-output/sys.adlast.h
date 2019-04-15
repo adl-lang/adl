@@ -401,13 +401,13 @@ struct Module
     Module(
         const ModuleName & name,
         const std::vector<Import>  & imports,
-        const std::map<Ident,Decl>  & decls,
+        const std::map<std::string,Decl> & decls,
         const Annotations & annotations
         );
     
     ModuleName name;
     std::vector<Import>  imports;
-    std::map<Ident,Decl>  decls;
+    std::map<std::string,Decl> decls;
     Annotations annotations;
 };
 

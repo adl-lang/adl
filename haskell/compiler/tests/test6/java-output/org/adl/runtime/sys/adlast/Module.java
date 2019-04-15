@@ -36,14 +36,14 @@ public class Module {
   public Module() {
     this.name = "";
     this.imports = new ArrayList<Import>();
-    this.decls = HashMapHelpers.factory(Factories.STRING, Decl.FACTORY).create();
+    this.decls = new HashMap<String, Decl>();
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create();
   }
 
   public Module(Module other) {
     this.name = other.name;
     this.imports = Factories.arrayList(Import.FACTORY).create(other.imports);
-    this.decls = HashMapHelpers.factory(Factories.STRING, Decl.FACTORY).create(other.decls);
+    this.decls = Factories.stringMap(Decl.FACTORY).create(other.decls);
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create(other.annotations);
   }
 
@@ -176,7 +176,7 @@ public class Module {
   public static JsonBinding<Module> jsonBinding() {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<ArrayList<Import>>> imports = new Lazy<>(() -> JsonBindings.arrayList(Import.jsonBinding()));
-    final Lazy<JsonBinding<HashMap<String, Decl>>> decls = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, Decl.jsonBinding()));
+    final Lazy<JsonBinding<HashMap<String, Decl>>> decls = new Lazy<>(() -> JsonBindings.stringMap(Decl.jsonBinding()));
     final Lazy<JsonBinding<HashMap<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
     final Factory<Module> _factory = FACTORY;
 

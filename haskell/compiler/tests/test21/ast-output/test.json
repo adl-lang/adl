@@ -15,204 +15,189 @@
             "v2": "module stuff"
         }
     ],
-    "decls": [
-        {
-            "v1": "Ann1",
-            "v2": {
-                "annotations": [],
-                "name": "Ann1",
+    "decls": {
+        "Ann1": {
+            "annotations": [],
+            "name": "Ann1",
+            "type_": {
                 "type_": {
-                    "type_": {
-                        "typeExpr": {
-                            "parameters": [],
-                            "typeRef": {
-                                "primitive": "Int32"
-                            }
-                        },
-                        "typeParams": []
-                    }
-                },
-                "version": "nothing"
-            }
-        },
-        {
-            "v1": "Ann2",
-            "v2": {
-                "annotations": [],
-                "name": "Ann2",
-                "type_": {
-                    "type_": {
-                        "typeExpr": {
-                            "parameters": [],
-                            "typeRef": {
-                                "primitive": "String"
-                            }
-                        },
-                        "typeParams": []
-                    }
-                },
-                "version": "nothing"
-            }
-        },
-        {
-            "v1": "Ann3",
-            "v2": {
-                "annotations": [],
-                "name": "Ann3",
-                "type_": {
-                    "struct_": {
-                        "fields": [
-                            {
-                                "annotations": [],
-                                "default": "nothing",
-                                "name": "f1",
-                                "serializedName": "f1",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "String"
-                                    }
-                                }
-                            },
-                            {
-                                "annotations": [],
-                                "default": "nothing",
-                                "name": "f2",
-                                "serializedName": "f2",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "String"
-                                    }
-                                }
-                            }
-                        ],
-                        "typeParams": []
-                    }
-                },
-                "version": "nothing"
-            }
-        },
-        {
-            "v1": "Ann4",
-            "v2": {
-                "annotations": [],
-                "name": "Ann4",
-                "type_": {
-                    "type_": {
-                        "typeExpr": {
-                            "parameters": [],
-                            "typeRef": {
-                                "primitive": "Void"
-                            }
-                        },
-                        "typeParams": []
-                    }
-                },
-                "version": "nothing"
-            }
-        },
-        {
-            "v1": "MyStruct",
-            "v2": {
-                "annotations": [
-                    {
-                        "v1": {
-                            "moduleName": "",
-                            "name": "Ann1"
-                        },
-                        "v2": 42
+                    "typeExpr": {
+                        "parameters": [],
+                        "typeRef": {
+                            "primitive": "Int32"
+                        }
                     },
-                    {
-                        "v1": {
-                            "moduleName": "",
-                            "name": "Ann2"
-                        },
-                        "v2": "asdfa"
-                    }
-                ],
-                "name": "MyStruct",
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        },
+        "Ann2": {
+            "annotations": [],
+            "name": "Ann2",
+            "type_": {
                 "type_": {
-                    "struct_": {
-                        "fields": [
-                            {
-                                "annotations": [
-                                    {
-                                        "v1": {
-                                            "moduleName": "sys.annotations",
-                                            "name": "Doc"
-                                        },
-                                        "v2": "The X coordinate\n"
-                                    }
-                                ],
-                                "default": "nothing",
-                                "name": "x",
-                                "serializedName": "x",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "Int32"
-                                    }
-                                }
-                            },
-                            {
-                                "annotations": [
-                                    {
-                                        "v1": {
-                                            "moduleName": "sys.annotations",
-                                            "name": "Doc"
-                                        },
-                                        "v2": "The Y coordinate\n"
-                                    }
-                                ],
-                                "default": "nothing",
-                                "name": "y",
-                                "serializedName": "y",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "Int32"
-                                    }
-                                }
-                            },
-                            {
-                                "annotations": [
-                                    {
-                                        "v1": {
-                                            "moduleName": "",
-                                            "name": "Ann3"
-                                        },
-                                        "v2": {
-                                            "f1": "a",
-                                            "f2": "b"
-                                        }
-                                    },
-                                    {
-                                        "v1": {
-                                            "moduleName": "",
-                                            "name": "Ann4"
-                                        },
-                                        "v2": null
-                                    }
-                                ],
-                                "default": "nothing",
-                                "name": "name",
-                                "serializedName": "name",
-                                "typeExpr": {
-                                    "parameters": [],
-                                    "typeRef": {
-                                        "primitive": "String"
-                                    }
+                    "typeExpr": {
+                        "parameters": [],
+                        "typeRef": {
+                            "primitive": "String"
+                        }
+                    },
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        },
+        "Ann3": {
+            "annotations": [],
+            "name": "Ann3",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "f1",
+                            "serializedName": "f1",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "String"
                                 }
                             }
-                        ],
-                        "typeParams": []
-                    }
+                        },
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "f2",
+                            "serializedName": "f2",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "String"
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        },
+        "Ann4": {
+            "annotations": [],
+            "name": "Ann4",
+            "type_": {
+                "type_": {
+                    "typeExpr": {
+                        "parameters": [],
+                        "typeRef": {
+                            "primitive": "Void"
+                        }
+                    },
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        },
+        "MyStruct": {
+            "annotations": [
+                {
+                    "v1": {
+                        "moduleName": "",
+                        "name": "Ann1"
+                    },
+                    "v2": 42
                 },
-                "version": "nothing"
-            }
+                {
+                    "v1": {
+                        "moduleName": "",
+                        "name": "Ann2"
+                    },
+                    "v2": "asdfa"
+                }
+            ],
+            "name": "MyStruct",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [
+                                {
+                                    "v1": {
+                                        "moduleName": "sys.annotations",
+                                        "name": "Doc"
+                                    },
+                                    "v2": "The X coordinate\n"
+                                }
+                            ],
+                            "default": "nothing",
+                            "name": "x",
+                            "serializedName": "x",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "Int32"
+                                }
+                            }
+                        },
+                        {
+                            "annotations": [
+                                {
+                                    "v1": {
+                                        "moduleName": "sys.annotations",
+                                        "name": "Doc"
+                                    },
+                                    "v2": "The Y coordinate\n"
+                                }
+                            ],
+                            "default": "nothing",
+                            "name": "y",
+                            "serializedName": "y",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "Int32"
+                                }
+                            }
+                        },
+                        {
+                            "annotations": [
+                                {
+                                    "v1": {
+                                        "moduleName": "",
+                                        "name": "Ann3"
+                                    },
+                                    "v2": {
+                                        "f1": "a",
+                                        "f2": "b"
+                                    }
+                                },
+                                {
+                                    "v1": {
+                                        "moduleName": "",
+                                        "name": "Ann4"
+                                    },
+                                    "v2": null
+                                }
+                            ],
+                            "default": "nothing",
+                            "name": "name",
+                            "serializedName": "name",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "String"
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
         }
-    ],
+    },
     "imports": [
         {
             "moduleName": "sys.annotations"

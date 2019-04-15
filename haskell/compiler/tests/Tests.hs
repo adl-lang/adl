@@ -106,8 +106,9 @@ runAstBackend ipath mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let af = defaultAdlFlags{af_searchPath=ipath,af_mergeFileExtensions=[".ann"]}
+      bf = AST.AstFlags Nothing
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
-  er <- unEIO $ AST.generate af fileWriter mpaths
+  er <- unEIO $ AST.generate af bf fileWriter mpaths
   processCompilerOutput epath tempDir er
 
 runAstBackend1 :: FilePath-> IO CodeGenResult
@@ -286,6 +287,9 @@ runTests = do
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
       collectResults (runCppBackend1 "test20/input/test.adl")
+        `shouldReturn` MatchOutput
+    it "Generates the correct code for the picture demo" $ do
+      collectResults (runCppBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput
 
   describe "adlc java backend" $ do
