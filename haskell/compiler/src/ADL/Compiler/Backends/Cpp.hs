@@ -996,7 +996,7 @@ generateCustomType n d ct = do
   write ifile $ wl ""
   case ct_generateOrigADLType ct of
     Nothing -> do
-      write ifile $ wt "// $1 excluded due to custom definition" [n]
+      write ifile $ wt "// $1 has custom definition" [n]
     Just i -> do
       write ifile $ wt "// $1 generated as $2 due to custom definition" [n,i]
       write ifile $ wl ""

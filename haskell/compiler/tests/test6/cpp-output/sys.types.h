@@ -567,17 +567,17 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
     return false;
 }
 
-// Pair excluded due to custom definition
+// Pair has custom definition
 
 template <class A, class B>
 using Pair = std::pair<A,B>;
 
-// Set excluded due to custom definition
+// Set has custom definition
 
 template <class A>
 using Set = std::set<A>;
 
-// Map excluded due to custom definition
+// Map has custom definition
 
 template <class K, class V>
 using Map = std::map<K,V>;
