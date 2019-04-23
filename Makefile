@@ -7,6 +7,9 @@ dist: allhaskell
 allhaskell:
 	(cd haskell && stack build)
 
+docker: dist
+	(cd dist && cp `ls -t adl-*-linux.zip | head -n1` hxadl.zip)
+	(cd dist && docker build -t helixta/hxadl:dev .)
 
 runtime-cpp: .make/built-runtime-cpp
 
