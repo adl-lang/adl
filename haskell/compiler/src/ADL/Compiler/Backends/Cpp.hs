@@ -369,6 +369,12 @@ genTemplateI :: [Ident] -> CodeWriter ()
 genTemplateI [] = wl "inline"
 genTemplateI tps = genTemplate tps
 
+genTemplateTypedefs :: [Ident] -> CodeWriter ()
+genTemplateTypedefs [] = return ()
+genTemplateTypedefs tps = wt "$1"
+                  [T.intercalate "\n" [T.concat ["typedef ",cTypeParamName tp, " ", cTypeParamName tp, "Type;"] | tp <- tps]]
+-- todo: use 'wl' to indent properly
+
 addMarker :: v -> v -> v -> [a] -> [(v,a)]
 addMarker fv v lv as = case add as of
     [] -> []
@@ -492,6 +498,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     dblock $ do
        wt "$1();" [ctname]
        wl ""
+       genTemplateTypedefs (s_typeParams s)
+       wl ""
        when (not isEmpty) $ do
          wt "$1(" [ctname]
          indent $ do
@@ -501,6 +509,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
          wl ""
        forM_ fds $ \fd -> do
            wt "$1 $2;" [fd_typeExpr fd, fd_fieldName fd]
+           wt "typedef $1 $2_type;" [fd_typeExpr fd, fd_fieldName fd]
 
     -- Omit comparison operators
     -- declareOperators ifile (s_typeParams s) ctnameP
@@ -626,6 +635,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wt "~$1();" [ctname]
       wt "$1 & operator=( const $1 & );" [ctnameP]
       wl ""
+      genTemplateTypedefs (u_typeParams u)
+      wl ""
       wl "enum DiscType"
       dblock $
         forM_ (commaSep fds) $ \(fd,sep) -> do
@@ -635,6 +646,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       forM_ fds $ \fd -> do
         when (not $ fd_isVoidType fd) $
           wt "$1 & $2() const;" [(fd_typeExpr fd),fd_unionAccessorName fd]
+        when (not $ fd_isVoidType fd) $
+          wt "typedef $1 $2_type;" [(fd_typeExpr fd),fd_unionAccessorName fd]
       wl ""
       forM_ fds $ \fd -> do
         if fd_isVoidType fd
