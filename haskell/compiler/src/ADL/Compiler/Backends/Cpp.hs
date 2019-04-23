@@ -370,6 +370,13 @@ genTemplateI :: [Ident] -> CodeWriter ()
 genTemplateI [] = wl "inline"
 genTemplateI tps = genTemplate tps
 
+genTemplateTypedefs :: [Ident] -> CodeWriter ()
+genTemplateTypedefs [] = return ()
+genTemplateTypedefs tps = do
+  forM_ tps $ \tp ->
+    wt "typedef $1 $1Type;" [cTypeParamName tp]
+  wl ""
+
 addMarker :: v -> v -> v -> [a] -> [(v,a)]
 addMarker fv v lv as = case add as of
     [] -> []
@@ -491,6 +498,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
     genTemplate (s_typeParams s)
     wt "struct $1" [ctname]
     dblock $ do
+       genTemplateTypedefs (s_typeParams s)
        wt "$1();" [ctname]
        wl ""
        when (not isEmpty) $ do
@@ -617,6 +625,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wl "{"
     wl "public:"
     indent $ do
+      genTemplateTypedefs (u_typeParams u)
       wt "$1();" [ctname]
       forM_ fds $ \fd -> do
         let ctorName = fd_unionConstructorName fd

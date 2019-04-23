@@ -141,6 +141,8 @@ inline std::string & U::f_string() const
 template <class T>
 struct XY
 {
+    typedef T TType;
+    
     XY();
     
     XY(
@@ -195,6 +197,8 @@ operator==( const XY<T> &a, const XY<T> &b )
 template <class T>
 struct B
 {
+    typedef T TType;
+    
     B();
     
     B(
@@ -263,6 +267,8 @@ operator==( const B<T> &a, const B<T> &b )
 template <class T>
 struct S
 {
+    typedef T TType;
+    
     S();
     
     S(

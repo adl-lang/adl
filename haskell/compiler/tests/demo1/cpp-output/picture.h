@@ -138,6 +138,8 @@ bool operator==( const Rectangle &a, const Rectangle &b );
 template <class T>
 struct Translated
 {
+    typedef T TType;
+    
     Translated();
     
     Translated(

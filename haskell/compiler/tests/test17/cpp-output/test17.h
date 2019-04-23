@@ -15,6 +15,9 @@ struct Pair;
 template <class A, class B>
 struct Pair
 {
+    typedef A AType;
+    typedef B BType;
+    
     Pair();
     
     Pair(

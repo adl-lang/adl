@@ -55,6 +55,8 @@ bool operator==( const S2 &a, const S2 &b );
 template <class T>
 struct S3
 {
+    typedef T TType;
+    
     S3();
     
     S3(
@@ -124,6 +126,8 @@ operator==( const S3<T> &a, const S3<T> &b )
 template <class T>
 struct Tree
 {
+    typedef T TType;
+    
     Tree();
     
     Tree(
@@ -180,6 +184,8 @@ using IntTree = Tree<int32_t> ;
 template <class T>
 struct S4
 {
+    typedef T TType;
+    
     S4();
     
     S4(

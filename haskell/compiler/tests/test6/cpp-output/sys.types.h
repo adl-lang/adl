@@ -15,6 +15,9 @@ template <class T1, class T2>
 class Either
 {
 public:
+    typedef T1 T1Type;
+    typedef T2 T2Type;
+    
     Either();
     static Either<T1,T2> mk_left( const T1 & v );
     static Either<T1,T2> mk_right( const T2 & v );
@@ -209,6 +212,8 @@ template <class T>
 class Error
 {
 public:
+    typedef T TType;
+    
     Error();
     static Error<T> mk_value( const T & v );
     static Error<T> mk_error( const std::string & v );
@@ -403,6 +408,8 @@ template <class T>
 class Maybe
 {
 public:
+    typedef T TType;
+    
     Maybe();
     static Maybe<T> mk_nothing();
     static Maybe<T> mk_just( const T & v );

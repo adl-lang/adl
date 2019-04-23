@@ -70,6 +70,8 @@ bool operator==( const Int6<X> &a, const Int6<X> &b ) { return a.value == b.valu
 template <class T>
 struct Point
 {
+    typedef T TType;
+    
     Point();
     
     Point(

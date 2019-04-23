@@ -18,6 +18,8 @@ template <class T>
 class List
 {
 public:
+    typedef T TType;
+    
     List();
     static List<T> mk_null_();
     static List<T> mk_cell( const Cell<T>  & v );
@@ -606,6 +608,8 @@ template <class T>
 class U9
 {
 public:
+    typedef T TType;
+    
     U9();
     static U9<T> mk_v1( const T & v );
     static U9<T> mk_v2( const int16_t & v );
@@ -799,6 +803,8 @@ operator==( const U9<T> &a, const U9<T> &b )
 template <class T>
 struct Cell
 {
+    typedef T TType;
+    
     Cell();
     
     Cell(
