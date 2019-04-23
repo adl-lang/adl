@@ -821,9 +821,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     cblock $ do
         wt "typedef $1 _T;" [scopedctnameP]
         wl ""
-        wl "struct S_ : public Serialiser<_T>"
+        wl "struct U_ : public Serialiser<_T>"
         dblock $ do
-            wl "S_( const SerialiserFlags & sf )"
+            wl "U_( const SerialiserFlags & sf )"
             indent $ do
               wl ": sf_(sf)"
               wl "{}"
@@ -879,7 +879,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                   wl "return;"
               wl "throw json_parse_failure();"
         wl ""
-        wl "return typename Serialiser<_T>::Ptr( new S_(sf) );"
+        wl "return typename Serialiser<_T>::Ptr( new U_(sf) );"
 
 generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
   let te = (n_typeExpr nt)

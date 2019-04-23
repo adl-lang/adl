@@ -771,9 +771,9 @@ Serialisable<ADL::sys::adlast::DeclType_>::serialiser( const SerialiserFlags &sf
 {
     typedef ADL::sys::adlast::DeclType_ _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -848,7 +848,7 @@ Serialisable<ADL::sys::adlast::DeclType_>::serialiser( const SerialiserFlags &sf
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 typename Serialiser<ADL::sys::adlast::Import>::Ptr
@@ -856,9 +856,9 @@ Serialisable<ADL::sys::adlast::Import>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::adlast::Import _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -911,7 +911,7 @@ Serialisable<ADL::sys::adlast::Import>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 typename Serialiser<ADL::sys::adlast::Struct_>::Ptr
@@ -958,9 +958,9 @@ Serialisable<ADL::sys::adlast::TypeRef>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::adlast::TypeRef _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -1024,7 +1024,7 @@ Serialisable<ADL::sys::adlast::TypeRef>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 typename Serialiser<ADL::sys::adlast::Union_>::Ptr

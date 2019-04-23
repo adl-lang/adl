@@ -301,9 +301,9 @@ Serialisable<ADL::test17::X2>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test17::X2 _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -411,7 +411,7 @@ Serialisable<ADL::test17::X2>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 typename Serialiser<ADL::test17::X1>::Ptr

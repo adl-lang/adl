@@ -598,9 +598,9 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
 {
     typedef ADL::sys::types::Either<T1,T2> _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -653,7 +653,7 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 template <class T>
@@ -668,9 +668,9 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::types::Error<T> _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -723,7 +723,7 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 template <class T>
@@ -738,9 +738,9 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::types::Maybe<T> _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -800,7 +800,7 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 template <class A,class B>

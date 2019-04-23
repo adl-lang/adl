@@ -299,9 +299,9 @@ Serialisable<ADL::test18::X1>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test18::X1 _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -354,7 +354,7 @@ Serialisable<ADL::test18::X1>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 typename Serialiser<ADL::test18::X2>::Ptr
@@ -401,9 +401,9 @@ Serialisable<ADL::test18::Y1>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::test18::Y1 _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -456,7 +456,7 @@ Serialisable<ADL::test18::Y1>::serialiser( const SerialiserFlags &sf )
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 typename Serialiser<ADL::test18::Y2>::Ptr
