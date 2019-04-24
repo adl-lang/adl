@@ -1,3 +1,4 @@
+// @generated from adl module sys.adlast
 #include "sys.adlast.h"
 
 namespace ADL {

@@ -1,3 +1,4 @@
+// @generated from adl module test
 #ifndef TEST_H
 #define TEST_H
 #include <adl/adl.h>

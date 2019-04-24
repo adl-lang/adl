@@ -1,3 +1,4 @@
+// @generated from adl module test4
 #ifndef TEST4_H
 #define TEST4_H
 #include "Date.h"

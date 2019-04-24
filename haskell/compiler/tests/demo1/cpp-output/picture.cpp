@@ -1,3 +1,4 @@
+// @generated from adl module picture
 #include "picture.h"
 
 namespace ADL {

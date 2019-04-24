@@ -1,3 +1,4 @@
+// @generated from adl module picture
 #ifndef PICTURE_H
 #define PICTURE_H
 #include <adl/adl.h>

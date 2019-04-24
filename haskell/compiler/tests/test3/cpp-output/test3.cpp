@@ -1,3 +1,4 @@
+// @generated from adl module test3
 #include "test3.h"
 
 namespace ADL {

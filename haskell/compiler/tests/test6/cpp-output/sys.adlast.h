@@ -1,3 +1,4 @@
+// @generated from adl module sys.adlast
 #ifndef SYS_ADLAST_H
 #define SYS_ADLAST_H
 #include <adl/adl.h>
