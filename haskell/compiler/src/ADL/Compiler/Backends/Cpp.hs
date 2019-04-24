@@ -1116,17 +1116,17 @@ writeModuleFile mNamespace mIncFile mFile fileWriter m = do
       guard_name = (T.append (T.intercalate "_" (map T.toUpper (unModuleName (m_name m)))) "_H" )
 
       ifileElements = [ms_incFileUserModule s1,ms_incFileSerialisation s1]
-      ifileLines = [ template "#ifndef $1" [guard_name]
+      ifileLines = map T.stripEnd [ T.concat ["// @", "generated"]
+                   , template "#ifndef $1" [guard_name]
                    , template "#define $1" [guard_name]
                    ] ++ fileLines ifileElements ++
-                   [ template "#endif // $1" [guard_name]
-                   ]
+                   [ template "#endif // $1" [guard_name], "\n\n\n\n" ]
 
       cppfileElements = [ms_cppFileUserModule s1,ms_cppFileSerialisation s1]
-      cppfileLines = fileLines cppfileElements
+      cppfileLines = map T.stripEnd [ T.concat ["// @", "generated"] ] ++ fileLines cppfileElements
 
-  liftIO $ fileWriter (mIncFile (m_name m) ++ ".h") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" ifileLines )))
-  liftIO $ fileWriter (mFile (m_name m) ++ ".cpp") (LBS.fromStrict (T.encodeUtf8 (T.intercalate "\n" cppfileLines)))
+  liftIO $ fileWriter (mIncFile (m_name m) ++ ".h") (LBS.fromStrict (T.encodeUtf8 (T.append (T.stripEnd (T.unlines ifileLines) ) "\n" )))
+  liftIO $ fileWriter (mFile (m_name m) ++ ".cpp") (LBS.fromStrict (T.encodeUtf8 (T.append (T.stripEnd (T.unlines cppfileLines)) "\n" )))
 
 data CppFlags = CppFlags {
   -- all include files will be generated and referenced
