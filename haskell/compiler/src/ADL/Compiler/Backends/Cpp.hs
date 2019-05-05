@@ -643,6 +643,20 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
           wt "$1$2" [fd_unionDiscName fd, sep]
       wl ""
       wl "DiscType d() const;"
+      wl ""
+      wl "// act on contents of the union by a functor (visitor) that must have overloads (or template functions) for all the contained types & enum flags"
+      wl "template<class Visitor>"
+      wl "void visit(Visitor vis) const"
+      wl "{"
+      wl "switch (d())"
+      cblock $
+        forM_ fds $ \fd -> do
+          when (not $ fd_isVoidType fd) $
+            wt "case $1: { vis($2(), std::integral_constant<DiscType, $1>()); break;}" [fd_unionDiscName fd, fd_unionAccessorName fd]
+          when (fd_isVoidType fd) $
+            wt "case $1: { vis(std::integral_constant<DiscType, $1>()); break;}" [fd_unionDiscName fd]
+      wl "}"
+      wl ""
       forM_ fds $ \fd -> do
         when (not $ fd_isVoidType fd) $
           wt "$1 & $2() const;" [(fd_typeExpr fd),fd_unionAccessorName fd]
