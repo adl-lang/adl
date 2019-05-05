@@ -35,6 +35,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case NULL_: { vis.null_();}
+        case CELL: { vis.cell(cell()); }
+        }
+    }
+    
     bool is_null_() const { return d_ == NULL_; };
     bool is_cell() const { return d_ == CELL; };
     
@@ -224,6 +235,16 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V: { vis.v();}
+        }
+    }
+    
     bool is_v() const { return d_ == V; };
     
     
@@ -263,6 +284,16 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V: { vis.v(v()); }
+        }
+    }
+    
     bool is_v() const { return d_ == V; };
     
     int16_t & v() const;
@@ -312,6 +343,16 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V: { vis.v(v()); }
+        }
+    }
+    
     bool is_v() const { return d_ == V; };
     
     int16_t & v() const;
@@ -361,6 +402,16 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V: { vis.v(v()); }
+        }
+    }
+    
     bool is_v() const { return d_ == V; };
     
     S1 & v() const;
@@ -410,6 +461,16 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V: { vis.v(v()); }
+        }
+    }
+    
     bool is_v() const { return d_ == V; };
     
     S1 & v() const;
@@ -459,6 +520,16 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V: { vis.v(v()); }
+        }
+    }
+    
     bool is_v() const { return d_ == V; };
     
     U3 & v() const;
@@ -508,6 +579,16 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V: { vis.v(v()); }
+        }
+    }
+    
     bool is_v() const { return d_ == V; };
     
     U3 & v() const;
@@ -559,6 +640,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V1: { vis.v1(v1()); }
+        case V2: { vis.v2(v2()); }
+        }
+    }
+    
     bool is_v1() const { return d_ == V1; };
     bool is_v2() const { return d_ == V2; };
     
@@ -625,6 +717,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V1: { vis.v1(v1()); }
+        case V2: { vis.v2(v2()); }
+        }
+    }
+    
     bool is_v1() const { return d_ == V1; };
     bool is_v2() const { return d_ == V2; };
     

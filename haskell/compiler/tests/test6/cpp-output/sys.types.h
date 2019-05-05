@@ -33,6 +33,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case LEFT: { vis.left(left()); }
+        case RIGHT: { vis.right(right()); }
+        }
+    }
+    
     bool is_left() const { return d_ == LEFT; };
     bool is_right() const { return d_ == RIGHT; };
     
@@ -229,6 +240,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case VALUE: { vis.value(value()); }
+        case ERROR: { vis.error(error()); }
+        }
+    }
+    
     bool is_value() const { return d_ == VALUE; };
     bool is_error() const { return d_ == ERROR; };
     
@@ -425,6 +447,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case NOTHING: { vis.nothing();}
+        case JUST: { vis.just(just()); }
+        }
+    }
+    
     bool is_nothing() const { return d_ == NOTHING; };
     bool is_just() const { return d_ == JUST; };
     

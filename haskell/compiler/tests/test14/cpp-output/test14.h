@@ -59,6 +59,16 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case NULL_: { vis.null_();}
+        }
+    }
+    
     bool is_null_() const { return d_ == NULL_; };
     
     

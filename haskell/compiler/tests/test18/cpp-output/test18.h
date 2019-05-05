@@ -34,6 +34,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case F1: { vis.f1(f1()); }
+        case F2: { vis.f2(f2()); }
+        }
+    }
+    
     bool is_f1() const { return d_ == F1; };
     bool is_f2() const { return d_ == F2; };
     
@@ -113,6 +124,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case F1: { vis.f1(f1()); }
+        case F2: { vis.f2(f2()); }
+        }
+    }
+    
     bool is_f1() const { return d_ == F1; };
     bool is_f2() const { return d_ == F2; };
     

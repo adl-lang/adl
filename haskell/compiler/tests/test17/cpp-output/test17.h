@@ -99,6 +99,22 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case F1: { vis.f1(f1()); }
+        case F2: { vis.f2(f2()); }
+        case F3: { vis.f3(f3()); }
+        case F4: { vis.f4(f4()); }
+        case F5: { vis.f5(f5()); }
+        case F6: { vis.f6(f6()); }
+        case F7: { vis.f7(f7()); }
+        }
+    }
+    
     bool is_f1() const { return d_ == F1; };
     bool is_f2() const { return d_ == F2; };
     bool is_f3() const { return d_ == F3; };

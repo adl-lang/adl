@@ -28,6 +28,18 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case UNDERLING: { vis.underling();}
+        case BOSS: { vis.boss();}
+        case SUPERBOSS: { vis.superBoss();}
+        }
+    }
+    
     bool is_underling() const { return d_ == UNDERLING; };
     bool is_boss() const { return d_ == BOSS; };
     bool is_superBoss() const { return d_ == SUPERBOSS; };

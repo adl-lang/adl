@@ -50,6 +50,19 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case STRUCT_: { vis.struct_(struct_()); }
+        case UNION_: { vis.union_(union_()); }
+        case TYPE_: { vis.type_(type_()); }
+        case NEWTYPE_: { vis.newtype_(newtype_()); }
+        }
+    }
+    
     bool is_struct_() const { return d_ == STRUCT_; };
     bool is_union_() const { return d_ == UNION_; };
     bool is_type_() const { return d_ == TYPE_; };
@@ -141,6 +154,17 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case MODULENAME: { vis.moduleName(moduleName()); }
+        case SCOPEDNAME: { vis.scopedName(scopedName()); }
+        }
+    }
+    
     bool is_moduleName() const { return d_ == MODULENAME; };
     bool is_scopedName() const { return d_ == SCOPEDNAME; };
     
@@ -224,6 +248,18 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case PRIMITIVE: { vis.primitive(primitive()); }
+        case TYPEPARAM: { vis.typeParam(typeParam()); }
+        case REFERENCE: { vis.reference(reference()); }
+        }
+    }
+    
     bool is_primitive() const { return d_ == PRIMITIVE; };
     bool is_typeParam() const { return d_ == TYPEPARAM; };
     bool is_reference() const { return d_ == REFERENCE; };

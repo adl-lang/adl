@@ -50,6 +50,19 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case CIRCLE: { vis.circle(circle()); }
+        case RECTANGLE: { vis.rectangle(rectangle()); }
+        case COMPOSED: { vis.composed(composed()); }
+        case TRANSLATED: { vis.translated(translated()); }
+        }
+    }
+    
     bool is_circle() const { return d_ == CIRCLE; };
     bool is_rectangle() const { return d_ == RECTANGLE; };
     bool is_composed() const { return d_ == COMPOSED; };

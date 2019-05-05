@@ -644,6 +644,20 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
           wt "$1$2" [fd_unionDiscName fd, sep]
       wl ""
       wl "DiscType d() const;"
+      wl ""
+      wl "template<class Visitor>"
+      wl "void visit(Visitor vis) const"
+      cblock $ do
+        wl "switch (d())"
+        wl "{"
+        forM_ fds $ \fd -> do
+          if fd_isVoidType fd
+            then
+              wt "case $1: { vis.$2();}" [fd_unionDiscName fd, fd_unionAccessorName fd]
+            else
+              wt "case $1: { vis.$2($2()); }" [fd_unionDiscName fd, fd_unionAccessorName fd]
+        wl "}"
+      wl ""
       forM_ fds $ \fd -> do
         wt "bool is_$1() const { return d_ == $2; };" [fd_unionAccessorName fd, fd_unionDiscName fd]
       wl ""
