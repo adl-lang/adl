@@ -309,15 +309,13 @@ Serialisable<ADL::picture::Picture>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::picture::Picture::CIRCLE: writeField( json, circle_s(), "circle", v.circle() ); break;
-                case ADL::picture::Picture::RECTANGLE: writeField( json, rectangle_s(), "rectangle", v.rectangle() ); break;
-                case ADL::picture::Picture::COMPOSED: writeField( json, composed_s(), "composed", v.composed() ); break;
-                case ADL::picture::Picture::TRANSLATED: writeField( json, translated_s(), "translated", v.translated() ); break;
+                case ADL::picture::Picture::CIRCLE: json.startObject(); writeField( json, circle_s(), "circle", v.circle() ); json.endObject(); break;
+                case ADL::picture::Picture::RECTANGLE: json.startObject(); writeField( json, rectangle_s(), "rectangle", v.rectangle() ); json.endObject(); break;
+                case ADL::picture::Picture::COMPOSED: json.startObject(); writeField( json, composed_s(), "composed", v.composed() ); json.endObject(); break;
+                case ADL::picture::Picture::TRANSLATED: json.startObject(); writeField( json, translated_s(), "translated", v.translated() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

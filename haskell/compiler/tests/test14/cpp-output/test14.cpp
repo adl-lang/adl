@@ -213,12 +213,10 @@ Serialisable<ADL::test14::unsigned_>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
                 case ADL::test14::unsigned_::NULL_: json.stringV( "null" ); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

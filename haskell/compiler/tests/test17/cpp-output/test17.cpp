@@ -367,18 +367,16 @@ Serialisable<ADL::test17::X2>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test17::X2::F1: writeField( json, f1_s(), "f1", v.f1() ); break;
-                case ADL::test17::X2::F2: writeField( json, f2_s(), "f2", v.f2() ); break;
-                case ADL::test17::X2::F3: writeField( json, f3_s(), "f3", v.f3() ); break;
-                case ADL::test17::X2::F4: writeField( json, f4_s(), "f4", v.f4() ); break;
-                case ADL::test17::X2::F5: writeField( json, f5_s(), "f5", v.f5() ); break;
-                case ADL::test17::X2::F6: writeField( json, f6_s(), "f6", v.f6() ); break;
-                case ADL::test17::X2::F7: writeField( json, f7_s(), "f7", v.f7() ); break;
+                case ADL::test17::X2::F1: json.startObject(); writeField( json, f1_s(), "f1", v.f1() ); json.endObject(); break;
+                case ADL::test17::X2::F2: json.startObject(); writeField( json, f2_s(), "f2", v.f2() ); json.endObject(); break;
+                case ADL::test17::X2::F3: json.startObject(); writeField( json, f3_s(), "f3", v.f3() ); json.endObject(); break;
+                case ADL::test17::X2::F4: json.startObject(); writeField( json, f4_s(), "f4", v.f4() ); json.endObject(); break;
+                case ADL::test17::X2::F5: json.startObject(); writeField( json, f5_s(), "f5", v.f5() ); json.endObject(); break;
+                case ADL::test17::X2::F6: json.startObject(); writeField( json, f6_s(), "f6", v.f6() ); json.endObject(); break;
+                case ADL::test17::X2::F7: json.startObject(); writeField( json, f7_s(), "f7", v.f7() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

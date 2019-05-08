@@ -325,13 +325,11 @@ Serialisable<ADL::test18::X1>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test18::X1::F1: writeField( json, f1_s(), "f1", v.f1() ); break;
-                case ADL::test18::X1::F2: writeField( json, f2_s(), "f2", v.f2() ); break;
+                case ADL::test18::X1::F1: json.startObject(); writeField( json, f1_s(), "f1", v.f1() ); json.endObject(); break;
+                case ADL::test18::X1::F2: json.startObject(); writeField( json, f2_s(), "f2", v.f2() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -429,13 +427,11 @@ Serialisable<ADL::test18::Y1>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test18::Y1::F1: writeField( json, f1_s(), "f1", v.f1() ); break;
-                case ADL::test18::Y1::F2: writeField( json, f2_s(), "f2", v.f2() ); break;
+                case ADL::test18::Y1::F1: json.startObject(); writeField( json, f1_s(), "f1", v.f1() ); json.endObject(); break;
+                case ADL::test18::Y1::F2: json.startObject(); writeField( json, f2_s(), "f2", v.f2() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

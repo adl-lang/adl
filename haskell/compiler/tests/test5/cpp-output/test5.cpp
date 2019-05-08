@@ -815,12 +815,10 @@ Serialisable<ADL::test5::U1>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
                 case ADL::test5::U1::V: json.stringV( "v" ); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -864,12 +862,10 @@ Serialisable<ADL::test5::U2>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U2::V: writeField( json, v_s(), "v", v.v() ); break;
+                case ADL::test5::U2::V: json.startObject(); writeField( json, v_s(), "v", v.v() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -918,12 +914,10 @@ Serialisable<ADL::test5::U3>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U3::V: writeField( json, v_s(), "v", v.v() ); break;
+                case ADL::test5::U3::V: json.startObject(); writeField( json, v_s(), "v", v.v() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -972,12 +966,10 @@ Serialisable<ADL::test5::U4>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U4::V: writeField( json, v_s(), "v", v.v() ); break;
+                case ADL::test5::U4::V: json.startObject(); writeField( json, v_s(), "v", v.v() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -1026,12 +1018,10 @@ Serialisable<ADL::test5::U5>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U5::V: writeField( json, v_s(), "v", v.v() ); break;
+                case ADL::test5::U5::V: json.startObject(); writeField( json, v_s(), "v", v.v() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -1080,12 +1070,10 @@ Serialisable<ADL::test5::U6>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U6::V: writeField( json, v_s(), "v", v.v() ); break;
+                case ADL::test5::U6::V: json.startObject(); writeField( json, v_s(), "v", v.v() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -1134,12 +1122,10 @@ Serialisable<ADL::test5::U7>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U7::V: writeField( json, v_s(), "v", v.v() ); break;
+                case ADL::test5::U7::V: json.startObject(); writeField( json, v_s(), "v", v.v() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -1196,13 +1182,11 @@ Serialisable<ADL::test5::U8>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U8::V1: writeField( json, v1_s(), "v1", v.v1() ); break;
-                case ADL::test5::U8::V2: writeField( json, v2_s(), "v2", v.v2() ); break;
+                case ADL::test5::U8::V1: json.startObject(); writeField( json, v1_s(), "v1", v.v1() ); json.endObject(); break;
+                case ADL::test5::U8::V2: json.startObject(); writeField( json, v2_s(), "v2", v.v2() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

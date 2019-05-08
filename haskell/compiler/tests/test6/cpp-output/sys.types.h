@@ -624,13 +624,11 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, left_s(), "left", v.left() ); break;
-                case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, right_s(), "right", v.right() ); break;
+                case ADL::sys::types::Either<T1,T2>::LEFT: json.startObject(); writeField( json, left_s(), "left", v.left() ); json.endObject(); break;
+                case ADL::sys::types::Either<T1,T2>::RIGHT: json.startObject(); writeField( json, right_s(), "right", v.right() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -696,13 +694,11 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::types::Error<T>::VALUE: writeField( json, value_s(), "value", v.value() ); break;
-                case ADL::sys::types::Error<T>::ERROR: writeField( json, error_s(), "error", v.error() ); break;
+                case ADL::sys::types::Error<T>::VALUE: json.startObject(); writeField( json, value_s(), "value", v.value() ); json.endObject(); break;
+                case ADL::sys::types::Error<T>::ERROR: json.startObject(); writeField( json, error_s(), "error", v.error() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -768,13 +764,11 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
                 case ADL::sys::types::Maybe<T>::NOTHING: json.stringV( "nothing" ); break;
-                case ADL::sys::types::Maybe<T>::JUST: writeField( json, just_s(), "just", v.just() ); break;
+                case ADL::sys::types::Maybe<T>::JUST: json.startObject(); writeField( json, just_s(), "just", v.just() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

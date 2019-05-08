@@ -841,16 +841,13 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
               wl ""
             wl "void toJson( JsonWriter &json, const _T & v ) const"
             cblock $ do
-              wl "json.startObject();"
               wl "switch( v.d() )"
               cblock $ do
                 forM_ fds $ \fd -> do
                   if fd_isVoidType fd
                     then wt "case $1::$2: json.stringV( \"$3\" ); break;" [scopedctnameP,fd_unionDiscName fd,fd_serializedName fd]
-                    else wt "case $1::$2: writeField( json, $3_s(), \"$4\", v.$5() ); break;"
+                    else wt "case $1::$2: json.startObject(); writeField( json, $3_s(), \"$4\", v.$5() ); json.endObject(); break;"
                            [scopedctnameP,fd_unionDiscName fd, f_name (fd_field fd), fd_serializedName fd,fd_unionAccessorName fd]
-
-              wl "json.endObject();"
               return ()
             wl ""
             let (voidfds,nonvoidfds) = L.partition fd_isVoidType fds

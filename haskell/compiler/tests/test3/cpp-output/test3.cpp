@@ -352,13 +352,11 @@ Serialisable<ADL::test3::E>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
                 case ADL::test3::E::V1: json.stringV( "v1" ); break;
                 case ADL::test3::E::V2: json.stringV( "v2" ); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -420,14 +418,12 @@ Serialisable<ADL::test3::U>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test3::U::F_INT: writeField( json, f_int_s(), "f_int", v.f_int() ); break;
-                case ADL::test3::U::F_STRING: writeField( json, f_string_s(), "f_string", v.f_string() ); break;
+                case ADL::test3::U::F_INT: json.startObject(); writeField( json, f_int_s(), "f_int", v.f_int() ); json.endObject(); break;
+                case ADL::test3::U::F_STRING: json.startObject(); writeField( json, f_string_s(), "f_string", v.f_string() ); json.endObject(); break;
                 case ADL::test3::U::F_VOID: json.stringV( "f_void" ); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

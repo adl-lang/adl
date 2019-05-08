@@ -868,13 +868,11 @@ Serialisable<ADL::test5::List<T>>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
                 case ADL::test5::List<T>::NULL_: json.stringV( "null" ); break;
-                case ADL::test5::List<T>::CELL: writeField( json, cell_s(), "cell", v.cell() ); break;
+                case ADL::test5::List<T>::CELL: json.startObject(); writeField( json, cell_s(), "cell", v.cell() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -1001,13 +999,11 @@ Serialisable<ADL::test5::U9<T>>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::test5::U9<T>::V1: writeField( json, v1_s(), "v1", v.v1() ); break;
-                case ADL::test5::U9<T>::V2: writeField( json, v2_s(), "v2", v.v2() ); break;
+                case ADL::test5::U9<T>::V1: json.startObject(); writeField( json, v1_s(), "v1", v.v1() ); json.endObject(); break;
+                case ADL::test5::U9<T>::V2: json.startObject(); writeField( json, v2_s(), "v2", v.v2() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

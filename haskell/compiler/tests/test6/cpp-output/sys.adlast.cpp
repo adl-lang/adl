@@ -813,15 +813,13 @@ Serialisable<ADL::sys::adlast::DeclType_>::serialiser( const SerialiserFlags &sf
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::adlast::DeclType_::STRUCT_: writeField( json, struct__s(), "struct_", v.struct_() ); break;
-                case ADL::sys::adlast::DeclType_::UNION_: writeField( json, union__s(), "union_", v.union_() ); break;
-                case ADL::sys::adlast::DeclType_::TYPE_: writeField( json, type__s(), "type_", v.type_() ); break;
-                case ADL::sys::adlast::DeclType_::NEWTYPE_: writeField( json, newtype__s(), "newtype_", v.newtype_() ); break;
+                case ADL::sys::adlast::DeclType_::STRUCT_: json.startObject(); writeField( json, struct__s(), "struct_", v.struct_() ); json.endObject(); break;
+                case ADL::sys::adlast::DeclType_::UNION_: json.startObject(); writeField( json, union__s(), "union_", v.union_() ); json.endObject(); break;
+                case ADL::sys::adlast::DeclType_::TYPE_: json.startObject(); writeField( json, type__s(), "type_", v.type_() ); json.endObject(); break;
+                case ADL::sys::adlast::DeclType_::NEWTYPE_: json.startObject(); writeField( json, newtype__s(), "newtype_", v.newtype_() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -884,13 +882,11 @@ Serialisable<ADL::sys::adlast::Import>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::adlast::Import::MODULENAME: writeField( json, moduleName_s(), "moduleName", v.moduleName() ); break;
-                case ADL::sys::adlast::Import::SCOPEDNAME: writeField( json, scopedName_s(), "scopedName", v.scopedName() ); break;
+                case ADL::sys::adlast::Import::MODULENAME: json.startObject(); writeField( json, moduleName_s(), "moduleName", v.moduleName() ); json.endObject(); break;
+                case ADL::sys::adlast::Import::SCOPEDNAME: json.startObject(); writeField( json, scopedName_s(), "scopedName", v.scopedName() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
@@ -996,14 +992,12 @@ Serialisable<ADL::sys::adlast::TypeRef>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::adlast::TypeRef::PRIMITIVE: writeField( json, primitive_s(), "primitive", v.primitive() ); break;
-                case ADL::sys::adlast::TypeRef::TYPEPARAM: writeField( json, typeParam_s(), "typeParam", v.typeParam() ); break;
-                case ADL::sys::adlast::TypeRef::REFERENCE: writeField( json, reference_s(), "reference", v.reference() ); break;
+                case ADL::sys::adlast::TypeRef::PRIMITIVE: json.startObject(); writeField( json, primitive_s(), "primitive", v.primitive() ); json.endObject(); break;
+                case ADL::sys::adlast::TypeRef::TYPEPARAM: json.startObject(); writeField( json, typeParam_s(), "typeParam", v.typeParam() ); json.endObject(); break;
+                case ADL::sys::adlast::TypeRef::REFERENCE: json.startObject(); writeField( json, reference_s(), "reference", v.reference() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const

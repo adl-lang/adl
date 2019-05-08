@@ -209,14 +209,12 @@ Serialisable<ADL::test20::Role>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
                 case ADL::test20::Role::UNDERLING: json.stringV( "u" ); break;
                 case ADL::test20::Role::BOSS: json.stringV( "b" ); break;
                 case ADL::test20::Role::SUPERBOSS: json.stringV( "sb" ); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
