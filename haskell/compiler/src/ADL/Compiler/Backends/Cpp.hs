@@ -658,6 +658,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wl "}"
       wl ""
       forM_ fds $ \fd -> do
+        wt "bool is_$1() const { return d_ == $2; };" [fd_unionAccessorName fd, fd_unionDiscName fd]
+      wl ""
+      forM_ fds $ \fd -> do
         when (not $ fd_isVoidType fd) $
           wt "$1 & $2() const;" [(fd_typeExpr fd),fd_unionAccessorName fd]
         when (not $ fd_isVoidType fd) $
