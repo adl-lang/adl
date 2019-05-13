@@ -34,6 +34,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_f1() const { return d_ == F1; };
+    bool is_f2() const { return d_ == F2; };
+    
     double & f1() const;
     Y1 & f2() const;
     
@@ -110,6 +113,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_f1() const { return d_ == F1; };
+    bool is_f2() const { return d_ == F2; };
+    
     std::string & f1() const;
     X1 & f2() const;
     

@@ -59,6 +59,8 @@ public:
     };
     
     DiscType d() const;
+    bool is_null_() const { return d_ == NULL_; };
+    
     
     void set_null_();
     

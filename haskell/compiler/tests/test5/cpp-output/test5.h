@@ -33,6 +33,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_null_() const { return d_ == NULL_; };
+    bool is_cell() const { return d_ == CELL; };
+    
     Cell<T>  & cell() const;
     
     void set_null_();
@@ -219,6 +222,8 @@ public:
     };
     
     DiscType d() const;
+    bool is_v() const { return d_ == V; };
+    
     
     void set_v();
     
@@ -256,6 +261,8 @@ public:
     };
     
     DiscType d() const;
+    bool is_v() const { return d_ == V; };
+    
     int16_t & v() const;
     
     const int16_t & set_v(const int16_t & );
@@ -303,6 +310,8 @@ public:
     };
     
     DiscType d() const;
+    bool is_v() const { return d_ == V; };
+    
     int16_t & v() const;
     
     const int16_t & set_v(const int16_t & );
@@ -350,6 +359,8 @@ public:
     };
     
     DiscType d() const;
+    bool is_v() const { return d_ == V; };
+    
     S1 & v() const;
     
     const S1 & set_v(const S1 & );
@@ -397,6 +408,8 @@ public:
     };
     
     DiscType d() const;
+    bool is_v() const { return d_ == V; };
+    
     S1 & v() const;
     
     const S1 & set_v(const S1 & );
@@ -444,6 +457,8 @@ public:
     };
     
     DiscType d() const;
+    bool is_v() const { return d_ == V; };
+    
     U3 & v() const;
     
     const U3 & set_v(const U3 & );
@@ -491,6 +506,8 @@ public:
     };
     
     DiscType d() const;
+    bool is_v() const { return d_ == V; };
+    
     U3 & v() const;
     
     const U3 & set_v(const U3 & );
@@ -540,6 +557,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_v1() const { return d_ == V1; };
+    bool is_v2() const { return d_ == V2; };
+    
     S1 & v1() const;
     int16_t & v2() const;
     
@@ -601,6 +621,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_v1() const { return d_ == V1; };
+    bool is_v2() const { return d_ == V2; };
+    
     T & v1() const;
     int16_t & v2() const;
     

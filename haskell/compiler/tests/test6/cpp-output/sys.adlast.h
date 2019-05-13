@@ -50,6 +50,11 @@ public:
     };
     
     DiscType d() const;
+    bool is_struct_() const { return d_ == STRUCT_; };
+    bool is_union_() const { return d_ == UNION_; };
+    bool is_type_() const { return d_ == TYPE_; };
+    bool is_newtype_() const { return d_ == NEWTYPE_; };
+    
     Struct_ & struct_() const;
     Union_ & union_() const;
     TypeDef_ & type_() const;
@@ -136,6 +141,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_moduleName() const { return d_ == MODULENAME; };
+    bool is_scopedName() const { return d_ == SCOPEDNAME; };
+    
     std::string & moduleName() const;
     ScopedName & scopedName() const;
     
@@ -216,6 +224,10 @@ public:
     };
     
     DiscType d() const;
+    bool is_primitive() const { return d_ == PRIMITIVE; };
+    bool is_typeParam() const { return d_ == TYPEPARAM; };
+    bool is_reference() const { return d_ == REFERENCE; };
+    
     std::string & primitive() const;
     std::string & typeParam() const;
     ScopedName & reference() const;

@@ -50,6 +50,11 @@ public:
     };
     
     DiscType d() const;
+    bool is_circle() const { return d_ == CIRCLE; };
+    bool is_rectangle() const { return d_ == RECTANGLE; };
+    bool is_composed() const { return d_ == COMPOSED; };
+    bool is_translated() const { return d_ == TRANSLATED; };
+    
     Circle & circle() const;
     Rectangle & rectangle() const;
     std::vector<Picture>  & composed() const;

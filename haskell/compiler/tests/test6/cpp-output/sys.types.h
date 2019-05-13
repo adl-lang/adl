@@ -30,6 +30,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_left() const { return d_ == LEFT; };
+    bool is_right() const { return d_ == RIGHT; };
+    
     T1 & left() const;
     T2 & right() const;
     
@@ -221,6 +224,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_value() const { return d_ == VALUE; };
+    bool is_error() const { return d_ == ERROR; };
+    
     T & value() const;
     std::string & error() const;
     
@@ -412,6 +418,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_nothing() const { return d_ == NOTHING; };
+    bool is_just() const { return d_ == JUST; };
+    
     T & just() const;
     
     void set_nothing();

@@ -28,6 +28,10 @@ public:
     };
     
     DiscType d() const;
+    bool is_underling() const { return d_ == UNDERLING; };
+    bool is_boss() const { return d_ == BOSS; };
+    bool is_superBoss() const { return d_ == SUPERBOSS; };
+    
     
     void set_underling();
     void set_boss();

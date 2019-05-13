@@ -96,6 +96,14 @@ public:
     };
     
     DiscType d() const;
+    bool is_f1() const { return d_ == F1; };
+    bool is_f2() const { return d_ == F2; };
+    bool is_f3() const { return d_ == F3; };
+    bool is_f4() const { return d_ == F4; };
+    bool is_f5() const { return d_ == F5; };
+    bool is_f6() const { return d_ == F6; };
+    bool is_f7() const { return d_ == F7; };
+    
     int32_t & f1() const;
     int32_t & f2() const;
     Pair<std::string,int32_t>  & f3() const;

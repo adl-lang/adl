@@ -46,6 +46,9 @@ public:
     };
     
     DiscType d() const;
+    bool is_v1() const { return d_ == V1; };
+    bool is_v2() const { return d_ == V2; };
+    
     
     void set_v1();
     void set_v2();
@@ -88,6 +91,10 @@ public:
     };
     
     DiscType d() const;
+    bool is_f_int() const { return d_ == F_INT; };
+    bool is_f_string() const { return d_ == F_STRING; };
+    bool is_f_void() const { return d_ == F_VOID; };
+    
     int16_t & f_int() const;
     std::string & f_string() const;
     
