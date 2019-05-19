@@ -121,18 +121,25 @@ runCpp args = do
     header = "Usage: adlc cpp [OPTION...] files..."
 
     flags0 libDir = C.CppFlags {
-      C.cf_incFilePrefix=""
+      C.cf_incFilePrefix="",
+      C.cf_includeRelops=True
       }
 
     optDescs =
       standardOptions <>
       [ includePrefixOption (\s -> updateBackendFlags (\cf -> cf{C.cf_incFilePrefix=s}))
+      , excludeRelopsOption (updateBackendFlags (\cf -> cf{C.cf_includeRelops=False}))
       ]
 
     includePrefixOption ufn =
       Option "" ["include-prefix"]
         (ReqArg ufn "DIR")
         "The prefix to be used to generate/reference include files"
+
+    excludeRelopsOption ufn =
+      Option "" ["exclude-relops"]
+        (NoArg ufn)
+        "Exclude generated code for relational operators"
 
 runJava args = do
   libDir <- liftIO $ getLibDir

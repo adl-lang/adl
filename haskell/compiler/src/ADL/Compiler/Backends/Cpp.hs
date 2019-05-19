@@ -87,7 +87,8 @@ data MState = MState {
    ms_incFileUserModule :: FState,
    ms_incFileSerialisation :: FState,
    ms_cppFileUserModule :: FState,
-   ms_cppFileSerialisation :: FState
+   ms_cppFileSerialisation :: FState,
+   ms_flags :: CppFlags
 }
 
 data CustomType = CustomType {
@@ -502,7 +503,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
        forM_ fds $ \fd -> do
            wt "$1 $2;" [fd_typeExpr fd, fd_fieldName fd]
 
-    declareOperators ifile (s_typeParams s) ctnameP
+
+    when (cf_includeRelops (ms_flags ms)) $ do
+      declareOperators ifile (s_typeParams s) ctnameP
 
   write icfile $ do
     -- Constructors
@@ -527,26 +530,27 @@ generateDecl dn d@(Decl{d_type=(Decl_Struct s)}) = do
       cblock $ return ()
 
     -- Non-inline functions
-    wl ""
-    genTemplate (s_typeParams s)
-    wl "bool"
-    wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
-    cblock $ do
-      forM_ fds $ \fd -> do
-        wt "if( a.$1 < b.$1 ) return true;" [fd_fieldName fd]
-        wt "if( b.$1 < a.$1 ) return false;" [fd_fieldName fd]
-      wl "return false;"
-    wl ""
-    genTemplate (s_typeParams s)
-    wl "bool"
-    wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
-    cblock $ do
-      if isEmpty
-        then wl "return true;"
-        else do
-          wl "return"
-          forM_ (sepWithTerm "&&" ";" fds) $ \(fd,sep) -> do
-            indent $ wt "a.$1 == b.$1 $2" [fd_fieldName fd,sep]
+    when (cf_includeRelops (ms_flags ms)) $ do
+      wl ""
+      genTemplate (s_typeParams s)
+      wl "bool"
+      wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
+      cblock $ do
+        forM_ fds $ \fd -> do
+          wt "if( a.$1 < b.$1 ) return true;" [fd_fieldName fd]
+          wt "if( b.$1 < a.$1 ) return false;" [fd_fieldName fd]
+        wl "return false;"
+      wl ""
+      genTemplate (s_typeParams s)
+      wl "bool"
+      wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
+      cblock $ do
+        if isEmpty
+          then wl "return true;"
+          else do
+            wl "return"
+            forM_ (sepWithTerm "&&" ";" fds) $ \(fd,sep) -> do
+              indent $ wt "a.$1 == b.$1 $2" [fd_fieldName fd,sep]
 
   write ifileS $ do
     declareSerialisation (s_typeParams s) ms ctnameP
@@ -654,7 +658,8 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
       wt "static void *copy( DiscType d, void *v );" [ctnameP]
     wl "};"
 
-    declareOperators ifile (u_typeParams u) ctnameP
+    when (cf_includeRelops (ms_flags ms)) $ do
+      declareOperators ifile (u_typeParams u) ctnameP
 
   write ifile $ do
     wl ""
@@ -779,37 +784,39 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
                  [fd_unionDiscName fd,fd_typeExpr fd]
       wl "return 0;"
     wl ""
-    genTemplate (u_typeParams u)
-    wl "bool"
-    wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
-    cblock $ do
-      wl "if( a.d() < b.d() ) return true;"
-      wl "if( b.d() < a.d()) return false;"
-      wl "switch( a.d() )"
-      cblock $
-        forM_ fds $ \fd -> do
-          if fd_isVoidType fd
-            then wt "case $1::$2: return false;"
-                 [ctnameP,fd_unionDiscName fd]
-            else wt "case $1::$2: return a.$3() < b.$3();"
-                 [ctnameP,fd_unionDiscName fd,fd_unionAccessorName fd]
-      wl "return false;"
 
-    wl ""
-    genTemplate (u_typeParams u)
-    wl "bool"
-    wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
-    cblock $ do
-      wl "if( a.d() != b.d() ) return false;"
-      wl "switch( a.d() )"
-      cblock $
-        forM_ fds $ \fd -> do
-          if fd_isVoidType fd
-            then wt "case $1::$2: return true;"
-                 [ctnameP,fd_unionDiscName fd]
-            else wt "case $1::$2: return a.$3() == b.$3();"
-                 [ctnameP,fd_unionDiscName fd,fd_unionAccessorName fd]
-      wl "return false;"
+    when (cf_includeRelops (ms_flags ms)) $ do
+      genTemplate (u_typeParams u)
+      wl "bool"
+      wt "operator<( const $1 &a, const $1 &b )" [ctnameP]
+      cblock $ do
+        wl "if( a.d() < b.d() ) return true;"
+        wl "if( b.d() < a.d()) return false;"
+        wl "switch( a.d() )"
+        cblock $
+          forM_ fds $ \fd -> do
+            if fd_isVoidType fd
+              then wt "case $1::$2: return false;"
+                   [ctnameP,fd_unionDiscName fd]
+              else wt "case $1::$2: return a.$3() < b.$3();"
+                   [ctnameP,fd_unionDiscName fd,fd_unionAccessorName fd]
+        wl "return false;"
+
+      wl ""
+      genTemplate (u_typeParams u)
+      wl "bool"
+      wt "operator==( const $1 &a, const $1 &b )" [ctnameP]
+      cblock $ do
+        wl "if( a.d() != b.d() ) return false;"
+        wl "switch( a.d() )"
+        cblock $
+          forM_ fds $ \fd -> do
+            if fd_isVoidType fd
+              then wt "case $1::$2: return true;"
+                   [ctnameP,fd_unionDiscName fd]
+              else wt "case $1::$2: return a.$3() == b.$3();"
+                   [ctnameP,fd_unionDiscName fd,fd_unionAccessorName fd]
+        wl "return false;"
 
   write ifileS $ do
     declareSerialisation (u_typeParams u) ms ctnameP
@@ -917,11 +924,13 @@ generateDecl dn d@(Decl{d_type=(Decl_Newtype nt)}) = do
        wt "explicit $1(const $2 & v) : value(v) {}" [ctname,t]
        wl ""
        wt "$1 value;" [t]
-    wl ""
-    genTemplateI tparams
-    wt "bool operator<( const $1 &a, const $1 &b ) { return a.value < b.value; }" [ctnameP]
-    genTemplateI tparams
-    wt "bool operator==( const $1 &a, const $1 &b ) { return a.value == b.value; }" [ctnameP]
+
+    when (cf_includeRelops (ms_flags ms)) $ do
+      wl ""
+      genTemplateI tparams
+      wt "bool operator<( const $1 &a, const $1 &b ) { return a.value < b.value; }" [ctnameP]
+      genTemplateI tparams
+      wt "bool operator==( const $1 &a, const $1 &b ) { return a.value == b.value; }" [ctnameP]
 
   write ifileS $ do
     wl ""
@@ -1095,12 +1104,13 @@ writeModuleFile :: (ModuleName -> CppNamespace) ->
                    (ModuleName -> FilePath) ->
                    (ModuleName -> FilePath) ->
                    (FilePath -> LBS.ByteString -> IO ()) ->
+                   CppFlags ->
                    CModule ->
                    EIO a ()
-writeModuleFile mNamespace mIncFile mFile fileWriter m = do
+writeModuleFile mNamespace mIncFile mFile fileWriter cf m = do
   let fs0 = FState Set.empty  [] (mNamespace (m_name m))
       fs1 = FState Set.empty  [] (CppNamespace ["ADL"])
-      s0 = MState (m_name m) mNamespace mIncFile fs0 fs1 fs0 fs1
+      s0 = MState (m_name m) mNamespace mIncFile fs0 fs1 fs0 fs1 cf
       s1 = execState (generateModule m) s0
       guard_name = (T.append (T.intercalate "_" (map T.toUpper (unModuleName (m_name m)))) "_H" )
 
@@ -1120,7 +1130,8 @@ writeModuleFile mNamespace mIncFile mFile fileWriter m = do
 data CppFlags = CppFlags {
   -- all include files will be generated and referenced
   -- with this path prefix
-  cf_incFilePrefix :: FilePath
+  cf_incFilePrefix :: FilePath,
+  cf_includeRelops :: Bool
   }
 
 
@@ -1173,6 +1184,7 @@ generate af cf fileWriter modulePaths = catchAllExceptions  $ forM_ modulePaths 
                   (incFileGenerator (cf_incFilePrefix cf))
                   fileGenerator
                   fileWriter
+                  cf
                   m
 
 ----------------------------------------------------------------------

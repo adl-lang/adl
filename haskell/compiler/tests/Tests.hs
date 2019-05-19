@@ -89,7 +89,8 @@ runCppBackend ipaths mpaths epath iprefix = do
   tempDir <- createTempDirectory tdir "adl.test."
   let af =  defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-cpp"]}
       cf = CPP.CppFlags {
-        CPP.cf_incFilePrefix = iprefix
+        CPP.cf_incFilePrefix = iprefix,
+        CPP.cf_includeRelops = True
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ CPP.generate af cf fileWriter mpaths
