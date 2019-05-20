@@ -52,8 +52,8 @@ public:
     {
         switch (d())
         {
-        case V1: { vis.v1();}
-        case V2: { vis.v2();}
+        case V1: { vis.v1(); break; }
+        case V2: { vis.v2(); break; }
         }
     }
     
@@ -108,9 +108,9 @@ public:
     {
         switch (d())
         {
-        case F_INT: { vis.f_int(f_int()); }
-        case F_STRING: { vis.f_string(f_string()); }
-        case F_VOID: { vis.f_void();}
+        case F_INT: { vis.f_int(f_int()); break; }
+        case F_STRING: { vis.f_string(f_string()); break; }
+        case F_VOID: { vis.f_void(); break; }
         }
     }
     

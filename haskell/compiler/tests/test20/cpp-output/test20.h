@@ -34,9 +34,9 @@ public:
     {
         switch (d())
         {
-        case UNDERLING: { vis.underling();}
-        case BOSS: { vis.boss();}
-        case SUPERBOSS: { vis.superBoss();}
+        case UNDERLING: { vis.underling(); break; }
+        case BOSS: { vis.boss(); break; }
+        case SUPERBOSS: { vis.superBoss(); break; }
         }
     }
     

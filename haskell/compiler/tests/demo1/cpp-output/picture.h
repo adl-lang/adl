@@ -56,10 +56,10 @@ public:
     {
         switch (d())
         {
-        case CIRCLE: { vis.circle(circle()); }
-        case RECTANGLE: { vis.rectangle(rectangle()); }
-        case COMPOSED: { vis.composed(composed()); }
-        case TRANSLATED: { vis.translated(translated()); }
+        case CIRCLE: { vis.circle(circle()); break; }
+        case RECTANGLE: { vis.rectangle(rectangle()); break; }
+        case COMPOSED: { vis.composed(composed()); break; }
+        case TRANSLATED: { vis.translated(translated()); break; }
         }
     }
     

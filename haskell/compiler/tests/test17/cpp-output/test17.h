@@ -105,13 +105,13 @@ public:
     {
         switch (d())
         {
-        case F1: { vis.f1(f1()); }
-        case F2: { vis.f2(f2()); }
-        case F3: { vis.f3(f3()); }
-        case F4: { vis.f4(f4()); }
-        case F5: { vis.f5(f5()); }
-        case F6: { vis.f6(f6()); }
-        case F7: { vis.f7(f7()); }
+        case F1: { vis.f1(f1()); break; }
+        case F2: { vis.f2(f2()); break; }
+        case F3: { vis.f3(f3()); break; }
+        case F4: { vis.f4(f4()); break; }
+        case F5: { vis.f5(f5()); break; }
+        case F6: { vis.f6(f6()); break; }
+        case F7: { vis.f7(f7()); break; }
         }
     }
     

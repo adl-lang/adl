@@ -40,8 +40,8 @@ public:
     {
         switch (d())
         {
-        case F1: { vis.f1(f1()); }
-        case F2: { vis.f2(f2()); }
+        case F1: { vis.f1(f1()); break; }
+        case F2: { vis.f2(f2()); break; }
         }
     }
     
@@ -130,8 +130,8 @@ public:
     {
         switch (d())
         {
-        case F1: { vis.f1(f1()); }
-        case F2: { vis.f2(f2()); }
+        case F1: { vis.f1(f1()); break; }
+        case F2: { vis.f2(f2()); break; }
         }
     }
     

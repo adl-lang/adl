@@ -41,8 +41,8 @@ public:
     {
         switch (d())
         {
-        case NULL_: { vis.null_();}
-        case CELL: { vis.cell(cell()); }
+        case NULL_: { vis.null_(); break; }
+        case CELL: { vis.cell(cell()); break; }
         }
     }
     
@@ -241,7 +241,7 @@ public:
     {
         switch (d())
         {
-        case V: { vis.v();}
+        case V: { vis.v(); break; }
         }
     }
     
@@ -290,7 +290,7 @@ public:
     {
         switch (d())
         {
-        case V: { vis.v(v()); }
+        case V: { vis.v(v()); break; }
         }
     }
     
@@ -349,7 +349,7 @@ public:
     {
         switch (d())
         {
-        case V: { vis.v(v()); }
+        case V: { vis.v(v()); break; }
         }
     }
     
@@ -408,7 +408,7 @@ public:
     {
         switch (d())
         {
-        case V: { vis.v(v()); }
+        case V: { vis.v(v()); break; }
         }
     }
     
@@ -467,7 +467,7 @@ public:
     {
         switch (d())
         {
-        case V: { vis.v(v()); }
+        case V: { vis.v(v()); break; }
         }
     }
     
@@ -526,7 +526,7 @@ public:
     {
         switch (d())
         {
-        case V: { vis.v(v()); }
+        case V: { vis.v(v()); break; }
         }
     }
     
@@ -585,7 +585,7 @@ public:
     {
         switch (d())
         {
-        case V: { vis.v(v()); }
+        case V: { vis.v(v()); break; }
         }
     }
     
@@ -646,8 +646,8 @@ public:
     {
         switch (d())
         {
-        case V1: { vis.v1(v1()); }
-        case V2: { vis.v2(v2()); }
+        case V1: { vis.v1(v1()); break; }
+        case V2: { vis.v2(v2()); break; }
         }
     }
     
@@ -723,8 +723,8 @@ public:
     {
         switch (d())
         {
-        case V1: { vis.v1(v1()); }
-        case V2: { vis.v2(v2()); }
+        case V1: { vis.v1(v1()); break; }
+        case V2: { vis.v2(v2()); break; }
         }
     }
     

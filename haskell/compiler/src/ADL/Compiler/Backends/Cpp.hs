@@ -653,9 +653,9 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
         forM_ fds $ \fd -> do
           if fd_isVoidType fd
             then
-              wt "case $1: { vis.$2();}" [fd_unionDiscName fd, fd_unionAccessorName fd]
+              wt "case $1: { vis.$2(); break; }" [fd_unionDiscName fd, fd_unionAccessorName fd]
             else
-              wt "case $1: { vis.$2($2()); }" [fd_unionDiscName fd, fd_unionAccessorName fd]
+              wt "case $1: { vis.$2($2()); break; }" [fd_unionDiscName fd, fd_unionAccessorName fd]
         wl "}"
       wl ""
       forM_ fds $ \fd -> do

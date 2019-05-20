@@ -56,10 +56,10 @@ public:
     {
         switch (d())
         {
-        case STRUCT_: { vis.struct_(struct_()); }
-        case UNION_: { vis.union_(union_()); }
-        case TYPE_: { vis.type_(type_()); }
-        case NEWTYPE_: { vis.newtype_(newtype_()); }
+        case STRUCT_: { vis.struct_(struct_()); break; }
+        case UNION_: { vis.union_(union_()); break; }
+        case TYPE_: { vis.type_(type_()); break; }
+        case NEWTYPE_: { vis.newtype_(newtype_()); break; }
         }
     }
     
@@ -160,8 +160,8 @@ public:
     {
         switch (d())
         {
-        case MODULENAME: { vis.moduleName(moduleName()); }
-        case SCOPEDNAME: { vis.scopedName(scopedName()); }
+        case MODULENAME: { vis.moduleName(moduleName()); break; }
+        case SCOPEDNAME: { vis.scopedName(scopedName()); break; }
         }
     }
     
@@ -254,9 +254,9 @@ public:
     {
         switch (d())
         {
-        case PRIMITIVE: { vis.primitive(primitive()); }
-        case TYPEPARAM: { vis.typeParam(typeParam()); }
-        case REFERENCE: { vis.reference(reference()); }
+        case PRIMITIVE: { vis.primitive(primitive()); break; }
+        case TYPEPARAM: { vis.typeParam(typeParam()); break; }
+        case REFERENCE: { vis.reference(reference()); break; }
         }
     }
     

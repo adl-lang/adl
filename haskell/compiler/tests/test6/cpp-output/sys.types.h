@@ -39,8 +39,8 @@ public:
     {
         switch (d())
         {
-        case LEFT: { vis.left(left()); }
-        case RIGHT: { vis.right(right()); }
+        case LEFT: { vis.left(left()); break; }
+        case RIGHT: { vis.right(right()); break; }
         }
     }
     
@@ -246,8 +246,8 @@ public:
     {
         switch (d())
         {
-        case VALUE: { vis.value(value()); }
-        case ERROR: { vis.error(error()); }
+        case VALUE: { vis.value(value()); break; }
+        case ERROR: { vis.error(error()); break; }
         }
     }
     
@@ -453,8 +453,8 @@ public:
     {
         switch (d())
         {
-        case NOTHING: { vis.nothing();}
-        case JUST: { vis.just(just()); }
+        case NOTHING: { vis.nothing(); break; }
+        case JUST: { vis.just(just()); break; }
         }
     }
     

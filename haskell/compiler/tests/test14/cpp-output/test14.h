@@ -65,7 +65,7 @@ public:
     {
         switch (d())
         {
-        case NULL_: { vis.null_();}
+        case NULL_: { vis.null_(); break; }
         }
     }
     
