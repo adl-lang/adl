@@ -5,13 +5,9 @@ import {fromDynamic, toDynamic} from './build/runtime/dynamic'
 import * as example from './build/example'
 import * as sys_types from './build/sys/types'
 import {Dynamic} from './build/sys/dynamic'
+import {RESOLVER} from "./build/resolver";
 
-const dresolver : DeclResolver = declResolver(
-  example._AST_MAP,
-  sys_types._AST_MAP
-);
-
-const personJsonBinding : JsonBinding<example.Person> = createJsonBinding(dresolver,example.texprPerson());
+const personJsonBinding : JsonBinding<example.Person> = createJsonBinding(RESOLVER,example.texprPerson());
 
 const person1 : example.Person = {
   name : "Joe",
@@ -49,7 +45,7 @@ describe('Person Structure', () => {
 
 //----------------------------------------------------------------------
 
-const intTreeJsonBinding : JsonBinding<example.IntTree> = createJsonBinding(dresolver,example.texprIntTree());
+const intTreeJsonBinding : JsonBinding<example.IntTree> = createJsonBinding(RESOLVER,example.texprIntTree());
 
 const tree1 : example.IntTree = {
   value : 7,
@@ -84,7 +80,7 @@ describe('IntTree Recursive Type', () => {
 //----------------------------------------------------------------------
 
 const dataSourceJsonBinding : JsonBinding<example.DataSource>
-  = createJsonBinding(dresolver,example.texprDataSource());
+  = createJsonBinding(RESOLVER,example.texprDataSource());
 
 const dataSource1 : example.DataSource = {
   kind : "implicit"
@@ -136,7 +132,7 @@ describe('DataSource union', () => {
 //----------------------------------------------------------------------
 
 const genderTreeJsonBinding : JsonBinding<example.Tree<example.Gender>>
-    = createJsonBinding(dresolver,example.texprTree(example.texprGender()));
+    = createJsonBinding(RESOLVER,example.texprTree(example.texprGender()));
 
 const gtree1 : example.Tree<example.Gender> = {
   value : example.Gender.female,
@@ -164,7 +160,7 @@ describe('GenderTree Constructed Concrete Type', () => {
 
 //----------------------------------------------------------------------
 const structWithDefaultsJsonBinding : JsonBinding<example.StructWithDefaults>
-    = createJsonBinding(dresolver,example.texprStructWithDefaults());
+    = createJsonBinding(RESOLVER,example.texprStructWithDefaults());
 
 describe('StructWithDefaults', () => {
   it( 'correctly inserts default values', () => {

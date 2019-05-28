@@ -1,3 +1,4 @@
+/* @generated from adl */
 import { declResolver, ScopedDecl } from "./runtime/adl";
 import { _AST_MAP as test2 } from "./test2";
 
