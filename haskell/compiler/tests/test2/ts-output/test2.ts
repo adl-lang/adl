@@ -9,7 +9,7 @@ export interface S0 {
 }
 
 export function makeS0(
-  input: {
+  _input: {
   }
 ): S0 {
   return {

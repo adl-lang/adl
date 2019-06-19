@@ -311,8 +311,11 @@ renderFactory name typeParams fds = function
     tparams = typeParamsExpr typeParams
     factoryInputVariable = renderFactoryInput fds
     fieldInitialisations = renderFieldInitialisations fds
+    inputVar = case fds of
+      [] -> "_input"
+      _  -> "input"
 
-    renderFactoryInput fds = cblock "input:" fields
+    renderFactoryInput fds = cblock (inputVar <> ":") fields
       where
         fields = mconcat [renderInputField fd | fd <- fds]
         renderInputField fd = case fdDefValue fd of
@@ -325,9 +328,9 @@ renderFactory name typeParams fds = function
 
     renderFieldInitialisation :: FieldDetails -> Code
     renderFieldInitialisation fd = case fdDefValue fd of
-      Nothing -> ctemplate "$1: input.$1," [fdName fd]
+      Nothing -> ctemplate "$1: $2.$1," [fdName fd, inputVar]
       Just defaultValue ->
-        cspan (cspan (ctemplate "$1: input.$1 === undefined ? " [fdName fd]) (cline defaultValue)) (ctemplate " : input.$1," [fdName fd])
+        cspan (cspan (ctemplate "$1: $2.$1 === undefined ? " [fdName fd,inputVar]) (cline defaultValue)) (ctemplate " : $2.$1," [fdName fd,inputVar])
 
 renderCommentForDeclaration :: CDecl -> Code
 renderCommentForDeclaration decl = mconcat $ map renderDeclComment $ M.elems (d_annotations decl)
