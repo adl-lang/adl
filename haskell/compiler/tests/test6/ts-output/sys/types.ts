@@ -26,11 +26,11 @@ export function texprPair<T1, T2>(texprT1 : ADL.ATypeExpr<T1>, texprT2 : ADL.ATy
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Pair"}}, parameters : [texprT1.value, texprT2.value]}};
 }
 
-export interface Either_Left<T1, T2> {
+export interface Either_Left<T1, _T2> {
   kind: 'left';
   value: T1;
 }
-export interface Either_Right<T1, T2> {
+export interface Either_Right<_T1, T2> {
   kind: 'right';
   value: T2;
 }
@@ -44,7 +44,7 @@ export function texprEither<T1, T2>(texprT1 : ADL.ATypeExpr<T1>, texprT2 : ADL.A
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Either"}}, parameters : [texprT1.value, texprT2.value]}};
 }
 
-export interface Maybe_Nothing<T> {
+export interface Maybe_Nothing<_T> {
   kind: 'nothing';
 }
 export interface Maybe_Just<T> {
@@ -65,7 +65,7 @@ export interface Error_Value<T> {
   kind: 'value';
   value: T;
 }
-export interface Error_Error<T> {
+export interface Error_Error<_T> {
   kind: 'error';
   value: string;
 }

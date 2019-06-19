@@ -9,6 +9,7 @@ import qualified Data.Foldable as F
 import qualified Data.HashMap.Lazy as HM
 import qualified Data.List as L
 import qualified Data.Map as M
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as LT
@@ -350,6 +351,17 @@ renderComment commentValue = clineN commentLinesStarred
 typeParamsExpr :: [T.Text] -> T.Text
 typeParamsExpr []         = T.pack ""
 typeParamsExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
+
+-- generate the type parameters for a declaration, renaming any unused type params to start
+-- with an _ (so as to pass lint checks)
+prefixUnusedTypeParams :: (T.Text -> Bool) -> [T.Text] -> [T.Text]
+prefixUnusedTypeParams isParamUsed parameters = [if isParamUsed p then p else ("_" <> p) | p <- parameters]
+
+isTypeParamUsedInTypeExpr :: TypeExprRT c -> T.Text -> Bool
+isTypeParamUsedInTypeExpr te tparam = S.member tparam (typeExprTypeParams te)
+
+isTypeParamUsedInFields :: [Field (ResolvedTypeT c)] -> T.Text -> Bool
+isTypeParamUsedInFields fields tparam = L.or [isTypeParamUsedInTypeExpr (f_type f) tparam | f <- fields]
 
 capitalise :: T.Text -> T.Text
 capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)

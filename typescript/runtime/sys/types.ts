@@ -18,18 +18,18 @@ export function makePair<T1, T2>(
   };
 }
 
-export interface Either_Left<T1, T2> {
+export interface Either_Left<T1, _T2> {
   kind: 'left';
   value: T1;
 }
-export interface Either_Right<T1, T2> {
+export interface Either_Right<_T1, T2> {
   kind: 'right';
   value: T2;
 }
 
 export type Either<T1, T2> = Either_Left<T1, T2> | Either_Right<T1, T2>;
 
-export interface Maybe_Nothing<T> {
+export interface Maybe_Nothing<_T> {
   kind: 'nothing';
 }
 export interface Maybe_Just<T> {
@@ -43,7 +43,7 @@ export interface Error_Value<T> {
   kind: 'value';
   value: T;
 }
-export interface Error_Error<T> {
+export interface Error_Error<_T> {
   kind: 'error';
   value: string;
 }

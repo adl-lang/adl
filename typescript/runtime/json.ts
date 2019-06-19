@@ -6,8 +6,8 @@ import {isVoid, isEnum} from './utils';
 /** A type alias for json serialised values */
 type Json = {}|null;
 
-/** A type alias for values of an unknown type */
-type unknown = {}|null;
+/** A type alias for values of an Unknown type */
+type Unknown = {}|null;
 
 /**
  * A JsonBinding is a de/serialiser for a give ADL type
@@ -107,10 +107,10 @@ interface JsonBinding0<T> {
 };
 
 interface BoundTypeParams {
-  [key: string]: JsonBinding0<unknown>;
+  [key: string]: JsonBinding0<Unknown>;
 }
 
-function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<unknown> {
+function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<Unknown> {
   if (texpr.typeRef.kind === "primitive") {
     return primitiveJsonBinding(dresolver, texpr.typeRef.value, texpr.parameters, boundTypeParams);
   } else if (texpr.typeRef.kind === "reference") {
@@ -135,7 +135,7 @@ function buildJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundT
   throw new Error("buildJsonBinding : unimplemented ADL type");
 };
 
-function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
+function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
   if      (ptype === "String")     { return identityJsonBinding("a string", (v) => typeof(v) === 'string'); }
   else if (ptype === "Int8")       { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
   else if (ptype === "Void")       { return identityJsonBinding("a null", (v) => v === null); }
@@ -189,18 +189,18 @@ function bytesJsonBinding() : JsonBinding0<Uint8Array> {
   return {toJson, fromJson};
 }
 
-function vectorJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<unknown[]> {
+function vectorJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<Unknown[]> {
   const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
 
-  function toJson(v : unknown[]) : Json {
+  function toJson(v : Unknown[]) : Json {
     return v.map(elementBinding().toJson);
   }
 
-  function fromJson(json : Json) : unknown[] {
+  function fromJson(json : Json) : Unknown[] {
       if (!(json instanceof Array)) {
         throw jsonParseException('expected an array');
       }
-      let result : unknown[] = [];
+      let result : Unknown[] = [];
       json.forEach( (eljson,i) => {
         try {
           result.push(elementBinding().fromJson(eljson));
@@ -219,10 +219,10 @@ function vectorJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bound
 
 type StringMap<T> = {[key:string]: T};
 
-function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<StringMap<unknown>> {
+function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<StringMap<Unknown>> {
   const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
 
-  function toJson(v : StringMap<unknown>) : Json {
+  function toJson(v : StringMap<Unknown>) : Json {
     const result = {};
     for (let k in v) {
       result[k] = elementBinding().toJson(v[k]);
@@ -230,7 +230,7 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
     return result;
   }
 
-  function fromJson(json : Json) : StringMap<unknown> {
+  function fromJson(json : Json) : StringMap<Unknown> {
     if (!(json instanceof Object)) {
       throw jsonParseException('expected an object');
     }
@@ -250,17 +250,17 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
   return {toJson, fromJson};
 }
 
-function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<unknown> {
+function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, boundTypeParams : BoundTypeParams) : JsonBinding0<Unknown> {
   const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
 
-  function toJson(v : unknown) : Json {
+  function toJson(v : Unknown) : Json {
     if (v === null) {
       return null;
     }
     return elementBinding().toJson(v);
   }
 
-  function fromJson(json : Json) : unknown {
+  function fromJson(json : Json) : Unknown {
     if (json === null) {
       return null;
     }
@@ -272,11 +272,11 @@ function nullableJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bou
 
 interface StructFieldDetails {
   field : AST.Field,
-  jsonBinding : () => JsonBinding0<unknown>,
-  buildDefault : () => { value : unknown } | null
+  jsonBinding : () => JsonBinding0<Unknown>,
+  buildDefault : () => { value : Unknown } | null
 };
 
-function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
+function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, struct.typeParams, params, boundTypeParams);
   const fieldDetails : StructFieldDetails[] = [];
   struct.fields.forEach( (field) => {
@@ -296,7 +296,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
     });
   });
 
-  function toJson(v: unknown) : Json {
+  function toJson(v: Unknown) : Json {
     const json = {};
     fieldDetails.forEach( (fd) => {
       json[fd.field.serializedName] = fd.jsonBinding().toJson(v && v[fd.field.name]);
@@ -304,7 +304,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
     return json;
   }
 
-  function fromJson(json: Json): unknown {
+  function fromJson(json: Json): Unknown {
     if (!(json instanceof Object)) {
       throw jsonParseException("expected an object");
     }
@@ -335,7 +335,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
   return {toJson, fromJson};
 }
 
-function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params : AST.TypeExpr[], _boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
+function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params : AST.TypeExpr[], _boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
   const fieldSerializedNames : string[] = [];
   const fieldNumbers = {};
   union.fields.forEach( (field,i) => {
@@ -343,11 +343,11 @@ function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params :
     fieldNumbers[field.serializedName] = i;
   });
 
-  function toJson(v :unknown) : Json {
+  function toJson(v :Unknown) : Json {
     return fieldSerializedNames[v as number];
   }
 
-  function fromJson(json : Json) : unknown {
+  function fromJson(json : Json) : Unknown {
     if (typeof(json) !== 'string') {
       throw jsonParseException("expected a string for enum");
     }
@@ -361,7 +361,7 @@ function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params :
   return {toJson, fromJson};
 }
 
-function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
+function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
 
 
   const newBoundTypeParams = createBoundTypeParams(dresolver, union.typeParams, params, boundTypeParams);
@@ -377,8 +377,8 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
     detailsBySerializedName[field.serializedName] = details;
   });
 
-  function toJson(v0 : unknown) : Json {
-    const v = v0 as {kind:string, value:unknown};
+  function toJson(v0 : Unknown) : Json {
+    const v = v0 as {kind:string, value:Unknown};
     const details = detailsByName[v.kind];
     if (details.isVoid) {
       return details.field.serializedName;
@@ -397,7 +397,7 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
     return details;
   }
 
-  function fromJson(json : Json) : unknown {
+  function fromJson(json : Json) : Unknown {
     if (typeof(json) === "string") {
       let details = lookupDetails(json);
       if (!details.isVoid) {
@@ -428,12 +428,12 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
   return {toJson, fromJson};
 }
 
-function newtypeJsonBinding(dresolver : DeclResolver, newtype : AST.NewType, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
+function newtypeJsonBinding(dresolver : DeclResolver, newtype : AST.NewType, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, newtype.typeParams, params, boundTypeParams);
   return buildJsonBinding(dresolver, newtype.typeExpr, newBoundTypeParams);
 }
 
-function typedefJsonBinding(dresolver : DeclResolver, typedef : AST.TypeDef, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
+function typedefJsonBinding(dresolver : DeclResolver, typedef : AST.TypeDef, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, typedef.typeParams, params, boundTypeParams);
   return buildJsonBinding(dresolver, typedef.typeExpr, newBoundTypeParams);
 }

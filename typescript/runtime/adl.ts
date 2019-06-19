@@ -1,8 +1,8 @@
 import * as AST from './sys/adlast';
 
 export type ScopedDecl = AST.ScopedDecl;
-export type ATypeRef<T> = {value: AST.TypeRef};
-export type ATypeExpr<T> = {value : AST.TypeExpr};
+export type ATypeRef<_T> = {value: AST.TypeRef};
+export type ATypeExpr<_T> = {value : AST.TypeExpr};
 
 /**
  * A function to obtain details on a declared type.
@@ -31,12 +31,12 @@ export function declResolver(...astMaps : ({[key:string] : AST.ScopedDecl})[]) {
   return resolver;
 }
 
-type unknown = {} | null;
+type Unknown = {} | null;
 type Json = {} | null;
 
 /* Type expressions for primitive types */
 
-function texprPrimitive(ptype: string): ATypeExpr<unknown> {
+function texprPrimitive(ptype: string): ATypeExpr<Unknown> {
   return {
     value: {
       typeRef: { kind: "primitive", value: ptype },
@@ -45,7 +45,7 @@ function texprPrimitive(ptype: string): ATypeExpr<unknown> {
   };
 };
 
-function texprPrimitive1(ptype: string, etype: ATypeExpr<unknown>): ATypeExpr<unknown> {
+function texprPrimitive1(ptype: string, etype: ATypeExpr<Unknown>): ATypeExpr<Unknown> {
   return {
     value: {
       typeRef: { kind: "primitive", value: ptype },

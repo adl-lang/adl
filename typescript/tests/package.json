@@ -1,12 +1,12 @@
 {
   "dependencies": {
     "@types/base64-js": "^1.2.5",
-    "@types/jest": "^19.2.3",
+    "@types/jest": "^24.0.13",
     "base64-js": "^1.2.3",
-    "jest": "^20.0.4",
-    "ts-jest": "^20.0.4",
-    "tslint": "^5.11.0",
-    "typescript": "^2.3.3"
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2",
+    "tslint": "^5.17.0",
+    "typescript": "^3.5.2"
   },
   "jest": {
     "transform": {

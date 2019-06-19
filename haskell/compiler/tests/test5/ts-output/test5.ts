@@ -140,7 +140,7 @@ export interface U9_V1<T> {
   kind: 'v1';
   value: T;
 }
-export interface U9_V2<T> {
+export interface U9_V2<_T> {
   kind: 'v2';
   value: number;
 }
@@ -154,7 +154,7 @@ export function texprU9<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<U9<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U9"}}, parameters : [texprT.value]}};
 }
 
-export interface List_Null<T> {
+export interface List_Null<_T> {
   kind: 'null';
 }
 export interface List_Cell<T> {

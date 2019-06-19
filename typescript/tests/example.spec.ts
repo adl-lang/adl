@@ -1,9 +1,7 @@
 /// <reference path="node_modules/@types/jest/index.d.ts" />
-import {DeclResolver,declResolver} from './build/runtime/adl'
 import {JsonBinding,createJsonBinding} from './build/runtime/json'
 import {fromDynamic, toDynamic} from './build/runtime/dynamic'
 import * as example from './build/example'
-import * as sys_types from './build/sys/types'
 import {Dynamic} from './build/sys/dynamic'
 import {RESOLVER} from "./build/resolver";
 
@@ -71,9 +69,9 @@ describe('IntTree Recursive Type', () => {
   })
   it( 'uses custom serialized names', () => {
     const json = intTreeJsonBinding.toJson(tree1);
-    expect(json.v).toEqual(7);
-    expect(json.cs[0].v).toEqual(15);
-    expect(json.cs[1].v).toEqual(33);
+    expect(json && json["v"]).toEqual(7);
+    expect(json && json["cs"][0].v).toEqual(15);
+    expect(json && json["cs"][1].v).toEqual(33);
   })
 });
 
@@ -178,13 +176,13 @@ describe('StructWithDefaults', () => {
 describe('Dynamic Values', () => {
   it( 'can roundtrip values successfully', () => {
     const dynamic : Dynamic = toDynamic(personJsonBinding, person1);
-    const person2 : example.Person = fromDynamic(personJsonBinding, dynamic);
-    expect(person2.name).toEqual("Joe");
-    expect(person2.age).toEqual(142);
+    const person2 : example.Person | null = fromDynamic(personJsonBinding, dynamic);
+    expect(person2 && person2.name).toEqual("Joe");
+    expect(person2 && person2.age).toEqual(142);
   });
   it( 'fails with null when extracting the wrong type', () => {
     const dynamic : Dynamic = toDynamic(personJsonBinding, person1);
-    const itree : example.IntTree = fromDynamic(intTreeJsonBinding, dynamic);
+    const itree : example.IntTree | null = fromDynamic(intTreeJsonBinding, dynamic);
     expect(itree).toBeNull();
   });
 });

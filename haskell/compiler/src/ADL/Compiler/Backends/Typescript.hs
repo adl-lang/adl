@@ -116,12 +116,13 @@ genModule m = do
     addAstMap m
 
 genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
-genStruct m decl struct@Struct{s_typeParams=parameters} = do
+genStruct m decl struct@Struct{s_typeParams=typeParams0} = do
   fds <- mapM genFieldDetails (s_fields struct)
   let structName = capitalise (d_name decl)
+  let typeParams = prefixUnusedTypeParams (isTypeParamUsedInFields (s_fields struct)) typeParams0
 
-  addDeclaration $ renderCommentForDeclaration decl <> renderInterface structName parameters fds False
-  addDeclaration $ renderFactory structName (s_typeParams struct) fds
+  addDeclaration $ renderCommentForDeclaration decl <> renderInterface structName typeParams fds False
+  addDeclaration $ renderFactory structName typeParams fds
   addAstDeclaration m decl
 
 genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
@@ -143,26 +144,27 @@ genUnionEnum _ decl enum = do
   addDeclaration enumDecl
 
 genUnionInterface :: CModule -> CDecl -> Union CResolvedType -> CState ()
-genUnionInterface _ decl union@Union{u_typeParams=parameters} = do
+genUnionInterface _ decl union = do
   fds <- mapM genFieldDetails (u_fields union)
-  let unionName = d_name decl
-  addDeclaration (renderUnionFieldsAsInterfaces unionName parameters fds)
-  addDeclaration (renderUnionChoice decl unionName parameters fds)
+  addDeclaration (renderUnionFieldsAsInterfaces decl union fds)
+  addDeclaration (renderUnionChoice decl union fds)
 
-renderUnionChoice :: CDecl -> T.Text -> [Ident] -> [FieldDetails] -> Code
-renderUnionChoice decl unionName typeParams fds =
-  CAppend renderedComments (ctemplate "export type $1$2 = $3;" [unionName, renderedParameters, T.intercalate " | " [getChoiceName fd | fd <- fds]])
+renderUnionChoice :: CDecl -> Union CResolvedType -> [FieldDetails] -> Code
+renderUnionChoice decl union fds =
+  CAppend renderedComments (ctemplate "export type $1$2 = $3;" [d_name decl, renderedParameters, T.intercalate " | " [getChoiceName fd | fd <- fds]])
   where
-    getChoiceName fd = unionName <> "_" <> capitalise (fdName fd) <> renderedParameters
+    typeParams = prefixUnusedTypeParams (isTypeParamUsedInFields (u_fields union)) (u_typeParams union)
+    getChoiceName fd = d_name decl <> "_" <> capitalise (fdName fd) <> renderedParameters
     renderedComments = renderCommentForDeclaration decl
     renderedParameters = typeParamsExpr typeParams
 
-renderUnionFieldsAsInterfaces :: T.Text -> [Ident] -> [FieldDetails] -> Code
-renderUnionFieldsAsInterfaces unionName parameters (fd:xs) =
-  CAppend renderedInterface (renderUnionFieldsAsInterfaces unionName parameters xs)
+renderUnionFieldsAsInterfaces :: CDecl -> Union CResolvedType -> [FieldDetails] -> Code
+renderUnionFieldsAsInterfaces decl union (fd:fds) =
+  CAppend renderedInterface (renderUnionFieldsAsInterfaces decl union fds)
     where
-      renderedInterface = CAppend (renderInterface interfaceName parameters fieldDetails False) CEmpty
-      interfaceName = unionName <> "_" <> capitalise (fdName fd)
+      renderedInterface = CAppend (renderInterface interfaceName typeParams fieldDetails False) CEmpty
+      typeParams = prefixUnusedTypeParams (isTypeParamUsedInTypeExpr (f_type (fdField fd))) (u_typeParams union)
+      interfaceName = d_name decl <> "_" <> capitalise (fdName fd)
       fieldDetails = constructUnionFieldDetailsFromField fd
 renderUnionFieldsAsInterfaces _ _ [] = CEmpty
 
@@ -202,16 +204,18 @@ constructUnionFieldDetailsFromField fd = [FieldDetails{
   fdDefValue=Nothing}]
 
 genNewtype :: CModule -> CDecl -> Newtype CResolvedType -> CState ()
-genNewtype  m decl ntype@Newtype{n_typeParams=typeParams} = do
+genNewtype  m decl ntype@Newtype{n_typeParams=typeParams0} = do
   typeExprOutput <- genTypeExpr (n_typeExpr ntype)
+  let typeParams = prefixUnusedTypeParams (isTypeParamUsedInTypeExpr (n_typeExpr ntype)) typeParams0
   let
     typeDecl = ctemplate "export type $1$2 = $3;" [d_name decl, typeParamsExpr typeParams, typeExprOutput]
   addDeclaration (renderCommentForDeclaration decl <> typeDecl)
   addAstDeclaration m decl
 
 genTypedef :: CModule -> CDecl -> Typedef CResolvedType -> CState ()
-genTypedef m decl typedef@Typedef{t_typeParams=typeParams} = do
+genTypedef m decl typedef@Typedef{t_typeParams=typeParams0} = do
   typeExprOutput <- genTypeExpr (t_typeExpr typedef)
+  let typeParams = prefixUnusedTypeParams (isTypeParamUsedInTypeExpr (t_typeExpr typedef)) typeParams0
   let
     typeDecl = ctemplate "export type $1$2 = $3;" [d_name decl, typeParamsExpr typeParams, typeExprOutput]
   addDeclaration (renderCommentForDeclaration decl <> typeDecl)

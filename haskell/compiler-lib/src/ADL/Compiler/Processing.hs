@@ -788,6 +788,11 @@ substTypeParams m  (TypeExpr (RT_Param n) ts) =
         _ -> Left "Type param not a concrete type"
 substTypeParams m  (TypeExpr t ts) = TypeExpr t <$> mapM (substTypeParams m) ts
 
+-- | Find the type parameters used in a type expression
+typeExprTypeParams :: TypeExprRT c -> Set.Set Ident
+typeExprTypeParams (TypeExpr (RT_Param t) tes) = Set.insert t (Set.unions (map typeExprTypeParams tes))
+typeExprTypeParams (TypeExpr _ tes) = Set.unions (map typeExprTypeParams tes)
+
 fullyScopedName :: ModuleName -> ScopedName -> ScopedName
 fullyScopedName mname (ScopedName (ModuleName []) n) = ScopedName mname n
 fullyScopedName _ sn = sn
