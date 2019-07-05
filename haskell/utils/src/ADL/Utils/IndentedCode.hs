@@ -6,6 +6,7 @@ module ADL.Utils.IndentedCode where
 import qualified Data.Text as T
 import qualified Data.List as L
 
+import qualified Data.Semigroup as S
 import Data.Monoid
 
 import ADL.Utils.Format
@@ -17,9 +18,12 @@ data Code = CEmpty
           | CIndent Code
           deriving (Show)
 
+instance S.Semigroup Code where
+  (<>) = CAppend
+
 instance Monoid Code where
   mempty = CEmpty
-  mappend = CAppend
+  mappend = (S.<>) -- redundant from ghc 8.4
 
 cline :: T.Text -> Code
 cline t = CLine t

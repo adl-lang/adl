@@ -36,16 +36,16 @@ library
                      , ADL.Test18
                      , ADL.Test20
                      , ADL.Picture
-  build-depends:       base >= 4.7 && < 5
-                     , aeson >= 1.0.2.1 && < 1.3
-                     , bytestring >= 0.10.8.1 && < 0.11
-                     , base64-bytestring >= 1.0.0.1 && < 1.1
-                     , containers >= 0.5.7.1 && < 0.6
-                     , scientific >= 0.3.4.10 && < 0.4
-                     , text >= 1.2 && < 1.3
-                     , time >= 1.6 && < 1.9
-                     , unordered-containers >= 0.2.7.2 && < 0.3
-                     , vector >= 0.11.0.0 && < 0.13
+  build-depends:       base
+                     , aeson
+                     , bytestring
+                     , base64-bytestring
+                     , containers
+                     , scientific
+                     , text
+                     , time
+                     , unordered-containers
+                     , vector
   default-language:    Haskell2010
 
 source-repository head
