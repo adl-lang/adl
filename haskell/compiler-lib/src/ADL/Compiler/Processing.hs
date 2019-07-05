@@ -20,7 +20,7 @@ import Data.Traversable(for)
 import Data.Monoid
 import Data.Maybe(catMaybes,isJust)
 
-import qualified Data.Map as Map
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -175,7 +175,7 @@ checkDuplicates m = structErrors ++ unionErrors ++ typedefErrors ++ newtypeError
     newtypeErrors1 n t = (map (D_Param "newtype" n) . findDuplicates) (n_typeParams t)
 
     findDuplicates :: [Ident] -> [Ident]
-    findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith' (+) (T.toCaseFold a) 1) Map.empty as),
+    findDuplicates as = [ a | (a,n) <- Map.toList (foldr (\a -> Map.insertWith (+) (T.toCaseFold a) 1) Map.empty as),
                           n > (1::Int) ]
 
 type AnnotationMap = (Map.Map Annotation0Target (Map.Map ScopedName Annotation0))

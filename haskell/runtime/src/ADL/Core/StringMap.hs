@@ -19,6 +19,7 @@ import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Map as M
 import qualified Data.Text as T
+import qualified Data.Semigroup as S
 
 import ADL.Core.Value
 import Data.Monoid
@@ -27,9 +28,12 @@ import Data.Proxy
 newtype StringMap a = StringMap {toMap :: M.Map T.Text a}
   deriving (Eq,Ord,Show)
 
+instance S.Semigroup (StringMap a) where
+  (StringMap m1) <> (StringMap m2) = StringMap (m1 <> m2)
+
 instance Monoid (StringMap a) where
   mempty = StringMap mempty
-  mappend (StringMap m1) (StringMap m2) = StringMap (mappend m1 m2)
+  mappend = (S.<>)  -- redundant from ghc 8.4
 
 instance forall a . (AdlValue a) => AdlValue (StringMap a) where
   atype _ = T.concat ["StringMap<",atype (Proxy :: Proxy a),">"]

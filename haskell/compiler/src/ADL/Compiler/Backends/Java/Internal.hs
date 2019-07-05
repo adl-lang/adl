@@ -12,6 +12,7 @@ import qualified Text.Parsec as P
 
 import qualified ADL.Adlc.Config.Java as JC
 import qualified ADL.Compiler.ParserP as P
+import qualified Data.Semigroup as S
 
 import Control.Monad
 
@@ -52,9 +53,12 @@ newtype JavaPackage = JavaPackage [Ident]
 javaPackage :: T.Text -> JavaPackage
 javaPackage s = JavaPackage (map unreserveWord (T.splitOn "." s ))
 
+instance S.Semigroup JavaPackage where
+  (JavaPackage p1) <> (JavaPackage p2) = JavaPackage (p1++p2)
+
 instance Monoid JavaPackage where
   mempty = JavaPackage []
-  mappend (JavaPackage p1) (JavaPackage p2) = JavaPackage (p1++p2)
+  mappend = (S.<>) -- redundant from ghc 8.4
 
 instance IsString JavaPackage where
   fromString s = JavaPackage (T.splitOn "." (T.pack s))
