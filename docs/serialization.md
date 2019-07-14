@@ -6,7 +6,7 @@ consistent. Hence, ADL is a formal specification for serialized data.
 
 Currently json serialization is implemented, as this gives best
 interoperability with browser based code.  It is envisaged that in
-future binary serialization will allow be supported. Note also that
+future binary serialization will also be supported. Note also that
 json is also the format used for literals in the ADL language itself.
 
 Each ADL primitive and declaration is serialized as specified in
@@ -27,8 +27,8 @@ determined by the repeated application of these rules.
 | Float,Double                 | number                                                 |
 | String                       | string                                                 |
 | ByteArray                    | string containing base 64 encoded data                 |
-| Vector<T>                    | json array containing serialized values of type T      |
-| StringMap<T>                 | A json object containing values of type T              |
+| `Vector<T>`                    | json array containing serialized values of type T      |
+| `StringMap<T>`                 | A json object containing values of type T              |
 
 [^1]: It's not clear that a json number is the best representation for
 64 bit values. The [json specification][jsonspec] doesn't specify a
@@ -70,7 +70,7 @@ are populated with the default value.
 
 An ADL `union` is a sum type - only one discriminator can be active at any
 time. The json serialisation depends on the type of discriminator. If
-the type is `Void` then the union is serialised as the discriminator name
+the associated type is `Void` then the union is serialised as the discriminator name
 (ie a json string). For any other type, the union value is serialised as
 a json object with a single name /value pair: the name of the active
 discriminator, and it's serialized value.
@@ -156,6 +156,7 @@ The json serialization scheme permits limited backwards compatibility. Fields ca
 provided the default value for those fields ensures compatibility. Discriminators may also be added to unions,
 provided that the default descriminator is not changed.
 
+The [custom type machinery](./custom-types.md) can be used to implement more generalized backwards compatibility behaviour.
 
 
 
