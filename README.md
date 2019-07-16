@@ -14,6 +14,7 @@ code generators for several target languages, and runtimes for these languages.
     * [haskell][]
     * [java][]
     * [typescript][]
+    * [c++][cpp]
 * [install][] - installation instructions
 
 [introduction]:docs/introduction.md
@@ -24,3 +25,4 @@ code generators for several target languages, and runtimes for these languages.
 [haskell]:docs/backend-haskell.md
 [typescript]:docs/backend-typescript.md
 [java]:docs/backend-java.md
+[cpp]:docs/backend-cpp.md
