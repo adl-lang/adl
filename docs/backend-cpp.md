@@ -167,9 +167,16 @@ map to C++ templates as would be expected.
 
 # Runtime
 
-The generated code depends on a small runtime, which currently has
-no external dependencies. The runtime is present in the git repository
-at `cpp/runtime`.
+The generated code depends on a small runtime, which currently embeds copies of it's
+dependencies:
+* [libb64][] for base64 encoding 
+* The [catch framework][catch] for testing
+
+The runtime is present in the git repository at `cpp/runtime`.
+
+[libb64]: http://libb64.sourceforge.net/
+[catch]: https://github.com/catchorg/Catch2
+
 
 # Annotations
 
