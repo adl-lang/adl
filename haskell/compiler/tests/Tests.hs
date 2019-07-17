@@ -26,6 +26,7 @@ import qualified ADL.Compiler.Backends.AST as AST
 import qualified ADL.Compiler.Backends.Java as J
 import qualified ADL.Compiler.Backends.Javascript as JS
 import qualified ADL.Compiler.Backends.Typescript as TS
+import qualified ADL.Compiler.Backends.Rust as RS
 
 data CodeGenResult = MatchOutput
                    | CompilerFailed T.Text
@@ -173,6 +174,20 @@ runTsBackend1 mpath = runTsBackend [ipath,stdsrc] [mpath] epath
   where
     ipath = takeDirectory mpath
     epath = takeDirectory ipath </> "ts-output"
+
+runRsBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
+runRsBackend ipaths mpaths epath = do
+  tdir <- getTemporaryDirectory
+  tempDir <- createTempDirectory tdir "adlt.test."
+  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
+      js = RS.RustFlags {
+        RS.rsIncludeRuntime=False,
+        RS.rsRuntimeDir="runtime",
+        RS.rsLibDir="../../../haskell/compiler/lib"
+      }
+      fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
+  er <- unEIO $ RS.generate af js fileWriter mpaths
+  processCompilerOutput epath tempDir er
 
 stdsrc :: FilePath
 stdsrc = "../../../haskell/compiler/lib/adl"
@@ -372,6 +387,12 @@ runTests = do
     it "Handles annotations and docstrings correctly" $ do
       collectResults (runTsBackend [stdsrc] ["test23/input/test23.adl"] "test23/ts-output")
         `shouldReturn` MatchOutput
+
+  describe "adlc rust backend" $ do
+    it "Generates the correct code for the picture demo" $ do
+      collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output")
+        `shouldReturn` MatchOutput
+
   where
     collectResults1 resultvar test = do
       r <- test

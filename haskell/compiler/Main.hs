@@ -8,6 +8,7 @@ import qualified ADL.Compiler.Backends.Cpp as C
 import qualified ADL.Compiler.Backends.Java as J
 import qualified ADL.Compiler.Backends.Javascript as JS
 import qualified ADL.Compiler.Backends.Typescript as TS
+import qualified ADL.Compiler.Backends.Rust as RS
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Paths_adl_compiler as P
@@ -274,6 +275,35 @@ runTypescript args = do
       Left e -> error "Unable to parse scoped names"
       Right sns -> sns
 
+runRust args = do
+  libDir <- liftIO $ getLibDir
+  let af = stdAdlFlags libDir ["adl-rs"]
+  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  RS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
+  where
+    header = "Usage: adlc rust [OPTION...] files..."
+
+    flags0 libDir = RS.RustFlags {
+      RS.rsLibDir=libDir,
+      RS.rsIncludeRuntime=False,
+      RS.rsRuntimeDir=""
+    }
+
+    optDescs =
+      standardOptions <>
+      [ rsIncludeRuntimePackageOption (updateBackendFlags (\rsf ->rsf{RS.rsIncludeRuntime=True}))
+      , rsRuntimeDirectoryOption (\path -> updateBackendFlags (\rsf ->rsf{RS.rsRuntimeDir=path}))
+      ]
+
+    rsIncludeRuntimePackageOption ufn =
+      Option "" ["include-rt"]
+        (NoArg ufn)
+        "Generate the runtime code"
+    rsRuntimeDirectoryOption ufn =
+      Option "R" ["runtime-dir"]
+        (ReqArg ufn "DIR")
+        "Set the directory where runtime code is written"
+
 runShow args0 =
   case args0 of
     ["--adlstdlib"] -> liftIO $ do
@@ -291,6 +321,7 @@ usage = T.intercalate "\n"
   , "       adlc java [OPTION..] <modulePath>..."
   , "       adlc javascript [OPTION..] <modulePath>..."
   , "       adlc typescript [OPTION..] <modulePath>..."
+  , "       adlc rust [OPTION..] <modulePath>..."
   , "       adlc show --version"
   , "       adlc show --adlstdlib"
   ]
@@ -305,6 +336,7 @@ main = do
     ("java":args) -> runJava args
     ("javascript":args) -> runJavascript args
     ("typescript":args) -> runTypescript args
+    ("rust":args) -> runRust args
     ("show":args) -> runShow args
     _ -> eioError usage
   where

@@ -59,6 +59,8 @@ library
                     , ADL.Compiler.Backends.Javascript
                     , ADL.Compiler.Backends.Typescript
                     , ADL.Compiler.Backends.Typescript.Internal
+                    , ADL.Compiler.Backends.Rust
+                    , ADL.Compiler.Backends.Rust.Internal
                     , ADL.Compiler.DataFiles
                     , ADL.Adlc.Config.Cpp
                     , ADL.Adlc.Config.Haskell
