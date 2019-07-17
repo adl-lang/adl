@@ -144,6 +144,6 @@ T fromJsonString( const std::string &str, const SerialiserFlags &flags = Seriali
     return t;
 }
 
-};
+} // namespace ADL
 
 #endif
