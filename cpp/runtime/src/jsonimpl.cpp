@@ -394,14 +394,22 @@ inline bool ishex( char c )
 std::string
 hexToUTF8( std::string hexDigits )
 {
+    // just need this one specific case urgently
+    if (hexDigits == "003d") {
+        return "=";
+    }
+
+    // todo: implement json unicode conversion
+    // See nlohmann::json
+
     throw json_parse_failure("hexToUTF8");
 }
 
 std::string
 StreamJsonReader::parseString()
 {
-    std::string b;
-    std::string u;
+    std::string result;
+    std::string hexchars;      // the 4 hex digits in \u escape code
 
     enum {
         NORMAL,
@@ -422,12 +430,17 @@ StreamJsonReader::parseString()
         switch( state )
         {
         case NORMAL:
-            if( c == '"' )
-                return b;
-            else if( c == '\\' )
+            if( c == '"' ) {
+                // end of string quote
+                return result;
+            }
+            else if( c == '\\' ) {
                 state = ESCAPE;
-            else
-                b.push_back( c );
+            }
+            else {
+                // appending to string result
+                result.push_back( c );
+            }
             break;
         case ESCAPE:
             if( c == 'u' )
@@ -435,45 +448,45 @@ StreamJsonReader::parseString()
             else
             {
                 if( c == '"' )
-                    b.push_back( '"' );
+                    result.push_back( '"' );
                 else if( c == '\\' )
-                    b.push_back( '\\' );
+                    result.push_back( '\\' );
                 else if( c == '/' )
-                    b.push_back( '/' );
+                    result.push_back( '/' );
                 else if( c == 'b' )
-                    b.push_back( '\b' );
+                    result.push_back( '\b' );
                 else if( c == 'f' )
-                    b.push_back( '\f' );
+                    result.push_back( '\f' );
                 else if( c == 'n' )
-                    b.push_back( '\n' );
+                    result.push_back( '\n' );
                 else if( c == 'r' )
-                    b.push_back( '\r' );
+                    result.push_back( '\r' );
                 else if( c == 't' )
-                    b.push_back( '\t' );
+                    result.push_back( '\t' );
                 else
-                    b.push_back( c );
+                    result.push_back( c );
                 state = NORMAL;
             }
             break;
         case U1:
             if( !ishex(c) ) throw json_parse_failure("U1");
-            u.push_back( c );
+            hexchars.push_back( c );
             state = U2;
             break; 
         case U2:
             if( !ishex(c) ) throw json_parse_failure("U2");
-            u.push_back( c );
+            hexchars.push_back( c );
             state = U3;
             break; 
         case U3:
             if( !ishex(c) ) throw json_parse_failure("U3");
-            u.push_back( c );
+            hexchars.push_back( c );
             state = U4;
             break; 
         case U4:
             if( !ishex(c) ) throw json_parse_failure("U4");
-            u.push_back( c );
-            b += hexToUTF8( u );
+            hexchars.push_back( c );
+            result += hexToUTF8(hexchars);
             state = NORMAL;
             break; 
         }

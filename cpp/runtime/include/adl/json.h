@@ -2,7 +2,7 @@
 #define ADL_JSON_H
 
 #include <stdint.h>
-#include <string> 
+#include <string>
 
 #include <adl/types.h>
 
@@ -93,7 +93,7 @@ public:
 };
 
 // This is to contain flags to control the serialisation
-// process (eg for versioning) 
+// process (eg for versioning)
 struct SerialiserFlags
 {
 };
@@ -182,61 +182,61 @@ bool ignoreField( JsonReader &json );
 // Serialisation for primitive/builtin types
 
 
-template <> 
+template <>
 struct Serialisable<Void>
 {
     static Serialiser<Void>::Ptr serialiser( const SerialiserFlags &  );
 };
 
-template <> 
+template <>
 struct Serialisable<bool>
 {
     static Serialiser<bool>::Ptr serialiser( const SerialiserFlags & );
 };
 
-template <> 
+template <>
 struct Serialisable<int8_t>
 {
     static Serialiser<int8_t>::Ptr serialiser( const SerialiserFlags & );
 };
 
-template <> 
+template <>
 struct Serialisable<int16_t>
 {
     static Serialiser<int16_t>::Ptr serialiser( const SerialiserFlags & );
 };
 
-template <> 
+template <>
 struct Serialisable<int32_t>
 {
     static Serialiser<int32_t>::Ptr serialiser( const SerialiserFlags & );
 };
 
-template <> 
+template <>
 struct Serialisable<int64_t>
 {
     static Serialiser<int64_t>::Ptr serialiser( const SerialiserFlags & );
 };
 
-template <> 
+template <>
 struct Serialisable<uint8_t>
 {
     static Serialiser<uint8_t>::Ptr serialiser( const SerialiserFlags & );
 };
 
-template <> 
+template <>
 struct Serialisable<uint16_t>
 {
     static Serialiser<uint16_t>::Ptr serialiser( const SerialiserFlags & );
 };
 
-template <> 
+template <>
 struct Serialisable<uint32_t>
 {
     static Serialiser<uint32_t>::Ptr serialiser( const SerialiserFlags & );
 };
 
-template <> 
+template <>
 struct Serialisable<uint64_t>
 {
     static Serialiser<uint64_t>::Ptr serialiser(const SerialiserFlags &);
@@ -321,7 +321,7 @@ class StringMapSerialiser : public Serialiser<StringMap<V>>
 {
 public:
     typedef StringMap<V> _M;
-    
+
     StringMapSerialiser( const SerialiserFlags & sf )
         : sf_( sf )
     {}

@@ -2,7 +2,9 @@
 #define ADL_JSONIMPL_H
 
 #include <vector>
-#include <iostream>
+#include <istream>
+#include <ostream>
+#include <sstream>
 #include <adl/json.h>
 
 namespace ADL {
@@ -10,7 +12,7 @@ namespace ADL {
 class StreamJsonWriter : public JsonWriter
 {
 public:
-    StreamJsonWriter( std::ostream &ostream, bool pretty );
+    StreamJsonWriter( std::ostream &ostream, bool pretty = false );
 
     virtual void startObject();
     virtual void field( const std::string &f );
@@ -122,7 +124,7 @@ StreamJsonReader::skipWhitespace()
 }
 
 template <class T>
-std::string toJsonString( const T & t, bool pretty, const SerialiserFlags &flags  )
+std::string toJsonString( const T & t, bool pretty = false, const SerialiserFlags &flags = SerialiserFlags() )
 {
     typename Serialiser<T>::Ptr s = Serialisable<T>::serialiser( flags );
     std::stringstream str;
@@ -132,7 +134,7 @@ std::string toJsonString( const T & t, bool pretty, const SerialiserFlags &flags
 }
 
 template <class T>
-T fromJsonString( const std::string &str, const SerialiserFlags &flags  )
+T fromJsonString( const std::string &str, const SerialiserFlags &flags = SerialiserFlags() )
 {
     std::istringstream is(str);
     typename Serialiser<T>::Ptr s = Serialisable<T>::serialiser( flags );
@@ -142,6 +144,6 @@ T fromJsonString( const std::string &str, const SerialiserFlags &flags  )
     return t;
 }
 
-};
+} // namespace ADL
 
 #endif
