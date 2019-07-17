@@ -2,7 +2,9 @@
 #define ADL_JSONIMPL_H
 
 #include <vector>
-#include <iostream>
+#include <istream>
+#include <ostream>
+#include <sstream>
 #include <adl/json.h>
 
 namespace ADL {
