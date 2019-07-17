@@ -4,26 +4,13 @@
 #include <adl/jsonimpl.h>
 #include <adl/sys.adlast.h>
 #include <adl/unittests.h>
-#include <adl/comms.h>
 
 using namespace ADL;
 
 template <class T>
-std::string toJsonString( const T & t, bool pretty )
-{
-    return toJsonString<T>( t, pretty, SerialiserFlags() );
-}
-
-template <class T>
-T fromJsonString( const std::string &str  )
-{
-    return fromJsonString<T>( str, SerialiserFlags() );
-}
-
-template <class T>
 T jsonRoundTrip( const T & t, bool pretty )
 {
-    return fromJsonString<T>(toJsonString(t,pretty));
+    return fromJsonString<T>(toJsonString(t, pretty));
 }
 
 TEST_CASE( "basic json reader operation" "[serialisation]" )

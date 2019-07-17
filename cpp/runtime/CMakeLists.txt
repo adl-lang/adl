@@ -22,3 +22,15 @@ add_library(adl_runtime
 target_link_libraries(adl_runtime
   b64
 )
+
+add_executable(adl_tests
+  tests/main.cpp
+  tests/tests-serialisation.cpp
+  src-generated/unittests.cpp
+)
+
+target_link_libraries(adl_tests
+  adl_runtime
+) 
+
+  
