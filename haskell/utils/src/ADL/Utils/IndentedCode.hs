@@ -3,6 +3,7 @@
 -- | A trivial DSL for generated indented block structured text
 module ADL.Utils.IndentedCode where
 
+import qualified Data.Char as C
 import qualified Data.Text as T
 import qualified Data.List as L
 
@@ -130,3 +131,7 @@ edgeCases first other last bs = add0 bs
     add1 [b] = [(last,b)]
     add1 (b:bs) = ((other,b)):add1 bs
     add1 [] = []
+
+capitalise :: T.Text -> T.Text
+capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)
+

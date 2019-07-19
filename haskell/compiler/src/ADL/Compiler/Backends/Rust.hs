@@ -73,8 +73,40 @@ genModule m = do
   for_ (getOrderedDecls m) $ \decl ->
     when (generateCode (d_annotations decl)) $
       case d_type decl of
-        (Decl_Struct struct)   -> return ()
-        (Decl_Union union)     -> return ()
+        (Decl_Struct struct)   -> genStruct m decl struct
+        (Decl_Union union)     -> genUnion m decl union
         (Decl_Typedef typedef) -> return ()
         (Decl_Newtype ntype)   -> return ()
 
+genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
+genStruct m decl struct@Struct{s_typeParams=typeParams} = do
+  fds <- mapM genFieldDetails (s_fields struct)
+  let structName = capitalise (d_name decl)
+  addDeclaration $ renderCommentForDeclaration decl <> render structName typeParams fds
+  where
+    render :: T.Text -> [Ident] -> [FieldDetails] -> Code
+    render name typeParams fields =
+      cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
+      where
+        renderedFields = mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd ","| fd <- fields]
+    
+        renderFieldDeclaration :: FieldDetails -> T.Text -> Code
+        renderFieldDeclaration fd endChar
+          | fdOptional fd = ctemplate "$1?: $2$3" [fdName fd, fdTypeExprStr fd, endChar]
+          | otherwise = ctemplate "$1: $2$3" [fdName fd, fdTypeExprStr fd, endChar]
+
+genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
+genUnion m decl union@Union{u_typeParams=typeParams} = do
+  fds <- mapM genFieldDetails (u_fields union)
+  let structName = capitalise (d_name decl)
+  addDeclaration $ renderCommentForDeclaration decl <> render structName typeParams fds
+  where
+    render :: T.Text -> [Ident] -> [FieldDetails] -> Code
+    render name typeParams fields =
+      cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
+      where
+        renderedFields = mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd | fd <- fields]
+    
+        renderFieldDeclaration :: FieldDetails -> Code
+        renderFieldDeclaration fd 
+          | otherwise = ctemplate "$1($2)," [enumVariantName fd, fdTypeExprStr fd]

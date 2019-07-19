@@ -4,7 +4,6 @@ module ADL.Compiler.Backends.Typescript.Internal where
 import qualified Data.Aeson as JS
 import qualified Data.Aeson.Text as JS
 import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Char as C
 import qualified Data.Foldable as F
 import qualified Data.HashMap.Lazy as HM
 import qualified Data.List as L
@@ -365,9 +364,6 @@ isTypeParamUsedInTypeExpr te tparam = S.member tparam (typeExprTypeParams te)
 
 isTypeParamUsedInFields :: [Field (ResolvedTypeT c)] -> T.Text -> Bool
 isTypeParamUsedInFields fields tparam = L.or [isTypeParamUsedInTypeExpr (f_type f) tparam | f <- fields]
-
-capitalise :: T.Text -> T.Text
-capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)
 
 addAstDeclaration :: CModule -> CDecl -> CState ()
 addAstDeclaration m decl = do
