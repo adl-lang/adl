@@ -1,0 +1,7 @@
+module picture {
+  import adlc.config.rust.RustBoxed;
+
+  // Make translated a boxed field to avoid an infinite
+  // sized structure error
+  annotation  Picture::translated RustBoxed null;
+};

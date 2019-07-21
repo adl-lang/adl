@@ -179,7 +179,7 @@ runRsBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
 runRsBackend ipaths mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adlt.test."
-  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
+  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-rs"]}
       js = RS.RustFlags {
         RS.rsIncludeRuntime=False,
         RS.rsRuntimeDir="runtime",

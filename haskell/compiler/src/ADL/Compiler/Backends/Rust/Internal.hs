@@ -127,7 +127,11 @@ addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails field = do
   let te = f_type field
-  typeExprStr <- genTypeExpr te
+      isBoxed = M.member snRustBoxed (f_annotations field)
+  typeExprStr0 <- genTypeExpr te
+  let typeExprStr = case isBoxed of
+        False -> typeExprStr0
+        True -> template "Box<$1>" [typeExprStr0]
   defValueStr <- case f_default field of
     (Just v) -> case literalForTypeExpr te v of
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
@@ -328,3 +332,6 @@ moduleFilePath path = joinPath (map T.unpack path)
 
 snRustGenerate :: ScopedName
 snRustGenerate = ScopedName (ModuleName ["adlc","config","rust"]) "RustGenerate"
+
+snRustBoxed :: ScopedName
+snRustBoxed = ScopedName (ModuleName ["adlc","config","rust"]) "RustBoxed"

@@ -1,0 +1,11 @@
+module adlc.config.rust {
+
+/// ADL module or declaration annotation to control
+/// whether code is actually generated.
+type RustGenerate = Bool;
+
+/// ADL field annotation to specify that a given field should
+/// be stored in a Box<>. This is intended to avoid infinitely
+/// sized recursive values
+type RustBoxed = Void;
+};

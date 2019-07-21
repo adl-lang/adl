@@ -5,7 +5,7 @@ pub enum Picture {
   Circle(Circle),
   Rectangle(Rectangle),
   Composed(Vec<Picture>),
-  Translated(Translated<Picture>),
+  Translated(Box<Translated<Picture>>),
 }
 
 pub struct Circle {
