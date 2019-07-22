@@ -355,15 +355,9 @@ typeParamsExpr []         = T.pack ""
 typeParamsExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
 
 -- generate the type parameters for a declaration, renaming any unused type params to start
--- with an _ (so as to pass lint checks)
+-- with an _ (so as to pass lint checkse_
 prefixUnusedTypeParams :: (T.Text -> Bool) -> [T.Text] -> [T.Text]
 prefixUnusedTypeParams isParamUsed parameters = [if isParamUsed p then p else ("_" <> p) | p <- parameters]
-
-isTypeParamUsedInTypeExpr :: TypeExprRT c -> T.Text -> Bool
-isTypeParamUsedInTypeExpr te tparam = S.member tparam (typeExprTypeParams te)
-
-isTypeParamUsedInFields :: [Field (ResolvedTypeT c)] -> T.Text -> Bool
-isTypeParamUsedInFields fields tparam = L.or [isTypeParamUsedInTypeExpr (f_type f) tparam | f <- fields]
 
 addAstDeclaration :: CModule -> CDecl -> CState ()
 addAstDeclaration m decl = do

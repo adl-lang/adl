@@ -17,6 +17,7 @@ import           ADL.Utils.FileDiff                         (dirContents)
 import           ADL.Utils.Format(template,formatText)
 import qualified Data.ByteString.Lazy                       as LBS
 import qualified Data.Map                                   as M
+import qualified Data.Set                                   as S
 import qualified Data.Text                                  as T
 import qualified Data.Text.Encoding                         as T
 
@@ -75,31 +76,37 @@ genModule m = do
       case d_type decl of
         (Decl_Struct struct)   -> genStruct m decl struct
         (Decl_Union union)     -> genUnion m decl union
-        (Decl_Typedef typedef) -> return ()
-        (Decl_Newtype ntype)   -> return ()
+        (Decl_Typedef typedef) -> genTypedef m decl typedef
+        (Decl_Newtype ntype)   -> genNewType m decl ntype
 
 genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
 genStruct m decl struct@Struct{s_typeParams=typeParams} = do
   fds <- mapM genFieldDetails (s_fields struct)
   let structName = capitalise (d_name decl)
-  addDeclaration $ renderCommentForDeclaration decl <> render structName typeParams fds
+  phantomFields <- mapM phantomData phantomTypeParams
+  addDeclaration $ renderCommentForDeclaration decl <> render structName typeParams fds phantomFields
   where
-    render :: T.Text -> [Ident] -> [FieldDetails] -> Code
-    render name typeParams fields =
+    render :: T.Text -> [Ident] -> [FieldDetails] -> [T.Text] -> Code
+    render name typeParams fields phantomFields =
       cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
       where
-        renderedFields = mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd ","| fd <- fields]
+        renderedFields
+          =   (mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd| fd <- fields])
+          <>  (mconcat [ctemplate "phantom$1: $2," [tp, pf] | (tp,pf) <- zip phantomTypeParams phantomFields])
     
-        renderFieldDeclaration :: FieldDetails -> T.Text -> Code
-        renderFieldDeclaration fd endChar
-          | fdOptional fd = ctemplate "$1?: $2$3" [fdName fd, fdTypeExprStr fd, endChar]
-          | otherwise = ctemplate "$1: $2$3" [fdName fd, fdTypeExprStr fd, endChar]
+        renderFieldDeclaration :: FieldDetails -> Code
+        renderFieldDeclaration fd
+          = ctemplate "$1: $2," [fdName fd, fdTypeExprStr fd]
+
+    phantomTypeParams = S.toList $ S.difference
+      (S.fromList typeParams)
+      (S.unions [typeExprTypeParams (f_type f) | f <- s_fields struct])
 
 genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnion m decl union@Union{u_typeParams=typeParams} = do
   fds <- mapM genFieldDetails (u_fields union)
-  let structName = capitalise (d_name decl)
-  addDeclaration $ renderCommentForDeclaration decl <> render structName typeParams fds
+  let unionName = capitalise (d_name decl)
+  addDeclaration $ renderCommentForDeclaration decl <> render unionName typeParams fds
   where
     render :: T.Text -> [Ident] -> [FieldDetails] -> Code
     render name typeParams fields =
@@ -110,3 +117,37 @@ genUnion m decl union@Union{u_typeParams=typeParams} = do
         renderFieldDeclaration :: FieldDetails -> Code
         renderFieldDeclaration fd 
           | otherwise = ctemplate "$1($2)," [enumVariantName fd, fdTypeExprStr fd]
+
+    -- FIXME: workout what to do with the phantom type parameters
+    phantomTypeParams = S.difference
+      (S.fromList typeParams)
+      (S.unions [typeExprTypeParams (f_type f) | f <- u_fields union])
+
+genTypedef :: CModule -> CDecl -> Typedef CResolvedType -> CState ()
+genTypedef m decl Typedef{t_typeParams=typeParams, t_typeExpr=te} = do
+  let typeName = capitalise (d_name decl)
+  typeExprStr <-genTypeExpr te
+  addDeclaration $ renderCommentForDeclaration decl <> render typeName typeParams typeExprStr
+  where
+    render :: T.Text -> [Ident] -> T.Text -> Code
+    render name typeParams typeExprStr =
+      -- Unclear how to have an unused type alias parameter in rust. So
+      -- we'll only include the used ones
+      ctemplate "pub type $1$2 = $3;" [name, typeParamsExpr usedTypeParams, typeExprStr]
+
+    usedTypeParams = S.toList (typeExprTypeParams te)
+
+genNewType :: CModule -> CDecl -> Newtype CResolvedType -> CState ()
+genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
+  let typeName = capitalise (d_name decl)
+  typeExprStr <-genTypeExpr te
+  phantomFields <- mapM phantomData phantomTypeParams
+  addDeclaration $ renderCommentForDeclaration decl <> render typeName typeParams typeExprStr phantomFields
+  where
+    render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> Code
+    render name typeParams typeExprStr phantomFields =
+      ctemplate "struct $1$2($3);"
+        [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> phantomFields)]
+
+    phantomTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))
+

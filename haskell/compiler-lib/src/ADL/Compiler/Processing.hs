@@ -21,6 +21,7 @@ import Data.Monoid
 import Data.Maybe(catMaybes,isJust)
 
 import qualified Data.Map.Strict as Map
+import qualified Data.List as L
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -808,6 +809,12 @@ substTypeParams m  (TypeExpr t ts) = TypeExpr t <$> mapM (substTypeParams m) ts
 typeExprTypeParams :: TypeExprRT c -> Set.Set Ident
 typeExprTypeParams (TypeExpr (RT_Param t) tes) = Set.insert t (Set.unions (map typeExprTypeParams tes))
 typeExprTypeParams (TypeExpr _ tes) = Set.unions (map typeExprTypeParams tes)
+
+isTypeParamUsedInTypeExpr :: TypeExprRT c -> T.Text -> Bool
+isTypeParamUsedInTypeExpr te tparam = Set.member tparam (typeExprTypeParams te)
+
+isTypeParamUsedInFields :: [Field (ResolvedTypeT c)] -> T.Text -> Bool
+isTypeParamUsedInFields fields tparam = L.or [isTypeParamUsedInTypeExpr (f_type f) tparam | f <- fields]
 
 fullyScopedName :: ModuleName -> ScopedName -> ScopedName
 fullyScopedName mname (ScopedName (ModuleName []) n) = ScopedName mname n

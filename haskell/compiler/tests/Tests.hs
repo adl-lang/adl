@@ -392,7 +392,10 @@ runTests = do
     it "Generates the correct code for the picture demo" $ do
       collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output")
         `shouldReturn` MatchOutput
-
+    it "generates expected code for type aliases and newtypes" $ do
+      collectResults (runRsBackend [stdsrc] ["test7/input/test.adl"] "test7/rs-output")
+        `shouldReturn` MatchOutput
+ 
   where
     collectResults1 resultvar test = do
       r <- test

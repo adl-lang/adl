@@ -83,7 +83,6 @@ data FieldDetails = FieldDetails {
   fdField       :: Field CResolvedType,
   fdName        :: T.Text,
   fdTypeExprStr :: T.Text,
-  fdOptional    :: Bool,
   fdDefValue    :: Maybe T.Text
 };
 
@@ -137,7 +136,7 @@ genFieldDetails field = do
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
       Right litv -> fmap Just (genLiteralText litv)
     Nothing -> return Nothing
-  return (FieldDetails field (f_name field) typeExprStr False defValueStr)
+  return (FieldDetails field (f_name field) typeExprStr defValueStr)
 
 -- | Generate the typescript type given an ADL type expression
 genTypeExpr :: CTypeExpr -> CState T.Text
@@ -329,6 +328,10 @@ emptyModuleFile mn cgp = ModuleFile mn M.empty [] cgp
 
 moduleFilePath  :: [Ident] -> FilePath
 moduleFilePath path = joinPath (map T.unpack path)
+
+phantomData :: Ident -> CState T.Text
+phantomData typeParam =
+  return (template "std::marker::PhantomData<$1>" [typeParam])
 
 snRustGenerate :: ScopedName
 snRustGenerate = ScopedName (ModuleName ["adlc","config","rust"]) "RustGenerate"
