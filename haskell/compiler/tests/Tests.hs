@@ -181,9 +181,8 @@ runRsBackend ipaths mpaths epath = do
   tempDir <- createTempDirectory tdir "adlt.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-rs"]}
       js = RS.RustFlags {
-        RS.rsIncludeRuntime=False,
-        RS.rsRuntimeDir="runtime",
-        RS.rsLibDir="../../../haskell/compiler/lib"
+        RS.rsModule = RS.rustModule "adl",
+        RS.rsRuntimeModule = RS.rustModule "crate::adlrt"
       }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
   er <- unEIO $ RS.generate af js fileWriter mpaths
@@ -392,6 +391,10 @@ runTests = do
     it "Generates the correct code for the picture demo" $ do
       collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output")
         `shouldReturn` MatchOutput
+    it "generates expected code for the standard library" $ do
+      let srcs = stdfiles <> ["test6/input/test.adl"]
+      collectResults (runRsBackend [stdsrc] srcs "test6/rs-output")
+          `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
       collectResults (runRsBackend [stdsrc] ["test7/input/test.adl"] "test7/rs-output")
         `shouldReturn` MatchOutput

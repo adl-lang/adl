@@ -8,8 +8,9 @@ a rust backend from an ADL file.
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Compiler.Backends.Rust(
  generate,
-  RustFlags(..),
-  ) where
+ RustFlags(..),
+ rustModule,
+ ) where
 
 import           ADL.Compiler.AST
 import           ADL.Compiler.Primitive
@@ -48,25 +49,21 @@ generate af tf fileWriter modulePaths = catchAllExceptions  $ do
     let m' = fullyScopedModule m
     when (generateCode (m_annotations m')) (generateModule tf fileWriter m')
     return m'
-  when (rsIncludeRuntime tf) (generateRuntime af tf fileWriter modulePaths)
-
--- JS.generate af (JS.JavascriptFlags {}) fileWriter
-generateRuntime :: AdlFlags -> RustFlags -> FileWriter -> [FilePath] -> EIOT ()
-generateRuntime af tf fileWriter modulePaths = do
   return ()
 
 -- | Generate and the rust code for a single ADL module, and
--- save the resulting code to the apppropriate file
+-- save the resulting code to the  apppropriate file
 generateModule :: RustFlags ->
                   FileWriter ->
                   RModule ->
                   EIO T.Text ()
-generateModule tf fileWriter m0 = do
+generateModule rf fileWriter m0 = do
   let moduleName = m_name m
       m = associateCustomTypes getCustomType moduleName m0
       cgp = CodeGenProfile {}
-      mf = execState (genModule m) (emptyModuleFile (m_name m) cgp)
-  liftIO $ fileWriter (moduleFilePath (unModuleName moduleName) <.> "rs") (genModuleCode "adlc" mf)
+      mf = execState (genModule m) (emptyModuleFile (m_name m) rf cgp)
+      filePath = moduleFilePath (unRustModule (rsModule rf) <> unModuleName moduleName) <.> "rs"
+  liftIO $ fileWriter filePath (genModuleCode "adlc" mf)
 
 genModule :: CModule -> CState ()
 genModule m = do
@@ -96,7 +93,7 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
     
         renderFieldDeclaration :: FieldDetails -> Code
         renderFieldDeclaration fd
-          = ctemplate "$1: $2," [fdName fd, fdTypeExprStr fd]
+          = ctemplate "pub $1: $2," [structFieldName fd, fdTypeExprStr fd]
 
     phantomTypeParams = S.toList $ S.difference
       (S.fromList typeParams)
@@ -115,7 +112,8 @@ genUnion m decl union@Union{u_typeParams=typeParams} = do
         renderedFields = mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd | fd <- fields]
     
         renderFieldDeclaration :: FieldDetails -> Code
-        renderFieldDeclaration fd 
+        renderFieldDeclaration fd
+          | isVoidType (f_type (fdField fd)) = ctemplate "$1," [enumVariantName fd]
           | otherwise = ctemplate "$1($2)," [enumVariantName fd, fdTypeExprStr fd]
 
     -- FIXME: workout what to do with the phantom type parameters
@@ -146,7 +144,7 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
   where
     render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> Code
     render name typeParams typeExprStr phantomFields =
-      ctemplate "struct $1$2($3);"
+      ctemplate "pub struct $1$2($3);"
         [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> phantomFields)]
 
     phantomTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))

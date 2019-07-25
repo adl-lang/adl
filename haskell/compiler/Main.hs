@@ -284,21 +284,15 @@ runRust args = do
     header = "Usage: adlc rust [OPTION...] files..."
 
     flags0 libDir = RS.RustFlags {
-      RS.rsLibDir=libDir,
-      RS.rsIncludeRuntime=False,
-      RS.rsRuntimeDir=""
+      RS.rsModule = RS.rustModule "adl",
+      RS.rsRuntimeModule = RS.rustModule "crate::adlrt"
     }
 
     optDescs =
       standardOptions <>
-      [ rsIncludeRuntimePackageOption (updateBackendFlags (\rsf ->rsf{RS.rsIncludeRuntime=True}))
-      , rsRuntimeDirectoryOption (\path -> updateBackendFlags (\rsf ->rsf{RS.rsRuntimeDir=path}))
+      [ outputPackageOption (\s -> updateBackendFlags (\jf -> jf{RS.rsModule=RS.rustModule (T.pack s)}))
       ]
 
-    rsIncludeRuntimePackageOption ufn =
-      Option "" ["include-rt"]
-        (NoArg ufn)
-        "Generate the runtime code"
     rsRuntimeDirectoryOption ufn =
       Option "R" ["runtime-dir"]
         (ReqArg ufn "DIR")

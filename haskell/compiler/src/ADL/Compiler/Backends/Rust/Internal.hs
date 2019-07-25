@@ -20,6 +20,7 @@ import ADL.Compiler.Primitive
 import ADL.Compiler.Processing
 import ADL.Utils.Format(template,formatText)
 import ADL.Utils.IndentedCode
+import Cases(camelize, snakify)
 import Control.Applicative
 import Control.Monad(when)
 import Control.Monad.Trans.State.Strict
@@ -31,10 +32,21 @@ import System.FilePath(joinPath)
 -- | Command line flags to control the backend.
 -- (once we have them)
 data RustFlags = RustFlags {
-  rsLibDir :: FilePath,
-  rsIncludeRuntime :: Bool,
-  rsRuntimeDir :: FilePath
+  -- The rust module into which we generate the ADL
+  -- relative to the crate root
+  rsModule :: RustModule,
+
+  -- The absolute rust module path containing the runtime
+  rsRuntimeModule :: RustModule
 }
+
+
+data RustModule = RustModule {unRustModule :: [Ident]}
+
+type RustModuleFn = ModuleName -> RustModule
+
+rustModule :: T.Text -> RustModule
+rustModule s = RustModule (T.splitOn "::" s)
 
 data CodeGenProfile = CodeGenProfile {
 }
@@ -57,6 +69,9 @@ data ModuleFile = ModuleFile {
 
   -- The code
   mfDeclarations :: [Code],
+
+  -- Function mappying ADL modules to rust modules
+  mfRustModuleFn :: RustModuleFn,
 
   -- Details to control the code generate
   mfCodeGenProfile :: CodeGenProfile
@@ -81,7 +96,6 @@ type CField = Field CResolvedType
 
 data FieldDetails = FieldDetails {
   fdField       :: Field CResolvedType,
-  fdName        :: T.Text,
   fdTypeExprStr :: T.Text,
   fdDefValue    :: Maybe T.Text
 };
@@ -97,14 +111,14 @@ data TypeDetails = TypeDetails {
   td_type :: [T.Text] -> CState T.Text,
 
   -- | Generate a typescript literal value
-  td_genLiteralText :: Literal CTypeExpr -> CState T.Text,
+  td_genLiteralText :: Literal CTypeExpr -> CState T.Text
 
   -- | Generate the expression to create an AST type value,
   -- given the representation of the type arguments.
   --
   -- eg adl type Vector<Int32> would have a type value expr `texprVector(texprInt32())`
   --
-  td_typeValue :: [T.Text] -> CState T.Text
+  -- td_typeValue :: [T.Text] -> CState T.Text
 }
 
 genModuleCode :: T.Text -> ModuleFile -> LBS.ByteString
@@ -112,11 +126,9 @@ genModuleCode cmd mf = genCode code
   where
     code
       =  ctemplate "// $1generated from adl module $2" ["@", formatText (mfModuleName mf)]
-      <> ctemplate "pub mod $1 {" [formatText (mfModuleName mf)]
       <> mconcat [genImport (mfModuleName mf) i | i <- M.elems (mfImports mf)]
       <> cline ""
       <> mconcat (L.intersperse (cline "") (reverse (mfDeclarations mf)))
-      <> cline "}"
 
     genCode code = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText Nothing code)))
 
@@ -136,7 +148,7 @@ genFieldDetails field = do
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
       Right litv -> fmap Just (genLiteralText litv)
     Nothing -> return Nothing
-  return (FieldDetails field (f_name field) typeExprStr defValueStr)
+  return (FieldDetails field typeExprStr defValueStr)
 
 -- | Generate the typescript type given an ADL type expression
 genTypeExpr :: CTypeExpr -> CState T.Text
@@ -145,10 +157,10 @@ genTypeExpr (TypeExpr rt params) = do
   td_type (getTypeDetails rt) rtParamsStr
 
 -- | Generate the typescript expr to creat an AST type value
-genTypeValueExpr :: CTypeExpr -> CState T.Text
-genTypeValueExpr (TypeExpr rt params) = do
-  rtParamsStr <- mapM genTypeValueExpr  params
-  td_typeValue (getTypeDetails rt) rtParamsStr
+-- genTypeValueExpr :: CTypeExpr -> CState T.Text
+-- genTypeValueExpr (TypeExpr rt params) = do
+--   rtParamsStr <- mapM genTypeValueExpr  params
+--   td_typeValue (getTypeDetails rt) rtParamsStr
 
 -- | Generate an expression to construct a literal value.
 genLiteralText :: Literal CTypeExpr -> CState T.Text
@@ -172,14 +184,14 @@ getTypeDetails (RT_Primitive pt) =
     P_Word32 -> primTypeDetails "u32" toNumber
     P_Word64 -> primTypeDetails "u64" toNumber
     P_Bool -> primTypeDetails "bool" toBool
-    P_Void -> primTypeDetails "null" (error "P_Void primitive not implemented")
-    P_ByteVector -> primTypeDetails "Uint8Array" (error "P_ByteVector  primitive not implemented")
-    P_Json -> primTypeDetails "{}|null" (error "P_Json  primitive not implemented")
+    P_Void -> primTypeDetails "()" (error "P_Void primitive not implemented")
+    P_ByteVector -> primTypeDetails "Vec<u8>" (error "P_ByteVector  primitive not implemented")
+    P_Json -> primTypeDetails "serde_json::Value" (error "P_Json  primitive not implemented")
     P_Vector -> vectorTypeDetails
     P_StringMap -> stringMapTypeDetails
     P_Nullable -> nullableTypeDetails
   where
-    primTypeDetails t convf = TypeDetails (const (return t)) convf (const (return ("ADL.texpr" <> ptToText pt <> "()")))
+    primTypeDetails t convf = TypeDetails (const (return t)) convf
 
     toString (Literal _ (LPrimitive (JS.String s))) = return (T.pack (show s))
     toString _ = error "BUG: expected a string literal"
@@ -192,7 +204,7 @@ getTypeDetails (RT_Primitive pt) =
     toBool _ = error "BUG: expected a boolean literal"
 
 
-    vectorTypeDetails = TypeDetails typeExpr literalText typeValue
+    vectorTypeDetails = TypeDetails typeExpr literalText
       where
         typeExpr [texpr] = return ("Vec<" <> texpr <> ">")
         typeExpr _ = error "BUG: expected a single type param for Vector"
@@ -200,40 +212,37 @@ getTypeDetails (RT_Primitive pt) =
           lits <- mapM genLiteralText ls
           return (template "vec![$1]" [T.intercalate ", " lits])
         literalText _ = error "BUG: invalid literal for Vector"
-        typeValue [tvalue] = return (template "ADL.texprVector($1)" [tvalue])
-        typeValue _ = error "BUG: expected a single type param for Vector"
 
-    stringMapTypeDetails = error "stringmap not implemented"
-    -- stringMapTypeDetails = TypeDetails typeExpr literalText typeValue
-    --   where
-    --     typeExpr [texpr] = return (template "{[key: string]: $1}" [texpr])
-    --     typeExpr _ = error "BUG: expected a single type param for StringMap"
-    --     literalText (Literal _ (LStringMap m)) = do
-    --       m' <- traverse genLiteralText m
-    --       return (template "{$1}" [T.intercalate ", " [ template "$1 : $2" [k,v] | (k,v) <- M.toList m']])
-    --     literalText _ = error "BUG: invalid literal for StringMap"
-    --     typeValue [tvalue] = return (template "ADL.texprStringMap($1)" [tvalue])
-    --     typeValue _ = error "BUG: expected a single type param for StringMap"
+    stringMapTypeDetails = TypeDetails typeExpr literalText
+      where
+        typeExpr [texpr] = return (template "std::collections::HashMap<String,$1>" [texpr])
+        typeExpr _ = error "BUG: expected a single type param for StringMap"
+        literalText (Literal _ (LStringMap m)) = do
+          m' <- traverse genLiteralText m
+          return (template "map!{$1}" [T.intercalate ", " [ template "$1 => $2" [k,v] | (k,v) <- M.toList m']])
+        literalText _ = error "BUG: invalid literal for StringMap"
 
-    nullableTypeDetails = error "nullable not implemented"
-    --nullableTypeDetails = TypeDetails typeExpr literalText typeValue
-    --  where
-    --    typeExpr [texpr] = return (template "($1|null)" [texpr])
-    --    typeExpr _ = error "BUG: expected a single type param for StringMap"
-    --    literalText (Literal _ (LNullable Nothing)) = return "null"
-    --    literalText (Literal _ (LNullable (Just l))) = genLiteralText l
-    --    literalText _ = error "BUG: invalid literal for Nullable"
-    --    typeValue [tvalue] = return (template "ADL.texprNullable($1)" [tvalue])
-    --    typeValue _ = error "BUG: expected a single type param for Nullable"
+    nullableTypeDetails = TypeDetails typeExpr literalText
+      where
+        typeExpr [texpr] = return (template "Option<$1>" [texpr])
+        typeExpr _ = error "BUG: expected a single type param for StringMap"
+        literalText (Literal _ (LNullable Nothing)) = return "None"
+        literalText (Literal _ (LNullable (Just l))) = do
+          lit <- genLiteralText l
+          return (template "Some($1)" [lit])
+        literalText _ = error "BUG: invalid literal for Nullable"
 
 -- a type defined through a regular ADL declaration
-getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText typeValue
+getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText
   where
     (ScopedName moduleName name) = scopedName
     typeExpr typeArgs = do
       currentModuleName <- fmap mfModuleName get
-      let modules =  if moduleName == currentModuleName then [] else unModuleName moduleName
-      addModulesImport modules name
+      modules <- if moduleName == currentModuleName
+        then return []
+        else do
+          mfn <- mfRustModuleFn <$> get
+          return (unRustModule (mfn moduleName))
       return (modulePrefix modules <> name <> typeParamsExpr typeArgs)
     literalText (Literal te LDefault) = error "BUG: literal defaults shouldn't be needed"
     literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) _) (LCtor ls)) = do
@@ -250,22 +259,15 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
           | otherwise -> return (template "{kind : \"$1\", value : $2}" [ctor,lv])
     literalText l = error ("BUG: missing RT_Named literalText definition (" <> show l <> ")")
 
-    typeValue typeValueArgs = do
-      currentModuleName <- fmap mfModuleName get
-      let modules =  if moduleName == currentModuleName then [] else unModuleName moduleName
-      addModulesImport modules name
-      return (template "$1texpr$2($3)" [modulePrefix modules, name, T.intercalate ", " typeValueArgs])
-
 -- a custom type
 getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) =
   error "BUG: custom types not implemented"
 
 -- a type variable
-getTypeDetails (RT_Param typeVar) = TypeDetails typeExpr literalText typeValue
+getTypeDetails (RT_Param typeVar) = TypeDetails typeExpr literalText
   where
     typeExpr _ = return typeVar
     literalText _ = error "BUG: literal values for type variables shouldn't be needed"
-    typeValue _ = error "BUG: type values expressions can't be created for type variables"
 
 renderCommentForDeclaration :: CDecl -> Code
 renderCommentForDeclaration decl = mconcat $ map renderDeclComment $ M.elems (d_annotations decl)
@@ -290,8 +292,11 @@ typeParamsExpr :: [T.Text] -> T.Text
 typeParamsExpr []         = T.pack ""
 typeParamsExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
 
+structFieldName :: FieldDetails -> T.Text
+structFieldName fd = unreserveWord (snakify (f_name (fdField fd)))
+
 enumVariantName :: FieldDetails -> T.Text
-enumVariantName fd = capitalise (fdName fd)
+enumVariantName fd = capitalise (camelize (f_name (fdField fd)))
 
 addImport :: Ident -> RSImport -> CState ()
 addImport moduleIdentity tsImport = modify (\mf->mf{mfImports=M.insert moduleIdentity tsImport (mfImports mf)})
@@ -310,7 +315,7 @@ addModulesImport modules _ = addImport importAsName tsImport
 
 modulePrefix :: [Ident] -> T.Text
 modulePrefix [] = T.pack ""
-modulePrefix modules = T.intercalate "_" modules <> "."
+modulePrefix modules = T.intercalate "::" modules <> "::"
 
 genImport :: ModuleName -> RSImport -> Code
 genImport intoModule RSImport{} = mempty
@@ -323,8 +328,11 @@ generateCode annotations = case M.lookup snRustGenerate annotations of
 getCustomType :: ScopedName -> RDecl -> Maybe CustomType
 getCustomType _ _ = Nothing
 
-emptyModuleFile :: ModuleName -> CodeGenProfile -> ModuleFile
-emptyModuleFile mn cgp = ModuleFile mn M.empty [] cgp
+emptyModuleFile :: ModuleName -> RustFlags -> CodeGenProfile -> ModuleFile
+emptyModuleFile mn rf cgp = ModuleFile mn M.empty [] (rustModuleFn rf) cgp
+
+rustModuleFn :: RustFlags -> RustModuleFn
+rustModuleFn rf = \mn -> RustModule (["crate"] <> unRustModule (rsModule rf) <> unModuleName mn)
 
 moduleFilePath  :: [Ident] -> FilePath
 moduleFilePath path = joinPath (map T.unpack path)
@@ -332,6 +340,17 @@ moduleFilePath path = joinPath (map T.unpack path)
 phantomData :: Ident -> CState T.Text
 phantomData typeParam =
   return (template "std::marker::PhantomData<$1>" [typeParam])
+
+reservedWords :: S.Set Ident
+reservedWords = S.fromList
+ [ "type"
+ -- Fixme: complete this list
+ ]
+
+unreserveWord :: Ident -> Ident
+unreserveWord n | S.member n reservedWords = T.append "r#" n
+                | otherwise = n
+
 
 snRustGenerate :: ScopedName
 snRustGenerate = ScopedName (ModuleName ["adlc","config","rust"]) "RustGenerate"

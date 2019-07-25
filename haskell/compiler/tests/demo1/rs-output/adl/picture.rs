@@ -1,5 +1,4 @@
 // @generated from adl module picture
-pub mod picture {
 
 pub enum Picture {
   Circle(Circle),
@@ -9,17 +8,16 @@ pub enum Picture {
 }
 
 pub struct Circle {
-  radius: f64,
+  pub radius: f64,
 }
 
 pub struct Rectangle {
-  width: f64,
-  height: f64,
+  pub width: f64,
+  pub height: f64,
 }
 
 pub struct Translated<T> {
-  xoffset: f64,
-  yoffset: f64,
-  object: T,
-}
+  pub xoffset: f64,
+  pub yoffset: f64,
+  pub object: T,
 }
