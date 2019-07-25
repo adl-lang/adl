@@ -30,7 +30,8 @@ import           Control.Monad                              (when)
 import           Control.Monad.Trans                        (liftIO)
 import           Control.Monad.Trans.State.Strict
 import           Data.Foldable                              (for_)
-import           Data.List                                  (sortOn)
+import           Data.List                                  (inits, sortOn)
+import           Data.Maybe                                 (catMaybes)
 import           Data.Monoid
 import           Data.Traversable                           (for)
 import           System.FilePath                            (joinPath,
@@ -43,13 +44,17 @@ import           ADL.Compiler.DataFiles
 -- | Run this backend on a list of ADL modules. Check each module
 -- for validity, and then generate the code for it.
 generate :: AdlFlags -> RustFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af tf fileWriter modulePaths = catchAllExceptions  $ do
+generate af rf fileWriter modulePaths = catchAllExceptions  $ do
   ms <- for modulePaths $ \modulePath -> do
     m <- loadAndCheckModule af modulePath
     let m' = fullyScopedModule m
-    when (generateCode (m_annotations m')) (generateModule tf fileWriter m')
-    return m'
-  return ()
+    if (generateCode (m_annotations m'))
+      then do
+        generateModule rf fileWriter m'
+        return (Just m')
+      else do
+        return Nothing
+  generateModFiles rf fileWriter (catMaybes ms)
 
 -- | Generate and the rust code for a single ADL module, and
 -- save the resulting code to the  apppropriate file
@@ -64,6 +69,21 @@ generateModule rf fileWriter m0 = do
       mf = execState (genModule m) (emptyModuleFile (m_name m) rf cgp)
       filePath = moduleFilePath (unRustModule (rsModule rf) <> unModuleName moduleName) <.> "rs"
   liftIO $ fileWriter filePath (genModuleCode "adlc" mf)
+
+-- | Generate the tree of mod.rs files that link together the generated code
+generateModFiles :: RustFlags -> FileWriter -> [RModule] -> EIO T.Text ()
+generateModFiles rf fileWriter ms = do
+  -- build up the map of required mod files
+  let modfiles :: M.Map [Ident] (S.Set Ident)
+      modfiles = foldr addParents M.empty ms
+      addParents m map = foldr addParent map (tail (inits (unModuleName (m_name m))))
+      addParent m = M.insertWith (<>) (init m) (S.singleton (last m))
+  -- Write them to the output tree
+  for_ (M.toList modfiles) $ \(parent,children) -> do
+    let filePath = moduleFilePath (unRustModule (rsModule rf) <> parent <> ["mod"]) <.> "rs"
+    let content = T.intercalate "\n" ["pub mod " <> child <> ";" | child <- S.toList children]
+    liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 content))
+
 
 genModule :: CModule -> CState ()
 genModule m = do
