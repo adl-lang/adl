@@ -173,16 +173,16 @@ getTypeDetails :: CResolvedType -> TypeDetails
 getTypeDetails (RT_Primitive pt) =
   case pt of
     P_String -> primTypeDetails "String" toString
-    P_Double -> primTypeDetails "f64" toNumber
-    P_Float -> primTypeDetails "f32" toNumber
-    P_Int8 -> primTypeDetails "i8" toNumber
-    P_Int16 -> primTypeDetails "i16" toNumber
-    P_Int32 -> primTypeDetails "i32" toNumber
-    P_Int64 -> primTypeDetails "i64" toNumber
-    P_Word8 -> primTypeDetails "u8" toNumber
-    P_Word16 -> primTypeDetails "u16" toNumber
-    P_Word32 -> primTypeDetails "u32" toNumber
-    P_Word64 -> primTypeDetails "u64" toNumber
+    P_Double -> numTypeDetails "f64"
+    P_Float -> numTypeDetails "f32"
+    P_Int8 -> numTypeDetails "i8"
+    P_Int16 -> numTypeDetails "i16"
+    P_Int32 -> numTypeDetails "i32"
+    P_Int64 -> numTypeDetails "i64"
+    P_Word8 -> numTypeDetails "u8"
+    P_Word16 -> numTypeDetails "u16"
+    P_Word32 -> numTypeDetails "u32"
+    P_Word64 -> numTypeDetails "u64"
     P_Bool -> primTypeDetails "bool" toBool
     P_Void -> primTypeDetails "()" (error "P_Void primitive not implemented")
     P_ByteVector -> primTypeDetails "Vec<u8>" (error "P_ByteVector  primitive not implemented")
@@ -193,11 +193,13 @@ getTypeDetails (RT_Primitive pt) =
   where
     primTypeDetails t convf = TypeDetails (const (return t)) convf
 
+    numTypeDetails t = TypeDetails (const (return t)) toNumber
+      where
+        toNumber (Literal _ (LPrimitive (JS.Number n))) = return (litNumber n <> "_" <> t)
+        toNumber _ = error "BUG: expected a numeric literal"
+
     toString (Literal _ (LPrimitive (JS.String s))) = return (T.pack (show s) <> ".to_string()")
     toString _ = error "BUG: expected a string literal"
-
-    toNumber (Literal _ (LPrimitive (JS.Number n))) = return (litNumber n)
-    toNumber _ = error "BUG: expected a number literal"
 
     toBool (Literal _ (LPrimitive (JS.Bool True))) = return "true"
     toBool (Literal _ (LPrimitive (JS.Bool False))) = return "false"

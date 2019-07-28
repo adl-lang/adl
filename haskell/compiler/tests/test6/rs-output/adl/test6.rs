@@ -27,7 +27,7 @@ impl S {
       f_nstring: f_nstring,
       f_nstring_2: Some("abcde".to_string()),
       f_int: f_int,
-      f_int_2: Some(100),
+      f_int_2: Some(100_i64),
     }
   }
 }

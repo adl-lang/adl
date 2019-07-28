@@ -42,8 +42,8 @@ pub struct Translated<T> {
 impl<T> Translated<T> {
   pub fn new(object: T) -> Translated<T> {
     Translated {
-      xoffset: 0,
-      yoffset: 0,
+      xoffset: 0_f64,
+      yoffset: 0_f64,
       object: object,
     }
   }
