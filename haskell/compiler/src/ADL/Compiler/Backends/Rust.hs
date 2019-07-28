@@ -31,7 +31,7 @@ import           Control.Monad.Trans                        (liftIO)
 import           Control.Monad.Trans.State.Strict
 import           Data.Foldable                              (for_)
 import           Data.List                                  (inits, sortOn)
-import           Data.Maybe                                 (catMaybes)
+import           Data.Maybe                                 (isNothing, catMaybes, fromMaybe)
 import           Data.Monoid
 import           Data.Traversable                           (for)
 import           System.FilePath                            (joinPath,
@@ -69,6 +69,16 @@ generateModule rf fileWriter m0 = do
       mf = execState (genModule m) (emptyModuleFile (m_name m) rf cgp)
       filePath = moduleFilePath (unRustModule (rsModule rf) <> unModuleName moduleName) <.> "rs"
   liftIO $ fileWriter filePath (genModuleCode "adlc" mf)
+  where
+    genModule m = do
+      -- Generate each declaration
+      for_ (getOrderedDecls m) $ \decl ->
+        when (generateCode (d_annotations decl)) $
+          case d_type decl of
+            (Decl_Struct struct)   -> genStruct m decl struct
+            (Decl_Union union)     -> genUnion m decl union
+            (Decl_Typedef typedef) -> genTypedef m decl typedef
+            (Decl_Newtype ntype)   -> genNewType m decl ntype
 
 -- | Generate the tree of mod.rs files that link together the generated code
 generateModFiles :: RustFlags -> FileWriter -> [RModule] -> EIO T.Text ()
@@ -85,17 +95,6 @@ generateModFiles rf fileWriter ms = do
     liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 content))
 
 
-genModule :: CModule -> CState ()
-genModule m = do
-  -- Generate each declaration
-  for_ (getOrderedDecls m) $ \decl ->
-    when (generateCode (d_annotations decl)) $
-      case d_type decl of
-        (Decl_Struct struct)   -> genStruct m decl struct
-        (Decl_Union union)     -> genUnion m decl union
-        (Decl_Typedef typedef) -> genTypedef m decl typedef
-        (Decl_Newtype ntype)   -> genNewType m decl ntype
-
 genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
 genStruct m decl struct@Struct{s_typeParams=typeParams} = do
   fds <- mapM genFieldDetails (s_fields struct)
@@ -104,9 +103,14 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
   addDeclaration $ renderCommentForDeclaration decl <> render structName typeParams fds phantomFields
   where
     render :: T.Text -> [Ident] -> [FieldDetails] -> [T.Text] -> Code
-    render name typeParams fields phantomFields =
-      cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
+    render name typeParams fields phantomFields 
+      =  renderDecl
+      <> cline ""
+      <> cblock (template "impl$1 $2$1" [typeParamsExpr typeParams, name])
+        ( renderConstructor
+        )
       where
+        renderDecl = cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
         renderedFields
           =   (mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd| fd <- fields])
           <>  (mconcat [ctemplate "phantom$1: $2," [tp, pf] | (tp,pf) <- zip phantomTypeParams phantomFields])
@@ -114,6 +118,16 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
         renderFieldDeclaration :: FieldDetails -> Code
         renderFieldDeclaration fd
           = ctemplate "pub $1: $2," [structFieldName fd, fdTypeExprStr fd]
+
+        renderConstructor = cblock (template "pub fn new($1) -> $2$3" [requiredArgs, name, typeParamsExpr typeParams]) (
+          cblock name (
+            mconcat [ctemplate "$1: $2," [structFieldName fd, fromMaybe (structFieldName fd) (fdDefValue fd)] | fd <- fields]
+            )
+          )
+
+        requiredArgs = T.intercalate ", "
+          [ template "$1: $2" [structFieldName fd, fdTypeExprStr fd]
+          | fd <- fields, isNothing (fdDefValue fd) ]
 
     phantomTypeParams = S.toList $ S.difference
       (S.fromList typeParams)

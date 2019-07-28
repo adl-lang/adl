@@ -193,7 +193,7 @@ getTypeDetails (RT_Primitive pt) =
   where
     primTypeDetails t convf = TypeDetails (const (return t)) convf
 
-    toString (Literal _ (LPrimitive (JS.String s))) = return (T.pack (show s))
+    toString (Literal _ (LPrimitive (JS.String s))) = return (T.pack (show s) <> ".to_string()")
     toString _ = error "BUG: expected a string literal"
 
     toNumber (Literal _ (LPrimitive (JS.Number n))) = return (litNumber n)
@@ -235,28 +235,22 @@ getTypeDetails (RT_Primitive pt) =
 -- a type defined through a regular ADL declaration
 getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText
   where
-    (ScopedName moduleName name) = scopedName
     typeExpr typeArgs = do
-      currentModuleName <- fmap mfModuleName get
-      modules <- if moduleName == currentModuleName
-        then return []
-        else do
-          mfn <- mfRustModuleFn <$> get
-          return (unRustModule (mfn moduleName))
-      return (modulePrefix modules <> name <> typeParamsExpr typeArgs)
+      declRef <- getDeclRef scopedName
+      return (declRef <> typeParamsExpr typeArgs)
     literalText (Literal te LDefault) = error "BUG: literal defaults shouldn't be needed"
     literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) _) (LCtor ls)) = do
       lvs <- mapM genLiteralText ls
       return (template "{$1}" [T.intercalate ", " [template "$1 : $2" [f_name f,v] | (f,v) <- zip (s_fields struct) lvs]])
     literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Newtype _})) _) (LCtor [l])) = do
       genLiteralText l
-    literalText (Literal te@(TypeExpr (RT_Named (_, Decl{d_type=Decl_Union union})) _) (LUnion ctor l)) = do
+    literalText (Literal te@(TypeExpr (RT_Named (sn, Decl{d_type=Decl_Union union})) _) (LUnion ctor l)) = do
+      let variantName  =  enumVariantName0 ctor
+      declRef <- getDeclRef sn
       lv <- genLiteralText l
       case te of
-       te | refEnumeration te -> let (i,f) = findUnionField ctor (u_fields union)
-                                 in return (T.pack (show i))
-          | isVoidLiteral l -> return (template "{kind : \"$1\"}" [ctor])
-          | otherwise -> return (template "{kind : \"$1\", value : $2}" [ctor,lv])
+       te| isVoidLiteral l -> return (template "$1::$2" [declRef, variantName])
+          | otherwise -> return (template "$1::$2($3)" [declRef, variantName, lv])
     literalText l = error ("BUG: missing RT_Named literalText definition (" <> show l <> ")")
 
 -- a custom type
@@ -296,7 +290,10 @@ structFieldName :: FieldDetails -> T.Text
 structFieldName fd = unreserveWord (snakify (f_name (fdField fd)))
 
 enumVariantName :: FieldDetails -> T.Text
-enumVariantName fd = capitalise (camelize (f_name (fdField fd)))
+enumVariantName fd = enumVariantName0 (f_name (fdField fd))
+
+enumVariantName0 :: T.Text -> T.Text
+enumVariantName0 fname = capitalise (camelize fname)
 
 addImport :: Ident -> RSImport -> CState ()
 addImport moduleIdentity tsImport = modify (\mf->mf{mfImports=M.insert moduleIdentity tsImport (mfImports mf)})
@@ -324,6 +321,17 @@ generateCode :: Annotations t -> Bool
 generateCode annotations = case M.lookup snRustGenerate annotations of
   Just (_,JSON.Bool gen) -> gen
   _ -> True
+
+-- Get the a typescript reference corresponding to an ADL scoped name,
+-- (TODO: generate imports to avoid fully scoping every reference)
+getDeclRef :: ScopedName -> CState T.Text
+getDeclRef sn = do
+  currentModuleName <- mfModuleName <$> get
+  if sn_moduleName sn == currentModuleName
+    then return (sn_name sn)
+    else do
+      mfn <- mfRustModuleFn <$> get
+      return (T.intercalate "::" (unRustModule (mfn (sn_moduleName sn)) <> [sn_name sn]))
 
 getCustomType :: ScopedName -> RDecl -> Maybe CustomType
 getCustomType _ _ = Nothing

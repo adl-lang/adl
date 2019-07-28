@@ -5,6 +5,15 @@ pub struct Point<T> {
   pub y: T,
 }
 
+impl<T> Point<T> {
+  pub fn new(x: T, y: T) -> Point<T> {
+    Point {
+      x: x,
+      y: y,
+    }
+  }
+}
+
 pub type Int1 = i64;
 
 pub struct Int2(pub i64);
@@ -43,4 +52,12 @@ pub type IntPoint1A = IntPoint1;
 
 pub struct S {
   pub f_1: IntPoint1A,
+}
+
+impl S {
+  pub fn new(f_1: IntPoint1A) -> S {
+    S {
+      f_1: f_1,
+    }
+  }
 }
