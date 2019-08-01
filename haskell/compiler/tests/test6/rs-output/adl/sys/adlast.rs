@@ -44,6 +44,31 @@ pub enum TypeRef {
   Reference(ScopedName),
 }
 
+impl Serialize for TypeRef {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    match self {
+      TypeRef::Primitive(v) => {
+        let mut s = serializer.serialize_struct("TypeRef", 1)?;
+        s.serialize_field("primitive", v)?;
+        s.end()
+      }
+      TypeRef::TypeParam(v) => {
+        let mut s = serializer.serialize_struct("TypeRef", 1)?;
+        s.serialize_field("typeParam", v)?;
+        s.end()
+      }
+      TypeRef::Reference(v) => {
+        let mut s = serializer.serialize_struct("TypeRef", 1)?;
+        s.serialize_field("reference", v)?;
+        s.end()
+      }
+    }
+  }
+}
+
 pub struct TypeExpr {
   pub type_ref: TypeRef,
   pub parameters: Vec<TypeExpr>,
@@ -219,6 +244,36 @@ pub enum DeclType {
   Newtype(NewType),
 }
 
+impl Serialize for DeclType {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    match self {
+      DeclType::Struct(v) => {
+        let mut s = serializer.serialize_struct("DeclType", 1)?;
+        s.serialize_field("struct_", v)?;
+        s.end()
+      }
+      DeclType::Union(v) => {
+        let mut s = serializer.serialize_struct("DeclType", 1)?;
+        s.serialize_field("union_", v)?;
+        s.end()
+      }
+      DeclType::Type(v) => {
+        let mut s = serializer.serialize_struct("DeclType", 1)?;
+        s.serialize_field("type_", v)?;
+        s.end()
+      }
+      DeclType::Newtype(v) => {
+        let mut s = serializer.serialize_struct("DeclType", 1)?;
+        s.serialize_field("newtype_", v)?;
+        s.end()
+      }
+    }
+  }
+}
+
 pub struct Decl {
   pub name: Ident,
   pub version: Maybe<u32>,
@@ -282,6 +337,26 @@ pub type DeclVersions = Vec<Decl>;
 pub enum Import {
   ModuleName(ModuleName),
   ScopedName(ScopedName),
+}
+
+impl Serialize for Import {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    match self {
+      Import::ModuleName(v) => {
+        let mut s = serializer.serialize_struct("Import", 1)?;
+        s.serialize_field("moduleName", v)?;
+        s.end()
+      }
+      Import::ScopedName(v) => {
+        let mut s = serializer.serialize_struct("Import", 1)?;
+        s.serialize_field("scopedName", v)?;
+        s.end()
+      }
+    }
+  }
 }
 
 pub struct Module {

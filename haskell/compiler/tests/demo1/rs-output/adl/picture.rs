@@ -11,6 +11,36 @@ pub enum Picture {
   Translated(Box<Translated<Picture>>),
 }
 
+impl Serialize for Picture {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    match self {
+      Picture::Circle(v) => {
+        let mut s = serializer.serialize_struct("Picture", 1)?;
+        s.serialize_field("circle", v)?;
+        s.end()
+      }
+      Picture::Rectangle(v) => {
+        let mut s = serializer.serialize_struct("Picture", 1)?;
+        s.serialize_field("rectangle", v)?;
+        s.end()
+      }
+      Picture::Composed(v) => {
+        let mut s = serializer.serialize_struct("Picture", 1)?;
+        s.serialize_field("composed", v)?;
+        s.end()
+      }
+      Picture::Translated(v) => {
+        let mut s = serializer.serialize_struct("Picture", 1)?;
+        s.serialize_field("translated", v)?;
+        s.end()
+      }
+    }
+  }
+}
+
 pub struct Circle {
   pub radius: f64,
 }

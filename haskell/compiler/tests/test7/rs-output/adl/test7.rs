@@ -35,35 +35,145 @@ pub type Int1 = i64;
 
 pub struct Int2(pub i64);
 
+impl Serialize for Int2 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let Int2(value) = self;
+    value.serialize(serializer)
+  }
+}
+
 pub struct Int3(pub i64);
+
+impl Serialize for Int3 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let Int3(value) = self;
+    value.serialize(serializer)
+  }
+}
 
 pub type Int4 = i64;
 
 pub struct Int5<X>(pub i64, PhantomData<X>);
 
+impl<X: Serialize> Serialize for Int5<X> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let Int5(value) = self;
+    value.serialize(serializer)
+  }
+}
+
 pub struct Int6<X>(pub i64, PhantomData<X>);
+
+impl<X: Serialize> Serialize for Int6<X> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let Int6(value) = self;
+    value.serialize(serializer)
+  }
+}
 
 pub type String1 = String;
 
 pub struct String2(pub String);
 
+impl Serialize for String2 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let String2(value) = self;
+    value.serialize(serializer)
+  }
+}
+
 pub struct String3(pub String);
+
+impl Serialize for String3 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let String3(value) = self;
+    value.serialize(serializer)
+  }
+}
 
 pub type String4 = String;
 
 pub struct String5<X>(pub String, PhantomData<X>);
 
+impl<X: Serialize> Serialize for String5<X> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let String5(value) = self;
+    value.serialize(serializer)
+  }
+}
+
 pub struct String6<X>(pub String, PhantomData<X>);
+
+impl<X: Serialize> Serialize for String6<X> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let String6(value) = self;
+    value.serialize(serializer)
+  }
+}
 
 pub type IntPoint1 = Point<i64>;
 
 pub struct IntPoint2(pub Point<i64>);
 
+impl Serialize for IntPoint2 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let IntPoint2(value) = self;
+    value.serialize(serializer)
+  }
+}
+
 pub struct IntPoint3(pub Point<i64>);
+
+impl Serialize for IntPoint3 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let IntPoint3(value) = self;
+    value.serialize(serializer)
+  }
+}
 
 pub type Point1<X> = Point<X>;
 
 pub struct Point2<X>(pub Point<X>);
+
+impl<X: Serialize> Serialize for Point2<X> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let Point2(value) = self;
+    value.serialize(serializer)
+  }
+}
 
 pub type IntPoint1A = IntPoint1;
 

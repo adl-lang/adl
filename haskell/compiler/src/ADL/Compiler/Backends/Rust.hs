@@ -156,11 +156,26 @@ genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnion m decl union@Union{u_typeParams=typeParams} = do
   fds <- mapM genFieldDetails (u_fields union)
   let unionName = capitalise (d_name decl)
-  addDeclaration $ renderCommentForDeclaration decl <> render unionName typeParams fds
+  rustUse (rustScopedName "serde::ser::SerializeStruct")
+  rSerialize <- rustUse (rustScopedName "serde::ser::Serialize")
+  rSerializer <- rustUse (rustScopedName "serde::ser::Serializer")
+  addDeclaration $ renderCommentForDeclaration decl <> render unionName typeParams fds rSerialize rSerializer
   where
-    render :: T.Text -> [Ident] -> [FieldDetails] -> Code
-    render name typeParams fields =
-      cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
+    render :: T.Text -> [Ident] -> [FieldDetails] -> T.Text -> T.Text -> Code
+    render name typeParams fields rSerialize rSerializer
+      =  cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
+      <> cline ""
+      <> cblock (template "impl$1 $2 for $3$4" [traitTypeParamsExpr rSerialize typeParams,  rSerialize, name, typeParamsExpr typeParams])
+        (  cline "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>"
+        <> cline "where"
+        <> ctemplate "    S: $1," [rSerializer]
+        <> cblock ""
+          ( cblock "match self"
+            (  mconcat [if isVoidType (f_type (fdField fd)) then renderSerializeVoidVariant fd else renderSerializeVariant fd | fd <- fields]
+            )
+          )
+        )
+
       where
         renderedFields = mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd | fd <- fields]
     
@@ -168,6 +183,15 @@ genUnion m decl union@Union{u_typeParams=typeParams} = do
         renderFieldDeclaration fd
           | isVoidType (f_type (fdField fd)) = ctemplate "$1," [enumVariantName fd]
           | otherwise = ctemplate "$1($2)," [enumVariantName fd, fdTypeExprStr fd]
+
+        renderSerializeVoidVariant fd =
+          ctemplate "$1::$2 => \"$3\".serialize(serializer)," [name, enumVariantName fd, f_name (fdField fd)]
+        renderSerializeVariant fd =
+          cblock (template "$1::$2(v) =>" [name, enumVariantName fd])
+            (  ctemplate "let mut s = serializer.serialize_struct(\"$1\", 1)?;" [name]
+            <> ctemplate "s.serialize_field(\"$1\", v)?;" [f_name (fdField fd)]
+            <> cline "s.end()"
+            )
 
     -- FIXME: workout what to do with the phantom type parameters
     phantomTypeParams = S.difference
@@ -193,12 +217,25 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
   let typeName = capitalise (d_name decl)
   typeExprStr <-genTypeExpr te
   phantomFields <- mapM phantomData phantomTypeParams
-  addDeclaration $ renderCommentForDeclaration decl <> render typeName typeParams typeExprStr phantomFields
+  rustUse (rustScopedName "serde::ser::SerializeStruct")
+  rSerialize <- rustUse (rustScopedName "serde::ser::Serialize")
+  rSerializer <- rustUse (rustScopedName "serde::ser::Serializer")
+  addDeclaration $ renderCommentForDeclaration decl <> render typeName typeParams typeExprStr phantomFields rSerialize rSerializer
   where
-    render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> Code
-    render name typeParams typeExprStr phantomFields =
+    render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> T.Text -> T.Text -> Code
+    render name typeParams typeExprStr phantomFields rSerialize rSerializer =
       ctemplate "pub struct $1$2($3);"
         [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> phantomFields)]
+      <> cline ""
+      <> cblock (template "impl$1 $2 for $3$4" [traitTypeParamsExpr rSerialize typeParams,  rSerialize, name, typeParamsExpr typeParams])
+        (  cline "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>"
+        <> cline "where"
+        <> ctemplate "    S: $1," [rSerializer]
+        <> cblock ""
+          (  ctemplate "let $1(value) = self;" [name]
+          <> cline "value.serialize(serializer)"
+          )
+        )
 
     phantomTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))
 

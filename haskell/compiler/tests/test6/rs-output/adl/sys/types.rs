@@ -35,9 +35,45 @@ pub enum Either<T1, T2> {
   Right(T2),
 }
 
+impl<T1: Serialize, T2: Serialize> Serialize for Either<T1, T2> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    match self {
+      Either::Left(v) => {
+        let mut s = serializer.serialize_struct("Either", 1)?;
+        s.serialize_field("left", v)?;
+        s.end()
+      }
+      Either::Right(v) => {
+        let mut s = serializer.serialize_struct("Either", 1)?;
+        s.serialize_field("right", v)?;
+        s.end()
+      }
+    }
+  }
+}
+
 pub enum Maybe<T> {
   Nothing,
   Just(T),
+}
+
+impl<T: Serialize> Serialize for Maybe<T> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    match self {
+      Maybe::Nothing => "nothing".serialize(serializer),
+      Maybe::Just(v) => {
+        let mut s = serializer.serialize_struct("Maybe", 1)?;
+        s.serialize_field("just", v)?;
+        s.end()
+      }
+    }
+  }
 }
 
 pub enum Error<T> {
@@ -45,6 +81,46 @@ pub enum Error<T> {
   Error(String),
 }
 
+impl<T: Serialize> Serialize for Error<T> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    match self {
+      Error::Value(v) => {
+        let mut s = serializer.serialize_struct("Error", 1)?;
+        s.serialize_field("value", v)?;
+        s.end()
+      }
+      Error::Error(v) => {
+        let mut s = serializer.serialize_struct("Error", 1)?;
+        s.serialize_field("error", v)?;
+        s.end()
+      }
+    }
+  }
+}
+
 pub struct Map<K, V>(pub Vec<Pair<K, V>>);
 
+impl<K: Serialize, V: Serialize> Serialize for Map<K, V> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let Map(value) = self;
+    value.serialize(serializer)
+  }
+}
+
 pub struct Set<T>(pub Vec<T>);
+
+impl<T: Serialize> Serialize for Set<T> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let Set(value) = self;
+    value.serialize(serializer)
+  }
+}
