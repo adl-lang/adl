@@ -284,13 +284,13 @@ runRust args = do
     header = "Usage: adlc rust [OPTION...] files..."
 
     flags0 libDir = RS.RustFlags {
-      RS.rsModule = RS.rustModule "adl",
-      RS.rsRuntimeModule = RS.rustModule "crate::adlrt"
+      RS.rsModule = RS.rustScopedName "adl",
+      RS.rsRuntimeModule = RS.rustScopedName "crate::adlrt"
     }
 
     optDescs =
       standardOptions <>
-      [ outputPackageOption (\s -> updateBackendFlags (\jf -> jf{RS.rsModule=RS.rustModule (T.pack s)}))
+      [ outputPackageOption (\s -> updateBackendFlags (\jf -> jf{RS.rsModule=RS.rustScopedName (T.pack s)}))
       ]
 
     rsRuntimeDirectoryOption ufn =

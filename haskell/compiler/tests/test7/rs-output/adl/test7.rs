@@ -1,5 +1,9 @@
 // @generated from adl module test7
 
+use serde::ser::Serialize;
+use serde::ser::SerializeStruct;
+use serde::ser::Serializer;
+
 pub struct Point<T> {
   pub x: T,
   pub y: T,
@@ -11,6 +15,18 @@ impl<T> Point<T> {
       x: x,
       y: y,
     }
+  }
+}
+
+impl<T: Serialize> Serialize for Point<T> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Point", 2)?;
+    s.serialize_field("x", &self.x)?;
+    s.serialize_field("y", &self.y)?;
+    s.end()
   }
 }
 
@@ -59,5 +75,16 @@ impl S {
     S {
       f_1: f_1,
     }
+  }
+}
+
+impl Serialize for S {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("S", 1)?;
+    s.serialize_field("f1", &self.f_1)?;
+    s.end()
   }
 }

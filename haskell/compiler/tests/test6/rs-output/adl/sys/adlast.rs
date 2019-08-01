@@ -1,5 +1,9 @@
 // @generated from adl module sys.adlast
 
+use serde::ser::Serialize;
+use serde::ser::SerializeStruct;
+use serde::ser::Serializer;
+
 pub type ModuleName = String;
 
 pub type Ident = String;
@@ -17,6 +21,18 @@ impl ScopedName {
       module_name: module_name,
       name: name,
     }
+  }
+}
+
+impl Serialize for ScopedName {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("ScopedName", 2)?;
+    s.serialize_field("moduleName", &self.module_name)?;
+    s.serialize_field("name", &self.name)?;
+    s.end()
   }
 }
 
@@ -40,6 +56,18 @@ impl TypeExpr {
   }
 }
 
+impl Serialize for TypeExpr {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("TypeExpr", 2)?;
+    s.serialize_field("typeRef", &self.type_ref)?;
+    s.serialize_field("parameters", &self.parameters)?;
+    s.end()
+  }
+}
+
 pub struct Field {
   pub name: Ident,
   pub serialized_name: Ident,
@@ -60,6 +88,21 @@ impl Field {
   }
 }
 
+impl Serialize for Field {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Field", 5)?;
+    s.serialize_field("name", &self.name)?;
+    s.serialize_field("serializedName", &self.serialized_name)?;
+    s.serialize_field("typeExpr", &self.type_expr)?;
+    s.serialize_field("default", &self.default)?;
+    s.serialize_field("annotations", &self.annotations)?;
+    s.end()
+  }
+}
+
 pub struct Struct {
   pub type_params: Vec<Ident>,
   pub fields: Vec<Field>,
@@ -71,6 +114,18 @@ impl Struct {
       type_params: type_params,
       fields: fields,
     }
+  }
+}
+
+impl Serialize for Struct {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Struct", 2)?;
+    s.serialize_field("typeParams", &self.type_params)?;
+    s.serialize_field("fields", &self.fields)?;
+    s.end()
   }
 }
 
@@ -88,6 +143,18 @@ impl Union {
   }
 }
 
+impl Serialize for Union {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Union", 2)?;
+    s.serialize_field("typeParams", &self.type_params)?;
+    s.serialize_field("fields", &self.fields)?;
+    s.end()
+  }
+}
+
 pub struct TypeDef {
   pub type_params: Vec<Ident>,
   pub type_expr: TypeExpr,
@@ -99,6 +166,18 @@ impl TypeDef {
       type_params: type_params,
       type_expr: type_expr,
     }
+  }
+}
+
+impl Serialize for TypeDef {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("TypeDef", 2)?;
+    s.serialize_field("typeParams", &self.type_params)?;
+    s.serialize_field("typeExpr", &self.type_expr)?;
+    s.end()
   }
 }
 
@@ -115,6 +194,19 @@ impl NewType {
       type_expr: type_expr,
       default: default,
     }
+  }
+}
+
+impl Serialize for NewType {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("NewType", 3)?;
+    s.serialize_field("typeParams", &self.type_params)?;
+    s.serialize_field("typeExpr", &self.type_expr)?;
+    s.serialize_field("default", &self.default)?;
+    s.end()
   }
 }
 
@@ -143,6 +235,20 @@ impl Decl {
   }
 }
 
+impl Serialize for Decl {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Decl", 4)?;
+    s.serialize_field("name", &self.name)?;
+    s.serialize_field("version", &self.version)?;
+    s.serialize_field("type_", &self.r#type)?;
+    s.serialize_field("annotations", &self.annotations)?;
+    s.end()
+  }
+}
+
 pub struct ScopedDecl {
   pub module_name: ModuleName,
   pub decl: Decl,
@@ -154,6 +260,18 @@ impl ScopedDecl {
       module_name: module_name,
       decl: decl,
     }
+  }
+}
+
+impl Serialize for ScopedDecl {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("ScopedDecl", 2)?;
+    s.serialize_field("moduleName", &self.module_name)?;
+    s.serialize_field("decl", &self.decl)?;
+    s.end()
   }
 }
 
@@ -179,5 +297,19 @@ impl Module {
       decls: decls,
       annotations: annotations,
     }
+  }
+}
+
+impl Serialize for Module {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Module", 4)?;
+    s.serialize_field("name", &self.name)?;
+    s.serialize_field("imports", &self.imports)?;
+    s.serialize_field("decls", &self.decls)?;
+    s.serialize_field("annotations", &self.annotations)?;
+    s.end()
   }
 }

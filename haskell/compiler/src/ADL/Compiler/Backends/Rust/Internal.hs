@@ -18,7 +18,7 @@ import qualified Data.Aeson as JSON
 import ADL.Compiler.AST
 import ADL.Compiler.Primitive
 import ADL.Compiler.Processing
-import ADL.Utils.Format(template,formatText)
+import ADL.Utils.Format(template,formatText, fshow)
 import ADL.Utils.IndentedCode
 import Cases(camelize, snakify)
 import Control.Applicative
@@ -34,19 +34,19 @@ import System.FilePath(joinPath)
 data RustFlags = RustFlags {
   -- The rust module into which we generate the ADL
   -- relative to the crate root
-  rsModule :: RustModule,
+  rsModule :: RustScopedName,
 
   -- The absolute rust module path containing the runtime
-  rsRuntimeModule :: RustModule
+  rsRuntimeModule :: RustScopedName
 }
 
+data RustScopedName = RustScopedName {unRustScopedName :: [Ident]}
+  deriving (Eq, Ord)
 
-data RustModule = RustModule {unRustModule :: [Ident]}
+type RustModuleFn = ModuleName -> RustScopedName
 
-type RustModuleFn = ModuleName -> RustModule
-
-rustModule :: T.Text -> RustModule
-rustModule s = RustModule (T.splitOn "::" s)
+rustScopedName :: T.Text -> RustScopedName
+rustScopedName s = RustScopedName (T.splitOn "::" s)
 
 data CodeGenProfile = CodeGenProfile {
 }
@@ -64,8 +64,8 @@ type CState a = State ModuleFile a
 data ModuleFile = ModuleFile {
   mfModuleName   :: ModuleName,
 
-  -- The imports upon which this module depends
-  mfImports      :: M.Map Ident RSImport,
+  -- The use references for this module
+  mfUserRefs     :: M.Map Ident RustScopedName,
 
   -- The code
   mfDeclarations :: [Code],
@@ -76,11 +76,6 @@ data ModuleFile = ModuleFile {
   -- Details to control the code generate
   mfCodeGenProfile :: CodeGenProfile
 }
-
-data RSImport = RSImport {
-  iAsName       :: Ident,
-  iModulePath :: [Ident]
-} deriving (Eq, Show, Ord)
 
 -- A variant of the AST that carries custom type
 -- information. A `CModule` value is the input to
@@ -126,11 +121,19 @@ genModuleCode cmd mf = genCode code
   where
     code
       =  ctemplate "// $1generated from adl module $2" ["@", formatText (mfModuleName mf)]
-      <> mconcat [genImport (mfModuleName mf) i | i <- M.elems (mfImports mf)]
+      <> (if M.null (mfUserRefs mf) then mempty else cline "")
+      <> mconcat [genUse shortName rsname | (shortName,rsname) <- M.toList (mfUserRefs mf)]
       <> cline ""
       <> mconcat (L.intersperse (cline "") (reverse (mfDeclarations mf)))
 
     genCode code = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText Nothing code)))
+
+    genUse shortName rsname =
+      if shortName == last (unRustScopedName rsname)
+        then ctemplate "use $1;" [scopedName]
+        else ctemplate "use $1 as $2;" [scopedName, shortName]
+      where
+        scopedName = T.intercalate "::" (unRustScopedName rsname)
 
 addDeclaration :: Code -> CState ()
 addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
@@ -288,6 +291,10 @@ typeParamsExpr :: [T.Text] -> T.Text
 typeParamsExpr []         = T.pack ""
 typeParamsExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
 
+traitTypeParamsExpr :: T.Text -> [T.Text] -> T.Text
+traitTypeParamsExpr _ []         = T.pack ""
+traitTypeParamsExpr trait parameters = "<" <> T.intercalate ", " [template "$1: $2" [p,trait] | p <- parameters] <> ">"
+
 structFieldName :: FieldDetails -> T.Text
 structFieldName fd = unreserveWord (snakify (f_name (fdField fd)))
 
@@ -297,27 +304,14 @@ enumVariantName fd = enumVariantName0 (f_name (fdField fd))
 enumVariantName0 :: T.Text -> T.Text
 enumVariantName0 fname = capitalise (camelize fname)
 
-addImport :: Ident -> RSImport -> CState ()
-addImport moduleIdentity tsImport = modify (\mf->mf{mfImports=M.insert moduleIdentity tsImport (mfImports mf)})
-
 findUnionField :: T.Text -> [Field CResolvedType] -> (Int,Field CResolvedType)
 findUnionField fname fs = case L.find (\(_,f) -> f_name f == fname) (zip [0,1..] fs) of
   (Just v) -> v
   Nothing -> error ("BUG: invalid literal " <> show fname <> "for union")
 
-addModulesImport :: [Ident] -> T.Text -> CState ()
-addModulesImport [] _ = return ()
-addModulesImport modules _ = addImport importAsName tsImport
-    where
-      tsImport = RSImport{iAsName=importAsName, iModulePath=modules}
-      importAsName = T.intercalate "_" modules
-
 modulePrefix :: [Ident] -> T.Text
 modulePrefix [] = T.pack ""
 modulePrefix modules = T.intercalate "::" modules <> "::"
-
-genImport :: ModuleName -> RSImport -> Code
-genImport intoModule RSImport{} = mempty
 
 generateCode :: Annotations t -> Bool
 generateCode annotations = case M.lookup snRustGenerate annotations of
@@ -333,7 +327,7 @@ getDeclRef sn = do
     then return (sn_name sn)
     else do
       mfn <- mfRustModuleFn <$> get
-      return (T.intercalate "::" (unRustModule (mfn (sn_moduleName sn)) <> [sn_name sn]))
+      return (T.intercalate "::" (unRustScopedName (mfn (sn_moduleName sn)) <> [sn_name sn]))
 
 getCustomType :: ScopedName -> RDecl -> Maybe CustomType
 getCustomType _ _ = Nothing
@@ -342,7 +336,7 @@ emptyModuleFile :: ModuleName -> RustFlags -> CodeGenProfile -> ModuleFile
 emptyModuleFile mn rf cgp = ModuleFile mn M.empty [] (rustModuleFn rf) cgp
 
 rustModuleFn :: RustFlags -> RustModuleFn
-rustModuleFn rf = \mn -> RustModule (["crate"] <> unRustModule (rsModule rf) <> unModuleName mn)
+rustModuleFn rf = \mn -> RustScopedName (["crate"] <> unRustScopedName (rsModule rf) <> unModuleName mn)
 
 moduleFilePath  :: [Ident] -> FilePath
 moduleFilePath path = joinPath (map T.unpack path)
@@ -350,6 +344,21 @@ moduleFilePath path = joinPath (map T.unpack path)
 phantomData :: Ident -> CState T.Text
 phantomData typeParam =
   return (template "std::marker::PhantomData<$1>" [typeParam])
+
+rustUse :: RustScopedName -> CState T.Text
+rustUse rsname = do
+  state <- get
+  let userRefs =mfUserRefs state
+      shortName = last (unRustScopedName rsname)
+      asCandidates = [shortName] <> [shortName <> "_" <> fshow n | n <- [1,2..]]
+      uniqueShortName = head (filter (shortNameOk userRefs) asCandidates)
+  put state{mfUserRefs=M.insert uniqueShortName rsname userRefs}
+
+  return uniqueShortName
+  where
+    shortNameOk userRefs n = case M.lookup n userRefs of
+      Nothing -> True
+      Just rsname1 -> rsname == rsname1
 
 reservedWords :: S.Set Ident
 reservedWords = S.fromList

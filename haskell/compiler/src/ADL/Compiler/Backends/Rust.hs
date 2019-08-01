@@ -9,13 +9,13 @@ a rust backend from an ADL file.
 module ADL.Compiler.Backends.Rust(
  generate,
  RustFlags(..),
- rustModule,
+ rustScopedName,
  ) where
 
 import           ADL.Compiler.AST
 import           ADL.Compiler.Primitive
 import           ADL.Utils.FileDiff                         (dirContents)
-import           ADL.Utils.Format(template,formatText)
+import           ADL.Utils.Format                           (template,formatText,fshow)
 import qualified Data.ByteString.Lazy                       as LBS
 import qualified Data.Map                                   as M
 import qualified Data.Set                                   as S
@@ -67,7 +67,7 @@ generateModule rf fileWriter m0 = do
       m = associateCustomTypes getCustomType moduleName m0
       cgp = CodeGenProfile {}
       mf = execState (genModule m) (emptyModuleFile (m_name m) rf cgp)
-      filePath = moduleFilePath (unRustModule (rsModule rf) <> unModuleName moduleName) <.> "rs"
+      filePath = moduleFilePath (unRustScopedName (rsModule rf) <> unModuleName moduleName) <.> "rs"
   liftIO $ fileWriter filePath (genModuleCode "adlc" mf)
   where
     genModule m = do
@@ -90,7 +90,7 @@ generateModFiles rf fileWriter ms = do
       addParent m = M.insertWith (<>) (init m) (S.singleton (last m))
   -- Write them to the output tree
   for_ (M.toList modfiles) $ \(parent,children) -> do
-    let filePath = moduleFilePath (unRustModule (rsModule rf) <> parent <> ["mod"]) <.> "rs"
+    let filePath = moduleFilePath (unRustScopedName (rsModule rf) <> parent <> ["mod"]) <.> "rs"
     let content = T.intercalate "\n" ["pub mod " <> child <> ";" | child <- S.toList children]
     liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 content))
 
@@ -100,14 +100,33 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
   fds <- mapM genFieldDetails (s_fields struct)
   let structName = capitalise (d_name decl)
   phantomFields <- mapM phantomData phantomTypeParams
-  addDeclaration $ renderCommentForDeclaration decl <> render structName typeParams fds phantomFields
+  rustUse (rustScopedName "serde::ser::SerializeStruct")
+  rSerialize <- rustUse (rustScopedName "serde::ser::Serialize")
+  rSerializer <- rustUse (rustScopedName "serde::ser::Serializer")
+  addDeclaration
+    (  renderCommentForDeclaration decl
+    <> render structName typeParams fds phantomFields rSerialize rSerializer
+    )
+
   where
-    render :: T.Text -> [Ident] -> [FieldDetails] -> [T.Text] -> Code
-    render name typeParams fields phantomFields 
+    render :: T.Text -> [Ident] -> [FieldDetails] -> [T.Text] -> T.Text -> T.Text-> Code
+    render name typeParams fields phantomFields rSerialize rSerializer
       =  renderDecl
       <> cline ""
       <> cblock (template "impl$1 $2$1" [typeParamsExpr typeParams, name])
         ( renderConstructor
+        )
+      <> cline ""
+      <> cblock (template "impl$1 $2 for $3$4" [traitTypeParamsExpr rSerialize typeParams,  rSerialize, name, typeParamsExpr typeParams])
+        (  cline "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>"
+        <> cline "where"
+        <> ctemplate "    S: $1," [rSerializer]
+        <> cblock ""
+          (  ctemplate "let mut s = serializer.serialize_struct(\"$1\", $2)?;" [name, fshow (length fields)]
+          <> mconcat [ ctemplate "s.serialize_field(\"$1\", &self.$2)?;" [f_name (fdField fd), structFieldName fd]
+                     | fd <- fields ]
+          <> cline "s.end()"
+          )
         )
       where
         renderDecl = cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields

@@ -1,5 +1,9 @@
 // @generated from adl module picture
 
+use serde::ser::Serialize;
+use serde::ser::SerializeStruct;
+use serde::ser::Serializer;
+
 pub enum Picture {
   Circle(Circle),
   Rectangle(Rectangle),
@@ -19,6 +23,17 @@ impl Circle {
   }
 }
 
+impl Serialize for Circle {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Circle", 1)?;
+    s.serialize_field("radius", &self.radius)?;
+    s.end()
+  }
+}
+
 pub struct Rectangle {
   pub width: f64,
   pub height: f64,
@@ -30,6 +45,18 @@ impl Rectangle {
       width: width,
       height: height,
     }
+  }
+}
+
+impl Serialize for Rectangle {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Rectangle", 2)?;
+    s.serialize_field("width", &self.width)?;
+    s.serialize_field("height", &self.height)?;
+    s.end()
   }
 }
 
@@ -46,5 +73,18 @@ impl<T> Translated<T> {
       yoffset: 0_f64,
       object: object,
     }
+  }
+}
+
+impl<T: Serialize> Serialize for Translated<T> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("Translated", 3)?;
+    s.serialize_field("xoffset", &self.xoffset)?;
+    s.serialize_field("yoffset", &self.yoffset)?;
+    s.serialize_field("object", &self.object)?;
+    s.end()
   }
 }

@@ -181,8 +181,8 @@ runRsBackend ipaths mpaths epath = do
   tempDir <- createTempDirectory tdir "adlt.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-rs"]}
       js = RS.RustFlags {
-        RS.rsModule = RS.rustModule "adl",
-        RS.rsRuntimeModule = RS.rustModule "crate::adlrt"
+        RS.rsModule = RS.rustScopedName "adl",
+        RS.rsRuntimeModule = RS.rustScopedName "crate::adlrt"
       }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
   er <- unEIO $ RS.generate af js fileWriter mpaths

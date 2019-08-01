@@ -1,5 +1,9 @@
 // @generated from adl module test6
 
+use serde::ser::Serialize;
+use serde::ser::SerializeStruct;
+use serde::ser::Serializer;
+
 pub struct S {
   pub f_pair: crate::adl::sys::types::Pair<i32, f64>,
   pub f_either: crate::adl::sys::types::Either<String, i32>,
@@ -29,5 +33,26 @@ impl S {
       f_int: f_int,
       f_int_2: Some(100_i64),
     }
+  }
+}
+
+impl Serialize for S {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+    let mut s = serializer.serialize_struct("S", 11)?;
+    s.serialize_field("f_pair", &self.f_pair)?;
+    s.serialize_field("f_either", &self.f_either)?;
+    s.serialize_field("f_error", &self.f_error)?;
+    s.serialize_field("f_map", &self.f_map)?;
+    s.serialize_field("f_set", &self.f_set)?;
+    s.serialize_field("f_mstring", &self.f_mstring)?;
+    s.serialize_field("f_mstring2", &self.f_mstring_2)?;
+    s.serialize_field("f_nstring", &self.f_nstring)?;
+    s.serialize_field("f_nstring2", &self.f_nstring_2)?;
+    s.serialize_field("f_int", &self.f_int)?;
+    s.serialize_field("f_int2", &self.f_int_2)?;
+    s.end()
   }
 }
