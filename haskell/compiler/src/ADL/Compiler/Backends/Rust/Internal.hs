@@ -327,7 +327,8 @@ getDeclRef sn = do
     then return (sn_name sn)
     else do
       mfn <- mfRustModuleFn <$> get
-      return (T.intercalate "::" (unRustScopedName (mfn (sn_moduleName sn)) <> [sn_name sn]))
+      rAdlType <- rustUse (RustScopedName (unRustScopedName (mfn (sn_moduleName sn)) <> [sn_name sn]))
+      return rAdlType
 
 getCustomType :: ScopedName -> RDecl -> Maybe CustomType
 getCustomType _ _ = Nothing
@@ -342,8 +343,9 @@ moduleFilePath  :: [Ident] -> FilePath
 moduleFilePath path = joinPath (map T.unpack path)
 
 phantomData :: Ident -> CState T.Text
-phantomData typeParam =
-  return (template "std::marker::PhantomData<$1>" [typeParam])
+phantomData typeParam = do
+  rPhantomData <- rustUse (rustScopedName "std::marker::PhantomData")
+  return (template "$1<$2>" [rPhantomData, typeParam])
 
 rustUse :: RustScopedName -> CState T.Text
 rustUse rsname = do

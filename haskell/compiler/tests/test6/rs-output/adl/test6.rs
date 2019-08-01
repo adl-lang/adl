@@ -1,17 +1,23 @@
 // @generated from adl module test6
 
+use crate::adl::sys::types::Either;
+use crate::adl::sys::types::Error;
+use crate::adl::sys::types::Map;
+use crate::adl::sys::types::Maybe;
+use crate::adl::sys::types::Pair;
 use serde::ser::Serialize;
 use serde::ser::SerializeStruct;
 use serde::ser::Serializer;
+use crate::adl::sys::types::Set;
 
 pub struct S {
-  pub f_pair: crate::adl::sys::types::Pair<i32, f64>,
-  pub f_either: crate::adl::sys::types::Either<String, i32>,
-  pub f_error: crate::adl::sys::types::Error<i32>,
-  pub f_map: crate::adl::sys::types::Map<String, f64>,
-  pub f_set: crate::adl::sys::types::Set<String>,
-  pub f_mstring: crate::adl::sys::types::Maybe<String>,
-  pub f_mstring_2: crate::adl::sys::types::Maybe<String>,
+  pub f_pair: Pair<i32, f64>,
+  pub f_either: Either<String, i32>,
+  pub f_error: Error<i32>,
+  pub f_map: Map<String, f64>,
+  pub f_set: Set<String>,
+  pub f_mstring: Maybe<String>,
+  pub f_mstring_2: Maybe<String>,
   pub f_nstring: Option<String>,
   pub f_nstring_2: Option<String>,
   pub f_int: Option<i64>,
@@ -19,7 +25,7 @@ pub struct S {
 }
 
 impl S {
-  pub fn new(f_pair: crate::adl::sys::types::Pair<i32, f64>, f_either: crate::adl::sys::types::Either<String, i32>, f_error: crate::adl::sys::types::Error<i32>, f_map: crate::adl::sys::types::Map<String, f64>, f_set: crate::adl::sys::types::Set<String>, f_mstring: crate::adl::sys::types::Maybe<String>, f_nstring: Option<String>, f_int: Option<i64>) -> S {
+  pub fn new(f_pair: Pair<i32, f64>, f_either: Either<String, i32>, f_error: Error<i32>, f_map: Map<String, f64>, f_set: Set<String>, f_mstring: Maybe<String>, f_nstring: Option<String>, f_int: Option<i64>) -> S {
     S {
       f_pair: f_pair,
       f_either: f_either,
@@ -27,7 +33,7 @@ impl S {
       f_map: f_map,
       f_set: f_set,
       f_mstring: f_mstring,
-      f_mstring_2: crate::adl::sys::types::Maybe::Just("sukpeepolup".to_string()),
+      f_mstring_2: Maybe::Just("sukpeepolup".to_string()),
       f_nstring: f_nstring,
       f_nstring_2: Some("abcde".to_string()),
       f_int: f_int,

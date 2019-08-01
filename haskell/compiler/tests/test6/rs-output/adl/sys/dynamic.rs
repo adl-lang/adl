@@ -3,17 +3,18 @@
 use serde::ser::Serialize;
 use serde::ser::SerializeStruct;
 use serde::ser::Serializer;
+use crate::adl::sys::adlast::TypeExpr;
 
 /**
  * A serialised value along with  its type
  */
 pub struct Dynamic {
-  pub type_expr: crate::adl::sys::adlast::TypeExpr,
+  pub type_expr: TypeExpr,
   pub value: serde_json::Value,
 }
 
 impl Dynamic {
-  pub fn new(type_expr: crate::adl::sys::adlast::TypeExpr, value: serde_json::Value) -> Dynamic {
+  pub fn new(type_expr: TypeExpr, value: serde_json::Value) -> Dynamic {
     Dynamic {
       type_expr: type_expr,
       value: value,

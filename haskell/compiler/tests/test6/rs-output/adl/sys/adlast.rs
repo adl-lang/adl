@@ -1,5 +1,7 @@
 // @generated from adl module sys.adlast
 
+use crate::adl::sys::types::Map;
+use crate::adl::sys::types::Maybe;
 use serde::ser::Serialize;
 use serde::ser::SerializeStruct;
 use serde::ser::Serializer;
@@ -8,7 +10,7 @@ pub type ModuleName = String;
 
 pub type Ident = String;
 
-pub type Annotations = crate::adl::sys::types::Map<ScopedName, serde_json::Value>;
+pub type Annotations = Map<ScopedName, serde_json::Value>;
 
 pub struct ScopedName {
   pub module_name: ModuleName,
@@ -72,12 +74,12 @@ pub struct Field {
   pub name: Ident,
   pub serialized_name: Ident,
   pub type_expr: TypeExpr,
-  pub default: crate::adl::sys::types::Maybe<serde_json::Value>,
+  pub default: Maybe<serde_json::Value>,
   pub annotations: Annotations,
 }
 
 impl Field {
-  pub fn new(name: Ident, serialized_name: Ident, type_expr: TypeExpr, default: crate::adl::sys::types::Maybe<serde_json::Value>, annotations: Annotations) -> Field {
+  pub fn new(name: Ident, serialized_name: Ident, type_expr: TypeExpr, default: Maybe<serde_json::Value>, annotations: Annotations) -> Field {
     Field {
       name: name,
       serialized_name: serialized_name,
@@ -184,11 +186,11 @@ impl Serialize for TypeDef {
 pub struct NewType {
   pub type_params: Vec<Ident>,
   pub type_expr: TypeExpr,
-  pub default: crate::adl::sys::types::Maybe<serde_json::Value>,
+  pub default: Maybe<serde_json::Value>,
 }
 
 impl NewType {
-  pub fn new(type_params: Vec<Ident>, type_expr: TypeExpr, default: crate::adl::sys::types::Maybe<serde_json::Value>) -> NewType {
+  pub fn new(type_params: Vec<Ident>, type_expr: TypeExpr, default: Maybe<serde_json::Value>) -> NewType {
     NewType {
       type_params: type_params,
       type_expr: type_expr,
@@ -219,13 +221,13 @@ pub enum DeclType {
 
 pub struct Decl {
   pub name: Ident,
-  pub version: crate::adl::sys::types::Maybe<u32>,
+  pub version: Maybe<u32>,
   pub r#type: DeclType,
   pub annotations: Annotations,
 }
 
 impl Decl {
-  pub fn new(name: Ident, version: crate::adl::sys::types::Maybe<u32>, r#type: DeclType, annotations: Annotations) -> Decl {
+  pub fn new(name: Ident, version: Maybe<u32>, r#type: DeclType, annotations: Annotations) -> Decl {
     Decl {
       name: name,
       version: version,
