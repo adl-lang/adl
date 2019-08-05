@@ -1,11 +1,14 @@
 // @generated from adl module sys.types
 
-use serde::ser::Serialize;
-use serde::ser::SerializeStruct;
-use serde::ser::Serializer;
+use serde::Deserialize;
+use serde::Serialize;
 
+#[derive(Serialize,Deserialize)]
 pub struct Pair<T1, T2> {
+  #[serde(rename="v1")]
   pub v_1: T1,
+
+  #[serde(rename="v2")]
   pub v_2: T2,
 }
 
@@ -18,109 +21,35 @@ impl<T1, T2> Pair<T1, T2> {
   }
 }
 
-impl<T1: Serialize, T2: Serialize> Serialize for Pair<T1, T2> {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Pair", 2)?;
-    s.serialize_field("v1", &self.v_1)?;
-    s.serialize_field("v2", &self.v_2)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub enum Either<T1, T2> {
+  #[serde(rename="left")]
   Left(T1),
+
+  #[serde(rename="right")]
   Right(T2),
 }
 
-impl<T1: Serialize, T2: Serialize> Serialize for Either<T1, T2> {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    match self {
-      Either::Left(v) => {
-        let mut s = serializer.serialize_struct("Either", 1)?;
-        s.serialize_field("left", v)?;
-        s.end()
-      }
-      Either::Right(v) => {
-        let mut s = serializer.serialize_struct("Either", 1)?;
-        s.serialize_field("right", v)?;
-        s.end()
-      }
-    }
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub enum Maybe<T> {
+  #[serde(rename="nothing")]
   Nothing,
+
+  #[serde(rename="just")]
   Just(T),
 }
 
-impl<T: Serialize> Serialize for Maybe<T> {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    match self {
-      Maybe::Nothing => "nothing".serialize(serializer),
-      Maybe::Just(v) => {
-        let mut s = serializer.serialize_struct("Maybe", 1)?;
-        s.serialize_field("just", v)?;
-        s.end()
-      }
-    }
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub enum Error<T> {
+  #[serde(rename="value")]
   Value(T),
+
+  #[serde(rename="error")]
   Error(String),
 }
 
-impl<T: Serialize> Serialize for Error<T> {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    match self {
-      Error::Value(v) => {
-        let mut s = serializer.serialize_struct("Error", 1)?;
-        s.serialize_field("value", v)?;
-        s.end()
-      }
-      Error::Error(v) => {
-        let mut s = serializer.serialize_struct("Error", 1)?;
-        s.serialize_field("error", v)?;
-        s.end()
-      }
-    }
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Map<K, V>(pub Vec<Pair<K, V>>);
 
-impl<K: Serialize, V: Serialize> Serialize for Map<K, V> {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let Map(value) = self;
-    value.serialize(serializer)
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Set<T>(pub Vec<T>);
-
-impl<T: Serialize> Serialize for Set<T> {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let Set(value) = self;
-    value.serialize(serializer)
-  }
-}

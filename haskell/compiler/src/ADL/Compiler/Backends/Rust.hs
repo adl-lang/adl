@@ -30,8 +30,8 @@ import           Control.Monad                              (when)
 import           Control.Monad.Trans                        (liftIO)
 import           Control.Monad.Trans.State.Strict
 import           Data.Foldable                              (for_)
-import           Data.List                                  (inits, sortOn)
-import           Data.Maybe                                 (isNothing, catMaybes, fromMaybe)
+import           Data.List                                  (inits, sortOn, intersperse)
+import           Data.Maybe                                 (isNothing, catMaybes, fromMaybe, isJust)
 import           Data.Monoid
 import           Data.Traversable                           (for)
 import           System.FilePath                            (joinPath,
@@ -100,49 +100,65 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
   fds <- mapM genFieldDetails (s_fields struct)
   let structName = capitalise (d_name decl)
   phantomFields <- mapM phantomData phantomTypeParams
-  rustUse (rustScopedName "serde::ser::SerializeStruct")
-  rSerialize <- rustUse (rustScopedName "serde::ser::Serialize")
-  rSerializer <- rustUse (rustScopedName "serde::ser::Serializer")
+  rustUse (rustScopedName "serde::Serialize")
+  rustUse (rustScopedName "serde::Deserialize")
   addDeclaration
     (  renderCommentForDeclaration decl
-    <> render structName typeParams fds phantomFields rSerialize rSerializer
+    <> render structName typeParams fds phantomFields
     )
 
   where
-    render :: T.Text -> [Ident] -> [FieldDetails] -> [T.Text] -> T.Text -> T.Text-> Code
-    render name typeParams fields phantomFields rSerialize rSerializer
+    render :: T.Text -> [Ident] -> [FieldDetails] -> [T.Text] -> Code
+    render name typeParams fields phantomFields
       =  renderDecl
       <> cline ""
       <> cblock (template "impl$1 $2$1" [typeParamsExpr typeParams, name])
         ( renderConstructor
-        )
-      <> cline ""
-      <> cblock (template "impl$1 $2 for $3$4" [traitTypeParamsExpr rSerialize typeParams,  rSerialize, name, typeParamsExpr typeParams])
-        (  cline "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>"
-        <> cline "where"
-        <> ctemplate "    S: $1," [rSerializer]
-        <> cblock ""
-          (  ctemplate "let mut s = serializer.serialize_struct(\"$1\", $2)?;" [name, fshow (length fields)]
-          <> mconcat [ ctemplate "s.serialize_field(\"$1\", &self.$2)?;" [f_name (fdField fd), structFieldName fd]
-                     | fd <- fields ]
-          <> cline "s.end()"
-          )
+        <> mconcat [renderDefaultValueFn fd defv | (fd, Just defv) <- map (\fd -> (fd, fdDefValue fd)) fields]
         )
       where
-        renderDecl = cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
+        renderDecl
+          =  cline "#[derive(Serialize,Deserialize)]"
+          <> cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
+
         renderedFields
-          =   (mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd| fd <- fields])
-          <>  (mconcat [ctemplate "phantom$1: $2," [tp, pf] | (tp,pf) <- zip phantomTypeParams phantomFields])
+          =  mconcat (intersperse (cline "")
+               (  [renderField fd| fd <- fields]
+               <> [ctemplate "phantom$1: $2," [tp, pf] | (tp,pf) <- zip phantomTypeParams phantomFields]
+               )
+             )
     
-        renderFieldDeclaration :: FieldDetails -> Code
-        renderFieldDeclaration fd
-          = ctemplate "pub $1: $2," [structFieldName fd, fdTypeExprStr fd]
+        renderField :: FieldDetails -> Code
+        renderField fd
+          =  renderCommentForField (fdField fd)
+          <> (if hasDefault fd
+              then ctemplate "#[serde(default=\"$1\")]" [defFunctionName fd]
+              else mempty
+            )
+          <> serdeRenameAttribute fd (structFieldName fd)
+          <> ctemplate "pub $1: $2," [structFieldName fd, fdTypeExprStr fd]
+
+        renderDefaultValueFn fd defv
+          =  cline ""
+          <> cblock (template "pub fn def_$1() -> $2" [structFieldName fd, fdTypeExprStr fd])
+               (  cline defv
+               )
 
         renderConstructor = cblock (template "pub fn new($1) -> $2$3" [requiredArgs, name, typeParamsExpr typeParams]) (
           cblock name (
-            mconcat [ctemplate "$1: $2," [structFieldName fd, fromMaybe (structFieldName fd) (fdDefValue fd)] | fd <- fields]
+            mconcat [ctemplate "$1: $2,"
+              [structFieldName fd, if hasDefault fd then defFunctionName fd <> "()" else structFieldName fd]
+            | fd <- fields]
             )
           )
+
+        defFunctionName fd = template "$1$2::def_$3" [name, tparams, structFieldName fd]
+        hasDefault fd = isJust (fdDefValue fd)
+
+        tparams = case typeParams of
+          [] -> ""
+          _ -> "::" <> typeParamsExpr typeParams
+
 
         requiredArgs = T.intercalate ", "
           [ template "$1: $2" [structFieldName fd, fdTypeExprStr fd]
@@ -156,28 +172,21 @@ genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnion m decl union@Union{u_typeParams=typeParams} = do
   fds <- mapM genFieldDetails (u_fields union)
   let unionName = capitalise (d_name decl)
-  rustUse (rustScopedName "serde::ser::SerializeStruct")
-  rSerialize <- rustUse (rustScopedName "serde::ser::Serialize")
-  rSerializer <- rustUse (rustScopedName "serde::ser::Serializer")
-  addDeclaration $ renderCommentForDeclaration decl <> render unionName typeParams fds rSerialize rSerializer
+  rustUse (rustScopedName "serde::Serialize")
+  rustUse (rustScopedName "serde::Deserialize")
+  addDeclaration $ renderCommentForDeclaration decl <> render unionName typeParams fds
   where
-    render :: T.Text -> [Ident] -> [FieldDetails] -> T.Text -> T.Text -> Code
-    render name typeParams fields rSerialize rSerializer
-      =  cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
-      <> cline ""
-      <> cblock (template "impl$1 $2 for $3$4" [traitTypeParamsExpr rSerialize typeParams,  rSerialize, name, typeParamsExpr typeParams])
-        (  cline "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>"
-        <> cline "where"
-        <> ctemplate "    S: $1," [rSerializer]
-        <> cblock ""
-          ( cblock "match self"
-            (  mconcat [if isVoidType (f_type (fdField fd)) then renderSerializeVoidVariant fd else renderSerializeVariant fd | fd <- fields]
-            )
-          )
-        )
-
+    render :: T.Text -> [Ident] -> [FieldDetails] -> Code
+    render name typeParams fields
+      =  cline "#[derive(Serialize,Deserialize)]"
+      <> cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
       where
-        renderedFields = mconcat [renderCommentForField (fdField fd) <> renderFieldDeclaration fd | fd <- fields]
+        renderedFields = mconcat (intersperse (cline "") [renderField fd| fd <- fields])
+
+        renderField fd
+          =  renderCommentForField (fdField fd)
+          <> serdeRenameAttribute fd (enumVariantName fd)
+          <> renderFieldDeclaration fd
     
         renderFieldDeclaration :: FieldDetails -> Code
         renderFieldDeclaration fd
@@ -217,25 +226,19 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
   let typeName = capitalise (d_name decl)
   typeExprStr <-genTypeExpr te
   phantomFields <- mapM phantomData phantomTypeParams
-  rustUse (rustScopedName "serde::ser::SerializeStruct")
-  rSerialize <- rustUse (rustScopedName "serde::ser::Serialize")
-  rSerializer <- rustUse (rustScopedName "serde::ser::Serializer")
-  addDeclaration $ renderCommentForDeclaration decl <> render typeName typeParams typeExprStr phantomFields rSerialize rSerializer
+  rustUse (rustScopedName "serde::Serialize")
+  rustUse (rustScopedName "serde::Deserialize")
+  addDeclaration $ renderCommentForDeclaration decl <> render typeName typeParams typeExprStr phantomFields
   where
-    render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> T.Text -> T.Text -> Code
-    render name typeParams typeExprStr phantomFields rSerialize rSerializer =
-      ctemplate "pub struct $1$2($3);"
-        [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> phantomFields)]
-      <> cline ""
-      <> cblock (template "impl$1 $2 for $3$4" [traitTypeParamsExpr rSerialize typeParams,  rSerialize, name, typeParamsExpr typeParams])
-        (  cline "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>"
-        <> cline "where"
-        <> ctemplate "    S: $1," [rSerializer]
-        <> cblock ""
-          (  ctemplate "let $1(value) = self;" [name]
-          <> cline "value.serialize(serializer)"
-          )
-        )
-
+    render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> Code
+    render name typeParams typeExprStr phantomFields
+      =  cline "#[derive(Serialize,Deserialize)]"
+      <> ctemplate "pub struct $1$2($3);"
+          [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> phantomFields)]
     phantomTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))
 
+
+serdeRenameAttribute :: FieldDetails -> Ident -> Code
+serdeRenameAttribute fd name
+  | name == (f_serializedName (fdField fd)) = mempty
+  | otherwise                                = ctemplate "#[serde(rename=\"$1\")]" [f_name (fdField fd)]

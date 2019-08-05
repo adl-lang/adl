@@ -1,46 +1,24 @@
 // @generated from adl module picture
 
-use serde::ser::Serialize;
-use serde::ser::SerializeStruct;
-use serde::ser::Serializer;
+use serde::Deserialize;
+use serde::Serialize;
 
+#[derive(Serialize,Deserialize)]
 pub enum Picture {
+  #[serde(rename="circle")]
   Circle(Circle),
+
+  #[serde(rename="rectangle")]
   Rectangle(Rectangle),
+
+  #[serde(rename="composed")]
   Composed(Vec<Picture>),
+
+  #[serde(rename="translated")]
   Translated(Box<Translated<Picture>>),
 }
 
-impl Serialize for Picture {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    match self {
-      Picture::Circle(v) => {
-        let mut s = serializer.serialize_struct("Picture", 1)?;
-        s.serialize_field("circle", v)?;
-        s.end()
-      }
-      Picture::Rectangle(v) => {
-        let mut s = serializer.serialize_struct("Picture", 1)?;
-        s.serialize_field("rectangle", v)?;
-        s.end()
-      }
-      Picture::Composed(v) => {
-        let mut s = serializer.serialize_struct("Picture", 1)?;
-        s.serialize_field("composed", v)?;
-        s.end()
-      }
-      Picture::Translated(v) => {
-        let mut s = serializer.serialize_struct("Picture", 1)?;
-        s.serialize_field("translated", v)?;
-        s.end()
-      }
-    }
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Circle {
   pub radius: f64,
 }
@@ -53,19 +31,10 @@ impl Circle {
   }
 }
 
-impl Serialize for Circle {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Circle", 1)?;
-    s.serialize_field("radius", &self.radius)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Rectangle {
   pub width: f64,
+
   pub height: f64,
 }
 
@@ -78,43 +47,31 @@ impl Rectangle {
   }
 }
 
-impl Serialize for Rectangle {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Rectangle", 2)?;
-    s.serialize_field("width", &self.width)?;
-    s.serialize_field("height", &self.height)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Translated<T> {
+  #[serde(default="Translated::<T>::def_xoffset")]
   pub xoffset: f64,
+
+  #[serde(default="Translated::<T>::def_yoffset")]
   pub yoffset: f64,
+
   pub object: T,
 }
 
 impl<T> Translated<T> {
   pub fn new(object: T) -> Translated<T> {
     Translated {
-      xoffset: 0_f64,
-      yoffset: 0_f64,
+      xoffset: Translated::<T>::def_xoffset(),
+      yoffset: Translated::<T>::def_yoffset(),
       object: object,
     }
   }
-}
 
-impl<T: Serialize> Serialize for Translated<T> {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Translated", 3)?;
-    s.serialize_field("xoffset", &self.xoffset)?;
-    s.serialize_field("yoffset", &self.yoffset)?;
-    s.serialize_field("object", &self.object)?;
-    s.end()
+  pub fn def_xoffset() -> f64 {
+    0_f64
+  }
+
+  pub fn def_yoffset() -> f64 {
+    0_f64
   }
 }

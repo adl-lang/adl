@@ -1,10 +1,9 @@
 // @generated from adl module sys.adlast
 
+use serde::Deserialize;
 use crate::adl::sys::types::Map;
 use crate::adl::sys::types::Maybe;
-use serde::ser::Serialize;
-use serde::ser::SerializeStruct;
-use serde::ser::Serializer;
+use serde::Serialize;
 
 pub type ModuleName = String;
 
@@ -12,8 +11,11 @@ pub type Ident = String;
 
 pub type Annotations = Map<ScopedName, serde_json::Value>;
 
+#[derive(Serialize,Deserialize)]
 pub struct ScopedName {
+  #[serde(rename="moduleName")]
   pub module_name: ModuleName,
+
   pub name: Ident,
 }
 
@@ -26,51 +28,23 @@ impl ScopedName {
   }
 }
 
-impl Serialize for ScopedName {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("ScopedName", 2)?;
-    s.serialize_field("moduleName", &self.module_name)?;
-    s.serialize_field("name", &self.name)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub enum TypeRef {
+  #[serde(rename="primitive")]
   Primitive(Ident),
+
+  #[serde(rename="typeParam")]
   TypeParam(Ident),
+
+  #[serde(rename="reference")]
   Reference(ScopedName),
 }
 
-impl Serialize for TypeRef {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    match self {
-      TypeRef::Primitive(v) => {
-        let mut s = serializer.serialize_struct("TypeRef", 1)?;
-        s.serialize_field("primitive", v)?;
-        s.end()
-      }
-      TypeRef::TypeParam(v) => {
-        let mut s = serializer.serialize_struct("TypeRef", 1)?;
-        s.serialize_field("typeParam", v)?;
-        s.end()
-      }
-      TypeRef::Reference(v) => {
-        let mut s = serializer.serialize_struct("TypeRef", 1)?;
-        s.serialize_field("reference", v)?;
-        s.end()
-      }
-    }
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct TypeExpr {
+  #[serde(rename="typeRef")]
   pub type_ref: TypeRef,
+
   pub parameters: Vec<TypeExpr>,
 }
 
@@ -83,23 +57,18 @@ impl TypeExpr {
   }
 }
 
-impl Serialize for TypeExpr {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("TypeExpr", 2)?;
-    s.serialize_field("typeRef", &self.type_ref)?;
-    s.serialize_field("parameters", &self.parameters)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Field {
   pub name: Ident,
+
+  #[serde(rename="serializedName")]
   pub serialized_name: Ident,
+
+  #[serde(rename="typeExpr")]
   pub type_expr: TypeExpr,
+
   pub default: Maybe<serde_json::Value>,
+
   pub annotations: Annotations,
 }
 
@@ -115,23 +84,11 @@ impl Field {
   }
 }
 
-impl Serialize for Field {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Field", 5)?;
-    s.serialize_field("name", &self.name)?;
-    s.serialize_field("serializedName", &self.serialized_name)?;
-    s.serialize_field("typeExpr", &self.type_expr)?;
-    s.serialize_field("default", &self.default)?;
-    s.serialize_field("annotations", &self.annotations)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Struct {
+  #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
+
   pub fields: Vec<Field>,
 }
 
@@ -144,20 +101,11 @@ impl Struct {
   }
 }
 
-impl Serialize for Struct {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Struct", 2)?;
-    s.serialize_field("typeParams", &self.type_params)?;
-    s.serialize_field("fields", &self.fields)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Union {
+  #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
+
   pub fields: Vec<Field>,
 }
 
@@ -170,20 +118,12 @@ impl Union {
   }
 }
 
-impl Serialize for Union {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Union", 2)?;
-    s.serialize_field("typeParams", &self.type_params)?;
-    s.serialize_field("fields", &self.fields)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct TypeDef {
+  #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
+
+  #[serde(rename="typeExpr")]
   pub type_expr: TypeExpr,
 }
 
@@ -196,21 +136,14 @@ impl TypeDef {
   }
 }
 
-impl Serialize for TypeDef {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("TypeDef", 2)?;
-    s.serialize_field("typeParams", &self.type_params)?;
-    s.serialize_field("typeExpr", &self.type_expr)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct NewType {
+  #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
+
+  #[serde(rename="typeExpr")]
   pub type_expr: TypeExpr,
+
   pub default: Maybe<serde_json::Value>,
 }
 
@@ -224,60 +157,30 @@ impl NewType {
   }
 }
 
-impl Serialize for NewType {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("NewType", 3)?;
-    s.serialize_field("typeParams", &self.type_params)?;
-    s.serialize_field("typeExpr", &self.type_expr)?;
-    s.serialize_field("default", &self.default)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub enum DeclType {
+  #[serde(rename="struct_")]
   Struct(Struct),
+
+  #[serde(rename="union_")]
   Union(Union),
+
+  #[serde(rename="type_")]
   Type(TypeDef),
+
+  #[serde(rename="newtype_")]
   Newtype(NewType),
 }
 
-impl Serialize for DeclType {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    match self {
-      DeclType::Struct(v) => {
-        let mut s = serializer.serialize_struct("DeclType", 1)?;
-        s.serialize_field("struct_", v)?;
-        s.end()
-      }
-      DeclType::Union(v) => {
-        let mut s = serializer.serialize_struct("DeclType", 1)?;
-        s.serialize_field("union_", v)?;
-        s.end()
-      }
-      DeclType::Type(v) => {
-        let mut s = serializer.serialize_struct("DeclType", 1)?;
-        s.serialize_field("type_", v)?;
-        s.end()
-      }
-      DeclType::Newtype(v) => {
-        let mut s = serializer.serialize_struct("DeclType", 1)?;
-        s.serialize_field("newtype_", v)?;
-        s.end()
-      }
-    }
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Decl {
   pub name: Ident,
+
   pub version: Maybe<u32>,
+
+  #[serde(rename="type_")]
   pub r#type: DeclType,
+
   pub annotations: Annotations,
 }
 
@@ -292,22 +195,11 @@ impl Decl {
   }
 }
 
-impl Serialize for Decl {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Decl", 4)?;
-    s.serialize_field("name", &self.name)?;
-    s.serialize_field("version", &self.version)?;
-    s.serialize_field("type_", &self.r#type)?;
-    s.serialize_field("annotations", &self.annotations)?;
-    s.end()
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct ScopedDecl {
+  #[serde(rename="moduleName")]
   pub module_name: ModuleName,
+
   pub decl: Decl,
 }
 
@@ -320,49 +212,25 @@ impl ScopedDecl {
   }
 }
 
-impl Serialize for ScopedDecl {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("ScopedDecl", 2)?;
-    s.serialize_field("moduleName", &self.module_name)?;
-    s.serialize_field("decl", &self.decl)?;
-    s.end()
-  }
-}
-
 pub type DeclVersions = Vec<Decl>;
 
+#[derive(Serialize,Deserialize)]
 pub enum Import {
+  #[serde(rename="moduleName")]
   ModuleName(ModuleName),
+
+  #[serde(rename="scopedName")]
   ScopedName(ScopedName),
 }
 
-impl Serialize for Import {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    match self {
-      Import::ModuleName(v) => {
-        let mut s = serializer.serialize_struct("Import", 1)?;
-        s.serialize_field("moduleName", v)?;
-        s.end()
-      }
-      Import::ScopedName(v) => {
-        let mut s = serializer.serialize_struct("Import", 1)?;
-        s.serialize_field("scopedName", v)?;
-        s.end()
-      }
-    }
-  }
-}
-
+#[derive(Serialize,Deserialize)]
 pub struct Module {
   pub name: ModuleName,
+
   pub imports: Vec<Import>,
+
   pub decls: std::collections::HashMap<String,Decl>,
+
   pub annotations: Annotations,
 }
 
@@ -374,19 +242,5 @@ impl Module {
       decls: decls,
       annotations: annotations,
     }
-  }
-}
-
-impl Serialize for Module {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Module", 4)?;
-    s.serialize_field("name", &self.name)?;
-    s.serialize_field("imports", &self.imports)?;
-    s.serialize_field("decls", &self.decls)?;
-    s.serialize_field("annotations", &self.annotations)?;
-    s.end()
   }
 }

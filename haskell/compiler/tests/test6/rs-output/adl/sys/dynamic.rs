@@ -1,15 +1,17 @@
 // @generated from adl module sys.dynamic
 
-use serde::ser::Serialize;
-use serde::ser::SerializeStruct;
-use serde::ser::Serializer;
+use serde::Deserialize;
+use serde::Serialize;
 use crate::adl::sys::adlast::TypeExpr;
 
 /**
  * A serialised value along with  its type
  */
+#[derive(Serialize,Deserialize)]
 pub struct Dynamic {
+  #[serde(rename="typeExpr")]
   pub type_expr: TypeExpr,
+
   pub value: serde_json::Value,
 }
 
@@ -19,17 +21,5 @@ impl Dynamic {
       type_expr: type_expr,
       value: value,
     }
-  }
-}
-
-impl Serialize for Dynamic {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: Serializer,
-  {
-    let mut s = serializer.serialize_struct("Dynamic", 2)?;
-    s.serialize_field("typeExpr", &self.type_expr)?;
-    s.serialize_field("value", &self.value)?;
-    s.end()
   }
 }
