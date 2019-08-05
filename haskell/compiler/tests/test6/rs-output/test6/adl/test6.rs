@@ -1,13 +1,13 @@
 // @generated from adl module test6
 
 use serde::Deserialize;
-use crate::adl::sys::types::Either;
-use crate::adl::sys::types::Error;
-use crate::adl::sys::types::Map;
-use crate::adl::sys::types::Maybe;
-use crate::adl::sys::types::Pair;
+use crate::test6::adl::sys::types::Either;
+use crate::test6::adl::sys::types::Error;
+use crate::test6::adl::sys::types::Map;
+use crate::test6::adl::sys::types::Maybe;
+use crate::test6::adl::sys::types::Pair;
 use serde::Serialize;
-use crate::adl::sys::types::Set;
+use crate::test6::adl::sys::types::Set;
 
 #[derive(Serialize,Deserialize)]
 pub struct S {

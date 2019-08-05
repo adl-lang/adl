@@ -1,0 +1,9 @@
+[package]
+name = "adl-rust-test"
+version = "0.1.0"
+authors = ["Tim Docker <tim@dockerz.net>"]
+edition = "2018"
+
+[dependencies]
+serde_json = "1.0.40"
+serde = { version = "1.0", features = ["derive"] }

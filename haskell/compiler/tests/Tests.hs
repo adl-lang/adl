@@ -175,13 +175,13 @@ runTsBackend1 mpath = runTsBackend [ipath,stdsrc] [mpath] epath
     ipath = takeDirectory mpath
     epath = takeDirectory ipath </> "ts-output"
 
-runRsBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
-runRsBackend ipaths mpaths epath = do
+runRsBackend :: [FilePath] -> [FilePath] -> FilePath -> T.Text -> IO CodeGenResult
+runRsBackend ipaths mpaths epath rsModule = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adlt.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-rs"]}
       js = RS.RustFlags {
-        RS.rsModule = RS.rustScopedName "adl",
+        RS.rsModule = RS.rustScopedName rsModule,
         RS.rsRuntimeModule = RS.rustScopedName "crate::adlrt"
       }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
@@ -389,14 +389,14 @@ runTests = do
 
   describe "adlc rust backend" $ do
     it "Generates the correct code for the picture demo" $ do
-      collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output")
+      collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output" "demo1::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
       let srcs = stdfiles <> ["test6/input/test.adl"]
-      collectResults (runRsBackend [stdsrc] srcs "test6/rs-output")
+      collectResults (runRsBackend [stdsrc] srcs "test6/rs-output" "test6::adl")
           `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runRsBackend [stdsrc] ["test7/input/test.adl"] "test7/rs-output")
+      collectResults (runRsBackend [stdsrc] ["test7/input/test.adl"] "test7/rs-output" "test7::adl")
         `shouldReturn` MatchOutput
  
   where
