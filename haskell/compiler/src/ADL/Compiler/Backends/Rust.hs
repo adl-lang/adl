@@ -17,6 +17,7 @@ import           ADL.Compiler.Primitive
 import           ADL.Utils.FileDiff                         (dirContents)
 import           ADL.Utils.Format                           (template,formatText,fshow)
 import qualified Data.ByteString.Lazy                       as LBS
+import qualified Data.List                                  as L
 import qualified Data.Map                                   as M
 import qualified Data.Set                                   as S
 import qualified Data.Text                                  as T
@@ -30,7 +31,6 @@ import           Control.Monad                              (when)
 import           Control.Monad.Trans                        (liftIO)
 import           Control.Monad.Trans.State.Strict
 import           Data.Foldable                              (for_)
-import           Data.List                                  (inits, sortOn, intersperse)
 import           Data.Maybe                                 (isNothing, catMaybes, fromMaybe, isJust)
 import           Data.Monoid
 import           Data.Traversable                           (for)
@@ -67,7 +67,7 @@ generateModule rf fileWriter m0 = do
       m = associateCustomTypes getCustomType moduleName m0
       cgp = CodeGenProfile {}
       mf = execState (genModule m) (emptyModuleFile (m_name m) rf cgp)
-      filePath = moduleFilePath (unRustScopedName (rsModule rf) <> unModuleName moduleName) <.> "rs"
+      filePath = moduleFilePath (unRustScopedName (rs_module rf) <> unModuleName moduleName) <.> "rs"
   liftIO $ fileWriter filePath (genModuleCode "adlc" mf)
   where
     genModule m = do
@@ -86,11 +86,11 @@ generateModFiles rf fileWriter ms = do
   -- build up the map of required mod files
   let modfiles :: M.Map [Ident] (S.Set Ident)
       modfiles = foldr addParents M.empty ms
-      addParents m map = foldr addParent map (tail (inits (unModuleName (m_name m))))
+      addParents m map = foldr addParent map (tail (L.inits (unModuleName (m_name m))))
       addParent m = M.insertWith (<>) (init m) (S.singleton (last m))
   -- Write them to the output tree
   for_ (M.toList modfiles) $ \(parent,children) -> do
-    let filePath = moduleFilePath (unRustScopedName (rsModule rf) <> parent <> ["mod"]) <.> "rs"
+    let filePath = moduleFilePath (unRustScopedName (rs_module rf) <> parent <> ["mod"]) <.> "rs"
     let content = T.intercalate "\n" ["pub mod " <> child <> ";" | child <- S.toList children]
     liftIO $ fileWriter filePath (LBS.fromStrict (T.encodeUtf8 content))
 
@@ -113,7 +113,7 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
       <> cline ""
       <> cblock (template "impl$1 $2$1" [typeParamsExpr typeParams, name])
         ( renderConstructor
-        <> mconcat [renderDefaultValueFn fd defv | (fd, Just defv) <- map (\fd -> (fd, fdDefValue fd)) fields]
+        <> mconcat [renderDefaultValueFn fd defv | (fd, Just defv) <- map (\fd -> (fd, fd_defValue fd)) fields]
         )
       where
         renderDecl
@@ -121,7 +121,7 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
           <> cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
 
         renderedFields
-          =  mconcat (intersperse (cline "")
+          =  mconcat (L.intersperse (cline "")
                (  [renderField fd| fd <- fields]
                <> [ctemplate "phantom$1: $2," [tp, pf] | (tp,pf) <- zip phantomTypeParams phantomFields]
                )
@@ -129,17 +129,17 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
     
         renderField :: FieldDetails -> Code
         renderField fd
-          =  renderCommentForField (fdField fd)
+          =  renderCommentForField (fd_field fd)
           <> (if hasDefault fd
               then ctemplate "#[serde(default=\"$1\")]" [defFunctionName fd]
               else mempty
             )
           <> serdeRenameAttribute fd (structFieldName fd)
-          <> ctemplate "pub $1: $2," [structFieldName fd, fdTypeExprStr fd]
+          <> ctemplate "pub $1: $2," [structFieldName fd, fd_typeExprStr fd]
 
         renderDefaultValueFn fd defv
           =  cline ""
-          <> cblock (template "pub fn def_$1() -> $2" [structFieldName fd, fdTypeExprStr fd])
+          <> cblock (template "pub fn def_$1() -> $2" [structFieldName fd, fd_typeExprStr fd])
                (  cline defv
                )
 
@@ -152,11 +152,11 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
           )
 
         defFunctionName fd = template "$1$2::def_$3" [name, turbofish typeParams, structFieldName fd]
-        hasDefault fd = isJust (fdDefValue fd)
+        hasDefault fd = isJust (fd_defValue fd)
 
         requiredArgs = T.intercalate ", "
-          [ template "$1: $2" [structFieldName fd, fdTypeExprStr fd]
-          | fd <- fields, isNothing (fdDefValue fd) ]
+          [ template "$1: $2" [structFieldName fd, fd_typeExprStr fd]
+          | fd <- fields, isNothing (fd_defValue fd) ]
 
     phantomTypeParams = S.toList $ S.difference
       (S.fromList typeParams)
@@ -175,24 +175,24 @@ genUnion m decl union@Union{u_typeParams=typeParams} = do
       =  cline "#[derive(Serialize,Deserialize)]"
       <> cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
       where
-        renderedFields = mconcat (intersperse (cline "") [renderField fd| fd <- fields])
+        renderedFields = mconcat (L.intersperse (cline "") [renderField fd| fd <- fields])
 
         renderField fd
-          =  renderCommentForField (fdField fd)
+          =  renderCommentForField (fd_field fd)
           <> serdeRenameAttribute fd (enumVariantName fd)
           <> renderFieldDeclaration fd
     
         renderFieldDeclaration :: FieldDetails -> Code
         renderFieldDeclaration fd
-          | isVoidType (f_type (fdField fd)) = ctemplate "$1," [enumVariantName fd]
-          | otherwise = ctemplate "$1($2)," [enumVariantName fd, fdTypeExprStr fd]
+          | isVoidType (f_type (fd_field fd)) = ctemplate "$1," [enumVariantName fd]
+          | otherwise = ctemplate "$1($2)," [enumVariantName fd, fd_typeExprStr fd]
 
         renderSerializeVoidVariant fd =
-          ctemplate "$1::$2 => \"$3\".serialize(serializer)," [name, enumVariantName fd, f_name (fdField fd)]
+          ctemplate "$1::$2 => \"$3\".serialize(serializer)," [name, enumVariantName fd, f_name (fd_field fd)]
         renderSerializeVariant fd =
           cblock (template "$1::$2(v) =>" [name, enumVariantName fd])
             (  ctemplate "let mut s = serializer.serialize_struct(\"$1\", 1)?;" [name]
-            <> ctemplate "s.serialize_field(\"$1\", v)?;" [f_name (fdField fd)]
+            <> ctemplate "s.serialize_field(\"$1\", v)?;" [f_name (fd_field fd)]
             <> cline "s.end()"
             )
 
@@ -234,5 +234,5 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
 
 serdeRenameAttribute :: FieldDetails -> Ident -> Code
 serdeRenameAttribute fd name
-  | name == (f_serializedName (fdField fd)) = mempty
-  | otherwise                                = ctemplate "#[serde(rename=\"$1\")]" [f_name (fdField fd)]
+  | name == (f_serializedName (fd_field fd)) = mempty
+  | otherwise                                = ctemplate "#[serde(rename=\"$1\")]" [f_name (fd_field fd)]

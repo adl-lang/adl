@@ -34,10 +34,10 @@ import System.FilePath(joinPath)
 data RustFlags = RustFlags {
   -- The rust module into which we generate the ADL
   -- relative to the crate root
-  rsModule :: RustScopedName,
+  rs_module :: RustScopedName,
 
   -- The absolute rust module path containing the runtime
-  rsRuntimeModule :: RustScopedName
+  rs_runtimeModule :: RustScopedName
 }
 
 data RustScopedName = RustScopedName {unRustScopedName :: [Ident]}
@@ -62,19 +62,19 @@ data CustomType = CustomType
 type CState a = State ModuleFile a
 
 data ModuleFile = ModuleFile {
-  mfModuleName   :: ModuleName,
+  mf_moduleName   :: ModuleName,
 
   -- The use references for this module
-  mfUserRefs     :: M.Map Ident RustScopedName,
+  mf_useRefs     :: M.Map Ident RustScopedName,
 
   -- The code
-  mfDeclarations :: [Code],
+  mf_declarations :: [Code],
 
   -- Function mappying ADL modules to rust modules
-  mfRustModuleFn :: RustModuleFn,
+  mf_rustModuleFn :: RustModuleFn,
 
   -- Details to control the code generate
-  mfCodeGenProfile :: CodeGenProfile
+  mf_codeGenProfile :: CodeGenProfile
 }
 
 -- A variant of the AST that carries custom type
@@ -90,9 +90,9 @@ type CStruct = Struct CResolvedType
 type CField = Field CResolvedType
 
 data FieldDetails = FieldDetails {
-  fdField       :: Field CResolvedType,
-  fdTypeExprStr :: T.Text,
-  fdDefValue    :: Maybe T.Text
+  fd_field       :: Field CResolvedType,
+  fd_typeExprStr :: T.Text,
+  fd_defValue    :: Maybe T.Text
 };
 
 -- | The key functions needed to plug a type into the
@@ -120,11 +120,11 @@ genModuleCode :: T.Text -> ModuleFile -> LBS.ByteString
 genModuleCode cmd mf = genCode code
   where
     code
-      =  ctemplate "// $1generated from adl module $2" ["@", formatText (mfModuleName mf)]
-      <> (if M.null (mfUserRefs mf) then mempty else cline "")
-      <> mconcat [genUse shortName rsname | (shortName,rsname) <- (L.sortOn snd (M.toList (mfUserRefs mf)))]
+      =  ctemplate "// $1generated from adl module $2" ["@", formatText (mf_moduleName mf)]
+      <> (if M.null (mf_useRefs mf) then mempty else cline "")
+      <> mconcat [genUse shortName rsname | (shortName,rsname) <- (L.sortOn snd (M.toList (mf_useRefs mf)))]
       <> cline ""
-      <> mconcat (L.intersperse (cline "") (reverse (mfDeclarations mf)))
+      <> mconcat (L.intersperse (cline "") (reverse (mf_declarations mf)))
 
     genCode code = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText Nothing code)))
 
@@ -136,7 +136,7 @@ genModuleCode cmd mf = genCode code
         scopedName = T.intercalate "::" (unRustScopedName rsname)
 
 addDeclaration :: Code -> CState ()
-addDeclaration code = modify (\mf->mf{mfDeclarations=code:mfDeclarations mf})
+addDeclaration code = modify (\mf->mf{mf_declarations=code:mf_declarations mf})
 
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails field = do
@@ -315,10 +315,10 @@ structName :: CDecl -> T.Text
 structName decl = capitalise (d_name decl)
 
 structFieldName :: FieldDetails -> T.Text
-structFieldName fd = unreserveWord (snakify (f_name (fdField fd)))
+structFieldName fd = unreserveWord (snakify (f_name (fd_field fd)))
 
 enumVariantName :: FieldDetails -> T.Text
-enumVariantName fd = enumVariantName0 (f_name (fdField fd))
+enumVariantName fd = enumVariantName0 (f_name (fd_field fd))
 
 enumVariantName0 :: T.Text -> T.Text
 enumVariantName0 fname = capitalise (camelize fname)
@@ -342,11 +342,11 @@ generateCode annotations = case M.lookup snRustGenerate annotations of
 -- (TODO: generate imports to avoid fully scoping every reference)
 getDeclRef :: ScopedName -> CState T.Text
 getDeclRef sn = do
-  currentModuleName <- mfModuleName <$> get
+  currentModuleName <- mf_moduleName <$> get
   if sn_moduleName sn == currentModuleName
     then return (sn_name sn)
     else do
-      mfn <- mfRustModuleFn <$> get
+      mfn <- mf_rustModuleFn <$> get
       rAdlType <- rustUse (RustScopedName (unRustScopedName (mfn (sn_moduleName sn)) <> [sn_name sn]))
       return rAdlType
 
@@ -357,7 +357,7 @@ emptyModuleFile :: ModuleName -> RustFlags -> CodeGenProfile -> ModuleFile
 emptyModuleFile mn rf cgp = ModuleFile mn M.empty [] (rustModuleFn rf) cgp
 
 rustModuleFn :: RustFlags -> RustModuleFn
-rustModuleFn rf = \mn -> RustScopedName (["crate"] <> unRustScopedName (rsModule rf) <> unModuleName mn)
+rustModuleFn rf = \mn -> RustScopedName (["crate"] <> unRustScopedName (rs_module rf) <> unModuleName mn)
 
 moduleFilePath  :: [Ident] -> FilePath
 moduleFilePath path = joinPath (map T.unpack path)
@@ -370,11 +370,11 @@ phantomData typeParam = do
 rustUse :: RustScopedName -> CState T.Text
 rustUse rsname = do
   state <- get
-  let userRefs =mfUserRefs state
+  let userRefs =mf_useRefs state
       shortName = last (unRustScopedName rsname)
       asCandidates = [shortName] <> [shortName <> "_" <> fshow n | n <- [1,2..]]
       uniqueShortName = head (filter (shortNameOk userRefs) asCandidates)
-  put state{mfUserRefs=M.insert uniqueShortName rsname userRefs}
+  put state{mf_useRefs=M.insert uniqueShortName rsname userRefs}
 
   return uniqueShortName
   where

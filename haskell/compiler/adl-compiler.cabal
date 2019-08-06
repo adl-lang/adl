@@ -93,6 +93,7 @@ library
 
 executable adlc
   main-is:            Main.hs
+  other-modules:      Paths_adl_compiler
   build-depends:      base
                     , bytestring
                     , text
