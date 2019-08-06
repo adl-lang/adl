@@ -1,0 +1,5 @@
+module test5 {
+  import adlc.config.rust.RustBoxed;
+
+  annotation Cell::tail  RustBoxed null;
+};

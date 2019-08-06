@@ -98,13 +98,12 @@ generateModFiles rf fileWriter ms = do
 genStruct :: CModule -> CDecl -> Struct CResolvedType -> CState ()
 genStruct m decl struct@Struct{s_typeParams=typeParams} = do
   fds <- mapM genFieldDetails (s_fields struct)
-  let structName = capitalise (d_name decl)
   phantomFields <- mapM phantomData phantomTypeParams
   rustUse (rustScopedName "serde::Serialize")
   rustUse (rustScopedName "serde::Deserialize")
   addDeclaration
     (  renderCommentForDeclaration decl
-    <> render structName typeParams fds phantomFields
+    <> render (structName decl) typeParams fds phantomFields
     )
 
   where
@@ -152,13 +151,8 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
             )
           )
 
-        defFunctionName fd = template "$1$2::def_$3" [name, tparams, structFieldName fd]
+        defFunctionName fd = template "$1$2::def_$3" [name, turbofish typeParams, structFieldName fd]
         hasDefault fd = isJust (fdDefValue fd)
-
-        tparams = case typeParams of
-          [] -> ""
-          _ -> "::" <> typeParamsExpr typeParams
-
 
         requiredArgs = T.intercalate ", "
           [ template "$1: $2" [structFieldName fd, fdTypeExprStr fd]

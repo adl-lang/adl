@@ -388,6 +388,15 @@ runTests = do
         `shouldReturn` MatchOutput
 
   describe "adlc rust backend" $ do
+    it "generates expected output for various structures" $
+      collectResults (runRsBackend [stdsrc] ["test2/input/test.adl"] "test2/rs-output" "test2::adl")
+        `shouldReturn` MatchOutput
+    it "generates expected code for structures with default overrides" $ do
+      collectResults (runRsBackend [stdsrc] ["test3/input/test.adl"] "test3/rs-output" "test3::adl")
+        `shouldReturn` MatchOutput
+    it "generates expected code for various unions" $ do
+      collectResults (runRsBackend [stdsrc] ["test5/input/test.adl"] "test5/rs-output" "test5::adl")
+        `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output" "demo1::adl")
         `shouldReturn` MatchOutput

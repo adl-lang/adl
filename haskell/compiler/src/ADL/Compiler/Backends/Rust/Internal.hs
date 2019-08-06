@@ -187,9 +187,9 @@ getTypeDetails (RT_Primitive pt) =
     P_Word32 -> numTypeDetails "u32"
     P_Word64 -> numTypeDetails "u64"
     P_Bool -> primTypeDetails "bool" toBool
-    P_Void -> primTypeDetails "()" (error "P_Void primitive not implemented")
-    P_ByteVector -> primTypeDetails "Vec<u8>" (error "P_ByteVector  primitive not implemented")
-    P_Json -> primTypeDetails "serde_json::Value" (error "P_Json  primitive not implemented")
+    P_Void -> primTypeDetails "()" toVoid
+    P_ByteVector -> primTypeDetails "Vec<u8>" toByteVector
+    P_Json -> primTypeDetails "serde_json::Value" toJson
     P_Vector -> vectorTypeDetails
     P_StringMap -> stringMapTypeDetails
     P_Nullable -> nullableTypeDetails
@@ -208,6 +208,17 @@ getTypeDetails (RT_Primitive pt) =
     toBool (Literal _ (LPrimitive (JS.Bool False))) = return "false"
     toBool _ = error "BUG: expected a boolean literal"
 
+    toVoid _= return "()"
+
+    toByteVector (Literal _ (LPrimitive (JS.String v))) =  do
+      rbase64 <- rustUse (rustScopedName "base64")
+      return (template "$1::decode(\"$2\").unwrap()" [rbase64, v])
+    toByteVector _ = error "BUG: expected a string literal for ByteVector"
+
+    toJson (Literal _ (LPrimitive jv)) = do
+      rserdejson <- rustUse (rustScopedName "serde_json")
+      return (template "$1::from_str(\"$2\").unwrap()" [rserdejson, T.replace "\"" "\\\"" (jsonToText jv)])
+    toJson _ = error "BUG: expected a json literal for JSson"
 
     vectorTypeDetails = TypeDetails typeExpr literalText
       where
@@ -224,7 +235,7 @@ getTypeDetails (RT_Primitive pt) =
         typeExpr _ = error "BUG: expected a single type param for StringMap"
         literalText (Literal _ (LStringMap m)) = do
           m' <- traverse genLiteralText m
-          return (template "map!{$1}" [T.intercalate ", " [ template "$1 => $2" [k,v] | (k,v) <- M.toList m']])
+          return (template "[$1].iter().cloned().collect()" [T.intercalate ", " [ template "(\"$1\".to_string(), $2)" [k,v] | (k,v) <- M.toList m']])
         literalText _ = error "BUG: invalid literal for StringMap"
 
     nullableTypeDetails = TypeDetails typeExpr literalText
@@ -238,15 +249,16 @@ getTypeDetails (RT_Primitive pt) =
         literalText _ = error "BUG: invalid literal for Nullable"
 
 -- a type defined through a regular ADL declaration
-getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText
+getTypeDetails rt@(RT_Named (scopedName,decl@Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText
   where
     typeExpr typeArgs = do
       declRef <- getDeclRef scopedName
       return (declRef <> typeParamsExpr typeArgs)
     literalText (Literal te LDefault) = error "BUG: literal defaults shouldn't be needed"
-    literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) _) (LCtor ls)) = do
+    literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) tparams0) (LCtor ls)) = do
+      tparams <- mapM genTypeExpr tparams0
       lvs <- mapM genLiteralText ls
-      return (template "{$1}" [T.intercalate ", " [template "$1 : $2" [f_name f,v] | (f,v) <- zip (s_fields struct) lvs]])
+      return (template "$1$2{$3}" [structName decl, turbofish tparams, T.intercalate ", " [template "$1 : $2" [f_name f,v] | (f,v) <- zip (s_fields struct) lvs]])
     literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Newtype _})) _) (LCtor [l])) = do
       genLiteralText l
     literalText (Literal te@(TypeExpr (RT_Named (sn, Decl{d_type=Decl_Union union})) _) (LUnion ctor l)) = do
@@ -288,12 +300,19 @@ renderComment commentValue = clineN commentLinesStarred
     commentLinesBroken = L.filter (/= "") (T.splitOn "\n" commentValue)
 
 typeParamsExpr :: [T.Text] -> T.Text
-typeParamsExpr []         = T.pack ""
+typeParamsExpr []         = ""
 typeParamsExpr parameters = "<" <> T.intercalate ", " parameters <> ">"
+
+turbofish :: [T.Text] -> T.Text
+turbofish [] = ""
+turbofish tparams = "::" <> typeParamsExpr tparams
 
 traitTypeParamsExpr :: T.Text -> [T.Text] -> T.Text
 traitTypeParamsExpr _ []         = T.pack ""
 traitTypeParamsExpr trait parameters = "<" <> T.intercalate ", " [template "$1: $2" [p,trait] | p <- parameters] <> ">"
+
+structName :: CDecl -> T.Text
+structName decl = capitalise (d_name decl)
 
 structFieldName :: FieldDetails -> T.Text
 structFieldName fd = unreserveWord (snakify (f_name (fdField fd)))
@@ -303,6 +322,7 @@ enumVariantName fd = enumVariantName0 (f_name (fdField fd))
 
 enumVariantName0 :: T.Text -> T.Text
 enumVariantName0 fname = capitalise (camelize fname)
+
 
 findUnionField :: T.Text -> [Field CResolvedType] -> (Int,Field CResolvedType)
 findUnionField fname fs = case L.find (\(_,f) -> f_name f == fname) (zip [0,1..] fs) of
@@ -361,6 +381,9 @@ rustUse rsname = do
     shortNameOk userRefs n = case M.lookup n userRefs of
       Nothing -> True
       Just rsname1 -> rsname == rsname1
+
+jsonToText :: JS.Value -> T.Text
+jsonToText = LT.toStrict . JS.encodeToLazyText
 
 reservedWords :: S.Set Ident
 reservedWords = S.fromList
