@@ -235,4 +235,4 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
 serdeRenameAttribute :: FieldDetails -> Ident -> Code
 serdeRenameAttribute fd name
   | name == (f_serializedName (fd_field fd)) = mempty
-  | otherwise                                = ctemplate "#[serde(rename=\"$1\")]" [f_name (fd_field fd)]
+  | otherwise                                = ctemplate "#[serde(rename=\"$1\")]" [f_serializedName (fd_field fd)]

@@ -5,22 +5,22 @@ use serde::Serialize;
 
 #[derive(Serialize,Deserialize)]
 pub enum Role {
-  #[serde(rename="underling")]
+  #[serde(rename="u")]
   Underling,
 
-  #[serde(rename="boss")]
+  #[serde(rename="b")]
   Boss,
 
-  #[serde(rename="superBoss")]
+  #[serde(rename="sb")]
   SuperBoss,
 }
 
 #[derive(Serialize,Deserialize)]
 pub struct Person {
-  #[serde(rename="firstName")]
+  #[serde(rename="fn")]
   pub first_name: String,
 
-  #[serde(rename="lastName")]
+  #[serde(rename="ln")]
   pub last_name: String,
 
   pub age: i16,
