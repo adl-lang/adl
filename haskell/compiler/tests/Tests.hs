@@ -388,6 +388,9 @@ runTests = do
         `shouldReturn` MatchOutput
 
   describe "adlc rust backend" $ do
+    it "generates expected code for an empty module" $ do
+      collectResults (runRsBackend [stdsrc] ["test1/input/test.adl"] "test1/rs-output" "test1::adl")
+        `shouldReturn` MatchOutput
     it "generates expected output for various structures" $
       collectResults (runRsBackend [stdsrc] ["test2/input/test.adl"] "test2/rs-output" "test2::adl")
         `shouldReturn` MatchOutput
@@ -397,6 +400,15 @@ runTests = do
     it "generates expected code for various unions" $ do
       collectResults (runRsBackend [stdsrc] ["test5/input/test.adl"] "test5/rs-output" "test5::adl")
         `shouldReturn` MatchOutput
+    it "generates expected code for type aliases and newtypes" $ do
+      collectResults (runRsBackend [stdsrc] ["test7/input/test.adl"] "test7/rs-output" "test7::adl")
+        `shouldReturn` MatchOutput
+    it "Generates code correctly for mutually recursive types" $ do
+      collectResults (runRsBackend [stdsrc] ["test18/input/test.adl"] "test18/rs-output" "test18::adl")
+        `shouldReturn` MatchOutput
+    it "Correctly uses specified serialisation field names" $ do
+      collectResults (runRsBackend [stdsrc] ["test20/input/test.adl"] "test20/rs-output" "test20::adl")
+        `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output" "demo1::adl")
         `shouldReturn` MatchOutput
@@ -404,9 +416,6 @@ runTests = do
       let srcs = stdfiles <> ["test6/input/test.adl"]
       collectResults (runRsBackend [stdsrc] srcs "test6/rs-output" "test6::adl")
           `shouldReturn` MatchOutput
-    it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runRsBackend [stdsrc] ["test7/input/test.adl"] "test7/rs-output" "test7::adl")
-        `shouldReturn` MatchOutput
  
   where
     collectResults1 resultvar test = do

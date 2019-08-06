@@ -1,0 +1,6 @@
+module test18 {
+  import adlc.config.rust.RustBoxed;
+
+  annotation X1::f2  RustBoxed null;
+  annotation Y1::f2  RustBoxed null;
+};
