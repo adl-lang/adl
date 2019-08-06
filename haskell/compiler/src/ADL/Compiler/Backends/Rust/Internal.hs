@@ -122,7 +122,7 @@ genModuleCode cmd mf = genCode code
     code
       =  ctemplate "// $1generated from adl module $2" ["@", formatText (mfModuleName mf)]
       <> (if M.null (mfUserRefs mf) then mempty else cline "")
-      <> mconcat [genUse shortName rsname | (shortName,rsname) <- M.toList (mfUserRefs mf)]
+      <> mconcat [genUse shortName rsname | (shortName,rsname) <- (L.sortOn snd (M.toList (mfUserRefs mf)))]
       <> cline ""
       <> mconcat (L.intersperse (cline "") (reverse (mfDeclarations mf)))
 

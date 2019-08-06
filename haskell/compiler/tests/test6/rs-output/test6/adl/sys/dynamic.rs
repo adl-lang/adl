@@ -1,8 +1,8 @@
 // @generated from adl module sys.dynamic
 
+use crate::test6::adl::sys::adlast::TypeExpr;
 use serde::Deserialize;
 use serde::Serialize;
-use crate::test6::adl::sys::adlast::TypeExpr;
 
 /**
  * A serialised value along with  its type

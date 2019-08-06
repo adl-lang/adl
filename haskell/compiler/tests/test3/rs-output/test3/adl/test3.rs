@@ -1,8 +1,8 @@
 // @generated from adl module test3
 
+use base64;
 use serde::Deserialize;
 use serde::Serialize;
-use base64;
 use serde_json;
 
 #[derive(Serialize,Deserialize)]

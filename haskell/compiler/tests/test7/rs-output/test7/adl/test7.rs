@@ -1,8 +1,8 @@
 // @generated from adl module test7
 
 use serde::Deserialize;
-use std::marker::PhantomData;
 use serde::Serialize;
+use std::marker::PhantomData;
 
 #[derive(Serialize,Deserialize)]
 pub struct Point<T> {

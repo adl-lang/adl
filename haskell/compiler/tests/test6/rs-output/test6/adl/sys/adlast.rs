@@ -1,8 +1,8 @@
 // @generated from adl module sys.adlast
 
-use serde::Deserialize;
 use crate::test6::adl::sys::types::Map;
 use crate::test6::adl::sys::types::Maybe;
+use serde::Deserialize;
 use serde::Serialize;
 
 pub type ModuleName = String;
