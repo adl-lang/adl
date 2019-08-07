@@ -1,7 +1,7 @@
 module picture {
-  import adlc.config.rust.RustBoxed;
+  import adlc.config.rust.*;
 
   // Make translated a boxed field to avoid an infinite
   // sized structure error
-  annotation  Picture::translated RustBoxed null;
+  annotation  Picture::translated RustStorageModel "boxed";
 };

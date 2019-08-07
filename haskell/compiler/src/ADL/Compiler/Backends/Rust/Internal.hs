@@ -14,7 +14,9 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as LT
 import qualified Data.Vector as V
 import qualified Data.Aeson as JSON
+import qualified ADL.Adlc.Config.Rust as RA
 
+import ADL.Core
 import ADL.Compiler.AST
 import ADL.Compiler.Primitive
 import ADL.Compiler.Processing
@@ -141,15 +143,15 @@ addDeclaration code = modify (\mf->mf{mf_declarations=code:mf_declarations mf})
 genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails field = do
   let te = f_type field
-      isBoxed = M.member snRustBoxed (f_annotations field)
+      storageModel = getRustStorageModel field
   typeExprStr0 <- genTypeExpr te
-  let typeExprStr = case isBoxed of
-        False -> typeExprStr0
-        True -> template "Box<$1>" [typeExprStr0]
+  let typeExprStr = storageTypeExpr storageModel typeExprStr0
   defValueStr <- case f_default field of
     (Just v) -> case literalForTypeExpr te v of
       Left e -> error ("BUG: invalid json literal: " ++ T.unpack e)
-      Right litv -> fmap Just (genLiteralText litv)
+      Right litv -> do
+        valueStr <- genLiteralText litv
+        return (Just valueStr)
     Nothing -> return Nothing
   return (FieldDetails field typeExprStr defValueStr)
 
@@ -395,9 +397,27 @@ unreserveWord :: Ident -> Ident
 unreserveWord n | S.member n reservedWords = T.append "r#" n
                 | otherwise = n
 
+storageTypeExpr :: RA.RustStorageModel -> T.Text -> T.Text
+storageTypeExpr RA.RustStorageModel_standard texprStr = texprStr
+storageTypeExpr RA.RustStorageModel_boxed texprStr = template "Box<$1>" [texprStr]
+
+storageLitValue :: RA.RustStorageModel -> T.Text -> T.Text
+storageLitValue RA.RustStorageModel_standard litValueStr = litValueStr
+storageLitValue RA.RustStorageModel_boxed litValueStr = template "Box::new($1)" [litValueStr]
+
+getRustStorageModel :: Field CResolvedType -> RA.RustStorageModel
+getRustStorageModel f = fromMaybe RA.RustStorageModel_standard (getFieldAnnotation rustStorageModel f)
+  where
+    rustStorageModel = ScopedName (ModuleName ["adlc","config","rust"]) "RustStorageModel"
+
+
+getFieldAnnotation :: (AdlValue a) => ScopedName -> Field CResolvedType -> Maybe a
+getFieldAnnotation sn f = case M.lookup sn (f_annotations f) of
+  Nothing -> Nothing
+  (Just (_,jv)) -> case adlFromJson jv of
+      (ParseFailure e ctx) -> error (T.unpack (  "BUG: failed to parse annotation: " <> e
+                                    <> ", at " <> textFromParseContext ctx))
+      (ParseSuccess a) -> Just a
 
 snRustGenerate :: ScopedName
 snRustGenerate = ScopedName (ModuleName ["adlc","config","rust"]) "RustGenerate"
-
-snRustBoxed :: ScopedName
-snRustBoxed = ScopedName (ModuleName ["adlc","config","rust"]) "RustBoxed"

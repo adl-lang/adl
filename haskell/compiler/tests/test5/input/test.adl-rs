@@ -1,5 +1,5 @@
 module test5 {
-  import adlc.config.rust.RustBoxed;
+  import adlc.config.rust.*;
 
-  annotation Cell::tail  RustBoxed null;
+  annotation Cell::tail  RustStorageModel "boxed";
 };

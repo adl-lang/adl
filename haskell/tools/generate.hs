@@ -39,6 +39,7 @@ main = do
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "cpp.adl"
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "java.adl"
   adlcb "compiler/lib/adl/adlc/config" "compiler/src" "typescript.adl"
+  adlcb "compiler/lib/adl/adlc/config" "compiler/src" "rust.adl"
 
   -- runtime
   adlcb adlstdlibdir "runtime/src" "sys/types.adl"

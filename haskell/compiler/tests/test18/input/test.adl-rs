@@ -1,6 +1,6 @@
 module test18 {
-  import adlc.config.rust.RustBoxed;
+  import adlc.config.rust.*;
 
-  annotation X1::f2  RustBoxed null;
-  annotation Y1::f2  RustBoxed null;
+  annotation X1::f2  RustStorageModel "boxed";
+  annotation Y1::f2  RustStorageModel "boxed";
 };
