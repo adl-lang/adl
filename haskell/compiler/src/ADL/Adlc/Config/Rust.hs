@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Adlc.Config.Rust(
+    RustCustomType(..),
     RustGenerate,
     RustStorageModel(..),
 ) where
@@ -9,7 +10,32 @@ import Control.Applicative( (<$>), (<*>), (<|>) )
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Proxy
+import qualified Data.Text as T
 import qualified Prelude
+
+data RustCustomType = RustCustomType
+    { rustCustomType_rustname :: T.Text
+    , rustCustomType_helpers :: T.Text
+    , rustCustomType_generateOrigADLType :: T.Text
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkRustCustomType :: T.Text -> T.Text -> RustCustomType
+mkRustCustomType rustname helpers = RustCustomType rustname helpers ""
+
+instance AdlValue RustCustomType where
+    atype _ = "adlc.config.rust.RustCustomType"
+    
+    jsonGen = genObject
+        [ genField "rustname" rustCustomType_rustname
+        , genField "helpers" rustCustomType_helpers
+        , genField "generateOrigADLType" rustCustomType_generateOrigADLType
+        ]
+    
+    jsonParser = RustCustomType
+        <$> parseField "rustname"
+        <*> parseField "helpers"
+        <*> parseFieldDef "generateOrigADLType" ""
 
 type RustGenerate = Prelude.Bool
 

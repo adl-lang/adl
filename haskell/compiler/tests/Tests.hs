@@ -397,6 +397,9 @@ runTests = do
     it "generates expected code for structures with default overrides" $ do
       collectResults (runRsBackend [stdsrc] ["test3/input/test.adl"] "test3/rs-output" "test3::adl")
         `shouldReturn` MatchOutput
+    it "generates expected code for custom type mappings" $ do
+      collectResults (runRsBackend [stdsrc] ["test4/input/test.adl", stdsrc </> "sys/types.adl"] "test4/rs-output" "test4::adl")
+        `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
       collectResults (runRsBackend [stdsrc] ["test5/input/test.adl"] "test5/rs-output" "test5::adl")
         `shouldReturn` MatchOutput

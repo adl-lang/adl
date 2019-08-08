@@ -43,7 +43,7 @@ data RustFlags = RustFlags {
 }
 
 data RustScopedName = RustScopedName {unRustScopedName :: [Ident]}
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Show)
 
 type RustModuleFn = ModuleName -> RustScopedName
 
@@ -53,13 +53,17 @@ rustScopedName s = RustScopedName (T.splitOn "::" s)
 data CodeGenProfile = CodeGenProfile {
 }
 
--- Currently we don't support custom types, but when we do,
--- they would go here (see the java backend as an example)
 
-data CustomType = CustomType
-  deriving (Show)
+-- Custom Type definitions where we want to substitute a
+-- user defined type in lieu of an ADL generated one
+data CustomType = CustomType {
+  ct_scopedName :: RustScopedName,
+  ct_helpers :: RustScopedName,
+  ct_generateOrigType :: Maybe Ident
+} deriving (Show)
 
 -- We use a state monad to accumulate details of the rust file
+-- 
 -- corresponding to each ADL module
 type CState a = State ModuleFile a
 
@@ -260,9 +264,15 @@ getTypeDetails rt@(RT_Named (scopedName,decl@Decl{d_customType=Nothing})) = Type
     literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) tparams0) (LCtor ls)) = do
       tparams <- mapM genTypeExpr tparams0
       lvs <- mapM genLiteralText ls
-      return (template "$1$2{$3}" [structName decl, turbofish tparams, T.intercalate ", " [template "$1 : $2" [f_name f,v] | (f,v) <- zip (s_fields struct) lvs]])
-    literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Newtype _})) _) (LCtor [l])) = do
-      genLiteralText l
+      return (template "$1$2{$3}"
+         [ structName decl
+         , turbofish tparams
+         , T.intercalate ", " [template "$1 : $2" [structFieldName0 (f_name f),v] | (f,v) <- zip (s_fields struct) lvs]
+         ])
+    literalText (Literal (TypeExpr (RT_Named (sn, Decl{d_type=Decl_Newtype _})) _) (LCtor [l])) = do
+      declRef <- getDeclRef sn
+      lv <- genLiteralText l
+      return (template "$1($2)" [declRef,lv])
     literalText (Literal te@(TypeExpr (RT_Named (sn, Decl{d_type=Decl_Union union})) _) (LUnion ctor l)) = do
       let variantName  =  enumVariantName0 ctor
       declRef <- getDeclRef sn
@@ -273,8 +283,24 @@ getTypeDetails rt@(RT_Named (scopedName,decl@Decl{d_customType=Nothing})) = Type
     literalText l = error ("BUG: missing RT_Named literalText definition (" <> show l <> ")")
 
 -- a custom type
-getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) =
-  error "BUG: custom types not implemented"
+getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetails typeExpr literalText
+  where
+    typeExpr typeArgs = do
+      rtype <- rustUse (ct_scopedName customType)
+      return (rtype <> typeParamsExpr typeArgs)
+
+    literalText (Literal te LDefault) = do
+      rHelpers <- rustUse (ct_helpers customType)
+      return (template "$1::default()" [rHelpers])
+    literalText (Literal te (LCtor ls)) = do
+      rHelpers <- rustUse (ct_helpers customType)
+      lits <- mapM genLiteralText ls
+      return (template "$1::new($2)" [rHelpers, T.intercalate ", " lits])
+    literalText (Literal te (LUnion ctor l)) = do
+      rHelpers <- rustUse (ct_helpers customType)
+      lit <- genLiteralText l
+      return (template "$1.$2($3)" [rHelpers, camelize ctor, lit ])
+    literalText lit = error ("BUG: getTypeDetails2: unexpected literal:" ++ show lit)
 
 -- a type variable
 getTypeDetails (RT_Param typeVar) = TypeDetails typeExpr literalText
@@ -317,7 +343,10 @@ structName :: CDecl -> T.Text
 structName decl = capitalise (d_name decl)
 
 structFieldName :: FieldDetails -> T.Text
-structFieldName fd = unreserveWord (snakify (f_name (fd_field fd)))
+structFieldName fd = structFieldName0 (f_name (fd_field fd))
+
+structFieldName0 :: T.Text -> T.Text
+structFieldName0 fname = unreserveWord (snakify fname)
 
 enumVariantName :: FieldDetails -> T.Text
 enumVariantName fd = enumVariantName0 (f_name (fd_field fd))
@@ -335,13 +364,22 @@ modulePrefix :: [Ident] -> T.Text
 modulePrefix [] = T.pack ""
 modulePrefix modules = T.intercalate "::" modules <> "::"
 
+-- Determine whether to generate the given CDecl, and if so, whether
+-- to rename it for use in a custom type
+generateDecl :: CDecl -> Maybe CDecl
+generateDecl decl@(Decl{d_customType=mct}) =
+  case generateCode (d_annotations decl) of
+    False -> Nothing
+    True -> case mct of
+      Nothing -> Just decl
+      Just ct -> case ct_generateOrigType ct of
+        Nothing -> Nothing
+        (Just asName) -> Just decl{d_name=asName}
+
 generateCode :: Annotations t -> Bool
-generateCode annotations = case M.lookup snRustGenerate annotations of
-  Just (_,JSON.Bool gen) -> gen
-  _ -> True
+generateCode annotations = fromMaybe True (getTypedAnnotation snRustGenerate annotations)
 
 -- Get the a typescript reference corresponding to an ADL scoped name,
--- (TODO: generate imports to avoid fully scoping every reference)
 getDeclRef :: ScopedName -> CState T.Text
 getDeclRef sn = do
   currentModuleName <- mf_moduleName <$> get
@@ -352,8 +390,20 @@ getDeclRef sn = do
       rAdlType <- rustUse (RustScopedName (unRustScopedName (mfn (sn_moduleName sn)) <> [sn_name sn]))
       return rAdlType
 
+-- Get the details of the custom type mapping for a declaration, if any.
 getCustomType :: ScopedName -> RDecl -> Maybe CustomType
-getCustomType _ _ = Nothing
+getCustomType sn decl = case getTypedAnnotation rustCustomType (d_annotations decl) of
+  Nothing -> Nothing
+  (Just rct) -> Just CustomType {
+    ct_scopedName = rustScopedName (RA.rustCustomType_rustname rct),
+    ct_helpers = rustScopedName (RA.rustCustomType_helpers rct),
+    ct_generateOrigType =
+      if T.length (RA.rustCustomType_generateOrigADLType rct) == 0
+        then Nothing
+        else (Just (RA.rustCustomType_generateOrigADLType rct))
+  }
+  where
+    rustCustomType = ScopedName (ModuleName ["adlc", "config", "rust"]) "RustCustomType"
 
 emptyModuleFile :: ModuleName -> RustFlags -> CodeGenProfile -> ModuleFile
 emptyModuleFile mn rf cgp = ModuleFile mn M.empty [] (rustModuleFn rf) cgp
@@ -406,13 +456,12 @@ storageLitValue RA.RustStorageModel_standard litValueStr = litValueStr
 storageLitValue RA.RustStorageModel_boxed litValueStr = template "Box::new($1)" [litValueStr]
 
 getRustStorageModel :: Field CResolvedType -> RA.RustStorageModel
-getRustStorageModel f = fromMaybe RA.RustStorageModel_standard (getFieldAnnotation rustStorageModel f)
+getRustStorageModel f = fromMaybe RA.RustStorageModel_standard (getTypedAnnotation rustStorageModel (f_annotations f))
   where
     rustStorageModel = ScopedName (ModuleName ["adlc","config","rust"]) "RustStorageModel"
 
-
-getFieldAnnotation :: (AdlValue a) => ScopedName -> Field CResolvedType -> Maybe a
-getFieldAnnotation sn f = case M.lookup sn (f_annotations f) of
+getTypedAnnotation :: (AdlValue a) => ScopedName -> Annotations r -> Maybe a
+getTypedAnnotation sn annotations = case M.lookup sn annotations of
   Nothing -> Nothing
   (Just (_,jv)) -> case adlFromJson jv of
       (ParseFailure e ctx) -> error (T.unpack (  "BUG: failed to parse annotation: " <> e

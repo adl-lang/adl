@@ -14,4 +14,23 @@ union RustStorageModel {
    Void boxed;
 };
 
+/// ADL declaration annotation to specify that a custom type
+/// should be used
+struct RustCustomType
+{
+    // The fully scoped name of the type to be used
+    String rustname;
+
+    // The fully scoped name of the module containing
+    // helper code. Specifically this will contain the
+    // function(s) used to construct values from ADL literal
+    // values.
+    String helpers;
+
+    // If non-empty the code for the original ADL type will be emitted,
+    // but with the supplied name. This can be useful within the
+    // implementation of the custom type. 
+    String generateOrigADLType = "";
+};
+
 };

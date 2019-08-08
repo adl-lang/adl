@@ -73,8 +73,9 @@ generateModule rf fileWriter m0 = do
     genModule m = do
       -- Generate each declaration
       for_ (getOrderedDecls m) $ \decl ->
-        when (generateCode (d_annotations decl)) $
-          case d_type decl of
+        case generateDecl decl of
+          Nothing -> return ()
+          (Just decl) ->  case d_type decl of
             (Decl_Struct struct)   -> genStruct m decl struct
             (Decl_Union union)     -> genUnion m decl union
             (Decl_Typedef typedef) -> genTypedef m decl typedef
