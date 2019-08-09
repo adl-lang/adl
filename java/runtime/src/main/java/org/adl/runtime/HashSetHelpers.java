@@ -52,10 +52,12 @@ public class HashSetHelpers
     final Factory<HashSet<T>> _factory = factory(bindingT.factory());
 
     return new JsonBinding<HashSet<T>>() {
+      @Override
       public Factory<HashSet<T>> factory() {
         return _factory;
       };
 
+      @Override
       public JsonElement toJson(HashSet<T> value) {
         JsonArray result = new JsonArray();
         for (T v : value) {
@@ -64,6 +66,7 @@ public class HashSetHelpers
         return result;
       }
 
+      @Override
       public HashSet<T> fromJson(JsonElement json) {
         if (!json.isJsonArray()) {
           throw new JsonParseException("expected an array");
