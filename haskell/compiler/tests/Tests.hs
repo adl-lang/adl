@@ -409,6 +409,9 @@ runTests = do
     it "Generates code correctly for mutually recursive types" $ do
       collectResults (runRsBackend [stdsrc] ["test18/input/test.adl"] "test18/rs-output" "test18::adl")
         `shouldReturn` MatchOutput
+    it "generates valid names when ADL contains rust reserved words" $ do
+      collectResults (runRsBackend [stdsrc] ["test14/input/test.adl"] "test14/rs-output" "test14::adl")
+        `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
       collectResults (runRsBackend [stdsrc] ["test20/input/test.adl"] "test20/rs-output" "test20::adl")
         `shouldReturn` MatchOutput
