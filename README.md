@@ -15,6 +15,7 @@ code generators for several target languages, and runtimes for these languages.
     * [java][]
     * [typescript][]
     * [c++][cpp]
+    * [rust][]
 * [install][] - installation instructions
 
 [introduction]:docs/introduction.md
@@ -26,3 +27,4 @@ code generators for several target languages, and runtimes for these languages.
 [typescript]:docs/backend-typescript.md
 [java]:docs/backend-java.md
 [cpp]:docs/backend-cpp.md
+[rust]:docs/backend-rust.md

@@ -18,11 +18,11 @@ The backend generates c++ code from the input ADL
 files. Each ADL module results in a c++ header and implementation
 file.
 
-## ADL Primitive
+## ADL Primitives
 
 The ADL primitive types are mapped to c++ types as follows:
 
-| ADL Type                     | Haskell Type                   |
+| ADL Type                     | C++ Type                   |
 |------------------------------|--------------------------------|
 | `Int8,Int16,Int32,Int64`     | `int8_t,int16_t,int32_t,int64_t`|
 | `Word8,Word16,Word32,Word64` | `uint8_t,uint16_t,uint32_t,uint64_t` |
