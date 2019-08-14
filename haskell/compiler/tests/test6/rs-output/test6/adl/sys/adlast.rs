@@ -1,7 +1,7 @@
 // @generated from adl module sys.adlast
 
-use crate::test6::adl::sys::types::Map;
-use crate::test6::adl::sys::types::Maybe;
+use crate::stdlib::Map;
+use crate::stdlib::Maybe;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -57,7 +57,7 @@ impl TypeExpr {
   }
 }
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub struct Field {
   pub name: Ident,
 
@@ -84,7 +84,7 @@ impl Field {
   }
 }
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub struct Struct {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -101,7 +101,7 @@ impl Struct {
   }
 }
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub struct Union {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -136,7 +136,7 @@ impl TypeDef {
   }
 }
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub struct NewType {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -157,7 +157,7 @@ impl NewType {
   }
 }
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub enum DeclType {
   #[serde(rename="struct_")]
   Struct(Struct),
@@ -172,7 +172,7 @@ pub enum DeclType {
   Newtype(NewType),
 }
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub struct Decl {
   pub name: Ident,
 
@@ -195,7 +195,7 @@ impl Decl {
   }
 }
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub struct ScopedDecl {
   #[serde(rename="moduleName")]
   pub module_name: ModuleName,
@@ -223,7 +223,7 @@ pub enum Import {
   ScopedName(ScopedName),
 }
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub struct Module {
   pub name: ModuleName,
 

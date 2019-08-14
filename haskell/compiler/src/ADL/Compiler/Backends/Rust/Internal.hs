@@ -300,7 +300,7 @@ getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetail
     literalText (Literal te (LUnion ctor l)) = do
       rHelpers <- rustUse (ct_helpers customType)
       lit <- genLiteralText l
-      return (template "$1.$2($3)" [rHelpers, camelize ctor, lit ])
+      return (template "$1::$2($3)" [rHelpers, camelize ctor, if isVoidLiteral l then "" else lit ])
     literalText lit = error ("BUG: getTypeDetails2: unexpected literal:" ++ show lit)
 
 -- a type variable

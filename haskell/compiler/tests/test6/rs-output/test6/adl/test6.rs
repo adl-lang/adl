@@ -1,15 +1,15 @@
 // @generated from adl module test6
 
+use crate::stdlib::Map;
+use crate::stdlib::Maybe;
+use crate::stdlib::Pair;
+use crate::stdlib::Set;
 use crate::test6::adl::sys::types::Either;
 use crate::test6::adl::sys::types::Error;
-use crate::test6::adl::sys::types::Map;
-use crate::test6::adl::sys::types::Maybe;
-use crate::test6::adl::sys::types::Pair;
-use crate::test6::adl::sys::types::Set;
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Deserialize,Serialize)]
 pub struct S {
   pub f_pair: Pair<i32, f64>,
 
@@ -58,7 +58,7 @@ impl S {
   }
 
   pub fn def_f_mstring_2() -> Maybe<String> {
-    Maybe::Just("sukpeepolup".to_string())
+    Maybe::just("sukpeepolup".to_string())
   }
 
   pub fn def_f_nstring_2() -> Option<String> {

@@ -1,10 +1,11 @@
 // @generated from adl module sys.types
 
+use crate::stdlib::Pair;
 use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct Pair<T1, T2> {
+pub struct PairInternal<T1, T2> {
   #[serde(rename="v1")]
   pub v_1: T1,
 
@@ -12,9 +13,9 @@ pub struct Pair<T1, T2> {
   pub v_2: T2,
 }
 
-impl<T1, T2> Pair<T1, T2> {
-  pub fn new(v_1: T1, v_2: T2) -> Pair<T1, T2> {
-    Pair {
+impl<T1, T2> PairInternal<T1, T2> {
+  pub fn new(v_1: T1, v_2: T2) -> PairInternal<T1, T2> {
+    PairInternal {
       v_1: v_1,
       v_2: v_2,
     }
@@ -31,7 +32,7 @@ pub enum Either<T1, T2> {
 }
 
 #[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub enum Maybe<T> {
+pub enum MaybeInternal<T> {
   #[serde(rename="nothing")]
   Nothing,
 
@@ -48,8 +49,8 @@ pub enum Error<T> {
   Error(String),
 }
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct Map<K, V>(pub Vec<Pair<K, V>>);
+#[derive(Deserialize,Serialize)]
+pub struct MapInternal<K, V>(pub Vec<Pair<K, V>>);
 
 #[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct Set<T>(pub Vec<T>);
+pub struct SetInternal<T>(pub Vec<T>);

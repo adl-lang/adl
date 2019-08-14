@@ -4,10 +4,10 @@ use crate::customtypes::CDate;
 use crate::customtypes::Date;
 use crate::customtypes::cdatehelpers;
 use crate::customtypes::datehelpers;
-use crate::test4::adl::sys::types::Map;
-use crate::test4::adl::sys::types::Maybe;
-use crate::test4::adl::sys::types::Pair;
-use crate::test4::adl::sys::types::Set;
+use crate::stdlib::Map;
+use crate::stdlib::Maybe;
+use crate::stdlib::Pair;
+use crate::stdlib::Set;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -102,18 +102,18 @@ impl S {
   }
 
   pub fn def_v_5_a() -> Maybe<String> {
-    Maybe::Nothing
+    Maybe::nothing()
   }
 
   pub fn def_v_5_b() -> Maybe<String> {
-    Maybe::Just("hello".to_string())
+    Maybe::just("hello".to_string())
   }
 
   pub fn def_v_7() -> Set<i32> {
-    Set(vec![1_i32, 2_i32, 3_i32])
+    Set::new(vec![1_i32, 2_i32, 3_i32])
   }
 
   pub fn def_v_8_a() -> Map<String, i32> {
-    Map(vec![Pair::<String, i32>{v_1 : "X".to_string(), v_2 : 1_i32}, Pair::<String, i32>{v_1 : "Y".to_string(), v_2 : 2_i32}])
+    Map::new(vec![Pair::new("X".to_string(), 1_i32), Pair::new("Y".to_string(), 2_i32)])
   }
 }
