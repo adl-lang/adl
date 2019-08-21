@@ -9,7 +9,7 @@ use crate::test6::adl::sys::types::Set;
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,PartialEq,Serialize)]
 pub struct S {
   pub f_pair: Pair<i32, f64>,
 

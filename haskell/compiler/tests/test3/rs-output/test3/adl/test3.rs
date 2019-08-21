@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct A {
   pub f_int: i16,
 
@@ -29,7 +29,7 @@ impl A {
   }
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct XY<T> {
   pub x: T,
 
@@ -45,7 +45,7 @@ impl<T> XY<T> {
   }
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct B<T> {
   pub f_t: T,
 
@@ -67,7 +67,7 @@ impl<T> B<T> {
   }
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U {
   #[serde(rename="f_int")]
   FInt(i16),
@@ -79,7 +79,7 @@ pub enum U {
   FVoid,
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum E {
   #[serde(rename="v1")]
   V1,
@@ -88,7 +88,7 @@ pub enum E {
   V2,
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,PartialEq,Serialize)]
 pub struct S<T> {
   #[serde(default="S::<T>::def_f_void")]
   pub f_void: (),

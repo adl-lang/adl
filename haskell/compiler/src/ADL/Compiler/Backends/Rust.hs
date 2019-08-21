@@ -119,7 +119,7 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
         )
       where
         renderDecl
-          =  cline "#[derive(Serialize,Deserialize)]"
+          =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (stdTraitsForFields (map fd_field fields)))]
           <> cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
 
         renderedFields
@@ -174,7 +174,7 @@ genUnion m decl union@Union{u_typeParams=typeParams} = do
   where
     render :: T.Text -> [Ident] -> [FieldDetails] -> Code
     render name typeParams fields
-      =  cline "#[derive(Serialize,Deserialize)]"
+      =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (stdTraitsForFields (map fd_field fields)))]
       <> cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
       where
         renderedFields = mconcat (L.intersperse (cline "") [renderField fd| fd <- fields])
@@ -228,7 +228,7 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
   where
     render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> Code
     render name typeParams typeExprStr phantomFields
-      =  cline "#[derive(Serialize,Deserialize)]"
+      =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (stdTraitsFor te))]
       <> ctemplate "pub struct $1$2($3);"
           [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> phantomFields)]
     phantomTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))

@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Role {
   #[serde(rename="u")]
   Underling,
@@ -15,7 +15,7 @@ pub enum Role {
   SuperBoss,
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct Person {
   #[serde(rename="fn")]
   pub first_name: String,

@@ -11,7 +11,7 @@ use crate::test4::adl::sys::types::Set;
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct CDate0 {
   pub year: i16,
 
@@ -30,7 +30,7 @@ impl CDate0 {
   }
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Serialize)]
 pub struct S {
   #[serde(rename="v1")]
   pub v_1: Date,

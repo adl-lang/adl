@@ -17,11 +17,12 @@ data RustCustomType = RustCustomType
     { rustCustomType_rustname :: T.Text
     , rustCustomType_helpers :: T.Text
     , rustCustomType_generateOrigADLType :: T.Text
+    , rustCustomType_stdTraits :: [T.Text]
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 mkRustCustomType :: T.Text -> T.Text -> RustCustomType
-mkRustCustomType rustname helpers = RustCustomType rustname helpers ""
+mkRustCustomType rustname helpers = RustCustomType rustname helpers "" [ "Serialize", "Deserialize" ]
 
 instance AdlValue RustCustomType where
     atype _ = "adlc.config.rust.RustCustomType"
@@ -30,12 +31,14 @@ instance AdlValue RustCustomType where
         [ genField "rustname" rustCustomType_rustname
         , genField "helpers" rustCustomType_helpers
         , genField "generateOrigADLType" rustCustomType_generateOrigADLType
+        , genField "stdTraits" rustCustomType_stdTraits
         ]
     
     jsonParser = RustCustomType
         <$> parseField "rustname"
         <*> parseField "helpers"
         <*> parseFieldDef "generateOrigADLType" ""
+        <*> parseFieldDef "stdTraits" [ "Serialize", "Deserialize" ]
 
 type RustGenerate = Prelude.Bool
 

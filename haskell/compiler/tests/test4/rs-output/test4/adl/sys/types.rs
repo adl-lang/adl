@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct Pair<T1, T2> {
   #[serde(rename="v1")]
   pub v_1: T1,
@@ -21,7 +21,7 @@ impl<T1, T2> Pair<T1, T2> {
   }
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Either<T1, T2> {
   #[serde(rename="left")]
   Left(T1),
@@ -30,7 +30,7 @@ pub enum Either<T1, T2> {
   Right(T2),
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Maybe<T> {
   #[serde(rename="nothing")]
   Nothing,
@@ -39,7 +39,7 @@ pub enum Maybe<T> {
   Just(T),
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Error<T> {
   #[serde(rename="value")]
   Value(T),
@@ -48,8 +48,8 @@ pub enum Error<T> {
   Error(String),
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct Map<K, V>(pub Vec<Pair<K, V>>);
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct Set<T>(pub Vec<T>);

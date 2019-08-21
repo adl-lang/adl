@@ -59,7 +59,8 @@ data CodeGenProfile = CodeGenProfile {
 data CustomType = CustomType {
   ct_scopedName :: RustScopedName,
   ct_helpers :: RustScopedName,
-  ct_generateOrigType :: Maybe Ident
+  ct_generateOrigType :: Maybe Ident,
+  ct_stdTraits :: StdTraits
 } deriving (Show)
 
 -- We use a state monad to accumulate details of the rust file
@@ -400,7 +401,8 @@ getCustomType sn decl = case getTypedAnnotation rustCustomType (d_annotations de
     ct_generateOrigType =
       if T.length (RA.rustCustomType_generateOrigADLType rct) == 0
         then Nothing
-        else (Just (RA.rustCustomType_generateOrigADLType rct))
+        else (Just (RA.rustCustomType_generateOrigADLType rct)),
+    ct_stdTraits = S.fromList (RA.rustCustomType_stdTraits rct)
   }
   where
     rustCustomType = ScopedName (ModuleName ["adlc", "config", "rust"]) "RustCustomType"
@@ -436,6 +438,51 @@ rustUse rsname = do
 
 jsonToText :: JS.Value -> T.Text
 jsonToText = LT.toStrict . JS.encodeToLazyText
+
+-- | Determine which standard traits exist for
+-- a given type expression
+--
+--
+--
+type StdTraits = S.Set Ident
+
+stdTraitsFor :: TypeExpr CResolvedType -> StdTraits
+stdTraitsFor = stdTraitsFor1 S.empty M.empty
+
+stdTraitsFor1 :: S.Set ScopedName -> TypeBindingMap -> TypeExpr CResolvedType -> StdTraits
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Vector) [te]) = stdTraitsFor1 sns tbmap te
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_StringMap) [te]) = stdTraitsFor1 sns tbmap te
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Nullable) [te]) = stdTraitsFor1 sns tbmap te
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Float) _) = S.fromList ["PartialEq", "Serialize", "Deserialize"]
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Double) _) = S.fromList ["PartialEq", "Serialize", "Deserialize"]
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Json) _) = S.fromList ["PartialEq", "Serialize", "Deserialize"]
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive _) _) = defaultStdTraits
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Param tp) _) = case M.lookup tp tbmap of
+   Nothing -> defaultStdTraits
+   (Just te) -> stdTraitsFor1 sns (M.delete tp tbmap) te
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Named (sn,decl)) tes) = case S.member sn sns of
+  True -> defaultStdTraits
+  False ->
+    let sns' = S.insert sn sns in
+    case decl of
+      Decl{d_customType=(Just ct)} -> ct_stdTraits ct
+      Decl{d_type=Decl_Struct s} -> stdTraitsForFields1 sns' (withTypeBindings (s_typeParams s) tes tbmap) (s_fields s)
+      Decl{d_type=Decl_Union u} -> stdTraitsForFields1 sns' (withTypeBindings (u_typeParams u) tes tbmap) (u_fields u)
+      Decl{d_type=Decl_Typedef t} -> stdTraitsFor1 sns' (withTypeBindings (t_typeParams t) tes tbmap) (t_typeExpr t)
+      Decl{d_type=Decl_Newtype n} -> stdTraitsFor1 sns' (withTypeBindings (n_typeParams n) tes tbmap) (n_typeExpr n)
+
+stdTraitsForFields1 :: S.Set ScopedName -> TypeBindingMap -> [Field CResolvedType] -> StdTraits
+stdTraitsForFields1 sns tbmap fields = foldr S.intersection defaultStdTraits [stdTraitsFor1 sns tbmap (f_type f) | f <- fields]
+
+stdTraitsForFields :: [Field CResolvedType] -> StdTraits
+stdTraitsForFields = stdTraitsForFields1 S.empty M.empty
+
+defaultStdTraits = S.fromList ["PartialEq", "Eq", "Hash", "Serialize", "Deserialize"]
+
+type TypeBindingMap = M.Map Ident (TypeExpr CResolvedType)
+
+withTypeBindings :: [Ident] -> [TypeExpr CResolvedType] -> TypeBindingMap -> TypeBindingMap
+withTypeBindings ids tes m = M.union m (M.fromList (zip ids tes))
 
 reservedWords :: S.Set Ident
 reservedWords = S.fromList

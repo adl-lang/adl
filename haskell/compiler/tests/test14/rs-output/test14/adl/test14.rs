@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,PartialEq,Serialize)]
 pub struct Switch {
   pub double: f64,
 
@@ -30,11 +30,11 @@ impl Switch {
   }
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Unsigned {
   #[serde(rename="null")]
   Null,
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct Factory(pub String);

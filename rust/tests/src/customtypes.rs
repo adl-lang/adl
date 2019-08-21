@@ -7,6 +7,7 @@ use serde::de;
 use crate::test4::adl::test4::CDate0;
 
 
+#[derive(Eq,PartialEq,Hash)]
 pub struct Date(NaiveDate);
 
 impl Serialize for Date {
@@ -37,6 +38,7 @@ pub mod datehelpers {
   }
 }
 
+#[derive(Eq,PartialEq,Hash)]
 pub struct CDate(NaiveDate);
 
 impl Serialize for CDate {
