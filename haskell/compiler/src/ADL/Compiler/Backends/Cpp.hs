@@ -1199,16 +1199,18 @@ fileGenerator :: ModuleName -> FilePath
 fileGenerator mn = T.unpack (T.intercalate "." (unModuleName mn))
 
 generate :: AdlFlags -> CppFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af cf fileWriter modulePaths = catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-  m0 <- loadAndCheckModule af modulePath
-  let m = associateCustomTypes getCustomType (m_name m0) m0
-  checkCustomSerializations m
-  writeModuleFile namespaceGenerator
-                  (incFileGenerator (cf_incFilePrefix cf))
-                  fileGenerator
-                  fileWriter
-                  cf
-                  m
+generate af cf fileWriter modulePaths = catchAllExceptions  $ do
+  (mods0,moddeps) <- loadAndCheckModules af modulePaths
+  let mods = if (af_generateTransitive af) then moddeps else mods0
+  forM_ mods $ \m0 -> do
+    let m = associateCustomTypes getCustomType (m_name m0) m0
+    checkCustomSerializations m
+    writeModuleFile namespaceGenerator
+                    (incFileGenerator (cf_incFilePrefix cf))
+                    fileGenerator
+                    fileWriter
+                    cf
+                    m
 
 ----------------------------------------------------------------------
 

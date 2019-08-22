@@ -2,14 +2,15 @@
 
 ```
 Usage: adlc haskell [OPTION...] files...
-  -I DIR  --searchdir=DIR      Add the specifed directory to the ADL searchpath
-  -O DIR  --outputdir=DIR      Set the directory where generated code is written
-          --merge-adlext=EXT   Add the specifed adl file extension to merged on loading
-          --verbose            Print extra diagnostic information, especially about files being read/written
-          --no-overwrite       Don't update files that haven't changed
-          --package=PACKAGE    The language package into which the generated ADL code will be placed
-          --include-rt         Generate the runtime code
-          --rtpackage=PACKAGE  The haskell package where the ADL runtime is located
+  -I DIR  --searchdir=DIR        Add the specifed directory to the ADL searchpath
+  -O DIR  --outputdir=DIR        Set the directory where generated code is written
+          --merge-adlext=EXT     Add the specifed adl file extension to merged on loading
+          --verbose              Print extra diagnostic information, especially about files being read/written
+          --no-overwrite         Don't update files that haven't changed
+          --generate-transitive  Also generate code for the transitive dependencies of the specified adl files
+          --package=PACKAGE      The language package into which the generated ADL code will be placed
+          --include-rt           Generate the runtime code
+          --rtpackage=PACKAGE    The java package where the ADL runtime is located
 ```
 
 # Generated Code

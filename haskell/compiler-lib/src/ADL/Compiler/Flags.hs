@@ -76,6 +76,14 @@ noOverwriteOption ufn =
 setNoOverwrite :: Flags b -> Flags b
 setNoOverwrite = updateOutputArgs (\oa-> oa{oa_noOverwrite=True})
 
+generateTransitiveOption ufn =
+  Option "" ["generate-transitive"]
+    (NoArg ufn)
+    "Also generate code for the transitive dependencies of the specified adl files"
+
+setGenerateTransitive :: Flags b -> Flags b
+setGenerateTransitive = updateAdlFlags (\af -> af{af_generateTransitive=True})
+
 -- | Combine an initial set of AdlFlags and appropriate backend
 -- flags with command line arguments.
 buildFlags :: AdlFlags -> b -> [Flags b -> Flags b] -> Flags b

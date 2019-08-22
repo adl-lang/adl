@@ -45,7 +45,7 @@ outputPackageOption ufn =
 runtimePackageOption ufn =
   Option "" ["rtpackage"]
     (ReqArg ufn "PACKAGE")
-    "The java package where the ADL runtime is located"
+    "The language package where the ADL runtime is located"
 
 includeRuntimePackageOption ufn =
   Option "" ["include-rt"]
@@ -107,7 +107,8 @@ runHaskell args = do
 
     mkOptDescs libDir =
       standardOptions <>
-      [ outputPackageOption (\s -> updateBackendFlags (\hf -> hf{H.hf_modulePrefix=s}))
+      [ generateTransitiveOption setGenerateTransitive
+      , outputPackageOption (\s -> updateBackendFlags (\hf -> hf{H.hf_modulePrefix=s}))
       , includeRuntimePackageOption (updateBackendFlags (\hf ->hf{H.hf_includeRuntime=Just (haskellRuntimeDir libDir)}))
       , runtimePackageOption (\s -> updateBackendFlags (\hf -> hf{H.hf_runtimePackage=T.pack s}))
       ]
@@ -127,7 +128,8 @@ runCpp args = do
 
     optDescs =
       standardOptions <>
-      [ includePrefixOption (\s -> updateBackendFlags (\cf -> cf{C.cf_incFilePrefix=s}))
+      [ generateTransitiveOption setGenerateTransitive
+      , includePrefixOption (\s -> updateBackendFlags (\cf -> cf{C.cf_incFilePrefix=s}))
       , excludeRelopsOption (updateBackendFlags (\cf -> cf{C.cf_includeRelops=False}))
       ]
 
@@ -158,7 +160,8 @@ runJava args = do
 
     optDescs =
       standardOptions <>
-      [ outputPackageOption (\s -> updateBackendFlags (\jf -> jf{J.jf_package=J.javaPackage (T.pack s)}))
+      [ generateTransitiveOption setGenerateTransitive
+      , outputPackageOption (\s -> updateBackendFlags (\jf -> jf{J.jf_package=J.javaPackage (T.pack s)}))
       , includeRuntimePackageOption (updateBackendFlags (\jf ->jf{J.jf_includeRuntime=True}))
       , runtimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{J.cgp_runtimePackage=fromString s}))
       , javaGenerateParcelable (updateCodeGenProfile (\cgp->cgp{J.cgp_parcelable=True}))
@@ -233,7 +236,8 @@ runTypescript args = do
 
     optDescs =
       standardOptions <>
-      [ tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeRuntime=True}))
+      [ generateTransitiveOption setGenerateTransitive
+      , tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeRuntime=True}))
       , tsIncludeResolverOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeResolver=True}))
       , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{TS.tsExcludeAst=True}))
       , tsExcludedAstAnnotationsOption (\s -> updateBackendFlags (\tsf ->tsf{TS.tsExcludedAstAnnotations=Just (parseScopedNames s)}))

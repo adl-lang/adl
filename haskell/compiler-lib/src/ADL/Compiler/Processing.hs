@@ -668,6 +668,7 @@ fileSetGenerator extensions path = map (\ext -> replaceExtension path ext) exten
 data AdlFlags = AdlFlags {
   af_searchPath :: [FilePath],
   af_mergeFileExtensions :: [String],
+  af_generateTransitive :: Bool,
   af_log :: String -> IO ()
 }
 
@@ -676,7 +677,22 @@ defaultAdlFlags = AdlFlags
   { af_searchPath = []
   , af_log = const (return ())
   , af_mergeFileExtensions = []
+  , af_generateTransitive = False
   }
+
+-- load and check each of the adl files.
+--
+-- Returns the specified modules, and all modules
+-- including transitive dependencies
+loadAndCheckModules :: AdlFlags -> [FilePath] -> EIOT ([RModule],[RModule])
+loadAndCheckModules af modulePaths = do
+  cms <- mapM (loadAndCheckModule1 af) modulePaths
+  let ms = map fst cms
+      rms = Map.elems ((moduleMap ms) <> (mconcat (map (moduleMap . snd) cms)))
+  return (ms,rms)
+  where
+    moduleMap :: [RModule] -> Map.Map ModuleName RModule
+    moduleMap rms = Map.fromList [(m_name rm,rm) | rm <- rms]
 
 loadAndCheckModule :: AdlFlags -> FilePath -> EIOT RModule
 loadAndCheckModule af modulePath = fst <$> loadAndCheckModule1 af modulePath

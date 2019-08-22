@@ -780,14 +780,16 @@ data HaskellFlags = HaskellFlags {
 }
 
 generate :: AdlFlags -> HaskellFlags -> FileWriter -> (ScopedName -> RDecl -> Maybe CustomType) -> [FilePath] -> EIOT ()
-generate af hf fileWriter getCustomType modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
-  rm <- loadAndCheckModule af modulePath
-  writeModuleFile (moduleMapper (hf_modulePrefix hf))
-                  (hf_runtimePackage hf)
-                  fileMapper
-                  getCustomType
-                  fileWriter
-                  rm
+generate af hf fileWriter getCustomType modulePaths = catchAllExceptions $ do
+  (ms0,tms) <- loadAndCheckModules af modulePaths
+  let rms = if (af_generateTransitive af) then tms else ms0
+  forM_ rms $ \rm -> do
+    writeModuleFile (moduleMapper (hf_modulePrefix hf))
+                    (hf_runtimePackage hf)
+                    fileMapper
+                    getCustomType
+                    fileWriter
+                    rm
   case hf_includeRuntime hf of
     (Just runtimedir) -> liftIO $ generateRuntime hf fileWriter runtimedir
     Nothing -> return ()
