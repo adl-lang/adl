@@ -45,8 +45,9 @@ import           ADL.Compiler.DataFiles
 -- for validity, and then generate the code for it.
 generate :: AdlFlags -> RustFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af rf fileWriter modulePaths = catchAllExceptions  $ do
-  ms <- for modulePaths $ \modulePath -> do
-    m <- loadAndCheckModule af modulePath
+  (ms0,tms) <- loadAndCheckModules af modulePaths
+  let ms = if (af_generateTransitive af) then tms else ms0
+  mms <- for ms $ \m -> do
     let m' = fullyScopedModule m
     if (generateCode (m_annotations m'))
       then do
@@ -54,7 +55,7 @@ generate af rf fileWriter modulePaths = catchAllExceptions  $ do
         return (Just m')
       else do
         return Nothing
-  generateModFiles rf fileWriter (catMaybes ms)
+  generateModFiles rf fileWriter (catMaybes mms)
 
 -- | Generate and the rust code for a single ADL module, and
 -- save the resulting code to the  apppropriate file

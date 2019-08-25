@@ -290,7 +290,8 @@ runRust args = do
 
     optDescs =
       standardOptions <>
-      [ outputPackageOption (\s -> updateBackendFlags (\jf -> jf{RS.rs_module=RS.rustScopedName (T.pack s)}))
+      [ generateTransitiveOption setGenerateTransitive
+      , outputPackageOption (\s -> updateBackendFlags (\jf -> jf{RS.rs_module=RS.rustScopedName (T.pack s)}))
       ]
 
     rsRuntimeDirectoryOption ufn =
