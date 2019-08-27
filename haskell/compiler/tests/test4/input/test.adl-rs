@@ -4,13 +4,13 @@ module test4
 import adlc.config.rust.*;
 
 annotation Date RustCustomType {
-  "rustname" : "crate::customtypes::Date",
-  "helpers" : "crate::customtypes::datehelpers"
+  "rustname" : "crate::test4::customtypes::Date",
+  "helpers" : "crate::test4::customtypes::datehelpers"
   };
 
 annotation CDate RustCustomType {
-  "rustname" : "crate::customtypes::CDate",
-  "helpers" : "crate::customtypes::cdatehelpers",
+  "rustname" : "crate::test4::customtypes::CDate",
+  "helpers" : "crate::test4::customtypes::cdatehelpers",
   "generateOrigADLType" : "CDate0"
   };
 
