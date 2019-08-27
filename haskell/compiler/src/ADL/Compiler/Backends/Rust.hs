@@ -65,10 +65,11 @@ generateModule :: RustFlags ->
                   EIO T.Text ()
 generateModule rf fileWriter m0 = do
   let moduleName = m_name m
-      m = associateCustomTypes getCustomType moduleName m0
+      m = associateCustomTypes (getCustomType runtimeModule) moduleName m0
       cgp = CodeGenProfile {}
       mf = execState (genModule m) (emptyModuleFile (m_name m) rf cgp)
       filePath = moduleFilePath (unRustScopedName (rs_module rf) <> unModuleName moduleName) <.> "rs"
+      runtimeModule = rs_runtimeModule rf
   liftIO $ fileWriter filePath (genModuleCode "adlc" mf)
   where
     genModule m = do

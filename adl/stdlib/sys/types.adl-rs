@@ -3,26 +3,26 @@ module sys.types {
 import adlc.config.rust.*;
 
 annotation Maybe RustCustomType {
-  "rustname" : "crate::stdlib::Maybe",
-  "helpers" : "crate::stdlib::Maybe",
+  "rustname" : "{{STDLIBMODULE}}::customtypes::Maybe",
+  "helpers" : "{{STDLIBMODULE}}::customtypes::Maybe",
   "generateOrigADLType" : "MaybeInternal"
   };
 
 annotation Map RustCustomType {
-  "rustname" : "crate::stdlib::Map",
-  "helpers" : "crate::stdlib::Map",
+  "rustname" : "{{STDLIBMODULE}}::customtypes::Map",
+  "helpers" : "{{STDLIBMODULE}}::customtypes::Map",
   "generateOrigADLType" : "MapInternal"
   };
 
 annotation Set RustCustomType {
-  "rustname" : "crate::stdlib::Set",
-  "helpers" : "crate::stdlib::Set",
+  "rustname" : "{{STDLIBMODULE}}::customtypes::Set",
+  "helpers" : "{{STDLIBMODULE}}::customtypes::Set",
   "generateOrigADLType" : "SetInternal"
   };
 
 annotation Pair RustCustomType {
-  "rustname" : "crate::stdlib::Pair",
-  "helpers" : "crate::stdlib::Pair",
+  "rustname" : "{{STDLIBMODULE}}::customtypes::Pair",
+  "helpers" : "{{STDLIBMODULE}}::customtypes::Pair",
   "generateOrigADLType" : "PairInternal"
   };
 };

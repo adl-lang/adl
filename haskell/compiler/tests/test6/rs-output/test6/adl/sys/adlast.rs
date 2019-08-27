@@ -1,7 +1,7 @@
 // @generated from adl module sys.adlast
 
-use crate::stdlib::Map;
-use crate::stdlib::Maybe;
+use crate::adlrt::customtypes::Map;
+use crate::adlrt::customtypes::Maybe;
 use serde::Deserialize;
 use serde::Serialize;
 

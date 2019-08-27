@@ -291,13 +291,14 @@ runRust args = do
     optDescs =
       standardOptions <>
       [ generateTransitiveOption setGenerateTransitive
-      , outputPackageOption (\s -> updateBackendFlags (\jf -> jf{RS.rs_module=RS.rustScopedName (T.pack s)}))
+      , outputPackageOption (\s -> updateBackendFlags (\rf -> rf{RS.rs_module=RS.rustScopedName (T.pack s)}))
+      , rsRuntimeModuleOption (\s -> updateBackendFlags (\rf -> rf{RS.rs_runtimeModule=RS.rustScopedName (T.pack s)}))
       ]
 
-    rsRuntimeDirectoryOption ufn =
-      Option "R" ["runtime-dir"]
+    rsRuntimeModuleOption ufn =
+      Option "R" ["runtime-module"]
         (ReqArg ufn "DIR")
-        "Set the directory where runtime code is written"
+        "Set the module where the runtime is located"
 
 runShow args0 =
   case args0 of

@@ -9,7 +9,7 @@ pub mod test7;
 pub mod test14;
 pub mod test18;
 pub mod test20;
-pub mod stdlib;
+pub mod adlrt;
 
 #[cfg(test)]
 mod tests {

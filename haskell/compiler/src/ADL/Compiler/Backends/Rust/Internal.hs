@@ -392,12 +392,12 @@ getDeclRef sn = do
       return rAdlType
 
 -- Get the details of the custom type mapping for a declaration, if any.
-getCustomType :: ScopedName -> RDecl -> Maybe CustomType
-getCustomType sn decl = case getTypedAnnotation rustCustomType (d_annotations decl) of
+getCustomType :: RustScopedName -> ScopedName -> RDecl -> Maybe CustomType
+getCustomType runtimeModule sn decl = case getTypedAnnotation rustCustomType (d_annotations decl) of
   Nothing -> Nothing
   (Just rct) -> Just CustomType {
-    ct_scopedName = rustScopedName (RA.rustCustomType_rustname rct),
-    ct_helpers = rustScopedName (RA.rustCustomType_helpers rct),
+    ct_scopedName = fixRuntimeModule (rustScopedName (RA.rustCustomType_rustname rct)),
+    ct_helpers = fixRuntimeModule (rustScopedName (RA.rustCustomType_helpers rct)),
     ct_generateOrigType =
       if T.length (RA.rustCustomType_generateOrigADLType rct) == 0
         then Nothing
@@ -407,6 +407,11 @@ getCustomType sn decl = case getTypedAnnotation rustCustomType (d_annotations de
   where
     rustCustomType = ScopedName (ModuleName ["adlc", "config", "rust"]) "RustCustomType"
 
+    fixRuntimeModule :: RustScopedName -> RustScopedName
+    fixRuntimeModule rsn = case rsn  of
+      RustScopedName (m:ms) | m == "{{STDLIBMODULE}}" -> RustScopedName (unRustScopedName runtimeModule <> ms)
+      _ -> rsn
+   
 emptyModuleFile :: ModuleName -> RustFlags -> CodeGenProfile -> ModuleFile
 emptyModuleFile mn rf cgp = ModuleFile mn M.empty [] (rustModuleFn rf) cgp
 

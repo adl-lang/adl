@@ -1,6 +1,6 @@
 // @generated from adl module sys.types
 
-use crate::stdlib::Pair;
+use crate::adlrt::customtypes::Pair;
 use serde::Deserialize;
 use serde::Serialize;
 
