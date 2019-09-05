@@ -6,6 +6,7 @@ module ADL.Test20(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
@@ -55,8 +56,8 @@ instance AdlValue Role where
         Role_superBoss -> genUnionVoid "sb"
         )
     
-    jsonParser
-        =   parseUnionVoid "u" Role_underling
-        <|> parseUnionVoid "b" Role_boss
-        <|> parseUnionVoid "sb" Role_superBoss
-        <|> parseFail "expected a Role"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "u" -> parseUnionVoid Role_underling
+        "b" -> parseUnionVoid Role_boss
+        "sb" -> parseUnionVoid Role_superBoss
+        _ -> parseFail "expected a discriminator for Role (u,b,sb)" 

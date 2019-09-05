@@ -16,6 +16,7 @@ module ADL.Test5(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
@@ -63,10 +64,10 @@ instance (AdlValue t) => AdlValue (List t) where
         L_cell v -> genUnionValue "cell" v
         )
     
-    jsonParser
-        =   parseUnionVoid "null" L_null
-        <|> parseUnionValue "cell" L_cell
-        <|> parseFail "expected a List"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "null" -> parseUnionVoid L_null
+        "cell" ->  parseUnionValue L_cell
+        _ -> parseFail "expected a discriminator for List (null,cell)" 
 
 data S1 = S1
     { s1_f :: Data.Int.Int16
@@ -97,9 +98,9 @@ instance AdlValue U1 where
         U1_v -> genUnionVoid "v"
         )
     
-    jsonParser
-        =   parseUnionVoid "v" U1_v
-        <|> parseFail "expected a U1"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v" -> parseUnionVoid U1_v
+        _ -> parseFail "expected a discriminator for U1 (v)" 
 
 data U2
     = U2_v Data.Int.Int16
@@ -112,9 +113,9 @@ instance AdlValue U2 where
         U2_v v -> genUnionValue "v" v
         )
     
-    jsonParser
-        =   parseUnionValue "v" U2_v
-        <|> parseFail "expected a U2"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v" ->  parseUnionValue U2_v
+        _ -> parseFail "expected a discriminator for U2 (v)" 
 
 data U3
     = U3_v Data.Int.Int16
@@ -127,9 +128,9 @@ instance AdlValue U3 where
         U3_v v -> genUnionValue "v" v
         )
     
-    jsonParser
-        =   parseUnionValue "v" U3_v
-        <|> parseFail "expected a U3"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v" ->  parseUnionValue U3_v
+        _ -> parseFail "expected a discriminator for U3 (v)" 
 
 data U4
     = U4_v S1
@@ -142,9 +143,9 @@ instance AdlValue U4 where
         U4_v v -> genUnionValue "v" v
         )
     
-    jsonParser
-        =   parseUnionValue "v" U4_v
-        <|> parseFail "expected a U4"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v" ->  parseUnionValue U4_v
+        _ -> parseFail "expected a discriminator for U4 (v)" 
 
 data U5
     = U5_v S1
@@ -157,9 +158,9 @@ instance AdlValue U5 where
         U5_v v -> genUnionValue "v" v
         )
     
-    jsonParser
-        =   parseUnionValue "v" U5_v
-        <|> parseFail "expected a U5"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v" ->  parseUnionValue U5_v
+        _ -> parseFail "expected a discriminator for U5 (v)" 
 
 data U6
     = U6_v U3
@@ -172,9 +173,9 @@ instance AdlValue U6 where
         U6_v v -> genUnionValue "v" v
         )
     
-    jsonParser
-        =   parseUnionValue "v" U6_v
-        <|> parseFail "expected a U6"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v" ->  parseUnionValue U6_v
+        _ -> parseFail "expected a discriminator for U6 (v)" 
 
 data U7
     = U7_v U3
@@ -187,9 +188,9 @@ instance AdlValue U7 where
         U7_v v -> genUnionValue "v" v
         )
     
-    jsonParser
-        =   parseUnionValue "v" U7_v
-        <|> parseFail "expected a U7"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v" ->  parseUnionValue U7_v
+        _ -> parseFail "expected a discriminator for U7 (v)" 
 
 data U8
     = U8_v1 S1
@@ -204,10 +205,10 @@ instance AdlValue U8 where
         U8_v2 v -> genUnionValue "v2" v
         )
     
-    jsonParser
-        =   parseUnionValue "v1" U8_v1
-        <|> parseUnionValue "v2" U8_v2
-        <|> parseFail "expected a U8"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v1" ->  parseUnionValue U8_v1
+        "v2" ->  parseUnionValue U8_v2
+        _ -> parseFail "expected a discriminator for U8 (v1,v2)" 
 
 data U9 t
     = U9_v1 t
@@ -225,7 +226,7 @@ instance (AdlValue t) => AdlValue (U9 t) where
         U9_v2 v -> genUnionValue "v2" v
         )
     
-    jsonParser
-        =   parseUnionValue "v1" U9_v1
-        <|> parseUnionValue "v2" U9_v2
-        <|> parseFail "expected a U9"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v1" ->  parseUnionValue U9_v1
+        "v2" ->  parseUnionValue U9_v2
+        _ -> parseFail "expected a discriminator for U9 (v1,v2)" 

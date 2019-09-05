@@ -5,6 +5,7 @@ module ADL.Test6(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified ADL.Core.Nullable
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JS

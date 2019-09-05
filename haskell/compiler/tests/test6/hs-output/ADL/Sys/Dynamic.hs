@@ -5,6 +5,7 @@ module ADL.Sys.Dynamic(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified ADL.Sys.Adlast
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM

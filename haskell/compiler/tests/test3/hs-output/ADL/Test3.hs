@@ -10,6 +10,7 @@ module ADL.Test3(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified Data.Aeson as JS
 import qualified Data.ByteString as B
 import qualified Data.HashMap.Strict as HM
@@ -88,10 +89,10 @@ instance AdlValue E where
         E_v2 -> genUnionVoid "v2"
         )
     
-    jsonParser
-        =   parseUnionVoid "v1" E_v1
-        <|> parseUnionVoid "v2" E_v2
-        <|> parseFail "expected a E"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v1" -> parseUnionVoid E_v1
+        "v2" -> parseUnionVoid E_v2
+        _ -> parseFail "expected a discriminator for E (v1,v2)" 
 
 data S t = S
     { s_f_void :: ()
@@ -198,11 +199,11 @@ instance AdlValue U where
         U_f_void -> genUnionVoid "f_void"
         )
     
-    jsonParser
-        =   parseUnionValue "f_int" U_f_int
-        <|> parseUnionValue "f_string" U_f_string
-        <|> parseUnionVoid "f_void" U_f_void
-        <|> parseFail "expected a U"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "f_int" ->  parseUnionValue U_f_int
+        "f_string" ->  parseUnionValue U_f_string
+        "f_void" -> parseUnionVoid U_f_void
+        _ -> parseFail "expected a discriminator for U (f_int,f_string,f_void)" 
 
 data XY t = XY
     { xY_x :: t

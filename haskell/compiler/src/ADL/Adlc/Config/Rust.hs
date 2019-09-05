@@ -7,6 +7,7 @@ module ADL.Adlc.Config.Rust(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Proxy
@@ -55,7 +56,7 @@ instance AdlValue RustStorageModel where
         RustStorageModel_boxed -> genUnionVoid "boxed"
         )
     
-    jsonParser
-        =   parseUnionVoid "standard" RustStorageModel_standard
-        <|> parseUnionVoid "boxed" RustStorageModel_boxed
-        <|> parseFail "expected a RustStorageModel"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "standard" -> parseUnionVoid RustStorageModel_standard
+        "boxed" -> parseUnionVoid RustStorageModel_boxed
+        _ -> parseFail "expected a discriminator for RustStorageModel (standard,boxed)" 

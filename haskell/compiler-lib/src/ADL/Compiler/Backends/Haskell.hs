@@ -516,14 +516,15 @@ generateUnionADLInstance lname mn d u = do
                 else wt "$1 v -> genUnionValue \"$2\" v" [dn, f_serializedName f]
             wl ")"
         nl
-        wl "jsonParser"
+        wl "jsonParser = parseUnion $ \\disc -> case disc of"
         indent $ do
-            forM_ (zip altPrefixes (u_fields u)) $ \(prefix,f) -> do
+            forM_ (u_fields u) $ \f -> do
               let dn = hDiscName d f
               if isVoidType (f_type f)
-                then wt "$1 parseUnionVoid \"$2\" $3" [prefix, f_serializedName f, dn]
-                else wt "$1 parseUnionValue \"$2\" $3" [prefix, f_serializedName f, dn]
-            wt "<|> parseFail \"expected a $1\"" [d_name d]
+                then wt "\"$1\" -> parseUnionVoid $2" [f_serializedName f, dn]
+                else wt "\"$1\" ->  parseUnionValue $2" [f_serializedName f, dn]
+            wt "_ -> parseFail \"expected a discriminator for $1 ($2)\" "
+                      [d_name d, T.intercalate "," (map f_serializedName (u_fields u))]
 
 generateNewtypeADLInstance :: Ident -> ModuleName -> CDecl -> Newtype CResolvedType -> HGen ()
 generateNewtypeADLInstance lname mn d n = do
@@ -668,6 +669,7 @@ generateModule m = do
   ms <- get
   addLanguageFeature "OverloadedStrings"
   addImport "import qualified Prelude"
+  addImport "import Prelude( ($) )"
   addImport "import qualified Data.Proxy"
   addImport "import Control.Applicative( (<$>), (<*>), (<|>) )"
   importModule (HaskellModule (ms_runtimePackage ms))

@@ -8,6 +8,7 @@ module ADL.Test18(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Proxy
@@ -27,10 +28,10 @@ instance AdlValue X1 where
         X1_f2 v -> genUnionValue "f2" v
         )
     
-    jsonParser
-        =   parseUnionValue "f1" X1_f1
-        <|> parseUnionValue "f2" X1_f2
-        <|> parseFail "expected a X1"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "f1" ->  parseUnionValue X1_f1
+        "f2" ->  parseUnionValue X1_f2
+        _ -> parseFail "expected a discriminator for X1 (f1,f2)" 
 
 data X2 = X2
     { x2_f1 :: Prelude.Double
@@ -66,10 +67,10 @@ instance AdlValue Y1 where
         Y1_f2 v -> genUnionValue "f2" v
         )
     
-    jsonParser
-        =   parseUnionValue "f1" Y1_f1
-        <|> parseUnionValue "f2" Y1_f2
-        <|> parseFail "expected a Y1"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "f1" ->  parseUnionValue Y1_f1
+        "f2" ->  parseUnionValue Y1_f2
+        _ -> parseFail "expected a discriminator for Y1 (f1,f2)" 
 
 data Y2 = Y2
     { y2_f1 :: T.Text

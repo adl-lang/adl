@@ -8,6 +8,7 @@ module ADL.Test4(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM

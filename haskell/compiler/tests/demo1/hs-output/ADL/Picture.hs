@@ -8,6 +8,7 @@ module ADL.Picture(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Proxy
@@ -49,12 +50,12 @@ instance AdlValue Picture where
         Picture_translated v -> genUnionValue "translated" v
         )
     
-    jsonParser
-        =   parseUnionValue "circle" Picture_circle
-        <|> parseUnionValue "rectangle" Picture_rectangle
-        <|> parseUnionValue "composed" Picture_composed
-        <|> parseUnionValue "translated" Picture_translated
-        <|> parseFail "expected a Picture"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "circle" ->  parseUnionValue Picture_circle
+        "rectangle" ->  parseUnionValue Picture_rectangle
+        "composed" ->  parseUnionValue Picture_composed
+        "translated" ->  parseUnionValue Picture_translated
+        _ -> parseFail "expected a discriminator for Picture (circle,rectangle,composed,translated)" 
 
 data Rectangle = Rectangle
     { rectangle_width :: Prelude.Double

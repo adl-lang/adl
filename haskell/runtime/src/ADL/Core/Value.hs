@@ -20,6 +20,7 @@ module ADL.Core.Value(
   genUnionVoid,
   parseField,
   parseFieldDef,
+  parseUnion,
   parseUnionValue,
   parseUnionVoid,
   parseFail,
@@ -102,6 +103,9 @@ instance Alternative ParseResult where
 parseFail :: T.Text -> JsonParser a
 parseFail t = JsonParser (\ctx _ -> (ParseFailure t ctx))
 
+parseNull :: JsonParser ()
+parseNull = jsonParser
+
 -- Convert an ADL value to a JSON value
 adlToJson :: AdlValue a => a -> JS.Value
 adlToJson = runJsonGen jsonGen
@@ -175,15 +179,22 @@ parseFieldDef label defv = withJsonObject $ \ctx hm -> case HM.lookup label hm o
   (Just b) -> runJsonParser jsonParser (ParseField label:ctx) b
   _ -> pure defv
 
-parseUnionVoid :: T.Text -> a -> JsonParser a
-parseUnionVoid disc a = JsonParser $ \ctx jv -> case jv of
-  (JS.String s) | s == disc -> pure a
-  _ -> empty
+parseUnion  :: ( T.Text -> JsonParser a) -> JsonParser a
+parseUnion parseCase = JsonParser $ \ctx jv0 -> case parse0 ctx jv0 of
+  ParseFailure emesg ctx -> ParseFailure emesg ctx
+  ParseSuccess (disc,jv) -> runJsonParser (parseCase disc) (ParseField disc:ctx) jv
+  where
+    parse0 ctx jv = case jv of
+      (JS.String disc) -> ParseSuccess (disc,JS.Null)
+      (JS.Object hm) | HM.size hm == 1 ->
+        let [(disc,v)] = HM.toList hm in  (ParseSuccess (disc,v))
+      _ -> ParseFailure "expected string or singleton object for union" ctx
 
-parseUnionValue :: AdlValue b => T.Text -> (b -> a) -> JsonParser a
-parseUnionValue disc fa = withJsonObject $ \ctx hm -> case HM.lookup disc hm of
-  (Just b) -> fa <$> runJsonParser jsonParser (ParseField disc:ctx) b
-  _ -> empty
+parseUnionVoid :: a -> JsonParser a
+parseUnionVoid a =  pure a <* parseNull
+
+parseUnionValue :: AdlValue b => (b -> a) -> JsonParser a
+parseUnionValue fa = fa <$> jsonParser
 
 withJsonObject :: (ParseContext -> JS.Object -> ParseResult a) -> JsonParser a
 withJsonObject f = JsonParser $ \ctx jv -> case jv of
@@ -303,9 +314,10 @@ instance (AdlValue t) => AdlValue (Maybe t) where
     Nothing -> genUnionVoid "nothing"
     (Just v1) -> genUnionValue "just" v1
 
-  jsonParser
-    =   parseUnionVoid "nothing" Nothing
-    <|> parseUnionValue "just" Just
+  jsonParser = parseUnion $ \disc -> case disc of
+    "nothing" -> parseUnionVoid Nothing
+    "just" -> parseUnionValue Just
+    _ -> parseFail "expected a Maybe discriminator (nothing,just)"
 
 instance (AdlValue t1, AdlValue t2) => AdlValue (Either t1 t2) where
   atype _ = T.concat
@@ -318,9 +330,10 @@ instance (AdlValue t1, AdlValue t2) => AdlValue (Either t1 t2) where
     (Left v1) -> genUnionValue "left" v1
     (Right v2) -> genUnionValue "right" v2
 
-  jsonParser
-    =   parseUnionValue "left" Left
-    <|> parseUnionValue "right" Right
+  jsonParser = parseUnion $ \disc -> case disc of
+    "left" -> parseUnionValue Left
+    "right" -> parseUnionValue  Right
+    _ -> parseFail "expected an Either discriminator (left,right)"
 
 instance forall t1 t2 . (AdlValue t1, AdlValue t2) => AdlValue (t1,t2) where
   atype _ = T.concat

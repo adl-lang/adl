@@ -21,6 +21,7 @@ module ADL.Sys.Adlast(
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
+import Prelude( ($) )
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
@@ -76,12 +77,12 @@ instance AdlValue DeclType where
         DeclType_newtype_ v -> genUnionValue "newtype_" v
         )
     
-    jsonParser
-        =   parseUnionValue "struct_" DeclType_struct_
-        <|> parseUnionValue "union_" DeclType_union_
-        <|> parseUnionValue "type_" DeclType_type_
-        <|> parseUnionValue "newtype_" DeclType_newtype_
-        <|> parseFail "expected a DeclType"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "struct_" ->  parseUnionValue DeclType_struct_
+        "union_" ->  parseUnionValue DeclType_union_
+        "type_" ->  parseUnionValue DeclType_type_
+        "newtype_" ->  parseUnionValue DeclType_newtype_
+        _ -> parseFail "expected a discriminator for DeclType (struct_,union_,type_,newtype_)" 
 
 type DeclVersions = [Decl]
 
@@ -130,10 +131,10 @@ instance AdlValue Import where
         Import_scopedName v -> genUnionValue "scopedName" v
         )
     
-    jsonParser
-        =   parseUnionValue "moduleName" Import_moduleName
-        <|> parseUnionValue "scopedName" Import_scopedName
-        <|> parseFail "expected a Import"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "moduleName" ->  parseUnionValue Import_moduleName
+        "scopedName" ->  parseUnionValue Import_scopedName
+        _ -> parseFail "expected a discriminator for Import (moduleName,scopedName)" 
 
 data Module = Module
     { module_name :: ModuleName
@@ -308,11 +309,11 @@ instance AdlValue TypeRef where
         TypeRef_reference v -> genUnionValue "reference" v
         )
     
-    jsonParser
-        =   parseUnionValue "primitive" TypeRef_primitive
-        <|> parseUnionValue "typeParam" TypeRef_typeParam
-        <|> parseUnionValue "reference" TypeRef_reference
-        <|> parseFail "expected a TypeRef"
+    jsonParser = parseUnion $ \disc -> case disc of
+        "primitive" ->  parseUnionValue TypeRef_primitive
+        "typeParam" ->  parseUnionValue TypeRef_typeParam
+        "reference" ->  parseUnionValue TypeRef_reference
+        _ -> parseFail "expected a discriminator for TypeRef (primitive,typeParam,reference)" 
 
 data Union = Union
     { union_typeParams :: [Ident]
