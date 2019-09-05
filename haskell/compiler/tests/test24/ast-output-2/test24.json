@@ -1,0 +1,38 @@
+{
+    "annotations": [],
+    "decls": {
+        "Test": {
+            "annotations": [],
+            "name": "Test",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "map",
+                            "serializedName": "map",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "reference": {
+                                        "moduleName": "",
+                                        "name": "Map_String_Int32"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        }
+    },
+    "imports": [
+        {
+            "moduleName": "sys.annotations"
+        }
+    ],
+    "name": "test24"
+}

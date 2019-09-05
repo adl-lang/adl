@@ -30,7 +30,8 @@ import ADL.Core.Value
 import qualified ADL.Sys.Adlast as A2
 
 data AstFlags = AstFlags {
-  astf_combinedModuleFile :: Maybe FilePath
+  astf_combinedModuleFile :: Maybe FilePath,
+  astf_eliminateParameterizedTypes :: Bool
   }
 
 writeModuleFile :: (FilePath -> LBS.ByteString -> IO ()) ->
@@ -49,21 +50,25 @@ writeModuleFile fileWriter m = do
 
 generate :: AdlFlags -> AstFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af astFlags fileWriter modulePaths = case astf_combinedModuleFile astFlags of
-  Nothing -> generateIndividualModuleFiles af fileWriter modulePaths
-  (Just file) -> generateCombinedModuleFile af (fileWriter file) modulePaths
+  Nothing -> generateIndividualModuleFiles af astFlags fileWriter modulePaths
+  (Just file) -> generateCombinedModuleFile af astFlags (fileWriter file) modulePaths
 
-generateIndividualModuleFiles af fileWriter modulePaths = do
+generateIndividualModuleFiles af astFlags fileWriter modulePaths = do
   catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-    rm <- loadAndCheckModule af modulePath
+    rm0 <- loadAndCheckModule af modulePath
+    let rm = eliminateParameterizedTypesIfRequired astFlags rm0
     writeModuleFile fileWriter rm
 
 -- Write a combined single json file containing the specified modules, and all of the
 -- ADL files upon which they depend. The json in the file will have type
 --    StringMap<AST.Module>
-generateCombinedModuleFile af writeFile modulePaths = do
+generateCombinedModuleFile af astFlags writeFile modulePaths = do
   allModules <- catchAllExceptions  $ forM modulePaths (loadAndCheckModule1 af)
   let modulesByName = mconcat (map merge1 allModules)
   liftIO $ writeFile (JSON.encodePretty' JSON.defConfig (adlToJson modulesByName))
   where
-    keyedModule m = SM.singleton (moduleNameToA2 (m_name m)) (moduleToA2 m)
+    keyedModule m = SM.singleton (moduleNameToA2 (m_name m)) (moduleToA2 (eliminateParameterizedTypesIfRequired astFlags m))
     merge1 (m,ms) = mconcat (keyedModule m : (map keyedModule ms))
+
+eliminateParameterizedTypesIfRequired astFlags rm = if astf_eliminateParameterizedTypes astFlags then eliminateParameterizedTypes rm else rm
+

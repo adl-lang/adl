@@ -1,0 +1,14 @@
+module test24 {
+
+struct Pair<A,B> {
+   A v1;
+   B v2;
+};
+
+newtype Map<K,V> = Vector<Pair<K,V>>;
+
+struct Test {
+  Map<String,Int32> map;
+};
+
+};

@@ -2,6 +2,8 @@
 
 module ADL.Compiler.Processing where
 
+import Debug.Trace
+
 import Prelude
 
 import Control.Applicative
@@ -795,6 +797,91 @@ expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
         Left err -> error ("BUG: " ++ T.unpack err)
         Right te -> expandTypedefs te
     typeExpr t ts = TypeExpr t ts
+
+type RDeclMap = Map.Map Ident RDecl
+type RDeclWriter a = Writer RDeclMap a
+
+-- | Remove all traces of parameterized types from the given module by creating
+-- appropriate monomorphic declarations
+eliminateParameterizedTypes :: RModule -> RModule
+eliminateParameterizedTypes = removeParameterizedDecls . addMonomophicDecls . replaceParameterisedRefs
+  where
+    replaceParameterisedRefs :: RModule -> (RModule,RDeclMap)
+    replaceParameterisedRefs rm = runWriter (rprModule rm)
+      where
+        rprModule mod= do
+          decls <- mapM rprDecl (m_decls mod)
+          return mod{m_decls=decls}
+        rprDecl decl = do
+          dtype1 <- rprDeclType (d_type decl)
+          return decl{d_type=dtype1}
+        rprDeclType (Decl_Struct s) = Decl_Struct <$> rprStruct s
+        rprDeclType (Decl_Union u) = Decl_Union <$> rprUnion u
+        rprDeclType (Decl_Typedef t) = Decl_Typedef <$> rprTypedef t
+        rprDeclType (Decl_Newtype n) = Decl_Newtype <$> rprNewtype n
+        rprStruct s | not (null (s_typeParams s)) = return s
+                    | otherwise  = do
+          fields <- mapM rprField (s_fields s)
+          return s{s_fields = fields}
+        rprUnion u  | not (null (u_typeParams u)) = return u
+                    | otherwise  = do
+          fields <- mapM rprField (u_fields u)
+          return u{u_fields = fields}
+        rprNewtype n | not (null (n_typeParams n)) = return n
+                     | otherwise  = do
+          te <- rprTypeExpr (n_typeExpr n)
+          return n{n_typeExpr=te}
+        rprTypedef t | not (null (t_typeParams t)) = return t
+                     | otherwise  = do
+          te <- rprTypeExpr (t_typeExpr t)
+          return t{t_typeExpr=te}
+
+        rprField field = do
+          ftype <- rprTypeExpr (f_type field)
+          return field{f_type=ftype}
+
+        rprTypeExpr te@(TypeExpr (RT_Primitive _) _) = return te
+        rprTypeExpr te@(TypeExpr (RT_Param _) _) = error "BUG: Unexpected type param /1"
+        rprTypeExpr te@(TypeExpr (RT_Named (scopedName,_)) []) = do
+          return te
+        rprTypeExpr te@(TypeExpr (RT_Named rtnamed) tes) = do
+          rtnamed1 <- createMonomorphisedDecl rtnamed tes
+          return (TypeExpr (RT_Named rtnamed1) [])
+
+        createMonomorphisedDecl :: (ScopedName,RDecl) -> [TypeExprRT ()] -> RDeclWriter (ScopedName,RDecl)
+        createMonomorphisedDecl (sn,decl) tes = do
+          tes1 <- trace (show ("createMonomorphisedDecl", sn)) $ mapM rprTypeExpr tes
+          let typeParams = Map.fromList (zip (getTypeParams (d_type decl)) tes1)
+              name1 = sn_name sn <> "_" <> T.intercalate "_" (map telabel tes1)
+              sn1 = sn{sn_name=name1}
+              decl1 = decl{d_type=substDeclTypeParams typeParams (d_type decl)}
+          tell (Map.singleton name1 decl1)
+          return (sn1, decl1)
+          where
+            telabel (TypeExpr (RT_Param _) _) = error "BUG: Unexpected type param /2"
+            telabel (TypeExpr (RT_Primitive p) tes) = T.intercalate "_" (ptToText p:map telabel tes)
+            telabel (TypeExpr (RT_Named  (sn,_)) []) = T.intercalate "_" (unModuleName (sn_moduleName sn) <> [sn_name sn])
+            telabel (TypeExpr (RT_Named  (sn,_)) _) = "BUG: shouldn't need to telabel a type application"
+
+            substDeclTypeParams tparams (Decl_Struct s) = Decl_Struct s{s_fields=map (substFieldTypeParams tparams) (s_fields s)}
+            substDeclTypeParams tparams (Decl_Union u) = Decl_Union u{u_fields=map (substFieldTypeParams tparams) (u_fields u)}
+            substDeclTypeParams tparams (Decl_Typedef t) = Decl_Typedef t{t_typeExpr=substTypeParams' tparams (t_typeExpr t)}
+            substDeclTypeParams tparams (Decl_Newtype n) = Decl_Newtype n{n_typeExpr=substTypeParams' tparams (n_typeExpr n)}
+
+            substFieldTypeParams tparams f = f{f_type=substTypeParams' tparams (f_type f)}
+
+            substTypeParams' tparams te = case substTypeParams tparams te of
+              Left _ -> error "BUG: unmapped type parameter"
+              Right te1 -> te1
+
+    addMonomophicDecls :: (RModule,RDeclMap) -> RModule
+    addMonomophicDecls (rm,monomorphicDecls) = rm{m_decls=m_decls rm <> monomorphicDecls}
+
+    removeParameterizedDecls :: RModule -> RModule
+    removeParameterizedDecls rm = rm{m_decls=Map.filter (not . isParameterised) (m_decls rm)}
+      where
+        isParameterised = not . null . getTypeParams . d_type
+
 
 substTypeParams :: Map.Map Ident (TypeExprRT c) -> TypeExprRT c -> Either T.Text (TypeExprRT c)
 substTypeParams m  (TypeExpr (RT_Param n) ts) =

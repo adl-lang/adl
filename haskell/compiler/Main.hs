@@ -58,6 +58,11 @@ astCombinedOutputFile ufn =
     (ReqArg ufn "OUTFILE")
     "The json file to which all adl modules will be written"
 
+astEliminateParameterizedTypes ufn =
+  Option "" ["eliminate-parameterized-types"]
+    (NoArg ufn)
+    "Eliminate parameterized types from the generated AST by replacing them with appropriate monomorphic declarations"
+
 runVerify args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
@@ -83,12 +88,14 @@ runAst args = do
     header = "Usage: adlc ast [OPTION...] files..."
 
     flags0 libDir = A.AstFlags {
-      A.astf_combinedModuleFile = Nothing
+      A.astf_combinedModuleFile = Nothing,
+      A.astf_eliminateParameterizedTypes = False
     }
 
     mkOptDescs libDir =
-      standardOptions <> [
-        astCombinedOutputFile (\f -> updateBackendFlags (\astf -> astf{A.astf_combinedModuleFile=Just f}))
+      standardOptions <> 
+      [ astCombinedOutputFile (\f -> updateBackendFlags (\astf -> astf{A.astf_combinedModuleFile=Just f}))
+      , astEliminateParameterizedTypes (updateBackendFlags (\astf -> astf{A.astf_eliminateParameterizedTypes=True}))
       ]
 
 

@@ -103,18 +103,18 @@ runCppBackend1 mpath = runCppBackend [ipath,stdsrc] [mpath] epath ""
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "cpp-output"
 
-runAstBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
-runAstBackend ipath mpaths epath = do
+runAstBackend :: Bool -> [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
+runAstBackend eliminateParameterizedTypes ipath mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let af = defaultAdlFlags{af_searchPath=ipath,af_mergeFileExtensions=[".ann"]}
-      bf = AST.AstFlags Nothing
+      bf = AST.AstFlags Nothing eliminateParameterizedTypes
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ AST.generate af bf fileWriter mpaths
   processCompilerOutput epath tempDir er
 
 runAstBackend1 :: FilePath-> IO CodeGenResult
-runAstBackend1 mpath = runAstBackend [ipath,stdsrc] [mpath] epath
+runAstBackend1 mpath = runAstBackend False [ipath,stdsrc] [mpath] epath
   where
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "ast-output"
@@ -264,6 +264,12 @@ runTests = do
         `shouldReturn` MatchOutput
     it "generates expected json serialisation for custom annotation types" $ do
       collectResults (runAstBackend1 "test21/input/test.adl")
+        `shouldReturn` MatchOutput
+    it "include generics by default" $ do
+      collectResults (runAstBackend False [stdsrc] ["test24/input/test24.adl"] "test24/ast-output-1")
+        `shouldReturn` MatchOutput
+    it "eliminates generics on request" $ do
+      collectResults (runAstBackend True [stdsrc] ["test24/input/test24.adl"] "test24/ast-output-2")
         `shouldReturn` MatchOutput
 
   describe "adlc cpp backend" $ do

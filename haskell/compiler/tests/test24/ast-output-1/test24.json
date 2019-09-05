@@ -1,0 +1,133 @@
+{
+    "annotations": [],
+    "decls": {
+        "Map": {
+            "annotations": [],
+            "name": "Map",
+            "type_": {
+                "newtype_": {
+                    "default": "nothing",
+                    "typeExpr": {
+                        "parameters": [
+                            {
+                                "parameters": [
+                                    {
+                                        "parameters": [],
+                                        "typeRef": {
+                                            "typeParam": "K"
+                                        }
+                                    },
+                                    {
+                                        "parameters": [],
+                                        "typeRef": {
+                                            "typeParam": "V"
+                                        }
+                                    }
+                                ],
+                                "typeRef": {
+                                    "reference": {
+                                        "moduleName": "",
+                                        "name": "Pair"
+                                    }
+                                }
+                            }
+                        ],
+                        "typeRef": {
+                            "primitive": "Vector"
+                        }
+                    },
+                    "typeParams": [
+                        "K",
+                        "V"
+                    ]
+                }
+            },
+            "version": "nothing"
+        },
+        "Pair": {
+            "annotations": [],
+            "name": "Pair",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "v1",
+                            "serializedName": "v1",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "typeParam": "A"
+                                }
+                            }
+                        },
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "v2",
+                            "serializedName": "v2",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "typeParam": "B"
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": [
+                        "A",
+                        "B"
+                    ]
+                }
+            },
+            "version": "nothing"
+        },
+        "Test": {
+            "annotations": [],
+            "name": "Test",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "map",
+                            "serializedName": "map",
+                            "typeExpr": {
+                                "parameters": [
+                                    {
+                                        "parameters": [],
+                                        "typeRef": {
+                                            "primitive": "String"
+                                        }
+                                    },
+                                    {
+                                        "parameters": [],
+                                        "typeRef": {
+                                            "primitive": "Int32"
+                                        }
+                                    }
+                                ],
+                                "typeRef": {
+                                    "reference": {
+                                        "moduleName": "",
+                                        "name": "Map"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        }
+    },
+    "imports": [
+        {
+            "moduleName": "sys.annotations"
+        }
+    ],
+    "name": "test24"
+}
