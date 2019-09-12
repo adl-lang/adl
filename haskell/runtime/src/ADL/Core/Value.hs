@@ -13,6 +13,7 @@ module ADL.Core.Value(
   adlFromJsonFile,
   adlFromJsonFile',
   adlToJsonFile,
+  decodeAdlParseResult,
   genField,
   genObject,
   genUnion,
@@ -136,16 +137,19 @@ adlFromJsonFile file = fmap adlFromByteString (LBS.readFile file)
 -- on failure.
 adlFromJsonFile' :: forall a . AdlValue a => FilePath -> IO a
 adlFromJsonFile' file = do
-  ma <- adlFromJsonFile file
-  case ma of
-    (ParseFailure e ctx) -> ioError $ userError $
-      T.unpack
-        (  "Unable to parse a value of type "
-        <> atype (Proxy :: Proxy a)
-        <> " from " <>  T.pack file <> ": "
-        <> e <> " at " <> textFromParseContext ctx
-        )
-    (ParseSuccess a) -> return a
+  pa <- adlFromJsonFile file
+  case decodeAdlParseResult (" from " <>  T.pack file) pa of
+    Left emsg -> ioError (userError (T.unpack emsg))
+    Right a -> return a
+
+decodeAdlParseResult :: forall a . (AdlValue a) => T.Text -> ParseResult a -> Either T.Text a
+decodeAdlParseResult from (ParseFailure e ctx) = Left
+  (  "Unable to parse a value of type "
+  <> atype (Proxy :: Proxy a)
+  <> from <> ": "
+  <> e <> " at " <> textFromParseContext ctx
+  )
+decodeAdlParseResult _ (ParseSuccess a) = Right a
 
 textFromParseContext :: ParseContext -> T.Text
 textFromParseContext [] = "$"
