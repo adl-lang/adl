@@ -130,3 +130,4 @@ if that file exists.
 
 [backend-haskell]: backend-haskell.md
 [backend-java]: backend-java.md
+[backend-typescript]: backend-typescript.md
