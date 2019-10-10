@@ -25,8 +25,10 @@ export function makeA(
 const A_AST : ADL.ScopedDecl =
   {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f_int","default":{"kind":"nothing"},"name":"f_int","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"f_string","default":{"kind":"nothing"},"name":"f_string","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f_bool","default":{"kind":"just","value":false},"name":"f_bool","typeExpr":{"typeRef":{"kind":"primitive","value":"Bool"},"parameters":[]}}]}},"name":"A","version":{"kind":"nothing"}}};
 
+export const snA: ADL.ScopedName = {moduleName:"test3", name:"A"};
+
 export function texprA(): ADL.ATypeExpr<A> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "A"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snA}, parameters : []}};
 }
 
 export interface XY<T> {
@@ -48,6 +50,8 @@ export function makeXY<T>(
 
 const XY_AST : ADL.ScopedDecl =
   {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"x","default":{"kind":"nothing"},"name":"x","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"y","default":{"kind":"nothing"},"name":"y","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"XY","version":{"kind":"nothing"}}};
+
+export const snXY: ADL.ScopedName = {moduleName:"test3", name:"XY"};
 
 export function texprXY<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<XY<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "XY"}}, parameters : [texprT.value]}};
@@ -79,6 +83,8 @@ export function makeB<T>(
 const B_AST : ADL.ScopedDecl =
   {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"f_t","default":{"kind":"nothing"},"name":"f_t","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"f_string","default":{"kind":"nothing"},"name":"f_string","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f_tvec","default":{"kind":"nothing"},"name":"f_tvec","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}},{"annotations":[],"serializedName":"f_xy","default":{"kind":"nothing"},"name":"f_xy","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test3","name":"XY"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"B","version":{"kind":"nothing"}}};
 
+export const snB: ADL.ScopedName = {moduleName:"test3", name:"B"};
+
 export function texprB<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<B<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "B"}}, parameters : [texprT.value]}};
 }
@@ -100,8 +106,10 @@ export type U = U_F_int | U_F_string | U_F_void;
 const U_AST : ADL.ScopedDecl =
   {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f_int","default":{"kind":"nothing"},"name":"f_int","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"f_string","default":{"kind":"nothing"},"name":"f_string","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f_void","default":{"kind":"nothing"},"name":"f_void","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U","version":{"kind":"nothing"}}};
 
+export const snU: ADL.ScopedName = {moduleName:"test3", name:"U"};
+
 export function texprU(): ADL.ATypeExpr<U> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "U"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snU}, parameters : []}};
 }
 
 export enum E {
@@ -112,8 +120,10 @@ export enum E {
 const E_AST : ADL.ScopedDecl =
   {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"v2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"E","version":{"kind":"nothing"}}};
 
+export const snE: ADL.ScopedName = {moduleName:"test3", name:"E"};
+
 export function texprE(): ADL.ATypeExpr<E> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "E"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snE}, parameters : []}};
 }
 
 export interface S<T> {
@@ -201,6 +211,8 @@ export function makeS<T>(
 
 const S_AST : ADL.ScopedDecl =
   {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"f_void","default":{"kind":"just","value":null},"name":"f_void","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"f_bool","default":{"kind":"just","value":true},"name":"f_bool","typeExpr":{"typeRef":{"kind":"primitive","value":"Bool"},"parameters":[]}},{"annotations":[],"serializedName":"f_int8","default":{"kind":"just","value":-5},"name":"f_int8","typeExpr":{"typeRef":{"kind":"primitive","value":"Int8"},"parameters":[]}},{"annotations":[],"serializedName":"f_int16","default":{"kind":"just","value":-10000},"name":"f_int16","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"f_int32","default":{"kind":"just","value":56},"name":"f_int32","typeExpr":{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}},{"annotations":[],"serializedName":"f_int64","default":{"kind":"just","value":40000},"name":"f_int64","typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}},{"annotations":[],"serializedName":"f_word8","default":{"kind":"just","value":32},"name":"f_word8","typeExpr":{"typeRef":{"kind":"primitive","value":"Word8"},"parameters":[]}},{"annotations":[],"serializedName":"f_word16","default":{"kind":"just","value":50000},"name":"f_word16","typeExpr":{"typeRef":{"kind":"primitive","value":"Word16"},"parameters":[]}},{"annotations":[],"serializedName":"f_word32","default":{"kind":"just","value":124456},"name":"f_word32","typeExpr":{"typeRef":{"kind":"primitive","value":"Word32"},"parameters":[]}},{"annotations":[],"serializedName":"f_word64","default":{"kind":"just","value":2344},"name":"f_word64","typeExpr":{"typeRef":{"kind":"primitive","value":"Word64"},"parameters":[]}},{"annotations":[],"serializedName":"f_float","default":{"kind":"just","value":0.5},"name":"f_float","typeExpr":{"typeRef":{"kind":"primitive","value":"Float"},"parameters":[]}},{"annotations":[],"serializedName":"f_double","default":{"kind":"just","value":0.45},"name":"f_double","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f_bytes","default":{"kind":"just","value":"aGVsbG8="},"name":"f_bytes","typeExpr":{"typeRef":{"kind":"primitive","value":"Bytes"},"parameters":[]}},{"annotations":[],"serializedName":"f_string","default":{"kind":"just","value":"abcd"},"name":"f_string","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f_vstring","default":{"kind":"just","value":["xy","ab"]},"name":"f_vstring","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}]}},{"annotations":[],"serializedName":"f_a","default":{"kind":"just","value":{"f_string":"xyz","f_int":0}},"name":"f_a","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test3","name":"A"}},"parameters":[]}},{"annotations":[],"serializedName":"f_u","default":{"kind":"just","value":{"f_int":45}},"name":"f_u","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test3","name":"U"}},"parameters":[]}},{"annotations":[],"serializedName":"f_u1","default":{"kind":"just","value":"f_void"},"name":"f_u1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test3","name":"U"}},"parameters":[]}},{"annotations":[],"serializedName":"f_e","default":{"kind":"just","value":"v2"},"name":"f_e","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test3","name":"E"}},"parameters":[]}},{"annotations":[],"serializedName":"f_t","default":{"kind":"nothing"},"name":"f_t","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"f_bint16","default":{"kind":"just","value":{"f_string":"yikes","f_t":56,"f_tvec":[1,2,3],"f_xy":{"x":5,"y":5}}},"name":"f_bint16","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test3","name":"B"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}]}},{"annotations":[],"serializedName":"f_smap","default":{"kind":"just","value":{"a":45,"b":47}},"name":"f_smap","typeExpr":{"typeRef":{"kind":"primitive","value":"StringMap"},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}},{"annotations":[],"serializedName":"f_json1","default":{"kind":"just","value":null},"name":"f_json1","typeExpr":{"typeRef":{"kind":"primitive","value":"Json"},"parameters":[]}},{"annotations":[],"serializedName":"f_json2","default":{"kind":"just","value":[{"v1":27,"v2":"abcde"},true]},"name":"f_json2","typeExpr":{"typeRef":{"kind":"primitive","value":"Json"},"parameters":[]}}]}},"name":"S","version":{"kind":"nothing"}}};
+
+export const snS: ADL.ScopedName = {moduleName:"test3", name:"S"};
 
 export function texprS<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<S<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test3",name : "S"}}, parameters : [texprT.value]}};

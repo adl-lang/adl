@@ -366,10 +366,12 @@ addAstDeclaration m decl = do
     let astDecl
           =  ctemplate "const $1 : ADL.ScopedDecl =" [astVariableName decl]
           <> indent (ctemplate "$1;" [jsonToText (scopedDeclAst cgp m decl)])
+        scopedNameDecl
+          = ctemplate "export const sn$1: ADL.ScopedName = {moduleName:\"$2\", name:\"$1\"};" [d_name decl, formatText (m_name m)]
         typeExprFn0
           =  cblock (template "export function texpr$1(): ADL.ATypeExpr<$1>" [d_name decl])
-                    (ctemplate "return {value : {typeRef : {kind: \"reference\", value : {moduleName : \"$1\",name : \"$2\"}}, parameters : []}};"
-                               [formatText (m_name m), d_name decl])
+                    (ctemplate "return {value : {typeRef : {kind: \"reference\", value : sn$1}, parameters : []}};"
+                               [d_name decl])
         typeExprFnN tparams
           =  cblock (template "export function texpr$1$2($3): ADL.ATypeExpr<$1$2>"
                               [d_name decl, typeParamsExpr tparams, exprArgs])
@@ -379,6 +381,7 @@ addAstDeclaration m decl = do
                exprArgs = T.intercalate ", " [template "texpr$1 : ADL.ATypeExpr<$1>" [t] | t <- tparams]
                exprParams = T.intercalate ", " [template "texpr$1.value" [t] | t <- tparams]
     addDeclaration astDecl
+    addDeclaration scopedNameDecl
     case getTypeParams (d_type decl) of
       []      -> addDeclaration typeExprFn0
       tparams -> addDeclaration (typeExprFnN tparams)

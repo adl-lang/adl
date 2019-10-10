@@ -25,8 +25,10 @@ export function makeS1(
 const S1_AST : ADL.ScopedDecl =
   {"moduleName":"test23","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"field","default":{"kind":"nothing"},"name":"field","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
 
+export const snS1: ADL.ScopedName = {moduleName:"test23", name:"S1"};
+
 export function texprS1(): ADL.ATypeExpr<S1> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test23",name : "S1"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snS1}, parameters : []}};
 }
 
 export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {

@@ -1,5 +1,6 @@
 import * as AST from './sys/adlast';
 
+export type ScopedName = AST.ScopedName;
 export type ScopedDecl = AST.ScopedDecl;
 export type ATypeRef<_T> = {value: AST.TypeRef};
 export type ATypeExpr<_T> = {value : AST.TypeExpr};

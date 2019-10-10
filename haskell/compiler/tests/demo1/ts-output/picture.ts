@@ -24,8 +24,10 @@ export type Picture = Picture_Circle | Picture_Rectangle | Picture_Composed | Pi
 const Picture_AST : ADL.ScopedDecl =
   {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"circle","default":{"kind":"nothing"},"name":"circle","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Circle"}},"parameters":[]}},{"annotations":[],"serializedName":"rectangle","default":{"kind":"nothing"},"name":"rectangle","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Rectangle"}},"parameters":[]}},{"annotations":[],"serializedName":"composed","default":{"kind":"nothing"},"name":"composed","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}},"parameters":[]}]}},{"annotations":[],"serializedName":"translated","default":{"kind":"nothing"},"name":"translated","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Translated"}},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}},"parameters":[]}]}}]}},"name":"Picture","version":{"kind":"nothing"}}};
 
+export const snPicture: ADL.ScopedName = {moduleName:"picture", name:"Picture"};
+
 export function texprPicture(): ADL.ATypeExpr<Picture> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Picture"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snPicture}, parameters : []}};
 }
 
 export interface Circle {
@@ -45,8 +47,10 @@ export function makeCircle(
 const Circle_AST : ADL.ScopedDecl =
   {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"radius","default":{"kind":"nothing"},"name":"radius","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}}]}},"name":"Circle","version":{"kind":"nothing"}}};
 
+export const snCircle: ADL.ScopedName = {moduleName:"picture", name:"Circle"};
+
 export function texprCircle(): ADL.ATypeExpr<Circle> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Circle"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snCircle}, parameters : []}};
 }
 
 export interface Rectangle {
@@ -69,8 +73,10 @@ export function makeRectangle(
 const Rectangle_AST : ADL.ScopedDecl =
   {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"width","default":{"kind":"nothing"},"name":"width","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"height","default":{"kind":"nothing"},"name":"height","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}}]}},"name":"Rectangle","version":{"kind":"nothing"}}};
 
+export const snRectangle: ADL.ScopedName = {moduleName:"picture", name:"Rectangle"};
+
 export function texprRectangle(): ADL.ATypeExpr<Rectangle> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Rectangle"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snRectangle}, parameters : []}};
 }
 
 export interface Translated<T> {
@@ -95,6 +101,8 @@ export function makeTranslated<T>(
 
 const Translated_AST : ADL.ScopedDecl =
   {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"xoffset","default":{"kind":"just","value":0},"name":"xoffset","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"yoffset","default":{"kind":"just","value":0},"name":"yoffset","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"object","default":{"kind":"nothing"},"name":"object","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Translated","version":{"kind":"nothing"}}};
+
+export const snTranslated: ADL.ScopedName = {moduleName:"picture", name:"Translated"};
 
 export function texprTranslated<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Translated<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "picture",name : "Translated"}}, parameters : [texprT.value]}};

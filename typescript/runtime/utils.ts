@@ -37,10 +37,13 @@ export function typeRefsEqual(tref1 : AST.TypeRef, tref2 : AST.TypeRef) : boolea
   } else if (tref1.kind === "typeParam" && tref2.kind === "typeParam") {
     return tref1.value === tref2.value;
   } else if (tref1.kind === "reference" && tref2.kind === "reference") {
-    return tref1.value.moduleName === tref2.value.moduleName &&
-      tref1.value.name === tref2.value.name;
+    return scopedNamesEqual(tref1.value, tref2.value);
   }
   return false;
+}
+
+export function scopedNamesEqual(sn1: AST.ScopedName, sn2: AST.ScopedName): boolean {
+  return sn1.moduleName === sn2.moduleName && sn1.name === sn2.name;
 }
 
 function typeExprToStringImpl(te: AST.TypeExpr, withScopedNames: boolean) : string {
@@ -71,3 +74,4 @@ export function typeExprToString(te: AST.TypeExpr) : string {
 export function typeExprToStringUnscoped(te: AST.TypeExpr) : string {
   return typeExprToStringImpl(te, false);
 }
+

@@ -19,8 +19,10 @@ export function makeS0(
 const S0_AST : ADL.ScopedDecl =
   {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[]}},"name":"S0","version":{"kind":"nothing"}}};
 
+export const snS0: ADL.ScopedName = {moduleName:"test2", name:"S0"};
+
 export function texprS0(): ADL.ATypeExpr<S0> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S0"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snS0}, parameters : []}};
 }
 
 /**
@@ -47,8 +49,10 @@ export function makeS1(
 const S1_AST : ADL.ScopedDecl =
   {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"x","default":{"kind":"nothing"},"name":"x","typeExpr":{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}},{"annotations":[],"serializedName":"y","default":{"kind":"nothing"},"name":"y","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
 
+export const snS1: ADL.ScopedName = {moduleName:"test2", name:"S1"};
+
 export function texprS1(): ADL.ATypeExpr<S1> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S1"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snS1}, parameters : []}};
 }
 
 /**
@@ -77,8 +81,10 @@ export function makeS2(
 const S2_AST : ADL.ScopedDecl =
   {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f3","default":{"kind":"nothing"},"name":"f3","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}}]}},"name":"S2","version":{"kind":"nothing"}}};
 
+export const snS2: ADL.ScopedName = {moduleName:"test2", name:"S2"};
+
 export function texprS2(): ADL.ATypeExpr<S2> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S2"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snS2}, parameters : []}};
 }
 
 /**
@@ -110,6 +116,8 @@ export function makeS3<T>(
 const S3_AST : ADL.ScopedDecl =
   {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f3","default":{"kind":"nothing"},"name":"f3","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"f4","default":{"kind":"nothing"},"name":"f4","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"S3","version":{"kind":"nothing"}}};
 
+export const snS3: ADL.ScopedName = {moduleName:"test2", name:"S3"};
+
 export function texprS3<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<S3<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S3"}}, parameters : [texprT.value]}};
 }
@@ -133,6 +141,8 @@ export function makeS4<T>(
 
 const S4_AST : ADL.ScopedDecl =
   {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"S3"}},"parameters":[{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"S3"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"S4","version":{"kind":"nothing"}}};
+
+export const snS4: ADL.ScopedName = {moduleName:"test2", name:"S4"};
 
 export function texprS4<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<S4<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "S4"}}, parameters : [texprT.value]}};
@@ -158,6 +168,8 @@ export function makeTree<T>(
 const Tree_AST : ADL.ScopedDecl =
   {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"value","default":{"kind":"nothing"},"name":"value","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"children","default":{"kind":"nothing"},"name":"children","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"Tree"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}]}}]}},"name":"Tree","version":{"kind":"nothing"}}};
 
+export const snTree: ADL.ScopedName = {moduleName:"test2", name:"Tree"};
+
 export function texprTree<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Tree<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "Tree"}}, parameters : [texprT.value]}};
 }
@@ -167,8 +179,10 @@ export type IntTree = Tree<number>;
 const IntTree_AST : ADL.ScopedDecl =
   {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"Tree"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}}},"name":"IntTree","version":{"kind":"nothing"}}};
 
+export const snIntTree: ADL.ScopedName = {moduleName:"test2", name:"IntTree"};
+
 export function texprIntTree(): ADL.ATypeExpr<IntTree> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "test2",name : "IntTree"}}, parameters : []}};
+  return {value : {typeRef : {kind: "reference", value : snIntTree}, parameters : []}};
 }
 
 export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {

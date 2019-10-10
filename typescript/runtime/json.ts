@@ -1,7 +1,7 @@
 import {DeclResolver,ATypeExpr} from './adl';
 import * as AST from './sys/adlast';
 import * as b64 from 'base64-js';
-import {isVoid, isEnum} from './utils';
+import {isVoid, isEnum, scopedNamesEqual} from './utils';
 
 /** A type alias for json serialised values */
 type Json = {}|null;
@@ -459,4 +459,19 @@ function once<T>(run : () => T) : () => T {
     }
     return result;
   };
+}
+
+/**
+ * Get the value of an annotation of type T
+ */
+export function getAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotations): T | undefined {
+  if (jb.typeExpr.typeRef.kind != 'reference') {
+    return undefined;
+  }
+  const annScopedName :AST.ScopedName = jb.typeExpr.typeRef.value;
+  const ann = annotations.find(el => scopedNamesEqual(el.v1, annScopedName));
+  if (ann === undefined) {
+    return undefined;
+  }
+  return jb.fromJsonE(ann);
 }
