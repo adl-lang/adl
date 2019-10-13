@@ -1,5 +1,8 @@
 # ADL haskell backend
 
+For a tutorial on using ADL in haskell, see the [adl-demo-hs repository][adl-demo-hs].
+
+# Usage
 ```
 Usage: adlc haskell [OPTION...] files...
   -I DIR  --searchdir=DIR        Add the specifed directory to the ADL searchpath
@@ -240,3 +243,4 @@ declarations in the [adl standard library][stdlib]:
 [dayhs]: http://hackage.haskell.org/package/time-1.1.2.1/docs/Data-Time-Calendar.html#t%3ADay
 [datehs]:../haskell/compiler/tests/test4/input/Date.hs
 [stdlib]:../adl/stdlib
+[adl-demo-hs]: https://github.com/timbod7/adl-demo-hs/blob/master/README.md
