@@ -256,11 +256,6 @@ hTypeExprB m (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   importMap
   importText
   return (template "StringMap ($1)" [argt])
-hTypeExprB m (TypeExpr (RT_Primitive P_Nullable) [te]) = do
-  argt <- hTypeExprB m te
-  importMap
-  importText
-  return (template "Prelude.Maybe ($1)" [argt])
 hTypeExprB m (TypeExpr c args) = do
   ct <- hTypeExprB1 m c
   argst <- mapM (hTypeExprB m) args

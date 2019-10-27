@@ -13,7 +13,7 @@ cabal-version:       >=1.8
 
 library
   hs-source-dirs:      src
-  ghc-options:         -Wall
+  ghc-options:         -fwarn-incomplete-patterns
   exposed-modules:     ADL.Core, ADL.Core.Value, ADL.Core.StringMap, ADL.Core.Nullable, ADL.Sys.Types, ADL.Sys.Adlast
   build-depends:       base, text, containers, bytestring,
                        parsec, mtl, transformers,

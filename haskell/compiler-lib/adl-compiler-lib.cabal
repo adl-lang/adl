@@ -18,6 +18,7 @@ library
                      ADL.Compiler.Flags, ADL.Compiler.ExternalAST,
                      ADL.Compiler.Backends.Verify,
                      ADL.Compiler.Backends.Haskell
+  other-modules:     Paths_adl_compiler_lib
   build-depends:     base, text, containers, bytestring,
                      parsec, mtl, transformers,
                      filepath, directory, unordered-containers, vector,

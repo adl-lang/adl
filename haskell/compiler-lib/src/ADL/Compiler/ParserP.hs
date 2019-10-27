@@ -10,7 +10,6 @@ import Control.Applicative
 
 import qualified Data.Aeson as JSON
 import qualified Data.Scientific as S
-import qualified Data.Attoparsec.Number as JSON
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
