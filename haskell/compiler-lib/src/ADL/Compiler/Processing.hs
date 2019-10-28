@@ -553,8 +553,12 @@ literalForTypeExpr te v = litForTE Map.empty te v
     litForTE m te@(TypeExpr (RT_Primitive P_Vector) [te0]) v = (Literal te . LVector) <$> vecLiteral m te0 v
     litForTE m te@(TypeExpr (RT_Primitive P_StringMap) [te0]) v = (Literal te . LStringMap) <$> stringMapLiteral m te0 v
     litForTE m te@(TypeExpr (RT_Primitive P_Nullable) [te0]) v = (Literal te . LNullable) <$> nullableLiteral m te0 v
-    litForTE m (TypeExpr (RT_Primitive _) _) v =
-      error "BUG: found primitive type with incorrect number of type parameters"
+    litForTE m te@(TypeExpr (RT_Primitive P_TypeToken) [te0]) v = case v of
+      JSON.Null -> Right (Literal te (LPrimitive undefined))
+      _ -> Left "expected null"
+
+    litForTE m te@(TypeExpr (RT_Primitive _) _) v =
+      error "BUG: found primitive type with incorrect number of type parameters: "
 
     litForTE m te@(TypeExpr (RT_Named (_,decl)) tes) v = case d_type decl of
       (Decl_Struct s) -> (Literal te . LCtor) <$> structFields m decl s tes v

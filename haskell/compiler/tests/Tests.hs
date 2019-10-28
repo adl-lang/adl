@@ -254,6 +254,9 @@ runTests = do
     it "Correctly uses specified serialisation field names" $ do
       collectResults (runHaskellBackend1 "test20/input/test.adl")
         `shouldReturn` MatchOutput
+    it "generated code for type token primitives" $ do
+      collectResults (runHaskellBackend1 "test24/input/test24.adl")
+        `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runHaskellBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput
@@ -351,6 +354,9 @@ runTests = do
           (withJavaOutputPackage "org.adl")
           )
         `shouldReturn` MatchOutput
+    it "generated code for type token primitives" $ do
+      collectResults (runJavaBackend1 "test24/input/test24.adl")
+        `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runJavaBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput
@@ -385,6 +391,9 @@ runTests = do
         `shouldReturn` MatchOutput
     it "Handles annotations and docstrings correctly" $ do
       collectResults (runTsBackend [stdsrc] ["test23/input/test23.adl"] "test23/ts-output")
+        `shouldReturn` MatchOutput
+    it "generates code for type token primitives" $ do
+      collectResults (runTsBackend [stdsrc] ["test24/input/test24.adl"] "test24/ts-output")
         `shouldReturn` MatchOutput
 
   describe "adlc rust backend" $ do

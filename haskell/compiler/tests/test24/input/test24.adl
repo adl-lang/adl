@@ -1,0 +1,31 @@
+module test24
+{
+   struct PostReq<I,O> {
+     String path;
+     TypeToken<I> reqBodyType = null;
+     TypeToken<O> respType = null;
+   };
+
+   struct CrudReqs<T> {
+     PostReq<T,String> create;
+     PostReq<String,T> read;
+   };
+
+   struct Service {
+      PostReq<String,String> hello = {
+         "path": "/hello"
+      };
+      PostReq<Nullable<String>,Nullable<String>> farewell = {
+         "path": "/farewell"
+      };
+
+      CrudReqs<Json> blobs = {
+        "create": {
+          "path": "/blobs/create"
+        },
+        "read": {
+          "path": "/blobs/read"
+        }
+      };
+   };
+};

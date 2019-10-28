@@ -35,6 +35,7 @@ data-files:          lib/adl/sys/adlast.adl
                      lib/java/runtime/org/adl/runtime/JsonBindings.java
                      lib/java/runtime/org/adl/runtime/JsonHelpers.java
                      lib/java/runtime/org/adl/runtime/JsonParseException.java
+                     lib/java/runtime/org/adl/runtime/TypeToken.java
                      lib/java/runtime/org/adl/runtime/Lazy.java
                      lib/java/runtime/org/adl/runtime/MaybeHelpers.java
                      lib/haskell/runtime/ADL/Core.hs

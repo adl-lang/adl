@@ -147,6 +147,7 @@ genTypeValueExpr (TypeExpr rt params) = do
 
 -- | Generate an expression to construct a literal value.
 genLiteralText :: Literal CTypeExpr -> CState T.Text
+genLiteralText (Literal (TypeExpr (RT_Primitive P_TypeToken) [te])  _) = genTypeValueExpr te
 genLiteralText lit@(Literal (TypeExpr rt _) _) = td_genLiteralText (getTypeDetails rt) lit
 
 -- | Get the TypeDetails record for any resolved type.
@@ -173,6 +174,7 @@ getTypeDetails (RT_Primitive pt) =
     P_Vector -> vectorTypeDetails
     P_StringMap -> stringMapTypeDetails
     P_Nullable -> nullableTypeDetails
+    P_TypeToken -> typeTokenTypeDetails
   where
     primTypeDetails t convf = TypeDetails (const (return t)) convf (const (return ("ADL.texpr" <> ptToText pt <> "()")))
 
@@ -217,12 +219,20 @@ getTypeDetails (RT_Primitive pt) =
     nullableTypeDetails = TypeDetails typeExpr literalText typeValue
       where
         typeExpr [texpr] = return (template "($1|null)" [texpr])
-        typeExpr _ = error "BUG: expected a single type param for StringMap"
+        typeExpr _ = error "BUG: expected a single type param for Nullable"
         literalText (Literal _ (LNullable Nothing)) = return "null"
         literalText (Literal _ (LNullable (Just l))) = genLiteralText l
         literalText _ = error "BUG: invalid literal for Nullable"
         typeValue [tvalue] = return (template "ADL.texprNullable($1)" [tvalue])
         typeValue _ = error "BUG: expected a single type param for Nullable"
+
+    typeTokenTypeDetails = TypeDetails typeExpr literalText typeValue
+      where
+        typeExpr [texpr] = return (template "ADL.ATypeExpr<$1>" [texpr])
+        typeExpr _ = error "BUG: expected a single type param for TypeToken"
+        literalText _ = return "NOTCALLED"
+        typeValue [tvalue] = return (template "ADL.texprTypeToken($1)" [tvalue])
+        typeValue _ = error "BUG: expected a single type param for TypeToken"
 
 -- a type defined through a regular ADL declaration
 getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText typeValue
@@ -262,8 +272,8 @@ getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) =
 getTypeDetails (RT_Param typeVar) = TypeDetails typeExpr literalText typeValue
   where
     typeExpr _ = return typeVar
-    literalText _ = error "BUG: literal values for type variables shouldn't be needed"
-    typeValue _ = error "BUG: type values expressions can't be created for type variables"
+    literalText _ = return (error "BUG: literal values for type variables shouldn't be needed")
+    typeValue _ = return (template "BUG:texprTypeVariable({{$1}})" [typeVar])
 
 findUnionField :: T.Text -> [Field CResolvedType] -> (Int,Field CResolvedType)
 findUnionField fname fs = case L.find (\(_,f) -> f_name f == fname) (zip [0,1..] fs) of
@@ -568,6 +578,11 @@ generateCode :: Annotations t -> Bool
 generateCode annotations = case M.lookup snTypescriptGenerate annotations of
   Just (_,JSON.Bool gen) -> gen
   _ -> True
+
+isTypeToken :: FieldDetails -> Bool
+isTypeToken fd = case f_type (fdField fd) of
+  TypeExpr (RT_Primitive P_TypeToken) _ -> True
+  _ -> False
 
 snTypescriptGenerate :: ScopedName
 snTypescriptGenerate = ScopedName (ModuleName ["adlc","config","typescript"]) "TypescriptGenerate"

@@ -123,7 +123,8 @@ genStruct m decl struct@Struct{s_typeParams=typeParams0} = do
   let typeParams = prefixUnusedTypeParams (isTypeParamUsedInFields (s_fields struct)) typeParams0
 
   addDeclaration $ renderCommentForDeclaration decl <> renderInterface structName typeParams fds False
-  addDeclaration $ renderFactory structName typeParams fds
+  when (not (any isTypeToken fds)) $ do
+    addDeclaration $ renderFactory structName typeParams fds
   addAstDeclaration m decl
 
 genUnion :: CModule -> CDecl -> Union CResolvedType -> CState ()

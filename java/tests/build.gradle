@@ -15,6 +15,7 @@ sourceSets {
       srcDir '../../haskell/compiler/tests/test16/java-output'
       srcDir '../../haskell/compiler/tests/test17/java-output'
       srcDir '../../haskell/compiler/tests/test22/java-output'
+      srcDir '../../haskell/compiler/tests/test24/java-output'
     }
   }
 }

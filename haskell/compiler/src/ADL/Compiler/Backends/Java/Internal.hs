@@ -599,6 +599,28 @@ getTypeDetails (RT_Primitive P_Nullable) = TypeDetails
       return (optionalI,typeExpr)
     otypes lit = error "BUG: optional type should have a single type parameter"
 
+getTypeDetails (RT_Primitive P_TypeToken) = TypeDetails
+  { td_type = \_ args -> do
+       rtpackage <- getRuntimePackage
+       typeProxyI <- addImport (javaClass rtpackage "TypeToken")
+       return (withTypeArgs typeProxyI (args))
+  , td_genLiteralText = genLiteralText'
+  , td_mutable = False
+  , td_factory = primitiveFactory "typeProxy"
+  , td_hashfn = \from -> template "$1.hashCode()" [from]
+  }
+  where
+    genLiteralText' (Literal (TypeExpr _ [te]) _) = do
+      rtpackage <- getRuntimePackage
+      typeProxyI <- addImport (javaClass rtpackage "TypeToken")
+      typeExpr <- genTypeExprB TypeBoxed te
+      cgp <- cf_codeProfile <$> get
+      jsonBinding <- genJsonBindingExpr0 cgp te
+      return (template "new $1<$2>($3)" [typeProxyI,typeExpr,jsonBinding])
+    genLiteralText' lit = error ("BUG: getTypeDetails17: unexpected literal:" ++ show lit)
+    jbFromFactory tvar = template "factory$1.jsonBinding()" [tvar]
+
+
 getTypeDetails (RT_Primitive P_String) = TypeDetails
   { td_type = \_ _ -> return "String"
   , td_genLiteralText = genLiteralText'
@@ -933,7 +955,8 @@ generateStructJson cgp decl struct fieldDetails = do
                                      [fd_serializedName fd,jsonBindingsI, fd_varName fd,terminator]
                           optionalField fd terminator =
                             template "_obj.has(\"$1\") ? $2.fieldFromJson(_obj, \"$1\", $3.get()) : $4$5"
-                                     [fd_serializedName fd,jsonBindingsI, fd_varName fd,fd_defValue fd,terminator]
+                                     [fd_serializedName fd,jsonBindingsI, fd_varName fd,defValue fd,terminator]
+                          defValue fd = replaceTypeVarsWithJsonBindings (fd_defValue fd)
                       in
                       clineN
                       [ if isJust (f_default (fd_field fd))
@@ -1122,22 +1145,32 @@ generateEnumJson cgp decl union fieldDetails = do
   addMethod (cline "/* Json serialization */")
   addMethod factory
 
+-- TODO: Replace the clunking text substitutions for type variables
+--- (ie {{{VAR}}}) with something better
 genJsonBindingExpr :: CodeGenProfile -> TypeExpr CResolvedType -> CState T.Text
-genJsonBindingExpr cgp (TypeExpr rt params) = do
-  bparams <- mapM (genJsonBindingExpr cgp) params
+genJsonBindingExpr cgp texpr = replaceTypeVarsWithJsonBindings <$> genJsonBindingExpr0 cgp texpr
+
+genJsonBindingExpr0 :: CodeGenProfile -> TypeExpr CResolvedType -> CState T.Text
+genJsonBindingExpr0 cgp (TypeExpr rt params) = do
+  bparams <- mapM (genJsonBindingExpr0 cgp) params
   case rt of
     (RT_Named (scopedName,Decl{d_customType=mct})) -> do
       fscope <- case mct of
         Nothing -> genScopedName scopedName
         (Just ct) -> getHelpers ct
       return (template "$1.jsonBinding($2)" [fscope,commaSep bparams])
-    (RT_Param ident) -> return ("binding" <> ident)
+    (RT_Param ident) -> return ("{{{" <> ident <> "}}}")  -- string template we will expand later
     (RT_Primitive pt) -> do
       prim <- primJsonBinding cgp pt
       case bparams of
         [] -> return prim
         _ -> return (template "$1($2)" [prim,commaSep bparams])
 
+replaceTypeVarsWithJsonBindings :: T.Text -> T.Text
+replaceTypeVarsWithJsonBindings = T.replace "{{{" "binding" . T.replace "}}}" ""
+
+replaceTypeVarsWithFactoryMethods:: T.Text -> T.Text
+replaceTypeVarsWithFactoryMethods = T.replace "{{{" "factory" . T.replace "}}}" ".jsonBinding()"
 
 primJsonBinding :: CodeGenProfile -> PrimitiveType -> CState T.Text
 primJsonBinding cgp pt = do
@@ -1162,5 +1195,6 @@ primJsonBinding cgp pt = do
     bindingName P_Vector = "arrayList"
     bindingName P_StringMap = "stringMap"
     bindingName P_Nullable = "nullable"
+    bindingName P_TypeToken = "typeProxy"
 
 

@@ -284,8 +284,9 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       factoryInterface <- addImport (javaClass (cgp_runtimePackage codeProfile) "Factory")
       typeExprMethodCode <- genTypeExprMethod codeProfile moduleName decl
 
-      -- builder if enabled and we have more than one field
-      when (cgp_builder codeProfile && length fieldDetails > 1) $ do
+      --  if enabled and we have more than one field
+      -- and we don't contain any typetokens
+      when (cgp_builder codeProfile && length fieldDetails > 1 && not (any isTypeToken fieldDetails)) $ do
         buildersI <- addImport (javaClass (cgp_runtimePackage codeProfile) "Builders")
         let initialValue fd = if hasDefault fd then fd_defValue fd else "null"
             hasDefault fd = case f_default (fd_field fd) of
@@ -381,7 +382,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
           jsonBindingArgs = commaSep [template "$1.jsonBinding()" [factoryTypeArg arg] | arg <- s_typeParams struct]
           ctor1Args = [case f_default (fd_field fd) of
                         Nothing -> template "$1.get().create()" [fd_varName fd]
-                        (Just _) -> fd_defValue fd
+                        (Just _) -> replaceTypeVarsWithFactoryMethods (fd_defValue fd)
                       | fd <-fieldDetails]
           ctor2Args = [if immutableType (f_type (fd_field fd))
                        then template "other.$1" [fd_accessExpr fd]
@@ -631,7 +632,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                 coverride (template "public $1$2 create()" [className,typeArgs]) (
                   let val = case f_default (fd_field fieldDetail0) of
                         Nothing -> template "$1.get().create()" [fd_varName fieldDetail0]
-                        (Just _) -> fd_defValue fieldDetail0
+                        (Just _) -> replaceTypeVarsWithFactoryMethods (fd_defValue fieldDetail0)
                   in ctemplate "return new $1$2(Disc.$3,$4);" [className,typeArgs,discriminatorName fieldDetail0,val]
                 )
                 <>
@@ -758,6 +759,7 @@ generateRuntime jf fileWriter imports = liftIO $ do
                     [ javaClass rtpackage "JsonParseException"
                     , javaClass rtpackage "JsonHelpers"
                     , javaClass rtpackage "DynamicHelpers"
+                    , javaClass rtpackage "TypeToken"
                     ]
                   else mempty
                )
@@ -811,6 +813,11 @@ genTypeExprMethod cgp moduleName decl = do
        <> (mconcat [ ctemplate "params.add(factory$1.typeExpr());" [tparam] | tparam <- getTypeParams (d_type decl)])
        <> ctemplate "return new $1($2.reference(scopedName), params);" [typeExprI,typeRefI]
     )
+
+isTypeToken :: FieldDetails -> Bool
+isTypeToken fd = case f_type (fd_field fd) of
+  TypeExpr (RT_Primitive P_TypeToken) _ -> True
+  _ -> False
 
 generateCode :: Annotations t -> Bool
 generateCode annotations = case Map.lookup snJavaGenerate annotations of

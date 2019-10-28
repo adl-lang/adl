@@ -23,6 +23,7 @@ library
                      , ../compiler/tests/test18/hs-output
                      , ../compiler/tests/test20/hs-output
                      , ../compiler/tests/demo1/hs-output
+                     , ../compiler/tests/test24/hs-output
   exposed-modules:     ADL.Core
                      , ADL.Core.Value
                      , ADL.Test1
@@ -35,6 +36,7 @@ library
                      , ADL.Test7
                      , ADL.Test18
                      , ADL.Test20
+                     , ADL.Test24
                      , ADL.Picture
   build-depends:       base
                      , aeson

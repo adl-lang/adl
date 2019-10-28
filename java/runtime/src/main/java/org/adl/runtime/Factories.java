@@ -264,6 +264,29 @@ public class Factories {
     };
   }
 
+  public static <T> Factory<TypeToken<T>> typeProxy(final Factory<T> factoryT) {
+    return new Factory<TypeToken<T>>() {
+      @Override
+      public TypeToken<T> create() {
+        return new TypeToken<T>(factoryT.jsonBinding());
+      }
+
+      @Override
+      public TypeToken<T> create(TypeToken<T> other) {
+        return other;
+      }
+
+      @Override
+      public TypeExpr typeExpr() {
+        return primTypeExpr("TypeToken", factoryT.typeExpr());
+      }
+      @Override
+      public JsonBinding<TypeToken<T>> jsonBinding() {
+        return JsonBindings.typeProxy(factoryT.jsonBinding());
+      }
+    };
+  }
+
   public static <T> HashMap<String,T> stringMap() {
     return new HashMap<>();
   }

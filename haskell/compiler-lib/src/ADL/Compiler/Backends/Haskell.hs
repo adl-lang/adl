@@ -198,6 +198,7 @@ hPrimitiveType P_ByteVector = importByteString >> return "B.ByteString"
 hPrimitiveType P_Vector = return "[]" -- never called
 hPrimitiveType P_StringMap = return "???" -- never called
 hPrimitiveType P_Nullable = return "???" -- never called
+hPrimitiveType P_TypeToken = return "???" -- never called
 hPrimitiveType P_String = importText >> return "T.Text"
 
 hPrimitiveLiteral :: PrimitiveType -> JS.Value -> HGen T.Text
@@ -251,6 +252,11 @@ hTypeExprB m (TypeExpr (RT_Primitive P_Nullable) [te]) = do
   nmod <- nullableModule
   importQualifiedModule nmod
   return (template "$1.Nullable ($2)" [unHaskellModule nmod, argt])
+hTypeExprB m (TypeExpr (RT_Primitive P_TypeToken) [te]) = do
+  argt <- hTypeExprB m te
+  tmod <- typeProxyModule
+  importQualifiedModule tmod
+  return (template "$1.TypeToken ($2)" [unHaskellModule tmod, argt])
 hTypeExprB m (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   argt <- hTypeExprB m te
   importMap
@@ -302,6 +308,11 @@ nullableModule = do
   ms <- get
   return (HaskellModule (ms_runtimePackage ms <> ".Nullable"))
 
+typeProxyModule :: HGen HaskellModule
+typeProxyModule = do
+  ms <- get
+  return (HaskellModule (ms_runtimePackage ms <> ".TypeToken"))
+
 enableScopedTypeVariables :: [Ident] -> HGen ()
 enableScopedTypeVariables [] = return ()
 enableScopedTypeVariables _ = addLanguageFeature "ScopedTypeVariables"
@@ -336,6 +347,7 @@ stdClassesFor1 :: Set.Set ScopedName -> TypeBindingMap -> TypeExpr CResolvedType
 stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_Vector) [te]) = stdClassesFor1 sns tbmap te
 stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_StringMap) [te]) = stdClassesFor1 sns tbmap te
 stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_Nullable) [te]) = stdClassesFor1 sns tbmap te
+stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_TypeToken) [te]) = stdClassesFor1 sns tbmap te
 stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive P_Json) []) = Set.fromList ["Eq","Show"]
 stdClassesFor1 sns tbmap (TypeExpr (RT_Primitive _) _) = defaultStdClasses
 stdClassesFor1 sns tbmap (TypeExpr (RT_Param tp) _) = case Map.lookup tp tbmap of
@@ -541,6 +553,7 @@ generateLiteral te v =  generateLV Map.empty te v
     generateLV m (TypeExpr (RT_Primitive P_Vector) [te]) v = generateVec m te v
     generateLV m (TypeExpr (RT_Primitive P_StringMap) [te]) v = generateStringMap m te v
     generateLV m (TypeExpr (RT_Primitive P_Nullable) [te]) v = generateNullable m te v
+    generateLV m (TypeExpr (RT_Primitive P_TypeToken) [te]) v = generateType m te v
     generateLV m (TypeExpr (RT_Primitive pt) []) v = hPrimitiveLiteral pt v
     generateLV m (TypeExpr (RT_Primitive pt) _) v = error "BUG: primitive literal with unexpected type params"
     generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
@@ -572,6 +585,10 @@ generateLiteral te v =  generateLV Map.empty te v
       nmod <- nullableModule
       v <- generateLV m te js
       return (template "($1.from ($2))" [unHaskellModule nmod, v])
+
+    generateType m te _ = do
+      tmod <- typeProxyModule
+      return (template "($1.typeProxy)" [unHaskellModule tmod])
 
     generateStruct m te0 d s tes (JS.Object hm) = do
       fields <- forM (s_fields s) $ \f -> do

@@ -8,6 +8,7 @@ import com.google.gson.JsonPrimitive;
 
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
+import org.adl.runtime.TypeToken;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -469,6 +470,10 @@ public class JsonBindings
         }
       }
     };
+  }
+
+  public static <T> JsonBinding<TypeToken<T>> typeProxy(final JsonBinding<T> factoryT) {
+    return TypeToken.jsonBinding(factoryT);
   }
 
 
