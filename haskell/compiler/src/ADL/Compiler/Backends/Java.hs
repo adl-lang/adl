@@ -37,7 +37,6 @@ import ADL.Compiler.AST
 import ADL.Utils.IndentedCode
 import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Java.Parcelable
-import ADL.Compiler.Backends.Java.Json
 import ADL.Compiler.EIO
 import ADL.Compiler.DataFiles
 import ADL.Compiler.Primitive

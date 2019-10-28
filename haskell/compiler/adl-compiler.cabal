@@ -54,7 +54,6 @@ library
                     , ADL.Compiler.Backends.Cpp
                     , ADL.Compiler.Backends.Java
                     , ADL.Compiler.Backends.Java.Internal
-                    , ADL.Compiler.Backends.Java.Json
                     , ADL.Compiler.Backends.Java.Parcelable
                     , ADL.Compiler.Backends.Javascript
                     , ADL.Compiler.Backends.Typescript
