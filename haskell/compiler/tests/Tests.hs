@@ -128,7 +128,7 @@ runJavaBackend ipaths mpaths epath updateflags = do
         J.jf_libDir = "LIBDIR",
         J.jf_package = J.javaPackage "adl",
         J.jf_includeRuntime = False,
-        J.jf_codeGenProfile = J.defaultCodeGenProfile {J.cgp_json=True}
+        J.jf_codeGenProfile = J.defaultCodeGenProfile
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
   er <- unEIO $ J.generate af (updateflags jf) fileWriter mpaths

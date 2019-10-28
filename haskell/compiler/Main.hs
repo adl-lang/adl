@@ -166,7 +166,6 @@ runJava args = do
       , includeRuntimePackageOption (updateBackendFlags (\jf ->jf{J.jf_includeRuntime=True}))
       , runtimePackageOption (\s -> updateCodeGenProfile (\cgp -> cgp{J.cgp_runtimePackage=fromString s}))
       , javaGenerateParcelable (updateCodeGenProfile (\cgp->cgp{J.cgp_parcelable=True}))
-      , javaGenerateJson (updateCodeGenProfile (\cgp->cgp{J.cgp_json=True}))
       , javaHungarianNaming (updateCodeGenProfile (\cgp->cgp{J.cgp_hungarianNaming=True}))
       , javaMaxLineLength (\s -> (updateCodeGenProfile (\cgp -> cgp{J.cgp_maxLineLength=read s})))
       , javaHeaderComment (\s -> (updateCodeGenProfile (\cgp -> cgp{J.cgp_header=T.pack s})))
@@ -177,11 +176,6 @@ runJava args = do
       Option "" ["parcelable"]
         (NoArg ufn)
         "Generated java code will include android parcellable implementations"
-
-    javaGenerateJson ufn =
-      Option "" ["json"]
-        (NoArg ufn)
-        "Generated java code will include gson json serialization"
 
     javaHeaderComment ufn =
       Option "" ["header-comment"]

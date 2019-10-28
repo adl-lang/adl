@@ -134,7 +134,6 @@ data CodeGenProfile = CodeGenProfile {
   cgp_publicMembers :: Bool,
   cgp_genericFactories :: Bool,
   cgp_builder :: Bool,
-  cgp_json :: Bool,
   cgp_parcelable :: Bool,
   cgp_runtimePackage :: JavaPackage,
   cgp_supressWarnings :: [T.Text]
@@ -148,7 +147,6 @@ defaultCodeGenProfile = CodeGenProfile {
   cgp_publicMembers = False,
   cgp_genericFactories = False,
   cgp_builder = True,
-  cgp_json = False,
   cgp_parcelable = False,
   cgp_runtimePackage = defaultRuntimePackage,
   cgp_supressWarnings = []

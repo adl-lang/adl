@@ -134,8 +134,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
       generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
 
       -- Json
-      when (cgp_json codeProfile) $ do
-        generateStructJson codeProfile decl struct fieldDetails
+      generateStructJson codeProfile decl struct fieldDetails
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do
@@ -170,8 +169,7 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState g
       generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
 
       -- Json
-      when (cgp_json codeProfile) $ do
-        generateNewtypeJson codeProfile decl newtype_ (fd_memberVarName (head fieldDetails))
+      generateNewtypeJson codeProfile decl newtype_ (fd_memberVarName (head fieldDetails))
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do
@@ -660,8 +658,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
           addMethod factory
 
       -- Json
-      when (cgp_json codeProfile) $ do
-        generateUnionJson codeProfile decl union fieldDetails
+      generateUnionJson codeProfile decl union fieldDetails
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do
@@ -715,8 +712,7 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
         )
 
       -- Json
-      when (cgp_json codeProfile) $ do
-        generateEnumJson codeProfile decl union fieldDetails
+      generateEnumJson codeProfile decl union fieldDetails
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do
