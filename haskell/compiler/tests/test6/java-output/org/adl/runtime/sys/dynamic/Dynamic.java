@@ -129,6 +129,10 @@ public class Dynamic {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Dynamic> jsonBinding() {
+      return Dynamic.jsonBinding();
+    }
   };
 
   /* Json serialization */

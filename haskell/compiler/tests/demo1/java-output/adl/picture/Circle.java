@@ -83,6 +83,10 @@ public class Circle {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Circle> jsonBinding() {
+      return Circle.jsonBinding();
+    }
   };
 
   /* Json serialization */

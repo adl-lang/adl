@@ -128,6 +128,11 @@ public class Either<T1, T2> {
         params.add(factoryT2.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Either<T1, T2>> jsonBinding() {
+        return Either.jsonBinding(factoryT1.jsonBinding(), factoryT2.jsonBinding());
+      }
     };
   }
 

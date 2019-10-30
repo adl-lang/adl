@@ -613,6 +613,11 @@ public class S<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<S<T>> jsonBinding() {
+        return S.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

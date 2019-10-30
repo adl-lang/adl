@@ -127,6 +127,11 @@ public class S4<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<S4<T>> jsonBinding() {
+        return S4.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

@@ -151,6 +151,10 @@ public class S2 {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<S2> jsonBinding() {
+      return S2.jsonBinding();
+    }
   };
 
   /* Json serialization */

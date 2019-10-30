@@ -174,6 +174,11 @@ public class Picture {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+
+    @Override
+    public JsonBinding<Picture> jsonBinding() {
+      return Picture.jsonBinding();
+    }
   };
 
   /* Json serialization */

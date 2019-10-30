@@ -127,6 +127,11 @@ public class Tree<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Tree<T>> jsonBinding() {
+        return Tree.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

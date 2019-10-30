@@ -128,6 +128,11 @@ public class Error<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Error<T>> jsonBinding() {
+        return Error.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

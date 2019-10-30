@@ -1,6 +1,7 @@
 package org.adl.runtime;
 
 import org.adl.runtime.sys.adlast.TypeExpr;
+import org.adl.runtime.JsonBinding;
 
 /**
  * A generic factory class for constructing generic instances.
@@ -23,4 +24,9 @@ public interface Factory<T> {
    * Return a type expression describing the type of T
    */
   TypeExpr typeExpr();
+
+  /**
+   * Return a jsonbinding for T
+   */
+  JsonBinding<T> jsonBinding();
 };

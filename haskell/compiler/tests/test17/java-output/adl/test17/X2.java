@@ -234,6 +234,11 @@ public class X2 {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+
+    @Override
+    public JsonBinding<X2> jsonBinding() {
+      return X2.jsonBinding();
+    }
   };
 
   /* Json serialization */

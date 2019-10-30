@@ -176,6 +176,11 @@ public class S3<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<S3<T>> jsonBinding() {
+        return S3.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

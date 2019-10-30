@@ -126,6 +126,11 @@ public class Cell<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Cell<T>> jsonBinding() {
+        return Cell.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

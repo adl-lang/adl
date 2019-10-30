@@ -36,6 +36,10 @@ public class DateHelpers {
       ScopedName scopedName = new ScopedName("test4", "Date");
       return new TypeExpr(TypeRef.reference(scopedName), new ArrayList<>());
     }
+    @Override
+    public JsonBinding<LocalDate> jsonBinding() {
+      return DateHelpers.jsonBinding();
+    }
   };
 
   /* Json serialization */

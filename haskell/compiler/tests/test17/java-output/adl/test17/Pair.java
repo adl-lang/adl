@@ -127,6 +127,11 @@ public class Pair<A, B> {
         params.add(factoryB.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Pair<A, B>> jsonBinding() {
+        return Pair.jsonBinding(factoryA.jsonBinding(), factoryB.jsonBinding());
+      }
     };
   }
 

@@ -82,6 +82,10 @@ public class Int3 {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Int3> jsonBinding() {
+      return Int3.jsonBinding();
+    }
   };
 
   /* Json serialization */

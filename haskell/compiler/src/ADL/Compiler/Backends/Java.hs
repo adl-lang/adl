@@ -336,6 +336,10 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
               cline ""
               <>
               typeExprMethodCode
+              <>
+              coverride (template "public JsonBinding<$1> jsonBinding()" [className]) (
+                ctemplate "return $1.jsonBinding();" [className]
+              )
             )
 
       let factoryg lazyC =
@@ -364,10 +368,17 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
                 cline ""
                 <>
                 typeExprMethodCode
+                <>
+                cline ""
+                <>
+                coverride (template "public JsonBinding<$1$2> jsonBinding()" [className,typeArgs]) (
+                  ctemplate "return $1.jsonBinding($2);" [className,jsonBindingArgs]
+                )
               )
             )
 
           factoryArgs = commaSep [template "$1<$2> $3" [factoryInterface,arg,factoryTypeArg arg] | arg <- s_typeParams struct]
+          jsonBindingArgs = commaSep [template "$1.jsonBinding()" [factoryTypeArg arg] | arg <- s_typeParams struct]
           ctor1Args = [case f_default (fd_field fd) of
                         Nothing -> template "$1.get().create()" [fd_varName fd]
                         (Just _) -> fd_defValue fd
@@ -601,6 +612,12 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
               cline ""
               <>
               typeExprMethodCode
+              <>
+              cline ""
+              <>
+              coverride (template "public JsonBinding<$1> jsonBinding()" [className]) (
+                ctemplate "return $1.jsonBinding();" [className]
+              )
             )
 
       let factoryg lazyC =
@@ -637,17 +654,24 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                         )
                       | fd <- fieldDetails]
                     )
-                  <>
-                  cline "throw new IllegalArgumentException();"
+                    <>
+                    cline "throw new IllegalArgumentException();"
                   )
                   <>
                   cline ""
                   <>
                   typeExprMethodCode
+                  <> 
+                  cline ""
+                  <>
+                  coverride (template "public JsonBinding<$1$2> jsonBinding()" [className,typeArgs]) (
+                    ctemplate "return $1.jsonBinding($2);" [className,jsonBindingArgs]
+                  )
                 )
               )
 
           factoryArgs = commaSep [template "Factory<$1> $2" [arg,factoryTypeArg arg] | arg <- u_typeParams union]
+          jsonBindingArgs = commaSep [template "$1.jsonBinding()" [factoryTypeArg arg] | arg <- u_typeParams union]
 
       addMethod (cline "/* Factory for construction of generic values */")
       if isGeneric
@@ -709,6 +733,10 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
             )
         <> cline ""
         <> typeExprMethodCode
+        <>
+        coverride (template "public JsonBinding<$1> jsonBinding()" [className]) (
+          ctemplate "return $1.jsonBinding();" [className]
+        )
         )
 
       -- Json

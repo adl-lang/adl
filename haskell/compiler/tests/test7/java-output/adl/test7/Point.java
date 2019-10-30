@@ -126,6 +126,11 @@ public class Point<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Point<T>> jsonBinding() {
+        return Point.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

@@ -108,6 +108,11 @@ public class U4 {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+
+    @Override
+    public JsonBinding<U4> jsonBinding() {
+      return U4.jsonBinding();
+    }
   };
 
   /* Json serialization */

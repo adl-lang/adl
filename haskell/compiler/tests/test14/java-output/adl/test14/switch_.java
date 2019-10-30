@@ -191,6 +191,10 @@ public class switch_ {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<switch_> jsonBinding() {
+      return switch_.jsonBinding();
+    }
   };
 
   /* Json serialization */

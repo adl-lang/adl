@@ -126,6 +126,11 @@ public class XY<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<XY<T>> jsonBinding() {
+        return XY.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

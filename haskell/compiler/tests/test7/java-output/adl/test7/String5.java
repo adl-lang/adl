@@ -83,6 +83,11 @@ public class String5<X> {
         params.add(factoryX.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<String5<X>> jsonBinding() {
+        return String5.jsonBinding(factoryX.jsonBinding());
+      }
     };
   }
 

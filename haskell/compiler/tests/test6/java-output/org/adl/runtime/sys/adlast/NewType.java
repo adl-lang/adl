@@ -147,6 +147,10 @@ public class NewType {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<NewType> jsonBinding() {
+      return NewType.jsonBinding();
+    }
   };
 
   /* Json serialization */

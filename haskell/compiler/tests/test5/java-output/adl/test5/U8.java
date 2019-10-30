@@ -129,6 +129,11 @@ public class U8 {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+
+    @Override
+    public JsonBinding<U8> jsonBinding() {
+      return U8.jsonBinding();
+    }
   };
 
   /* Json serialization */

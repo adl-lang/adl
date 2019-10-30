@@ -148,6 +148,11 @@ public class Translated<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Translated<T>> jsonBinding() {
+        return Translated.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

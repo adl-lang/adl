@@ -56,6 +56,10 @@ public enum E {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<E> jsonBinding() {
+      return E.jsonBinding();
+    }
   };
 
   /* Json serialization */

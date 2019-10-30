@@ -83,6 +83,11 @@ public class Int6<X> {
         params.add(factoryX.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Int6<X>> jsonBinding() {
+        return Int6.jsonBinding(factoryX.jsonBinding());
+      }
     };
   }
 

@@ -126,6 +126,10 @@ public class Rectangle {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Rectangle> jsonBinding() {
+      return Rectangle.jsonBinding();
+    }
   };
 
   /* Json serialization */

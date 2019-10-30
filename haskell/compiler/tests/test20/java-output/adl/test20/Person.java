@@ -170,6 +170,10 @@ public class Person {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Person> jsonBinding() {
+      return Person.jsonBinding();
+    }
   };
 
   /* Json serialization */

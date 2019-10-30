@@ -22,6 +22,8 @@ public class Factories {
     public Void create(Void other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Void"); }
+    @Override
+    public JsonBinding<Void> jsonBinding() { return JsonBindings.VOID; }
   };
 
   public static final Factory<Boolean> BOOLEAN = new Factory<Boolean>() {
@@ -31,6 +33,8 @@ public class Factories {
     public Boolean create(Boolean other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Boolean"); }
+    @Override
+    public JsonBinding<Boolean> jsonBinding() { return JsonBindings.BOOLEAN; }
   };
 
   public static final Factory<Byte> INT8 = new Factory<Byte>() {
@@ -40,6 +44,8 @@ public class Factories {
     public Byte create(Byte other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Int8"); }
+    @Override
+    public JsonBinding<Byte> jsonBinding() { return JsonBindings.INT8; }
   };
 
   public static final Factory<Short> INT16 = new Factory<Short>() {
@@ -49,6 +55,8 @@ public class Factories {
     public Short create(Short other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Int16"); }
+    @Override
+    public JsonBinding<Short> jsonBinding() { return JsonBindings.INT16; }
   };
 
   public static final Factory<Integer> INT32 = new Factory<Integer>() {
@@ -58,6 +66,8 @@ public class Factories {
     public Integer create(Integer other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Int32"); }
+    @Override
+    public JsonBinding<Integer> jsonBinding() { return JsonBindings.INT32; }
   };
 
   public static final Factory<Long> INT64 = new Factory<Long>() {
@@ -67,6 +77,8 @@ public class Factories {
     public Long create(Long other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Int64"); }
+    @Override
+    public JsonBinding<Long> jsonBinding() { return JsonBindings.INT64; }
   };
 
   public static final Factory<Byte> WORD8 = new Factory<Byte>() {
@@ -76,6 +88,8 @@ public class Factories {
     public Byte create(Byte other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Word8"); }
+    @Override
+    public JsonBinding<Byte> jsonBinding() { return JsonBindings.WORD8; }
   };
 
   public static final Factory<Short> WORD16 = new Factory<Short>() {
@@ -85,6 +99,8 @@ public class Factories {
     public Short create(Short other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Word16"); }
+    @Override
+    public JsonBinding<Short> jsonBinding() { return JsonBindings.WORD16; }
   };
 
   public static final Factory<Integer> WORD32 = new Factory<Integer>() {
@@ -94,6 +110,8 @@ public class Factories {
     public Integer create(Integer other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Word32"); }
+    @Override
+    public JsonBinding<Integer> jsonBinding() { return JsonBindings.WORD32; }
   };
 
   public static final Factory<Long> WORD64 = new Factory<Long>() {
@@ -103,6 +121,8 @@ public class Factories {
     public Long create(Long other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Word64"); }
+    @Override
+    public JsonBinding<Long> jsonBinding() { return JsonBindings.WORD64; }
   };
 
   public static final Factory<Float> FLOAT = new Factory<Float>() {
@@ -112,6 +132,8 @@ public class Factories {
     public Float create(Float other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Float"); }
+    @Override
+    public JsonBinding<Float> jsonBinding() { return JsonBindings.FLOAT; }
   };
 
   public static final Factory<Double> DOUBLE = new Factory<Double>() {
@@ -121,6 +143,8 @@ public class Factories {
     public Double create(Double other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Double"); }
+    @Override
+    public JsonBinding<Double> jsonBinding() { return JsonBindings.DOUBLE; }
   };
 
   public static final Factory<String> STRING = new Factory<String>() {
@@ -130,6 +154,8 @@ public class Factories {
     public String create(String other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("String"); }
+    @Override
+    public JsonBinding<String> jsonBinding() { return JsonBindings.STRING; }
   };
 
   public static final Factory<ByteArray> BYTE_ARRAY = new Factory<ByteArray>() {
@@ -139,6 +165,8 @@ public class Factories {
     public ByteArray create(ByteArray other) { return new ByteArray(other); }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("ByteVector"); }
+    @Override
+    public JsonBinding<ByteArray> jsonBinding() { return JsonBindings.BYTE_ARRAY; }
   };
 
   public static final Factory<JsonElement> JSON = new Factory<JsonElement>() {
@@ -148,6 +176,8 @@ public class Factories {
     public JsonElement create(JsonElement other) { return other.deepCopy(); }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Json"); }
+    @Override
+    public JsonBinding<JsonElement> jsonBinding() { return JsonBindings.JSON; }
   };
 
   public static <T> Factory<ArrayList<T>> arrayList(final Factory<T> factoryT) {
@@ -170,6 +200,8 @@ public class Factories {
       public TypeExpr typeExpr() {
         return primTypeExpr("Vector", factoryT.typeExpr());
       }
+      @Override
+      public JsonBinding<ArrayList<T>> jsonBinding() { return JsonBindings.arrayList(factoryT.jsonBinding()); }
     };
   }
 
@@ -202,6 +234,10 @@ public class Factories {
       public TypeExpr typeExpr() {
         return primTypeExpr("StringMap", factoryT.typeExpr());
       }
+      @Override
+      public JsonBinding<HashMap<String,T>> jsonBinding() {
+        return JsonBindings.stringMap(factoryT.jsonBinding());
+      }
     };
   }
 
@@ -220,6 +256,10 @@ public class Factories {
       @Override
       public TypeExpr typeExpr() {
         return primTypeExpr("Nullable", factoryT.typeExpr());
+      }
+      @Override
+      public JsonBinding<Optional<T>> jsonBinding() {
+        return JsonBindings.nullable(factoryT.jsonBinding());
       }
     };
   }

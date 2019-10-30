@@ -146,6 +146,11 @@ public class TypeRef {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(org.adl.runtime.sys.adlast.TypeRef.reference(scopedName), params);
     }
+
+    @Override
+    public JsonBinding<TypeRef> jsonBinding() {
+      return TypeRef.jsonBinding();
+    }
   };
 
   /* Json serialization */

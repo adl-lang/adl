@@ -61,6 +61,10 @@ public enum Role {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Role> jsonBinding() {
+      return Role.jsonBinding();
+    }
   };
 
   /* Json serialization */

@@ -109,6 +109,11 @@ public class U2 {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+
+    @Override
+    public JsonBinding<U2> jsonBinding() {
+      return U2.jsonBinding();
+    }
   };
 
   /* Json serialization */

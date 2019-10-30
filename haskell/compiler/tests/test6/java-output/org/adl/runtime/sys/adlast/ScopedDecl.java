@@ -123,6 +123,10 @@ public class ScopedDecl {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<ScopedDecl> jsonBinding() {
+      return ScopedDecl.jsonBinding();
+    }
   };
 
   /* Json serialization */

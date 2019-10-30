@@ -123,6 +123,10 @@ public class Union {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Union> jsonBinding() {
+      return Union.jsonBinding();
+    }
   };
 
   /* Json serialization */

@@ -169,6 +169,10 @@ public class Module {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Module> jsonBinding() {
+      return Module.jsonBinding();
+    }
   };
 
   /* Json serialization */

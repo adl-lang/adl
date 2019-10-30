@@ -83,6 +83,10 @@ public class S {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<S> jsonBinding() {
+      return S.jsonBinding();
+    }
   };
 
   /* Json serialization */

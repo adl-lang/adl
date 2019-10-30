@@ -37,6 +37,11 @@ public class HashSetHelpers
         params.add(valueFactory.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<HashSet<V>> jsonBinding() {
+        return HashSetHelpers.jsonBinding(valueFactory.jsonBinding());
+      }
     };
   }
 

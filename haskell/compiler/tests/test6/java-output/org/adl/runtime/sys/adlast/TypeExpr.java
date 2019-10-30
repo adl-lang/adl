@@ -123,6 +123,10 @@ public class TypeExpr {
       ArrayList<org.adl.runtime.sys.adlast.TypeExpr> params = new ArrayList<>();
       return new org.adl.runtime.sys.adlast.TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<TypeExpr> jsonBinding() {
+      return TypeExpr.jsonBinding();
+    }
   };
 
   /* Json serialization */

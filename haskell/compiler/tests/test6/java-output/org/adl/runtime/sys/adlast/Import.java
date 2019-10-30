@@ -126,6 +126,11 @@ public class Import {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+
+    @Override
+    public JsonBinding<Import> jsonBinding() {
+      return Import.jsonBinding();
+    }
   };
 
   /* Json serialization */

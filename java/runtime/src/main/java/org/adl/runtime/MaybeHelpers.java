@@ -32,6 +32,11 @@ public class MaybeHelpers
         params.add(tFactory.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<Optional<T>> jsonBinding() {
+        return MaybeHelpers.jsonBinding(tFactory.jsonBinding());
+      }
     };
   }
 

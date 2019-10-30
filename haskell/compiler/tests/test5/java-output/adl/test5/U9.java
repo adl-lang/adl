@@ -128,6 +128,11 @@ public class U9<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<U9<T>> jsonBinding() {
+        return U9.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

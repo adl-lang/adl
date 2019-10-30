@@ -40,6 +40,10 @@ public class HashMapHelpers
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
 
+      @Override
+      public JsonBinding<HashMap<K,V>> jsonBinding() {
+        return HashMapHelpers.jsonBinding(keyFactory.jsonBinding(), valueFactory.jsonBinding());
+      }
     };
   }
 

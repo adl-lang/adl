@@ -81,6 +81,10 @@ public class Factory {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+    @Override
+    public JsonBinding<Factory> jsonBinding() {
+      return Factory.jsonBinding();
+    }
   };
 
   /* Json serialization */

@@ -133,6 +133,11 @@ public class List<T> {
         params.add(factoryT.typeExpr());
         return new TypeExpr(TypeRef.reference(scopedName), params);
       }
+
+      @Override
+      public JsonBinding<List<T>> jsonBinding() {
+        return List.jsonBinding(factoryT.jsonBinding());
+      }
     };
   }
 

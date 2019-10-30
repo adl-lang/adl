@@ -165,6 +165,11 @@ public class DeclType {
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
+
+    @Override
+    public JsonBinding<DeclType> jsonBinding() {
+      return DeclType.jsonBinding();
+    }
   };
 
   /* Json serialization */
