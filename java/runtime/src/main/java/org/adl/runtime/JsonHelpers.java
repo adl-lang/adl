@@ -35,6 +35,13 @@ public class JsonHelpers {
   }
 
   /**
+   * Converts an ADL value to a string, using the specified gson serializer
+   */
+  public static <T> String toString(JsonBinding<T> binding, Gson gson, T value) {
+    return gson.toJson(binding.toJson(value));
+  }
+
+  /**
    *  Parses an ADL value from a string
    */
   public static <T> T fromString(JsonBinding<T> binding, String value) {
@@ -81,6 +88,13 @@ public class JsonHelpers {
    * Writes an ADL value to a UTF-8 json file
    */
   public static <T> void toFile(JsonBinding<T> binding, T value, String path) throws IOException {
+    toFile(binding, gson, value, path);
+  }
+
+  /**
+   * Writes an ADL value to a UTF-8 json file, using the specified gson serializer
+   */
+  public static <T> void toFile(JsonBinding<T> binding, Gson gson, T value, String path) throws IOException {
     OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(path), Charset.forName("UTF-8"));
     try {
       gson.toJson( binding.toJson(value), writer );
@@ -118,5 +132,18 @@ public class JsonHelpers {
    */
   public static JsonElement jsonFromString(String s) {
     return gson.fromJson(s, JsonElement.class);
+  }
+
+
+  /** Read an ADL value from stdin */
+  public static <T> T fromStdin(JsonBinding<T> binding) {
+    InputStreamReader utf8Reader = new InputStreamReader(System.in);
+    return binding.fromJson(gson.fromJson(utf8Reader, JsonElement.class));
+  }
+
+  /** Read an ADL value leniently from stdin */
+  public static <T> T fromLenientStdin(JsonBinding<T> binding) {
+    InputStreamReader utf8Reader = new InputStreamReader(System.in);
+    return binding.fromJson(lenientGson.fromJson(utf8Reader, JsonElement.class));
   }
 };
