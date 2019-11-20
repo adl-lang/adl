@@ -1,0 +1,24 @@
+module admin {
+
+struct HttpGet<O> {
+  String path;
+  TypeToken<O> otype = null;
+};
+
+type DbRow = Json;
+
+struct AdminApiRequests {
+  HttpGet<DbRow> query = {
+      "path" : "/admin/query"
+  };
+};
+
+struct Holder {
+  AdminApiRequests admin = {
+    "query" : {
+      "path" : "/admin/query"
+    }
+  };
+};
+
+};

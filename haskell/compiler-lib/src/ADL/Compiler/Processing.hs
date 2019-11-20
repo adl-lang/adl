@@ -768,10 +768,11 @@ topologicalSort idf depf as = fmap (map fst) (sort1 (addDeps as) Set.empty)
 
 -- | expand all of the typedefs in a module
 expandModuleTypedefs :: RModule -> RModule
-expandModuleTypedefs = exModule
+expandModuleTypedefs mod@Module{m_decls=ds} = mod{m_decls=fmap expandDeclTypedefs ds}
+
+expandDeclTypedefs :: Decl c (ResolvedTypeT c) -> Decl c (ResolvedTypeT c)
+expandDeclTypedefs decl@Decl{d_type=d} = decl{d_type=exDeclType d}
   where
-  exModule mod@Module{m_decls=ds} = mod{m_decls=fmap exDecl ds}
-  exDecl decl@Decl{d_type=d} = decl{d_type=exDeclType d}
   exDeclType (Decl_Struct s) = Decl_Struct (exStruct s)
   exDeclType (Decl_Union u) = Decl_Union (exUnion u)
   exDeclType (Decl_Typedef t) = Decl_Typedef (exTypedef t)
@@ -791,14 +792,15 @@ removeModuleTypedefs mod@Module{m_decls=ds} = mod{m_decls=Map.filter (not . isTy
 
 -- | eliminate the typedefs from an expression through substitution
 expandTypedefs :: TypeExpr (ResolvedTypeT c) -> TypeExpr (ResolvedTypeT c)
-expandTypedefs (TypeExpr t ts) = typeExpr t (map expandTypedefs ts)
+expandTypedefs (TypeExpr rt ts) = typeExpr rt (map expandTypedefs ts)
   where
     typeExpr :: ResolvedTypeT c -> [TypeExpr (ResolvedTypeT c)] -> TypeExpr (ResolvedTypeT c)
     typeExpr (RT_Named (_,Decl{d_type=Decl_Typedef t})) ts =
       case substTypeParams (Map.fromList (zip (t_typeParams t) ts)) (t_typeExpr t) of
         Left err -> error ("BUG: " ++ T.unpack err)
         Right te -> expandTypedefs te
-    typeExpr t ts = TypeExpr t ts
+    typeExpr (RT_Named (sn,decl)) ts = TypeExpr (RT_Named (sn,expandDeclTypedefs decl)) ts
+    typeExpr rt ts = TypeExpr rt ts
 
 substTypeParams :: Map.Map Ident (TypeExprRT c) -> TypeExprRT c -> Either T.Text (TypeExprRT c)
 substTypeParams m  (TypeExpr (RT_Param n) ts) =
