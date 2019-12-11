@@ -10,10 +10,11 @@ Usage: adlc haskell [OPTION...] files...
           --merge-adlext=EXT     Add the specifed adl file extension to merged on loading
           --verbose              Print extra diagnostic information, especially about files being read/written
           --no-overwrite         Don't update files that haven't changed
+          --manifest=FILE        Write a manifest file recording generated files
           --generate-transitive  Also generate code for the transitive dependencies of the specified adl files
           --package=PACKAGE      The language package into which the generated ADL code will be placed
           --include-rt           Generate the runtime code
-          --rtpackage=PACKAGE    The java package where the ADL runtime is located
+          --rtpackage=PACKAGE    The language package where the ADL runtime is located
 ```
 
 # Generated Code

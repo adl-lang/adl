@@ -7,8 +7,10 @@ Usage: adlc rust [OPTION...] files...
           --merge-adlext=EXT     Add the specifed adl file extension to merged on loading
           --verbose              Print extra diagnostic information, especially about files being read/written
           --no-overwrite         Don't update files that haven't changed
+          --manifest=FILE        Write a manifest file recording generated files
           --generate-transitive  Also generate code for the transitive dependencies of the specified adl files
           --package=PACKAGE      The language package into which the generated ADL code will be placed
+  -R DIR  --runtime-module=DIR   Set the module where the runtime is located
 ```
 
 # Generated Code

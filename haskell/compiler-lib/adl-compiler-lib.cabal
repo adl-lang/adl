@@ -23,6 +23,6 @@ library
                      parsec, mtl, transformers,
                      filepath, directory, unordered-containers, vector,
                      base64-bytestring,
-                     attoparsec, aeson, scientific,
+                     attoparsec, aeson, scientific, stm,
                      adl-utils, adl-runtime
   ghc-options:       -fwarn-incomplete-patterns

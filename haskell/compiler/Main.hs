@@ -78,7 +78,8 @@ runAst args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir []
   (flags,paths) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
-  A.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
+  withManifest (f_output flags) $ \ writer -> do
+    A.generate (f_adl flags) (f_backend flags) writer  paths
   where
     header = "Usage: adlc ast [OPTION...] files..."
 
@@ -96,7 +97,8 @@ runHaskell args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-hs"]
   (flags,paths) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
-  H.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) getCustomType paths
+  withManifest (f_output flags) $ \ writer -> do
+    H.generate (f_adl flags) (f_backend flags) writer getCustomType paths
   where
     header = "Usage: adlc haskell [OPTION...] files..."
 
@@ -118,7 +120,8 @@ runCpp args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-cpp"]
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
-  C.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
+  withManifest (f_output flags) $ \ writer -> do
+    C.generate (f_adl flags) (f_backend flags) writer paths
   where
     header = "Usage: adlc cpp [OPTION...] files..."
 
@@ -148,7 +151,8 @@ runJava args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-java"]
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
-  J.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
+  withManifest (f_output flags) $ \ writer -> do
+    J.generate (f_adl flags) (f_backend flags) writer paths
   where
     header = "Usage: adlc java [OPTION...] files..."
 
@@ -203,7 +207,9 @@ runJavascript args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-js"]
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
-  JS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
+  withManifest (f_output flags) $ \writer -> do
+    JS.generate (f_adl flags) (f_backend flags) writer paths
+
   where
     header = "Usage: adlc javascript [OPTION...] files..."
 
@@ -216,7 +222,8 @@ runTypescript args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-ts"]
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
-  TS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
+  withManifest (f_output flags) $ \ writer -> do
+    TS.generate (f_adl flags) (f_backend flags) writer paths
   where
     header = "Usage: adlc typescript [OPTION...] files..."
 
@@ -273,7 +280,8 @@ runRust args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-rs"]
   (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
-  RS.generate (f_adl flags) (f_backend flags) (writeOutputFile (f_output flags)) paths
+  withManifest (f_output flags) $ \ writer -> do
+    RS.generate (f_adl flags) (f_backend flags) writer paths
   where
     header = "Usage: adlc rust [OPTION...] files..."
 

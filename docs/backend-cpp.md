@@ -7,6 +7,7 @@ Usage: adlc cpp [OPTION...] files...
           --merge-adlext=EXT     Add the specifed adl file extension to merged on loading
           --verbose              Print extra diagnostic information, especially about files being read/written
           --no-overwrite         Don't update files that haven't changed
+          --manifest=FILE        Write a manifest file recording generated files
           --generate-transitive  Also generate code for the transitive dependencies of the specified adl files
           --include-prefix=DIR   The prefix to be used to generate/reference include files
           --exclude-relops       Exclude generated code for relational operators

@@ -32,7 +32,8 @@ defaultOutputArgs :: OutputArgs
 defaultOutputArgs = OutputArgs {
   oa_log = const (return ()),
   oa_noOverwrite = True,
-  oa_outputPath = "."
+  oa_outputPath = ".",
+  oa_manifestFile = Nothing
   }
 
 searchDirOption ufn =
@@ -68,6 +69,14 @@ outputDirOption ufn =
 setOutputDir :: FilePath -> Flags b -> Flags b
 setOutputDir dir = updateOutputArgs (\oa -> oa{oa_outputPath=dir})
 
+manifestOption ufn =
+  Option "" ["manifest"]
+    (ReqArg ufn "FILE")
+    "Write a manifest file recording generated files"
+
+setManifest :: FilePath -> Flags b -> Flags b
+setManifest file = updateOutputArgs (\oa -> oa{oa_manifestFile=Just file})
+
 noOverwriteOption ufn =
   Option "" ["no-overwrite"]
     (NoArg ufn)
@@ -97,6 +106,7 @@ standardOptions =
   , mergeFileExtensionOption addToMergeFileExtensions
   , verboseOption setVerbose
   , noOverwriteOption setNoOverwrite
+  , manifestOption setManifest
   ]
 
 parseArguments :: String -> AdlFlags -> b -> [OptDescr (Flags b -> Flags b)] -> [String] -> EIO T.Text (Flags b,[FilePath])
