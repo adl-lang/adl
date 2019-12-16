@@ -87,8 +87,9 @@ writerWithManifest oa = do
       forM_ oldFiles $ \file -> do
         let opath = oa_outputPath oa </> file
         exists <- doesFileExist opath
-        oa_log oa ("Removing defunct file " <> file <> ".")
-        removeFile opath
+        when exists $ do
+          oa_log oa ("Removing defunct file " <> file <> ".")
+          removeFile opath
 
     readManifest path = do
       content <- T.readFile path
