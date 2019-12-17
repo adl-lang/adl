@@ -251,10 +251,10 @@ hTypeExprB m (TypeExpr (RT_Primitive P_Nullable) [te]) = do
   argt <- hTypeExprB m te
   nmod <- nullableModule
   importQualifiedModule nmod
-  return (template "$1.Nullable ($2)" [unHaskellModule nmod, argt])
+  return (template "($1.Nullable $2)" [unHaskellModule nmod, argt])
 hTypeExprB m (TypeExpr (RT_Primitive P_TypeToken) [te]) = do
   argt <- hTypeExprB m te
-  tmod <- typeProxyModule
+  tmod <- typeTokenModule
   importQualifiedModule tmod
   return (template "$1.TypeToken ($2)" [unHaskellModule tmod, argt])
 hTypeExprB m (TypeExpr (RT_Primitive P_StringMap) [te]) = do
@@ -308,8 +308,8 @@ nullableModule = do
   ms <- get
   return (HaskellModule (ms_runtimePackage ms <> ".Nullable"))
 
-typeProxyModule :: HGen HaskellModule
-typeProxyModule = do
+typeTokenModule :: HGen HaskellModule
+typeTokenModule = do
   ms <- get
   return (HaskellModule (ms_runtimePackage ms <> ".TypeToken"))
 
@@ -587,8 +587,8 @@ generateLiteral te v =  generateLV Map.empty te v
       return (template "($1.from ($2))" [unHaskellModule nmod, v])
 
     generateType m te _ = do
-      tmod <- typeProxyModule
-      return (template "($1.typeProxy)" [unHaskellModule tmod])
+      tmod <- typeTokenModule
+      return (template "($1.TypeToken)" [unHaskellModule tmod])
 
     generateStruct m te0 d s tes (JS.Object hm) = do
       fields <- forM (s_fields s) $ \f -> do

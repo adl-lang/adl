@@ -369,3 +369,4 @@ instance AdlValue JS.Value where
   atype _ = "Json"
   jsonGen = JsonGen id
   jsonParser = JsonParser (\_ v -> ParseSuccess v)
+

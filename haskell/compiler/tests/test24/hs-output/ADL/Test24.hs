@@ -48,7 +48,7 @@ data PostReq i o = PostReq
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 mkPostReq :: T.Text -> PostReq i o
-mkPostReq path = PostReq path (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy)
+mkPostReq path = PostReq path (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken)
 
 instance (AdlValue i, AdlValue o) => AdlValue (PostReq i o) where
     atype _ = T.concat
@@ -65,18 +65,18 @@ instance (AdlValue i, AdlValue o) => AdlValue (PostReq i o) where
     
     jsonParser = PostReq
         <$> parseField "path"
-        <*> parseFieldDef "reqBodyType" (ADL.Core.TypeToken.typeProxy)
-        <*> parseFieldDef "respType" (ADL.Core.TypeToken.typeProxy)
+        <*> parseFieldDef "reqBodyType" (ADL.Core.TypeToken.TypeToken)
+        <*> parseFieldDef "respType" (ADL.Core.TypeToken.TypeToken)
 
 data Service = Service
     { service_hello :: (PostReq T.Text T.Text)
-    , service_farewell :: (PostReq ADL.Core.Nullable.Nullable (T.Text) ADL.Core.Nullable.Nullable (T.Text))
+    , service_farewell :: (PostReq (ADL.Core.Nullable.Nullable T.Text) (ADL.Core.Nullable.Nullable T.Text))
     , service_blobs :: (CrudReqs JS.Value)
     }
     deriving (Prelude.Eq,Prelude.Show)
 
 mkService ::  Service
-mkService  = Service (PostReq "/hello" (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy)) (PostReq "/farewell" (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy)) (CrudReqs (PostReq "/blobs/create" (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy)) (PostReq "/blobs/read" (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy)))
+mkService  = Service (PostReq "/hello" (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken)) (PostReq "/farewell" (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken)) (CrudReqs (PostReq "/blobs/create" (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken)) (PostReq "/blobs/read" (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken)))
 
 instance AdlValue Service where
     atype _ = "test24.Service"
@@ -88,6 +88,6 @@ instance AdlValue Service where
         ]
     
     jsonParser = Service
-        <$> parseFieldDef "hello" (PostReq "/hello" (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy))
-        <*> parseFieldDef "farewell" (PostReq "/farewell" (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy))
-        <*> parseFieldDef "blobs" (CrudReqs (PostReq "/blobs/create" (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy)) (PostReq "/blobs/read" (ADL.Core.TypeToken.typeProxy) (ADL.Core.TypeToken.typeProxy)))
+        <$> parseFieldDef "hello" (PostReq "/hello" (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken))
+        <*> parseFieldDef "farewell" (PostReq "/farewell" (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken))
+        <*> parseFieldDef "blobs" (CrudReqs (PostReq "/blobs/create" (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken)) (PostReq "/blobs/read" (ADL.Core.TypeToken.TypeToken) (ADL.Core.TypeToken.TypeToken)))

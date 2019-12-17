@@ -26,6 +26,9 @@ library
                      , ../compiler/tests/test24/hs-output
   exposed-modules:     ADL.Core
                      , ADL.Core.Value
+                     , ADL.Core.StringMap
+                     , ADL.Core.TypeToken
+                     , ADL.Core.Nullable
                      , ADL.Test1
                      , ADL.Test2
                      , ADL.Test3
@@ -38,6 +41,7 @@ library
                      , ADL.Test20
                      , ADL.Test24
                      , ADL.Picture
+                     , Date
   build-depends:       base
                      , aeson
                      , bytestring
