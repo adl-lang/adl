@@ -74,7 +74,7 @@ runHaskellBackend ipaths mpaths epath = do
         , H.hf_includeRuntime = Nothing
         , H.hf_runtimePackage = "ADL.Core"
         }
-      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
   er <- unEIO $ H.generate af hf fileWriter getCustomType mpaths
   processCompilerOutput epath tempDir er
 
@@ -93,7 +93,7 @@ runCppBackend ipaths mpaths epath iprefix = do
         CPP.cf_incFilePrefix = iprefix,
         CPP.cf_includeRelops = True
         }
-      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
   er <- unEIO $ CPP.generate af cf fileWriter mpaths
   processCompilerOutput epath tempDir er
 
@@ -109,7 +109,7 @@ runAstBackend ipath mpaths epath = do
   tempDir <- createTempDirectory tdir "adl.test."
   let af = defaultAdlFlags{af_searchPath=ipath,af_mergeFileExtensions=[".ann"]}
       bf = AST.AstFlags Nothing
-      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
   er <- unEIO $ AST.generate af bf fileWriter mpaths
   processCompilerOutput epath tempDir er
 
@@ -130,7 +130,7 @@ runJavaBackend ipaths mpaths epath updateflags = do
         J.jf_includeRuntime = False,
         J.jf_codeGenProfile = J.defaultCodeGenProfile
         }
-      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
   er <- unEIO $ J.generate af (updateflags jf) fileWriter mpaths
   processCompilerOutput epath tempDir er
 
@@ -149,7 +149,7 @@ runJsBackend ipaths mpaths epath = do
   tempDir <- createTempDirectory tdir "adl.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
       jf = JS.JavascriptFlags {}
-      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir)
+      fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
   er <- unEIO $ JS.generate af jf fileWriter mpaths
   processCompilerOutput epath tempDir er
 
@@ -166,7 +166,7 @@ runTsBackend ipaths mpaths epath = do
         TS.tsExcludeAst=False,
         TS.tsExcludedAstAnnotations=Nothing
       }
-      fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
+      fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir Nothing)
   er <- unEIO $ TS.generate af js fileWriter mpaths
   processCompilerOutput epath tempDir er
 
@@ -184,7 +184,7 @@ runRsBackend ipaths mpaths epath rsModule = do
         RS.rs_module = RS.rustScopedName rsModule,
         RS.rs_runtimeModule = RS.rustScopedName "crate::adlrt"
       }
-      fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir)
+      fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir Nothing)
   er <- unEIO $ RS.generate af js fileWriter mpaths
   processCompilerOutput epath tempDir er
 
