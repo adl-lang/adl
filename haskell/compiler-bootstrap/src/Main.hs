@@ -64,7 +64,8 @@ runHaskell args0 =
     out0 = OutputArgs {
       oa_log = putStrLn,
       oa_noOverwrite = True,
-      oa_outputPath = "."
+      oa_outputPath = ".",
+      oa_manifestFile = Nothing
     }
 
     optDescs =
