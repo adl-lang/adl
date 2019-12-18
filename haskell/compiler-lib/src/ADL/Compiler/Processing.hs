@@ -592,17 +592,17 @@ literalForTypeExpr te v = litForTE Map.empty te v
     structFields pm0 decl s tes (JSON.Object hm) = for (s_fields s) $ \f -> do
       pm <- createParamMap (s_typeParams s) tes pm0
       ftype <- substTypeParams pm (f_type f)
-      case HM.lookup (f_name f) hm of
+      case HM.lookup (f_serializedName f) hm of
        (Just jv) -> litForTE pm ftype jv
        Nothing -> case f_default f of
          (Just jv) -> litForTE pm ftype jv
-         Nothing -> Left ("no literal value provided for field " <> f_name f <> " of struct " <> d_name decl)
+         Nothing -> Left ("no literal value provided for field " <> f_serializedName f <> " of struct " <> d_name decl)
     structFields _ _ _ _ _ = Left "expected an object"
 
     unionField m decl u tes (JSON.Object hm) = do
       pm <- createParamMap (u_typeParams u) tes m
       case HM.toList hm of
-        [(k,v)] -> case find ((k==).f_name) (u_fields u) of
+        [(k,v)] -> case find ((k==).f_serializedName) (u_fields u) of
           (Just f) -> do
             ftype <- substTypeParams pm (f_type f)
             lit <- litForTE pm ftype v
@@ -612,7 +612,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
         _ -> Left "literal union must have a single key/value pair"
     unionField m decl u tes (JSON.String k) = do
       pm <- createParamMap (u_typeParams u) tes m
-      case find ((k==).f_name) (u_fields u) of
+      case find ((k==).f_serializedName) (u_fields u) of
           (Just f) | isVoidType (f_type f) -> Right (k,Literal (f_type f) (LPrimitive JSON.Null))
                    | otherwise -> Left (T.concat ["Field ",k, " in literal for ", d_name decl, " must be an object"])
           Nothing ->
