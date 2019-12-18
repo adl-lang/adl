@@ -87,6 +87,32 @@ export function texprError<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Error<T>
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Error"}}, parameters : [texprT.value]}};
 }
 
+export interface MapEntry<K, V> {
+  key: K;
+  value: V;
+}
+
+export function makeMapEntry<K, V>(
+  input: {
+    key: K,
+    value: V,
+  }
+): MapEntry<K, V> {
+  return {
+    key: input.key,
+    value: input.value,
+  };
+}
+
+const MapEntry_AST : ADL.ScopedDecl =
+  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["K","V"],"fields":[{"annotations":[],"serializedName":"k","default":{"kind":"nothing"},"name":"key","typeExpr":{"typeRef":{"kind":"typeParam","value":"K"},"parameters":[]}},{"annotations":[],"serializedName":"v","default":{"kind":"nothing"},"name":"value","typeExpr":{"typeRef":{"kind":"typeParam","value":"V"},"parameters":[]}}]}},"name":"MapEntry","version":{"kind":"nothing"}}};
+
+export const snMapEntry: ADL.ScopedName = {moduleName:"sys.types", name:"MapEntry"};
+
+export function texprMapEntry<K, V>(texprK : ADL.ATypeExpr<K>, texprV : ADL.ATypeExpr<V>): ADL.ATypeExpr<MapEntry<K, V>> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "MapEntry"}}, parameters : [texprK.value, texprV.value]}};
+}
+
 export type Map<K, V> = Pair<K, V>[];
 
 const Map_AST : ADL.ScopedDecl =
@@ -114,6 +140,7 @@ export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "sys.types.Either" : Either_AST,
   "sys.types.Maybe" : Maybe_AST,
   "sys.types.Error" : Error_AST,
+  "sys.types.MapEntry" : MapEntry_AST,
   "sys.types.Map" : Map_AST,
   "sys.types.Set" : Set_AST
 };

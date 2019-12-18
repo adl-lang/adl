@@ -64,6 +64,31 @@ const Map = {
   ]
 };
 
+const MapEntry = {
+  name : "MapEntry",
+  module : "sys.types",
+  kind : "struct",
+  typevars : [["K","V"]],
+  fields : [
+    {
+      name : "key",
+      type : {"var":"K"},
+      defaultv : null,
+      annotations : [
+      ]
+    },
+    {
+      name : "value",
+      type : {"var":"V"},
+      defaultv : null,
+      annotations : [
+      ]
+    }
+  ],
+  annotations : [
+  ]
+};
+
 const Maybe = {
   name : "Maybe",
   module : "sys.types",
@@ -129,6 +154,7 @@ export const _ADL_TYPES = {
   "sys.types.Set" : Set,
   "sys.types.Pair" : Pair,
   "sys.types.Maybe" : Maybe,
+  "sys.types.MapEntry" : MapEntry,
   "sys.types.Map" : Map,
   "sys.types.Error" : Error,
   "sys.types.Either" : Either

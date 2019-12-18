@@ -50,6 +50,23 @@ export interface Error_Error<_T> {
 
 export type Error<T> = Error_Value<T> | Error_Error<T>;
 
+export interface MapEntry<K, V> {
+  key: K;
+  value: V;
+}
+
+export function makeMapEntry<K, V>(
+  input: {
+    key: K,
+    value: V,
+  }
+): MapEntry<K, V> {
+  return {
+    key: input.key,
+    value: input.value,
+  };
+}
+
 export type Map<K, V> = Pair<K, V>[];
 
 export type Set<T> = T[];

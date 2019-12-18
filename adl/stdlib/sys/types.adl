@@ -26,6 +26,16 @@ union Error<T>
     String error;
 };
 
+struct MapEntry<K,V>
+{
+    @SerializedName "k"
+    K key;
+
+    @SerializedName "v"
+    V value;
+};
+
+// TODO: update to be  Vector<Pair<K,V>>;
 newtype Map<K,V> = Vector<Pair<K,V>>;
 
 newtype Set<T> = Vector<T>;

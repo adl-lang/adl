@@ -426,6 +426,63 @@ operator==( const Error<T> &a, const Error<T> &b )
     return false;
 }
 
+template <class K, class V>
+struct MapEntry
+{
+    typedef K KType;
+    typedef V VType;
+    
+    MapEntry();
+    
+    MapEntry(
+        const K & key,
+        const V & value
+        );
+    
+    K key;
+    V value;
+};
+
+template <class K, class V>
+bool operator<( const MapEntry<K,V> &a, const MapEntry<K,V> &b );
+template <class K, class V>
+bool operator==( const MapEntry<K,V> &a, const MapEntry<K,V> &b );
+
+template <class K, class V>
+MapEntry<K,V>::MapEntry()
+{
+}
+
+template <class K, class V>
+MapEntry<K,V>::MapEntry(
+    const K & key_,
+    const V & value_
+    )
+    : key(key_)
+    , value(value_)
+{
+}
+
+template <class K, class V>
+bool
+operator<( const MapEntry<K,V> &a, const MapEntry<K,V> &b )
+{
+    if( a.key < b.key ) return true;
+    if( b.key < a.key ) return false;
+    if( a.value < b.value ) return true;
+    if( b.value < a.value ) return false;
+    return false;
+}
+
+template <class K, class V>
+bool
+operator==( const MapEntry<K,V> &a, const MapEntry<K,V> &b )
+{
+    return
+        a.key == b.key &&
+        a.value == b.value ;
+}
+
 template <class T>
 class Maybe
 {
@@ -775,6 +832,52 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
     
     return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
+
+template <class K, class V>
+struct Serialisable<ADL::sys::types::MapEntry<K,V>>
+{
+    static typename Serialiser<ADL::sys::types::MapEntry<K,V>>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <class K, class V>
+typename Serialiser<ADL::sys::types::MapEntry<K,V>>::Ptr
+Serialisable<ADL::sys::types::MapEntry<K,V>>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::sys::types::MapEntry<K,V> _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : key_s( Serialisable<K>::serialiser(sf) )
+            , value_s( Serialisable<V>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<K>::Ptr key_s;
+        typename Serialiser<V>::Ptr value_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<K>( json, key_s, "k", v.key );
+            writeField<V>( json, value_s, "v", v.value );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( key_s, v.key, "k", json ) ||
+                readField( value_s, v.value, "v", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
 
 template <class T>
 struct Serialisable<ADL::sys::types::Maybe<T>>
