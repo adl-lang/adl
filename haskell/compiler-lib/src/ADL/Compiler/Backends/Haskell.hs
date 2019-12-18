@@ -561,10 +561,10 @@ generateLiteral te v =  generateLV Map.empty te v
     generateLV m (TypeExpr (RT_Primitive pt) []) v = hPrimitiveLiteral pt v
     generateLV m (TypeExpr (RT_Primitive pt) _) v = error "BUG: primitive literal with unexpected type params"
     generateLV m te0@(TypeExpr (RT_Named (sn,decl)) tes) v = case d_type decl of
-      (Decl_Struct s) -> generateStruct m te0 decl s tes v
-      (Decl_Union u) -> generateUnion m decl u tes v
+      (Decl_Struct s) -> generateStruct m sn decl s tes v
+      (Decl_Union u) -> generateUnion m sn decl u tes v
       (Decl_Typedef t) -> generateTypedef m decl t tes v
-      (Decl_Newtype n) -> generateNewtype m decl n tes v
+      (Decl_Newtype n) -> generateNewtype m sn decl n tes v
     generateLV m (TypeExpr (RT_Param id) _) v = case Map.lookup id m of
          (Just te) -> generateLV m te v
          Nothing -> error "BUG: unresolved type variable in literal"
@@ -594,23 +594,23 @@ generateLiteral te v =  generateLV Map.empty te v
       tmod <- typeTokenModule
       return (template "($1.TypeToken)" [unHaskellModule tmod])
 
-    generateStruct m te0 d s tes (JS.Object hm) = do
+    generateStruct m sn d s tes (JS.Object hm) = do
       fields <- forM (s_fields s) $ \f -> do
         let mjv = HM.lookup (f_serializedName f) hm <|> f_default f
             jv = case mjv of
               Just jv -> jv
               Nothing -> error ("BUG: missing default value for field " <> T.unpack (f_name f))
         generateLV m2 (f_type f) jv
-      ctor <- structCtor d
+      ctor <- structCtor sn d
       return (template "($1 $2)" [ctor,T.intercalate " " fields])
       where
         m2 = withTypeBindings (s_typeParams s) tes m
-    generateStruct m te0 d s tes _ = error "BUG: struct literal is not an object"
+    generateStruct m sn d s tes _ = error "BUG: struct literal is not an object"
 
-    generateUnion m d u tes (JS.String fname) = do
-      unionCtor d u fname
-    generateUnion m d u tes (JS.Object hm) = do
-      ctor <- unionCtor d u fname
+    generateUnion m sn d u tes (JS.String fname) = do
+      unionCtor sn d u fname
+    generateUnion m sn d u tes (JS.Object hm) = do
+      ctor <- unionCtor sn d u fname
       if isVoidType te
         then return ctor
         else do
@@ -624,39 +624,48 @@ generateLiteral te v =  generateLV Map.empty te v
           Just f -> f_type f
           Nothing -> error "BUG: union literal key must be a field"
         m2 = withTypeBindings (u_typeParams u) tes m
-    generateUnion m d u tes _ = error "BUG: union literal expects a json string or object"
+    generateUnion m sn d u tes _ = error "BUG: union literal expects a json string or object"
 
     generateTypedef m d t tes v = generateLV m2 (t_typeExpr t) v
       where
         m2 = withTypeBindings (t_typeParams t) tes m
 
-    generateNewtype m d n tes v = do
+    generateNewtype m sn d n tes v = do
       lit <- generateLV m2 (n_typeExpr n) v
-      ctor <- structCtor d
+      ctor <- structCtor sn d
       return (template "($1 $2)" [ctor,lit])
       where
         m2 = withTypeBindings (n_typeParams n) tes m
 
-    unionCtor :: CDecl -> Union CResolvedType -> T.Text -> HGen Ident
-    unionCtor decl union fname = case d_customType decl of
+    unionCtor :: ScopedName -> CDecl -> Union CResolvedType -> T.Text -> HGen Ident
+    unionCtor sn decl union fname = case d_customType decl of
       Nothing -> do
         let field :: CField
             field = case L.find ((==fname) . f_name) (u_fields union) of
               Just field -> field
               Nothing -> undefined
-        return (hDiscName decl field)
+        scopedName (sn_moduleName sn) (hDiscName decl field)
       Just ct -> do
         importsForCustomType ct
         case Map.lookup fname (ct_unionConstructors ct) of
           Just fctor -> return fctor
           Nothing -> error ("Missing custom constructor for " ++  T.unpack fname)
 
-    structCtor decl = case d_customType decl of
-      Nothing -> return (hTypeName (d_name decl))
+    structCtor sn decl = case d_customType decl of
+      Nothing -> scopedName (sn_moduleName sn) (hTypeName (d_name decl))
       (Just ct) -> do
         importsForCustomType ct
         let ctor = ct_structConstructor ct
         if T.null ctor then error "Missing custom constructor for struct" else return ctor
+
+scopedName :: ModuleName -> Ident -> HGen T.Text
+scopedName mn name = do
+  genmn <- fmap ms_name get
+  if unModuleName mn == [] || mn == genmn
+     then return name
+     else do
+       hm <- importADLModule mn
+       return (T.intercalate "." [formatText hm,name])
 
 generateCustomType :: Ident -> CDecl -> CustomType -> HGen ()
 generateCustomType n d ct = do
