@@ -256,27 +256,28 @@ getTypeDetails (RT_Primitive pt) =
         literalText _ = error "BUG: invalid literal for Nullable"
 
 -- a type defined through a regular ADL declaration
-getTypeDetails rt@(RT_Named (scopedName,decl@Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText
+getTypeDetails rt@(RT_Named (sn,decl@Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText
   where
     typeExpr typeArgs = do
-      declRef <- getDeclRef scopedName
+      declRef <- getDeclRef (sn_moduleName sn) (sn_name sn)
       return (declRef <> typeParamsExpr typeArgs)
     literalText (Literal te LDefault) = error "BUG: literal defaults shouldn't be needed"
-    literalText (Literal (TypeExpr (RT_Named (_, Decl{d_type=Decl_Struct struct})) tparams0) (LCtor ls)) = do
+    literalText (Literal (TypeExpr (RT_Named (sn, Decl{d_type=Decl_Struct struct})) tparams0) (LCtor ls)) = do
+      sname <- getDeclRef (sn_moduleName sn) (structName decl)
       tparams <- mapM genTypeExpr tparams0
       lvs <- mapM genLiteralText ls
       return (template "$1$2{$3}"
-         [ structName decl
+         [ sname
          , turbofish tparams
          , T.intercalate ", " [template "$1 : $2" [structFieldName0 (f_name f),v] | (f,v) <- zip (s_fields struct) lvs]
          ])
     literalText (Literal (TypeExpr (RT_Named (sn, Decl{d_type=Decl_Newtype _})) _) (LCtor [l])) = do
-      declRef <- getDeclRef sn
+      declRef <- getDeclRef (sn_moduleName sn) (sn_name sn)
       lv <- genLiteralText l
       return (template "$1($2)" [declRef,lv])
     literalText (Literal te@(TypeExpr (RT_Named (sn, Decl{d_type=Decl_Union union})) _) (LUnion ctor l)) = do
       let variantName  =  enumVariantName0 ctor
-      declRef <- getDeclRef sn
+      declRef <- getDeclRef (sn_moduleName sn) (sn_name sn)
       lv <- genLiteralText l
       case te of
        te| isVoidLiteral l -> return (template "$1::$2" [declRef, variantName])
@@ -381,14 +382,14 @@ generateCode :: Annotations t -> Bool
 generateCode annotations = fromMaybe True (getTypedAnnotation snRustGenerate annotations)
 
 -- Get the a typescript reference corresponding to an ADL scoped name,
-getDeclRef :: ScopedName -> CState T.Text
-getDeclRef sn = do
+getDeclRef :: ModuleName -> Ident -> CState T.Text
+getDeclRef mn ident = do
   currentModuleName <- mf_moduleName <$> get
-  if sn_moduleName sn == currentModuleName
-    then return (sn_name sn)
+  if mn == currentModuleName
+    then return ident
     else do
       mfn <- mf_rustModuleFn <$> get
-      rAdlType <- rustUse (RustScopedName (unRustScopedName (mfn (sn_moduleName sn)) <> [sn_name sn]))
+      rAdlType <- rustUse (RustScopedName (unRustScopedName (mfn mn) <> [ident]))
       return rAdlType
 
 -- Get the details of the custom type mapping for a declaration, if any.
