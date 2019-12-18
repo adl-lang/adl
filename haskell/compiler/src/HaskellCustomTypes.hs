@@ -40,6 +40,7 @@ getCustomType scopedName decl = case Map.lookup haskellCustomType (d_annotations
       (ParseSuccess hct) -> CustomType {
         ct_hTypeName = (HC.haskellCustomType_haskellname hct),
         ct_hImports = map HaskellModule (HC.haskellCustomType_haskellimports hct),
+        ct_hExtraExports = (HC.haskellCustomType_haskellextraexports hct),
         ct_insertCode = (HC.haskellCustomType_insertCode hct),
         ct_structConstructor = HC.haskellCustomType_structConstructor hct,
         ct_unionConstructors = Map.fromList

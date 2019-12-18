@@ -17,6 +17,7 @@ import qualified Prelude
 data HaskellCustomType = HaskellCustomType
     { haskellCustomType_haskellname :: T.Text
     , haskellCustomType_haskellimports :: [T.Text]
+    , haskellCustomType_haskellextraexports :: [T.Text]
     , haskellCustomType_insertCode :: [T.Text]
     , haskellCustomType_generateOrigADLType :: T.Text
     , haskellCustomType_structConstructor :: T.Text
@@ -25,7 +26,7 @@ data HaskellCustomType = HaskellCustomType
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 mkHaskellCustomType :: T.Text -> [T.Text] -> [T.Text] -> HaskellCustomType
-mkHaskellCustomType haskellname haskellimports insertCode = HaskellCustomType haskellname haskellimports insertCode "" "" [  ]
+mkHaskellCustomType haskellname haskellimports insertCode = HaskellCustomType haskellname haskellimports [  ] insertCode "" "" [  ]
 
 instance AdlValue HaskellCustomType where
     atype _ = "adlc.config.haskell.HaskellCustomType"
@@ -33,6 +34,7 @@ instance AdlValue HaskellCustomType where
     jsonGen = genObject
         [ genField "haskellname" haskellCustomType_haskellname
         , genField "haskellimports" haskellCustomType_haskellimports
+        , genField "haskellextraexports" haskellCustomType_haskellextraexports
         , genField "insertCode" haskellCustomType_insertCode
         , genField "generateOrigADLType" haskellCustomType_generateOrigADLType
         , genField "structConstructor" haskellCustomType_structConstructor
@@ -42,6 +44,7 @@ instance AdlValue HaskellCustomType where
     jsonParser = HaskellCustomType
         <$> parseField "haskellname"
         <*> parseField "haskellimports"
+        <*> parseFieldDef "haskellextraexports" [  ]
         <*> parseField "insertCode"
         <*> parseFieldDef "generateOrigADLType" ""
         <*> parseFieldDef "structConstructor" ""

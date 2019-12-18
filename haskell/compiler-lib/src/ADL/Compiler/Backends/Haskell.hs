@@ -52,6 +52,10 @@ data CustomType = CustomType {
    -- Any imports required to support the custom haskell type.
    ct_hImports :: [HaskellModule],
 
+   -- Any extra exports required from the module where the custom type
+   -- was declared
+   ct_hExtraExports:: [Ident],
+
    -- Lines of helper code. This must implement the AdlValue typeclass
    -- for the custom haskell type
    ct_insertCode :: [T.Text],
@@ -658,6 +662,7 @@ generateCustomType :: Ident -> CDecl -> CustomType -> HGen ()
 generateCustomType n d ct = do
   -- imports and exports
   addExport (hTypeName n)
+  mapM addExport (ct_hExtraExports ct)
   importsForCustomType ct
 
   -- Insert the user supplied code

@@ -19,6 +19,10 @@ struct HaskellCustomType
     // The imports required to use the haskell type
     Vector<String> haskellimports;
 
+    // Any extra exports required from the module where the custom type
+    // was declared
+    Vector<String> haskellextraexports = [];
+
     // Text to be inserted to implement the haskell
     // type
     Vector<String> insertCode;
