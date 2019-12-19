@@ -473,5 +473,5 @@ export function getAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotation
   if (ann === undefined) {
     return undefined;
   }
-  return jb.fromJsonE(ann);
+  return jb.fromJsonE(ann.v2);
 }
