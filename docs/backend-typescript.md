@@ -15,6 +15,8 @@ Usage: adlc typescript [OPTION...] files...
   -R DIR  --runtime-dir=DIR                       Set the directory where runtime code is written
 ```
 
+The typescript runtime and ADL generated code depend on ES6 (so use `--target ES6` for the tsc compiler).
+
 # Generated Code
 
 The typescript backend generates typescript code from the input ADL
