@@ -830,10 +830,28 @@ fullyScopedType :: ModuleName -> ResolvedTypeT c -> ResolvedTypeT c
 fullyScopedType mname (RT_Named (sn,decl)) = RT_Named (fullyScopedName mname sn,mapDecl (fullyScopedType mname) decl)
 fullyScopedType _ rt = rt
 
+fullyScopedAnnotations :: ModuleName -> Annotations r -> Annotations r
+fullyScopedAnnotations mn annotations = Map.mapKeys (fullyScopedName mn) annotations
+
 fullyScopedModule :: Module c (ResolvedTypeT c) -> Module c (ResolvedTypeT c)
 fullyScopedModule m = m{m_decls=decls'}
   where
-    decls' = (fmap (mapDecl (fullyScopedType (m_name m))) (m_decls m))
+    decls' = (fmap (mapDecl (fullyScopedType (m_name m)) . fixDeclAnnotations) (m_decls m))
+
+    fixDeclAnnotations :: Decl ct r -> Decl ct r
+    fixDeclAnnotations decl = decl{
+      d_type=fixDeclFields (d_type decl),
+      d_annotations=fullyScopedAnnotations (m_name m) (d_annotations decl)
+    }
+
+    fixDeclFields :: DeclType r -> DeclType r
+    fixDeclFields (Decl_Struct struct) = Decl_Struct struct{s_fields=map fixFieldAnnotations (s_fields struct)}
+    fixDeclFields (Decl_Union union) = Decl_Union union{u_fields=map fixFieldAnnotations (u_fields union)}
+    fixDeclFields declType = declType
+
+    fixFieldAnnotations :: Field r -> Field r
+    fixFieldAnnotations f = f{f_annotations=fullyScopedAnnotations (m_name m) (f_annotations f)}
+
 
 -- Populate the custom type field for each declaration.
 --

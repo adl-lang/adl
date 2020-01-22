@@ -3,8 +3,10 @@ module test23 {
 import adlc.config.typescript.*;
 
 /// A docstring
+@X
 struct S1 {
    /// Another docstring
+   @X
    String field;
 };
 
@@ -12,4 +14,7 @@ struct S1 {
 struct S2 {
 };
 
+type X = Void;
+
 };
+
