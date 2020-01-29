@@ -754,6 +754,45 @@ operator==( const U8 &a, const U8 &b )
     return false;
 }
 
+S::S()
+    : f1(U9<std::string> ::mk_v1("xx"))
+    , f2(U9<std::string> ::mk_v2(100))
+    , f3(U9<std::string> ::mk_v3())
+{
+}
+
+S::S(
+    const U9<std::string>  & f1_,
+    const U9<std::string>  & f2_,
+    const U9<std::string>  & f3_
+    )
+    : f1(f1_)
+    , f2(f2_)
+    , f3(f3_)
+{
+}
+
+bool
+operator<( const S &a, const S &b )
+{
+    if( a.f1 < b.f1 ) return true;
+    if( b.f1 < a.f1 ) return false;
+    if( a.f2 < b.f2 ) return true;
+    if( b.f2 < a.f2 ) return false;
+    if( a.f3 < b.f3 ) return true;
+    if( b.f3 < a.f3 ) return false;
+    return false;
+}
+
+bool
+operator==( const S &a, const S &b )
+{
+    return
+        a.f1 == b.f1 &&
+        a.f2 == b.f2 &&
+        a.f3 == b.f3 ;
+}
+
 }}; // ADL::test5
 
 namespace ADL {
@@ -1214,5 +1253,48 @@ Serialisable<ADL::test5::U8>::serialiser( const SerialiserFlags &sf )
     
     return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
+
+typename Serialiser<ADL::test5::S>::Ptr
+Serialisable<ADL::test5::S>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test5::S _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : f1_s( Serialisable<ADL::test5::U9<std::string> >::serialiser(sf) )
+            , f2_s( Serialisable<ADL::test5::U9<std::string> >::serialiser(sf) )
+            , f3_s( Serialisable<ADL::test5::U9<std::string> >::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<ADL::test5::U9<std::string> >::Ptr f1_s;
+        typename Serialiser<ADL::test5::U9<std::string> >::Ptr f2_s;
+        typename Serialiser<ADL::test5::U9<std::string> >::Ptr f3_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<ADL::test5::U9<std::string> >( json, f1_s, "f1", v.f1 );
+            writeField<ADL::test5::U9<std::string> >( json, f2_s, "f2", v.f2 );
+            writeField<ADL::test5::U9<std::string> >( json, f3_s, "f3", v.f3 );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( f1_s, v.f1, "f1", json ) ||
+                readField( f2_s, v.f2, "f2", json ) ||
+                readField( f3_s, v.f3, "f3", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
 
 }; // ADL

@@ -333,12 +333,12 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
       lits <- mapM genLiteralText ls
       return (template "new $1($2)" [typeExpr, T.intercalate ", " lits])
     genLiteralText' (Literal te (LUnion ctor l)) = do
-      typeExpr <- genTypeExpr te
+      sn <- genScopedName scopedName
       lit <- genLiteralText l
       case te of
-       te | refEnumeration te -> return (template "$1.$2" [typeExpr, discriminatorName0 ctor])
-          | isVoidLiteral l -> return (template "$1.$2()" [typeExpr, ctor])
-          | otherwise -> return (template "$1.$2($3)" [typeExpr, ctor, lit ])
+       te | refEnumeration te -> return (template "$1.$2" [sn, discriminatorName0 ctor])
+          | isVoidLiteral l -> return (template "$1.$2()" [sn, ctor])
+          | otherwise -> return (template "$1.$2($3)" [sn, ctor, lit ])
     genLiteralText' lit = error ("BUG: getTypeDetails1: unexpected literal:" ++ show lit)
 
 -- a custom type

@@ -3,6 +3,7 @@
 #define TEST5_H
 #include <adl/adl.h>
 #include <stdint.h>
+#include <string>
 
 namespace ADL {
 namespace test5 {
@@ -705,6 +706,7 @@ public:
     U9();
     static U9<T> mk_v1( const T & v );
     static U9<T> mk_v2( const int16_t & v );
+    static U9<T> mk_v3();
     
     U9( const U9<T> & );
     ~U9();
@@ -713,7 +715,8 @@ public:
     enum DiscType
     {
         V1,
-        V2
+        V2,
+        V3
     };
     
     DiscType d() const;
@@ -725,17 +728,20 @@ public:
         {
         case V1: { vis.v1(v1()); break; }
         case V2: { vis.v2(v2()); break; }
+        case V3: { vis.v3(); break; }
         }
     }
     
     bool is_v1() const { return d_ == V1; };
     bool is_v2() const { return d_ == V2; };
+    bool is_v3() const { return d_ == V3; };
     
     T & v1() const;
     int16_t & v2() const;
     
     const T & set_v1(const T & );
     const int16_t & set_v2(const int16_t & );
+    void set_v3();
     
 private:
     U9( DiscType d, void * v);
@@ -797,6 +803,12 @@ U9<T> U9<T>::mk_v2( const int16_t & v )
 }
 
 template <class T>
+U9<T> U9<T>::mk_v3()
+{
+    return U9<T>( V3, 0 );
+}
+
+template <class T>
 U9<T>::U9( const U9<T> & v )
     : d_(v.d_), p_(copy(v.d_,v.p_))
 {
@@ -850,6 +862,17 @@ const int16_t & U9<T>::set_v2(const int16_t &v)
 }
 
 template <class T>
+void U9<T>::set_v3()
+{
+    if( d_ != V3 )
+    {
+        free(d_,p_);
+        d_ = V3;
+        p_ = 0;
+    }
+}
+
+template <class T>
 U9<T>::U9(DiscType d, void *p)
     : d_(d), p_(p)
 {
@@ -862,6 +885,7 @@ void U9<T>::free(DiscType d, void *p)
     {
         case V1: delete (T *)p; return;
         case V2: delete (int16_t *)p; return;
+        case V3: return;
     }
 }
 
@@ -872,6 +896,7 @@ void * U9<T>::copy( DiscType d, void *p )
     {
         case V1: return new T(*(T *)p);
         case V2: return new int16_t(*(int16_t *)p);
+        case V3: return 0;
     }
     return 0;
 }
@@ -886,6 +911,7 @@ operator<( const U9<T> &a, const U9<T> &b )
     {
         case U9<T>::V1: return a.v1() < b.v1();
         case U9<T>::V2: return a.v2() < b.v2();
+        case U9<T>::V3: return false;
     }
     return false;
 }
@@ -899,6 +925,7 @@ operator==( const U9<T> &a, const U9<T> &b )
     {
         case U9<T>::V1: return a.v1() == b.v1();
         case U9<T>::V2: return a.v2() == b.v2();
+        case U9<T>::V3: return true;
     }
     return false;
 }
@@ -958,6 +985,24 @@ operator==( const Cell<T> &a, const Cell<T> &b )
         a.head == b.head &&
         a.tail == b.tail ;
 }
+
+struct S
+{
+    S();
+    
+    S(
+        const U9<std::string>  & f1,
+        const U9<std::string>  & f2,
+        const U9<std::string>  & f3
+        );
+    
+    U9<std::string>  f1;
+    U9<std::string>  f2;
+    U9<std::string>  f3;
+};
+
+bool operator<( const S &a, const S &b );
+bool operator==( const S &a, const S &b );
 
 }}; // ADL::test5
 
@@ -1115,6 +1160,7 @@ Serialisable<ADL::test5::U9<T>>::serialiser( const SerialiserFlags &sf )
         SerialiserFlags sf_;
         mutable typename Serialiser<T>::Ptr v1_;
         mutable typename Serialiser<int16_t>::Ptr v2_;
+        mutable typename Serialiser<Void>::Ptr v3_;
         
         typename Serialiser<T>::Ptr v1_s() const
         {
@@ -1130,17 +1176,34 @@ Serialisable<ADL::test5::U9<T>>::serialiser( const SerialiserFlags &sf )
             return v2_;
         }
         
+        typename Serialiser<Void>::Ptr v3_s() const
+        {
+            if( !v3_ )
+                v3_ = Serialisable<Void>::serialiser(sf_);
+            return v3_;
+        }
+        
         void toJson( JsonWriter &json, const _T & v ) const
         {
             switch( v.d() )
             {
                 case ADL::test5::U9<T>::V1: json.startObject(); writeField( json, v1_s(), "v1", v.v1() ); json.endObject(); break;
                 case ADL::test5::U9<T>::V2: json.startObject(); writeField( json, v2_s(), "v2", v.v2() ); json.endObject(); break;
+                case ADL::test5::U9<T>::V3: json.stringV( "v3" ); break;
             }
         }
         
         void fromJson( _T &v, JsonReader &json ) const
         {
+            if( json.type() == JsonReader::STRING )
+            {
+                if( json.stringV() == "v3" )
+                    v.set_v3();
+                else
+                    throw json_parse_failure();
+                json.next();
+                return;
+            }
             if( json.type() == JsonReader::START_OBJECT )
             {
                 match( json, JsonReader::START_OBJECT );
@@ -1208,6 +1271,12 @@ Serialisable<ADL::test5::Cell<T>>::serialiser( const SerialiserFlags &sf )
     };
     
     return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
+
+template <>
+struct Serialisable<ADL::test5::S>
+{
+    static Serialiser<ADL::test5::S>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL

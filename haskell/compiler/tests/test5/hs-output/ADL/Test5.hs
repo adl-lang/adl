@@ -2,6 +2,7 @@
 module ADL.Test5(
     Cell(..),
     List(..),
+    S(..),
     S1(..),
     U1(..),
     U2(..),
@@ -68,6 +69,30 @@ instance (AdlValue t) => AdlValue (List t) where
         "null" -> parseUnionVoid L_null
         "cell" ->  parseUnionValue L_cell
         _ -> parseFail "expected a discriminator for List (null,cell)" 
+
+data S = S
+    { s_f1 :: (U9 T.Text)
+    , s_f2 :: (U9 T.Text)
+    , s_f3 :: (U9 T.Text)
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS ::  S
+mkS  = S (U9_v1 "xx") (U9_v2 100) U9_v3
+
+instance AdlValue S where
+    atype _ = "test5.S"
+    
+    jsonGen = genObject
+        [ genField "f1" s_f1
+        , genField "f2" s_f2
+        , genField "f3" s_f3
+        ]
+    
+    jsonParser = S
+        <$> parseFieldDef "f1" (U9_v1 "xx")
+        <*> parseFieldDef "f2" (U9_v2 100)
+        <*> parseFieldDef "f3" U9_v3
 
 data S1 = S1
     { s1_f :: Data.Int.Int16
@@ -213,6 +238,7 @@ instance AdlValue U8 where
 data U9 t
     = U9_v1 t
     | U9_v2 Data.Int.Int16
+    | U9_v3
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance (AdlValue t) => AdlValue (U9 t) where
@@ -224,9 +250,11 @@ instance (AdlValue t) => AdlValue (U9 t) where
     jsonGen = genUnion (\jv -> case jv of
         U9_v1 v -> genUnionValue "v1" v
         U9_v2 v -> genUnionValue "v2" v
+        U9_v3 -> genUnionVoid "v3"
         )
     
     jsonParser = parseUnion $ \disc -> case disc of
         "v1" ->  parseUnionValue U9_v1
         "v2" ->  parseUnionValue U9_v2
-        _ -> parseFail "expected a discriminator for U9 (v1,v2)" 
+        "v3" -> parseUnionVoid U9_v3
+        _ -> parseFail "expected a discriminator for U9 (v1,v2,v3)" 

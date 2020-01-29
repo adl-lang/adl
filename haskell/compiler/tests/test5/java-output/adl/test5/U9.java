@@ -27,7 +27,8 @@ public class U9<T> {
    */
   public enum Disc {
     V1,
-    V2
+    V2,
+    V3
   }
 
   /* Constructors */
@@ -38,6 +39,10 @@ public class U9<T> {
 
   public static <T> U9<T> v2(short v) {
     return new U9<T>(Disc.V2, v);
+  }
+
+  public static <T> U9<T> v3() {
+    return new U9<T>(Disc.V3, null);
   }
 
   private U9(Disc disc, Object value) {
@@ -77,6 +82,11 @@ public class U9<T> {
     this.disc = Disc.V2;
   }
 
+  public void setV3() {
+    this.value = null;
+    this.disc = Disc.V3;
+  }
+
   /* Object level helpers */
 
   @Override
@@ -85,12 +95,28 @@ public class U9<T> {
       return false;
     }
     U9<?> other = (U9<?>) other0;
-    return disc == other.disc && value.equals(other.value);
+    switch (disc) {
+      case V1:
+        return disc == other.disc && value.equals(other.value);
+      case V2:
+        return disc == other.disc && value.equals(other.value);
+      case V3:
+        return disc == other.disc;
+    }
+    throw new IllegalStateException();
   }
 
   @Override
   public int hashCode() {
-    return disc.hashCode() * 37 + value.hashCode();
+    switch (disc) {
+      case V1:
+        return disc.hashCode() * 37 + value.hashCode();
+      case V2:
+        return disc.hashCode() * 37 + value.hashCode();
+      case V3:
+        return disc.hashCode();
+    }
+    throw new IllegalStateException();
   }
 
   @SuppressWarnings("unchecked")
@@ -104,6 +130,7 @@ public class U9<T> {
     return new Factory<U9<T>>() {
       final Lazy<Factory<T>> v1 = new Lazy<>(() -> factoryT);
       final Lazy<Factory<Short>> v2 = new Lazy<>(() -> Factories.INT16);
+      final Lazy<Factory<Void>> v3 = new Lazy<>(() -> Factories.VOID);
 
       @Override
       public U9<T> create() {
@@ -116,6 +143,8 @@ public class U9<T> {
           case V1:
             return new U9<T>(other.disc,v1.get().create(U9.<T>cast(other.value)));
           case V2:
+            return new U9<T>(other.disc,other.value);
+          case V3:
             return new U9<T>(other.disc,other.value);
         }
         throw new IllegalArgumentException();
@@ -141,6 +170,7 @@ public class U9<T> {
   public static<T> JsonBinding<U9<T>> jsonBinding(JsonBinding<T> bindingT) {
     final Lazy<JsonBinding<T>> v1 = new Lazy<>(() -> bindingT);
     final Lazy<JsonBinding<Short>> v2 = new Lazy<>(() -> JsonBindings.INT16);
+    final Lazy<JsonBinding<Void>> v3 = new Lazy<>(() -> JsonBindings.VOID);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<U9<T>> _factory = factory(bindingT.factory());
 
@@ -157,6 +187,8 @@ public class U9<T> {
             return JsonBindings.unionToJson("v1", _value.getV1(), v1.get());
           case V2:
             return JsonBindings.unionToJson("v2", _value.getV2(), v2.get());
+          case V3:
+            return JsonBindings.unionToJson("v3", null, null);
         }
         return null;
       }
@@ -169,6 +201,9 @@ public class U9<T> {
         }
         else if (_key.equals("v2")) {
           return U9.<T>v2(JsonBindings.unionValueFromJson(_json, v2.get()));
+        }
+        else if (_key.equals("v3")) {
+          return U9.<T>v3();
         }
         throw new JsonParseException("Invalid discriminator " + _key + " for union U9<T>");
       }

@@ -52,6 +52,13 @@ module test5
    {
        T v1;
        Int16 v2;
+       Void v3;
+   };
+
+   struct S {
+       U9<String> f1 = {"v1":"xx"};
+       U9<String> f2 = {"v2":100};
+       U9<String> f3 = "v3";
    };
 
    // A recursive type

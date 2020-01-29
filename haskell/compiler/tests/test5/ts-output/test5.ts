@@ -162,16 +162,48 @@ export interface U9_V2<_T> {
   kind: 'v2';
   value: number;
 }
+export interface U9_V3<_T> {
+  kind: 'v3';
+}
 
-export type U9<T> = U9_V1<T> | U9_V2<T>;
+export type U9<T> = U9_V1<T> | U9_V2<T> | U9_V3<T>;
 
 const U9_AST : ADL.ScopedDecl =
-  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"v1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"v2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"U9","version":{"kind":"nothing"}}};
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"v1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"v2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"v3","default":{"kind":"nothing"},"name":"v3","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U9","version":{"kind":"nothing"}}};
 
 export const snU9: ADL.ScopedName = {moduleName:"test5", name:"U9"};
 
 export function texprU9<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<U9<T>> {
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "U9"}}, parameters : [texprT.value]}};
+}
+
+export interface S {
+  f1: U9<string>;
+  f2: U9<string>;
+  f3: U9<string>;
+}
+
+export function makeS(
+  input: {
+    f1?: U9<string>,
+    f2?: U9<string>,
+    f3?: U9<string>,
+  }
+): S {
+  return {
+    f1: input.f1 === undefined ? {kind : "v1", value : "xx"} : input.f1,
+    f2: input.f2 === undefined ? {kind : "v2", value : 100} : input.f2,
+    f3: input.f3 === undefined ? {kind : "v3"} : input.f3,
+  };
+}
+
+const S_AST : ADL.ScopedDecl =
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"just","value":{"v1":"xx"}},"name":"f1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U9"}},"parameters":[{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}]}},{"annotations":[],"serializedName":"f2","default":{"kind":"just","value":{"v2":100}},"name":"f2","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U9"}},"parameters":[{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}]}},{"annotations":[],"serializedName":"f3","default":{"kind":"just","value":"v3"},"name":"f3","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U9"}},"parameters":[{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}]}}]}},"name":"S","version":{"kind":"nothing"}}};
+
+export const snS: ADL.ScopedName = {moduleName:"test5", name:"S"};
+
+export function texprS(): ADL.ATypeExpr<S> {
+  return {value : {typeRef : {kind: "reference", value : snS}, parameters : []}};
 }
 
 export interface List_Null<_T> {
@@ -230,6 +262,7 @@ export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test5.U7" : U7_AST,
   "test5.U8" : U8_AST,
   "test5.U9" : U9_AST,
+  "test5.S" : S_AST,
   "test5.List" : List_AST,
   "test5.Cell" : Cell_AST
 };
