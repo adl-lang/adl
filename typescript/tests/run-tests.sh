@@ -11,6 +11,7 @@ rm -rf $GENDIR
 mkdir -p $GENDIR
 
 # Build ADL and dependencies setup
+(cd $HASKELLDIR; stack build ./compiler)
 (cd $HASKELLDIR; stack exec adlc -- typescript -I $ADLSTDLIBDIR -O $GENDIR --include-rt --include-resolver --runtime-dir runtime $HERE/example.adl $ADLSTDLIBDIR/sys/types.adl $ADLSTDLIBDIR/sys/adlast.adl $ADLSTDLIBDIR/sys/dynamic.adl)
 yarn
 

@@ -56,9 +56,9 @@ export interface JsonParseException {
 }
 
 // Map a JsonException to an Error value
-export function mapJsonException(exception:{}): {} {
-  if (exception && exception['kind'] == "JsonParseException") {
-    const jserr: JsonParseException = exception as JsonParseException;
+export function mapJsonException(exception:(Error & {kind?:never})|JsonParseException): Error {
+  if (exception && exception['kind'] === "JsonParseException") {
+    const jserr: JsonParseException = exception;
     return new Error(jserr.getMessage());
   } else {
     return exception;
@@ -223,7 +223,7 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
   const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
 
   function toJson(v : StringMap<Unknown>) : Json {
-    const result = {};
+    const result : StringMap<Json> = {};
     for (let k in v) {
       result[k] = elementBinding().toJson(v[k]);
     }
@@ -234,10 +234,11 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
     if (!(json instanceof Object)) {
       throw jsonParseException('expected an object');
     }
-    let result = {};
+    let result : StringMap<Unknown> = {};
     for (let k in json) {
       try {
-        result[k] = elementBinding().fromJson(json[k]);
+        const field : Json = (json as StringMap<Json>)[k];
+        result[k] = elementBinding().fromJson(field);
       } catch(e) {
         if (isJsonParseException(e)) {
           e.pushField(k);
@@ -297,9 +298,10 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
   });
 
   function toJson(v: Unknown) : Json {
-    const json = {};
+    const json : StringMap<Json> = {};
+
     fieldDetails.forEach( (fd) => {
-      json[fd.field.serializedName] = fd.jsonBinding().toJson(v && v[fd.field.name]);
+      json[fd.field.serializedName] = fd.jsonBinding().toJson(v && (v as StringMap<Json>)[fd.field.name]);
     });
     return json;
   }
@@ -308,10 +310,11 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
     if (!(json instanceof Object)) {
       throw jsonParseException("expected an object");
     }
+    const jsonObj = json as StringMap<Json>;
 
-    const v = {};
+    const v : StringMap<Unknown> = {};
     fieldDetails.forEach( (fd) => {
-      if (json[fd.field.serializedName] === undefined) {
+      if (jsonObj[fd.field.serializedName] === undefined) {
         const defaultv = fd.buildDefault();
         if (defaultv === null)  {
           throw jsonParseException("missing struct field " + fd.field.serializedName );
@@ -320,7 +323,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
         }
       } else {
         try {
-          v[fd.field.name] = fd.jsonBinding().fromJson(json[fd.field.serializedName]);
+          v[fd.field.name] = fd.jsonBinding().fromJson(jsonObj[fd.field.serializedName]);
         } catch(e) {
           if (isJsonParseException(e)) {
             e.pushField(fd.field.serializedName);
@@ -337,7 +340,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
 
 function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params : AST.TypeExpr[], _boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
   const fieldSerializedNames : string[] = [];
-  const fieldNumbers = {};
+  const fieldNumbers : StringMap<number> = {};
   union.fields.forEach( (field,i) => {
     fieldSerializedNames.push(field.serializedName);
     fieldNumbers[field.serializedName] = i;
@@ -351,7 +354,8 @@ function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params :
     if (typeof(json) !== 'string') {
       throw jsonParseException("expected a string for enum");
     }
-    const result = fieldNumbers[json as string];
+    const fieldIndex = json;
+    const result = fieldNumbers[fieldIndex];
     if (result === undefined) {
       throw jsonParseException("invalid string for enum: " + json);
     }
@@ -365,8 +369,15 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
 
 
   const newBoundTypeParams = createBoundTypeParams(dresolver, union.typeParams, params, boundTypeParams);
-  const detailsByName = {};
-  const detailsBySerializedName = {};
+
+  type Details = {
+    field: AST.Field;
+    isVoid: boolean;
+    jsonBinding: ()=>JsonBinding0<Unknown>
+  };
+
+  const detailsByName : StringMap<Details> = {};
+  const detailsBySerializedName : StringMap<Details> = {};
   union.fields.forEach( (field) => {
     const details = {
       field : field,
@@ -383,7 +394,7 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
     if (details.isVoid) {
       return details.field.serializedName;
     } else {
-      const result = {};
+      const result : StringMap<Json> = {};
       result[details.field.serializedName] = details.jsonBinding().toJson(v.value);
       return result;
     }
@@ -406,11 +417,12 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
       return { kind : details.field.name };
     } else if (json instanceof Object) {
       for (let k in json) {
+        const jsonObj = json as StringMap<Json>;
         let details = lookupDetails(k);
         try {
           return {
             kind : details.field.name,
-            value : details.jsonBinding().fromJson(json[k])
+            value : details.jsonBinding().fromJson(jsonObj[k])
           }
         } catch(e) {
           if (isJsonParseException(e)) {
@@ -469,6 +481,7 @@ export function getAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotation
     return undefined;
   }
   const annScopedName :AST.ScopedName = jb.typeExpr.typeRef.value;
+
   const ann = annotations.find(el => scopedNamesEqual(el.v1, annScopedName));
   if (ann === undefined) {
     return undefined;
