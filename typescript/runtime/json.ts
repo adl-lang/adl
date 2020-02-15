@@ -56,9 +56,9 @@ export interface JsonParseException {
 }
 
 // Map a JsonException to an Error value
-export function mapJsonException(exception:any): any {
-  if (exception && exception['kind'] == "JsonParseException") {
-    const jserr: JsonParseException = exception as JsonParseException;
+export function mapJsonException(exception:(Error & {kind?:never})|JsonParseException): Error {
+  if (exception && exception['kind'] === "JsonParseException") {
+    const jserr: JsonParseException = exception;
     return new Error(jserr.getMessage());
   } else {
     return exception;
