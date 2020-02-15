@@ -68,7 +68,14 @@ describe('IntTree Recursive Type', () => {
     expect(tree2.children[1].value).toEqual(33);
   })
   it( 'uses custom serialized names', () => {
-    const json = intTreeJsonBinding.toJson(tree1);
+
+    type SerialisedTreeInt = {
+      v: number;
+      cs: SerialisedTreeInt[];
+    };
+
+    const json = intTreeJsonBinding.toJson(tree1) as SerialisedTreeInt;
+
     expect(json && json["v"]).toEqual(7);
     expect(json && json["cs"][0].v).toEqual(15);
     expect(json && json["cs"][1].v).toEqual(33);
