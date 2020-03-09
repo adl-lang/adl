@@ -39,5 +39,12 @@ Usage: adlc java [OPTION...] files...
 $
 ```
 
+# From scratch build
+
+```
+cd $REPO/haskell
+./tools/scratch-build.sh
+```
+
 [stack]: https://docs.haskellstack.org/en/stable/README/
 [releases]: https://github.com/timbod7/adl/releases

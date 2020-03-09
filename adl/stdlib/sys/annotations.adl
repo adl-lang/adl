@@ -5,6 +5,15 @@ module sys.annotations
 
 type Doc = String;
 
+// Annotation to switch union serialization
+// to be "internally tagged". This is intended for
+// compatibility with external systems - the
+// default union serialization model is more
+// general.
+struct SerializedWithInternalTag {
+  String tag;
+};
+
 type SerializedName = String;
 
 type CustomSerialization = Bool;
