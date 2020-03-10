@@ -360,6 +360,9 @@ runTests = do
     it "generated code for type aliases accross modules" $ do
       collectResults (runJavaBackend ["test25/input",stdsrc] ["test25/input/admin.adl"] "test25/java-output" id)
         `shouldReturn` MatchOutput
+    it "generated code for SerializedWithInternalTag union annotation" $ do
+      collectResults (runJavaBackend1 "test26/input/test26.adl")
+        `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runJavaBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput

@@ -526,6 +526,20 @@ public class JsonBindings
     }
   }
 
+  public static <T> JsonElement unionToItJson(String tag, String name, T value, JsonBinding<T> jsonBinding) {
+    JsonObject jv = jsonBinding.toJson(value).getAsJsonObject();
+    jv.addProperty(tag, name);
+    return jv;
+  }
+
+  public static String unionNameFromItJson(String tag, JsonElement json) {
+    return json.getAsJsonObject().get(tag).getAsString();
+  }
+
+  public static <T> T unionValueFromItJson(String tag, JsonElement json, JsonBinding<T> jsonBinding) {
+    return jsonBinding.fromJson(json);
+  }
+
   public static JsonObject objectFromJson(JsonElement json) {
     if (!json.isJsonObject()) {
       throw new JsonParseException("expected an object");

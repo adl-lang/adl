@@ -733,6 +733,7 @@ loadAndCheckModule1 af modulePath = do
         failOnErrors rm (checkTypeCtorApps rm)
         failOnErrors rm (checkDefaultOverrides rm)
         failOnErrors rm (checkModuleAnnotations rm)
+        failOnErrors rm (checkSerializedWithInternalTag rm)
 
         let mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (fmap (mapDecl (fullyScopedType (m_name m))) (m_decls rm))
             ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
@@ -889,4 +890,36 @@ checkCustomSerializations m = when (not (Map.null badDecls)) $ do
       Just (_,JSON.Bool True) -> isJust (d_customType d)
       _ -> True
 
-    customSerialization = ScopedName (ModuleName ["sys","annotations"]) "CustomSerialization"
+-- | Check that the SerializedWithInternalTag annotation is only applied to monomorphic unions
+-- with all struct values, and where the tag name doesn't overlap with a struct field
+checkSerializedWithInternalTag :: RModule -> [GeneralError]
+checkSerializedWithInternalTag m = map mkError (filter (not . declOK) (Map.elems (m_decls m)))
+  where
+    mkError decl = GeneralError (template "SerializedWithInternalTag is not allowed for $1. (permitted only for monomorphic unions with all struct fields)"
+                   [d_name decl])
+
+    declOK d = case getSerializedWithInternalTag (d_annotations d) of
+       Nothing -> True
+       (Just tag) -> case d_type d of
+         (Decl_Union u) -> unionOk tag u
+         _ -> False
+
+    unionOk tag u = case u_typeParams u of
+      [] -> all (\f -> isStructOk tag (f_type f)) (u_fields u)
+      _ -> False
+
+    isStructOk tag (TypeExpr (RT_Named (_,d)) _) = case d_type d of
+      (Decl_Struct s) -> all (\f -> f_serializedName f /= tag) (s_fields s)
+      _ -> False
+    isStructOk _ _ = False
+
+getSerializedWithInternalTag :: Annotations a -> Maybe T.Text
+getSerializedWithInternalTag annotations = case Map.lookup serializedWithInternalTag  annotations of
+   (Just (_,JSON.Object hm)) -> case HM.lookup "tag" hm of
+      (Just (JSON.String tag)) -> Just tag
+      _ -> Nothing
+   _ -> Nothing
+
+customSerialization = ScopedName (ModuleName ["sys","annotations"]) "CustomSerialization"
+serializedWithInternalTag = ScopedName (ModuleName ["sys", "annotations"]) "SerializedWithInternalTag"
+

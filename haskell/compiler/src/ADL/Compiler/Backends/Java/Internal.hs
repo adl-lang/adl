@@ -3,6 +3,7 @@ module ADL.Compiler.Backends.Java.Internal where
 
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.HashMap.Strict as HM
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Scientific as S
@@ -1038,6 +1039,7 @@ generateUnionJson cgp decl union fieldDetails = do
   jsonElementI <- addImport "com.google.gson.JsonElement"
   jsonParseExceptionI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonParseException")
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
+  let isInternallyTagged = getSerializedWithInternalTag (d_annotations decl)
 
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- u_typeParams union]
 
@@ -1073,7 +1075,12 @@ generateUnionJson cgp decl union fieldDetails = do
                          if isVoidType (f_type (fd_field fd))
                          then ctemplate "return $1.unionToJson(\"$2\", null, null);"
                                         [jsonBindingsI, fd_serializedName fd]
-                         else ctemplate "return $1.unionToJson(\"$2\", _value.$3, $4.get());"
+                         else case isInternallyTagged of
+                           (Just tag) ->
+                             ctemplate "return $1.unionToItJson(\"$2\", \"$3\", _value.$4, $5.get());"
+                                        [jsonBindingsI, tag, fd_serializedName fd, fd_accessExpr fd, fd_varName fd]
+                           _ ->
+                             ctemplate "return $1.unionToJson(\"$2\", _value.$3, $4.get());"
                                         [jsonBindingsI, fd_serializedName fd, fd_accessExpr fd, fd_varName fd]
                        )
                        | fd <- fieldDetails ]
@@ -1085,12 +1092,20 @@ generateUnionJson cgp decl union fieldDetails = do
                 cline ""
                 <>
                 coverride (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
-                  ctemplate "String _key = $1.unionNameFromJson(_json);" [jsonBindingsI]
+                  case isInternallyTagged of
+                    (Just tag) -> 
+                      ctemplate "String _key = $1.unionNameFromItJson(\"$2\", _json);" [jsonBindingsI, tag]
+                    _ ->
+                      ctemplate "String _key = $1.unionNameFromJson(_json);" [jsonBindingsI]
                   <>
                   let returnStatements = [
                         if isVoidType (f_type (fd_field fd))
                         then ctemplate "return $1.$2$3();" [className0,typeArgs,fd_unionCtorName fd]
-                        else ctemplate "return $1.$2$3($4.unionValueFromJson(_json, $5.get()));" [className0,typeArgs,fd_unionCtorName fd, jsonBindingsI, fd_varName fd]
+                        else case isInternallyTagged of
+                          (Just tag) ->
+                            ctemplate "return $1.$2$3($4.unionValueFromItJson(\"$5\", _json, $6.get()));" [className0,typeArgs,fd_unionCtorName fd, jsonBindingsI, tag, fd_varName fd]
+                          _ ->
+                            ctemplate "return $1.$2$3($4.unionValueFromJson(_json, $5.get()));" [className0,typeArgs,fd_unionCtorName fd, jsonBindingsI, fd_varName fd]
                         | fd <- fieldDetails]
                   in ctemplate "if (_key.equals(\"$1\")) {" [fd_serializedName (head fieldDetails)]
                        <>
