@@ -10,11 +10,11 @@
         "moduleResolution": "node",
         "rootDir": ".",
         "forceConsistentCasingInFileNames": true,
-        "strict": true /* Enable all strict type-checking options. */,
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
+        "suppressImplicitAnyIndexErrors": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true
     },

@@ -13,9 +13,12 @@ export interface DeclResolver {
 };
 
 export function declResolver(...astMaps : ({[key:string] : AST.ScopedDecl})[]) {
-  const astMap = astMaps.reduce((prev, curr)=>{
-    return {...prev,...curr}
-  },{});
+  const astMap = {};
+  for (let map of astMaps) {
+    for (let scopedName in map) {
+      astMap[scopedName] = map[scopedName];
+    }
+  }
 
   function resolver(scopedName : AST.ScopedName) : AST.ScopedDecl {
     const scopedNameStr = scopedName.moduleName + "." + scopedName.name;
