@@ -14,6 +14,7 @@ cabal-version:       >=1.8
 data-files:          lib/adl/adlc/config/cpp.adl
                      lib/adl/adlc/config/haskell.adl
                      lib/adl/adlc/config/java.adl
+                     lib/adl/adlc/config/rust.adl
                      lib/adl/adlc/config/typescript.adl
                      lib/adl/sys/adlast.adl
                      lib/adl/sys/adlast.adl-java
@@ -24,10 +25,15 @@ data-files:          lib/adl/adlc/config/cpp.adl
                      lib/adl/sys/types.adl-cpp
                      lib/adl/sys/types.adl-hs
                      lib/adl/sys/types.adl-java
+                     lib/adl/sys/types.adl-rs
                      lib/haskell/runtime/ADL/Core.hs
                      lib/haskell/runtime/ADL/Core/Nullable.hs
                      lib/haskell/runtime/ADL/Core/StringMap.hs
+                     lib/haskell/runtime/ADL/Core/TypeProxy.hs
+                     lib/haskell/runtime/ADL/Core/TypeToken.hs
                      lib/haskell/runtime/ADL/Core/Value.hs
+                     lib/haskell/runtime/ADL/Sys/Adlast.hs
+                     lib/haskell/runtime/ADL/Sys/Types.hs
                      lib/java/runtime/org/adl/runtime/Builders.java
                      lib/java/runtime/org/adl/runtime/ByteArray.java
                      lib/java/runtime/org/adl/runtime/DynamicHelpers.java
