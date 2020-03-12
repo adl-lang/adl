@@ -28,3 +28,5 @@ code generators for several target languages, and runtimes for these languages.
 [java]:docs/backend-java.md
 [cpp]:docs/backend-cpp.md
 [rust]:docs/backend-rust.md
+
+![](https://github.com/timbod7/adl/workflows/Build%20and%20test/badge.svg)
