@@ -38,10 +38,8 @@ specialFile _ = False
 main = do
   repoRoot <- takeDirectory <$> stackCmd "path --project-root"
   localInstallRoot <- stackCmd "path --local-install-root"
-  version <- trim <$> readCreateProcess (shell ("git describe")) ""
-  platform <- (map toLower . trim) <$> readCreateProcess (shell ("uname")) ""
                                 
-  let zipFile = repoRoot </> "dist" </> "adl-" <> version <> "-" <> platform <> ".zip"
+  let zipFile = repoRoot </> "dist" </> "adl-bindist" <> ".zip"
 
   withSystemTempDirectory "distXXXX" $ \zipDir -> do
     copyFiles (localInstallRoot </> "bin") (zipDir </> "bin") (=="adlc")
