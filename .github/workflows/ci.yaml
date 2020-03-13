@@ -25,4 +25,4 @@ jobs:
             ${{ runner.os }}-
 
       - name: Build and run tests
-        run: "cd haskell; stack build adl-compiler; stack test --fast --no-terminal adl-compiler"
+        run: "cd haskell; stack build --fast adl-compiler; stack test --fast --no-terminal adl-compiler"

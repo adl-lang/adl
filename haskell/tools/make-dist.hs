@@ -10,23 +10,25 @@ import Data.Monoid((<>))
 import System.Directory(createDirectoryIfMissing,copyFile,getDirectoryContents)
 import System.FilePath((</>), takeDirectory)
 import System.IO.Temp(withSystemTempDirectory)
-import System.Posix.Files(isRegularFile,getFileStatus)
+import System.Posix.Files(isRegularFile, isDirectory, getFileStatus)
 import System.Process(readCreateProcess, shell, callCommand)
 
 trim :: String -> String
 trim = dropWhileEnd isSpace . dropWhile isSpace
 
-stackPath :: String -> IO String
-stackPath name = trim <$> readCreateProcess (shell ("stack path --" <> name)) ""
+stackCmd :: String -> IO String
+stackCmd args = trim <$> readCreateProcess (shell ("stack " <> args)) ""
 
 copyFiles :: FilePath -> FilePath -> (FilePath -> Bool) -> IO ()
 copyFiles src target match = do
   createDirectoryIfMissing True target
   files <- getDirectoryContents src
   for_ files $ \file -> do
-    isFile <- isRegularFile <$> getFileStatus (src </> file)
-    when (isFile && match file) $ do
+    status <- getFileStatus (src </> file)
+    when (isRegularFile status && match file) $ do
       copyFile (src </> file) (target  </> file)
+    when (isDirectory status && not (specialFile file)) $ do
+      copyFiles (src </> file) (target  </> file) match
 
 specialFile :: FilePath -> Bool
 specialFile "." = True
@@ -34,27 +36,19 @@ specialFile ".." = True
 specialFile _ = False
 
 main = do
-  repoRoot <- takeDirectory <$> stackPath "project-root"
-  localInstallRoot <- stackPath "local-install-root"
-  version <- trim <$> readCreateProcess (shell ("git describe")) ""
-  platform <- (map toLower . trim) <$> readCreateProcess (shell ("uname")) ""
+  repoRoot <- takeDirectory <$> stackCmd "path --project-root"
+  localInstallRoot <- stackCmd "path --local-install-root"
                                 
-  let zipFile = repoRoot </> "dist" </> "adl-" <> version <> "-" <> platform <> ".zip"
+  let zipFile = repoRoot </> "dist" </> "adl-bindist" <> ".zip"
 
   withSystemTempDirectory "distXXXX" $ \zipDir -> do
     copyFiles (localInstallRoot </> "bin") (zipDir </> "bin") (=="adlc")
 
-    let src =   repoRoot </> "adl/stdlib/sys"
-        target = zipDir </> "lib/adl/sys"
-    copyFiles src target (const True)
+    adllib <- stackCmd "run adlc -- show --adlstdlib"
 
-    let src =   repoRoot </> "haskell/compiler/lib/adl/adlc/config"
-        target = zipDir </> "lib/adl/adlc/config"
+    let src =  takeDirectory adllib
+        target = zipDir </> "lib"
     copyFiles src target (const True)
-
-    let src =   repoRoot </> "java/runtime/src/main/java/org/adl/runtime"
-        target = zipDir </> "lib/java/runtime/org/adl/runtime"
-    copyFiles src target (isSuffixOf ".java")
 
     putStrLn ("creating " <> zipFile)
     createDirectoryIfMissing True (takeDirectory zipFile)
