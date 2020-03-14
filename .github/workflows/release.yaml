@@ -2,7 +2,7 @@ name: New release
 on:
   push:
     tags:
-      - v*
+      - v[0-9]*
 
 jobs:
   build:
@@ -44,6 +44,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+    - name: Determine version
+      id: version
+      run: "echo ::set-output name=version::${GITHUB_REF:11}"
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1.0.0
@@ -54,7 +58,7 @@ jobs:
         release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
-
+     
     - name: Fetch macOS build
       uses: actions/download-artifact@v1
       with:
@@ -74,7 +78,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist-macOS/adl-bindist.zip
-        asset_name: adl-bindist-${{ github.ref }}-osx.zip
+        asset_name: adl-bindist-${{ steps.version.outputs.version }}-osx.zip
         asset_content_type: application/zip
 
     - name: Upload linux build
@@ -84,5 +88,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist-linux/adl-bindist.zip
-        asset_name: adl-bindist-${{ github.ref }}-linux.zip
+        asset_name: adl-bindist-${{ steps.version.outputs.version }}-linux.zip
         asset_content_type: application/zip
