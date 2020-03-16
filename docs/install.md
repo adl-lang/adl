@@ -1,3 +1,7 @@
+# Binary releases
+
+As of version 0.13, binary releases for osx and linux are published on the [releases][] page.
+
 # Building from source
 
 The build process relies on [stack][].
