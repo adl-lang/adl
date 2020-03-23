@@ -22,6 +22,12 @@ export interface U2_V {
 
 export type U2 = U2_V;
 
+export interface U2Opts {
+  v: number;
+}
+
+export function makeU2<K extends keyof U2Opts>(kind: K, value: U2Opts[K]) { return {kind, value}; }
+
 const U2_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"nothing"},"name":"v","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"U2","version":{"kind":"nothing"}}};
 
@@ -37,6 +43,12 @@ export interface U3_V {
 }
 
 export type U3 = U3_V;
+
+export interface U3Opts {
+  v: number;
+}
+
+export function makeU3<K extends keyof U3Opts>(kind: K, value: U3Opts[K]) { return {kind, value}; }
 
 const U3_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":100},"name":"v","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"U3","version":{"kind":"nothing"}}};
@@ -77,6 +89,12 @@ export interface U4_V {
 
 export type U4 = U4_V;
 
+export interface U4Opts {
+  v: S1;
+}
+
+export function makeU4<K extends keyof U4Opts>(kind: K, value: U4Opts[K]) { return {kind, value}; }
+
 const U4_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"nothing"},"name":"v","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"S1"}},"parameters":[]}}]}},"name":"U4","version":{"kind":"nothing"}}};
 
@@ -92,6 +110,12 @@ export interface U5_V {
 }
 
 export type U5 = U5_V;
+
+export interface U5Opts {
+  v: S1;
+}
+
+export function makeU5<K extends keyof U5Opts>(kind: K, value: U5Opts[K]) { return {kind, value}; }
 
 const U5_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":{"f":200}},"name":"v","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"S1"}},"parameters":[]}}]}},"name":"U5","version":{"kind":"nothing"}}};
@@ -109,6 +133,12 @@ export interface U6_V {
 
 export type U6 = U6_V;
 
+export interface U6Opts {
+  v: U3;
+}
+
+export function makeU6<K extends keyof U6Opts>(kind: K, value: U6Opts[K]) { return {kind, value}; }
+
 const U6_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"nothing"},"name":"v","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U3"}},"parameters":[]}}]}},"name":"U6","version":{"kind":"nothing"}}};
 
@@ -124,6 +154,12 @@ export interface U7_V {
 }
 
 export type U7 = U7_V;
+
+export interface U7Opts {
+  v: U3;
+}
+
+export function makeU7<K extends keyof U7Opts>(kind: K, value: U7Opts[K]) { return {kind, value}; }
 
 const U7_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"just","value":{"v":75}},"name":"v","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U3"}},"parameters":[]}}]}},"name":"U7","version":{"kind":"nothing"}}};
@@ -144,6 +180,13 @@ export interface U8_V2 {
 }
 
 export type U8 = U8_V1 | U8_V2;
+
+export interface U8Opts {
+  v1: S1;
+  v2: number;
+}
+
+export function makeU8<K extends keyof U8Opts>(kind: K, value: U8Opts[K]) { return {kind, value}; }
 
 const U8_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"S1"}},"parameters":[]}},{"annotations":[],"serializedName":"v2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}}]}},"name":"U8","version":{"kind":"nothing"}}};
@@ -167,6 +210,14 @@ export interface U9_V3<_T> {
 }
 
 export type U9<T> = U9_V1<T> | U9_V2<T> | U9_V3<T>;
+
+export interface U9Opts<T> {
+  v1: T;
+  v2: number;
+  v3: null;
+}
+
+export function makeU9<T, K extends keyof U9Opts<T>>(kind: K, value: U9Opts<T>[K]) { return {kind, value}; }
 
 const U9_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"v1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"v2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"v3","default":{"kind":"nothing"},"name":"v3","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U9","version":{"kind":"nothing"}}};
@@ -215,6 +266,13 @@ export interface List_Cell<T> {
 }
 
 export type List<T> = List_Null<T> | List_Cell<T>;
+
+export interface ListOpts<T> {
+  null: null;
+  cell: Cell<T>;
+}
+
+export function makeList<T, K extends keyof ListOpts<T>>(kind: K, value: ListOpts<T>[K]) { return {kind, value}; }
 
 const List_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"null","default":{"kind":"nothing"},"name":"null","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"cell","default":{"kind":"nothing"},"name":"cell","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"Cell"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"List","version":{"kind":"nothing"}}};

@@ -103,6 +103,14 @@ export interface U_F_void {
 
 export type U = U_F_int | U_F_string | U_F_void;
 
+export interface UOpts {
+  f_int: number;
+  f_string: string;
+  f_void: null;
+}
+
+export function makeU<K extends keyof UOpts>(kind: K, value: UOpts[K]) { return {kind, value}; }
+
 const U_AST : ADL.ScopedDecl =
   {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f_int","default":{"kind":"nothing"},"name":"f_int","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"f_string","default":{"kind":"nothing"},"name":"f_string","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f_void","default":{"kind":"nothing"},"name":"f_void","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U","version":{"kind":"nothing"}}};
 
