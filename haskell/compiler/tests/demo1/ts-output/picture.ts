@@ -21,6 +21,15 @@ export interface Picture_Translated {
 
 export type Picture = Picture_Circle | Picture_Rectangle | Picture_Composed | Picture_Translated;
 
+export interface PictureOpts {
+  circle: Circle;
+  rectangle: Rectangle;
+  composed: Picture[];
+  translated: Translated<Picture>;
+}
+
+export function makePicture<K extends keyof PictureOpts>(kind: K, value: PictureOpts[K]) { return {kind, value}; }
+
 const Picture_AST : ADL.ScopedDecl =
   {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"circle","default":{"kind":"nothing"},"name":"circle","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Circle"}},"parameters":[]}},{"annotations":[],"serializedName":"rectangle","default":{"kind":"nothing"},"name":"rectangle","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Rectangle"}},"parameters":[]}},{"annotations":[],"serializedName":"composed","default":{"kind":"nothing"},"name":"composed","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}},"parameters":[]}]}},{"annotations":[],"serializedName":"translated","default":{"kind":"nothing"},"name":"translated","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Translated"}},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}},"parameters":[]}]}}]}},"name":"Picture","version":{"kind":"nothing"}}};
 

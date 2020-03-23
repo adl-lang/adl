@@ -77,6 +77,14 @@ export interface TypeRef_Reference {
 
 export type TypeRef = TypeRef_Primitive | TypeRef_TypeParam | TypeRef_Reference;
 
+export interface TypeRefOpts {
+  primitive: Ident;
+  typeParam: Ident;
+  reference: ScopedName;
+}
+
+export function makeTypeRef<K extends keyof TypeRefOpts>(kind: K, value: TypeRefOpts[K]) { return {kind, value}; }
+
 const TypeRef_AST : ADL.ScopedDecl =
   {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"primitive","default":{"kind":"nothing"},"name":"primitive","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}},{"annotations":[],"serializedName":"typeParam","default":{"kind":"nothing"},"name":"typeParam","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}},{"annotations":[],"serializedName":"reference","default":{"kind":"nothing"},"name":"reference","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ScopedName"}},"parameters":[]}}]}},"name":"TypeRef","version":{"kind":"nothing"}}};
 
@@ -273,6 +281,15 @@ export interface DeclType_Newtype_ {
 
 export type DeclType = DeclType_Struct_ | DeclType_Union_ | DeclType_Type_ | DeclType_Newtype_;
 
+export interface DeclTypeOpts {
+  struct_: Struct;
+  union_: Union;
+  type_: TypeDef;
+  newtype_: NewType;
+}
+
+export function makeDeclType<K extends keyof DeclTypeOpts>(kind: K, value: DeclTypeOpts[K]) { return {kind, value}; }
+
 const DeclType_AST : ADL.ScopedDecl =
   {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"struct_","default":{"kind":"nothing"},"name":"struct_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Struct"}},"parameters":[]}},{"annotations":[],"serializedName":"union_","default":{"kind":"nothing"},"name":"union_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Union"}},"parameters":[]}},{"annotations":[],"serializedName":"type_","default":{"kind":"nothing"},"name":"type_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeDef"}},"parameters":[]}},{"annotations":[],"serializedName":"newtype_","default":{"kind":"nothing"},"name":"newtype_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"NewType"}},"parameters":[]}}]}},"name":"DeclType","version":{"kind":"nothing"}}};
 
@@ -361,6 +378,13 @@ export interface Import_ScopedName {
 }
 
 export type Import = Import_ModuleName | Import_ScopedName;
+
+export interface ImportOpts {
+  moduleName: ModuleName;
+  scopedName: ScopedName;
+}
+
+export function makeImport<K extends keyof ImportOpts>(kind: K, value: ImportOpts[K]) { return {kind, value}; }
 
 const Import_AST : ADL.ScopedDecl =
   {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"moduleName","default":{"kind":"nothing"},"name":"moduleName","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}},"parameters":[]}},{"annotations":[],"serializedName":"scopedName","default":{"kind":"nothing"},"name":"scopedName","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ScopedName"}},"parameters":[]}}]}},"name":"Import","version":{"kind":"nothing"}}};

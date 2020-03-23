@@ -39,6 +39,13 @@ export interface Either_Right<_T1, T2> {
 
 export type Either<T1, T2> = Either_Left<T1, T2> | Either_Right<T1, T2>;
 
+export interface EitherOpts<T1, T2> {
+  left: T1;
+  right: T2;
+}
+
+export function makeEither<T1, T2, K extends keyof EitherOpts<T1, T2>>(kind: K, value: EitherOpts<T1, T2>[K]) { return {kind, value}; }
+
 const Either_AST : ADL.ScopedDecl =
   {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T1","T2"],"fields":[{"annotations":[],"serializedName":"left","default":{"kind":"nothing"},"name":"left","typeExpr":{"typeRef":{"kind":"typeParam","value":"T1"},"parameters":[]}},{"annotations":[],"serializedName":"right","default":{"kind":"nothing"},"name":"right","typeExpr":{"typeRef":{"kind":"typeParam","value":"T2"},"parameters":[]}}]}},"name":"Either","version":{"kind":"nothing"}}};
 
@@ -57,6 +64,13 @@ export interface Maybe_Just<T> {
 }
 
 export type Maybe<T> = Maybe_Nothing<T> | Maybe_Just<T>;
+
+export interface MaybeOpts<T> {
+  nothing: null;
+  just: T;
+}
+
+export function makeMaybe<T, K extends keyof MaybeOpts<T>>(kind: K, value: MaybeOpts<T>[K]) { return {kind, value}; }
 
 const Maybe_AST : ADL.ScopedDecl =
   {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"nothing","default":{"kind":"nothing"},"name":"nothing","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"just","default":{"kind":"nothing"},"name":"just","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Maybe","version":{"kind":"nothing"}}};
@@ -77,6 +91,13 @@ export interface Error_Error<_T> {
 }
 
 export type Error<T> = Error_Value<T> | Error_Error<T>;
+
+export interface ErrorOpts<T> {
+  value: T;
+  error: string;
+}
+
+export function makeError<T, K extends keyof ErrorOpts<T>>(kind: K, value: ErrorOpts<T>[K]) { return {kind, value}; }
 
 const Error_AST : ADL.ScopedDecl =
   {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"value","default":{"kind":"nothing"},"name":"value","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"error","default":{"kind":"nothing"},"name":"error","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"Error","version":{"kind":"nothing"}}};
