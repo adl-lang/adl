@@ -150,6 +150,8 @@ genUnionInterface _ decl union = do
   fds <- mapM genFieldDetails (u_fields union)
   addDeclaration (renderUnionFieldsAsInterfaces decl union fds)
   addDeclaration (renderUnionChoice decl union fds)
+  addDeclaration (renderUnionChoicesObject decl union fds)
+  addDeclaration (renderUnionFactory decl union fds)
 
 renderUnionChoice :: CDecl -> Union CResolvedType -> [FieldDetails] -> Code
 renderUnionChoice decl union fds =
@@ -159,6 +161,22 @@ renderUnionChoice decl union fds =
     getChoiceName fd = d_name decl <> "_" <> capitalise (fdName fd) <> renderedParameters
     renderedComments = renderCommentForDeclaration decl
     renderedParameters = typeParamsExpr typeParams
+
+-- Render an interface such that the keys and values give the union kinds and values.
+renderUnionChoicesObject :: CDecl -> Union CResolvedType -> [FieldDetails] -> Code
+renderUnionChoicesObject decl union fds =
+  renderInterface (d_name decl <> "Opts") typeParams fds False
+  where
+    typeParams = prefixUnusedTypeParams (isTypeParamUsedInFields (u_fields union)) (u_typeParams union)
+
+-- Render makeXxx function for union taking kind & value args
+renderUnionFactory :: CDecl -> Union CResolvedType -> [FieldDetails] -> Code
+renderUnionFactory decl union _ =
+  ctemplate "export function make$1$2(kind: K, value: $1Opts$3[K]) { return {kind, value}; }" [d_name decl, renderedParametersWithK, renderedParameters]
+  where
+    typeParams = prefixUnusedTypeParams (isTypeParamUsedInFields (u_fields union)) (u_typeParams union)
+    renderedParameters = typeParamsExpr typeParams
+    renderedParametersWithK = typeParamsExpr (typeParams ++ [T.pack "K extends keyof " <> d_name decl <> T.pack "Opts" <> renderedParameters])
 
 renderUnionFieldsAsInterfaces :: CDecl -> Union CResolvedType -> [FieldDetails] -> Code
 renderUnionFieldsAsInterfaces decl union (fd:fds) =
