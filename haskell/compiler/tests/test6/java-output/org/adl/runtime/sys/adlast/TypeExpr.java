@@ -118,10 +118,10 @@ public class TypeExpr {
     }
 
     @Override
-    public org.adl.runtime.sys.adlast.TypeExpr typeExpr() {
+    public TypeExpr typeExpr() {
       ScopedName scopedName = new ScopedName("sys.adlast", "TypeExpr");
-      ArrayList<org.adl.runtime.sys.adlast.TypeExpr> params = new ArrayList<>();
-      return new org.adl.runtime.sys.adlast.TypeExpr(TypeRef.reference(scopedName), params);
+      ArrayList<TypeExpr> params = new ArrayList<>();
+      return new TypeExpr(TypeRef.reference(scopedName), params);
     }
     @Override
     public JsonBinding<TypeExpr> jsonBinding() {
@@ -133,7 +133,7 @@ public class TypeExpr {
 
   public static JsonBinding<TypeExpr> jsonBinding() {
     final Lazy<JsonBinding<TypeRef>> typeRef = new Lazy<>(() -> TypeRef.jsonBinding());
-    final Lazy<JsonBinding<ArrayList<TypeExpr>>> parameters = new Lazy<>(() -> JsonBindings.arrayList(org.adl.runtime.sys.adlast.TypeExpr.jsonBinding()));
+    final Lazy<JsonBinding<ArrayList<TypeExpr>>> parameters = new Lazy<>(() -> JsonBindings.arrayList(TypeExpr.jsonBinding()));
     final Factory<TypeExpr> _factory = FACTORY;
 
     return new JsonBinding<TypeExpr>() {

@@ -363,6 +363,9 @@ runTests = do
     it "generated code for SerializedWithInternalTag union annotation" $ do
       collectResults (runJavaBackend1 "test26/input/test26.adl")
         `shouldReturn` MatchOutput
+    it "generated code for types that reference another type of the same name" $ do
+      collectResults (runJavaBackend1 "test27/input/test27.adl")
+        `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runJavaBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput

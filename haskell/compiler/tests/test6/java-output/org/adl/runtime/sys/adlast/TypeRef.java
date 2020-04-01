@@ -144,7 +144,7 @@ public class TypeRef {
     public TypeExpr typeExpr() {
       ScopedName scopedName = new ScopedName("sys.adlast", "TypeRef");
       ArrayList<TypeExpr> params = new ArrayList<>();
-      return new TypeExpr(org.adl.runtime.sys.adlast.TypeRef.reference(scopedName), params);
+      return new TypeExpr(TypeRef.reference(scopedName), params);
     }
 
     @Override

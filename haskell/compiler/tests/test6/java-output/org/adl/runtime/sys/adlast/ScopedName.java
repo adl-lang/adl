@@ -119,7 +119,7 @@ public class ScopedName {
 
     @Override
     public TypeExpr typeExpr() {
-      org.adl.runtime.sys.adlast.ScopedName scopedName = new org.adl.runtime.sys.adlast.ScopedName("sys.adlast", "ScopedName");
+      ScopedName scopedName = new ScopedName("sys.adlast", "ScopedName");
       ArrayList<TypeExpr> params = new ArrayList<>();
       return new TypeExpr(TypeRef.reference(scopedName), params);
     }
