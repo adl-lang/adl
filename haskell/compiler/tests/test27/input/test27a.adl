@@ -1,0 +1,11 @@
+module test27a {
+   
+struct Message {
+  String field;
+};
+
+struct Message2 {
+  String field2;
+};
+
+};

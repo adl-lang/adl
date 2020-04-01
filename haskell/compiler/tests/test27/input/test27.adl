@@ -1,0 +1,9 @@
+module test27 {
+
+struct Message {
+  test27a.Message other;
+  test27a.Message2 other2;
+};
+
+};
+

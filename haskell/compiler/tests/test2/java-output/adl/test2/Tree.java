@@ -139,7 +139,7 @@ public class Tree<T> {
 
   public static<T> JsonBinding<Tree<T>> jsonBinding(JsonBinding<T> bindingT) {
     final Lazy<JsonBinding<T>> value = new Lazy<>(() -> bindingT);
-    final Lazy<JsonBinding<ArrayList<Tree<T>>>> children = new Lazy<>(() -> JsonBindings.arrayList(adl.test2.Tree.jsonBinding(bindingT)));
+    final Lazy<JsonBinding<ArrayList<Tree<T>>>> children = new Lazy<>(() -> JsonBindings.arrayList(Tree.jsonBinding(bindingT)));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<Tree<T>> _factory = factory(bindingT.factory());
 

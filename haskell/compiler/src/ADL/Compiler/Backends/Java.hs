@@ -130,8 +130,7 @@ generateStruct codeProfile moduleName javaPackageFn decl struct =  execState gen
       args -> "<" <> commaSep (map unreserveWord args) <> ">"
 
     gen = do
-      fieldDetails <- mapM genFieldDetails (s_fields struct)
-      generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
+      fieldDetails <- generateCoreStruct codeProfile moduleName javaPackageFn decl struct
 
       -- Json
       generateStructJson codeProfile decl struct fieldDetails
@@ -165,8 +164,7 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState g
       }
 
     gen = do
-      fieldDetails <- mapM genFieldDetails (s_fields struct)
-      generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
+      fieldDetails <- generateCoreStruct codeProfile moduleName javaPackageFn decl struct
 
       -- Json
       generateNewtypeJson codeProfile decl newtype_ (fd_memberVarName (head fieldDetails))
@@ -176,8 +174,8 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState g
         generateStructParcelable codeProfile decl struct fieldDetails
 
 generateCoreStruct :: CodeGenProfile -> ModuleName -> JavaPackageFn
-                   -> CDecl -> Struct CResolvedType -> [FieldDetails] -> CState ()
-generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails =  gen
+                   -> CDecl -> Struct CResolvedType -> CState [FieldDetails]
+generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
   where
     className = unreserveWord (d_name decl)
     state0 = classFile codeProfile moduleName javaPackageFn classDecl
@@ -187,9 +185,11 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
       [] -> ""
       args -> "<" <> commaSep (map unreserveWord args) <> ">"
     gen = do
+      addImport (javaClass (javaPackageFn moduleName) className)
+
       setDocString (generateDocString (d_annotations decl))
 
-      preventImport className
+      fieldDetails <- mapM genFieldDetails (s_fields struct)
       for_ fieldDetails (\fd -> preventImport (fd_memberVarName fd))
       for_ fieldDetails (\fd -> preventImport (fd_varName fd))
 
@@ -398,6 +398,8 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct fieldDetails
         else do
           addMethod factory
 
+      return fieldDetails
+
 data UnionType = AllVoids | NoVoids | Mixed
 
 generateUnion :: CodeGenProfile -> ModuleName -> JavaPackageFn -> CDecl -> Union CResolvedType -> ClassFile
@@ -422,17 +424,18 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
         voidTypes = [isVoidType (f_type f) | f <- u_fields union]
 
     gen = do
+      addImport (javaClass (javaPackageFn moduleName) className)
+      preventImport discVar
+      preventImport valueVar
+
       setDocString (generateDocString (d_annotations decl))
       fieldDetails <- mapM genFieldDetails (u_fields union)
       fieldDetail0 <- case fieldDetails of
         [] -> error "BUG: unions with no fields are illegal"
         (fd:_) -> return fd
 
-      preventImport className
       for_ fieldDetails (\fd -> preventImport (fd_memberVarName fd))
       for_ fieldDetails (\fd -> preventImport (fd_varName fd))
-      preventImport discVar
-      preventImport valueVar
 
       objectsClass <- addImport "java.util.Objects"
 

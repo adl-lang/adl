@@ -186,8 +186,8 @@ public class Picture {
   public static JsonBinding<Picture> jsonBinding() {
     final Lazy<JsonBinding<Circle>> circle = new Lazy<>(() -> Circle.jsonBinding());
     final Lazy<JsonBinding<Rectangle>> rectangle = new Lazy<>(() -> Rectangle.jsonBinding());
-    final Lazy<JsonBinding<ArrayList<Picture>>> composed = new Lazy<>(() -> JsonBindings.arrayList(adl.picture.Picture.jsonBinding()));
-    final Lazy<JsonBinding<Translated<Picture>>> translated = new Lazy<>(() -> Translated.jsonBinding(adl.picture.Picture.jsonBinding()));
+    final Lazy<JsonBinding<ArrayList<Picture>>> composed = new Lazy<>(() -> JsonBindings.arrayList(Picture.jsonBinding()));
+    final Lazy<JsonBinding<Translated<Picture>>> translated = new Lazy<>(() -> Translated.jsonBinding(Picture.jsonBinding()));
     final Factory<Picture> _factory = FACTORY;
 
     return new JsonBinding<Picture>() {
