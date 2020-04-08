@@ -65,5 +65,5 @@ generateCombinedModuleFile af writeFile modulePaths = do
   let modulesByName = mconcat (map merge1 allModules)
   liftIO $ writeFile (JSON.encodePretty' JSON.defConfig (adlToJson modulesByName))
   where
-    keyedModule m = SM.singleton (moduleNameToA2 (m_name m)) (moduleToA2 m)
+    keyedModule m = SM.singleton (moduleNameToA2 (m_name m)) (moduleToA2 (fullyScopedModule m))
     merge1 (m,ms) = mconcat (keyedModule m : (map keyedModule ms))
