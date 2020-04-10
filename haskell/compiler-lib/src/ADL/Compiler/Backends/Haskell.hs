@@ -260,7 +260,7 @@ hTypeExprB m (TypeExpr (RT_Primitive P_TypeToken) [te]) = do
   argt <- hTypeExprB m te
   tmod <- typeTokenModule
   importQualifiedModule tmod
-  return (template "$1.TypeToken ($2)" [unHaskellModule tmod, argt])
+  return (template "($1.TypeToken $2)" [unHaskellModule tmod, argt])
 hTypeExprB m (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   argt <- hTypeExprB m te
   importMap
@@ -592,6 +592,7 @@ generateLiteral te v =  generateLV Map.empty te v
 
     generateType m te _ = do
       tmod <- typeTokenModule
+      importQualifiedModule tmod
       return (template "($1.TypeToken)" [unHaskellModule tmod])
 
     generateStruct m sn d s tes (JS.Object hm) = do

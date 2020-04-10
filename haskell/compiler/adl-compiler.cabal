@@ -29,7 +29,6 @@ data-files:          lib/adl/adlc/config/cpp.adl
                      lib/haskell/runtime/ADL/Core.hs
                      lib/haskell/runtime/ADL/Core/Nullable.hs
                      lib/haskell/runtime/ADL/Core/StringMap.hs
-                     lib/haskell/runtime/ADL/Core/TypeProxy.hs
                      lib/haskell/runtime/ADL/Core/TypeToken.hs
                      lib/haskell/runtime/ADL/Core/Value.hs
                      lib/haskell/runtime/ADL/Sys/Adlast.hs
