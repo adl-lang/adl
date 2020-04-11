@@ -7,6 +7,12 @@ module ADL.Test2(
     S3(..),
     S4(..),
     Tree(..),
+    mkS0,
+    mkS1,
+    mkS2,
+    mkS3,
+    mkS4,
+    mkTree,
 ) where
 
 import ADL.Core

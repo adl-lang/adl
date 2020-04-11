@@ -13,6 +13,9 @@ module ADL.Test5(
     U7(..),
     U8(..),
     U9(..),
+    mkCell,
+    mkS,
+    mkS1,
 ) where
 
 import ADL.Core

@@ -2,6 +2,7 @@
 module ADL.Test20(
     Person(..),
     Role(..),
+    mkPerson,
 ) where
 
 import ADL.Core

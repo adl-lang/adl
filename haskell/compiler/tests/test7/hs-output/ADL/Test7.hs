@@ -20,6 +20,8 @@ module ADL.Test7(
     String4,
     String5(..),
     String6(..),
+    mkPoint,
+    mkS,
 ) where
 
 import ADL.Core

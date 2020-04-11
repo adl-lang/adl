@@ -388,7 +388,8 @@ generateDecl lname d@(Decl{d_type=(Decl_Struct s)}) = do
       else do
         generateStructDataType lname mn d s
     nl
-    generateMkStructFunction lname mn d s
+    mkfn <- generateMkStructFunction lname mn d s
+    addExport mkfn
     nl
     if (null (s_fields s))
       then generateNullStructADLInstance lname mn d s
@@ -441,7 +442,7 @@ generateStructDataType lname mn d s = do
         wl "}"
         derivingStdClasses (stdClassesForFields (s_fields s))
 
-generateMkStructFunction :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()
+generateMkStructFunction :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen T.Text
 generateMkStructFunction lname mn d s = do
   args <- forM (s_fields s) $ \f -> do
     case f_default f of
@@ -459,6 +460,7 @@ generateMkStructFunction lname mn d s = do
 
   wt "$1 :: $2 $3$4" [fnname, T.intercalate " " [p <> " ->" | p <- paramtypes], lname, hTParams (s_typeParams s)]
   wt "$1 $2 = $3 $4" [fnname, T.intercalate " "  params, lname, T.intercalate " " ctorArgs]
+  return fnname
   where
 
 generateNullStructDataType :: Ident -> ModuleName -> CDecl -> Struct CResolvedType -> HGen ()

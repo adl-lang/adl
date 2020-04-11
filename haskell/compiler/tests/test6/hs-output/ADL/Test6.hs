@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Test6(
     S(..),
+    mkS,
 ) where
 
 import ADL.Core

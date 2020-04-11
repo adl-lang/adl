@@ -4,6 +4,8 @@ module ADL.Test18(
     X2(..),
     Y1(..),
     Y2(..),
+    mkX2,
+    mkY2,
 ) where
 
 import ADL.Core

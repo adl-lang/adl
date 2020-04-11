@@ -4,6 +4,9 @@ module ADL.Test4(
     Date,
     S(..),
     S2(..),
+    mkCDate,
+    mkS,
+    mkS2,
 ) where
 
 import ADL.Core

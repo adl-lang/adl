@@ -6,6 +6,10 @@ module ADL.Test3(
     S(..),
     U(..),
     XY(..),
+    mkA,
+    mkB,
+    mkS,
+    mkXY,
 ) where
 
 import ADL.Core

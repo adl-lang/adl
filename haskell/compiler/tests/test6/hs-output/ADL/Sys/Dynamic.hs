@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Sys.Dynamic(
     Dynamic(..),
+    mkDynamic,
 ) where
 
 import ADL.Core

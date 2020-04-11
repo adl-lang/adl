@@ -4,6 +4,9 @@ module ADL.Picture(
     Picture(..),
     Rectangle(..),
     Translated(..),
+    mkCircle,
+    mkRectangle,
+    mkTranslated,
 ) where
 
 import ADL.Core

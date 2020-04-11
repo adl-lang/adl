@@ -3,6 +3,9 @@ module ADL.Test24(
     CrudReqs(..),
     PostReq(..),
     Service(..),
+    mkCrudReqs,
+    mkPostReq,
+    mkService,
 ) where
 
 import ADL.Core
@@ -42,8 +45,8 @@ instance (AdlValue t) => AdlValue (CrudReqs t) where
 
 data PostReq i o = PostReq
     { postReq_path :: T.Text
-    , postReq_reqBodyType :: ADL.Core.TypeToken.TypeToken (i)
-    , postReq_respType :: ADL.Core.TypeToken.TypeToken (o)
+    , postReq_reqBodyType :: (ADL.Core.TypeToken.TypeToken i)
+    , postReq_respType :: (ADL.Core.TypeToken.TypeToken o)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
