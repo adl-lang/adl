@@ -3,8 +3,25 @@ import * as AST from './sys/adlast';
 import * as b64 from 'base64-js';
 import {isVoid, isEnum, scopedNamesEqual} from './utils';
 
-/** A type alias for json serialised values */
-type Json = {}|null;
+/** A type for json serialised values */
+
+export type Json = {} | null;
+export type JsonObject = { [member: string]: Json };
+export type JsonArray = Json[];
+
+function asJsonObject(jv: Json): JsonObject | undefined {
+  if (jv instanceof Object && !(jv instanceof Array)) {
+    return jv as JsonObject;
+  }
+  return undefined;
+}
+
+function asJsonArray(jv: Json): JsonArray | undefined{
+  if(jv instanceof Array) {
+    return jv as JsonArray;
+  }
+  return undefined;
+}
 
 /** A type alias for values of an Unknown type */
 type Unknown = {}|null;
@@ -57,7 +74,7 @@ export interface JsonParseException {
 
 // Map a JsonException to an Error value
 export function mapJsonException(exception:{}): {} {
-  if (exception && exception['kind'] == "JsonParseException") {
+  if (exception && (exception as {kind:string})['kind'] == "JsonParseException") {
     const jserr: JsonParseException = exception as JsonParseException;
     return new Error(jserr.getMessage());
   } else {
@@ -161,14 +178,14 @@ function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params :
 function identityJsonBinding<T>(expected : string, predicate : (json : Json) => boolean) : JsonBinding0<T>{
 
   function toJson(v : T) : Json {
-    return v;
+    return (v as Unknown as Json);
   }
 
   function fromJson(json : Json) : T {
     if( !predicate(json)) {
       throw jsonParseException("expected " + expected);
     }
-    return json as T;
+    return json as Unknown as T;
   }
 
   return {toJson, fromJson};
@@ -197,11 +214,12 @@ function vectorJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bound
   }
 
   function fromJson(json : Json) : Unknown[] {
-      if (!(json instanceof Array)) {
+      const jarr = asJsonArray(json);
+      if (jarr == undefined) {
         throw jsonParseException('expected an array');
       }
       let result : Unknown[] = [];
-      json.forEach( (eljson,i) => {
+      jarr.forEach( (eljson:Json,i:number) => {
         try {
           result.push(elementBinding().fromJson(eljson));
         } catch(e) {
@@ -223,7 +241,7 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
   const elementBinding = once(() => buildJsonBinding(dresolver, texpr, boundTypeParams));
 
   function toJson(v : StringMap<Unknown>) : Json {
-    const result = {};
+    const result: JsonObject = {};
     for (let k in v) {
       result[k] = elementBinding().toJson(v[k]);
     }
@@ -231,13 +249,14 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
   }
 
   function fromJson(json : Json) : StringMap<Unknown> {
-    if (!(json instanceof Object)) {
+    const jobj = asJsonObject(json);
+    if (!jobj) {
       throw jsonParseException('expected an object');
     }
-    let result = {};
-    for (let k in json) {
+    let result: JsonObject  = {};
+    for (let k in jobj) {
       try {
-        result[k] = elementBinding().fromJson(json[k]);
+        result[k] = elementBinding().fromJson(jobj[k]);
       } catch(e) {
         if (isJsonParseException(e)) {
           e.pushField(k);
@@ -296,8 +315,9 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
     });
   });
 
-  function toJson(v: Unknown) : Json {
-    const json = {};
+  function toJson(v0: Unknown) : Json {
+    const v = v0 as {[key:string]:Unknown};
+    const json: JsonObject = {};
     fieldDetails.forEach( (fd) => {
       json[fd.field.serializedName] = fd.jsonBinding().toJson(v && v[fd.field.name]);
     });
@@ -305,13 +325,14 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
   }
 
   function fromJson(json: Json): Unknown {
-    if (!(json instanceof Object)) {
+    const jobj = asJsonObject(json);
+    if (!jobj) {
       throw jsonParseException("expected an object");
     }
 
-    const v = {};
+    const v : {[member:string]: Unknown} = {};
     fieldDetails.forEach( (fd) => {
-      if (json[fd.field.serializedName] === undefined) {
+      if (jobj[fd.field.serializedName] === undefined) {
         const defaultv = fd.buildDefault();
         if (defaultv === null)  {
           throw jsonParseException("missing struct field " + fd.field.serializedName );
@@ -320,7 +341,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
         }
       } else {
         try {
-          v[fd.field.name] = fd.jsonBinding().fromJson(json[fd.field.serializedName]);
+          v[fd.field.name] = fd.jsonBinding().fromJson(jobj[fd.field.serializedName]);
         } catch(e) {
           if (isJsonParseException(e)) {
             e.pushField(fd.field.serializedName);
@@ -337,7 +358,7 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
 
 function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params : AST.TypeExpr[], _boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
   const fieldSerializedNames : string[] = [];
-  const fieldNumbers = {};
+  const fieldNumbers : {[key:string]:number} = {};
   union.fields.forEach( (field,i) => {
     fieldSerializedNames.push(field.serializedName);
     fieldNumbers[field.serializedName] = i;
@@ -361,12 +382,18 @@ function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params :
   return {toJson, fromJson};
 }
 
+interface FieldDetails {
+  field : AST.Field;
+  isVoid : boolean;
+  jsonBinding : () => JsonBinding0<Unknown>;
+};
+
 function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
 
 
   const newBoundTypeParams = createBoundTypeParams(dresolver, union.typeParams, params, boundTypeParams);
-  const detailsByName = {};
-  const detailsBySerializedName = {};
+  const detailsByName : {[key: string]: FieldDetails} = {};
+  const detailsBySerializedName : {[key: string]: FieldDetails} = {};
   union.fields.forEach( (field) => {
     const details = {
       field : field,
@@ -383,7 +410,7 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
     if (details.isVoid) {
       return details.field.serializedName;
     } else {
-      const result = {};
+      const result: JsonObject = {};
       result[details.field.serializedName] = details.jsonBinding().toJson(v.value);
       return result;
     }
@@ -404,13 +431,15 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
         throw jsonParseException("union field " + json + "needs an associated value");
       }
       return { kind : details.field.name };
-    } else if (json instanceof Object) {
-      for (let k in json) {
+    }
+    const jobj = asJsonObject(json);
+    if (jobj) {
+      for (let k in jobj) {
         let details = lookupDetails(k);
         try {
           return {
             kind : details.field.name,
-            value : details.jsonBinding().fromJson(json[k])
+            value : details.jsonBinding().fromJson(jobj[k])
           }
         } catch(e) {
           if (isJsonParseException(e)) {

@@ -13,7 +13,7 @@ export interface DeclResolver {
 };
 
 export function declResolver(...astMaps : ({[key:string] : AST.ScopedDecl})[]) {
-  const astMap = {};
+  const astMap :  {[key:string] : AST.ScopedDecl} = {};
   for (let map of astMaps) {
     for (let scopedName in map) {
       astMap[scopedName] = map[scopedName];
