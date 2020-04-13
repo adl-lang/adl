@@ -3,6 +3,8 @@ module ADL.Adlc.Config.Haskell(
     HaskellCustomType(..),
     HaskellFieldPrefix,
     UnionConstructor(..),
+    mkHaskellCustomType,
+    mkUnionConstructor,
 ) where
 
 import ADL.Core

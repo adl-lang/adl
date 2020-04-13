@@ -3,6 +3,7 @@ module ADL.Adlc.Config.Java(
     JavaCustomType(..),
     JavaGenerate,
     JavaPackage,
+    mkJavaCustomType,
 ) where
 
 import ADL.Core

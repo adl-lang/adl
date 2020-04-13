@@ -2,6 +2,8 @@
 module ADL.Adlc.Config.Cpp(
     CppCustomType(..),
     Include(..),
+    mkCppCustomType,
+    mkInclude,
 ) where
 
 import ADL.Core

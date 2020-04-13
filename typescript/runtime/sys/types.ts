@@ -29,6 +29,13 @@ export interface Either_Right<_T1, T2> {
 
 export type Either<T1, T2> = Either_Left<T1, T2> | Either_Right<T1, T2>;
 
+export interface EitherOpts<T1, T2> {
+  left: T1;
+  right: T2;
+}
+
+export function makeEither<T1, T2, K extends keyof EitherOpts<T1, T2>>(kind: K, value: EitherOpts<T1, T2>[K]) { return {kind, value}; }
+
 export interface Maybe_Nothing<_T> {
   kind: 'nothing';
 }
@@ -38,6 +45,13 @@ export interface Maybe_Just<T> {
 }
 
 export type Maybe<T> = Maybe_Nothing<T> | Maybe_Just<T>;
+
+export interface MaybeOpts<T> {
+  nothing: null;
+  just: T;
+}
+
+export function makeMaybe<T, K extends keyof MaybeOpts<T>>(kind: K, value: MaybeOpts<T>[K]) { return {kind, value}; }
 
 export interface Error_Value<T> {
   kind: 'value';
@@ -49,6 +63,13 @@ export interface Error_Error<_T> {
 }
 
 export type Error<T> = Error_Value<T> | Error_Error<T>;
+
+export interface ErrorOpts<T> {
+  value: T;
+  error: string;
+}
+
+export function makeError<T, K extends keyof ErrorOpts<T>>(kind: K, value: ErrorOpts<T>[K]) { return {kind, value}; }
 
 export interface MapEntry<K, V> {
   key: K;

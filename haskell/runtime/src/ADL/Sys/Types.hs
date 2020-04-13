@@ -7,6 +7,7 @@ module ADL.Sys.Types(
     Maybe,
     Pair,
     Set,
+    mkMapEntry,
 ) where
 
 import ADL.Core

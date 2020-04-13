@@ -17,6 +17,16 @@ module ADL.Sys.Adlast(
     TypeExpr(..),
     TypeRef(..),
     Union(..),
+    mkDecl,
+    mkField,
+    mkModule,
+    mkNewType,
+    mkScopedDecl,
+    mkScopedName,
+    mkStruct,
+    mkTypeDef,
+    mkTypeExpr,
+    mkUnion,
 ) where
 
 import ADL.Core

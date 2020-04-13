@@ -3,6 +3,7 @@ module ADL.Adlc.Config.Rust(
     RustCustomType(..),
     RustGenerate,
     RustStorageModel(..),
+    mkRustCustomType,
 ) where
 
 import ADL.Core
