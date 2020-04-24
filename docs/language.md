@@ -159,8 +159,8 @@ it's standard library, appropriate custom mappings are used.
 # Default Values
 
 Default values can specified for fields. Such fields then become optional
-in serialized values, and hence facilitate backwards compatibility. Default
-literal values are specified in appropriate places in
+in language constructors and serialized values, and hence facilitate backwards
+compatibility. Default literal values are specified in appropriate places in
 the ADL definitions. A literal value is specified in JSON form, structured
 according to the json [serialization specification](serialization.md).
 
