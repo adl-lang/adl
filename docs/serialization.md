@@ -29,6 +29,7 @@ determined by the repeated application of these rules.
 | ByteArray                    | string containing base 64 encoded data                 |
 | `Vector<T>`                    | json array containing serialized values of type T      |
 | `StringMap<T>`                 | A json object containing values of type T              |
+| `Nullable<T>`                  | A serialized value T or null                           |
 
 [^1]: It's not clear that a json number is the best representation for
 64 bit values. The [json specification][jsonspec] doesn't specify a
