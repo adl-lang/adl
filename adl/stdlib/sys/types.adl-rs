@@ -25,4 +25,10 @@ annotation Pair RustCustomType {
   "helpers" : "{{STDLIBMODULE}}::customtypes::Pair",
   "generateOrigADLType" : "PairInternal"
   };
+
+annotation Result RustCustomType {
+  "rustname" : "{{STDLIBMODULE}}::customtypes::Result",
+  "helpers" : "{{STDLIBMODULE}}::customtypes::Result",
+  "generateOrigADLType" : "ResultInternal"
+  };
 };

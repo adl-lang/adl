@@ -108,6 +108,33 @@ export function texprError<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Error<T>
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Error"}}, parameters : [texprT.value]}};
 }
 
+export interface Result_Ok<T, _E> {
+  kind: 'ok';
+  value: T;
+}
+export interface Result_Error<_T, E> {
+  kind: 'error';
+  value: E;
+}
+
+export type Result<T, E> = Result_Ok<T, E> | Result_Error<T, E>;
+
+export interface ResultOpts<T, E> {
+  ok: T;
+  error: E;
+}
+
+export function makeResult<T, E, K extends keyof ResultOpts<T, E>>(kind: K, value: ResultOpts<T, E>[K]) { return {kind, value}; }
+
+const Result_AST : ADL.ScopedDecl =
+  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T","E"],"fields":[{"annotations":[],"serializedName":"ok","default":{"kind":"nothing"},"name":"ok","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"error","default":{"kind":"nothing"},"name":"error","typeExpr":{"typeRef":{"kind":"typeParam","value":"E"},"parameters":[]}}]}},"name":"Result","version":{"kind":"nothing"}}};
+
+export const snResult: ADL.ScopedName = {moduleName:"sys.types", name:"Result"};
+
+export function texprResult<T, E>(texprT : ADL.ATypeExpr<T>, texprE : ADL.ATypeExpr<E>): ADL.ATypeExpr<Result<T, E>> {
+  return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Result"}}, parameters : [texprT.value, texprE.value]}};
+}
+
 export interface MapEntry<K, V> {
   key: K;
   value: V;
@@ -161,6 +188,7 @@ export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "sys.types.Either" : Either_AST,
   "sys.types.Maybe" : Maybe_AST,
   "sys.types.Error" : Error_AST,
+  "sys.types.Result" : Result_AST,
   "sys.types.MapEntry" : MapEntry_AST,
   "sys.types.Map" : Map_AST,
   "sys.types.Set" : Set_AST

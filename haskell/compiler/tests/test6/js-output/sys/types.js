@@ -139,6 +139,31 @@ const Pair = {
   ]
 };
 
+const Result = {
+  name : "Result",
+  module : "sys.types",
+  kind : "union",
+  typevars : [["T","E"]],
+  fields : [
+    {
+      name : "ok",
+      type : {"var":"T"},
+      defaultv : null,
+      annotations : [
+      ]
+    },
+    {
+      name : "error",
+      type : {"var":"E"},
+      defaultv : null,
+      annotations : [
+      ]
+    }
+  ],
+  annotations : [
+  ]
+};
+
 const Set = {
   name : "Set",
   module : "sys.types",
@@ -152,6 +177,7 @@ const Set = {
 
 export const _ADL_TYPES = {
   "sys.types.Set" : Set,
+  "sys.types.Result" : Result,
   "sys.types.Pair" : Pair,
   "sys.types.Maybe" : Maybe,
   "sys.types.MapEntry" : MapEntry,
