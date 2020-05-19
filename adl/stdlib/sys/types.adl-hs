@@ -39,6 +39,18 @@ annotation Error HaskellCustomType {
     ]
   };
 
+annotation Result HaskellCustomType {
+  "haskellname" : "Result",
+  "haskellimports" : [],
+  "insertCode" : ["type Result a b = Prelude.Either a b"],
+  "generateOrigADLType" : "",
+  "structConstructor" : "",
+  "unionConstructors" : [
+    {"fieldName":"error", "constructor":"Prelude.Left"},
+    {"fieldName":"ok", "constructor":"Prelude.Right"}
+    ]
+  };
+
 annotation Pair HaskellCustomType {
   "haskellname" : "Pair",
   "haskellimports" : [],

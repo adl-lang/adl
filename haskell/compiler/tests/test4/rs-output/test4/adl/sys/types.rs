@@ -50,6 +50,15 @@ pub enum Error<T> {
 }
 
 #[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+pub enum ResultInternal<T, E> {
+  #[serde(rename="ok")]
+  Ok(T),
+
+  #[serde(rename="error")]
+  Error(E),
+}
+
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct MapEntry<K, V> {
   #[serde(rename="k")]
   pub key: K,

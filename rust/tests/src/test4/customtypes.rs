@@ -3,6 +3,7 @@ use chrono::Datelike;
 use serde::de;
 use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
+use std::result;
 
 use crate::test4::adl::test4::CDate0;
 
@@ -41,7 +42,7 @@ pub mod datehelpers {
 pub struct CDate(NaiveDate);
 
 impl Serialize for CDate {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -55,7 +56,7 @@ impl Serialize for CDate {
 }
 
 impl<'de> Deserialize<'de> for CDate {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {

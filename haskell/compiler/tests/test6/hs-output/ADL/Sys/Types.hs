@@ -6,6 +6,7 @@ module ADL.Sys.Types(
     MapEntry(..),
     Maybe,
     Pair,
+    Result,
     Set,
     mkMapEntry,
 ) where
@@ -61,6 +62,9 @@ type Maybe = Prelude.Maybe
 
 
 type Pair a b = (a,b)
+
+
+type Result a b = Prelude.Either a b
 
 
 type Set v = Data.Set.Set v

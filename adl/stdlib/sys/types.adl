@@ -26,6 +26,11 @@ union Error<T>
     String error;
 };
 
+union Result<T, E> {
+    T ok;
+    E error;
+};
+
 struct MapEntry<K,V>
 {
     @SerializedName "k"

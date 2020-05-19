@@ -6,6 +6,7 @@ module ADL.Sys.Types(
     MapEntry(..),
     Maybe,
     Pair,
+    Result(..),
     Set,
     mkMapEntry,
 ) where
@@ -60,6 +61,28 @@ type Maybe = Prelude.Maybe
 
 
 type Pair a b = (a,b)
+
+data Result t e
+    = Result_ok t
+    | Result_error e
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance (AdlValue t, AdlValue e) => AdlValue (Result t e) where
+    atype _ = T.concat
+        [ "sys.types.Result"
+        , "<", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy t)
+        , ",", atype (Data.Proxy.Proxy :: Data.Proxy.Proxy e)
+        , ">" ]
+    
+    jsonGen = genUnion (\jv -> case jv of
+        Result_ok v -> genUnionValue "ok" v
+        Result_error v -> genUnionValue "error" v
+        )
+    
+    jsonParser = parseUnion $ \disc -> case disc of
+        "ok" ->  parseUnionValue Result_ok
+        "error" ->  parseUnionValue Result_error
+        _ -> parseFail "expected a discriminator for Result (ok,error)" 
 
 
 type Set v = Set.Set v

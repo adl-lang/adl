@@ -1,12 +1,14 @@
 use crate::test4::adl::sys::types::MapInternal;
 use crate::test4::adl::sys::types::MaybeInternal;
 use crate::test4::adl::sys::types::PairInternal;
+use crate::test4::adl::sys::types::ResultInternal;
 use crate::test4::adl::sys::types::SetInternal;
 use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::Hash;
+use std::result;
 
 pub struct Maybe<T>(Option<T>);
 
@@ -21,7 +23,7 @@ impl<T> Maybe<T> {
 }
 
 impl<T: Serialize> Serialize for Maybe<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -34,7 +36,7 @@ impl<T: Serialize> Serialize for Maybe<T> {
 }
 
 impl<'de, T: Deserialize<'de>> Deserialize<'de> for Maybe<T> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -66,7 +68,7 @@ where
     K: Serialize + Eq + Hash,
     V: Serialize,
 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -83,12 +85,12 @@ where
     K: Deserialize<'de> + Eq + Hash,
     V: Deserialize<'de>,
 {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let m = MapInternal::<K, V>::deserialize(deserializer)?;
-        Result::Ok(Map::new(m.0))
+        Ok(Map::new(m.0))
     }
 }
 
@@ -107,7 +109,7 @@ impl<T> Serialize for Set<T>
 where
     T: Serialize + Eq + Hash,
 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -123,12 +125,12 @@ impl<'de, T> Deserialize<'de> for Set<T>
 where
     T: Deserialize<'de> + Eq + Hash,
 {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let m = SetInternal::<T>::deserialize(deserializer)?;
-        Result::Ok(Set::new(m.0))
+        Ok(Set::new(m.0))
     }
 }
 
@@ -145,7 +147,7 @@ where
     A: Serialize,
     B: Serialize,
 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -159,11 +161,57 @@ where
     A: Deserialize<'de>,
     B: Deserialize<'de>,
 {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let m = PairInternal::<A, B>::deserialize(deserializer)?;
-        Result::Ok(Pair((m.v_1, m.v_2)))
+        Ok(Pair((m.v_1, m.v_2)))
+    }
+}
+
+pub struct Result<T, E>(std::result::Result<T, E>);
+
+impl<T, E> Result<T, E> {
+    pub fn ok(value: T) -> Result<T, E> {
+        Result(Ok(value))
+    }
+
+    pub fn err(e: E) -> Result<T, E> {
+        Result(Err(e))
+    }
+}
+
+impl<T, E> Serialize for Result<T, E>
+where
+    T: Serialize,
+    E: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let m = match &self.0 {
+            Ok(v) => ResultInternal::Ok(v),
+            Err(e) => ResultInternal::Error(e),
+        };
+        m.serialize(serializer)
+    }
+}
+
+impl<'de, T, E> Deserialize<'de> for Result<T, E>
+where
+    T: Deserialize<'de>,
+    E: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let m = ResultInternal::deserialize(deserializer)?;
+        Ok(match m {
+            ResultInternal::Ok(v) => Result::ok(v),
+            ResultInternal::Error(e) => Result::err(e),
+        })
     }
 }

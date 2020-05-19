@@ -679,6 +679,214 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
 template <class A, class B>
 using Pair = std::pair<A,B>;
 
+template <class T, class E>
+class Result
+{
+public:
+    typedef T TType;
+    typedef E EType;
+    
+    Result();
+    static Result<T,E> mk_ok( const T & v );
+    static Result<T,E> mk_error( const E & v );
+    
+    Result( const Result<T,E> & );
+    ~Result();
+    Result<T,E> & operator=( const Result<T,E> & );
+    
+    enum DiscType
+    {
+        OK,
+        ERROR
+    };
+    
+    DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case OK: { vis.ok(ok()); break; }
+        case ERROR: { vis.error(error()); break; }
+        }
+    }
+    
+    bool is_ok() const { return d_ == OK; };
+    bool is_error() const { return d_ == ERROR; };
+    
+    T & ok() const;
+    E & error() const;
+    
+    const T & set_ok(const T & );
+    const E & set_error(const E & );
+    
+private:
+    Result( DiscType d, void * v);
+    
+    DiscType d_;
+    void *p_;
+    
+    static void free( DiscType d, void *v );
+    static void *copy( DiscType d, void *v );
+};
+
+template <class T, class E>
+bool operator<( const Result<T,E> &a, const Result<T,E> &b );
+template <class T, class E>
+bool operator==( const Result<T,E> &a, const Result<T,E> &b );
+
+template <class T, class E>
+typename Result<T,E>::DiscType Result<T,E>::d() const
+{
+    return d_;
+}
+
+template <class T, class E>
+inline T & Result<T,E>::ok() const
+{
+    if( d_ == OK )
+    {
+        return *(T *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T, class E>
+inline E & Result<T,E>::error() const
+{
+    if( d_ == ERROR )
+    {
+        return *(E *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T, class E>
+Result<T,E>::Result()
+    : d_(OK), p_(new T())
+{
+}
+
+template <class T, class E>
+Result<T,E> Result<T,E>::mk_ok( const T & v )
+{
+    return Result<T,E>( OK, new T(v) );
+}
+
+template <class T, class E>
+Result<T,E> Result<T,E>::mk_error( const E & v )
+{
+    return Result<T,E>( ERROR, new E(v) );
+}
+
+template <class T, class E>
+Result<T,E>::Result( const Result<T,E> & v )
+    : d_(v.d_), p_(copy(v.d_,v.p_))
+{
+}
+
+template <class T, class E>
+Result<T,E>::~Result()
+{
+    free(d_,p_);
+}
+
+template <class T, class E>
+Result<T,E> & Result<T,E>::operator=( const Result<T,E> & o )
+{
+    free(d_,p_);
+    d_ = o.d_;
+    p_ = copy( o.d_, o.p_ );
+    return *this;
+}
+
+template <class T, class E>
+const T & Result<T,E>::set_ok(const T &v)
+{
+    if( d_ == OK )
+    {
+        *(T *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = OK;
+        p_ = new T(v);
+    }
+    return *(T *)p_;
+}
+
+template <class T, class E>
+const E & Result<T,E>::set_error(const E &v)
+{
+    if( d_ == ERROR )
+    {
+        *(E *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = ERROR;
+        p_ = new E(v);
+    }
+    return *(E *)p_;
+}
+
+template <class T, class E>
+Result<T,E>::Result(DiscType d, void *p)
+    : d_(d), p_(p)
+{
+}
+
+template <class T, class E>
+void Result<T,E>::free(DiscType d, void *p)
+{
+    switch( d )
+    {
+        case OK: delete (T *)p; return;
+        case ERROR: delete (E *)p; return;
+    }
+}
+
+template <class T, class E>
+void * Result<T,E>::copy( DiscType d, void *p )
+{
+    switch( d )
+    {
+        case OK: return new T(*(T *)p);
+        case ERROR: return new E(*(E *)p);
+    }
+    return 0;
+}
+
+template <class T, class E>
+bool
+operator<( const Result<T,E> &a, const Result<T,E> &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case Result<T,E>::OK: return a.ok() < b.ok();
+        case Result<T,E>::ERROR: return a.error() < b.error();
+    }
+    return false;
+}
+
+template <class T, class E>
+bool
+operator==( const Result<T,E> &a, const Result<T,E> &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case Result<T,E>::OK: return a.ok() == b.ok();
+        case Result<T,E>::ERROR: return a.error() == b.error();
+    }
+    return false;
+}
+
 // Set has custom definition
 
 template <class A>
@@ -996,6 +1204,76 @@ struct Serialisable<std::pair<A,B>>
         return typename Serialiser<P>::Ptr( new S(sf) );
     }
 };
+
+template <class T, class E>
+struct Serialisable<ADL::sys::types::Result<T,E>>
+{
+    static typename Serialiser<ADL::sys::types::Result<T,E>>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <class T, class E>
+typename Serialiser<ADL::sys::types::Result<T,E>>::Ptr
+Serialisable<ADL::sys::types::Result<T,E>>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::sys::types::Result<T,E> _T;
+    
+    struct U_ : public Serialiser<_T>
+    {
+        U_( const SerialiserFlags & sf )
+            : sf_(sf)
+            {}
+        
+        SerialiserFlags sf_;
+        mutable typename Serialiser<T>::Ptr ok_;
+        mutable typename Serialiser<E>::Ptr error_;
+        
+        typename Serialiser<T>::Ptr ok_s() const
+        {
+            if( !ok_ )
+                ok_ = Serialisable<T>::serialiser(sf_);
+            return ok_;
+        }
+        
+        typename Serialiser<E>::Ptr error_s() const
+        {
+            if( !error_ )
+                error_ = Serialisable<E>::serialiser(sf_);
+            return error_;
+        }
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            switch( v.d() )
+            {
+                case ADL::sys::types::Result<T,E>::OK: json.startObject(); writeField( json, ok_s(), "ok", v.ok() ); json.endObject(); break;
+                case ADL::sys::types::Result<T,E>::ERROR: json.startObject(); writeField( json, error_s(), "error", v.error() ); json.endObject(); break;
+            }
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            if( json.type() == JsonReader::START_OBJECT )
+            {
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
+                    throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "ok", json ) )
+                        v.set_ok(ok_s()->fromJson( json ));
+                    else if( matchField0( "error", json ) )
+                        v.set_error(error_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
+            }
+            throw json_parse_failure();
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
+}
 
 template <class A>
 struct Serialisable<std::set<A>>

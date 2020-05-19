@@ -71,6 +71,24 @@ export interface ErrorOpts<T> {
 
 export function makeError<T, K extends keyof ErrorOpts<T>>(kind: K, value: ErrorOpts<T>[K]) { return {kind, value}; }
 
+export interface Result_Ok<T, _E> {
+  kind: 'ok';
+  value: T;
+}
+export interface Result_Error<_T, E> {
+  kind: 'error';
+  value: E;
+}
+
+export type Result<T, E> = Result_Ok<T, E> | Result_Error<T, E>;
+
+export interface ResultOpts<T, E> {
+  ok: T;
+  error: E;
+}
+
+export function makeResult<T, E, K extends keyof ResultOpts<T, E>>(kind: K, value: ResultOpts<T, E>[K]) { return {kind, value}; }
+
 export interface MapEntry<K, V> {
   key: K;
   value: V;
