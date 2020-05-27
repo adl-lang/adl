@@ -224,6 +224,9 @@ runTests = do
     it "aborts with error for type constructors applied to incorrect numbers of arguments" $ do
       runVerifyBackend1 "test19/input/test.adl"
         `shouldReturn` (CompilerFailed "In module test :\ntype X doesn't take arguments\n  type constructor Pair expected 2 arguments, but was passed 1")
+    it "aborts with error with extra content at end of module file" $ do
+      runVerifyBackend1 "test28/input/test28.adl"
+        `shouldReturn` (CompilerFailed "\"test28/input/test28.adl\" (line 4, column 1):\nunexpected 's'\nexpecting space, \"//\" or end of input")
 
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do

@@ -1,0 +1,5 @@
+module test28 {
+};
+
+struct S {
+};

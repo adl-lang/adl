@@ -275,7 +275,7 @@ parseScopedNameList = (P.sepBy scopedName (ctoken ','))
 
 
 moduleFile :: P.Parser (Module0 Decl0)
-moduleFile = whiteSpace *> moduleP <* ctoken ';'
+moduleFile = whiteSpace *> moduleP <* ctoken ';' <* P.eof
 
 
 fromFile :: P.Parser a -> FilePath -> IO (Either P.ParseError a)
