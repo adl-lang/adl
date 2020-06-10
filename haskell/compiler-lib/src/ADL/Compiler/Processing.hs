@@ -289,7 +289,7 @@ refEnumeration _ = False
 
 -- If a type expression references a newtype, return it
 refNewtype :: TypeExpr (ResolvedTypeT a) -> Maybe (Newtype (ResolvedTypeT a))
-refNewtype (TypeExpr (RT_Named (_,Decl{d_type=Decl_Newtype n})) []) = Just n
+refNewtype (TypeExpr (RT_Named (_,Decl{d_type=Decl_Newtype n})) _) = Just n
 refNewtype _ = Nothing
 
 -- Naming Scope
