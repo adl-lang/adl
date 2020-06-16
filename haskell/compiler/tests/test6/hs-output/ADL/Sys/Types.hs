@@ -64,7 +64,7 @@ type Maybe = Prelude.Maybe
 type Pair a b = (a,b)
 
 
-type Result a b = Prelude.Either a b
+type Result a b = Prelude.Either b a
 
 
 type Set v = Data.Set.Set v

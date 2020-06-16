@@ -42,7 +42,7 @@ annotation Error HaskellCustomType {
 annotation Result HaskellCustomType {
   "haskellname" : "Result",
   "haskellimports" : [],
-  "insertCode" : ["type Result a b = Prelude.Either a b"],
+  "insertCode" : ["type Result a b = Prelude.Either b a"],
   "generateOrigADLType" : "",
   "structConstructor" : "",
   "unionConstructors" : [
