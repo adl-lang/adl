@@ -30,6 +30,12 @@ getCustomType scopedName _ = Map.lookup scopedName customTypes
          ""
          (Map.fromList [("error", "Prelude.Left"), ("value", "Prelude.Right")])
          Nothing)
+      , (ScopedName (ModuleName ["sys","types"]) "Result",
+         CustomType "Result" [] []
+         ["type Result t e  = Prelude.Either e t"]
+         ""
+         (Map.fromList [("error", "Prelude.Left"), ("ok", "Prelude.Right")])
+         Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Pair",
          CustomType "Pair" [] []
          ["type Pair a b = (a,b)"]
