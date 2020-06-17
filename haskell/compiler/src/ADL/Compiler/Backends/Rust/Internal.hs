@@ -200,6 +200,7 @@ getTypeDetails (RT_Primitive pt) =
     P_Vector -> vectorTypeDetails
     P_StringMap -> stringMapTypeDetails
     P_Nullable -> nullableTypeDetails
+    P_TypeToken -> typeTokenTypeDetails
   where
     primTypeDetails t convf = TypeDetails (const (return t)) convf
 
@@ -254,6 +255,12 @@ getTypeDetails (RT_Primitive pt) =
           lit <- genLiteralText l
           return (template "Some($1)" [lit])
         literalText _ = error "BUG: invalid literal for Nullable"
+
+    typeTokenTypeDetails = TypeDetails typeExpr literalText
+      where
+        typeExpr [texpr] = return (template "std::marker::PhantomData<$1>" [texpr])
+        typeExpr _ = error "BUG: expected a single type param for TypeToken"
+        literalText _ = return "std::marker::PhantomData"
 
 -- a type defined through a regular ADL declaration
 getTypeDetails rt@(RT_Named (sn,decl@Decl{d_customType=Nothing})) = TypeDetails typeExpr literalText
