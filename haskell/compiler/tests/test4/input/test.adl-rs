@@ -5,13 +5,15 @@ import adlc.config.rust.*;
 
 annotation Date RustCustomType {
   "rustname" : "crate::test4::customtypes::Date",
-  "helpers" : "crate::test4::customtypes::datehelpers"
+  "helpers" : "crate::test4::customtypes::datehelpers",
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize","Clone"]
   };
 
 annotation CDate RustCustomType {
   "rustname" : "crate::test4::customtypes::CDate",
   "helpers" : "crate::test4::customtypes::cdatehelpers",
-  "generateOrigADLType" : "CDate0"
+  "generateOrigADLType" : "CDate0",
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize","Clone"]
   };
 
 annotation S2 RustGenerate false;

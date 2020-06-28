@@ -7,7 +7,7 @@ use serde::Serialize;
 /**
  * A serialised value along with  its type
  */
-#[derive(Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,PartialEq,Serialize)]
 pub struct Dynamic {
   #[serde(rename="typeExpr")]
   pub type_expr: TypeExpr,

@@ -33,9 +33,14 @@ struct RustCustomType
     String generateOrigADLType = "";
 
     // The standard traits that this custom type implements.
-    // `Serialize` and `Deserialize` must be implemented and must
-    // be consistent with the standard ADL serialization schema.
-    Vector<String> stdTraits = ["Serialize", "Deserialize"];
+    // Generally you want either:
+    //       ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize", "Clone"]
+    // or
+    //       ["PartialEq", "Serialize", "Deserialize", "Clone"]
+    //
+    // `Serialize` and `Deserialize` must be consistent 
+    // with the standard ADL serialization schema.
+    Vector<String> stdTraits;
 };
 
 };

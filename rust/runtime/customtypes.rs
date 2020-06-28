@@ -10,6 +10,7 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::result;
 
+#[derive(Clone,Eq,Hash,PartialEq)]
 pub struct Maybe<T>(Option<T>);
 
 impl<T> Maybe<T> {
@@ -48,12 +49,11 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Maybe<T> {
     }
 }
 
-pub struct Map<K, V>(HashMap<K, V>);
+#[derive(Clone,Eq,PartialEq)]
+pub struct Map<K:Eq + Hash, V>(HashMap<K, V>);
 
-impl<K, V> Map<K, V> {
+impl<K:Eq + Hash, V> Map<K, V> {
     pub fn new(v: Vec<Pair<K, V>>) -> Map<K, V>
-    where
-        K: Eq + Hash,
     {
         let mut hm = HashMap::new();
         for Pair((k, v)) in v {
@@ -94,12 +94,11 @@ where
     }
 }
 
-pub struct Set<T>(HashSet<T>);
+#[derive(Clone,Eq,PartialEq)]
+pub struct Set<T:Eq + Hash>(HashSet<T>);
 
-impl<T> Set<T> {
+impl<T:Eq + Hash> Set<T> {
     pub fn new(v: Vec<T>) -> Set<T>
-    where
-        T: Eq + Hash,
     {
         Set(v.into_iter().collect())
     }
@@ -134,6 +133,7 @@ where
     }
 }
 
+#[derive(Clone,Eq,Hash,PartialEq)]
 pub struct Pair<A, B>((A, B));
 
 impl<A, B> Pair<A, B> {
@@ -170,6 +170,7 @@ where
     }
 }
 
+#[derive(Clone,Eq,Hash,PartialEq)]
 pub struct Result<T, E>(std::result::Result<T, E>);
 
 impl<T, E> Result<T, E> {

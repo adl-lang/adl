@@ -5,30 +5,35 @@ import adlc.config.rust.*;
 annotation Maybe RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::customtypes::Maybe",
   "helpers" : "{{STDLIBMODULE}}::customtypes::Maybe",
-  "generateOrigADLType" : "MaybeInternal"
+  "generateOrigADLType" : "MaybeInternal",
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
   };
 
 annotation Map RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::customtypes::Map",
   "helpers" : "{{STDLIBMODULE}}::customtypes::Map",
-  "generateOrigADLType" : "MapInternal"
+  "generateOrigADLType" : "MapInternal",
+  "stdTraits": ["Eq", "PartialEq", "Serialize", "Deserialize"]
   };
 
 annotation Set RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::customtypes::Set",
   "helpers" : "{{STDLIBMODULE}}::customtypes::Set",
-  "generateOrigADLType" : "SetInternal"
+  "generateOrigADLType" : "SetInternal",
+  "stdTraits": ["Eq", "PartialEq", "Serialize", "Deserialize"]
   };
 
 annotation Pair RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::customtypes::Pair",
   "helpers" : "{{STDLIBMODULE}}::customtypes::Pair",
-  "generateOrigADLType" : "PairInternal"
+  "generateOrigADLType" : "PairInternal",
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
   };
 
 annotation Result RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::customtypes::Result",
   "helpers" : "{{STDLIBMODULE}}::customtypes::Result",
-  "generateOrigADLType" : "ResultInternal"
+  "generateOrigADLType" : "ResultInternal",
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
   };
 };

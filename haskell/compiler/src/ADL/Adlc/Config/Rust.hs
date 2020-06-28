@@ -23,8 +23,8 @@ data RustCustomType = RustCustomType
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-mkRustCustomType :: T.Text -> T.Text -> RustCustomType
-mkRustCustomType rustname helpers = RustCustomType rustname helpers "" [ "Serialize", "Deserialize" ]
+mkRustCustomType :: T.Text -> T.Text -> [T.Text] -> RustCustomType
+mkRustCustomType rustname helpers stdTraits = RustCustomType rustname helpers "" stdTraits
 
 instance AdlValue RustCustomType where
     atype _ = "adlc.config.rust.RustCustomType"
@@ -40,7 +40,7 @@ instance AdlValue RustCustomType where
         <$> parseField "rustname"
         <*> parseField "helpers"
         <*> parseFieldDef "generateOrigADLType" ""
-        <*> parseFieldDef "stdTraits" [ "Serialize", "Deserialize" ]
+        <*> parseField "stdTraits"
 
 type RustGenerate = Prelude.Bool
 

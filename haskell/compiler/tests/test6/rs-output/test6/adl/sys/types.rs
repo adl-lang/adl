@@ -4,7 +4,7 @@ use crate::adlrt::customtypes::Pair;
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct PairInternal<T1, T2> {
   #[serde(rename="v1")]
   pub v_1: T1,
@@ -22,7 +22,7 @@ impl<T1, T2> PairInternal<T1, T2> {
   }
 }
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Either<T1, T2> {
   #[serde(rename="left")]
   Left(T1),
@@ -31,7 +31,7 @@ pub enum Either<T1, T2> {
   Right(T2),
 }
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum MaybeInternal<T> {
   #[serde(rename="nothing")]
   Nothing,
@@ -40,7 +40,7 @@ pub enum MaybeInternal<T> {
   Just(T),
 }
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Error<T> {
   #[serde(rename="value")]
   Value(T),
@@ -49,7 +49,7 @@ pub enum Error<T> {
   Error(String),
 }
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum ResultInternal<T, E> {
   #[serde(rename="ok")]
   Ok(T),
@@ -58,7 +58,7 @@ pub enum ResultInternal<T, E> {
   Error(E),
 }
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct MapEntry<K, V> {
   #[serde(rename="k")]
   pub key: K,
@@ -76,8 +76,8 @@ impl<K, V> MapEntry<K, V> {
   }
 }
 
-#[derive(Deserialize,Serialize)]
+#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct MapInternal<K, V>(pub Vec<Pair<K, V>>);
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct SetInternal<T>(pub Vec<T>);
