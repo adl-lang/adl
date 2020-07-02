@@ -1,6 +1,43 @@
 # Binary releases
 
-As of version 0.13, binary releases for osx and linux are published on the [releases][] page.
+As of version 0.13, binary releases for osx and linux are published on the [releases][] page. You
+can use this shell script to download, cache and then run the compiler:
+
+```
+#!/bin/bash
+# 
+# script that downloads and caches the adl compiler if necessary, and then
+# runs it.
+
+set -e
+
+adlversion=0.13.5
+
+if [ "$(uname)" == "Darwin" ]; then
+  platform=osx
+  cachedir=$HOME/Library/Caches/adl
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+  platform=linux
+  cachedir=$HOME/.cache/adl 
+else
+  echo "Unable to download ADL for platform"
+  exit 1
+fi
+
+downloads=$cachedir/downloads
+release=https://github.com/timbod7/adl/releases/download/v$adlversion/adl-bindist-$adlversion-$platform.zip
+
+if [ ! -d "$cachedir/$adlversion" ]; then
+  echo "fetching $release ..."
+  mkdir -p $downloads
+  (cd $downloads; wget -q $release || (echo "download failed"; exit 1))
+  mkdir -p $cachedir/$adlversion
+  (cd $cachedir/$adlversion; unzip -q $downloads/$(basename $release))
+fi
+
+exec $cachedir/$adlversion/bin/adlc "$@"
+```
+
 
 # Building from source
 
