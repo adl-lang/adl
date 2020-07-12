@@ -1,9 +1,9 @@
 // @generated from adl module test4
 
-use crate::adlrt::customtypes::Map;
-use crate::adlrt::customtypes::Maybe;
-use crate::adlrt::customtypes::Pair;
-use crate::adlrt::customtypes::Set;
+use crate::adlrt::custom::sys::types::map::Map;
+use crate::adlrt::custom::sys::types::maybe::Maybe;
+use crate::adlrt::custom::sys::types::pair::Pair;
+use crate::adlrt::custom::sys::types::set::Set;
 use crate::test4::customtypes::CDate;
 use crate::test4::customtypes::Date;
 use crate::test4::customtypes::cdatehelpers;

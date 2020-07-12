@@ -54,8 +54,15 @@ data-files:          lib/adl/adlc/config/cpp.adl
                      lib/typescript/runtime/sys/dynamic.ts
                      lib/typescript/runtime/sys/types.ts
                      lib/typescript/runtime/utils.ts
+                     lib/rust/runtime/custom/mod.rs
+                     lib/rust/runtime/custom/sys/mod.rs
+                     lib/rust/runtime/custom/sys/types/map.rs
+                     lib/rust/runtime/custom/sys/types/maybe.rs
+                     lib/rust/runtime/custom/sys/types/mod.rs
+                     lib/rust/runtime/custom/sys/types/pair.rs
+                     lib/rust/runtime/custom/sys/types/result.rs
+                     lib/rust/runtime/custom/sys/types/set.rs
                      lib/rust/runtime/mod.rs
-                     lib/rust/runtime/customtypes.rs
 
 
 library
