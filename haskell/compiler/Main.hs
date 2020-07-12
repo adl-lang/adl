@@ -239,17 +239,12 @@ runTypescript args = do
     optDescs =
       standardOptions <>
       [ generateTransitiveOption setGenerateTransitive
-      , tsIncludeRuntimePackageOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeRuntime=True}))
+      , includeRuntimeOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeRuntime=True}))
       , tsIncludeResolverOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeResolver=True}))
       , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{TS.tsExcludeAst=True}))
       , tsExcludedAstAnnotationsOption (\s -> updateBackendFlags (\tsf ->tsf{TS.tsExcludedAstAnnotations=Just (parseScopedNames s)}))
       , tsRuntimeDirectoryOption (\path -> updateBackendFlags (\tsf ->tsf{TS.tsRuntimeDir=path}))
       ]
-
-    tsIncludeRuntimePackageOption ufn =
-      Option "" ["include-rt"]
-        (NoArg ufn)
-        "Generate the runtime code"
 
     tsIncludeResolverOption ufn =
       Option "" ["include-resolver"]
@@ -286,21 +281,29 @@ runRust args = do
     header = "Usage: adlc rust [OPTION...] files..."
 
     flags0 libDir = RS.RustFlags {
+      RS.rs_libDir = libDir,
       RS.rs_module = RS.rustScopedName "adl",
-      RS.rs_runtimeModule = RS.rustScopedName "crate::adlrt"
+      RS.rs_runtimeModule = RS.rustScopedName "adlrt",
+      RS.rs_includeRuntime = False
     }
 
     optDescs =
       standardOptions <>
       [ generateTransitiveOption setGenerateTransitive
-      , outputPackageOption (\s -> updateBackendFlags (\rf -> rf{RS.rs_module=RS.rustScopedName (T.pack s)}))
+      , rsModuleOption (\s -> updateBackendFlags (\rf -> rf{RS.rs_module=RS.rustScopedName (T.pack s)}))
       , rsRuntimeModuleOption (\s -> updateBackendFlags (\rf -> rf{RS.rs_runtimeModule=RS.rustScopedName (T.pack s)}))
+      , includeRuntimeOption (updateBackendFlags (\rf ->rf{RS.rs_includeRuntime=True}))
       ]
+
+    rsModuleOption ufn =
+      Option "R" ["module"]
+        (ReqArg ufn "DIR")
+        "Set the module where the code is generated, relative to crate root"
 
     rsRuntimeModuleOption ufn =
       Option "R" ["runtime-module"]
         (ReqArg ufn "DIR")
-        "Set the module where the runtime is located"
+        "Set the module where the runtime is located, relative to crate root"
 
 runShow args0 =
   case args0 of

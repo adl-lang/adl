@@ -34,12 +34,18 @@ import System.FilePath(joinPath)
 -- | Command line flags to control the backend.
 -- (once we have them)
 data RustFlags = RustFlags {
+  rs_libDir :: FilePath,
+
   -- The rust module into which we generate the ADL
   -- relative to the crate root
   rs_module :: RustScopedName,
 
   -- The absolute rust module path containing the runtime
-  rs_runtimeModule :: RustScopedName
+  -- relative to the crate root
+  rs_runtimeModule :: RustScopedName,
+
+  -- Whether to output the runtime code
+  rs_includeRuntime :: Bool
 }
 
 data RustScopedName = RustScopedName {unRustScopedName :: [Ident]}
@@ -417,7 +423,7 @@ getCustomType runtimeModule sn decl = case getTypedAnnotation rustCustomType (d_
 
     fixRuntimeModule :: RustScopedName -> RustScopedName
     fixRuntimeModule rsn = case rsn  of
-      RustScopedName (m:ms) | m == "{{STDLIBMODULE}}" -> RustScopedName (unRustScopedName runtimeModule <> ms)
+      RustScopedName (m:ms) | m == "{{STDLIBMODULE}}" -> RustScopedName ("crate" : unRustScopedName runtimeModule <> ms)
       _ -> rsn
    
 emptyModuleFile :: ModuleName -> RustFlags -> CodeGenProfile -> ModuleFile

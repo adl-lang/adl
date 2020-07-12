@@ -1,8 +1,8 @@
-use crate::test4::adl::sys::types::MapInternal;
-use crate::test4::adl::sys::types::MaybeInternal;
-use crate::test4::adl::sys::types::PairInternal;
-use crate::test4::adl::sys::types::ResultInternal;
-use crate::test4::adl::sys::types::SetInternal;
+use crate::adl::sys::types::MapInternal;
+use crate::adl::sys::types::MaybeInternal;
+use crate::adl::sys::types::PairInternal;
+use crate::adl::sys::types::ResultInternal;
+use crate::adl::sys::types::SetInternal;
 use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
 use std::collections::HashMap;

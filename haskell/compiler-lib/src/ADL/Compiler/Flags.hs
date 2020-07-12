@@ -93,6 +93,11 @@ generateTransitiveOption ufn =
 setGenerateTransitive :: Flags b -> Flags b
 setGenerateTransitive = updateAdlFlags (\af -> af{af_generateTransitive=True})
 
+includeRuntimeOption ufn =
+  Option "" ["include-rt"]
+    (NoArg ufn)
+    "Generate the runtime code"
+
 -- | Combine an initial set of AdlFlags and appropriate backend
 -- flags with command line arguments.
 buildFlags :: AdlFlags -> b -> [Flags b -> Flags b] -> Flags b

@@ -56,6 +56,24 @@ generate af rf fileWriter modulePaths = catchAllExceptions  $ do
       else do
         return Nothing
   generateModFiles rf fileWriter (catMaybes mms)
+  when (rs_includeRuntime rf) (generateRuntime af rf fileWriter modulePaths)
+
+generateRuntime :: AdlFlags -> RustFlags -> FileWriter -> [FilePath] -> EIOT ()
+generateRuntime af rf fileWriter modulePaths = do
+    files <- liftIO $ dirContents runtimeLibDir
+    liftIO $ for_ files $ \inpath -> do
+      content <- LBS.readFile (runtimeLibDir </> inpath)
+      let filePath = moduleFilePath (unRustScopedName (rs_runtimeModule rf)) </> inpath
+      fileWriter filePath (adjustContent content)
+    where
+      runtimeLibDir = rustRuntimeDir (rs_libDir rf)
+
+      adjustContent :: LBS.ByteString -> LBS.ByteString
+      adjustContent origLBS = LBS.fromStrict (T.encodeUtf8 newT)
+        where origT = T.decodeUtf8 (LBS.toStrict origLBS)
+              newT = T.replace ("crate::adl") ("crate::" <> T.intercalate "::" (unRustScopedName (rs_module rf)))
+                   $ T.replace ("crate::adlrt") ("crate::" <> T.intercalate "::" (unRustScopedName (rs_runtimeModule rf)))
+                   $ origT
 
 -- | Generate and the rust code for a single ADL module, and
 -- save the resulting code to the  apppropriate file

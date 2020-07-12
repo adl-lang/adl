@@ -3,6 +3,7 @@ module ADL.Compiler.DataFiles(
   javaRuntimeDir,
   typescriptRuntimeDir,
   haskellRuntimeDir,
+  rustRuntimeDir,
   systemAdlDir,
   stdlibCustomTypesHs,
   stdlibCustomTypesCpp
@@ -54,3 +55,6 @@ stdlibCustomTypesCpp libdir = libdir </> "adl/sys/types/cpp-custom-types.json"
 
 typescriptRuntimeDir :: FilePath -> FilePath
 typescriptRuntimeDir libdir = libdir </> "typescript/runtime"
+
+rustRuntimeDir :: FilePath -> FilePath
+rustRuntimeDir libdir = libdir </> "rust/runtime"
