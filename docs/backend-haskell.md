@@ -155,7 +155,7 @@ with an underscore suffix (see the `Picture` and `Rectangle` examples
 above.  The [HaskellFieldPrefix][] can be applied to declarations or
 individual fields to customize this prefix.
 
-[HaskellFieldPrefix][../haskell/compiler/lib/adl/adlc/config/haskell.adl]
+[HaskellFieldPrefix]:../haskell/compiler/lib/adl/adlc/config/haskell.adl
 
 # Custom types
 
