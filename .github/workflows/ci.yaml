@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Stack
-        uses: mstksg/setup-stack@v1
+        uses: timbod7/setup-stack@61acd0e
 
       - name: Clone project
         uses: actions/checkout@v2
