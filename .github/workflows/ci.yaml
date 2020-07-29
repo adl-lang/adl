@@ -4,14 +4,18 @@ on:
   push:
     branches:
       - master
+      - ci-test
 
 jobs:
   build:
     name: CI
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
+      - name: test curl
+        run: "curl -L https://get.haskellstack.org/stable/osx-x86_64.tar.gz >/dev/null"
+
       - name: Setup Stack
-        uses: mstksg/setup-stack@v1
+        uses: timbod7/setup-stack@master
 
       - name: Clone project
         uses: actions/checkout@v2
