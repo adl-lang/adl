@@ -105,7 +105,6 @@ As a concrete example, if the adl compiler is called like this:
 adlc java \
   --outputdir src \
   --package adl \
-  --json \
   --rtpackage adl/runtime \
   --include-rt \
   picture.adl
