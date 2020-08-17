@@ -33,4 +33,11 @@ target_link_libraries(adl_tests
   adl_runtime
 ) 
 
+
+include(GNUInstallDirs)
+install(TARGETS adl_runtime)
+install(DIRECTORY include/adl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h"
+)
   
