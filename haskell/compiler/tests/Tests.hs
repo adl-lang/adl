@@ -316,6 +316,9 @@ runTests = do
     it "Generates the correct code for the picture demo" $ do
       collectResults (runCppBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput
+    it "generates correct keys for stringmap literals" $ do
+      collectResults (runCppBackend1 "test29/input/test29.adl")
+        `shouldReturn` MatchOutput
 
   describe "adlc java backend" $ do
     it "generates expected code for various structures" $ do

@@ -5,7 +5,8 @@ struct Test {
     "$": "bar",
     " ": "baz",
     "'": "baz",
-    "\"": "baz"
+    "\"": "baz",
+    "degrees": "°"
   };
 };
 

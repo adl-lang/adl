@@ -632,7 +632,7 @@ getTypeDetails (RT_Primitive P_String) = TypeDetails
   }
   where
     genLiteralText' (Literal _ LDefault) = return "\"\"";
-    genLiteralText' (Literal _ (LPrimitive (JSON.String s))) = return (T.pack (show s))
+    genLiteralText' (Literal _ (LPrimitive (JSON.String s))) = return (doubleQuote s)
     genLiteralText' lit = error ("BUG: getTypeDetails16: unexpected literal:" ++ show lit)
 
 primitiveFactory :: Ident -> [T.Text] -> CState T.Text

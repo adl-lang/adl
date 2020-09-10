@@ -178,7 +178,7 @@ getTypeDetails (RT_Primitive pt) =
   where
     primTypeDetails t convf = TypeDetails (const (return t)) convf (const (return ("ADL.texpr" <> ptToText pt <> "()")))
 
-    toString (Literal _ (LPrimitive (JS.String s))) = return (T.pack (show s))
+    toString (Literal _ (LPrimitive (JS.String s))) = return (doubleQuote s)
     toString _ = error "BUG: expected a string literal"
 
     toNumber (Literal _ (LPrimitive (JS.Number n))) = return (litNumber n)

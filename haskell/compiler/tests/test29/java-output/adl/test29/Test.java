@@ -29,7 +29,7 @@ public class Test {
   }
 
   public Test() {
-    this.foo = Factories.stringMap(" ", "baz", "\"", "baz", "$", "bar", "'", "baz");
+    this.foo = Factories.stringMap(" ", "baz", "\"", "baz", "$", "bar", "'", "baz", "degrees", "°");
   }
 
   public Test(Test other) {
@@ -113,7 +113,7 @@ public class Test {
       public Test fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new Test(
-          _obj.has("foo") ? JsonBindings.fieldFromJson(_obj, "foo", foo.get()) : Factories.stringMap(" ", "baz", "\"", "baz", "$", "bar", "'", "baz")
+          _obj.has("foo") ? JsonBindings.fieldFromJson(_obj, "foo", foo.get()) : Factories.stringMap(" ", "baz", "\"", "baz", "$", "bar", "'", "baz", "degrees", "°")
         );
       }
     };

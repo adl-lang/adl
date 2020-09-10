@@ -229,7 +229,7 @@ hPrimitiveLiteral P_ByteVector (JS.String s) = return (T.pack (show (decode s)))
       (Left _) -> "???"
       (Right s) -> s
 hPrimitiveLiteral P_Vector _ = return "undefined" -- never called
-hPrimitiveLiteral P_String (JS.String s) = return (T.pack (show s))
+hPrimitiveLiteral P_String (JS.String s) = return (doubleQuote s)
 hPrimitiveLiteral p _ = error ("BUG: invalid literal type for primitive " ++ show p)
 
 litNumber :: S.Scientific -> T.Text

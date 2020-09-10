@@ -17,6 +17,6 @@ impl Test {
   }
 
   pub fn def_foo() -> std::collections::HashMap<String,String> {
-    [(" ".to_string(), "baz".to_string()), ("\"".to_string(), "baz".to_string()), ("$".to_string(), "bar".to_string()), ("'".to_string(), "baz".to_string())].iter().cloned().collect()
+    [(" ".to_string(), "baz".to_string()), ("\"".to_string(), "baz".to_string()), ("$".to_string(), "bar".to_string()), ("'".to_string(), "baz".to_string()), ("degrees".to_string(), "°".to_string())].iter().cloned().collect()
   }
 }

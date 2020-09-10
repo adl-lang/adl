@@ -36,6 +36,7 @@ import qualified ADL.Compiler.Processing as PL
 import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
 import ADL.Core.Value
+import ADL.Utils.IndentedCode(doubleQuote)
 
 import qualified ADL.Adlc.Config.Cpp as CC
 
@@ -1243,7 +1244,7 @@ literalLValue (Literal (TypeExpr _ [te]) (LStringMap map)) = do
   t <- cTypeExpr False te
   adds <- forM (Map.toList map) $ \(k,v) -> do
     litv <- literalLValue v
-    return (template ".add(\"$1\",$2)" [k,litv])
+    return (template ".add($1,$2)" [doubleQuote k,litv])
   return (template "MapBuilder<std::string,$1>()$2.result()" [t, T.intercalate "" adds])
 literalLValue (Literal (TypeExpr (RT_Primitive pt) _) (LPrimitive  jv)) = return (cPrimitiveLiteral pt jv)
 literalLValue _ = error "BUG: literalLValue: unexpected literal value"
@@ -1351,5 +1352,5 @@ cPrimitiveLiteral P_ByteVector (JSON.String s) = template "ByteVector::fromLiter
 cPrimitiveLiteral P_Vector _ = "????" -- never called
 cPrimitiveLiteral P_StringMap _ = "????" -- never called
 cPrimitiveLiteral P_Nullable _ = "????" -- never called
-cPrimitiveLiteral P_String (JSON.String s) = T.pack (show s)
+cPrimitiveLiteral P_String (JSON.String s) = doubleQuote s
 cPrimitiveLiteral _ _ = error "BUG: invalid json literal for primitive"

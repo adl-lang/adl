@@ -215,7 +215,7 @@ getTypeDetails (RT_Primitive pt) =
         toNumber (Literal _ (LPrimitive (JS.Number n))) = return (litNumber n <> "_" <> t)
         toNumber _ = error "BUG: expected a numeric literal"
 
-    toString (Literal _ (LPrimitive (JS.String s))) = return (T.pack (show s) <> ".to_string()")
+    toString (Literal _ (LPrimitive (JS.String s))) = return (doubleQuote s <> ".to_string()")
     toString _ = error "BUG: expected a string literal"
 
     toBool (Literal _ (LPrimitive (JS.Bool True))) = return "true"
