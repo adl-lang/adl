@@ -153,12 +153,12 @@ runJsBackend ipaths mpaths epath = do
   er <- unEIO $ JS.generate af jf fileWriter mpaths
   processCompilerOutput epath tempDir er
 
-runTsBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
-runTsBackend ipaths mpaths epath = do
+runTsBackend :: (TS.TypescriptFlags -> TS.TypescriptFlags) -> [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
+runTsBackend flagsfn ipaths mpaths epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adlt.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
-      js = TS.TypescriptFlags {
+      js = flagsfn $ TS.TypescriptFlags {
         TS.tsIncludeRuntime=False,
         TS.tsIncludeResolver=True,
         TS.tsRuntimeDir="runtime",
@@ -169,11 +169,6 @@ runTsBackend ipaths mpaths epath = do
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir Nothing)
   er <- unEIO $ TS.generate af js fileWriter mpaths
   processCompilerOutput epath tempDir er
-
-runTsBackend1 mpath = runTsBackend [ipath,stdsrc] [mpath] epath
-  where
-    ipath = takeDirectory mpath
-    epath = takeDirectory ipath </> "ts-output"
 
 runRsBackend :: [FilePath] -> [FilePath] -> FilePath -> T.Text -> IO CodeGenResult
 runRsBackend ipaths mpaths epath rsModule = do
@@ -393,32 +388,32 @@ runTests = do
 
   describe "adlc typescript backend" $ do
     it "generates expected output for various structures" $
-      collectResults (runTsBackend [stdsrc] ["test2/input/test.adl"] "test2/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test2/input/test.adl"] "test2/ts-output")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runTsBackend [stdsrc] ["test3/input/test.adl"] "test3/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test3/input/test.adl"] "test3/ts-output")
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runTsBackend [stdsrc] ["test5/input/test.adl"] "test5/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test5/input/test.adl"] "test5/ts-output")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
       let srcs = stdfiles <> ["test6/input/test.adl"]
-      collectResults (runTsBackend [stdsrc] srcs "test6/ts-output")
+      collectResults (runTsBackend id [stdsrc] srcs "test6/ts-output")
           `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runTsBackend [stdsrc] ["test7/input/test.adl"] "test7/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test7/input/test.adl"] "test7/ts-output")
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
-      collectResults (runTsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["demo1/input/picture.adl"] "demo1/ts-output")
         `shouldReturn` MatchOutput
     it "Handles annotations and docstrings correctly" $ do
-      collectResults (runTsBackend [stdsrc] ["test23/input/test23.adl"] "test23/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test23/input/test23.adl"] "test23/ts-output")
         `shouldReturn` MatchOutput
     it "generates code for type token primitives" $ do
-      collectResults (runTsBackend [stdsrc] ["test24/input/test24.adl"] "test24/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test24/input/test24.adl"] "test24/ts-output")
         `shouldReturn` MatchOutput
     it "generates correct keys for stringmap literals" $ do
-      collectResults (runTsBackend [stdsrc] ["test29/input/test29.adl"] "test29/ts-output")
+      collectResults (runTsBackend (\tf -> tf{TS.tsExcludedAstAnnotations=Just []}) [stdsrc] ["test29/input/test29.adl"] "test29/ts-output")
         `shouldReturn` MatchOutput
 
   describe "adlc rust backend" $ do

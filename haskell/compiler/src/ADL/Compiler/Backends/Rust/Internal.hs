@@ -470,7 +470,7 @@ stdTraitsFor = stdTraitsFor1 S.empty M.empty
 
 stdTraitsFor1 :: S.Set ScopedName -> TypeBindingMap -> TypeExpr CResolvedType -> StdTraits
 stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Vector) [te]) = stdTraitsFor1 sns tbmap te
-stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_StringMap) [te]) = stdTraitsFor1 sns tbmap te
+stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_StringMap) [te]) = S.delete "Hash" (stdTraitsFor1 sns tbmap te)
 stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Nullable) [te]) = stdTraitsFor1 sns tbmap te
 stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_TypeToken) [te]) = stdTraitsFor1 sns tbmap te
 stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Float) _) = noeqStdTraits

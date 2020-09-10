@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
+/**
+ * An example with weird "quoting" conventions, designed to break things
+ */
 public class Test {
 
   /* Members */

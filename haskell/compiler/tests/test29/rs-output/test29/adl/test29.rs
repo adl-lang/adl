@@ -3,8 +3,14 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+/**
+ * An example with weird "quoting" conventions, designed to break things
+ */
+#[derive(Clone,Deserialize,Eq,PartialEq,Serialize)]
 pub struct Test {
+  /**
+   * "foo" as a field
+   */
   #[serde(default="Test::def_foo")]
   pub foo: std::collections::HashMap<String,String>,
 }
