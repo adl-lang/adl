@@ -264,6 +264,9 @@ runTests = do
     it "Generates the correct code for the picture demo" $ do
       collectResults (runHaskellBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput
+    it "generates correct keys for stringmap literals" $ do
+      collectResults (runHaskellBackend1 "test29/input/test29.adl")
+        `shouldReturn` MatchOutput
 
   describe "adlc ast backend" $ do
     it "generates expected json serialisation for each type of decl" $ do
@@ -373,6 +376,9 @@ runTests = do
     it "Generates the correct code for the picture demo" $ do
       collectResults (runJavaBackend1 "demo1/input/picture.adl")
         `shouldReturn` MatchOutput
+    it "generates correct keys for stringmap literals" $ do
+      collectResults (runJavaBackend1 "test29/input/test29.adl")
+        `shouldReturn` MatchOutput
 
   describe "adlc javascript backend" $ do
     it "generates expected code for the standard library" $ do
@@ -407,6 +413,9 @@ runTests = do
         `shouldReturn` MatchOutput
     it "generates code for type token primitives" $ do
       collectResults (runTsBackend [stdsrc] ["test24/input/test24.adl"] "test24/ts-output")
+        `shouldReturn` MatchOutput
+    it "generates correct keys for stringmap literals" $ do
+      collectResults (runTsBackend [stdsrc] ["test29/input/test29.adl"] "test29/ts-output")
         `shouldReturn` MatchOutput
 
   describe "adlc rust backend" $ do
@@ -444,6 +453,9 @@ runTests = do
       let srcs = stdfiles <> ["test6/input/test.adl"]
       collectResults (runRsBackend [stdsrc] srcs "test6/rs-output" "test6::adl")
           `shouldReturn` MatchOutput
+    it "generates correct keys for stringmap literals" $ do
+      collectResults (runRsBackend [stdsrc] ["test29/input/test29.adl"] "test29/rs-output" "test29::adl")
+        `shouldReturn` MatchOutput
  
   where
     collectResults1 resultvar test = do

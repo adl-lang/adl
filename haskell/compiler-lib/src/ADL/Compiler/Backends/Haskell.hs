@@ -37,6 +37,7 @@ import ADL.Compiler.Processing hiding (litNumber)
 import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
 import ADL.Utils.FileDiff(dirContents)
+import ADL.Utils.IndentedCode(doubleQuote)
 
 newtype HaskellModule = HaskellModule {unHaskellModule :: T.Text}
   deriving Show
@@ -581,7 +582,7 @@ generateLiteral te v =  generateLV Map.empty te v
       where
         genPair (k,jv) = do
           v <- generateLV m te jv
-          return (template "(\"$1\", $2)" [k,v])
+          return (template "($1, $2)" [doubleQuote k,v])
     generateStringMap m te _ = error "BUG: stringmap literal requires a json object"
 
     generateNullable m te JS.Null = do

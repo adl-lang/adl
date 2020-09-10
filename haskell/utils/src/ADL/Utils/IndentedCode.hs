@@ -135,3 +135,6 @@ edgeCases first other last bs = add0 bs
 capitalise :: T.Text -> T.Text
 capitalise text = T.cons (C.toUpper (T.head text)) (T.tail text)
 
+doubleQuote :: T.Text -> T.Text
+doubleQuote s = "\"" <> T.replace "\"" "\\\"" s <> "\""
+

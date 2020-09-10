@@ -567,7 +567,7 @@ getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
     genLiteralText' (Literal _ (LStringMap kvPairs)) = do
       kvlits <- for (Map.toList kvPairs) $ \(k,v) -> do
         litv <- genLiteralText v
-        return (template "\"$1\", $2" [k,litv])
+        return (template "$1, $2" [doubleQuote k,litv])
       rtpackage <- getRuntimePackage
       factories <- addImport (javaClass rtpackage "Factories")
       return (template "$1.stringMap($2)" [factories,commaSep kvlits])

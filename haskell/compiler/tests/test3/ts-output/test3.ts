@@ -211,7 +211,7 @@ export function makeS<T>(
     f_e: input.f_e === undefined ? 1 : input.f_e,
     f_t: input.f_t,
     f_bint16: input.f_bint16 === undefined ? {f_t : 56, f_string : "yikes", f_tvec : [1, 2, 3], f_xy : {x : 5, y : 5}} : input.f_bint16,
-    f_smap: input.f_smap === undefined ? {a : 45, b : 47} : input.f_smap,
+    f_smap: input.f_smap === undefined ? {"a" : 45, "b" : 47} : input.f_smap,
     f_json1: input.f_json1 === undefined ? null : input.f_json1,
     f_json2: input.f_json2 === undefined ? [{"v1":27,"v2":"abcde"},true] : input.f_json2,
   };
