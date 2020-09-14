@@ -1282,9 +1282,9 @@ struct Serialisable<std::set<A>>
 
     static typename Serialiser<S>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        struct S : public Serialiser<S>
+        struct S_ : public Serialiser<S>
         {
-            S( const SerialiserFlags &sf )
+            S_( const SerialiserFlags &sf )
                 : s( Serialisable<A>::serialiser(sf) )
                 {}
 
@@ -1306,7 +1306,7 @@ struct Serialisable<std::set<A>>
             }
         };
 
-        return typename Serialiser<S>::Ptr( new S(sf) );
+        return typename Serialiser<S>::Ptr( new S_(sf) );
     }
 };
 

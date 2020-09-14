@@ -38,6 +38,10 @@ pub struct S {
   #[serde(default="S::def_f_int_2")]
   #[serde(rename="f_int2")]
   pub f_int_2: Option<i64>,
+
+  #[serde(default="S::def_f_int_3")]
+  #[serde(rename="f_int3")]
+  pub f_int_3: Option<i64>,
 }
 
 impl S {
@@ -54,6 +58,7 @@ impl S {
       f_nstring_2: S::def_f_nstring_2(),
       f_int: f_int,
       f_int_2: S::def_f_int_2(),
+      f_int_3: S::def_f_int_3(),
     }
   }
 
@@ -67,5 +72,9 @@ impl S {
 
   pub fn def_f_int_2() -> Option<i64> {
     Some(100_i64)
+  }
+
+  pub fn def_f_int_3() -> Option<i64> {
+    None
   }
 }

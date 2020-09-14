@@ -28,11 +28,12 @@ data S = S
     , s_f_nstring2 :: (ADL.Core.Nullable.Nullable T.Text)
     , s_f_int :: (ADL.Core.Nullable.Nullable Data.Int.Int64)
     , s_f_int2 :: (ADL.Core.Nullable.Nullable Data.Int.Int64)
+    , s_f_int3 :: (ADL.Core.Nullable.Nullable Data.Int.Int64)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 mkS :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double) -> (ADL.Sys.Types.Either T.Text Data.Int.Int32) -> (ADL.Sys.Types.Error Data.Int.Int32) -> (ADL.Sys.Types.Map T.Text Prelude.Double) -> (ADL.Sys.Types.Set T.Text) -> (ADL.Sys.Types.Maybe T.Text) -> (ADL.Core.Nullable.Nullable T.Text) -> (ADL.Core.Nullable.Nullable Data.Int.Int64) -> S
-mkS f_pair f_either f_error f_map f_set f_mstring f_nstring f_int = S f_pair f_either f_error f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (ADL.Core.Nullable.from ("abcde")) f_int (ADL.Core.Nullable.from (100))
+mkS f_pair f_either f_error f_map f_set f_mstring f_nstring f_int = S f_pair f_either f_error f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (ADL.Core.Nullable.from ("abcde")) f_int (ADL.Core.Nullable.from (100)) (ADL.Core.Nullable.null)
 
 instance AdlValue S where
     atype _ = "test6.S"
@@ -49,6 +50,7 @@ instance AdlValue S where
         , genField "f_nstring2" s_f_nstring2
         , genField "f_int" s_f_int
         , genField "f_int2" s_f_int2
+        , genField "f_int3" s_f_int3
         ]
     
     jsonParser = S
@@ -63,3 +65,4 @@ instance AdlValue S where
         <*> parseFieldDef "f_nstring2" (ADL.Core.Nullable.from ("abcde"))
         <*> parseField "f_int"
         <*> parseFieldDef "f_int2" (ADL.Core.Nullable.from (100))
+        <*> parseFieldDef "f_int3" (ADL.Core.Nullable.null)

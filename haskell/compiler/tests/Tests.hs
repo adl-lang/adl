@@ -287,8 +287,11 @@ runTests = do
     it "generates expected code for various unions" $ do
       collectResults (runCppBackend1 "test5/input/test.adl")
         `shouldReturn` MatchOutput
+    it "generates expected code for nullable" $ do
+      collectResults (runCppBackend1 "test6/input/test.adl")
+        `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      collectResults (runCppBackend [stdsrc] stdfiles "test6/cpp-output" "")
+      collectResults (runCppBackend [stdsrc] stdfiles "test6/cpp-output-std" "")
         `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
       collectResults (runCppBackend1 "test7/input/test.adl")

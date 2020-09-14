@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <optional>
 
 #include <adl/types.h>
 
@@ -335,8 +336,9 @@ public:
     void toJson( JsonWriter &json, const _M & v ) const
     {
         json.startObject();
-        for( typename _M::const_iterator mi = v.begin(); mi != v.end(); mi++ )
-            writeField( json, js(), mi.first(), mi.second() );
+        for( typename _M::const_iterator mi = v.begin(); mi != v.end(); mi++ ) {
+            writeField( json, js(), mi->first, mi->second );
+        }
         json.endObject();
     }
 
@@ -363,6 +365,45 @@ template <class V>
 static typename Serialiser<StringMap<V>>::Ptr stringMapSerialiser(const SerialiserFlags & sf)
 {
     return typename Serialiser<StringMap<V>>::Ptr( new StringMapSerialiser<V>(sf) );
+}
+
+// OptionalSerialiser
+
+template <class V>
+class OptionalSerialiser : public Serialiser<std::optional<V>>
+{
+public:
+    typedef std::optional<V> _O;
+
+    OptionalSerialiser( const SerialiserFlags & sf )
+        : sf_( sf )
+    {}
+
+    typename Serialiser<V>::Ptr js() const {
+        if( !js_ )
+            js_ = Serialisable<V>::serialiser(sf_);
+        return js_;
+    }
+
+    void toJson( JsonWriter &json, const _O & v ) const
+    {
+        // implement
+    }
+
+    void fromJson( _O &optional, JsonReader &json ) const
+    {
+        // implement
+    }
+
+private:
+    SerialiserFlags sf_;
+    mutable typename Serialiser<V>::Ptr js_;
+};
+
+template <class V>
+static typename Serialiser<std::optional<V>>::Ptr optionalSerialiser(const SerialiserFlags & sf)
+{
+    return typename Serialiser<std::optional<V>>::Ptr( new OptionalSerialiser<V>(sf) );
 }
 
 };

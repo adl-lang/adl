@@ -40,10 +40,11 @@ public class S {
   private Optional<String> f_nstring2;
   private Optional<Long> f_int;
   private Optional<Long> f_int2;
+  private Optional<Long> f_int3;
 
   /* Constructors */
 
-  public S(Pair<Integer, Double> f_pair, Either<String, Integer> f_either, Error<Integer> f_error, HashMap<String, Double> f_map, HashSet<String> f_set, Optional<String> f_mstring, Optional<String> f_mstring2, Optional<String> f_nstring, Optional<String> f_nstring2, Optional<Long> f_int, Optional<Long> f_int2) {
+  public S(Pair<Integer, Double> f_pair, Either<String, Integer> f_either, Error<Integer> f_error, HashMap<String, Double> f_map, HashSet<String> f_set, Optional<String> f_mstring, Optional<String> f_mstring2, Optional<String> f_nstring, Optional<String> f_nstring2, Optional<Long> f_int, Optional<Long> f_int2, Optional<Long> f_int3) {
     this.f_pair = Objects.requireNonNull(f_pair);
     this.f_either = Objects.requireNonNull(f_either);
     this.f_error = Objects.requireNonNull(f_error);
@@ -55,6 +56,7 @@ public class S {
     this.f_nstring2 = Objects.requireNonNull(f_nstring2);
     this.f_int = Objects.requireNonNull(f_int);
     this.f_int2 = Objects.requireNonNull(f_int2);
+    this.f_int3 = Objects.requireNonNull(f_int3);
   }
 
   public S() {
@@ -69,6 +71,7 @@ public class S {
     this.f_nstring2 = Optional.<String>of("abcde");
     this.f_int = Optional.<Long>empty();
     this.f_int2 = Optional.<Long>of(100L);
+    this.f_int3 = Optional.<Long>empty();
   }
 
   public S(S other) {
@@ -83,6 +86,7 @@ public class S {
     this.f_nstring2 = Factories.nullable(Factories.STRING).create(other.f_nstring2);
     this.f_int = Factories.nullable(Factories.INT64).create(other.f_int);
     this.f_int2 = Factories.nullable(Factories.INT64).create(other.f_int2);
+    this.f_int3 = Factories.nullable(Factories.INT64).create(other.f_int3);
   }
 
   /* Accessors and mutators */
@@ -175,6 +179,14 @@ public class S {
     this.f_int2 = Objects.requireNonNull(f_int2);
   }
 
+  public Optional<Long> getF_int3() {
+    return f_int3;
+  }
+
+  public void setF_int3(Optional<Long> f_int3) {
+    this.f_int3 = Objects.requireNonNull(f_int3);
+  }
+
   /* Object level helpers */
 
   @Override
@@ -194,7 +206,8 @@ public class S {
       f_nstring.equals(other.f_nstring) &&
       f_nstring2.equals(other.f_nstring2) &&
       f_int.equals(other.f_int) &&
-      f_int2.equals(other.f_int2);
+      f_int2.equals(other.f_int2) &&
+      f_int3.equals(other.f_int3);
   }
 
   @Override
@@ -211,6 +224,7 @@ public class S {
     _result = _result * 37 + f_nstring2.hashCode();
     _result = _result * 37 + f_int.hashCode();
     _result = _result * 37 + f_int2.hashCode();
+    _result = _result * 37 + f_int3.hashCode();
     return _result;
   }
 
@@ -228,6 +242,7 @@ public class S {
     private Optional<String> f_nstring2;
     private Optional<Long> f_int;
     private Optional<Long> f_int2;
+    private Optional<Long> f_int3;
 
     public Builder() {
       this.f_pair = null;
@@ -241,6 +256,7 @@ public class S {
       this.f_nstring2 = Optional.<String>of("abcde");
       this.f_int = null;
       this.f_int2 = Optional.<Long>of(100L);
+      this.f_int3 = Optional.<Long>empty();
     }
 
     public Builder setF_pair(Pair<Integer, Double> f_pair) {
@@ -298,6 +314,11 @@ public class S {
       return this;
     }
 
+    public Builder setF_int3(Optional<Long> f_int3) {
+      this.f_int3 = Objects.requireNonNull(f_int3);
+      return this;
+    }
+
     public S create() {
       Builders.checkFieldInitialized("S", "f_pair", f_pair);
       Builders.checkFieldInitialized("S", "f_either", f_either);
@@ -307,7 +328,7 @@ public class S {
       Builders.checkFieldInitialized("S", "f_mstring", f_mstring);
       Builders.checkFieldInitialized("S", "f_nstring", f_nstring);
       Builders.checkFieldInitialized("S", "f_int", f_int);
-      return new S(f_pair, f_either, f_error, f_map, f_set, f_mstring, f_mstring2, f_nstring, f_nstring2, f_int, f_int2);
+      return new S(f_pair, f_either, f_error, f_map, f_set, f_mstring, f_mstring2, f_nstring, f_nstring2, f_int, f_int2, f_int3);
     }
   }
 
@@ -350,6 +371,7 @@ public class S {
     final Lazy<JsonBinding<Optional<String>>> f_nstring2 = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<Long>>> f_int = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.INT64));
     final Lazy<JsonBinding<Optional<Long>>> f_int2 = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.INT64));
+    final Lazy<JsonBinding<Optional<Long>>> f_int3 = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.INT64));
     final Factory<S> _factory = FACTORY;
 
     return new JsonBinding<S>() {
@@ -372,6 +394,7 @@ public class S {
         _result.add("f_nstring2", f_nstring2.get().toJson(_value.f_nstring2));
         _result.add("f_int", f_int.get().toJson(_value.f_int));
         _result.add("f_int2", f_int2.get().toJson(_value.f_int2));
+        _result.add("f_int3", f_int3.get().toJson(_value.f_int3));
         return _result;
       }
 
@@ -389,7 +412,8 @@ public class S {
           JsonBindings.fieldFromJson(_obj, "f_nstring", f_nstring.get()),
           _obj.has("f_nstring2") ? JsonBindings.fieldFromJson(_obj, "f_nstring2", f_nstring2.get()) : Optional.<String>of("abcde"),
           JsonBindings.fieldFromJson(_obj, "f_int", f_int.get()),
-          _obj.has("f_int2") ? JsonBindings.fieldFromJson(_obj, "f_int2", f_int2.get()) : Optional.<Long>of(100L)
+          _obj.has("f_int2") ? JsonBindings.fieldFromJson(_obj, "f_int2", f_int2.get()) : Optional.<Long>of(100L),
+          _obj.has("f_int3") ? JsonBindings.fieldFromJson(_obj, "f_int3", f_int3.get()) : Optional.<Long>empty()
         );
       }
     };

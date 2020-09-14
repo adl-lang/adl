@@ -351,7 +351,7 @@ cSerializerExpr (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   return (template "stringMapSerialiser<$1>" [t])
 cSerializerExpr (TypeExpr (RT_Primitive P_Nullable) [te]) = do
   t <- cTypeExpr True te
-  return (template "nullableSerialiser<$1>" [t])
+  return (template "optionalSerialiser<$1>" [t])
 cSerializerExpr te = do
   t <- cTypeExpr True te
   return (template "Serialisable<$1>::serialiser" [t])
@@ -1247,6 +1247,13 @@ literalLValue (Literal (TypeExpr _ [te]) (LStringMap map)) = do
     return (template ".add($1,$2)" [doubleQuote k,litv])
   return (template "MapBuilder<std::string,$1>()$2.result()" [t, T.intercalate "" adds])
 literalLValue (Literal (TypeExpr (RT_Primitive pt) _) (LPrimitive  jv)) = return (cPrimitiveLiteral pt jv)
+literalLValue (Literal (TypeExpr _ [te]) (LNullable Nothing)) = do
+  t <- cTypeExpr False te
+  return (template "std::optional<$1>()" [t])
+literalLValue (Literal (TypeExpr _ [te]) (LNullable (Just v))) = do
+  t <- cTypeExpr False te
+  litv <- literalLValue v
+  return (template "std::optional<$1>($2)" [t, litv])
 literalLValue _ = error "BUG: literalLValue: unexpected literal value"
 
 literalPValue :: (Literal CTypeExpr) -> Gen T.Text
@@ -1266,6 +1273,7 @@ literalPValue l@(Literal te (LVector _)) = do
   lit <- literalLValue l
   return (template "std::vector<$1>( $2 )" [t,lit])
 literalPValue l@(Literal _ (LStringMap _)) = literalLValue l
+literalPValue l@(Literal _ (LNullable _)) = literalLValue l
 literalPValue (Literal (TypeExpr (RT_Primitive pt) _) (LPrimitive jv)) = do
   t <- cPrimitiveType pt []
   return (template "$1($2)" [t, cPrimitiveLiteral pt jv])
@@ -1304,7 +1312,8 @@ cPrimitiveType P_StringMap targs = do
   includeStd ifile "map"
   return (template "std::map<std::string,$1>" targs)
 cPrimitiveType P_Nullable targs = do
-  return (template "nullable<$1>" targs)
+  includeStd ifile "optional"
+  return (template "std::optional<$1>" targs)
 cPrimitiveType P_String targs = do
   includeStd ifile "string"
   return "std::string"

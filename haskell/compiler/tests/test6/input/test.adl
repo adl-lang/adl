@@ -19,5 +19,6 @@ module test6
 
        Nullable<Int64> f_int;
        Nullable<Int64> f_int2 = 100;
+       Nullable<Int64> f_int3 = null;
    };
 };
