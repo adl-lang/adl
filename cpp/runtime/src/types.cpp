@@ -10,6 +10,8 @@ extern "C" {
 namespace ADL
 {
 
+const JsonValue JsonValue::null { nullptr };
+
 std::string
 ByteVector::toLiteral( const ByteVector & v )
 {

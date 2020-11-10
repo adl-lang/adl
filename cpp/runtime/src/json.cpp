@@ -434,4 +434,32 @@ Serialisable<ByteVector>::serialiser( const SerialiserFlags &  )
     return s;
 }
 
+Serialiser<JsonValue>::Ptr
+Serialisable<JsonValue>::serialiser( const SerialiserFlags &  )
+{
+    struct S : public Serialiser<JsonValue>
+    {
+        void toJson( JsonWriter &json, const JsonValue & v ) const
+        {
+            json.stringV(v.dump());
+        }
+
+        void fromJson( JsonValue &v, JsonReader &json )const
+        {
+            if( json.type() == JsonReader::STRING )
+            {
+                v = nlohmann::json::parse( json.stringV() );
+                json.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<JsonValue>::Ptr s;
+    if( !s )
+        s = Serialiser<JsonValue>::Ptr( new S() );
+    return s;
+}
+
 };

@@ -8,6 +8,9 @@
 #include <exception>
 #include <memory>
 
+#include <nlohmann/json.hpp>
+
+
 namespace ADL {
 
 //----------------------------------------------------------------------
@@ -104,6 +107,10 @@ private:
 
 template <class V>
 using StringMap = std::map<std::string,V>;
+
+struct JsonValue : public nlohmann::json {
+  static const JsonValue null;
+};
 
 
 } // namespace ADL

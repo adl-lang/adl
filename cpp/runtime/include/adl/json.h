@@ -266,6 +266,12 @@ struct Serialisable<ByteVector>
     static Serialiser<ByteVector>::Ptr serialiser(const SerialiserFlags &);
 };
 
+template <>
+struct Serialisable<JsonValue>
+{
+    static Serialiser<JsonValue>::Ptr serialiser(const SerialiserFlags &);
+};
+
 template <class T>
 struct Serialisable<std::vector<T>>
 {
