@@ -38,6 +38,16 @@ stack exec adlc -- typescript \
  -I $ADL_STDLIB_DIR \
  $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
 
+# Generate ADL specified elements of the c++ runtime
+CPP_RUNTIME_DIR=../cpp/runtime/src-generated 
+stack exec adlc -- cpp \
+ --no-overwrite \
+ --verbose \
+ --include-prefix adl \
+ -O $CPP_RUNTIME_DIR \
+ -I $ADL_STDLIB_DIR \
+ $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
+
 # Run some tests for each target language
 stack build generated-haskell
 (cd ../typescript/tests; ./run-tests.sh)

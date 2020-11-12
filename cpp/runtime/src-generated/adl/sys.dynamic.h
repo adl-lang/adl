@@ -2,7 +2,7 @@
 #ifndef SYS_DYNAMIC_H
 #define SYS_DYNAMIC_H
 #include <adl/adl.h>
-#include "sys.adlast.h"
+#include "adl/sys.adlast.h"
 
 namespace ADL {
 namespace sys {

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string>
 #include <optional>
+#include <nlohmann/json.hpp>
 
 #include <adl/types.h>
 
@@ -265,6 +266,12 @@ template <>
 struct Serialisable<ByteVector>
 {
     static Serialiser<ByteVector>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<nlohmann::json>
+{
+    static Serialiser<nlohmann::json>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <class T>

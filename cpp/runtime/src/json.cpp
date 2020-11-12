@@ -434,4 +434,84 @@ Serialisable<ByteVector>::serialiser( const SerialiserFlags &  )
     return s;
 }
 
-};
+Serialiser<nlohmann::json>::Ptr
+Serialisable<nlohmann::json>::serialiser( const SerialiserFlags &  )
+{
+    struct S : public Serialiser<nlohmann::json>
+    {
+        void toJson(JsonWriter &writer, const nlohmann::json & v) const
+        {
+            if (v.is_null()) {
+              writer.nullV();
+            } else if (v.is_boolean()) {
+              writer.boolV(v);
+            } else if (v.is_number()) {
+              writer.doubleV(v);
+            } else if (v.is_object()) {
+              writer.startObject();
+              for(auto& el : v.items()) {
+                writer.field(el.key());
+                toJson(writer, el.value());
+              }
+              writer.endObject();
+            } else if (v.is_array()) {
+              writer.startArray();
+              for(auto& el : v) {
+                toJson(writer, el);
+              }
+              writer.endArray();
+            } else if (v.is_string()) {
+              writer.stringV(v);
+            }
+        }
+
+        void fromJson(nlohmann::json &v, JsonReader &reader) const
+        {
+            if( reader.type() == JsonReader::START_OBJECT) {
+              reader.next();
+              v = nlohmann::json::object();
+              while(reader.type() == JsonReader::FIELD) {
+                std::string field = reader.fieldName();
+                reader.next();
+                nlohmann::json value;
+                fromJson(value, reader);
+                v[field] = value;
+              }
+              if (reader.type() != JsonReader::END_OBJECT) {
+                throw json_parse_failure();
+              }
+              reader.next();
+            } else if( reader.type() == JsonReader::START_ARRAY) {
+              reader.next();
+              v = nlohmann::json::array();
+              while(reader.type() !=  JsonReader::END_ARRAY) {
+                nlohmann::json value;
+                fromJson(value, reader);
+                v.push_back(value);
+              }
+              reader.next();
+            } else if( reader.type() == JsonReader::NULLV) {
+                v = nullptr;
+                reader.next();
+            } else if( reader.type() == JsonReader::BOOLEAN) {
+                v = reader.boolV();
+                reader.next();
+            } else if( reader.type() == JsonReader::STRING ) {
+                v = reader.stringV();
+                reader.next();
+            } else if( reader.type() == JsonReader::NUMBER) {
+                v = reader.doubleV();
+                reader.next();
+            }
+            else
+                throw json_parse_failure();
+        }
+    };
+
+    static Serialiser<nlohmann::json>::Ptr s;
+    if( !s )
+        s = Serialiser<nlohmann::json>::Ptr( new S() );
+      return s;
+  }
+
+  };

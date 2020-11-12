@@ -252,6 +252,24 @@ TEST_CASE( "Roundtrip primitives", "[serialisation]" )
     }
 
     {
+        nlohmann::json jv = nlohmann::json::parse("[{\"x\": 1.0, \"y\": null}, \"yyy\"]");
+        Maybe<nlohmann::json> v = Maybe<nlohmann::json>::mk_just( jv );
+        CHECK( v == jsonRoundTrip(v,true) );
+    }
+
+    {
+        nlohmann::json jv = nlohmann::json::parse("[]");
+        Maybe<nlohmann::json> v = Maybe<nlohmann::json>::mk_just( jv );
+        CHECK( v == jsonRoundTrip(v,true) );
+    }
+
+    {
+        nlohmann::json jv = nlohmann::json::parse("{}");
+        Maybe<nlohmann::json> v = Maybe<nlohmann::json>::mk_just( jv );
+        CHECK( v == jsonRoundTrip(v,true) );
+    }
+
+    {
         std::vector<bool> vb;
         vb.push_back( true );
         vb.push_back( false );
