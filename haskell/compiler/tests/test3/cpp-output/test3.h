@@ -317,8 +317,8 @@ struct S
         const T & f_t,
         const B<int16_t>  & f_bint16,
         const std::map<std::string,int32_t> & f_smap,
-        const JsonValue & f_json1,
-        const JsonValue & f_json2
+        const nlohmann::json & f_json1,
+        const nlohmann::json & f_json2
         );
     
     Void f_void;
@@ -343,8 +343,8 @@ struct S
     T f_t;
     B<int16_t>  f_bint16;
     std::map<std::string,int32_t> f_smap;
-    JsonValue f_json1;
-    JsonValue f_json2;
+    nlohmann::json f_json1;
+    nlohmann::json f_json2;
 };
 
 template <class T>
@@ -375,8 +375,8 @@ S<T>::S()
     , f_e(E::mk_v2())
     , f_bint16(B<int16_t> (56,"yikes",mkvec<int16_t>(1,2,3),XY<int16_t> (5,5)))
     , f_smap(MapBuilder<std::string,int32_t>().add("a",45).add("b",47).result())
-    , f_json1(JsonValue.parseString("null"))
-    , f_json2(JsonValue.parseString("[{\"v1\":27,\"v2\":\"abcde\"},true]"))
+    , f_json1(nlohmann::json::parse("null"))
+    , f_json2(nlohmann::json::parse("[{\"v1\":27,\"v2\":\"abcde\"},true]"))
 {
 }
 
@@ -404,8 +404,8 @@ S<T>::S(
     const T & f_t_,
     const B<int16_t>  & f_bint16_,
     const std::map<std::string,int32_t> & f_smap_,
-    const JsonValue & f_json1_,
-    const JsonValue & f_json2_
+    const nlohmann::json & f_json1_,
+    const nlohmann::json & f_json2_
     )
     : f_void(f_void_)
     , f_bool(f_bool_)
@@ -679,8 +679,8 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
             , f_t_s( Serialisable<T>::serialiser(sf) )
             , f_bint16_s( Serialisable<ADL::test3::B<int16_t> >::serialiser(sf) )
             , f_smap_s( stringMapSerialiser<int32_t>(sf) )
-            , f_json1_s( Serialisable<JsonValue>::serialiser(sf) )
-            , f_json2_s( Serialisable<JsonValue>::serialiser(sf) )
+            , f_json1_s( Serialisable<nlohmann::json>::serialiser(sf) )
+            , f_json2_s( Serialisable<nlohmann::json>::serialiser(sf) )
             {}
         
         
@@ -706,8 +706,8 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<T>::Ptr f_t_s;
         typename Serialiser<ADL::test3::B<int16_t> >::Ptr f_bint16_s;
         typename Serialiser<std::map<std::string,int32_t>>::Ptr f_smap_s;
-        typename Serialiser<JsonValue>::Ptr f_json1_s;
-        typename Serialiser<JsonValue>::Ptr f_json2_s;
+        typename Serialiser<nlohmann::json>::Ptr f_json1_s;
+        typename Serialiser<nlohmann::json>::Ptr f_json2_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
@@ -734,8 +734,8 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
             writeField<T>( json, f_t_s, "f_t", v.f_t );
             writeField<ADL::test3::B<int16_t> >( json, f_bint16_s, "f_bint16", v.f_bint16 );
             writeField<std::map<std::string,int32_t>>( json, f_smap_s, "f_smap", v.f_smap );
-            writeField<JsonValue>( json, f_json1_s, "f_json1", v.f_json1 );
-            writeField<JsonValue>( json, f_json2_s, "f_json2", v.f_json2 );
+            writeField<nlohmann::json>( json, f_json1_s, "f_json1", v.f_json1 );
+            writeField<nlohmann::json>( json, f_json2_s, "f_json2", v.f_json2 );
             json.endObject();
         }
         

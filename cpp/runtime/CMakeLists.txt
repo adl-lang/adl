@@ -2,11 +2,16 @@ cmake_minimum_required(VERSION 3.0)
 
 project(ADL_RUNTIME C CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+
 add_subdirectory(3rd-party)
 
 include_directories(
   ./include
   ./3rd-party/libb64-1.2/include
+  ./3rd-party
   ./src-generated
 )
 

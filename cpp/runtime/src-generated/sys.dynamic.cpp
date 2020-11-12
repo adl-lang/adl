@@ -1,5 +1,5 @@
 // @generated from adl module sys.dynamic
-#include "sys.dynamic.h"
+#include "adl/sys.dynamic.h"
 
 namespace ADL {
 namespace sys {

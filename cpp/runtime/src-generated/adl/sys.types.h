@@ -1,3 +1,4 @@
+// @generated from adl module sys.types
 #ifndef SYS_TYPES_H
 #define SYS_TYPES_H
 #include <adl/adl.h>
@@ -14,6 +15,9 @@ template <class T1, class T2>
 class Either
 {
 public:
+    typedef T1 T1Type;
+    typedef T2 T2Type;
+    
     Either();
     static Either<T1,T2> mk_left( const T1 & v );
     static Either<T1,T2> mk_right( const T2 & v );
@@ -29,6 +33,20 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case LEFT: { vis.left(left()); break; }
+        case RIGHT: { vis.right(right()); break; }
+        }
+    }
+    
+    bool is_left() const { return d_ == LEFT; };
+    bool is_right() const { return d_ == RIGHT; };
+    
     T1 & left() const;
     T2 & right() const;
     
@@ -205,6 +223,8 @@ template <class T>
 class Error
 {
 public:
+    typedef T TType;
+    
     Error();
     static Error<T> mk_value( const T & v );
     static Error<T> mk_error( const std::string & v );
@@ -220,6 +240,20 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case VALUE: { vis.value(value()); break; }
+        case ERROR: { vis.error(error()); break; }
+        }
+    }
+    
+    bool is_value() const { return d_ == VALUE; };
+    bool is_error() const { return d_ == ERROR; };
+    
     T & value() const;
     std::string & error() const;
     
@@ -392,10 +426,69 @@ operator==( const Error<T> &a, const Error<T> &b )
     return false;
 }
 
+template <class K, class V>
+struct MapEntry
+{
+    typedef K KType;
+    typedef V VType;
+    
+    MapEntry();
+    
+    MapEntry(
+        const K & key,
+        const V & value
+        );
+    
+    K key;
+    V value;
+};
+
+template <class K, class V>
+bool operator<( const MapEntry<K,V> &a, const MapEntry<K,V> &b );
+template <class K, class V>
+bool operator==( const MapEntry<K,V> &a, const MapEntry<K,V> &b );
+
+template <class K, class V>
+MapEntry<K,V>::MapEntry()
+{
+}
+
+template <class K, class V>
+MapEntry<K,V>::MapEntry(
+    const K & key_,
+    const V & value_
+    )
+    : key(key_)
+    , value(value_)
+{
+}
+
+template <class K, class V>
+bool
+operator<( const MapEntry<K,V> &a, const MapEntry<K,V> &b )
+{
+    if( a.key < b.key ) return true;
+    if( b.key < a.key ) return false;
+    if( a.value < b.value ) return true;
+    if( b.value < a.value ) return false;
+    return false;
+}
+
+template <class K, class V>
+bool
+operator==( const MapEntry<K,V> &a, const MapEntry<K,V> &b )
+{
+    return
+        a.key == b.key &&
+        a.value == b.value ;
+}
+
 template <class T>
 class Maybe
 {
 public:
+    typedef T TType;
+    
     Maybe();
     static Maybe<T> mk_nothing();
     static Maybe<T> mk_just( const T & v );
@@ -411,6 +504,20 @@ public:
     };
     
     DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case NOTHING: { vis.nothing(); break; }
+        case JUST: { vis.just(just()); break; }
+        }
+    }
+    
+    bool is_nothing() const { return d_ == NOTHING; };
+    bool is_just() const { return d_ == JUST; };
+    
     T & just() const;
     
     void set_nothing();
@@ -567,17 +674,225 @@ operator==( const Maybe<T> &a, const Maybe<T> &b )
     return false;
 }
 
-// Pair excluded due to custom definition
+// Pair has custom definition
 
 template <class A, class B>
 using Pair = std::pair<A,B>;
 
-// Set excluded due to custom definition
+template <class T, class E>
+class Result
+{
+public:
+    typedef T TType;
+    typedef E EType;
+    
+    Result();
+    static Result<T,E> mk_ok( const T & v );
+    static Result<T,E> mk_error( const E & v );
+    
+    Result( const Result<T,E> & );
+    ~Result();
+    Result<T,E> & operator=( const Result<T,E> & );
+    
+    enum DiscType
+    {
+        OK,
+        ERROR
+    };
+    
+    DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case OK: { vis.ok(ok()); break; }
+        case ERROR: { vis.error(error()); break; }
+        }
+    }
+    
+    bool is_ok() const { return d_ == OK; };
+    bool is_error() const { return d_ == ERROR; };
+    
+    T & ok() const;
+    E & error() const;
+    
+    const T & set_ok(const T & );
+    const E & set_error(const E & );
+    
+private:
+    Result( DiscType d, void * v);
+    
+    DiscType d_;
+    void *p_;
+    
+    static void free( DiscType d, void *v );
+    static void *copy( DiscType d, void *v );
+};
+
+template <class T, class E>
+bool operator<( const Result<T,E> &a, const Result<T,E> &b );
+template <class T, class E>
+bool operator==( const Result<T,E> &a, const Result<T,E> &b );
+
+template <class T, class E>
+typename Result<T,E>::DiscType Result<T,E>::d() const
+{
+    return d_;
+}
+
+template <class T, class E>
+inline T & Result<T,E>::ok() const
+{
+    if( d_ == OK )
+    {
+        return *(T *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T, class E>
+inline E & Result<T,E>::error() const
+{
+    if( d_ == ERROR )
+    {
+        return *(E *)p_;
+    }
+    throw invalid_union_access();
+}
+
+template <class T, class E>
+Result<T,E>::Result()
+    : d_(OK), p_(new T())
+{
+}
+
+template <class T, class E>
+Result<T,E> Result<T,E>::mk_ok( const T & v )
+{
+    return Result<T,E>( OK, new T(v) );
+}
+
+template <class T, class E>
+Result<T,E> Result<T,E>::mk_error( const E & v )
+{
+    return Result<T,E>( ERROR, new E(v) );
+}
+
+template <class T, class E>
+Result<T,E>::Result( const Result<T,E> & v )
+    : d_(v.d_), p_(copy(v.d_,v.p_))
+{
+}
+
+template <class T, class E>
+Result<T,E>::~Result()
+{
+    free(d_,p_);
+}
+
+template <class T, class E>
+Result<T,E> & Result<T,E>::operator=( const Result<T,E> & o )
+{
+    free(d_,p_);
+    d_ = o.d_;
+    p_ = copy( o.d_, o.p_ );
+    return *this;
+}
+
+template <class T, class E>
+const T & Result<T,E>::set_ok(const T &v)
+{
+    if( d_ == OK )
+    {
+        *(T *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = OK;
+        p_ = new T(v);
+    }
+    return *(T *)p_;
+}
+
+template <class T, class E>
+const E & Result<T,E>::set_error(const E &v)
+{
+    if( d_ == ERROR )
+    {
+        *(E *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = ERROR;
+        p_ = new E(v);
+    }
+    return *(E *)p_;
+}
+
+template <class T, class E>
+Result<T,E>::Result(DiscType d, void *p)
+    : d_(d), p_(p)
+{
+}
+
+template <class T, class E>
+void Result<T,E>::free(DiscType d, void *p)
+{
+    switch( d )
+    {
+        case OK: delete (T *)p; return;
+        case ERROR: delete (E *)p; return;
+    }
+}
+
+template <class T, class E>
+void * Result<T,E>::copy( DiscType d, void *p )
+{
+    switch( d )
+    {
+        case OK: return new T(*(T *)p);
+        case ERROR: return new E(*(E *)p);
+    }
+    return 0;
+}
+
+template <class T, class E>
+bool
+operator<( const Result<T,E> &a, const Result<T,E> &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case Result<T,E>::OK: return a.ok() < b.ok();
+        case Result<T,E>::ERROR: return a.error() < b.error();
+    }
+    return false;
+}
+
+template <class T, class E>
+bool
+operator==( const Result<T,E> &a, const Result<T,E> &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case Result<T,E>::OK: return a.ok() == b.ok();
+        case Result<T,E>::ERROR: return a.error() == b.error();
+    }
+    return false;
+}
+
+// Set has custom definition
 
 template <class A>
 using Set = std::set<A>;
 
-// Map excluded due to custom definition
+// Map has custom definition
 
 template <class K, class V>
 using Map = std::map<K,V>;
@@ -598,9 +913,9 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
 {
     typedef ADL::sys::types::Either<T1,T2> _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -624,31 +939,36 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::types::Either<T1,T2>::LEFT: writeField( json, left_s(), "left", v.left() ); break;
-                case ADL::sys::types::Either<T1,T2>::RIGHT: writeField( json, right_s(), "right", v.right() ); break;
+                case ADL::sys::types::Either<T1,T2>::LEFT: json.startObject(); writeField( json, left_s(), "left", v.left() ); json.endObject(); break;
+                case ADL::sys::types::Either<T1,T2>::RIGHT: json.startObject(); writeField( json, right_s(), "right", v.right() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::START_OBJECT )
             {
-                if( matchField0( "left", json ) )
-                    v.set_left(left_s()->fromJson( json ));
-                else if( matchField0( "right", json ) )
-                    v.set_right(right_s()->fromJson( json ));
-                else
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
                     throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "left", json ) )
+                        v.set_left(left_s()->fromJson( json ));
+                    else if( matchField0( "right", json ) )
+                        v.set_right(right_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
             }
+            throw json_parse_failure();
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 template <class T>
@@ -663,9 +983,9 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::types::Error<T> _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -689,12 +1009,66 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::types::Error<T>::VALUE: writeField( json, value_s(), "value", v.value() ); break;
-                case ADL::sys::types::Error<T>::ERROR: writeField( json, error_s(), "error", v.error() ); break;
+                case ADL::sys::types::Error<T>::VALUE: json.startObject(); writeField( json, value_s(), "value", v.value() ); json.endObject(); break;
+                case ADL::sys::types::Error<T>::ERROR: json.startObject(); writeField( json, error_s(), "error", v.error() ); json.endObject(); break;
             }
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            if( json.type() == JsonReader::START_OBJECT )
+            {
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
+                    throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "value", json ) )
+                        v.set_value(value_s()->fromJson( json ));
+                    else if( matchField0( "error", json ) )
+                        v.set_error(error_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
+            }
+            throw json_parse_failure();
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
+}
+
+template <class K, class V>
+struct Serialisable<ADL::sys::types::MapEntry<K,V>>
+{
+    static typename Serialiser<ADL::sys::types::MapEntry<K,V>>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <class K, class V>
+typename Serialiser<ADL::sys::types::MapEntry<K,V>>::Ptr
+Serialisable<ADL::sys::types::MapEntry<K,V>>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::sys::types::MapEntry<K,V> _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : key_s( Serialisable<K>::serialiser(sf) )
+            , value_s( Serialisable<V>::serialiser(sf) )
+            {}
+        
+        
+        typename Serialiser<K>::Ptr key_s;
+        typename Serialiser<V>::Ptr value_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<K>( json, key_s, "k", v.key );
+            writeField<V>( json, value_s, "v", v.value );
             json.endObject();
         }
         
@@ -703,18 +1077,15 @@ Serialisable<ADL::sys::types::Error<T>>::serialiser( const SerialiserFlags &sf )
             match( json, JsonReader::START_OBJECT );
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
-                if( matchField0( "value", json ) )
-                    v.set_value(value_s()->fromJson( json ));
-                else if( matchField0( "error", json ) )
-                    v.set_error(error_s()->fromJson( json ));
-                else
-                    throw json_parse_failure();
+                readField( key_s, v.key, "k", json ) ||
+                readField( value_s, v.value, "v", json ) ||
+                ignoreField( json );
             }
         }
     };
     
     return typename Serialiser<_T>::Ptr( new S_(sf) );
-}
+};
 
 template <class T>
 struct Serialisable<ADL::sys::types::Maybe<T>>
@@ -728,9 +1099,9 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
 {
     typedef ADL::sys::types::Maybe<T> _T;
     
-    struct S_ : public Serialiser<_T>
+    struct U_ : public Serialiser<_T>
     {
-        S_( const SerialiserFlags & sf )
+        U_( const SerialiserFlags & sf )
             : sf_(sf)
             {}
         
@@ -754,34 +1125,43 @@ Serialisable<ADL::sys::types::Maybe<T>>::serialiser( const SerialiserFlags &sf )
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
-            json.startObject();
             switch( v.d() )
             {
-                case ADL::sys::types::Maybe<T>::NOTHING: writeField( json, nothing_s(), "nothing", Void() ); break;
-                case ADL::sys::types::Maybe<T>::JUST: writeField( json, just_s(), "just", v.just() ); break;
+                case ADL::sys::types::Maybe<T>::NOTHING: json.stringV( "nothing" ); break;
+                case ADL::sys::types::Maybe<T>::JUST: json.startObject(); writeField( json, just_s(), "just", v.just() ); json.endObject(); break;
             }
-            json.endObject();
         }
         
         void fromJson( _T &v, JsonReader &json ) const
         {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
+            if( json.type() == JsonReader::STRING )
             {
-                if( matchField0( "nothing", json ) )
-                {
-                    nothing_s()->fromJson( json );
+                if( json.stringV() == "nothing" )
                     v.set_nothing();
-                }
-                else if( matchField0( "just", json ) )
-                    v.set_just(just_s()->fromJson( json ));
                 else
                     throw json_parse_failure();
+                json.next();
+                return;
             }
+            if( json.type() == JsonReader::START_OBJECT )
+            {
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
+                    throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "just", json ) )
+                        v.set_just(just_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
+            }
+            throw json_parse_failure();
         }
     };
     
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
 
 template <class A,class B>
@@ -825,6 +1205,76 @@ struct Serialisable<std::pair<A,B>>
     }
 };
 
+template <class T, class E>
+struct Serialisable<ADL::sys::types::Result<T,E>>
+{
+    static typename Serialiser<ADL::sys::types::Result<T,E>>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <class T, class E>
+typename Serialiser<ADL::sys::types::Result<T,E>>::Ptr
+Serialisable<ADL::sys::types::Result<T,E>>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::sys::types::Result<T,E> _T;
+    
+    struct U_ : public Serialiser<_T>
+    {
+        U_( const SerialiserFlags & sf )
+            : sf_(sf)
+            {}
+        
+        SerialiserFlags sf_;
+        mutable typename Serialiser<T>::Ptr ok_;
+        mutable typename Serialiser<E>::Ptr error_;
+        
+        typename Serialiser<T>::Ptr ok_s() const
+        {
+            if( !ok_ )
+                ok_ = Serialisable<T>::serialiser(sf_);
+            return ok_;
+        }
+        
+        typename Serialiser<E>::Ptr error_s() const
+        {
+            if( !error_ )
+                error_ = Serialisable<E>::serialiser(sf_);
+            return error_;
+        }
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            switch( v.d() )
+            {
+                case ADL::sys::types::Result<T,E>::OK: json.startObject(); writeField( json, ok_s(), "ok", v.ok() ); json.endObject(); break;
+                case ADL::sys::types::Result<T,E>::ERROR: json.startObject(); writeField( json, error_s(), "error", v.error() ); json.endObject(); break;
+            }
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            if( json.type() == JsonReader::START_OBJECT )
+            {
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
+                    throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "ok", json ) )
+                        v.set_ok(ok_s()->fromJson( json ));
+                    else if( matchField0( "error", json ) )
+                        v.set_error(error_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
+            }
+            throw json_parse_failure();
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
+}
+
 template <class A>
 struct Serialisable<std::set<A>>
 {
@@ -832,9 +1282,9 @@ struct Serialisable<std::set<A>>
 
     static typename Serialiser<S>::Ptr serialiser(const SerialiserFlags &sf)
     {
-        struct S : public Serialiser<S>
+        struct S_ : public Serialiser<S>
         {
-            S( const SerialiserFlags &sf )
+            S_( const SerialiserFlags &sf )
                 : s( Serialisable<A>::serialiser(sf) )
                 {}
 
@@ -856,7 +1306,7 @@ struct Serialisable<std::set<A>>
             }
         };
 
-        return typename Serialiser<S>::Ptr( new S(sf) );
+        return typename Serialiser<S>::Ptr( new S_(sf) );
     }
 };
 
@@ -885,14 +1335,9 @@ struct Serialisable<std::map<K,V>>
 
             void fromJson( M &v, JsonReader &json ) const
             {
-                v.clear();
-                match( json, JsonReader::START_ARRAY );
-                while( !match0( json, JsonReader::END_ARRAY ) )
-                {
-                    typename std::pair<K,V> pv;
-                    s->fromJson( pv, json );
-                    v.insert( pv );
-                }
+                std::pair<K,V> pv;
+                s->fromJson( pv, json );
+                v[pv.first] = pv.second;
             }
         };
 

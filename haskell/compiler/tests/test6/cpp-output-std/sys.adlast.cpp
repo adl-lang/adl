@@ -544,7 +544,7 @@ NewType::NewType()
 NewType::NewType(
     const std::vector<std::string>  & typeParams_,
     const TypeExpr & typeExpr_,
-    const ADL::sys::types::Maybe<JsonValue>  & default__
+    const ADL::sys::types::Maybe<nlohmann::json>  & default__
     )
     : typeParams(typeParams_)
     , typeExpr(typeExpr_)
@@ -653,7 +653,7 @@ Field::Field(
     const Ident & name_,
     const Ident & serializedName_,
     const TypeExpr & typeExpr_,
-    const ADL::sys::types::Maybe<JsonValue>  & default__,
+    const ADL::sys::types::Maybe<nlohmann::json>  & default__,
     const Annotations & annotations_
     )
     : name(name_)
@@ -1155,20 +1155,20 @@ Serialisable<ADL::sys::adlast::NewType>::serialiser( const SerialiserFlags &sf )
         S_( const SerialiserFlags & sf )
             : typeParams_s( Serialisable<std::vector<std::string> >::serialiser(sf) )
             , typeExpr_s( Serialisable<ADL::sys::adlast::TypeExpr>::serialiser(sf) )
-            , default__s( Serialisable<ADL::sys::types::Maybe<JsonValue> >::serialiser(sf) )
+            , default__s( Serialisable<ADL::sys::types::Maybe<nlohmann::json> >::serialiser(sf) )
             {}
         
         
         typename Serialiser<std::vector<std::string> >::Ptr typeParams_s;
         typename Serialiser<ADL::sys::adlast::TypeExpr>::Ptr typeExpr_s;
-        typename Serialiser<ADL::sys::types::Maybe<JsonValue> >::Ptr default__s;
+        typename Serialiser<ADL::sys::types::Maybe<nlohmann::json> >::Ptr default__s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
             json.startObject();
             writeField<std::vector<std::string> >( json, typeParams_s, "typeParams", v.typeParams );
             writeField<ADL::sys::adlast::TypeExpr>( json, typeExpr_s, "typeExpr", v.typeExpr );
-            writeField<ADL::sys::types::Maybe<JsonValue> >( json, default__s, "default", v.default_ );
+            writeField<ADL::sys::types::Maybe<nlohmann::json> >( json, default__s, "default", v.default_ );
             json.endObject();
         }
         
@@ -1285,7 +1285,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
             : name_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
             , serializedName_s( Serialisable<ADL::sys::adlast::Ident>::serialiser(sf) )
             , typeExpr_s( Serialisable<ADL::sys::adlast::TypeExpr>::serialiser(sf) )
-            , default__s( Serialisable<ADL::sys::types::Maybe<JsonValue> >::serialiser(sf) )
+            , default__s( Serialisable<ADL::sys::types::Maybe<nlohmann::json> >::serialiser(sf) )
             , annotations_s( Serialisable<ADL::sys::adlast::Annotations>::serialiser(sf) )
             {}
         
@@ -1293,7 +1293,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<ADL::sys::adlast::Ident>::Ptr name_s;
         typename Serialiser<ADL::sys::adlast::Ident>::Ptr serializedName_s;
         typename Serialiser<ADL::sys::adlast::TypeExpr>::Ptr typeExpr_s;
-        typename Serialiser<ADL::sys::types::Maybe<JsonValue> >::Ptr default__s;
+        typename Serialiser<ADL::sys::types::Maybe<nlohmann::json> >::Ptr default__s;
         typename Serialiser<ADL::sys::adlast::Annotations>::Ptr annotations_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
@@ -1302,7 +1302,7 @@ Serialisable<ADL::sys::adlast::Field>::serialiser( const SerialiserFlags &sf )
             writeField<ADL::sys::adlast::Ident>( json, name_s, "name", v.name );
             writeField<ADL::sys::adlast::Ident>( json, serializedName_s, "serializedName", v.serializedName );
             writeField<ADL::sys::adlast::TypeExpr>( json, typeExpr_s, "typeExpr", v.typeExpr );
-            writeField<ADL::sys::types::Maybe<JsonValue> >( json, default__s, "default", v.default_ );
+            writeField<ADL::sys::types::Maybe<nlohmann::json> >( json, default__s, "default", v.default_ );
             writeField<ADL::sys::adlast::Annotations>( json, annotations_s, "annotations", v.annotations );
             json.endObject();
         }

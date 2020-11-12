@@ -365,7 +365,7 @@ struct TypeExpr
 bool operator<( const TypeExpr &a, const TypeExpr &b );
 bool operator==( const TypeExpr &a, const TypeExpr &b );
 
-using Annotations = std::map<ScopedName,JsonValue> ;
+using Annotations = std::map<ScopedName,nlohmann::json> ;
 
 struct NewType
 {
@@ -374,12 +374,12 @@ struct NewType
     NewType(
         const std::vector<std::string>  & typeParams,
         const TypeExpr & typeExpr,
-        const ADL::sys::types::Maybe<JsonValue>  & default_
+        const ADL::sys::types::Maybe<nlohmann::json>  & default_
         );
     
     std::vector<std::string>  typeParams;
     TypeExpr typeExpr;
-    ADL::sys::types::Maybe<JsonValue>  default_;
+    ADL::sys::types::Maybe<nlohmann::json>  default_;
 };
 
 bool operator<( const NewType &a, const NewType &b );
@@ -429,14 +429,14 @@ struct Field
         const Ident & name,
         const Ident & serializedName,
         const TypeExpr & typeExpr,
-        const ADL::sys::types::Maybe<JsonValue>  & default_,
+        const ADL::sys::types::Maybe<nlohmann::json>  & default_,
         const Annotations & annotations
         );
     
     Ident name;
     Ident serializedName;
     TypeExpr typeExpr;
-    ADL::sys::types::Maybe<JsonValue>  default_;
+    ADL::sys::types::Maybe<nlohmann::json>  default_;
     Annotations annotations;
 };
 
