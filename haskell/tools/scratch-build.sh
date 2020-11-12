@@ -43,3 +43,4 @@ stack build generated-haskell
 (cd ../typescript/tests; ./run-tests.sh)
 (cd ../java; gradle build; gradle test)
 (cd ../rust/tests; cargo build; cargo test)
+(cd ../cpp/tests; ./run-tests.sh)
