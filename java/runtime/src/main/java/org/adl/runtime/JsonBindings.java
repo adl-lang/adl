@@ -489,8 +489,14 @@ public class JsonBindings
 
   public static String unionNameFromJson(JsonElement json) {
     if(json.isJsonObject()) {
-      Set<Map.Entry<String,JsonElement>> entries = json.getAsJsonObject().entrySet();
+      JsonObject jsonObject = json.getAsJsonObject();
+      Set<Map.Entry<String,JsonElement>> entries = jsonObject.entrySet();
       if (entries.size() != 1) {
+        // If the ADL is the result of a JSON merge, use the most
+        // recently added field
+        if (jsonObject.has(LAST_MERGED_FIELD)) {
+          return jsonObject.getAsJsonPrimitive(LAST_MERGED_FIELD).getAsString();
+        }
         throw new JsonParseException("union object must have a single field");
       }
       for (Map.Entry<String,JsonElement> v : entries) {
@@ -508,19 +514,14 @@ public class JsonBindings
 
   public static <T> T unionValueFromJson(JsonElement json, JsonBinding<T> jsonBinding) {
     if(json.isJsonObject()) {
-      Set<Map.Entry<String,JsonElement>> entries = json.getAsJsonObject().entrySet();
-      if (entries.size() != 1) {
-        throw new IllegalStateException();
+      String field = unionNameFromJson(json);
+      JsonElement jv = json.getAsJsonObject().get(field);
+      try {
+        return jsonBinding.fromJson(jv);
+      } catch (JsonParseException e) {
+        e.pushField(field);
+        throw e;
       }
-      for (Map.Entry<String,JsonElement> v : entries) {
-        try {
-          return jsonBinding.fromJson(v.getValue());
-        } catch (JsonParseException e) {
-          e.pushField(v.getKey());
-          throw e;
-        }
-      }
-      throw new IllegalStateException();
     } else {
       return null;
     }
@@ -559,4 +560,6 @@ public class JsonBindings
       throw e;
     }
   }
+
+  public static String LAST_MERGED_FIELD = "_adl_last_merged_field";
 };
