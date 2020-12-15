@@ -1,8 +1,12 @@
 package org.adl.runtime;
 
+import static org.adl.runtime.JsonBindings.LAST_MERGED_FIELD;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,6 +16,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.nio.charset.Charset;
+
+import java.util.Map;
 
 /**
  * Simple functions to reduce boilerplate in working with json for ADL values
@@ -145,5 +151,43 @@ public class JsonHelpers {
   public static <T> T fromLenientStdin(JsonBinding<T> binding) {
     InputStreamReader utf8Reader = new InputStreamReader(System.in);
     return binding.fromJson(lenientGson.fromJson(utf8Reader, JsonElement.class));
+  }
+
+  /**
+   * Merge 2 json values such that they can subsequently be parsed.
+   *
+   * Json objects get merged with the values in jv2 overiding those in
+   * jv1 (including nested objects). For any other types the
+   * value in jv2 replaces the value in jv1.
+   */
+  public static JsonElement mergeJson(JsonElement jv1, JsonElement jv2) {
+    if( jv1.isJsonObject() && jv2.isJsonObject()) {
+      JsonObject jobj1 = jv1.getAsJsonObject();
+      JsonObject jobj2 = jv2.getAsJsonObject();
+
+      JsonObject result = new JsonObject();
+      String lastMergedField = null;
+
+      for(Map.Entry<String,JsonElement> me : jv1.getAsJsonObject().entrySet()) {
+        if (!me.getKey().equals(LAST_MERGED_FIELD)) {
+          result.add(me.getKey(), me.getValue());
+          lastMergedField = me.getKey();
+        }
+      }
+      for(Map.Entry<String,JsonElement> me : jv2.getAsJsonObject().entrySet()) {
+        if (!me.getKey().equals(LAST_MERGED_FIELD)) {
+          if (result.has(me.getKey())) {
+            result.add(me.getKey(), mergeJson(result.get(me.getKey()), me.getValue()));
+          } else {
+            result.add(me.getKey(), me.getValue());
+          }
+          lastMergedField = me.getKey();
+        }
+      }
+      result.add(LAST_MERGED_FIELD, new JsonPrimitive(lastMergedField));
+      return result;
+    } else {
+      return jv2;
+    }
   }
 };
