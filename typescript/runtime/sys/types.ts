@@ -53,24 +53,6 @@ export interface MaybeOpts<T> {
 
 export function makeMaybe<T, K extends keyof MaybeOpts<T>>(kind: K, value: MaybeOpts<T>[K]) { return {kind, value}; }
 
-export interface Error_Value<T> {
-  kind: 'value';
-  value: T;
-}
-export interface Error_Error<_T> {
-  kind: 'error';
-  value: string;
-}
-
-export type Error<T> = Error_Value<T> | Error_Error<T>;
-
-export interface ErrorOpts<T> {
-  value: T;
-  error: string;
-}
-
-export function makeError<T, K extends keyof ErrorOpts<T>>(kind: K, value: ErrorOpts<T>[K]) { return {kind, value}; }
-
 export interface Result_Ok<T, _E> {
   kind: 'ok';
   value: T;

@@ -27,18 +27,6 @@ annotation Either HaskellCustomType {
     ]
   };
 
-annotation Error HaskellCustomType {
-  "haskellname" : "Error",
-  "haskellimports" : ["qualified Data.Text"],
-  "insertCode" : ["type Error a  = Prelude.Either Data.Text.Text a"],
-  "generateOrigADLType" : "",
-  "structConstructor" : "",
-  "unionConstructors" : [
-    {"fieldName":"error", "constructor":"Prelude.Left"},
-    {"fieldName":"value", "constructor":"Prelude.Right"}
-    ]
-  };
-
 annotation Result HaskellCustomType {
   "haskellname" : "Result",
   "haskellimports" : [],

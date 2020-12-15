@@ -28,31 +28,6 @@ const Either = {
   ]
 };
 
-const Error = {
-  name : "Error",
-  module : "sys.types",
-  kind : "union",
-  typevars : [["T"]],
-  fields : [
-    {
-      name : "value",
-      type : {"var":"T"},
-      defaultv : null,
-      annotations : [
-      ]
-    },
-    {
-      name : "error",
-      type : {"primitive":"String"},
-      defaultv : null,
-      annotations : [
-      ]
-    }
-  ],
-  annotations : [
-  ]
-};
-
 const Map = {
   name : "Map",
   module : "sys.types",
@@ -182,6 +157,5 @@ export const _ADL_TYPES = {
   "sys.types.Maybe" : Maybe,
   "sys.types.MapEntry" : MapEntry,
   "sys.types.Map" : Map,
-  "sys.types.Error" : Error,
   "sys.types.Either" : Either
 };

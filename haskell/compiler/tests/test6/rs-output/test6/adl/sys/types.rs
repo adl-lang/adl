@@ -13,15 +13,6 @@ pub enum Either<T1, T2> {
 }
 
 #[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub enum Error<T> {
-  #[serde(rename="value")]
-  Value(T),
-
-  #[serde(rename="error")]
-  Error(String),
-}
-
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct MapEntry<K, V> {
   #[serde(rename="k")]
   pub key: K,

@@ -24,12 +24,6 @@ getCustomType scopedName _ = Map.lookup scopedName customTypes
          ""
          (Map.fromList [("left", "Prelude.Left"), ("right", "Prelude.Right")])
          Nothing)
-      , (ScopedName (ModuleName ["sys","types"]) "Error",
-         CustomType "Error" [HaskellModule "qualified Data.Text as T"] []
-         ["type Error a  = Prelude.Either T.Text a"]
-         ""
-         (Map.fromList [("error", "Prelude.Left"), ("value", "Prelude.Right")])
-         Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Result",
          CustomType "Result" [] []
          ["type Result t e  = Prelude.Either e t"]

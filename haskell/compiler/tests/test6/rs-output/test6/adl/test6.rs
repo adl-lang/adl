@@ -5,7 +5,6 @@ use crate::adlrt::custom::sys::types::maybe::Maybe;
 use crate::adlrt::custom::sys::types::pair::Pair;
 use crate::adlrt::custom::sys::types::set::Set;
 use crate::test6::adl::sys::types::Either;
-use crate::test6::adl::sys::types::Error;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -14,8 +13,6 @@ pub struct S {
   pub f_pair: Pair<i32, f64>,
 
   pub f_either: Either<String, i32>,
-
-  pub f_error: Error<i32>,
 
   pub f_map: Map<String, f64>,
 
@@ -45,11 +42,10 @@ pub struct S {
 }
 
 impl S {
-  pub fn new(f_pair: Pair<i32, f64>, f_either: Either<String, i32>, f_error: Error<i32>, f_map: Map<String, f64>, f_set: Set<String>, f_mstring: Maybe<String>, f_nstring: Option<String>, f_int: Option<i64>) -> S {
+  pub fn new(f_pair: Pair<i32, f64>, f_either: Either<String, i32>, f_map: Map<String, f64>, f_set: Set<String>, f_mstring: Maybe<String>, f_nstring: Option<String>, f_int: Option<i64>) -> S {
     S {
       f_pair: f_pair,
       f_either: f_either,
-      f_error: f_error,
       f_map: f_map,
       f_set: f_set,
       f_mstring: f_mstring,

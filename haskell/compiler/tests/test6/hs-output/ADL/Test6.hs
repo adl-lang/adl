@@ -19,7 +19,6 @@ import qualified Prelude
 data S = S
     { s_f_pair :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double)
     , s_f_either :: (ADL.Sys.Types.Either T.Text Data.Int.Int32)
-    , s_f_error :: (ADL.Sys.Types.Error Data.Int.Int32)
     , s_f_map :: (ADL.Sys.Types.Map T.Text Prelude.Double)
     , s_f_set :: (ADL.Sys.Types.Set T.Text)
     , s_f_mstring :: (ADL.Sys.Types.Maybe T.Text)
@@ -32,8 +31,8 @@ data S = S
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
-mkS :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double) -> (ADL.Sys.Types.Either T.Text Data.Int.Int32) -> (ADL.Sys.Types.Error Data.Int.Int32) -> (ADL.Sys.Types.Map T.Text Prelude.Double) -> (ADL.Sys.Types.Set T.Text) -> (ADL.Sys.Types.Maybe T.Text) -> (ADL.Core.Nullable.Nullable T.Text) -> (ADL.Core.Nullable.Nullable Data.Int.Int64) -> S
-mkS f_pair f_either f_error f_map f_set f_mstring f_nstring f_int = S f_pair f_either f_error f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (ADL.Core.Nullable.from ("abcde")) f_int (ADL.Core.Nullable.from (100)) (ADL.Core.Nullable.null)
+mkS :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double) -> (ADL.Sys.Types.Either T.Text Data.Int.Int32) -> (ADL.Sys.Types.Map T.Text Prelude.Double) -> (ADL.Sys.Types.Set T.Text) -> (ADL.Sys.Types.Maybe T.Text) -> (ADL.Core.Nullable.Nullable T.Text) -> (ADL.Core.Nullable.Nullable Data.Int.Int64) -> S
+mkS f_pair f_either f_map f_set f_mstring f_nstring f_int = S f_pair f_either f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (ADL.Core.Nullable.from ("abcde")) f_int (ADL.Core.Nullable.from (100)) (ADL.Core.Nullable.null)
 
 instance AdlValue S where
     atype _ = "test6.S"
@@ -41,7 +40,6 @@ instance AdlValue S where
     jsonGen = genObject
         [ genField "f_pair" s_f_pair
         , genField "f_either" s_f_either
-        , genField "f_error" s_f_error
         , genField "f_map" s_f_map
         , genField "f_set" s_f_set
         , genField "f_mstring" s_f_mstring
@@ -56,7 +54,6 @@ instance AdlValue S where
     jsonParser = S
         <$> parseField "f_pair"
         <*> parseField "f_either"
-        <*> parseField "f_error"
         <*> parseField "f_map"
         <*> parseField "f_set"
         <*> parseField "f_mstring"

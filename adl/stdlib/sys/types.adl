@@ -20,12 +20,6 @@ union Maybe<T>
     T just;
 };
 
-union Error<T>
-{
-    T value;
-    String error;
-};
-
 union Result<T, E> {
     T ok;
     E error;

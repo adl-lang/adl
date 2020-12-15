@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Sys.Types(
     Either,
-    Error,
     Map,
     MapEntry(..),
     Maybe,
@@ -24,9 +23,6 @@ import qualified Prelude
 
 
 type Either = Prelude.Either
-
-
-type Error a  = Prelude.Either T.Text a
 
 
 type Map k v = Map.Map k v

@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module ADL.Sys.Types(
     Either,
-    Error,
     Map,
     MapEntry(..),
     Maybe,
@@ -19,15 +18,11 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.Map
 import qualified Data.Proxy
 import qualified Data.Set
-import qualified Data.Text
 import qualified Data.Text as T
 import qualified Prelude
 
 
 type Either a b = Prelude.Either a b
-
-
-type Error a  = Prelude.Either Data.Text.Text a
 
 
 type Map k v = Data.Map.Map k v

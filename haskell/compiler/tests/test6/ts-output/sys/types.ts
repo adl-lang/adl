@@ -81,33 +81,6 @@ export function texprMaybe<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Maybe<T>
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Maybe"}}, parameters : [texprT.value]}};
 }
 
-export interface Error_Value<T> {
-  kind: 'value';
-  value: T;
-}
-export interface Error_Error<_T> {
-  kind: 'error';
-  value: string;
-}
-
-export type Error<T> = Error_Value<T> | Error_Error<T>;
-
-export interface ErrorOpts<T> {
-  value: T;
-  error: string;
-}
-
-export function makeError<T, K extends keyof ErrorOpts<T>>(kind: K, value: ErrorOpts<T>[K]) { return {kind, value}; }
-
-const Error_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"value","default":{"kind":"nothing"},"name":"value","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"error","default":{"kind":"nothing"},"name":"error","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"Error","version":{"kind":"nothing"}}};
-
-export const snError: ADL.ScopedName = {moduleName:"sys.types", name:"Error"};
-
-export function texprError<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Error<T>> {
-  return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "Error"}}, parameters : [texprT.value]}};
-}
-
 export interface Result_Ok<T, _E> {
   kind: 'ok';
   value: T;
@@ -187,7 +160,6 @@ export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "sys.types.Pair" : Pair_AST,
   "sys.types.Either" : Either_AST,
   "sys.types.Maybe" : Maybe_AST,
-  "sys.types.Error" : Error_AST,
   "sys.types.Result" : Result_AST,
   "sys.types.MapEntry" : MapEntry_AST,
   "sys.types.Map" : Map_AST,

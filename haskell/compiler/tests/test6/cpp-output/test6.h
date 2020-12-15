@@ -20,7 +20,6 @@ struct S
     S(
         const std::pair<int32_t,double>  & f_pair,
         const ADL::sys::types::Either<std::string,int32_t>  & f_either,
-        const ADL::sys::types::Error<int32_t>  & f_error,
         const std::map<std::string,double>  & f_map,
         const std::set<std::string>  & f_set,
         const ADL::sys::types::Maybe<std::string>  & f_mstring,
@@ -34,7 +33,6 @@ struct S
     
     std::pair<int32_t,double>  f_pair;
     ADL::sys::types::Either<std::string,int32_t>  f_either;
-    ADL::sys::types::Error<int32_t>  f_error;
     std::map<std::string,double>  f_map;
     std::set<std::string>  f_set;
     ADL::sys::types::Maybe<std::string>  f_mstring;
