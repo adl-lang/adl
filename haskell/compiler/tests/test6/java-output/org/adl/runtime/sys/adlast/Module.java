@@ -13,6 +13,8 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class Module {
@@ -20,13 +22,13 @@ public class Module {
   /* Members */
 
   private String name;
-  private ArrayList<Import> imports;
-  private HashMap<String, Decl> decls;
-  private HashMap<ScopedName, JsonElement> annotations;
+  private List<Import> imports;
+  private Map<String, Decl> decls;
+  private Map<ScopedName, JsonElement> annotations;
 
   /* Constructors */
 
-  public Module(String name, ArrayList<Import> imports, HashMap<String, Decl> decls, HashMap<ScopedName, JsonElement> annotations) {
+  public Module(String name, List<Import> imports, Map<String, Decl> decls, Map<ScopedName, JsonElement> annotations) {
     this.name = Objects.requireNonNull(name);
     this.imports = Objects.requireNonNull(imports);
     this.decls = Objects.requireNonNull(decls);
@@ -42,7 +44,7 @@ public class Module {
 
   public Module(Module other) {
     this.name = other.name;
-    this.imports = Factories.arrayList(Import.FACTORY).create(other.imports);
+    this.imports = Factories.list(Import.FACTORY).create(other.imports);
     this.decls = Factories.stringMap(Decl.FACTORY).create(other.decls);
     this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create(other.annotations);
   }
@@ -57,27 +59,27 @@ public class Module {
     this.name = Objects.requireNonNull(name);
   }
 
-  public ArrayList<Import> getImports() {
+  public List<Import> getImports() {
     return imports;
   }
 
-  public void setImports(ArrayList<Import> imports) {
+  public void setImports(List<Import> imports) {
     this.imports = Objects.requireNonNull(imports);
   }
 
-  public HashMap<String, Decl> getDecls() {
+  public Map<String, Decl> getDecls() {
     return decls;
   }
 
-  public void setDecls(HashMap<String, Decl> decls) {
+  public void setDecls(Map<String, Decl> decls) {
     this.decls = Objects.requireNonNull(decls);
   }
 
-  public HashMap<ScopedName, JsonElement> getAnnotations() {
+  public Map<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+  public void setAnnotations(Map<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
@@ -110,9 +112,9 @@ public class Module {
 
   public static class Builder {
     private String name;
-    private ArrayList<Import> imports;
-    private HashMap<String, Decl> decls;
-    private HashMap<ScopedName, JsonElement> annotations;
+    private List<Import> imports;
+    private Map<String, Decl> decls;
+    private Map<ScopedName, JsonElement> annotations;
 
     public Builder() {
       this.name = null;
@@ -126,17 +128,17 @@ public class Module {
       return this;
     }
 
-    public Builder setImports(ArrayList<Import> imports) {
+    public Builder setImports(List<Import> imports) {
       this.imports = Objects.requireNonNull(imports);
       return this;
     }
 
-    public Builder setDecls(HashMap<String, Decl> decls) {
+    public Builder setDecls(Map<String, Decl> decls) {
       this.decls = Objects.requireNonNull(decls);
       return this;
     }
 
-    public Builder setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+    public Builder setAnnotations(Map<ScopedName, JsonElement> annotations) {
       this.annotations = Objects.requireNonNull(annotations);
       return this;
     }
@@ -179,9 +181,9 @@ public class Module {
 
   public static JsonBinding<Module> jsonBinding() {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
-    final Lazy<JsonBinding<ArrayList<Import>>> imports = new Lazy<>(() -> JsonBindings.arrayList(Import.jsonBinding()));
-    final Lazy<JsonBinding<HashMap<String, Decl>>> decls = new Lazy<>(() -> JsonBindings.stringMap(Decl.jsonBinding()));
-    final Lazy<JsonBinding<HashMap<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
+    final Lazy<JsonBinding<List<Import>>> imports = new Lazy<>(() -> JsonBindings.list(Import.jsonBinding()));
+    final Lazy<JsonBinding<Map<String, Decl>>> decls = new Lazy<>(() -> JsonBindings.stringMap(Decl.jsonBinding()));
+    final Lazy<JsonBinding<Map<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
     final Factory<Module> _factory = FACTORY;
 
     return new JsonBinding<Module>() {

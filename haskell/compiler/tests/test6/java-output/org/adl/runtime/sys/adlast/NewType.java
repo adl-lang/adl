@@ -12,6 +12,7 @@ import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import org.adl.runtime.MaybeHelpers;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,13 +20,13 @@ public class NewType {
 
   /* Members */
 
-  private ArrayList<String> typeParams;
+  private List<String> typeParams;
   private TypeExpr typeExpr;
   private Optional<JsonElement> default_;
 
   /* Constructors */
 
-  public NewType(ArrayList<String> typeParams, TypeExpr typeExpr, Optional<JsonElement> default_) {
+  public NewType(List<String> typeParams, TypeExpr typeExpr, Optional<JsonElement> default_) {
     this.typeParams = Objects.requireNonNull(typeParams);
     this.typeExpr = Objects.requireNonNull(typeExpr);
     this.default_ = Objects.requireNonNull(default_);
@@ -38,18 +39,18 @@ public class NewType {
   }
 
   public NewType(NewType other) {
-    this.typeParams = Factories.arrayList(Factories.STRING).create(other.typeParams);
+    this.typeParams = Factories.list(Factories.STRING).create(other.typeParams);
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
     this.default_ = MaybeHelpers.factory(JsonBindings.JSON_FACTORY).create(other.default_);
   }
 
   /* Accessors and mutators */
 
-  public ArrayList<String> getTypeParams() {
+  public List<String> getTypeParams() {
     return typeParams;
   }
 
-  public void setTypeParams(ArrayList<String> typeParams) {
+  public void setTypeParams(List<String> typeParams) {
     this.typeParams = Objects.requireNonNull(typeParams);
   }
 
@@ -95,7 +96,7 @@ public class NewType {
   /* Builder */
 
   public static class Builder {
-    private ArrayList<String> typeParams;
+    private List<String> typeParams;
     private TypeExpr typeExpr;
     private Optional<JsonElement> default_;
 
@@ -105,7 +106,7 @@ public class NewType {
       this.default_ = null;
     }
 
-    public Builder setTypeParams(ArrayList<String> typeParams) {
+    public Builder setTypeParams(List<String> typeParams) {
       this.typeParams = Objects.requireNonNull(typeParams);
       return this;
     }
@@ -156,7 +157,7 @@ public class NewType {
   /* Json serialization */
 
   public static JsonBinding<NewType> jsonBinding() {
-    final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
+    final Lazy<JsonBinding<List<String>>> typeParams = new Lazy<>(() -> JsonBindings.list(JsonBindings.STRING));
     final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
     final Lazy<JsonBinding<Optional<JsonElement>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.JSON));
     final Factory<NewType> _factory = FACTORY;

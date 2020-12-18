@@ -14,6 +14,7 @@ import org.adl.runtime.sys.adlast.ScopedName;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class X1 {
@@ -24,13 +25,13 @@ public class X1 {
   private int f2;
   private Pair<String, Integer> f3;
   private Pair<String, String> f4;
-  private ArrayList<Integer> f5;
-  private ArrayList<Pair<String, Integer>> f6;
-  private ArrayList<Pair<String, String>> f7;
+  private List<Integer> f5;
+  private List<Pair<String, Integer>> f6;
+  private List<Pair<String, String>> f7;
 
   /* Constructors */
 
-  public X1(int f1, int f2, Pair<String, Integer> f3, Pair<String, String> f4, ArrayList<Integer> f5, ArrayList<Pair<String, Integer>> f6, ArrayList<Pair<String, String>> f7) {
+  public X1(int f1, int f2, Pair<String, Integer> f3, Pair<String, String> f4, List<Integer> f5, List<Pair<String, Integer>> f6, List<Pair<String, String>> f7) {
     this.f1 = f1;
     this.f2 = f2;
     this.f3 = Objects.requireNonNull(f3);
@@ -55,9 +56,9 @@ public class X1 {
     this.f2 = other.f2;
     this.f3 = Pair.factory(Factories.STRING, Factories.INT32).create(other.f3);
     this.f4 = Pair.factory(Factories.STRING, Factories.STRING).create(other.f4);
-    this.f5 = Factories.arrayList(Factories.INT32).create(other.f5);
-    this.f6 = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INT32)).create(other.f6);
-    this.f7 = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(other.f7);
+    this.f5 = Factories.list(Factories.INT32).create(other.f5);
+    this.f6 = Factories.list(Pair.factory(Factories.STRING, Factories.INT32)).create(other.f6);
+    this.f7 = Factories.list(Pair.factory(Factories.STRING, Factories.STRING)).create(other.f7);
   }
 
   /* Accessors and mutators */
@@ -94,27 +95,27 @@ public class X1 {
     this.f4 = Objects.requireNonNull(f4);
   }
 
-  public ArrayList<Integer> getF5() {
+  public List<Integer> getF5() {
     return f5;
   }
 
-  public void setF5(ArrayList<Integer> f5) {
+  public void setF5(List<Integer> f5) {
     this.f5 = Objects.requireNonNull(f5);
   }
 
-  public ArrayList<Pair<String, Integer>> getF6() {
+  public List<Pair<String, Integer>> getF6() {
     return f6;
   }
 
-  public void setF6(ArrayList<Pair<String, Integer>> f6) {
+  public void setF6(List<Pair<String, Integer>> f6) {
     this.f6 = Objects.requireNonNull(f6);
   }
 
-  public ArrayList<Pair<String, String>> getF7() {
+  public List<Pair<String, String>> getF7() {
     return f7;
   }
 
-  public void setF7(ArrayList<Pair<String, String>> f7) {
+  public void setF7(List<Pair<String, String>> f7) {
     this.f7 = Objects.requireNonNull(f7);
   }
 
@@ -156,9 +157,9 @@ public class X1 {
     private Integer f2;
     private Pair<String, Integer> f3;
     private Pair<String, String> f4;
-    private ArrayList<Integer> f5;
-    private ArrayList<Pair<String, Integer>> f6;
-    private ArrayList<Pair<String, String>> f7;
+    private List<Integer> f5;
+    private List<Pair<String, Integer>> f6;
+    private List<Pair<String, String>> f7;
 
     public Builder() {
       this.f1 = null;
@@ -190,17 +191,17 @@ public class X1 {
       return this;
     }
 
-    public Builder setF5(ArrayList<Integer> f5) {
+    public Builder setF5(List<Integer> f5) {
       this.f5 = Objects.requireNonNull(f5);
       return this;
     }
 
-    public Builder setF6(ArrayList<Pair<String, Integer>> f6) {
+    public Builder setF6(List<Pair<String, Integer>> f6) {
       this.f6 = Objects.requireNonNull(f6);
       return this;
     }
 
-    public Builder setF7(ArrayList<Pair<String, String>> f7) {
+    public Builder setF7(List<Pair<String, String>> f7) {
       this.f7 = Objects.requireNonNull(f7);
       return this;
     }
@@ -249,9 +250,9 @@ public class X1 {
     final Lazy<JsonBinding<Integer>> f2 = new Lazy<>(() -> JsonBindings.INT32);
     final Lazy<JsonBinding<Pair<String, Integer>>> f3 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
     final Lazy<JsonBinding<Pair<String, String>>> f4 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING));
-    final Lazy<JsonBinding<ArrayList<Integer>>> f5 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INT32));
-    final Lazy<JsonBinding<ArrayList<Pair<String, Integer>>>> f6 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32)));
-    final Lazy<JsonBinding<ArrayList<Pair<String, String>>>> f7 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING)));
+    final Lazy<JsonBinding<List<Integer>>> f5 = new Lazy<>(() -> JsonBindings.list(JsonBindings.INT32));
+    final Lazy<JsonBinding<List<Pair<String, Integer>>>> f6 = new Lazy<>(() -> JsonBindings.list(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32)));
+    final Lazy<JsonBinding<List<Pair<String, String>>>> f7 = new Lazy<>(() -> JsonBindings.list(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING)));
     final Factory<X1> _factory = FACTORY;
 
     return new JsonBinding<X1>() {

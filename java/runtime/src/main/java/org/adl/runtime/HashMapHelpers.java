@@ -10,21 +10,22 @@ import org.adl.runtime.sys.adlast.TypeRef;
 import org.adl.runtime.sys.adlast.ScopedName;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
 public class HashMapHelpers
 {
-  public static <K,V> Factory<HashMap<K,V>> factory(final Factory<K> keyFactory,final Factory <V> valueFactory) {
-    return new Factory<HashMap<K,V>>() {
+  public static <K,V> Factory<Map<K,V>> factory(final Factory<K> keyFactory,final Factory <V> valueFactory) {
+    return new Factory<Map<K,V>>() {
       @Override
-      public HashMap<K,V> create() {
+      public Map<K,V> create() {
         return new HashMap<>();
       }
 
       @Override
-      public HashMap<K,V> create(HashMap<K,V> other) {
-        HashMap<K,V> result = new HashMap<>();
+      public Map<K,V> create(Map<K,V> other) {
+        Map<K,V> result = new HashMap<>();
         for (Map.Entry<K,V> e : other.entrySet()) {
           result.put(keyFactory.create(e.getKey()), valueFactory.create(e.getValue()));
         }
@@ -41,32 +42,32 @@ public class HashMapHelpers
       }
 
       @Override
-      public JsonBinding<HashMap<K,V>> jsonBinding() {
+      public JsonBinding<Map<K,V>> jsonBinding() {
         return HashMapHelpers.jsonBinding(keyFactory.jsonBinding(), valueFactory.jsonBinding());
       }
     };
   }
 
-  public static <K,V> HashMap<K,V> create(ArrayList<MapEntry<K,V>> vals) {
-    HashMap<K,V> result = new HashMap<>();
+  public static <K,V> Map<K,V> create(List<MapEntry<K,V>> vals) {
+    Map<K,V> result = new HashMap<>();
     for (MapEntry<K,V> p : vals) {
       result.put(p.getKey(),p.getValue());
     }
     return result;
   }
 
-  public static <K,V> JsonBinding<HashMap<K,V>> jsonBinding(
+  public static <K,V> JsonBinding<Map<K,V>> jsonBinding(
       final JsonBinding<K> bindingK,final JsonBinding<V> bindingV) {
-    final Factory<HashMap<K,V>> _factory = factory(bindingK.factory(), bindingV.factory());
+    final Factory<Map<K,V>> _factory = factory(bindingK.factory(), bindingV.factory());
 
-    return new JsonBinding<HashMap<K,V>>() {
+    return new JsonBinding<Map<K,V>>() {
       @Override
-      public Factory<HashMap<K,V>> factory() {
+      public Factory<Map<K,V>> factory() {
         return _factory;
       };
 
       @Override
-      public JsonElement toJson(HashMap<K,V> value) {
+      public JsonElement toJson(Map<K,V> value) {
         JsonArray result = new JsonArray();
         for (Map.Entry<K,V> me: value.entrySet()) {
           JsonObject entry = new JsonObject();
@@ -78,13 +79,13 @@ public class HashMapHelpers
       }
 
       @Override
-      public HashMap<K,V> fromJson(JsonElement json) {
+      public Map<K,V> fromJson(JsonElement json) {
         if (!json.isJsonArray()) {
           throw new JsonParseException("expected an array");
         }
 
         JsonArray array = json.getAsJsonArray();
-        HashMap<K,V> result = new HashMap<>();
+        Map<K,V> result = new HashMap<>();
         for(int i = 0; i < array.size(); i++) {
           try {
             JsonObject pair = JsonBindings.objectFromJson(array.get(i));

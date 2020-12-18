@@ -13,6 +13,7 @@ import org.adl.runtime.sys.adlast.ScopedName;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class X2 {
@@ -53,15 +54,15 @@ public class X2 {
     return new X2(Disc.F4, Objects.requireNonNull(v));
   }
 
-  public static X2 f5(ArrayList<Integer> v) {
+  public static X2 f5(List<Integer> v) {
     return new X2(Disc.F5, Objects.requireNonNull(v));
   }
 
-  public static X2 f6(ArrayList<Pair<String, Integer>> v) {
+  public static X2 f6(List<Pair<String, Integer>> v) {
     return new X2(Disc.F6, Objects.requireNonNull(v));
   }
 
-  public static X2 f7(ArrayList<Pair<String, String>> v) {
+  public static X2 f7(List<Pair<String, String>> v) {
     return new X2(Disc.F7, Objects.requireNonNull(v));
   }
 
@@ -86,13 +87,13 @@ public class X2 {
         this.value = Pair.factory(Factories.STRING, Factories.STRING).create(X2.<Pair<String, String>>cast(other.value));
         break;
       case F5:
-        this.value = Factories.arrayList(Factories.INT32).create(X2.<ArrayList<Integer>>cast(other.value));
+        this.value = Factories.list(Factories.INT32).create(X2.<List<Integer>>cast(other.value));
         break;
       case F6:
-        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.INT32)).create(X2.<ArrayList<Pair<String, Integer>>>cast(other.value));
+        this.value = Factories.list(Pair.factory(Factories.STRING, Factories.INT32)).create(X2.<List<Pair<String, Integer>>>cast(other.value));
         break;
       case F7:
-        this.value = Factories.arrayList(Pair.factory(Factories.STRING, Factories.STRING)).create(X2.<ArrayList<Pair<String, String>>>cast(other.value));
+        this.value = Factories.list(Pair.factory(Factories.STRING, Factories.STRING)).create(X2.<List<Pair<String, String>>>cast(other.value));
         break;
     }
   }
@@ -136,23 +137,23 @@ public class X2 {
     throw new IllegalStateException();
   }
 
-  public ArrayList<Integer> getF5() {
+  public List<Integer> getF5() {
     if (disc == Disc.F5) {
-      return X2.<ArrayList<Integer>>cast(value);
+      return X2.<List<Integer>>cast(value);
     }
     throw new IllegalStateException();
   }
 
-  public ArrayList<Pair<String, Integer>> getF6() {
+  public List<Pair<String, Integer>> getF6() {
     if (disc == Disc.F6) {
-      return X2.<ArrayList<Pair<String, Integer>>>cast(value);
+      return X2.<List<Pair<String, Integer>>>cast(value);
     }
     throw new IllegalStateException();
   }
 
-  public ArrayList<Pair<String, String>> getF7() {
+  public List<Pair<String, String>> getF7() {
     if (disc == Disc.F7) {
-      return X2.<ArrayList<Pair<String, String>>>cast(value);
+      return X2.<List<Pair<String, String>>>cast(value);
     }
     throw new IllegalStateException();
   }
@@ -179,17 +180,17 @@ public class X2 {
     this.disc = Disc.F4;
   }
 
-  public void setF5(ArrayList<Integer> v) {
+  public void setF5(List<Integer> v) {
     this.value = Objects.requireNonNull(v);
     this.disc = Disc.F5;
   }
 
-  public void setF6(ArrayList<Pair<String, Integer>> v) {
+  public void setF6(List<Pair<String, Integer>> v) {
     this.value = Objects.requireNonNull(v);
     this.disc = Disc.F6;
   }
 
-  public void setF7(ArrayList<Pair<String, String>> v) {
+  public void setF7(List<Pair<String, String>> v) {
     this.value = Objects.requireNonNull(v);
     this.disc = Disc.F7;
   }
@@ -248,9 +249,9 @@ public class X2 {
     final Lazy<JsonBinding<Integer>> f2 = new Lazy<>(() -> JsonBindings.INT32);
     final Lazy<JsonBinding<Pair<String, Integer>>> f3 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
     final Lazy<JsonBinding<Pair<String, String>>> f4 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING));
-    final Lazy<JsonBinding<ArrayList<Integer>>> f5 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INT32));
-    final Lazy<JsonBinding<ArrayList<Pair<String, Integer>>>> f6 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32)));
-    final Lazy<JsonBinding<ArrayList<Pair<String, String>>>> f7 = new Lazy<>(() -> JsonBindings.arrayList(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING)));
+    final Lazy<JsonBinding<List<Integer>>> f5 = new Lazy<>(() -> JsonBindings.list(JsonBindings.INT32));
+    final Lazy<JsonBinding<List<Pair<String, Integer>>>> f6 = new Lazy<>(() -> JsonBindings.list(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32)));
+    final Lazy<JsonBinding<List<Pair<String, String>>>> f7 = new Lazy<>(() -> JsonBindings.list(Pair.jsonBinding(JsonBindings.STRING, JsonBindings.STRING)));
     final Factory<X2> _factory = FACTORY;
 
     return new JsonBinding<X2>() {

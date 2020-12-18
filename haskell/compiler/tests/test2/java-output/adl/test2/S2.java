@@ -14,6 +14,7 @@ import org.adl.runtime.sys.adlast.ScopedName;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -25,11 +26,11 @@ public class S2 {
 
   private String f1;
   private double f2;
-  private ArrayList<Integer> f3;
+  private List<Integer> f3;
 
   /* Constructors */
 
-  public S2(String f1, double f2, ArrayList<Integer> f3) {
+  public S2(String f1, double f2, List<Integer> f3) {
     this.f1 = Objects.requireNonNull(f1);
     this.f2 = f2;
     this.f3 = Objects.requireNonNull(f3);
@@ -44,7 +45,7 @@ public class S2 {
   public S2(S2 other) {
     this.f1 = other.f1;
     this.f2 = other.f2;
-    this.f3 = Factories.arrayList(Factories.INT32).create(other.f3);
+    this.f3 = Factories.list(Factories.INT32).create(other.f3);
   }
 
   /* Accessors and mutators */
@@ -65,11 +66,11 @@ public class S2 {
     this.f2 = f2;
   }
 
-  public ArrayList<Integer> getF3() {
+  public List<Integer> getF3() {
     return f3;
   }
 
-  public void setF3(ArrayList<Integer> f3) {
+  public void setF3(List<Integer> f3) {
     this.f3 = Objects.requireNonNull(f3);
   }
 
@@ -101,7 +102,7 @@ public class S2 {
   public static class Builder {
     private String f1;
     private Double f2;
-    private ArrayList<Integer> f3;
+    private List<Integer> f3;
 
     public Builder() {
       this.f1 = null;
@@ -119,7 +120,7 @@ public class S2 {
       return this;
     }
 
-    public Builder setF3(ArrayList<Integer> f3) {
+    public Builder setF3(List<Integer> f3) {
       this.f3 = Objects.requireNonNull(f3);
       return this;
     }
@@ -162,7 +163,7 @@ public class S2 {
   public static JsonBinding<S2> jsonBinding() {
     final Lazy<JsonBinding<String>> f1 = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<Double>> f2 = new Lazy<>(() -> JsonBindings.DOUBLE);
-    final Lazy<JsonBinding<ArrayList<Integer>>> f3 = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.INT32));
+    final Lazy<JsonBinding<List<Integer>>> f3 = new Lazy<>(() -> JsonBindings.list(JsonBindings.INT32));
     final Factory<S2> _factory = FACTORY;
 
     return new JsonBinding<S2>() {

@@ -6,12 +6,14 @@ import adlc.config.java.*;
 annotation JavaPackage "org.adl.runtime.sys.types";
 
 annotation Set JavaCustomType {
-  "javaname" : "java.util.HashSet",
+  "javaname" : "java.util.Set",
+  "ctorjavaname" : "java.util.HashSet",
   "helpers" : "org.adl.runtime.HashSetHelpers"
   };
 
 annotation Map JavaCustomType {
-  "javaname" : "java.util.HashMap",
+  "javaname" : "java.util.Map",
+  "ctorjavaname" : "java.util.HashMap",
   "helpers" : "org.adl.runtime.HashMapHelpers"
   };
 

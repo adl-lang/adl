@@ -11,18 +11,19 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class TypeDef {
 
   /* Members */
 
-  private ArrayList<String> typeParams;
+  private List<String> typeParams;
   private TypeExpr typeExpr;
 
   /* Constructors */
 
-  public TypeDef(ArrayList<String> typeParams, TypeExpr typeExpr) {
+  public TypeDef(List<String> typeParams, TypeExpr typeExpr) {
     this.typeParams = Objects.requireNonNull(typeParams);
     this.typeExpr = Objects.requireNonNull(typeExpr);
   }
@@ -33,17 +34,17 @@ public class TypeDef {
   }
 
   public TypeDef(TypeDef other) {
-    this.typeParams = Factories.arrayList(Factories.STRING).create(other.typeParams);
+    this.typeParams = Factories.list(Factories.STRING).create(other.typeParams);
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
   }
 
   /* Accessors and mutators */
 
-  public ArrayList<String> getTypeParams() {
+  public List<String> getTypeParams() {
     return typeParams;
   }
 
-  public void setTypeParams(ArrayList<String> typeParams) {
+  public void setTypeParams(List<String> typeParams) {
     this.typeParams = Objects.requireNonNull(typeParams);
   }
 
@@ -79,7 +80,7 @@ public class TypeDef {
   /* Builder */
 
   public static class Builder {
-    private ArrayList<String> typeParams;
+    private List<String> typeParams;
     private TypeExpr typeExpr;
 
     public Builder() {
@@ -87,7 +88,7 @@ public class TypeDef {
       this.typeExpr = null;
     }
 
-    public Builder setTypeParams(ArrayList<String> typeParams) {
+    public Builder setTypeParams(List<String> typeParams) {
       this.typeParams = Objects.requireNonNull(typeParams);
       return this;
     }
@@ -132,7 +133,7 @@ public class TypeDef {
   /* Json serialization */
 
   public static JsonBinding<TypeDef> jsonBinding() {
-    final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
+    final Lazy<JsonBinding<List<String>>> typeParams = new Lazy<>(() -> JsonBindings.list(JsonBindings.STRING));
     final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
     final Factory<TypeDef> _factory = FACTORY;
 

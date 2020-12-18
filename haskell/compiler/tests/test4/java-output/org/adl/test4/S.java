@@ -24,8 +24,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public class S {
 
@@ -39,14 +41,14 @@ public class S {
   private Optional<String> v5a;
   private Optional<String> v5b;
   private Pair<String, Integer> v6;
-  private HashSet<Integer> v7;
-  private HashSet<Integer> v7a;
-  private HashMap<String, Integer> v8;
-  private HashMap<String, Integer> v8a;
+  private Set<Integer> v7;
+  private Set<Integer> v7a;
+  private Map<String, Integer> v8;
+  private Map<String, Integer> v8a;
 
   /* Constructors */
 
-  public S(LocalDate v1, LocalDate v2, LocalDate v3, LocalDate v4, Optional<String> v5, Optional<String> v5a, Optional<String> v5b, Pair<String, Integer> v6, HashSet<Integer> v7, HashSet<Integer> v7a, HashMap<String, Integer> v8, HashMap<String, Integer> v8a) {
+  public S(LocalDate v1, LocalDate v2, LocalDate v3, LocalDate v4, Optional<String> v5, Optional<String> v5a, Optional<String> v5b, Pair<String, Integer> v6, Set<Integer> v7, Set<Integer> v7a, Map<String, Integer> v8, Map<String, Integer> v8a) {
     this.v1 = Objects.requireNonNull(v1);
     this.v2 = Objects.requireNonNull(v2);
     this.v3 = Objects.requireNonNull(v3);
@@ -70,10 +72,10 @@ public class S {
     this.v5a = MaybeHelpers.nothing(null);
     this.v5b = MaybeHelpers.just("hello");
     this.v6 = Pair.factory(Factories.STRING, Factories.INT32).create();
-    this.v7 = HashSetHelpers.create(Factories.arrayList(1, 2, 3));
+    this.v7 = HashSetHelpers.create(Factories.list(1, 2, 3));
     this.v7a = HashSetHelpers.factory(Factories.INT32).create();
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INT32).create();
-    this.v8a = HashMapHelpers.create(Factories.arrayList(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
+    this.v8a = HashMapHelpers.create(Factories.list(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
   }
 
   public S(S other) {
@@ -157,35 +159,35 @@ public class S {
     this.v6 = Objects.requireNonNull(v6);
   }
 
-  public HashSet<Integer> getV7() {
+  public Set<Integer> getV7() {
     return v7;
   }
 
-  public void setV7(HashSet<Integer> v7) {
+  public void setV7(Set<Integer> v7) {
     this.v7 = Objects.requireNonNull(v7);
   }
 
-  public HashSet<Integer> getV7a() {
+  public Set<Integer> getV7a() {
     return v7a;
   }
 
-  public void setV7a(HashSet<Integer> v7a) {
+  public void setV7a(Set<Integer> v7a) {
     this.v7a = Objects.requireNonNull(v7a);
   }
 
-  public HashMap<String, Integer> getV8() {
+  public Map<String, Integer> getV8() {
     return v8;
   }
 
-  public void setV8(HashMap<String, Integer> v8) {
+  public void setV8(Map<String, Integer> v8) {
     this.v8 = Objects.requireNonNull(v8);
   }
 
-  public HashMap<String, Integer> getV8a() {
+  public Map<String, Integer> getV8a() {
     return v8a;
   }
 
-  public void setV8a(HashMap<String, Integer> v8a) {
+  public void setV8a(Map<String, Integer> v8a) {
     this.v8a = Objects.requireNonNull(v8a);
   }
 
@@ -241,10 +243,10 @@ public class S {
     private Optional<String> v5a;
     private Optional<String> v5b;
     private Pair<String, Integer> v6;
-    private HashSet<Integer> v7;
-    private HashSet<Integer> v7a;
-    private HashMap<String, Integer> v8;
-    private HashMap<String, Integer> v8a;
+    private Set<Integer> v7;
+    private Set<Integer> v7a;
+    private Map<String, Integer> v8;
+    private Map<String, Integer> v8a;
 
     public Builder() {
       this.v1 = null;
@@ -255,10 +257,10 @@ public class S {
       this.v5a = MaybeHelpers.nothing(null);
       this.v5b = MaybeHelpers.just("hello");
       this.v6 = null;
-      this.v7 = HashSetHelpers.create(Factories.arrayList(1, 2, 3));
+      this.v7 = HashSetHelpers.create(Factories.list(1, 2, 3));
       this.v7a = null;
       this.v8 = null;
-      this.v8a = HashMapHelpers.create(Factories.arrayList(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
+      this.v8a = HashMapHelpers.create(Factories.list(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
     }
 
     public Builder setV1(LocalDate v1) {
@@ -301,22 +303,22 @@ public class S {
       return this;
     }
 
-    public Builder setV7(HashSet<Integer> v7) {
+    public Builder setV7(Set<Integer> v7) {
       this.v7 = Objects.requireNonNull(v7);
       return this;
     }
 
-    public Builder setV7a(HashSet<Integer> v7a) {
+    public Builder setV7a(Set<Integer> v7a) {
       this.v7a = Objects.requireNonNull(v7a);
       return this;
     }
 
-    public Builder setV8(HashMap<String, Integer> v8) {
+    public Builder setV8(Map<String, Integer> v8) {
       this.v8 = Objects.requireNonNull(v8);
       return this;
     }
 
-    public Builder setV8a(HashMap<String, Integer> v8a) {
+    public Builder setV8a(Map<String, Integer> v8a) {
       this.v8a = Objects.requireNonNull(v8a);
       return this;
     }
@@ -368,10 +370,10 @@ public class S {
     final Lazy<JsonBinding<Optional<String>>> v5a = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> v5b = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Pair<String, Integer>>> v6 = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
-    final Lazy<JsonBinding<HashSet<Integer>>> v7 = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INT32));
-    final Lazy<JsonBinding<HashSet<Integer>>> v7a = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INT32));
-    final Lazy<JsonBinding<HashMap<String, Integer>>> v8 = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
-    final Lazy<JsonBinding<HashMap<String, Integer>>> v8a = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
+    final Lazy<JsonBinding<Set<Integer>>> v7 = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INT32));
+    final Lazy<JsonBinding<Set<Integer>>> v7a = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.INT32));
+    final Lazy<JsonBinding<Map<String, Integer>>> v8 = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
+    final Lazy<JsonBinding<Map<String, Integer>>> v8a = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
     final Factory<S> _factory = FACTORY;
 
     return new JsonBinding<S>() {
@@ -410,10 +412,10 @@ public class S {
           _obj.has("v5a") ? JsonBindings.fieldFromJson(_obj, "v5a", v5a.get()) : MaybeHelpers.nothing(null),
           _obj.has("v5b") ? JsonBindings.fieldFromJson(_obj, "v5b", v5b.get()) : MaybeHelpers.just("hello"),
           JsonBindings.fieldFromJson(_obj, "v6", v6.get()),
-          _obj.has("v7") ? JsonBindings.fieldFromJson(_obj, "v7", v7.get()) : HashSetHelpers.create(Factories.arrayList(1, 2, 3)),
+          _obj.has("v7") ? JsonBindings.fieldFromJson(_obj, "v7", v7.get()) : HashSetHelpers.create(Factories.list(1, 2, 3)),
           JsonBindings.fieldFromJson(_obj, "v7a", v7a.get()),
           JsonBindings.fieldFromJson(_obj, "v8", v8.get()),
-          _obj.has("v8a") ? JsonBindings.fieldFromJson(_obj, "v8a", v8a.get()) : HashMapHelpers.create(Factories.arrayList(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)))
+          _obj.has("v8a") ? JsonBindings.fieldFromJson(_obj, "v8a", v8a.get()) : HashMapHelpers.create(Factories.list(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)))
         );
       }
     };

@@ -11,18 +11,19 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Union {
 
   /* Members */
 
-  private ArrayList<String> typeParams;
-  private ArrayList<Field> fields;
+  private List<String> typeParams;
+  private List<Field> fields;
 
   /* Constructors */
 
-  public Union(ArrayList<String> typeParams, ArrayList<Field> fields) {
+  public Union(List<String> typeParams, List<Field> fields) {
     this.typeParams = Objects.requireNonNull(typeParams);
     this.fields = Objects.requireNonNull(fields);
   }
@@ -33,25 +34,25 @@ public class Union {
   }
 
   public Union(Union other) {
-    this.typeParams = Factories.arrayList(Factories.STRING).create(other.typeParams);
-    this.fields = Factories.arrayList(Field.FACTORY).create(other.fields);
+    this.typeParams = Factories.list(Factories.STRING).create(other.typeParams);
+    this.fields = Factories.list(Field.FACTORY).create(other.fields);
   }
 
   /* Accessors and mutators */
 
-  public ArrayList<String> getTypeParams() {
+  public List<String> getTypeParams() {
     return typeParams;
   }
 
-  public void setTypeParams(ArrayList<String> typeParams) {
+  public void setTypeParams(List<String> typeParams) {
     this.typeParams = Objects.requireNonNull(typeParams);
   }
 
-  public ArrayList<Field> getFields() {
+  public List<Field> getFields() {
     return fields;
   }
 
-  public void setFields(ArrayList<Field> fields) {
+  public void setFields(List<Field> fields) {
     this.fields = Objects.requireNonNull(fields);
   }
 
@@ -79,20 +80,20 @@ public class Union {
   /* Builder */
 
   public static class Builder {
-    private ArrayList<String> typeParams;
-    private ArrayList<Field> fields;
+    private List<String> typeParams;
+    private List<Field> fields;
 
     public Builder() {
       this.typeParams = null;
       this.fields = null;
     }
 
-    public Builder setTypeParams(ArrayList<String> typeParams) {
+    public Builder setTypeParams(List<String> typeParams) {
       this.typeParams = Objects.requireNonNull(typeParams);
       return this;
     }
 
-    public Builder setFields(ArrayList<Field> fields) {
+    public Builder setFields(List<Field> fields) {
       this.fields = Objects.requireNonNull(fields);
       return this;
     }
@@ -132,8 +133,8 @@ public class Union {
   /* Json serialization */
 
   public static JsonBinding<Union> jsonBinding() {
-    final Lazy<JsonBinding<ArrayList<String>>> typeParams = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
-    final Lazy<JsonBinding<ArrayList<Field>>> fields = new Lazy<>(() -> JsonBindings.arrayList(Field.jsonBinding()));
+    final Lazy<JsonBinding<List<String>>> typeParams = new Lazy<>(() -> JsonBindings.list(JsonBindings.STRING));
+    final Lazy<JsonBinding<List<Field>>> fields = new Lazy<>(() -> JsonBindings.list(Field.jsonBinding()));
     final Factory<Union> _factory = FACTORY;
 
     return new JsonBinding<Union>() {

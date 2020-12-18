@@ -17,6 +17,8 @@ import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class S<T> {
@@ -37,20 +39,20 @@ public class S<T> {
   private double f_double;
   private ByteArray f_bytes;
   private String f_string;
-  private ArrayList<String> f_vstring;
+  private List<String> f_vstring;
   private A f_a;
   private U f_u;
   private U f_u1;
   private E f_e;
   private T f_t;
   private B<Short> f_bint16;
-  private HashMap<String, Integer> f_smap;
+  private Map<String, Integer> f_smap;
   private JsonElement f_json1;
   private JsonElement f_json2;
 
   /* Constructors */
 
-  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, ArrayList<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, HashMap<String, Integer> f_smap, JsonElement f_json1, JsonElement f_json2) {
+  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, List<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, Map<String, Integer> f_smap, JsonElement f_json1, JsonElement f_json2) {
     this.f_void = f_void;
     this.f_bool = f_bool;
     this.f_int8 = f_int8;
@@ -191,11 +193,11 @@ public class S<T> {
     this.f_string = Objects.requireNonNull(f_string);
   }
 
-  public ArrayList<String> getF_vstring() {
+  public List<String> getF_vstring() {
     return f_vstring;
   }
 
-  public void setF_vstring(ArrayList<String> f_vstring) {
+  public void setF_vstring(List<String> f_vstring) {
     this.f_vstring = Objects.requireNonNull(f_vstring);
   }
 
@@ -247,11 +249,11 @@ public class S<T> {
     this.f_bint16 = Objects.requireNonNull(f_bint16);
   }
 
-  public HashMap<String, Integer> getF_smap() {
+  public Map<String, Integer> getF_smap() {
     return f_smap;
   }
 
-  public void setF_smap(HashMap<String, Integer> f_smap) {
+  public void setF_smap(Map<String, Integer> f_smap) {
     this.f_smap = Objects.requireNonNull(f_smap);
   }
 
@@ -353,14 +355,14 @@ public class S<T> {
     private Double f_double;
     private ByteArray f_bytes;
     private String f_string;
-    private ArrayList<String> f_vstring;
+    private List<String> f_vstring;
     private A f_a;
     private U f_u;
     private U f_u1;
     private E f_e;
     private T f_t;
     private B<Short> f_bint16;
-    private HashMap<String, Integer> f_smap;
+    private Map<String, Integer> f_smap;
     private JsonElement f_json1;
     private JsonElement f_json2;
 
@@ -379,13 +381,13 @@ public class S<T> {
       this.f_double = 0.45D;
       this.f_bytes = new ByteArray("hello".getBytes());
       this.f_string = "abcd";
-      this.f_vstring = Factories.arrayList("xy", "ab");
+      this.f_vstring = Factories.list("xy", "ab");
       this.f_a = new A((short)0, "xyz", false);
       this.f_u = U.f_int((short)45);
       this.f_u1 = U.f_void();
       this.f_e = E.V2;
       this.f_t = null;
-      this.f_bint16 = new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5));
+      this.f_bint16 = new B<Short>((short)56, "yikes", Factories.list((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5));
       this.f_smap = Factories.stringMap("a", 45, "b", 47);
       this.f_json1 = JsonHelpers.jsonFromString("null");
       this.f_json2 = JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]");
@@ -461,7 +463,7 @@ public class S<T> {
       return this;
     }
 
-    public Builder<T> setF_vstring(ArrayList<String> f_vstring) {
+    public Builder<T> setF_vstring(List<String> f_vstring) {
       this.f_vstring = Objects.requireNonNull(f_vstring);
       return this;
     }
@@ -496,7 +498,7 @@ public class S<T> {
       return this;
     }
 
-    public Builder<T> setF_smap(HashMap<String, Integer> f_smap) {
+    public Builder<T> setF_smap(Map<String, Integer> f_smap) {
       this.f_smap = Objects.requireNonNull(f_smap);
       return this;
     }
@@ -535,14 +537,14 @@ public class S<T> {
       final Lazy<Factory<Double>> f_double = new Lazy<>(() -> Factories.DOUBLE);
       final Lazy<Factory<ByteArray>> f_bytes = new Lazy<>(() -> Factories.BYTE_ARRAY);
       final Lazy<Factory<String>> f_string = new Lazy<>(() -> Factories.STRING);
-      final Lazy<Factory<ArrayList<String>>> f_vstring = new Lazy<>(() -> Factories.arrayList(Factories.STRING));
+      final Lazy<Factory<List<String>>> f_vstring = new Lazy<>(() -> Factories.list(Factories.STRING));
       final Lazy<Factory<A>> f_a = new Lazy<>(() -> A.FACTORY);
       final Lazy<Factory<U>> f_u = new Lazy<>(() -> U.FACTORY);
       final Lazy<Factory<U>> f_u1 = new Lazy<>(() -> U.FACTORY);
       final Lazy<Factory<E>> f_e = new Lazy<>(() -> E.FACTORY);
       final Lazy<Factory<T>> f_t = new Lazy<>(() -> factoryT);
       final Lazy<Factory<B<Short>>> f_bint16 = new Lazy<>(() -> B.factory(Factories.INT16));
-      final Lazy<Factory<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> Factories.stringMap(Factories.INT32));
+      final Lazy<Factory<Map<String, Integer>>> f_smap = new Lazy<>(() -> Factories.stringMap(Factories.INT32));
       final Lazy<Factory<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
       final Lazy<Factory<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
 
@@ -563,13 +565,13 @@ public class S<T> {
           0.45D,
           new ByteArray("hello".getBytes()),
           "abcd",
-          Factories.arrayList("xy", "ab"),
+          Factories.list("xy", "ab"),
           new A((short)0, "xyz", false),
           U.f_int((short)45),
           U.f_void(),
           E.V2,
           f_t.get().create(),
-          new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
+          new B<Short>((short)56, "yikes", Factories.list((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
           Factories.stringMap("a", 45, "b", 47),
           JsonHelpers.jsonFromString("null"),
           JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]")
@@ -638,14 +640,14 @@ public class S<T> {
     final Lazy<JsonBinding<Double>> f_double = new Lazy<>(() -> JsonBindings.DOUBLE);
     final Lazy<JsonBinding<ByteArray>> f_bytes = new Lazy<>(() -> JsonBindings.BYTE_ARRAY);
     final Lazy<JsonBinding<String>> f_string = new Lazy<>(() -> JsonBindings.STRING);
-    final Lazy<JsonBinding<ArrayList<String>>> f_vstring = new Lazy<>(() -> JsonBindings.arrayList(JsonBindings.STRING));
+    final Lazy<JsonBinding<List<String>>> f_vstring = new Lazy<>(() -> JsonBindings.list(JsonBindings.STRING));
     final Lazy<JsonBinding<A>> f_a = new Lazy<>(() -> A.jsonBinding());
     final Lazy<JsonBinding<U>> f_u = new Lazy<>(() -> U.jsonBinding());
     final Lazy<JsonBinding<U>> f_u1 = new Lazy<>(() -> U.jsonBinding());
     final Lazy<JsonBinding<E>> f_e = new Lazy<>(() -> E.jsonBinding());
     final Lazy<JsonBinding<T>> f_t = new Lazy<>(() -> bindingT);
     final Lazy<JsonBinding<B<Short>>> f_bint16 = new Lazy<>(() -> B.jsonBinding(JsonBindings.INT16));
-    final Lazy<JsonBinding<HashMap<String, Integer>>> f_smap = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.INT32));
+    final Lazy<JsonBinding<Map<String, Integer>>> f_smap = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.INT32));
     final Lazy<JsonBinding<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON);
     final Lazy<JsonBinding<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON);
     final Factory<T> factoryT = bindingT.factory();
@@ -705,13 +707,13 @@ public class S<T> {
           _obj.has("f_double") ? JsonBindings.fieldFromJson(_obj, "f_double", f_double.get()) : 0.45D,
           _obj.has("f_bytes") ? JsonBindings.fieldFromJson(_obj, "f_bytes", f_bytes.get()) : new ByteArray("hello".getBytes()),
           _obj.has("f_string") ? JsonBindings.fieldFromJson(_obj, "f_string", f_string.get()) : "abcd",
-          _obj.has("f_vstring") ? JsonBindings.fieldFromJson(_obj, "f_vstring", f_vstring.get()) : Factories.arrayList("xy", "ab"),
+          _obj.has("f_vstring") ? JsonBindings.fieldFromJson(_obj, "f_vstring", f_vstring.get()) : Factories.list("xy", "ab"),
           _obj.has("f_a") ? JsonBindings.fieldFromJson(_obj, "f_a", f_a.get()) : new A((short)0, "xyz", false),
           _obj.has("f_u") ? JsonBindings.fieldFromJson(_obj, "f_u", f_u.get()) : U.f_int((short)45),
           _obj.has("f_u1") ? JsonBindings.fieldFromJson(_obj, "f_u1", f_u1.get()) : U.f_void(),
           _obj.has("f_e") ? JsonBindings.fieldFromJson(_obj, "f_e", f_e.get()) : E.V2,
           JsonBindings.fieldFromJson(_obj, "f_t", f_t.get()),
-          _obj.has("f_bint16") ? JsonBindings.fieldFromJson(_obj, "f_bint16", f_bint16.get()) : new B<Short>((short)56, "yikes", Factories.arrayList((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
+          _obj.has("f_bint16") ? JsonBindings.fieldFromJson(_obj, "f_bint16", f_bint16.get()) : new B<Short>((short)56, "yikes", Factories.list((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
           _obj.has("f_smap") ? JsonBindings.fieldFromJson(_obj, "f_smap", f_smap.get()) : Factories.stringMap("a", 45, "b", 47),
           _obj.has("f_json1") ? JsonBindings.fieldFromJson(_obj, "f_json1", f_json1.get()) : JsonHelpers.jsonFromString("null"),
           _obj.has("f_json2") ? JsonBindings.fieldFromJson(_obj, "f_json2", f_json2.get()) : JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]")

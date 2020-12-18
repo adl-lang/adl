@@ -13,8 +13,11 @@ type JavaGenerate = Bool;
 /// should be used
 struct JavaCustomType
 {
-    // The fully scoped java name of the type to be used
+    // The fully scoped java name of the interface type to be used
     String javaname;
+
+    // If non empty, the fully scoped java name of the class to be constructed if different to javaname
+    String ctorjavaname = "";
 
     // The fully scoped name of the class containing
     // helper code.

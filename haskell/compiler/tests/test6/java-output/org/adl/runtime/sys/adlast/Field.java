@@ -14,6 +14,7 @@ import org.adl.runtime.Lazy;
 import org.adl.runtime.MaybeHelpers;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -25,11 +26,11 @@ public class Field {
   private String serializedName;
   private TypeExpr typeExpr;
   private Optional<JsonElement> default_;
-  private HashMap<ScopedName, JsonElement> annotations;
+  private Map<ScopedName, JsonElement> annotations;
 
   /* Constructors */
 
-  public Field(String name, String serializedName, TypeExpr typeExpr, Optional<JsonElement> default_, HashMap<ScopedName, JsonElement> annotations) {
+  public Field(String name, String serializedName, TypeExpr typeExpr, Optional<JsonElement> default_, Map<ScopedName, JsonElement> annotations) {
     this.name = Objects.requireNonNull(name);
     this.serializedName = Objects.requireNonNull(serializedName);
     this.typeExpr = Objects.requireNonNull(typeExpr);
@@ -87,11 +88,11 @@ public class Field {
     this.default_ = Objects.requireNonNull(default_);
   }
 
-  public HashMap<ScopedName, JsonElement> getAnnotations() {
+  public Map<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+  public void setAnnotations(Map<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
@@ -129,7 +130,7 @@ public class Field {
     private String serializedName;
     private TypeExpr typeExpr;
     private Optional<JsonElement> default_;
-    private HashMap<ScopedName, JsonElement> annotations;
+    private Map<ScopedName, JsonElement> annotations;
 
     public Builder() {
       this.name = null;
@@ -159,7 +160,7 @@ public class Field {
       return this;
     }
 
-    public Builder setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+    public Builder setAnnotations(Map<ScopedName, JsonElement> annotations) {
       this.annotations = Objects.requireNonNull(annotations);
       return this;
     }
@@ -206,7 +207,7 @@ public class Field {
     final Lazy<JsonBinding<String>> serializedName = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<TypeExpr>> typeExpr = new Lazy<>(() -> TypeExpr.jsonBinding());
     final Lazy<JsonBinding<Optional<JsonElement>>> default_ = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.JSON));
-    final Lazy<JsonBinding<HashMap<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
+    final Lazy<JsonBinding<Map<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
     final Factory<Field> _factory = FACTORY;
 
     return new JsonBinding<Field>() {

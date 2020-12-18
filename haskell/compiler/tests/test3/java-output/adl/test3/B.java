@@ -14,6 +14,7 @@ import org.adl.runtime.sys.adlast.ScopedName;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class B<T> {
@@ -22,12 +23,12 @@ public class B<T> {
 
   private T f_t;
   private String f_string;
-  private ArrayList<T> f_tvec;
+  private List<T> f_tvec;
   private XY<T> f_xy;
 
   /* Constructors */
 
-  public B(T f_t, String f_string, ArrayList<T> f_tvec, XY<T> f_xy) {
+  public B(T f_t, String f_string, List<T> f_tvec, XY<T> f_xy) {
     this.f_t = Objects.requireNonNull(f_t);
     this.f_string = Objects.requireNonNull(f_string);
     this.f_tvec = Objects.requireNonNull(f_tvec);
@@ -52,11 +53,11 @@ public class B<T> {
     this.f_string = Objects.requireNonNull(f_string);
   }
 
-  public ArrayList<T> getF_tvec() {
+  public List<T> getF_tvec() {
     return f_tvec;
   }
 
-  public void setF_tvec(ArrayList<T> f_tvec) {
+  public void setF_tvec(List<T> f_tvec) {
     this.f_tvec = Objects.requireNonNull(f_tvec);
   }
 
@@ -98,7 +99,7 @@ public class B<T> {
   public static class Builder<T> {
     private T f_t;
     private String f_string;
-    private ArrayList<T> f_tvec;
+    private List<T> f_tvec;
     private XY<T> f_xy;
 
     public Builder() {
@@ -118,7 +119,7 @@ public class B<T> {
       return this;
     }
 
-    public Builder<T> setF_tvec(ArrayList<T> f_tvec) {
+    public Builder<T> setF_tvec(List<T> f_tvec) {
       this.f_tvec = Objects.requireNonNull(f_tvec);
       return this;
     }
@@ -143,7 +144,7 @@ public class B<T> {
     return new Factory<B<T>>() {
       final Lazy<Factory<T>> f_t = new Lazy<>(() -> factoryT);
       final Lazy<Factory<String>> f_string = new Lazy<>(() -> Factories.STRING);
-      final Lazy<Factory<ArrayList<T>>> f_tvec = new Lazy<>(() -> Factories.arrayList(factoryT));
+      final Lazy<Factory<List<T>>> f_tvec = new Lazy<>(() -> Factories.list(factoryT));
       final Lazy<Factory<XY<T>>> f_xy = new Lazy<>(() -> XY.factory(factoryT));
 
       @Override
@@ -186,7 +187,7 @@ public class B<T> {
   public static<T> JsonBinding<B<T>> jsonBinding(JsonBinding<T> bindingT) {
     final Lazy<JsonBinding<T>> f_t = new Lazy<>(() -> bindingT);
     final Lazy<JsonBinding<String>> f_string = new Lazy<>(() -> JsonBindings.STRING);
-    final Lazy<JsonBinding<ArrayList<T>>> f_tvec = new Lazy<>(() -> JsonBindings.arrayList(bindingT));
+    final Lazy<JsonBinding<List<T>>> f_tvec = new Lazy<>(() -> JsonBindings.list(bindingT));
     final Lazy<JsonBinding<XY<T>>> f_xy = new Lazy<>(() -> XY.jsonBinding(bindingT));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<B<T>> _factory = factory(bindingT.factory());

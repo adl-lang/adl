@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
@@ -180,16 +181,16 @@ public class Factories {
     public JsonBinding<JsonElement> jsonBinding() { return JsonBindings.JSON; }
   };
 
-  public static <T> Factory<ArrayList<T>> arrayList(final Factory<T> factoryT) {
-    return new Factory<ArrayList<T>>() {
+  public static <T> Factory<List<T>> list(final Factory<T> factoryT) {
+    return new Factory<List<T>>() {
       @Override
-      public ArrayList<T> create() {
+      public List<T> create() {
         return new java.util.ArrayList<>();
       }
 
       @Override
-      public ArrayList<T> create(ArrayList<T> other) {
-        ArrayList<T> result = new ArrayList<>();
+      public List<T> create(List<T> other) {
+        List<T> result = new ArrayList<>();
         for (T v : other) {
           result.add(factoryT.create(v));
         }
@@ -201,12 +202,12 @@ public class Factories {
         return primTypeExpr("Vector", factoryT.typeExpr());
       }
       @Override
-      public JsonBinding<ArrayList<T>> jsonBinding() { return JsonBindings.arrayList(factoryT.jsonBinding()); }
+      public JsonBinding<List<T>> jsonBinding() { return JsonBindings.list(factoryT.jsonBinding()); }
     };
   }
 
   @SafeVarargs
-  public static <T> ArrayList<T> arrayList(T... values) {
+  public static <T> List<T> list(T... values) {
     ArrayList<T> result  = new ArrayList<>();
     for (int i=  0; i < values.length; i++) {
       result.add(values[i]);
@@ -214,16 +215,16 @@ public class Factories {
     return result;
   }
 
-  public static <T> Factory<HashMap<String,T>> stringMap(final Factory<T> factoryT) {
-    return new Factory<HashMap<String,T>>() {
+  public static <T> Factory<Map<String,T>> stringMap(final Factory<T> factoryT) {
+    return new Factory<Map<String,T>>() {
       @Override
-      public HashMap<String,T> create() {
+      public Map<String,T> create() {
         return new java.util.HashMap<>();
       }
 
       @Override
-      public HashMap<String,T> create(HashMap<String,T> other) {
-        HashMap<String,T> result = new HashMap<>();
+      public Map<String,T> create(Map<String,T> other) {
+        Map<String,T> result = new HashMap<>();
         for (Map.Entry<String,T> e : other.entrySet()) {
           result.put(e.getKey(), factoryT.create(e.getValue()));
         }
@@ -235,7 +236,7 @@ public class Factories {
         return primTypeExpr("StringMap", factoryT.typeExpr());
       }
       @Override
-      public JsonBinding<HashMap<String,T>> jsonBinding() {
+      public JsonBinding<Map<String,T>> jsonBinding() {
         return JsonBindings.stringMap(factoryT.jsonBinding());
       }
     };

@@ -14,16 +14,16 @@ import java.util.Set;
 
 public class HashSetHelpers
 {
-  public static <V> Factory<HashSet<V>> factory(final Factory <V> valueFactory) {
-    return new Factory<HashSet<V>>() {
+  public static <V> Factory<Set<V>> factory(final Factory <V> valueFactory) {
+    return new Factory<Set<V>>() {
       @Override
-      public HashSet<V> create() {
+      public Set<V> create() {
         return new HashSet<>();
       }
 
       @Override
-      public HashSet<V> create(HashSet<V> other) {
-        HashSet<V> result = new HashSet<V>();
+      public Set<V> create(Set<V> other) {
+        Set<V> result = new HashSet<V>();
         for (V v : other) {
           result.add(valueFactory.create(v));
         }
@@ -39,13 +39,13 @@ public class HashSetHelpers
       }
 
       @Override
-      public JsonBinding<HashSet<V>> jsonBinding() {
+      public JsonBinding<Set<V>> jsonBinding() {
         return HashSetHelpers.jsonBinding(valueFactory.jsonBinding());
       }
     };
   }
 
-  public static <V> HashSet<V> create(List<V> vals) {
+  public static <V> Set<V> create(List<V> vals) {
     HashSet<V> result = new HashSet<V>();
     for (V v : vals) {
       result.add(v);
@@ -53,17 +53,17 @@ public class HashSetHelpers
     return result;
   }
 
-  public static <T> JsonBinding<HashSet<T>> jsonBinding(final JsonBinding<T> bindingT) {
-    final Factory<HashSet<T>> _factory = factory(bindingT.factory());
+  public static <T> JsonBinding<Set<T>> jsonBinding(final JsonBinding<T> bindingT) {
+    final Factory<Set<T>> _factory = factory(bindingT.factory());
 
-    return new JsonBinding<HashSet<T>>() {
+    return new JsonBinding<Set<T>>() {
       @Override
-      public Factory<HashSet<T>> factory() {
+      public Factory<Set<T>> factory() {
         return _factory;
       };
 
       @Override
-      public JsonElement toJson(HashSet<T> value) {
+      public JsonElement toJson(Set<T> value) {
         JsonArray result = new JsonArray();
         for (T v : value) {
           result.add(bindingT.toJson(v));
@@ -72,7 +72,7 @@ public class HashSetHelpers
       }
 
       @Override
-      public HashSet<T> fromJson(JsonElement json) {
+      public Set<T> fromJson(JsonElement json) {
         if (!json.isJsonArray()) {
           throw new JsonParseException("expected an array");
         }

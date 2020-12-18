@@ -11,6 +11,7 @@ import org.adl.runtime.sys.adlast.TypeRef;
 import org.adl.runtime.TypeToken;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Optional;
@@ -364,16 +365,16 @@ public class JsonBindings
     }
   };
 
-  public static <T> JsonBinding<ArrayList<T>> arrayList(final JsonBinding<T> factoryT) {
-    return new JsonBinding<ArrayList<T>>() {
+  public static <T> JsonBinding<List<T>> list(final JsonBinding<T> factoryT) {
+    return new JsonBinding<List<T>>() {
 
       @Override
-      public Factory<ArrayList<T>> factory() {
-        return Factories.arrayList(factoryT.factory());
+      public Factory<List<T>> factory() {
+        return Factories.list(factoryT.factory());
       }
 
       @Override
-      public JsonElement toJson(ArrayList<T> value) {
+      public JsonElement toJson(List<T> value) {
         JsonArray result = new JsonArray();
         for (T v : value) {
           result.add(factoryT.toJson(v));
@@ -382,8 +383,8 @@ public class JsonBindings
       }
 
       @Override
-      public ArrayList<T> fromJson(JsonElement json) {
-        ArrayList<T> result = new ArrayList<>();
+      public List<T> fromJson(JsonElement json) {
+        List<T> result = new ArrayList<>();
         JsonArray jarray;
         try {
           jarray = json.getAsJsonArray();
@@ -405,16 +406,16 @@ public class JsonBindings
     };
   }
 
-  public static <T> JsonBinding<HashMap<String,T>> stringMap(final JsonBinding<T> factoryT) {
-    return new JsonBinding<HashMap<String,T>>() {
+  public static <T> JsonBinding<Map<String,T>> stringMap(final JsonBinding<T> factoryT) {
+    return new JsonBinding<Map<String,T>>() {
 
       @Override
-      public Factory<HashMap<String,T>> factory() {
+      public Factory<Map<String,T>> factory() {
         return Factories.stringMap(factoryT.factory());
       }
 
       @Override
-      public JsonElement toJson(HashMap<String,T> value) {
+      public JsonElement toJson(Map<String,T> value) {
         JsonObject result = new JsonObject();
         for (Map.Entry<String,T> e : value.entrySet()) {
           result.add(e.getKey(), factoryT.toJson(e.getValue()));
@@ -423,14 +424,14 @@ public class JsonBindings
       }
 
       @Override
-      public HashMap<String,T> fromJson(JsonElement json) {
+      public Map<String,T> fromJson(JsonElement json) {
         JsonObject jobj;
         try {
           jobj = json.getAsJsonObject();
         } catch (UnsupportedOperationException | ClassCastException e) {
           throw new JsonParseException("expected an object");
         }
-        HashMap<String,T> result = new HashMap<>();
+        Map<String,T> result = new HashMap<>();
         for (Map.Entry<String,JsonElement> e : jobj.entrySet()) {
           try {
             result.put(e.getKey(), factoryT.fromJson(e.getValue()));

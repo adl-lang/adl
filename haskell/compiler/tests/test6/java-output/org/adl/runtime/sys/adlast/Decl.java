@@ -14,6 +14,7 @@ import org.adl.runtime.Lazy;
 import org.adl.runtime.MaybeHelpers;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,11 +25,11 @@ public class Decl {
   private String name;
   private Optional<Integer> version;
   private DeclType type_;
-  private HashMap<ScopedName, JsonElement> annotations;
+  private Map<ScopedName, JsonElement> annotations;
 
   /* Constructors */
 
-  public Decl(String name, Optional<Integer> version, DeclType type_, HashMap<ScopedName, JsonElement> annotations) {
+  public Decl(String name, Optional<Integer> version, DeclType type_, Map<ScopedName, JsonElement> annotations) {
     this.name = Objects.requireNonNull(name);
     this.version = Objects.requireNonNull(version);
     this.type_ = Objects.requireNonNull(type_);
@@ -75,11 +76,11 @@ public class Decl {
     this.type_ = Objects.requireNonNull(type_);
   }
 
-  public HashMap<ScopedName, JsonElement> getAnnotations() {
+  public Map<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+  public void setAnnotations(Map<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
@@ -114,7 +115,7 @@ public class Decl {
     private String name;
     private Optional<Integer> version;
     private DeclType type_;
-    private HashMap<ScopedName, JsonElement> annotations;
+    private Map<ScopedName, JsonElement> annotations;
 
     public Builder() {
       this.name = null;
@@ -138,7 +139,7 @@ public class Decl {
       return this;
     }
 
-    public Builder setAnnotations(HashMap<ScopedName, JsonElement> annotations) {
+    public Builder setAnnotations(Map<ScopedName, JsonElement> annotations) {
       this.annotations = Objects.requireNonNull(annotations);
       return this;
     }
@@ -183,7 +184,7 @@ public class Decl {
     final Lazy<JsonBinding<String>> name = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<Optional<Integer>>> version = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.WORD32));
     final Lazy<JsonBinding<DeclType>> type_ = new Lazy<>(() -> DeclType.jsonBinding());
-    final Lazy<JsonBinding<HashMap<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
+    final Lazy<JsonBinding<Map<ScopedName, JsonElement>>> annotations = new Lazy<>(() -> HashMapHelpers.jsonBinding(ScopedName.jsonBinding(), JsonBindings.JSON));
     final Factory<Decl> _factory = FACTORY;
 
     return new JsonBinding<Decl>() {

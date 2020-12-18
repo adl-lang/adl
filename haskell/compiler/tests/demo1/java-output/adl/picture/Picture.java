@@ -13,6 +13,7 @@ import org.adl.runtime.sys.adlast.ScopedName;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Picture {
@@ -42,7 +43,7 @@ public class Picture {
     return new Picture(Disc.RECTANGLE, Objects.requireNonNull(v));
   }
 
-  public static Picture composed(ArrayList<Picture> v) {
+  public static Picture composed(List<Picture> v) {
     return new Picture(Disc.COMPOSED, Objects.requireNonNull(v));
   }
 
@@ -65,7 +66,7 @@ public class Picture {
         this.value = Rectangle.FACTORY.create((Rectangle) other.value);
         break;
       case COMPOSED:
-        this.value = Factories.arrayList(Picture.FACTORY).create(Picture.<ArrayList<Picture>>cast(other.value));
+        this.value = Factories.list(Picture.FACTORY).create(Picture.<List<Picture>>cast(other.value));
         break;
       case TRANSLATED:
         this.value = Translated.factory(Picture.FACTORY).create(Picture.<Translated<Picture>>cast(other.value));
@@ -98,9 +99,9 @@ public class Picture {
     throw new IllegalStateException();
   }
 
-  public ArrayList<Picture> getComposed() {
+  public List<Picture> getComposed() {
     if (disc == Disc.COMPOSED) {
-      return Picture.<ArrayList<Picture>>cast(value);
+      return Picture.<List<Picture>>cast(value);
     }
     throw new IllegalStateException();
   }
@@ -124,7 +125,7 @@ public class Picture {
     this.disc = Disc.RECTANGLE;
   }
 
-  public void setComposed(ArrayList<Picture> v) {
+  public void setComposed(List<Picture> v) {
     this.value = Objects.requireNonNull(v);
     this.disc = Disc.COMPOSED;
   }
@@ -186,7 +187,7 @@ public class Picture {
   public static JsonBinding<Picture> jsonBinding() {
     final Lazy<JsonBinding<Circle>> circle = new Lazy<>(() -> Circle.jsonBinding());
     final Lazy<JsonBinding<Rectangle>> rectangle = new Lazy<>(() -> Rectangle.jsonBinding());
-    final Lazy<JsonBinding<ArrayList<Picture>>> composed = new Lazy<>(() -> JsonBindings.arrayList(Picture.jsonBinding()));
+    final Lazy<JsonBinding<List<Picture>>> composed = new Lazy<>(() -> JsonBindings.list(Picture.jsonBinding()));
     final Lazy<JsonBinding<Translated<Picture>>> translated = new Lazy<>(() -> Translated.jsonBinding(Picture.jsonBinding()));
     final Factory<Picture> _factory = FACTORY;
 

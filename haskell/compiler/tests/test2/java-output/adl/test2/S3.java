@@ -14,6 +14,7 @@ import org.adl.runtime.sys.adlast.ScopedName;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -26,11 +27,11 @@ public class S3<T> {
   private String f1;
   private double f2;
   private T f3;
-  private ArrayList<T> f4;
+  private List<T> f4;
 
   /* Constructors */
 
-  public S3(String f1, double f2, T f3, ArrayList<T> f4) {
+  public S3(String f1, double f2, T f3, List<T> f4) {
     this.f1 = Objects.requireNonNull(f1);
     this.f2 = f2;
     this.f3 = Objects.requireNonNull(f3);
@@ -63,11 +64,11 @@ public class S3<T> {
     this.f3 = Objects.requireNonNull(f3);
   }
 
-  public ArrayList<T> getF4() {
+  public List<T> getF4() {
     return f4;
   }
 
-  public void setF4(ArrayList<T> f4) {
+  public void setF4(List<T> f4) {
     this.f4 = Objects.requireNonNull(f4);
   }
 
@@ -102,7 +103,7 @@ public class S3<T> {
     private String f1;
     private Double f2;
     private T f3;
-    private ArrayList<T> f4;
+    private List<T> f4;
 
     public Builder() {
       this.f1 = null;
@@ -126,7 +127,7 @@ public class S3<T> {
       return this;
     }
 
-    public Builder<T> setF4(ArrayList<T> f4) {
+    public Builder<T> setF4(List<T> f4) {
       this.f4 = Objects.requireNonNull(f4);
       return this;
     }
@@ -147,7 +148,7 @@ public class S3<T> {
       final Lazy<Factory<String>> f1 = new Lazy<>(() -> Factories.STRING);
       final Lazy<Factory<Double>> f2 = new Lazy<>(() -> Factories.DOUBLE);
       final Lazy<Factory<T>> f3 = new Lazy<>(() -> factoryT);
-      final Lazy<Factory<ArrayList<T>>> f4 = new Lazy<>(() -> Factories.arrayList(factoryT));
+      final Lazy<Factory<List<T>>> f4 = new Lazy<>(() -> Factories.list(factoryT));
 
       @Override
       public S3<T> create() {
@@ -190,7 +191,7 @@ public class S3<T> {
     final Lazy<JsonBinding<String>> f1 = new Lazy<>(() -> JsonBindings.STRING);
     final Lazy<JsonBinding<Double>> f2 = new Lazy<>(() -> JsonBindings.DOUBLE);
     final Lazy<JsonBinding<T>> f3 = new Lazy<>(() -> bindingT);
-    final Lazy<JsonBinding<ArrayList<T>>> f4 = new Lazy<>(() -> JsonBindings.arrayList(bindingT));
+    final Lazy<JsonBinding<List<T>>> f4 = new Lazy<>(() -> JsonBindings.list(bindingT));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<S3<T>> _factory = factory(bindingT.factory());
 

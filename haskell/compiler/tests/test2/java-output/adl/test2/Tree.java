@@ -14,6 +14,7 @@ import org.adl.runtime.sys.adlast.ScopedName;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Tree<T> {
@@ -21,11 +22,11 @@ public class Tree<T> {
   /* Members */
 
   private T value;
-  private ArrayList<Tree<T>> children;
+  private List<Tree<T>> children;
 
   /* Constructors */
 
-  public Tree(T value, ArrayList<Tree<T>> children) {
+  public Tree(T value, List<Tree<T>> children) {
     this.value = Objects.requireNonNull(value);
     this.children = Objects.requireNonNull(children);
   }
@@ -40,11 +41,11 @@ public class Tree<T> {
     this.value = Objects.requireNonNull(value);
   }
 
-  public ArrayList<Tree<T>> getChildren() {
+  public List<Tree<T>> getChildren() {
     return children;
   }
 
-  public void setChildren(ArrayList<Tree<T>> children) {
+  public void setChildren(List<Tree<T>> children) {
     this.children = Objects.requireNonNull(children);
   }
 
@@ -73,7 +74,7 @@ public class Tree<T> {
 
   public static class Builder<T> {
     private T value;
-    private ArrayList<Tree<T>> children;
+    private List<Tree<T>> children;
 
     public Builder() {
       this.value = null;
@@ -85,7 +86,7 @@ public class Tree<T> {
       return this;
     }
 
-    public Builder<T> setChildren(ArrayList<Tree<T>> children) {
+    public Builder<T> setChildren(List<Tree<T>> children) {
       this.children = Objects.requireNonNull(children);
       return this;
     }
@@ -102,7 +103,7 @@ public class Tree<T> {
   public static <T> Factory<Tree<T>> factory(Factory<T> factoryT) {
     return new Factory<Tree<T>>() {
       final Lazy<Factory<T>> value = new Lazy<>(() -> factoryT);
-      final Lazy<Factory<ArrayList<Tree<T>>>> children = new Lazy<>(() -> Factories.arrayList(Tree.factory(factoryT)));
+      final Lazy<Factory<List<Tree<T>>>> children = new Lazy<>(() -> Factories.list(Tree.factory(factoryT)));
 
       @Override
       public Tree<T> create() {
@@ -139,7 +140,7 @@ public class Tree<T> {
 
   public static<T> JsonBinding<Tree<T>> jsonBinding(JsonBinding<T> bindingT) {
     final Lazy<JsonBinding<T>> value = new Lazy<>(() -> bindingT);
-    final Lazy<JsonBinding<ArrayList<Tree<T>>>> children = new Lazy<>(() -> JsonBindings.arrayList(Tree.jsonBinding(bindingT)));
+    final Lazy<JsonBinding<List<Tree<T>>>> children = new Lazy<>(() -> JsonBindings.list(Tree.jsonBinding(bindingT)));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<Tree<T>> _factory = factory(bindingT.factory());
 

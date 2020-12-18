@@ -14,6 +14,7 @@ import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -23,11 +24,11 @@ public class Test {
 
   /* Members */
 
-  private HashMap<String, String> foo;
+  private Map<String, String> foo;
 
   /* Constructors */
 
-  public Test(HashMap<String, String> foo) {
+  public Test(Map<String, String> foo) {
     this.foo = Objects.requireNonNull(foo);
   }
 
@@ -41,11 +42,11 @@ public class Test {
 
   /* Accessors and mutators */
 
-  public HashMap<String, String> getFoo() {
+  public Map<String, String> getFoo() {
     return foo;
   }
 
-  public void setFoo(HashMap<String, String> foo) {
+  public void setFoo(Map<String, String> foo) {
     this.foo = Objects.requireNonNull(foo);
   }
 
@@ -96,7 +97,7 @@ public class Test {
   /* Json serialization */
 
   public static JsonBinding<Test> jsonBinding() {
-    final Lazy<JsonBinding<HashMap<String, String>>> foo = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.STRING));
+    final Lazy<JsonBinding<Map<String, String>>> foo = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.STRING));
     final Factory<Test> _factory = FACTORY;
 
     return new JsonBinding<Test>() {

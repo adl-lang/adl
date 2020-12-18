@@ -11,6 +11,7 @@ import org.adl.runtime.JsonBinding;
 import org.adl.runtime.JsonBindings;
 import org.adl.runtime.Lazy;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class TypeExpr {
@@ -18,11 +19,11 @@ public class TypeExpr {
   /* Members */
 
   private TypeRef typeRef;
-  private ArrayList<TypeExpr> parameters;
+  private List<TypeExpr> parameters;
 
   /* Constructors */
 
-  public TypeExpr(TypeRef typeRef, ArrayList<TypeExpr> parameters) {
+  public TypeExpr(TypeRef typeRef, List<TypeExpr> parameters) {
     this.typeRef = Objects.requireNonNull(typeRef);
     this.parameters = Objects.requireNonNull(parameters);
   }
@@ -34,7 +35,7 @@ public class TypeExpr {
 
   public TypeExpr(TypeExpr other) {
     this.typeRef = TypeRef.FACTORY.create(other.typeRef);
-    this.parameters = Factories.arrayList(TypeExpr.FACTORY).create(other.parameters);
+    this.parameters = Factories.list(TypeExpr.FACTORY).create(other.parameters);
   }
 
   /* Accessors and mutators */
@@ -47,11 +48,11 @@ public class TypeExpr {
     this.typeRef = Objects.requireNonNull(typeRef);
   }
 
-  public ArrayList<TypeExpr> getParameters() {
+  public List<TypeExpr> getParameters() {
     return parameters;
   }
 
-  public void setParameters(ArrayList<TypeExpr> parameters) {
+  public void setParameters(List<TypeExpr> parameters) {
     this.parameters = Objects.requireNonNull(parameters);
   }
 
@@ -80,7 +81,7 @@ public class TypeExpr {
 
   public static class Builder {
     private TypeRef typeRef;
-    private ArrayList<TypeExpr> parameters;
+    private List<TypeExpr> parameters;
 
     public Builder() {
       this.typeRef = null;
@@ -92,7 +93,7 @@ public class TypeExpr {
       return this;
     }
 
-    public Builder setParameters(ArrayList<TypeExpr> parameters) {
+    public Builder setParameters(List<TypeExpr> parameters) {
       this.parameters = Objects.requireNonNull(parameters);
       return this;
     }
@@ -133,7 +134,7 @@ public class TypeExpr {
 
   public static JsonBinding<TypeExpr> jsonBinding() {
     final Lazy<JsonBinding<TypeRef>> typeRef = new Lazy<>(() -> TypeRef.jsonBinding());
-    final Lazy<JsonBinding<ArrayList<TypeExpr>>> parameters = new Lazy<>(() -> JsonBindings.arrayList(TypeExpr.jsonBinding()));
+    final Lazy<JsonBinding<List<TypeExpr>>> parameters = new Lazy<>(() -> JsonBindings.list(TypeExpr.jsonBinding()));
     final Factory<TypeExpr> _factory = FACTORY;
 
     return new JsonBinding<TypeExpr>() {

@@ -21,8 +21,10 @@ import org.adl.runtime.sys.types.Pair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public class S {
 
@@ -30,8 +32,8 @@ public class S {
 
   private Pair<Integer, Double> f_pair;
   private Either<String, Integer> f_either;
-  private HashMap<String, Double> f_map;
-  private HashSet<String> f_set;
+  private Map<String, Double> f_map;
+  private Set<String> f_set;
   private Optional<String> f_mstring;
   private Optional<String> f_mstring2;
   private Optional<String> f_nstring;
@@ -42,7 +44,7 @@ public class S {
 
   /* Constructors */
 
-  public S(Pair<Integer, Double> f_pair, Either<String, Integer> f_either, HashMap<String, Double> f_map, HashSet<String> f_set, Optional<String> f_mstring, Optional<String> f_mstring2, Optional<String> f_nstring, Optional<String> f_nstring2, Optional<Long> f_int, Optional<Long> f_int2, Optional<Long> f_int3) {
+  public S(Pair<Integer, Double> f_pair, Either<String, Integer> f_either, Map<String, Double> f_map, Set<String> f_set, Optional<String> f_mstring, Optional<String> f_mstring2, Optional<String> f_nstring, Optional<String> f_nstring2, Optional<Long> f_int, Optional<Long> f_int2, Optional<Long> f_int3) {
     this.f_pair = Objects.requireNonNull(f_pair);
     this.f_either = Objects.requireNonNull(f_either);
     this.f_map = Objects.requireNonNull(f_map);
@@ -102,19 +104,19 @@ public class S {
     this.f_either = Objects.requireNonNull(f_either);
   }
 
-  public HashMap<String, Double> getF_map() {
+  public Map<String, Double> getF_map() {
     return f_map;
   }
 
-  public void setF_map(HashMap<String, Double> f_map) {
+  public void setF_map(Map<String, Double> f_map) {
     this.f_map = Objects.requireNonNull(f_map);
   }
 
-  public HashSet<String> getF_set() {
+  public Set<String> getF_set() {
     return f_set;
   }
 
-  public void setF_set(HashSet<String> f_set) {
+  public void setF_set(Set<String> f_set) {
     this.f_set = Objects.requireNonNull(f_set);
   }
 
@@ -218,8 +220,8 @@ public class S {
   public static class Builder {
     private Pair<Integer, Double> f_pair;
     private Either<String, Integer> f_either;
-    private HashMap<String, Double> f_map;
-    private HashSet<String> f_set;
+    private Map<String, Double> f_map;
+    private Set<String> f_set;
     private Optional<String> f_mstring;
     private Optional<String> f_mstring2;
     private Optional<String> f_nstring;
@@ -252,12 +254,12 @@ public class S {
       return this;
     }
 
-    public Builder setF_map(HashMap<String, Double> f_map) {
+    public Builder setF_map(Map<String, Double> f_map) {
       this.f_map = Objects.requireNonNull(f_map);
       return this;
     }
 
-    public Builder setF_set(HashSet<String> f_set) {
+    public Builder setF_set(Set<String> f_set) {
       this.f_set = Objects.requireNonNull(f_set);
       return this;
     }
@@ -339,8 +341,8 @@ public class S {
   public static JsonBinding<S> jsonBinding() {
     final Lazy<JsonBinding<Pair<Integer, Double>>> f_pair = new Lazy<>(() -> Pair.jsonBinding(JsonBindings.INT32, JsonBindings.DOUBLE));
     final Lazy<JsonBinding<Either<String, Integer>>> f_either = new Lazy<>(() -> Either.jsonBinding(JsonBindings.STRING, JsonBindings.INT32));
-    final Lazy<JsonBinding<HashMap<String, Double>>> f_map = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.DOUBLE));
-    final Lazy<JsonBinding<HashSet<String>>> f_set = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.STRING));
+    final Lazy<JsonBinding<Map<String, Double>>> f_map = new Lazy<>(() -> HashMapHelpers.jsonBinding(JsonBindings.STRING, JsonBindings.DOUBLE));
+    final Lazy<JsonBinding<Set<String>>> f_set = new Lazy<>(() -> HashSetHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> f_mstring = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> f_mstring2 = new Lazy<>(() -> MaybeHelpers.jsonBinding(JsonBindings.STRING));
     final Lazy<JsonBinding<Optional<String>>> f_nstring = new Lazy<>(() -> JsonBindings.nullable(JsonBindings.STRING));

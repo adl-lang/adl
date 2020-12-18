@@ -92,6 +92,7 @@ javaClassFilePath (JavaClass ids) = T.unpack (T.intercalate "/" ids <> ".java")
 -- Types we want to override
 data CustomType = CustomType {
   ct_scopedName :: ScopedName,
+  ct_ctorScopedName :: ScopedName,
   ct_helpers :: ScopedName,
   ct_generateType :: Bool
   } deriving (Show)
@@ -115,6 +116,9 @@ getCustomType scopedName decl = case Map.lookup javaCustomType (d_annotations de
                                     <> ", at " <> textFromParseContext ctx))
       (ParseSuccess jct) -> CustomType
         { ct_scopedName = parseScopedName (JC.javaCustomType_javaname jct)
+        , ct_ctorScopedName =
+            if JC.javaCustomType_ctorjavaname jct == "" then parseScopedName (JC.javaCustomType_javaname jct)
+                                                        else parseScopedName (JC.javaCustomType_ctorjavaname jct)
         , ct_helpers = parseScopedName (JC.javaCustomType_helpers jct)
         , ct_generateType = (JC.javaCustomType_generateType jct)
         }
@@ -258,13 +262,10 @@ getHelpers customType = do
   jclass <- fixStdRef (classFromScopedName (ct_helpers customType))
   addImport jclass
 
-data TypeBoxed = TypeBoxed | TypeUnboxed
+data TypeContext = TypeBoxed | TypeUnboxed | TypeCtor
 
 -- | Generate the java code expressing a type.
-genTypeExpr :: TypeExpr CResolvedType -> CState T.Text
-genTypeExpr te = genTypeExprB TypeUnboxed te
-
-genTypeExprB :: TypeBoxed ->  TypeExpr CResolvedType -> CState T.Text
+genTypeExprB :: TypeContext ->  TypeExpr CResolvedType -> CState T.Text
 genTypeExprB boxed (TypeExpr rt params) = do
   rtParamsStr <- mapM (genTypeExprB TypeBoxed) params
   td_type (getTypeDetails rt) boxed rtParamsStr
@@ -286,7 +287,7 @@ data TypeDetails = TypeDetails {
 
   -- | Generate the textual representation of the type,
   -- given the representation of the type arguments.
-  td_type :: TypeBoxed -> [T.Text] -> CState T.Text,
+  td_type :: TypeContext -> [T.Text] -> CState T.Text,
 
   -- | Generate the text for a literal of the type.
   -- Implementations can be partial they only need to
@@ -324,13 +325,13 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
   }
   where
     genLiteralText' (Literal te@(TypeExpr _ []) LDefault) | not (refEnumeration te) = do
-      typeExpr <- genTypeExpr te
+      typeExpr <- genTypeExprB TypeCtor te
       return (template "new $1()" [typeExpr])
     genLiteralText' (Literal te LDefault) = do
       factoryExpr <- genFactoryExpr te
       return (template "$1.create()" [factoryExpr])
     genLiteralText' (Literal te (LCtor ls)) = do
-      typeExpr <- genTypeExpr te
+      typeExpr <- genTypeExprB TypeCtor te
       lits <- mapM genLiteralText ls
       return (template "new $1($2)" [typeExpr, T.intercalate ", " lits])
     genLiteralText' (Literal te (LUnion ctor l)) = do
@@ -345,8 +346,10 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
 
 -- a custom type
 getTypeDetails rt@(RT_Named (_,Decl{d_customType=Just customType})) = TypeDetails
-  { td_type = \_ typeArgs -> do
-      ts <- addImport (classFromScopedName (ct_scopedName customType))
+  { td_type = \tctx typeArgs -> do
+      ts <- case tctx of
+        TypeCtor -> addImport (classFromScopedName (ct_ctorScopedName customType))
+        _ -> addImport (classFromScopedName (ct_scopedName customType))
       return (withTypeArgs ts typeArgs)
   , td_genLiteralText = genLiteralText'
   , td_mutable = True
@@ -382,7 +385,7 @@ getTypeDetails (RT_Param typeVar) = TypeDetails
   }
   where
     genLiteralText' (Literal te LDefault) = do
-      typeExpr <- genTypeExpr te
+      typeExpr <- genTypeExprB TypeUnboxed te
       return (template "$1.create()" [factoryTypeArg typeVar])
     genLiteralText' lit = error ("BUG: getTypeDetails3: unexpected literal:" ++ show lit)
 
@@ -532,29 +535,39 @@ getTypeDetails (RT_Primitive P_Json) = TypeDetails
     genLiteralText' lit = error ("BUG: getTypeDetails12: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_Vector) = TypeDetails
-  { td_type = \_ args -> do
-       arrayListI <- addImport "java.util.ArrayList"
-       return (withTypeArgs arrayListI args)
+  { td_type = \tctx args -> do
+       case tctx of
+         TypeCtor -> do
+           arrayListI <- addImport "java.util.ArrayList"
+           return (withTypeArgs arrayListI args)
+         _ -> do
+           listI <- addImport "java.util.List"
+           return (withTypeArgs listI args)
   , td_genLiteralText = genLiteralText'
   , td_mutable = True
-  , td_factory = primitiveFactory "arrayList"
+  , td_factory = primitiveFactory "list"
   , td_hashfn = \from -> template "$1.hashCode()" [from]
   }
   where
     genLiteralText' (Literal te LDefault) = do
-      typeExpr <- genTypeExpr te
+      typeExpr <- genTypeExprB TypeCtor te
       return (template "new $1()" [typeExpr])
     genLiteralText' (Literal _ (LVector ls)) = do
       lits <- mapM genLiteralText ls
       rtpackage <- getRuntimePackage
       factories <- addImport (javaClass rtpackage "Factories")
-      return (template "$1.arrayList($2)" [factories,commaSep lits])
+      return (template "$1.list($2)" [factories,commaSep lits])
     genLiteralText' lit = error ("BUG: getTypeDetails13: unexpected literal:" ++ show lit)
 
 getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
-  { td_type = \_ args -> do
-       hashMapI <- addImport "java.util.HashMap"
-       return (withTypeArgs hashMapI ("String":args))
+  { td_type = \tctx  args -> do
+      case tctx of
+        TypeCtor -> do
+          hashMapI <- addImport "java.util.HashMap"
+          return (withTypeArgs hashMapI ("String":args))
+        _ -> do
+          mapI <- addImport "java.util.Map"
+          return (withTypeArgs mapI ("String":args))
   , td_genLiteralText = genLiteralText'
   , td_mutable = True
   , td_factory = primitiveFactory "stringMap"
@@ -562,7 +575,7 @@ getTypeDetails (RT_Primitive P_StringMap) = TypeDetails
   }
   where
     genLiteralText' (Literal te LDefault) = do
-      typeExpr <- genTypeExpr te
+      typeExpr <- genTypeExprB TypeCtor te
       return (template "new $1()" [typeExpr])
     genLiteralText' (Literal _ (LStringMap kvPairs)) = do
       kvlits <- for (Map.toList kvPairs) $ \(k,v) -> do
@@ -672,6 +685,7 @@ data FieldDetails = FieldDetails {
   fd_serializedName :: Ident,
   fd_accessExpr :: Ident,
   fd_typeExprStr :: T.Text,
+  fd_ctorTypeExprStr :: T.Text,
   fd_boxedTypeExprStr :: T.Text,
   fd_factoryExprStr :: T.Text,
   fd_defValue :: T.Text,
@@ -680,9 +694,10 @@ data FieldDetails = FieldDetails {
   fd_equals :: T.Text -> T.Text -> T.Text
 }
 
-unboxedPrimitive :: T.Text -> T.Text -> TypeBoxed -> [T.Text] -> CState T.Text
+unboxedPrimitive :: T.Text -> T.Text -> TypeContext -> [T.Text] -> CState T.Text
 unboxedPrimitive _ boxed TypeBoxed _ = return boxed
 unboxedPrimitive unboxed _ TypeUnboxed _ = return unboxed
+unboxedPrimitive unboxed _ TypeCtor _ = return unboxed
 
 unboxedField fd = fd_typeExprStr fd /= fd_boxedTypeExprStr fd
 
@@ -695,6 +710,7 @@ genFieldDetails :: Field CResolvedType -> CState FieldDetails
 genFieldDetails f = do
   let te = f_type f
   typeExprStr <- genTypeExprB TypeUnboxed te
+  ctorTypeExprStr <- genTypeExprB TypeCtor te
   boxedTypeExprStr <- genTypeExprB TypeBoxed te
   factoryExprStr <- genFactoryExpr te
   litv <- case f_default f of
@@ -744,6 +760,7 @@ genFieldDetails f = do
     fd_unionCtorName=unionCtorName,
     fd_serializedName=serializedName,
     fd_typeExprStr=typeExprStr,
+    fd_ctorTypeExprStr=ctorTypeExprStr,
     fd_boxedTypeExprStr=boxedTypeExprStr,
     fd_factoryExprStr=factoryExprStr,
     fd_defValue=defValue,
@@ -1208,7 +1225,7 @@ primJsonBinding cgp pt = do
     bindingName P_Json = "JSON"
     bindingName P_ByteVector = "BYTE_ARRAY"
     bindingName P_String = "STRING"
-    bindingName P_Vector = "arrayList"
+    bindingName P_Vector = "list"
     bindingName P_StringMap = "stringMap"
     bindingName P_Nullable = "nullable"
     bindingName P_TypeToken = "typeProxy"
