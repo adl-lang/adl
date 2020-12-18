@@ -1,3 +1,4 @@
+pub mod mapentry;
 pub mod map;
 pub mod maybe;
 pub mod pair;

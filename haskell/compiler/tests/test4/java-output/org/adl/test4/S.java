@@ -18,6 +18,7 @@ import org.adl.runtime.MaybeHelpers;
 import org.adl.runtime.sys.adlast.ScopedName;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
+import org.adl.runtime.sys.types.MapEntry;
 import org.adl.runtime.sys.types.Pair;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ public class S {
     this.v7 = HashSetHelpers.create(Factories.arrayList(1, 2, 3));
     this.v7a = HashSetHelpers.factory(Factories.INT32).create();
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INT32).create();
-    this.v8a = HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)));
+    this.v8a = HashMapHelpers.create(Factories.arrayList(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
   }
 
   public S(S other) {
@@ -257,7 +258,7 @@ public class S {
       this.v7 = HashSetHelpers.create(Factories.arrayList(1, 2, 3));
       this.v7a = null;
       this.v8 = null;
-      this.v8a = HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)));
+      this.v8a = HashMapHelpers.create(Factories.arrayList(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
     }
 
     public Builder setV1(LocalDate v1) {
@@ -412,7 +413,7 @@ public class S {
           _obj.has("v7") ? JsonBindings.fieldFromJson(_obj, "v7", v7.get()) : HashSetHelpers.create(Factories.arrayList(1, 2, 3)),
           JsonBindings.fieldFromJson(_obj, "v7a", v7a.get()),
           JsonBindings.fieldFromJson(_obj, "v8", v8.get()),
-          _obj.has("v8a") ? JsonBindings.fieldFromJson(_obj, "v8a", v8a.get()) : HashMapHelpers.create(Factories.arrayList(new Pair<String, Integer>("X", 1), new Pair<String, Integer>("Y", 2)))
+          _obj.has("v8a") ? JsonBindings.fieldFromJson(_obj, "v8a", v8a.get()) : HashMapHelpers.create(Factories.arrayList(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)))
         );
       }
     };

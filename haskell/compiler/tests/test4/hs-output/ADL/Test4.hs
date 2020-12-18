@@ -10,8 +10,10 @@ module ADL.Test4(
 ) where
 
 import ADL.Core
+import ADL.Core.Map(mapFromMapEntryList)
 import Control.Applicative( (<$>), (<*>), (<|>) )
 import Prelude( ($) )
+import qualified ADL.Core.Map
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
@@ -67,7 +69,7 @@ data S = S
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 mkS :: Date -> CDate -> (ADL.Sys.Types.Maybe T.Text) -> (ADL.Sys.Types.Pair T.Text Data.Int.Int32) -> (ADL.Sys.Types.Set Data.Int.Int32) -> (ADL.Sys.Types.Map T.Text Data.Int.Int32) -> S
-mkS v1 v3 v5 v6 v7a v8 = S v1 (Date.fromText "2000-01-01") v3 (CDate 2000 1 1) v5 Prelude.Nothing (Prelude.Just "hello") v6 (Data.Set.fromList [ 1, 2, 3 ]) v7a v8 (Data.Map.fromList [ ((,) "X" 1), ((,) "Y" 2) ])
+mkS v1 v3 v5 v6 v7a v8 = S v1 (Date.fromText "2000-01-01") v3 (CDate 2000 1 1) v5 Prelude.Nothing (Prelude.Just "hello") v6 (Data.Set.fromList [ 1, 2, 3 ]) v7a v8 (mapFromMapEntryList [ (ADL.Core.Map.MapEntry "X" 1), (ADL.Core.Map.MapEntry "Y" 2) ])
 
 instance AdlValue S where
     atype _ = "test4.S"
@@ -99,7 +101,7 @@ instance AdlValue S where
         <*> parseFieldDef "v7" (Data.Set.fromList [ 1, 2, 3 ])
         <*> parseField "v7a"
         <*> parseField "v8"
-        <*> parseFieldDef "v8a" (Data.Map.fromList [ ((,) "X" 1), ((,) "Y" 2) ])
+        <*> parseFieldDef "v8a" (mapFromMapEntryList [ (ADL.Core.Map.MapEntry "X" 1), (ADL.Core.Map.MapEntry "Y" 2) ])
 
 data S2 = S2
     { s2_intv :: Data.Int.Int32

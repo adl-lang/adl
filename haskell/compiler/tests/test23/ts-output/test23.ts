@@ -23,7 +23,7 @@ export function makeS1(
 }
 
 const S1_AST : ADL.ScopedDecl =
-  {"moduleName":"test23","decl":{"annotations":[{"v1":{"moduleName":"test23","name":"X"},"v2":null}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[{"v1":{"moduleName":"test23","name":"X"},"v2":null}],"serializedName":"field","default":{"kind":"nothing"},"name":"field","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
+  {"moduleName":"test23","decl":{"annotations":[{"value":null,"key":{"moduleName":"test23","name":"X"}}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[{"value":null,"key":{"moduleName":"test23","name":"X"}}],"serializedName":"field","default":{"kind":"nothing"},"name":"field","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
 
 export const snS1: ADL.ScopedName = {moduleName:"test23", name:"S1"};
 

@@ -26,6 +26,7 @@ library
                      , ../compiler/tests/test24/hs-output
   exposed-modules:     ADL.Core
                      , ADL.Core.Value
+                     , ADL.Core.Map
                      , ADL.Core.StringMap
                      , ADL.Core.TypeToken
                      , ADL.Core.Nullable

@@ -88,6 +88,6 @@ export function makeMapEntry<K, V>(
   };
 }
 
-export type Map<K, V> = Pair<K, V>[];
+export type Map<K, V> = MapEntry<K, V>[];
 
 export type Set<T> = T[];

@@ -44,8 +44,8 @@ struct S
     Map<String,Int32> v8;
 
     Map<String,Int32> v8a = [
-      { "v1" : "X", "v2" : 1 },
-      { "v1" : "Y", "v2" : 2 }
+      { "k" : "X", "v" : 1 },
+      { "k" : "Y", "v" : 2 }
       ];
 };
 

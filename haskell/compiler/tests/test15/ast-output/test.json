@@ -4,11 +4,11 @@
         "A": {
             "annotations": [
                 {
-                    "v1": {
+                    "k": {
                         "moduleName": "sys.annotations",
                         "name": "Doc"
                     },
-                    "v2": "A monomorphic struct\n"
+                    "v": "A monomorphic struct\n"
                 }
             ],
             "name": "A",
@@ -48,11 +48,11 @@
         "B": {
             "annotations": [
                 {
-                    "v1": {
+                    "k": {
                         "moduleName": "sys.annotations",
                         "name": "Doc"
                     },
-                    "v2": "A polymorphic union\n"
+                    "v": "A polymorphic union\n"
                 }
             ],
             "name": "B",

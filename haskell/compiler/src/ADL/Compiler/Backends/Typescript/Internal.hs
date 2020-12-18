@@ -473,7 +473,7 @@ annotationsAst cgp as = mapAst scopedNameAst id [(k,v) | (k,(_,v)) <- (M.toList 
 mapAst :: (k -> JS.Value) -> (v -> JS.Value) -> [(k,v)] -> JS.Value
 mapAst kf vf kvs = JS.toJSON [ kvAst (kf k) (vf v) | (k,v) <- kvs]
   where
-    kvAst kjv vjv = JS.object [ ("v1", kjv), ("v2", vjv) ]
+    kvAst kjv vjv = JS.object [ ("key", kjv), ("value", vjv) ]
 
 typeExprAst :: TypeExpr CResolvedType -> JS.Value
 typeExprAst (TypeExpr tr tes) = JS.object

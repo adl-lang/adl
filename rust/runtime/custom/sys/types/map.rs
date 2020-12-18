@@ -3,18 +3,18 @@ use serde::{Serialize, Serializer};
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::result;
-use super::pair::Pair;
+use super::mapentry::MapEntry;
 
 
 #[derive(Clone,Eq,PartialEq)]
 pub struct Map<K:Eq + Hash, V>(HashMap<K, V>);
 
 impl<K:Eq + Hash, V> Map<K, V> {
-    pub fn new(v: Vec<Pair<K, V>>) -> Map<K, V>
+    pub fn new(v: Vec<MapEntry<K, V>>) -> Map<K, V>
     {
         let mut hm = HashMap::new();
-        for Pair((k, v)) in v {
-            hm.insert(k, v);
+        for MapEntry{key,value} in v {
+            hm.insert(key,value);
         }
         Map(hm)
     }
@@ -29,11 +29,11 @@ where
     where
         S: Serializer,
     {
-        let mut vpairs: Vec<Pair<&K, &V>> = Vec::new();
-        for (k, v) in &self.0 {
-            vpairs.push(Pair((k, v)));
+        let mut ventries: Vec<MapEntry<&K, &V>> = Vec::new();
+        for (key, value) in &self.0 {
+            ventries.push(MapEntry{key, value});
         }
-        MapImpl(vpairs).serialize(serializer)
+        MapImpl(ventries).serialize(serializer)
     }
 }
 
@@ -52,5 +52,5 @@ where
 }
 
 #[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
-struct MapImpl<K, V>(pub Vec<Pair<K, V>>);
+struct MapImpl<K, V>(pub Vec<MapEntry<K, V>>);
 

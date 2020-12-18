@@ -34,7 +34,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.HashMap.Strict as HM
-import qualified Data.Map as M
 import qualified Data.Scientific as SC
 import qualified Data.Set as S
 import qualified Data.Text as T
@@ -354,11 +353,6 @@ instance forall t1 t2 . (AdlValue t1, AdlValue t2) => AdlValue (t1,t2) where
   jsonParser = (,)
     <$> parseField "v1"
     <*> parseField "v2"
-
-instance (AdlValue k, Ord k, AdlValue v) => AdlValue (M.Map k v) where
-  atype _ = atype (Proxy :: Proxy [(k,v)])
-  jsonGen = JsonGen (adlToJson . M.toList)
-  jsonParser = M.fromList <$> jsonParser
 
 instance (Ord v, AdlValue v) => AdlValue (S.Set v) where
   atype _ = atype (Proxy :: Proxy [v])

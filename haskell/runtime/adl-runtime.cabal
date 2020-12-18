@@ -16,6 +16,7 @@ library
   ghc-options:         -fwarn-incomplete-patterns
   exposed-modules:     ADL.Core,
                        ADL.Core.Value,
+                       ADL.Core.Map,
                        ADL.Core.StringMap,
                        ADL.Core.Nullable,
                        ADL.Sys.Types,

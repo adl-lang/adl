@@ -33,7 +33,7 @@ const Map = {
   module : "sys.types",
   kind : "newtype",
   typevars : ["K","V"],
-  type : {"args":[{"args":[{"var":"K"},{"var":"V"}],"app":{"ref":"sys.types.Pair"}}],"app":{"primitive":"Vector"}},
+  type : {"args":[{"args":[{"var":"K"},{"var":"V"}],"app":{"ref":"sys.types.MapEntry"}}],"app":{"primitive":"Vector"}},
   defaultv : null,
   annotations : [
   ]

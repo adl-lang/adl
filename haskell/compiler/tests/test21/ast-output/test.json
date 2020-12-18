@@ -1,18 +1,18 @@
 {
     "annotations": [
         {
-            "v1": {
+            "k": {
                 "moduleName": "",
                 "name": "Ann1"
             },
-            "v2": 100
+            "v": 100
         },
         {
-            "v1": {
+            "k": {
                 "moduleName": "",
                 "name": "Ann2"
             },
-            "v2": "module stuff"
+            "v": "module stuff"
         }
     ],
     "decls": {
@@ -103,18 +103,18 @@
         "MyStruct": {
             "annotations": [
                 {
-                    "v1": {
+                    "k": {
                         "moduleName": "",
                         "name": "Ann1"
                     },
-                    "v2": 42
+                    "v": 42
                 },
                 {
-                    "v1": {
+                    "k": {
                         "moduleName": "",
                         "name": "Ann2"
                     },
-                    "v2": "asdfa"
+                    "v": "asdfa"
                 }
             ],
             "name": "MyStruct",
@@ -124,11 +124,11 @@
                         {
                             "annotations": [
                                 {
-                                    "v1": {
+                                    "k": {
                                         "moduleName": "sys.annotations",
                                         "name": "Doc"
                                     },
-                                    "v2": "The X coordinate\n"
+                                    "v": "The X coordinate\n"
                                 }
                             ],
                             "default": "nothing",
@@ -144,11 +144,11 @@
                         {
                             "annotations": [
                                 {
-                                    "v1": {
+                                    "k": {
                                         "moduleName": "sys.annotations",
                                         "name": "Doc"
                                     },
-                                    "v2": "The Y coordinate\n"
+                                    "v": "The Y coordinate\n"
                                 }
                             ],
                             "default": "nothing",
@@ -164,21 +164,21 @@
                         {
                             "annotations": [
                                 {
-                                    "v1": {
+                                    "k": {
                                         "moduleName": "",
                                         "name": "Ann3"
                                     },
-                                    "v2": {
+                                    "v": {
                                         "f1": "a",
                                         "f2": "b"
                                     }
                                 },
                                 {
-                                    "v1": {
+                                    "k": {
                                         "moduleName": "",
                                         "name": "Ann4"
                                     },
-                                    "v2": null
+                                    "v": null
                                 }
                             ],
                             "default": "nothing",

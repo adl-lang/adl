@@ -1,6 +1,7 @@
 // @generated from adl module test4
 
 use crate::adlrt::custom::sys::types::map::Map;
+use crate::adlrt::custom::sys::types::mapentry::MapEntry;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
 use crate::adlrt::custom::sys::types::pair::Pair;
 use crate::adlrt::custom::sys::types::set::Set;
@@ -114,6 +115,6 @@ impl S {
   }
 
   pub fn def_v_8_a() -> Map<String, i32> {
-    Map::new(vec![Pair::new("X".to_string(), 1_i32), Pair::new("Y".to_string(), 2_i32)])
+    Map::new(vec![MapEntry::new("X".to_string(), 1_i32), MapEntry::new("Y".to_string(), 2_i32)])
   }
 }

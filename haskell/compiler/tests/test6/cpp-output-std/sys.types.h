@@ -10,6 +10,9 @@ namespace ADL {
 namespace sys {
 namespace types {
 
+template <class K, class V>
+struct MapEntry;
+
 template <class T1, class T2>
 class Either
 {
@@ -217,6 +220,11 @@ operator==( const Either<T1,T2> &a, const Either<T1,T2> &b )
     }
     return false;
 }
+
+// Map has custom definition
+
+template <class K, class V>
+using Map = std::map<K,V>;
 
 template <class K, class V>
 struct MapEntry
@@ -684,11 +692,6 @@ operator==( const Result<T,E> &a, const Result<T,E> &b )
 template <class A>
 using Set = std::set<A>;
 
-// Map has custom definition
-
-template <class K, class V>
-using Map = std::map<K,V>;
-
 }}}; // ADL::sys::types
 
 namespace ADL {
@@ -762,6 +765,47 @@ Serialisable<ADL::sys::types::Either<T1,T2>>::serialiser( const SerialiserFlags 
     
     return typename Serialiser<_T>::Ptr( new U_(sf) );
 }
+
+template <class K,class V>
+struct Serialisable<std::map<K,V>>
+{
+    typedef std::map<K,V> M;
+    typedef std::vector<ADL::sys::types::MapEntry<K,V>> VME;
+    typedef ADL::sys::types::MapEntry<K,V> ME;
+
+    static typename Serialiser<M>::Ptr serialiser(const SerialiserFlags &sf)
+    {
+        struct S : public Serialiser<M>
+        {
+            S( const SerialiserFlags &sf )
+                : s( Serialisable<VME>::serialiser(sf) )
+                {}
+
+            typename Serialiser<VME>::Ptr s;
+
+            void toJson( JsonWriter &json, const M & m ) const
+            {
+                VME v;
+                for( typename M::const_iterator i = m.begin(); i != m.end(); i++ ) {
+                    v.push_back(ME(i->first, i->second));
+                }
+                s->toJson( json, v );
+            }
+
+            void fromJson( M &m, JsonReader &json ) const
+            {
+                VME v;
+                s->fromJson( v, json );
+                m.clear();
+                for( typename VME::const_iterator i = v.begin(); i != v.end(); i++ ) {
+                  m[i->key] = i->value;
+                }
+            }
+        };
+
+        return typename Serialiser<M>::Ptr (new S(sf));
+    }
+};
 
 template <class K, class V>
 struct Serialisable<ADL::sys::types::MapEntry<K,V>>
@@ -1029,41 +1073,6 @@ struct Serialisable<std::set<A>>
         };
 
         return typename Serialiser<S>::Ptr( new S_(sf) );
-    }
-};
-
-template <class K,class V>
-struct Serialisable<std::map<K,V>>
-{
-    typedef std::map<K,V> M;
-
-    static typename Serialiser<M>::Ptr serialiser(const SerialiserFlags &sf)
-    {
-        struct S : public Serialiser<M>
-        {
-            S( const SerialiserFlags &sf )
-                : s( Serialisable<std::pair<K,V>>::serialiser(sf) )
-                {}
-
-            typename Serialiser<std::pair<K,V>>::Ptr s;
-
-            void toJson( JsonWriter &json, const M & v ) const
-            {
-                json.startArray();
-                for( typename std::map<K,V>::const_iterator i = v.begin(); i != v.end(); i++ )
-                    s->toJson( json, *i );
-                json.endArray();
-            }
-
-            void fromJson( M &v, JsonReader &json ) const
-            {
-                std::pair<K,V> pv;
-                s->fromJson( pv, json );
-                v[pv.first] = pv.second;
-            }
-        };
-
-        return typename Serialiser<M>::Ptr (new S(sf));
     }
 };
 

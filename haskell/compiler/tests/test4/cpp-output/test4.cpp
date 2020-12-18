@@ -76,7 +76,7 @@ S::S()
     , v5a(ADL::sys::types::Maybe<std::string> ::mk_nothing())
     , v5b(ADL::sys::types::Maybe<std::string> ::mk_just("hello"))
     , v7(std::set<int32_t> (mkvec<int32_t>(1,2,3)))
-    , v8a(std::map<std::string,int32_t> (mkvec<std::pair<std::string,int32_t> >(std::pair<std::string,int32_t> ("X",1),std::pair<std::string,int32_t> ("Y",2))))
+    , v8a(std::map<std::string,int32_t> (mkvec<ADL::sys::types::MapEntry<std::string,int32_t> >(ADL::sys::types::MapEntry<std::string,int32_t> ("X",1),ADL::sys::types::MapEntry<std::string,int32_t> ("Y",2))))
 {
 }
 

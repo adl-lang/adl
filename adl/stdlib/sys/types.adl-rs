@@ -8,6 +8,12 @@ annotation Maybe RustCustomType {
   "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
   };
 
+annotation MapEntry RustCustomType {
+  "rustname" : "{{STDLIBMODULE}}::custom::sys::types::mapentry::MapEntry",
+  "helpers" : "{{STDLIBMODULE}}::custom::sys::types::mapentry::MapEntry",
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
+  };
+
 annotation Map RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::custom::sys::types::map::Map",
   "helpers" : "{{STDLIBMODULE}}::custom::sys::types::map::Map",

@@ -34,8 +34,7 @@ struct MapEntry<K,V>
     V value;
 };
 
-// TODO: update to be  Vector<Pair<K,V>>;
-newtype Map<K,V> = Vector<Pair<K,V>>;
+newtype Map<K,V> = Vector<MapEntry<K,V>>;
 
 newtype Set<T> = Vector<T>;
 

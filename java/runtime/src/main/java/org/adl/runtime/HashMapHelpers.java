@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import org.adl.runtime.sys.types.Pair;
+import org.adl.runtime.sys.types.MapEntry;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import org.adl.runtime.sys.adlast.ScopedName;
@@ -47,10 +47,10 @@ public class HashMapHelpers
     };
   }
 
-  public static <K,V> HashMap<K,V> create(ArrayList<Pair<K,V>> vals) {
+  public static <K,V> HashMap<K,V> create(ArrayList<MapEntry<K,V>> vals) {
     HashMap<K,V> result = new HashMap<>();
-    for (Pair<K,V> p : vals) {
-      result.put(p.getV1(),p.getV2());
+    for (MapEntry<K,V> p : vals) {
+      result.put(p.getKey(),p.getValue());
     }
     return result;
   }
@@ -68,11 +68,11 @@ public class HashMapHelpers
       @Override
       public JsonElement toJson(HashMap<K,V> value) {
         JsonArray result = new JsonArray();
-        for (Map.Entry<K,V> entry : value.entrySet()) {
-          JsonObject pair = new JsonObject();
-          pair.add("v1", bindingK.toJson(entry.getKey()));
-          pair.add("v2", bindingV.toJson(entry.getValue()));
-          result.add(pair);
+        for (Map.Entry<K,V> me: value.entrySet()) {
+          JsonObject entry = new JsonObject();
+          entry.add("k", bindingK.toJson(me.getKey()));
+          entry.add("v", bindingV.toJson(me.getValue()));
+          result.add(entry);
         }
         return result;
       }
@@ -88,8 +88,8 @@ public class HashMapHelpers
         for(int i = 0; i < array.size(); i++) {
           try {
             JsonObject pair = JsonBindings.objectFromJson(array.get(i));
-            K v1 = JsonBindings.fieldFromJson(pair, "v1", bindingK);
-            V v2 = JsonBindings.fieldFromJson(pair, "v2", bindingV);
+            K v1 = JsonBindings.fieldFromJson(pair, "k", bindingK);
+            V v2 = JsonBindings.fieldFromJson(pair, "v", bindingV);
             result.put(v1,v2);
           } catch (JsonParseException e) {
             e.pushIndex(i);

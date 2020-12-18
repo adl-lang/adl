@@ -134,10 +134,10 @@ export function texprMapEntry<K, V>(texprK : ADL.ATypeExpr<K>, texprV : ADL.ATyp
   return {value : {typeRef : {kind: "reference", value : {moduleName : "sys.types",name : "MapEntry"}}, parameters : [texprK.value, texprV.value]}};
 }
 
-export type Map<K, V> = Pair<K, V>[];
+export type Map<K, V> = MapEntry<K, V>[];
 
 const Map_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["K","V"],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Pair"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"K"},"parameters":[]},{"typeRef":{"kind":"typeParam","value":"V"},"parameters":[]}]}]}}},"name":"Map","version":{"kind":"nothing"}}};
+  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["K","V"],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"MapEntry"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"K"},"parameters":[]},{"typeRef":{"kind":"typeParam","value":"V"},"parameters":[]}]}]}}},"name":"Map","version":{"kind":"nothing"}}};
 
 export const snMap: ADL.ScopedName = {moduleName:"sys.types", name:"Map"};
 

@@ -498,9 +498,9 @@ export function getAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotation
     return undefined;
   }
   const annScopedName :AST.ScopedName = jb.typeExpr.typeRef.value;
-  const ann = annotations.find(el => scopedNamesEqual(el.v1, annScopedName));
+  const ann = annotations.find(el => scopedNamesEqual(el.key, annScopedName));
   if (ann === undefined) {
     return undefined;
   }
-  return jb.fromJsonE(ann.v2);
+  return jb.fromJsonE(ann.value);
 }

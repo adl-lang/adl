@@ -36,10 +36,16 @@ getCustomType scopedName _ = Map.lookup scopedName customTypes
          "(\a b -> (a,b))"
          Map.empty
          Nothing)
+      , (ScopedName (ModuleName ["sys","types"]) "MapEntry",
+         CustomType "Map" [HaskellModule "qualified ADL.Core.Map"] []
+         ["type MapEntry k v = ADL.Core.Map.MapEntry k v"]
+         "ADL.Core.Map.MapEntry"
+         Map.empty
+         Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Map",
-         CustomType "Map" [HaskellModule "qualified Data.Map as Map"] []
-         ["type Map k v = Map.Map k v" ]
-         "Map.fromList"
+         CustomType "Map" [HaskellModule "qualified Data.Map", HaskellModule "ADL.Core.Map(mapFromMapEntryList)"] []
+         ["type Map k v = Data.Map.Map k v" ]
+         "mapFromMapEntryList"
          Map.empty
          Nothing)
       , (ScopedName (ModuleName ["sys","types"]) "Set",

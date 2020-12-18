@@ -48,12 +48,21 @@ annotation Pair HaskellCustomType {
   "unionConstructors" : []
   };
 
+annotation MapEntry HaskellCustomType {
+  "haskellname" : "MapEntry",
+  "haskellimports" : ["qualified ADL.Core.Map"],
+  "insertCode" : ["type MapEntry k v = ADL.Core.Map.MapEntry k v"],
+  "generateOrigADLType" : "",
+  "structConstructor" : "ADL.Core.Map.MapEntry",
+  "unionConstructors" : []
+  };
+
 annotation Map HaskellCustomType {
   "haskellname" : "Map",
-  "haskellimports" : ["qualified Data.Map"],
+  "haskellimports" : ["qualified Data.Map","ADL.Core.Map(mapFromMapEntryList)"],
   "insertCode" : ["type Map k v = Data.Map.Map k v"],
   "generateOrigADLType" : "",
-  "structConstructor" : "Data.Map.fromList",
+  "structConstructor" : "mapFromMapEntryList",
   "unionConstructors" : []
   };
 
