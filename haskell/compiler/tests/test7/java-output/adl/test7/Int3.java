@@ -27,11 +27,17 @@ public class Int3 {
   }
 
   public Int3() {
-    this.value = 42L;
+    this.value = defValue();
   }
 
   public Int3(Int3 other) {
     this.value = other.value;
+  }
+
+  /* Field defaults */
+
+  public static long defValue() {
+    return 42L;
   }
 
   /* Accessors and mutators */

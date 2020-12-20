@@ -65,17 +65,17 @@ public class S {
 
   public S(LocalDate v1, LocalDate v3, Optional<String> v5, Pair<String, Integer> v6, Set<Integer> v7a, Map<String, Integer> v8) {
     this.v1 = Objects.requireNonNull(v1);
-    this.v2 = DateHelpers.create("2000-01-01");
+    this.v2 = defV2();
     this.v3 = Objects.requireNonNull(v3);
-    this.v4 = CDateHelpers.create((short)2000, (short)1, (short)1);
+    this.v4 = defV4();
     this.v5 = Objects.requireNonNull(v5);
-    this.v5a = MaybeHelpers.nothing(null);
-    this.v5b = MaybeHelpers.just("hello");
+    this.v5a = defV5a();
+    this.v5b = defV5b();
     this.v6 = Objects.requireNonNull(v6);
-    this.v7 = HashSetHelpers.create(Factories.list(1, 2, 3));
+    this.v7 = defV7();
     this.v7a = Objects.requireNonNull(v7a);
     this.v8 = Objects.requireNonNull(v8);
-    this.v8a = HashMapHelpers.create(Factories.list(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
+    this.v8a = defV8a();
   }
 
   public S(S other) {
@@ -91,6 +91,32 @@ public class S {
     this.v7a = HashSetHelpers.factory(Factories.INT32).create(other.v7a);
     this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INT32).create(other.v8);
     this.v8a = HashMapHelpers.factory(Factories.STRING, Factories.INT32).create(other.v8a);
+  }
+
+  /* Field defaults */
+
+  public static LocalDate defV2() {
+    return DateHelpers.create("2000-01-01");
+  }
+
+  public static LocalDate defV4() {
+    return CDateHelpers.create((short)2000, (short)1, (short)1);
+  }
+
+  public static Optional<String> defV5a() {
+    return MaybeHelpers.nothing(null);
+  }
+
+  public static Optional<String> defV5b() {
+    return MaybeHelpers.just("hello");
+  }
+
+  public static Set<Integer> defV7() {
+    return HashSetHelpers.create(Factories.list(1, 2, 3));
+  }
+
+  public static Map<String, Integer> defV8a() {
+    return HashMapHelpers.create(Factories.list(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
   }
 
   /* Accessors and mutators */

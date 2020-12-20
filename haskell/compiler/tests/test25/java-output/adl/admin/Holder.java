@@ -28,11 +28,17 @@ public class Holder {
   }
 
   public Holder() {
-    this.admin = new AdminApiRequests(new HttpGet<JsonElement>("/admin/query", new TypeToken<JsonElement>(JsonBindings.JSON)));
+    this.admin = defAdmin();
   }
 
   public Holder(Holder other) {
     this.admin = AdminApiRequests.FACTORY.create(other.admin);
+  }
+
+  /* Field defaults */
+
+  public static AdminApiRequests defAdmin() {
+    return new AdminApiRequests(new HttpGet<JsonElement>("/admin/query", new TypeToken<JsonElement>(JsonBindings.JSON)));
   }
 
   /* Accessors and mutators */

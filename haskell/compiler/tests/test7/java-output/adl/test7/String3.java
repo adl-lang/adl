@@ -27,11 +27,17 @@ public class String3 {
   }
 
   public String3() {
-    this.value = "hello";
+    this.value = defValue();
   }
 
   public String3(String3 other) {
     this.value = other.value;
+  }
+
+  /* Field defaults */
+
+  public static String defValue() {
+    return "hello";
   }
 
   /* Accessors and mutators */

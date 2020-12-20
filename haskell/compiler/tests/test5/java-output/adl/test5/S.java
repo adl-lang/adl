@@ -33,15 +33,29 @@ public class S {
   }
 
   public S() {
-    this.f1 = U9.v1("xx");
-    this.f2 = U9.v2((short)100);
-    this.f3 = U9.v3();
+    this.f1 = defF1();
+    this.f2 = defF2();
+    this.f3 = defF3();
   }
 
   public S(S other) {
     this.f1 = U9.factory(Factories.STRING).create(other.f1);
     this.f2 = U9.factory(Factories.STRING).create(other.f2);
     this.f3 = U9.factory(Factories.STRING).create(other.f3);
+  }
+
+  /* Field defaults */
+
+  public static U9<String> defF1() {
+    return U9.v1("xx");
+  }
+
+  public static U9<String> defF2() {
+    return U9.v2((short)100);
+  }
+
+  public static U9<String> defF3() {
+    return U9.v3();
   }
 
   /* Accessors and mutators */

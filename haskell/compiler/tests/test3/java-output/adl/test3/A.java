@@ -35,13 +35,19 @@ public class A {
   public A(short f_int, String f_string) {
     this.f_int = Objects.requireNonNull(f_int);
     this.f_string = Objects.requireNonNull(f_string);
-    this.f_bool = false;
+    this.f_bool = defF_bool();
   }
 
   public A(A other) {
     this.f_int = other.f_int;
     this.f_string = other.f_string;
     this.f_bool = other.f_bool;
+  }
+
+  /* Field defaults */
+
+  public static boolean defF_bool() {
+    return false;
   }
 
   /* Accessors and mutators */

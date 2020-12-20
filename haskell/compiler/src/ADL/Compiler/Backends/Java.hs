@@ -180,7 +180,6 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
     className = unreserveWord (d_name decl)
     state0 = classFile codeProfile moduleName javaPackageFn classDecl
     isEmpty = null (s_fields struct)
-    hasDefaults = any (isJust . f_default) (s_fields struct)
     classDecl = "public class " <> className <> typeArgs
     typeArgs = case s_typeParams struct of
       [] -> ""
@@ -191,6 +190,8 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
       setDocString (generateDocString (d_annotations decl))
 
       fieldDetails <- mapM genFieldDetails (s_fields struct)
+      let fieldsWithDefaults = filter (\fd -> fd_hasDefault fd && not (isTypeToken fd)) fieldDetails
+          hasDefaults = not (null fieldsWithDefaults)
       for_ fieldDetails (\fd -> preventImport (fd_memberVarName fd))
       for_ fieldDetails (\fd -> preventImport (fd_varName fd))
 
@@ -206,7 +207,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
 
       -- Constructors
       let ctorAllArgs = T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_varName fd | fd <- fieldDetails]
-          ctorReqArgs = T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_varName fd | fd <- fieldDetails, not (isJust (f_default (fd_field fd)))]
+          ctorReqArgs = T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_varName fd | fd <- fieldDetails, not (fd_hasDefault fd)]
           isGeneric = length (s_typeParams struct) > 0
 
           ctor1 =
@@ -223,8 +224,8 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
               clineN
                 [template "this.$1 = $2;"
                   [ fd_memberVarName fd,
-                    if isJust (f_default (fd_field fd))
-                       then fd_defValue fd
+                    if fd_hasDefault fd
+                       then template "$1()" [fd_defFnName fd]
                        else template "$1.requireNonNull($2)" [objectsClass, fd_varName fd]
                   ]
                 | fd <- fieldDetails]
@@ -241,6 +242,16 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
       addMethod ctor1
       when (not isGeneric && hasDefaults) (addMethod ctor2)
       when (not isGeneric) (addMethod ctor3)
+
+      -- Default static fns
+      when (not (null fieldsWithDefaults)) $ do
+        (addMethod (cline "/* Field defaults */"))
+      for_ fieldsWithDefaults $ \fd -> do
+        let deffn =
+              cblock (template "public static $1 $2()" [fd_typeExprStr fd,fd_defFnName fd]) (
+                ctemplate "return $1;" [fd_defValue fd]
+              )
+        addMethod deffn
 
       -- Getters/Setters
       when (not isEmpty) (addMethod (cline "/* Accessors and mutators */"))

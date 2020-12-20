@@ -28,11 +28,17 @@ public class AdminApiRequests {
   }
 
   public AdminApiRequests() {
-    this.query = new HttpGet<JsonElement>("/admin/query", new TypeToken<JsonElement>(JsonBindings.JSON));
+    this.query = defQuery();
   }
 
   public AdminApiRequests(AdminApiRequests other) {
     this.query = HttpGet.factory(JsonBindings.JSON_FACTORY).create(other.query);
+  }
+
+  /* Field defaults */
+
+  public static HttpGet<JsonElement> defQuery() {
+    return new HttpGet<JsonElement>("/admin/query", new TypeToken<JsonElement>(JsonBindings.JSON));
   }
 
   /* Accessors and mutators */

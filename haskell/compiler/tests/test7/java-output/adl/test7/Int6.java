@@ -27,6 +27,12 @@ public class Int6<X> {
     this.value = value;
   }
 
+  /* Field defaults */
+
+  public static long defValue() {
+    return 43L;
+  }
+
   /* Accessors and mutators */
 
   public long getValue() {

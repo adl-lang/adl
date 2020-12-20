@@ -27,6 +27,12 @@ public class String6<X> {
     this.value = Objects.requireNonNull(value);
   }
 
+  /* Field defaults */
+
+  public static String defValue() {
+    return "goodbye";
+  }
+
   /* Accessors and mutators */
 
   public String getValue() {

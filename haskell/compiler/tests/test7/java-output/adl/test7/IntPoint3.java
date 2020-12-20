@@ -27,11 +27,17 @@ public class IntPoint3 {
   }
 
   public IntPoint3() {
-    this.value = new Point<Long>(5L, 27L);
+    this.value = defValue();
   }
 
   public IntPoint3(IntPoint3 other) {
     this.value = Point.factory(Factories.INT64).create(other.value);
+  }
+
+  /* Field defaults */
+
+  public static Point<Long> defValue() {
+    return new Point<Long>(5L, 27L);
   }
 
   /* Accessors and mutators */

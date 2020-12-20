@@ -33,11 +33,17 @@ public class Test {
   }
 
   public Test() {
-    this.foo = Factories.stringMap(" ", "baz", "\"", "baz", "$", "bar", "'", "baz", "degrees", "°");
+    this.foo = defFoo();
   }
 
   public Test(Test other) {
     this.foo = Factories.stringMap(Factories.STRING).create(other.foo);
+  }
+
+  /* Field defaults */
+
+  public static Map<String, String> defFoo() {
+    return Factories.stringMap(" ", "baz", "\"", "baz", "$", "bar", "'", "baz", "degrees", "°");
   }
 
   /* Accessors and mutators */

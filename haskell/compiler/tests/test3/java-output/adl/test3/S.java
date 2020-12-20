@@ -79,6 +79,100 @@ public class S<T> {
     this.f_json2 = Objects.requireNonNull(f_json2);
   }
 
+  /* Field defaults */
+
+  public static Void defF_void() {
+    return null;
+  }
+
+  public static boolean defF_bool() {
+    return true;
+  }
+
+  public static byte defF_int8() {
+    return (byte)-5;
+  }
+
+  public static short defF_int16() {
+    return (short)-10000;
+  }
+
+  public static int defF_int32() {
+    return 56;
+  }
+
+  public static long defF_int64() {
+    return 40000L;
+  }
+
+  public static byte defF_word8() {
+    return (byte)32;
+  }
+
+  public static short defF_word16() {
+    return (short)50000;
+  }
+
+  public static int defF_word32() {
+    return 124456;
+  }
+
+  public static long defF_word64() {
+    return 2344L;
+  }
+
+  public static float defF_float() {
+    return 0.5F;
+  }
+
+  public static double defF_double() {
+    return 0.45D;
+  }
+
+  public static ByteArray defF_bytes() {
+    return new ByteArray("hello".getBytes());
+  }
+
+  public static String defF_string() {
+    return "abcd";
+  }
+
+  public static List<String> defF_vstring() {
+    return Factories.list("xy", "ab");
+  }
+
+  public static A defF_a() {
+    return new A((short)0, "xyz", false);
+  }
+
+  public static U defF_u() {
+    return U.f_int((short)45);
+  }
+
+  public static U defF_u1() {
+    return U.f_void();
+  }
+
+  public static E defF_e() {
+    return E.V2;
+  }
+
+  public static B<Short> defF_bint16() {
+    return new B<Short>((short)56, "yikes", Factories.list((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5));
+  }
+
+  public static Map<String, Integer> defF_smap() {
+    return Factories.stringMap("a", 45, "b", 47);
+  }
+
+  public static JsonElement defF_json1() {
+    return JsonHelpers.jsonFromString("null");
+  }
+
+  public static JsonElement defF_json2() {
+    return JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]");
+  }
+
   /* Accessors and mutators */
 
   public Void getF_void() {

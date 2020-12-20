@@ -28,11 +28,17 @@ public class S1 {
   }
 
   public S1() {
-    this.f = (short)100;
+    this.f = defF();
   }
 
   public S1(S1 other) {
     this.f = other.f;
+  }
+
+  /* Field defaults */
+
+  public static short defF() {
+    return (short)100;
   }
 
   /* Accessors and mutators */

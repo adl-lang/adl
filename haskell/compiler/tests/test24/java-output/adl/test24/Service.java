@@ -35,15 +35,29 @@ public class Service {
   }
 
   public Service() {
-    this.hello = new PostReq<String, String>("/hello", new TypeToken<String>(JsonBindings.STRING), new TypeToken<String>(JsonBindings.STRING));
-    this.farewell = new PostReq<Optional<String>, Optional<String>>("/farewell", new TypeToken<Optional<String>>(JsonBindings.nullable(JsonBindings.STRING)), new TypeToken<Optional<String>>(JsonBindings.nullable(JsonBindings.STRING)));
-    this.blobs = new CrudReqs<JsonElement>(new PostReq<JsonElement, String>("/blobs/create", new TypeToken<JsonElement>(JsonBindings.JSON), new TypeToken<String>(JsonBindings.STRING)), new PostReq<String, JsonElement>("/blobs/read", new TypeToken<String>(JsonBindings.STRING), new TypeToken<JsonElement>(JsonBindings.JSON)));
+    this.hello = defHello();
+    this.farewell = defFarewell();
+    this.blobs = defBlobs();
   }
 
   public Service(Service other) {
     this.hello = PostReq.factory(Factories.STRING, Factories.STRING).create(other.hello);
     this.farewell = PostReq.factory(Factories.nullable(Factories.STRING), Factories.nullable(Factories.STRING)).create(other.farewell);
     this.blobs = CrudReqs.factory(JsonBindings.JSON_FACTORY).create(other.blobs);
+  }
+
+  /* Field defaults */
+
+  public static PostReq<String, String> defHello() {
+    return new PostReq<String, String>("/hello", new TypeToken<String>(JsonBindings.STRING), new TypeToken<String>(JsonBindings.STRING));
+  }
+
+  public static PostReq<Optional<String>, Optional<String>> defFarewell() {
+    return new PostReq<Optional<String>, Optional<String>>("/farewell", new TypeToken<Optional<String>>(JsonBindings.nullable(JsonBindings.STRING)), new TypeToken<Optional<String>>(JsonBindings.nullable(JsonBindings.STRING)));
+  }
+
+  public static CrudReqs<JsonElement> defBlobs() {
+    return new CrudReqs<JsonElement>(new PostReq<JsonElement, String>("/blobs/create", new TypeToken<JsonElement>(JsonBindings.JSON), new TypeToken<String>(JsonBindings.STRING)), new PostReq<String, JsonElement>("/blobs/read", new TypeToken<String>(JsonBindings.STRING), new TypeToken<JsonElement>(JsonBindings.JSON)));
   }
 
   /* Accessors and mutators */

@@ -679,6 +679,7 @@ data FieldDetails = FieldDetails {
   fd_field :: Field CResolvedType,
   fd_memberVarName :: Ident,
   fd_varName :: Ident,
+  fd_defFnName :: Ident,
   fd_accessorName :: Ident,
   fd_mutatorName :: Ident,
   fd_unionCtorName :: Ident,
@@ -732,6 +733,7 @@ genFieldDetails f = do
         then "m" <> javaCapsFieldName f
         else unreserveWord (f_name f)
       accessorName = template "get$1" [javaCapsFieldName f]
+      defFnName = template "def$1" [javaCapsFieldName f]
       mutatorName = template "set$1" [javaCapsFieldName f]
       accessExpr =
         if cgp_publicMembers cgp
@@ -756,6 +758,7 @@ genFieldDetails f = do
     fd_memberVarName=memberVarName,
     fd_accessExpr=accessExpr,
     fd_accessorName=accessorName,
+    fd_defFnName=defFnName,
     fd_mutatorName=mutatorName,
     fd_unionCtorName=unionCtorName,
     fd_serializedName=serializedName,
@@ -768,6 +771,9 @@ genFieldDetails f = do
     fd_hashcode=hashCode,
     fd_equals=equals
     }
+
+fd_hasDefault :: FieldDetails -> Bool
+fd_hasDefault fd = isJust (f_default (fd_field fd))
 
 -- Inside the union implementation we need to be able to cast
 -- from Object to the type of the branch. For a simple enough type

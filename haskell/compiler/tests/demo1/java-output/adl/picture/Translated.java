@@ -32,6 +32,16 @@ public class Translated<T> {
     this.object = Objects.requireNonNull(object);
   }
 
+  /* Field defaults */
+
+  public static double defXoffset() {
+    return 0D;
+  }
+
+  public static double defYoffset() {
+    return 0D;
+  }
+
   /* Accessors and mutators */
 
   public double getXoffset() {

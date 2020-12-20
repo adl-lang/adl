@@ -64,12 +64,12 @@ public class S {
     this.f_map = Objects.requireNonNull(f_map);
     this.f_set = Objects.requireNonNull(f_set);
     this.f_mstring = Objects.requireNonNull(f_mstring);
-    this.f_mstring2 = MaybeHelpers.just("sukpeepolup");
+    this.f_mstring2 = defF_mstring2();
     this.f_nstring = Objects.requireNonNull(f_nstring);
-    this.f_nstring2 = Optional.<String>of("abcde");
+    this.f_nstring2 = defF_nstring2();
     this.f_int = Objects.requireNonNull(f_int);
-    this.f_int2 = Optional.<Long>of(100L);
-    this.f_int3 = Optional.<Long>empty();
+    this.f_int2 = defF_int2();
+    this.f_int3 = defF_int3();
   }
 
   public S(S other) {
@@ -84,6 +84,24 @@ public class S {
     this.f_int = Factories.nullable(Factories.INT64).create(other.f_int);
     this.f_int2 = Factories.nullable(Factories.INT64).create(other.f_int2);
     this.f_int3 = Factories.nullable(Factories.INT64).create(other.f_int3);
+  }
+
+  /* Field defaults */
+
+  public static Optional<String> defF_mstring2() {
+    return MaybeHelpers.just("sukpeepolup");
+  }
+
+  public static Optional<String> defF_nstring2() {
+    return Optional.<String>of("abcde");
+  }
+
+  public static Optional<Long> defF_int2() {
+    return Optional.<Long>of(100L);
+  }
+
+  public static Optional<Long> defF_int3() {
+    return Optional.<Long>empty();
   }
 
   /* Accessors and mutators */
