@@ -37,8 +37,9 @@ public class S {
     return f1;
   }
 
-  public void setF1(Point<Long> f1) {
+  public S setF1(Point<Long> f1) {
     this.f1 = Objects.requireNonNull(f1);
+    return this;
   }
 
   /* Object level helpers */

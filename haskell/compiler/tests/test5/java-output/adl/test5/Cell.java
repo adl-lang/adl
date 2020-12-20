@@ -35,16 +35,18 @@ public class Cell<T> {
     return head;
   }
 
-  public void setHead(T head) {
+  public Cell<T> setHead(T head) {
     this.head = Objects.requireNonNull(head);
+    return this;
   }
 
   public List<T> getTail() {
     return tail;
   }
 
-  public void setTail(List<T> tail) {
+  public Cell<T> setTail(List<T> tail) {
     this.tail = Objects.requireNonNull(tail);
+    return this;
   }
 
   /* Object level helpers */

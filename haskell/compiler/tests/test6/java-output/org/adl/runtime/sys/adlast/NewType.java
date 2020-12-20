@@ -44,24 +44,27 @@ public class NewType {
     return typeParams;
   }
 
-  public void setTypeParams(List<String> typeParams) {
+  public NewType setTypeParams(List<String> typeParams) {
     this.typeParams = Objects.requireNonNull(typeParams);
+    return this;
   }
 
   public TypeExpr getTypeExpr() {
     return typeExpr;
   }
 
-  public void setTypeExpr(TypeExpr typeExpr) {
+  public NewType setTypeExpr(TypeExpr typeExpr) {
     this.typeExpr = Objects.requireNonNull(typeExpr);
+    return this;
   }
 
   public Optional<JsonElement> getDefault() {
     return default_;
   }
 
-  public void setDefault(Optional<JsonElement> default_) {
+  public NewType setDefault(Optional<JsonElement> default_) {
     this.default_ = Objects.requireNonNull(default_);
+    return this;
   }
 
   /* Object level helpers */

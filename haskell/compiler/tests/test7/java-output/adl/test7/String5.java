@@ -33,8 +33,9 @@ public class String5<X> {
     return value;
   }
 
-  public void setValue(String value) {
+  public String5<X> setValue(String value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   /* Object level helpers */

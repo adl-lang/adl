@@ -36,16 +36,18 @@ public class CrudReqs<T> {
     return create;
   }
 
-  public void setCreate(PostReq<T, String> create) {
+  public CrudReqs<T> setCreate(PostReq<T, String> create) {
     this.create = Objects.requireNonNull(create);
+    return this;
   }
 
   public PostReq<String, T> getRead() {
     return read;
   }
 
-  public void setRead(PostReq<String, T> read) {
+  public CrudReqs<T> setRead(PostReq<String, T> read) {
     this.read = Objects.requireNonNull(read);
+    return this;
   }
 
   /* Object level helpers */

@@ -56,24 +56,27 @@ public class A {
     return f_int;
   }
 
-  public void setF_int(short f_int) {
+  public A setF_int(short f_int) {
     this.f_int = f_int;
+    return this;
   }
 
   public String getF_string() {
     return f_string;
   }
 
-  public void setF_string(String f_string) {
+  public A setF_string(String f_string) {
     this.f_string = Objects.requireNonNull(f_string);
+    return this;
   }
 
   public boolean getF_bool() {
     return f_bool;
   }
 
-  public void setF_bool(boolean f_bool) {
+  public A setF_bool(boolean f_bool) {
     this.f_bool = f_bool;
+    return this;
   }
 
   /* Object level helpers */

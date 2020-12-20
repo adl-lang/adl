@@ -35,8 +35,9 @@ public class Factory {
     return value;
   }
 
-  public void setValue(String value) {
+  public Factory setValue(String value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   /* Object level helpers */

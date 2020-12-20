@@ -48,24 +48,27 @@ public class S2 {
     return f1;
   }
 
-  public void setF1(String f1) {
+  public S2 setF1(String f1) {
     this.f1 = Objects.requireNonNull(f1);
+    return this;
   }
 
   public double getF2() {
     return f2;
   }
 
-  public void setF2(double f2) {
+  public S2 setF2(double f2) {
     this.f2 = f2;
+    return this;
   }
 
   public List<Integer> getF3() {
     return f3;
   }
 
-  public void setF3(List<Integer> f3) {
+  public S2 setF3(List<Integer> f3) {
     this.f3 = Objects.requireNonNull(f3);
+    return this;
   }
 
   /* Object level helpers */

@@ -179,192 +179,216 @@ public class S<T> {
     return f_void;
   }
 
-  public void setF_void(Void f_void) {
+  public S<T> setF_void(Void f_void) {
     this.f_void = f_void;
+    return this;
   }
 
   public boolean getF_bool() {
     return f_bool;
   }
 
-  public void setF_bool(boolean f_bool) {
+  public S<T> setF_bool(boolean f_bool) {
     this.f_bool = f_bool;
+    return this;
   }
 
   public byte getF_int8() {
     return f_int8;
   }
 
-  public void setF_int8(byte f_int8) {
+  public S<T> setF_int8(byte f_int8) {
     this.f_int8 = f_int8;
+    return this;
   }
 
   public short getF_int16() {
     return f_int16;
   }
 
-  public void setF_int16(short f_int16) {
+  public S<T> setF_int16(short f_int16) {
     this.f_int16 = f_int16;
+    return this;
   }
 
   public int getF_int32() {
     return f_int32;
   }
 
-  public void setF_int32(int f_int32) {
+  public S<T> setF_int32(int f_int32) {
     this.f_int32 = f_int32;
+    return this;
   }
 
   public long getF_int64() {
     return f_int64;
   }
 
-  public void setF_int64(long f_int64) {
+  public S<T> setF_int64(long f_int64) {
     this.f_int64 = f_int64;
+    return this;
   }
 
   public byte getF_word8() {
     return f_word8;
   }
 
-  public void setF_word8(byte f_word8) {
+  public S<T> setF_word8(byte f_word8) {
     this.f_word8 = f_word8;
+    return this;
   }
 
   public short getF_word16() {
     return f_word16;
   }
 
-  public void setF_word16(short f_word16) {
+  public S<T> setF_word16(short f_word16) {
     this.f_word16 = f_word16;
+    return this;
   }
 
   public int getF_word32() {
     return f_word32;
   }
 
-  public void setF_word32(int f_word32) {
+  public S<T> setF_word32(int f_word32) {
     this.f_word32 = f_word32;
+    return this;
   }
 
   public long getF_word64() {
     return f_word64;
   }
 
-  public void setF_word64(long f_word64) {
+  public S<T> setF_word64(long f_word64) {
     this.f_word64 = f_word64;
+    return this;
   }
 
   public float getF_float() {
     return f_float;
   }
 
-  public void setF_float(float f_float) {
+  public S<T> setF_float(float f_float) {
     this.f_float = f_float;
+    return this;
   }
 
   public double getF_double() {
     return f_double;
   }
 
-  public void setF_double(double f_double) {
+  public S<T> setF_double(double f_double) {
     this.f_double = f_double;
+    return this;
   }
 
   public ByteArray getF_bytes() {
     return f_bytes;
   }
 
-  public void setF_bytes(ByteArray f_bytes) {
+  public S<T> setF_bytes(ByteArray f_bytes) {
     this.f_bytes = Objects.requireNonNull(f_bytes);
+    return this;
   }
 
   public String getF_string() {
     return f_string;
   }
 
-  public void setF_string(String f_string) {
+  public S<T> setF_string(String f_string) {
     this.f_string = Objects.requireNonNull(f_string);
+    return this;
   }
 
   public List<String> getF_vstring() {
     return f_vstring;
   }
 
-  public void setF_vstring(List<String> f_vstring) {
+  public S<T> setF_vstring(List<String> f_vstring) {
     this.f_vstring = Objects.requireNonNull(f_vstring);
+    return this;
   }
 
   public A getF_a() {
     return f_a;
   }
 
-  public void setF_a(A f_a) {
+  public S<T> setF_a(A f_a) {
     this.f_a = Objects.requireNonNull(f_a);
+    return this;
   }
 
   public U getF_u() {
     return f_u;
   }
 
-  public void setF_u(U f_u) {
+  public S<T> setF_u(U f_u) {
     this.f_u = Objects.requireNonNull(f_u);
+    return this;
   }
 
   public U getF_u1() {
     return f_u1;
   }
 
-  public void setF_u1(U f_u1) {
+  public S<T> setF_u1(U f_u1) {
     this.f_u1 = Objects.requireNonNull(f_u1);
+    return this;
   }
 
   public E getF_e() {
     return f_e;
   }
 
-  public void setF_e(E f_e) {
+  public S<T> setF_e(E f_e) {
     this.f_e = Objects.requireNonNull(f_e);
+    return this;
   }
 
   public T getF_t() {
     return f_t;
   }
 
-  public void setF_t(T f_t) {
+  public S<T> setF_t(T f_t) {
     this.f_t = Objects.requireNonNull(f_t);
+    return this;
   }
 
   public B<Short> getF_bint16() {
     return f_bint16;
   }
 
-  public void setF_bint16(B<Short> f_bint16) {
+  public S<T> setF_bint16(B<Short> f_bint16) {
     this.f_bint16 = Objects.requireNonNull(f_bint16);
+    return this;
   }
 
   public Map<String, Integer> getF_smap() {
     return f_smap;
   }
 
-  public void setF_smap(Map<String, Integer> f_smap) {
+  public S<T> setF_smap(Map<String, Integer> f_smap) {
     this.f_smap = Objects.requireNonNull(f_smap);
+    return this;
   }
 
   public JsonElement getF_json1() {
     return f_json1;
   }
 
-  public void setF_json1(JsonElement f_json1) {
+  public S<T> setF_json1(JsonElement f_json1) {
     this.f_json1 = Objects.requireNonNull(f_json1);
+    return this;
   }
 
   public JsonElement getF_json2() {
     return f_json2;
   }
 
-  public void setF_json2(JsonElement f_json2) {
+  public S<T> setF_json2(JsonElement f_json2) {
     this.f_json2 = Objects.requireNonNull(f_json2);
+    return this;
   }
 
   /* Object level helpers */

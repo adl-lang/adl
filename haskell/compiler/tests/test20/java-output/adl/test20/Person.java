@@ -47,32 +47,36 @@ public class Person {
     return firstName;
   }
 
-  public void setFirstName(String firstName) {
+  public Person setFirstName(String firstName) {
     this.firstName = Objects.requireNonNull(firstName);
+    return this;
   }
 
   public String getLastName() {
     return lastName;
   }
 
-  public void setLastName(String lastName) {
+  public Person setLastName(String lastName) {
     this.lastName = Objects.requireNonNull(lastName);
+    return this;
   }
 
   public short getAge() {
     return age;
   }
 
-  public void setAge(short age) {
+  public Person setAge(short age) {
     this.age = age;
+    return this;
   }
 
   public Role getRole() {
     return role;
   }
 
-  public void setRole(Role role) {
+  public Person setRole(Role role) {
     this.role = Objects.requireNonNull(role);
+    return this;
   }
 
   /* Object level helpers */

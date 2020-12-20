@@ -39,16 +39,18 @@ public class Union {
     return typeParams;
   }
 
-  public void setTypeParams(List<String> typeParams) {
+  public Union setTypeParams(List<String> typeParams) {
     this.typeParams = Objects.requireNonNull(typeParams);
+    return this;
   }
 
   public List<Field> getFields() {
     return fields;
   }
 
-  public void setFields(List<Field> fields) {
+  public Union setFields(List<Field> fields) {
     this.fields = Objects.requireNonNull(fields);
+    return this;
   }
 
   /* Object level helpers */

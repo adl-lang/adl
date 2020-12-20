@@ -37,16 +37,18 @@ public class Tree<T> {
     return value;
   }
 
-  public void setValue(T value) {
+  public Tree<T> setValue(T value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   public List<Tree<T>> getChildren() {
     return children;
   }
 
-  public void setChildren(List<Tree<T>> children) {
+  public Tree<T> setChildren(List<Tree<T>> children) {
     this.children = Objects.requireNonNull(children);
+    return this;
   }
 
   /* Object level helpers */

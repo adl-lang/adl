@@ -37,8 +37,9 @@ public class S2 {
     return f2;
   }
 
-  public void setF2(double f2) {
+  public S2 setF2(double f2) {
     this.f2 = f2;
+    return this;
   }
 
   /* Object level helpers */

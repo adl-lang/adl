@@ -36,8 +36,9 @@ public class IntPoint2 {
     return value;
   }
 
-  public void setValue(Point<Long> value) {
+  public IntPoint2 setValue(Point<Long> value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   /* Object level helpers */

@@ -57,56 +57,63 @@ public class X1 {
     return f1;
   }
 
-  public void setF1(int f1) {
+  public X1 setF1(int f1) {
     this.f1 = f1;
+    return this;
   }
 
   public int getF2() {
     return f2;
   }
 
-  public void setF2(int f2) {
+  public X1 setF2(int f2) {
     this.f2 = f2;
+    return this;
   }
 
   public Pair<String, Integer> getF3() {
     return f3;
   }
 
-  public void setF3(Pair<String, Integer> f3) {
+  public X1 setF3(Pair<String, Integer> f3) {
     this.f3 = Objects.requireNonNull(f3);
+    return this;
   }
 
   public Pair<String, String> getF4() {
     return f4;
   }
 
-  public void setF4(Pair<String, String> f4) {
+  public X1 setF4(Pair<String, String> f4) {
     this.f4 = Objects.requireNonNull(f4);
+    return this;
   }
 
   public List<Integer> getF5() {
     return f5;
   }
 
-  public void setF5(List<Integer> f5) {
+  public X1 setF5(List<Integer> f5) {
     this.f5 = Objects.requireNonNull(f5);
+    return this;
   }
 
   public List<Pair<String, Integer>> getF6() {
     return f6;
   }
 
-  public void setF6(List<Pair<String, Integer>> f6) {
+  public X1 setF6(List<Pair<String, Integer>> f6) {
     this.f6 = Objects.requireNonNull(f6);
+    return this;
   }
 
   public List<Pair<String, String>> getF7() {
     return f7;
   }
 
-  public void setF7(List<Pair<String, String>> f7) {
+  public X1 setF7(List<Pair<String, String>> f7) {
     this.f7 = Objects.requireNonNull(f7);
+    return this;
   }
 
   /* Object level helpers */

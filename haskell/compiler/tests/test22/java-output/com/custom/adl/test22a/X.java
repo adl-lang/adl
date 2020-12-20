@@ -37,8 +37,9 @@ public class X {
     return field;
   }
 
-  public void setField(String field) {
+  public X setField(String field) {
     this.field = Objects.requireNonNull(field);
+    return this;
   }
 
   /* Object level helpers */

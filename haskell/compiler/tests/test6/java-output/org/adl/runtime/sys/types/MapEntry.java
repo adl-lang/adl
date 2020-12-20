@@ -35,16 +35,18 @@ public class MapEntry<K, V> {
     return key;
   }
 
-  public void setKey(K key) {
+  public MapEntry<K, V> setKey(K key) {
     this.key = Objects.requireNonNull(key);
+    return this;
   }
 
   public V getValue() {
     return value;
   }
 
-  public void setValue(V value) {
+  public MapEntry<K, V> setValue(V value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   /* Object level helpers */

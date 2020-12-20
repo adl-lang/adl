@@ -39,8 +39,9 @@ public class Int6<X> {
     return value;
   }
 
-  public void setValue(long value) {
+  public Int6<X> setValue(long value) {
     this.value = value;
+    return this;
   }
 
   /* Object level helpers */

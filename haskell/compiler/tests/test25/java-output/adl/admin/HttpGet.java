@@ -36,16 +36,18 @@ public class HttpGet<O> {
     return path;
   }
 
-  public void setPath(String path) {
+  public HttpGet<O> setPath(String path) {
     this.path = Objects.requireNonNull(path);
+    return this;
   }
 
   public TypeToken<O> getOtype() {
     return otype;
   }
 
-  public void setOtype(TypeToken<O> otype) {
+  public HttpGet<O> setOtype(TypeToken<O> otype) {
     this.otype = Objects.requireNonNull(otype);
+    return this;
   }
 
   /* Object level helpers */

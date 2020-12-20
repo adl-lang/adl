@@ -263,10 +263,12 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
                   ctemplate "return $1;" [fd_memberVarName fd]
                 )
               setter =
-                cblock (template "public void $1($2 $3)" [fd_mutatorName fd,fd_typeExprStr fd, fd_varName fd]) (
-                  if needsNullCheck fd
-                     then ctemplate "this.$1 = $2.requireNonNull($3);" [fd_memberVarName fd,objectsClass,fd_varName fd]
-                     else ctemplate "this.$1 = $2;" [fd_memberVarName fd,fd_varName fd]
+                cblock (template "public $1 $2($3 $4)" [className <> typeArgs, fd_mutatorName fd,fd_typeExprStr fd, fd_varName fd]) (
+                  ( if needsNullCheck fd
+                      then ctemplate "this.$1 = $2.requireNonNull($3);" [fd_memberVarName fd,objectsClass,fd_varName fd]
+                      else ctemplate "this.$1 = $2;" [fd_memberVarName fd,fd_varName fd]
+                  )
+                  <> cline "return this;"
                 )
           addMethod getter
           when (cgp_mutable codeProfile) (addMethod setter)

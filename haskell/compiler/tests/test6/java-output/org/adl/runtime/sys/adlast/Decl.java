@@ -49,32 +49,36 @@ public class Decl {
     return name;
   }
 
-  public void setName(String name) {
+  public Decl setName(String name) {
     this.name = Objects.requireNonNull(name);
+    return this;
   }
 
   public Optional<Integer> getVersion() {
     return version;
   }
 
-  public void setVersion(Optional<Integer> version) {
+  public Decl setVersion(Optional<Integer> version) {
     this.version = Objects.requireNonNull(version);
+    return this;
   }
 
   public DeclType getType_() {
     return type_;
   }
 
-  public void setType_(DeclType type_) {
+  public Decl setType_(DeclType type_) {
     this.type_ = Objects.requireNonNull(type_);
+    return this;
   }
 
   public Map<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(Map<ScopedName, JsonElement> annotations) {
+  public Decl setAnnotations(Map<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
+    return this;
   }
 
   /* Object level helpers */

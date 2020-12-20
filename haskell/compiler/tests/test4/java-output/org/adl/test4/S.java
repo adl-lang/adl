@@ -125,96 +125,108 @@ public class S {
     return v1;
   }
 
-  public void setV1(LocalDate v1) {
+  public S setV1(LocalDate v1) {
     this.v1 = Objects.requireNonNull(v1);
+    return this;
   }
 
   public LocalDate getV2() {
     return v2;
   }
 
-  public void setV2(LocalDate v2) {
+  public S setV2(LocalDate v2) {
     this.v2 = Objects.requireNonNull(v2);
+    return this;
   }
 
   public LocalDate getV3() {
     return v3;
   }
 
-  public void setV3(LocalDate v3) {
+  public S setV3(LocalDate v3) {
     this.v3 = Objects.requireNonNull(v3);
+    return this;
   }
 
   public LocalDate getV4() {
     return v4;
   }
 
-  public void setV4(LocalDate v4) {
+  public S setV4(LocalDate v4) {
     this.v4 = Objects.requireNonNull(v4);
+    return this;
   }
 
   public Optional<String> getV5() {
     return v5;
   }
 
-  public void setV5(Optional<String> v5) {
+  public S setV5(Optional<String> v5) {
     this.v5 = Objects.requireNonNull(v5);
+    return this;
   }
 
   public Optional<String> getV5a() {
     return v5a;
   }
 
-  public void setV5a(Optional<String> v5a) {
+  public S setV5a(Optional<String> v5a) {
     this.v5a = Objects.requireNonNull(v5a);
+    return this;
   }
 
   public Optional<String> getV5b() {
     return v5b;
   }
 
-  public void setV5b(Optional<String> v5b) {
+  public S setV5b(Optional<String> v5b) {
     this.v5b = Objects.requireNonNull(v5b);
+    return this;
   }
 
   public Pair<String, Integer> getV6() {
     return v6;
   }
 
-  public void setV6(Pair<String, Integer> v6) {
+  public S setV6(Pair<String, Integer> v6) {
     this.v6 = Objects.requireNonNull(v6);
+    return this;
   }
 
   public Set<Integer> getV7() {
     return v7;
   }
 
-  public void setV7(Set<Integer> v7) {
+  public S setV7(Set<Integer> v7) {
     this.v7 = Objects.requireNonNull(v7);
+    return this;
   }
 
   public Set<Integer> getV7a() {
     return v7a;
   }
 
-  public void setV7a(Set<Integer> v7a) {
+  public S setV7a(Set<Integer> v7a) {
     this.v7a = Objects.requireNonNull(v7a);
+    return this;
   }
 
   public Map<String, Integer> getV8() {
     return v8;
   }
 
-  public void setV8(Map<String, Integer> v8) {
+  public S setV8(Map<String, Integer> v8) {
     this.v8 = Objects.requireNonNull(v8);
+    return this;
   }
 
   public Map<String, Integer> getV8a() {
     return v8a;
   }
 
-  public void setV8a(Map<String, Integer> v8a) {
+  public S setV8a(Map<String, Integer> v8a) {
     this.v8a = Objects.requireNonNull(v8a);
+    return this;
   }
 
   /* Object level helpers */

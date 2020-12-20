@@ -52,8 +52,9 @@ public class Test {
     return foo;
   }
 
-  public void setFoo(Map<String, String> foo) {
+  public Test setFoo(Map<String, String> foo) {
     this.foo = Objects.requireNonNull(foo);
+    return this;
   }
 
   /* Object level helpers */

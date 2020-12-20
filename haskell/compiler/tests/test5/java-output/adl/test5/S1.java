@@ -47,8 +47,9 @@ public class S1 {
     return f;
   }
 
-  public void setF(short f) {
+  public S1 setF(short f) {
     this.f = f;
+    return this;
   }
 
   /* Object level helpers */

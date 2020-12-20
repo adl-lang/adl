@@ -48,32 +48,36 @@ public class Module {
     return name;
   }
 
-  public void setName(String name) {
+  public Module setName(String name) {
     this.name = Objects.requireNonNull(name);
+    return this;
   }
 
   public List<Import> getImports() {
     return imports;
   }
 
-  public void setImports(List<Import> imports) {
+  public Module setImports(List<Import> imports) {
     this.imports = Objects.requireNonNull(imports);
+    return this;
   }
 
   public Map<String, Decl> getDecls() {
     return decls;
   }
 
-  public void setDecls(Map<String, Decl> decls) {
+  public Module setDecls(Map<String, Decl> decls) {
     this.decls = Objects.requireNonNull(decls);
+    return this;
   }
 
   public Map<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(Map<ScopedName, JsonElement> annotations) {
+  public Module setAnnotations(Map<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
+    return this;
   }
 
   /* Object level helpers */

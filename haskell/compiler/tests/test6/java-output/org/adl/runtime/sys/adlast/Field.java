@@ -52,40 +52,45 @@ public class Field {
     return name;
   }
 
-  public void setName(String name) {
+  public Field setName(String name) {
     this.name = Objects.requireNonNull(name);
+    return this;
   }
 
   public String getSerializedName() {
     return serializedName;
   }
 
-  public void setSerializedName(String serializedName) {
+  public Field setSerializedName(String serializedName) {
     this.serializedName = Objects.requireNonNull(serializedName);
+    return this;
   }
 
   public TypeExpr getTypeExpr() {
     return typeExpr;
   }
 
-  public void setTypeExpr(TypeExpr typeExpr) {
+  public Field setTypeExpr(TypeExpr typeExpr) {
     this.typeExpr = Objects.requireNonNull(typeExpr);
+    return this;
   }
 
   public Optional<JsonElement> getDefault() {
     return default_;
   }
 
-  public void setDefault(Optional<JsonElement> default_) {
+  public Field setDefault(Optional<JsonElement> default_) {
     this.default_ = Objects.requireNonNull(default_);
+    return this;
   }
 
   public Map<ScopedName, JsonElement> getAnnotations() {
     return annotations;
   }
 
-  public void setAnnotations(Map<ScopedName, JsonElement> annotations) {
+  public Field setAnnotations(Map<ScopedName, JsonElement> annotations) {
     this.annotations = Objects.requireNonNull(annotations);
+    return this;
   }
 
   /* Object level helpers */

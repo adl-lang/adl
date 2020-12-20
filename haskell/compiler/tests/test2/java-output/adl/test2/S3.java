@@ -44,32 +44,36 @@ public class S3<T> {
     return f1;
   }
 
-  public void setF1(String f1) {
+  public S3<T> setF1(String f1) {
     this.f1 = Objects.requireNonNull(f1);
+    return this;
   }
 
   public double getF2() {
     return f2;
   }
 
-  public void setF2(double f2) {
+  public S3<T> setF2(double f2) {
     this.f2 = f2;
+    return this;
   }
 
   public T getF3() {
     return f3;
   }
 
-  public void setF3(T f3) {
+  public S3<T> setF3(T f3) {
     this.f3 = Objects.requireNonNull(f3);
+    return this;
   }
 
   public List<T> getF4() {
     return f4;
   }
 
-  public void setF4(List<T> f4) {
+  public S3<T> setF4(List<T> f4) {
     this.f4 = Objects.requireNonNull(f4);
+    return this;
   }
 
   /* Object level helpers */

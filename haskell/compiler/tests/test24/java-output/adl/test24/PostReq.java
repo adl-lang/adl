@@ -38,24 +38,27 @@ public class PostReq<I, O> {
     return path;
   }
 
-  public void setPath(String path) {
+  public PostReq<I, O> setPath(String path) {
     this.path = Objects.requireNonNull(path);
+    return this;
   }
 
   public TypeToken<I> getReqBodyType() {
     return reqBodyType;
   }
 
-  public void setReqBodyType(TypeToken<I> reqBodyType) {
+  public PostReq<I, O> setReqBodyType(TypeToken<I> reqBodyType) {
     this.reqBodyType = Objects.requireNonNull(reqBodyType);
+    return this;
   }
 
   public TypeToken<O> getRespType() {
     return respType;
   }
 
-  public void setRespType(TypeToken<O> respType) {
+  public PostReq<I, O> setRespType(TypeToken<O> respType) {
     this.respType = Objects.requireNonNull(respType);
+    return this;
   }
 
   /* Object level helpers */

@@ -110,88 +110,99 @@ public class S {
     return f_pair;
   }
 
-  public void setF_pair(Pair<Integer, Double> f_pair) {
+  public S setF_pair(Pair<Integer, Double> f_pair) {
     this.f_pair = Objects.requireNonNull(f_pair);
+    return this;
   }
 
   public Either<String, Integer> getF_either() {
     return f_either;
   }
 
-  public void setF_either(Either<String, Integer> f_either) {
+  public S setF_either(Either<String, Integer> f_either) {
     this.f_either = Objects.requireNonNull(f_either);
+    return this;
   }
 
   public Map<String, Double> getF_map() {
     return f_map;
   }
 
-  public void setF_map(Map<String, Double> f_map) {
+  public S setF_map(Map<String, Double> f_map) {
     this.f_map = Objects.requireNonNull(f_map);
+    return this;
   }
 
   public Set<String> getF_set() {
     return f_set;
   }
 
-  public void setF_set(Set<String> f_set) {
+  public S setF_set(Set<String> f_set) {
     this.f_set = Objects.requireNonNull(f_set);
+    return this;
   }
 
   public Optional<String> getF_mstring() {
     return f_mstring;
   }
 
-  public void setF_mstring(Optional<String> f_mstring) {
+  public S setF_mstring(Optional<String> f_mstring) {
     this.f_mstring = Objects.requireNonNull(f_mstring);
+    return this;
   }
 
   public Optional<String> getF_mstring2() {
     return f_mstring2;
   }
 
-  public void setF_mstring2(Optional<String> f_mstring2) {
+  public S setF_mstring2(Optional<String> f_mstring2) {
     this.f_mstring2 = Objects.requireNonNull(f_mstring2);
+    return this;
   }
 
   public Optional<String> getF_nstring() {
     return f_nstring;
   }
 
-  public void setF_nstring(Optional<String> f_nstring) {
+  public S setF_nstring(Optional<String> f_nstring) {
     this.f_nstring = Objects.requireNonNull(f_nstring);
+    return this;
   }
 
   public Optional<String> getF_nstring2() {
     return f_nstring2;
   }
 
-  public void setF_nstring2(Optional<String> f_nstring2) {
+  public S setF_nstring2(Optional<String> f_nstring2) {
     this.f_nstring2 = Objects.requireNonNull(f_nstring2);
+    return this;
   }
 
   public Optional<Long> getF_int() {
     return f_int;
   }
 
-  public void setF_int(Optional<Long> f_int) {
+  public S setF_int(Optional<Long> f_int) {
     this.f_int = Objects.requireNonNull(f_int);
+    return this;
   }
 
   public Optional<Long> getF_int2() {
     return f_int2;
   }
 
-  public void setF_int2(Optional<Long> f_int2) {
+  public S setF_int2(Optional<Long> f_int2) {
     this.f_int2 = Objects.requireNonNull(f_int2);
+    return this;
   }
 
   public Optional<Long> getF_int3() {
     return f_int3;
   }
 
-  public void setF_int3(Optional<Long> f_int3) {
+  public S setF_int3(Optional<Long> f_int3) {
     this.f_int3 = Objects.requireNonNull(f_int3);
+    return this;
   }
 
   /* Object level helpers */

@@ -39,16 +39,18 @@ public class TypeDef {
     return typeParams;
   }
 
-  public void setTypeParams(List<String> typeParams) {
+  public TypeDef setTypeParams(List<String> typeParams) {
     this.typeParams = Objects.requireNonNull(typeParams);
+    return this;
   }
 
   public TypeExpr getTypeExpr() {
     return typeExpr;
   }
 
-  public void setTypeExpr(TypeExpr typeExpr) {
+  public TypeDef setTypeExpr(TypeExpr typeExpr) {
     this.typeExpr = Objects.requireNonNull(typeExpr);
+    return this;
   }
 
   /* Object level helpers */

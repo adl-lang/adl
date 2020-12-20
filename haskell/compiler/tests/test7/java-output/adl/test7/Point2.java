@@ -31,8 +31,9 @@ public class Point2<X> {
     return value;
   }
 
-  public void setValue(Point<X> value) {
+  public Point2<X> setValue(Point<X> value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   /* Object level helpers */

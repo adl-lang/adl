@@ -48,24 +48,27 @@ public class Translated<T> {
     return xoffset;
   }
 
-  public void setXoffset(double xoffset) {
+  public Translated<T> setXoffset(double xoffset) {
     this.xoffset = xoffset;
+    return this;
   }
 
   public double getYoffset() {
     return yoffset;
   }
 
-  public void setYoffset(double yoffset) {
+  public Translated<T> setYoffset(double yoffset) {
     this.yoffset = yoffset;
+    return this;
   }
 
   public T getObject() {
     return object;
   }
 
-  public void setObject(T object) {
+  public Translated<T> setObject(T object) {
     this.object = Objects.requireNonNull(object);
+    return this;
   }
 
   /* Object level helpers */

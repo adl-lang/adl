@@ -41,32 +41,36 @@ public class B<T> {
     return f_t;
   }
 
-  public void setF_t(T f_t) {
+  public B<T> setF_t(T f_t) {
     this.f_t = Objects.requireNonNull(f_t);
+    return this;
   }
 
   public String getF_string() {
     return f_string;
   }
 
-  public void setF_string(String f_string) {
+  public B<T> setF_string(String f_string) {
     this.f_string = Objects.requireNonNull(f_string);
+    return this;
   }
 
   public List<T> getF_tvec() {
     return f_tvec;
   }
 
-  public void setF_tvec(List<T> f_tvec) {
+  public B<T> setF_tvec(List<T> f_tvec) {
     this.f_tvec = Objects.requireNonNull(f_tvec);
+    return this;
   }
 
   public XY<T> getF_xy() {
     return f_xy;
   }
 
-  public void setF_xy(XY<T> f_xy) {
+  public B<T> setF_xy(XY<T> f_xy) {
     this.f_xy = Objects.requireNonNull(f_xy);
+    return this;
   }
 
   /* Object level helpers */

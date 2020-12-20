@@ -64,24 +64,27 @@ public class S {
     return f1;
   }
 
-  public void setF1(U9<String> f1) {
+  public S setF1(U9<String> f1) {
     this.f1 = Objects.requireNonNull(f1);
+    return this;
   }
 
   public U9<String> getF2() {
     return f2;
   }
 
-  public void setF2(U9<String> f2) {
+  public S setF2(U9<String> f2) {
     this.f2 = Objects.requireNonNull(f2);
+    return this;
   }
 
   public U9<String> getF3() {
     return f3;
   }
 
-  public void setF3(U9<String> f3) {
+  public S setF3(U9<String> f3) {
     this.f3 = Objects.requireNonNull(f3);
+    return this;
   }
 
   /* Object level helpers */

@@ -47,8 +47,9 @@ public class AdminApiRequests {
     return query;
   }
 
-  public void setQuery(HttpGet<JsonElement> query) {
+  public AdminApiRequests setQuery(HttpGet<JsonElement> query) {
     this.query = Objects.requireNonNull(query);
+    return this;
   }
 
   /* Object level helpers */

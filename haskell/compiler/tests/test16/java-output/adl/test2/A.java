@@ -37,8 +37,9 @@ public class A {
     return a;
   }
 
-  public void setA(int a) {
+  public A setA(int a) {
     this.a = a;
+    return this;
   }
 
   /* Object level helpers */

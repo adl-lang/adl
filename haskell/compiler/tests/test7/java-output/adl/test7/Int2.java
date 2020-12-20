@@ -36,8 +36,9 @@ public class Int2 {
     return value;
   }
 
-  public void setValue(long value) {
+  public Int2 setValue(long value) {
     this.value = value;
+    return this;
   }
 
   /* Object level helpers */

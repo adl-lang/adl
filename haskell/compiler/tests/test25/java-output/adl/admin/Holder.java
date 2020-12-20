@@ -47,8 +47,9 @@ public class Holder {
     return admin;
   }
 
-  public void setAdmin(AdminApiRequests admin) {
+  public Holder setAdmin(AdminApiRequests admin) {
     this.admin = Objects.requireNonNull(admin);
+    return this;
   }
 
   /* Object level helpers */

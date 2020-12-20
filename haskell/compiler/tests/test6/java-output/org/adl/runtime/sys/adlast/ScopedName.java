@@ -38,16 +38,18 @@ public class ScopedName {
     return moduleName;
   }
 
-  public void setModuleName(String moduleName) {
+  public ScopedName setModuleName(String moduleName) {
     this.moduleName = Objects.requireNonNull(moduleName);
+    return this;
   }
 
   public String getName() {
     return name;
   }
 
-  public void setName(String name) {
+  public ScopedName setName(String name) {
     this.name = Objects.requireNonNull(name);
+    return this;
   }
 
   /* Object level helpers */

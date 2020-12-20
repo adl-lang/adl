@@ -46,8 +46,9 @@ public class Int3 {
     return value;
   }
 
-  public void setValue(long value) {
+  public Int3 setValue(long value) {
     this.value = value;
+    return this;
   }
 
   /* Object level helpers */

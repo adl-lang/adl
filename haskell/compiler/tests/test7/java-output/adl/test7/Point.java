@@ -35,16 +35,18 @@ public class Point<T> {
     return x;
   }
 
-  public void setX(T x) {
+  public Point<T> setX(T x) {
     this.x = Objects.requireNonNull(x);
+    return this;
   }
 
   public T getY() {
     return y;
   }
 
-  public void setY(T y) {
+  public Point<T> setY(T y) {
     this.y = Objects.requireNonNull(y);
+    return this;
   }
 
   /* Object level helpers */

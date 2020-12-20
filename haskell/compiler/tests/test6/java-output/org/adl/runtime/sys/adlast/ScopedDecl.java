@@ -38,16 +38,18 @@ public class ScopedDecl {
     return moduleName;
   }
 
-  public void setModuleName(String moduleName) {
+  public ScopedDecl setModuleName(String moduleName) {
     this.moduleName = Objects.requireNonNull(moduleName);
+    return this;
   }
 
   public Decl getDecl() {
     return decl;
   }
 
-  public void setDecl(Decl decl) {
+  public ScopedDecl setDecl(Decl decl) {
     this.decl = Objects.requireNonNull(decl);
+    return this;
   }
 
   /* Object level helpers */

@@ -44,16 +44,18 @@ public class Dynamic {
     return typeExpr;
   }
 
-  public void setTypeExpr(TypeExpr typeExpr) {
+  public Dynamic setTypeExpr(TypeExpr typeExpr) {
     this.typeExpr = Objects.requireNonNull(typeExpr);
+    return this;
   }
 
   public JsonElement getValue() {
     return value;
   }
 
-  public void setValue(JsonElement value) {
+  public Dynamic setValue(JsonElement value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   /* Object level helpers */

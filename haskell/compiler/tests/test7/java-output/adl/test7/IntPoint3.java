@@ -46,8 +46,9 @@ public class IntPoint3 {
     return value;
   }
 
-  public void setValue(Point<Long> value) {
+  public IntPoint3 setValue(Point<Long> value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   /* Object level helpers */

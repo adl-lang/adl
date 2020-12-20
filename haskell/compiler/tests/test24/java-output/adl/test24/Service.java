@@ -66,24 +66,27 @@ public class Service {
     return hello;
   }
 
-  public void setHello(PostReq<String, String> hello) {
+  public Service setHello(PostReq<String, String> hello) {
     this.hello = Objects.requireNonNull(hello);
+    return this;
   }
 
   public PostReq<Optional<String>, Optional<String>> getFarewell() {
     return farewell;
   }
 
-  public void setFarewell(PostReq<Optional<String>, Optional<String>> farewell) {
+  public Service setFarewell(PostReq<Optional<String>, Optional<String>> farewell) {
     this.farewell = Objects.requireNonNull(farewell);
+    return this;
   }
 
   public CrudReqs<JsonElement> getBlobs() {
     return blobs;
   }
 
-  public void setBlobs(CrudReqs<JsonElement> blobs) {
+  public Service setBlobs(CrudReqs<JsonElement> blobs) {
     this.blobs = Objects.requireNonNull(blobs);
+    return this;
   }
 
   /* Object level helpers */

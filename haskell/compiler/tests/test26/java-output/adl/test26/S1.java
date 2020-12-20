@@ -37,8 +37,9 @@ public class S1 {
     return f1;
   }
 
-  public void setF1(String f1) {
+  public S1 setF1(String f1) {
     this.f1 = Objects.requireNonNull(f1);
+    return this;
   }
 
   /* Object level helpers */

@@ -36,8 +36,9 @@ public class String2 {
     return value;
   }
 
-  public void setValue(String value) {
+  public String2 setValue(String value) {
     this.value = Objects.requireNonNull(value);
+    return this;
   }
 
   /* Object level helpers */

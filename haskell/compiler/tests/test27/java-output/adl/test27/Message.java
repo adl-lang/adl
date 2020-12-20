@@ -41,16 +41,18 @@ public class Message {
     return other;
   }
 
-  public void setOther(adl.test27a.Message other) {
+  public Message setOther(adl.test27a.Message other) {
     this.other = Objects.requireNonNull(other);
+    return this;
   }
 
   public Message2 getOther2() {
     return other2;
   }
 
-  public void setOther2(Message2 other2) {
+  public Message setOther2(Message2 other2) {
     this.other2 = Objects.requireNonNull(other2);
+    return this;
   }
 
   /* Object level helpers */

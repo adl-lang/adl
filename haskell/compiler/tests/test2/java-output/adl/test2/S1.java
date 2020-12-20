@@ -46,16 +46,18 @@ public class S1 {
     return x;
   }
 
-  public void setX(int x) {
+  public S1 setX(int x) {
     this.x = x;
+    return this;
   }
 
   public String getY() {
     return y;
   }
 
-  public void setY(String y) {
+  public S1 setY(String y) {
     this.y = Objects.requireNonNull(y);
+    return this;
   }
 
   /* Object level helpers */

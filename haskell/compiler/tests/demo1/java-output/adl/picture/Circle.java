@@ -37,8 +37,9 @@ public class Circle {
     return radius;
   }
 
-  public void setRadius(double radius) {
+  public Circle setRadius(double radius) {
     this.radius = radius;
+    return this;
   }
 
   /* Object level helpers */

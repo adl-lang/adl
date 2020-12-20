@@ -39,16 +39,18 @@ public class TypeExpr {
     return typeRef;
   }
 
-  public void setTypeRef(TypeRef typeRef) {
+  public TypeExpr setTypeRef(TypeRef typeRef) {
     this.typeRef = Objects.requireNonNull(typeRef);
+    return this;
   }
 
   public List<TypeExpr> getParameters() {
     return parameters;
   }
 
-  public void setParameters(List<TypeExpr> parameters) {
+  public TypeExpr setParameters(List<TypeExpr> parameters) {
     this.parameters = Objects.requireNonNull(parameters);
+    return this;
   }
 
   /* Object level helpers */
