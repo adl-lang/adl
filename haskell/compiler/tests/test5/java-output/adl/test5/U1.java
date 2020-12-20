@@ -36,11 +36,6 @@ public enum U1 {
 
   public static final Factory<U1> FACTORY = new Factory<U1>() {
     @Override
-    public U1 create() {
-      return V;
-    }
-
-    @Override
     public U1 create(U1 other) {
       return other;
     }

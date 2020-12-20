@@ -68,11 +68,6 @@ public class S1 {
 
   public static final Factory<S1> FACTORY = new Factory<S1>() {
     @Override
-    public S1 create() {
-      return new S1();
-    }
-
-    @Override
     public S1 create(S1 other) {
       return new S1(other);
     }

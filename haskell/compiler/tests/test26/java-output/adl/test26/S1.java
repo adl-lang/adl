@@ -27,10 +27,6 @@ public class S1 {
     this.f1 = Objects.requireNonNull(f1);
   }
 
-  public S1() {
-    this.f1 = "";
-  }
-
   public S1(S1 other) {
     this.f1 = other.f1;
   }
@@ -67,11 +63,6 @@ public class S1 {
   /* Factory for construction of generic values */
 
   public static final Factory<S1> FACTORY = new Factory<S1>() {
-    @Override
-    public S1 create() {
-      return new S1();
-    }
-
     @Override
     public S1 create(S1 other) {
       return new S1(other);

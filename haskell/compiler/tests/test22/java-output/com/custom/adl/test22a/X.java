@@ -27,10 +27,6 @@ public class X {
     this.field = Objects.requireNonNull(field);
   }
 
-  public X() {
-    this.field = "";
-  }
-
   public X(X other) {
     this.field = other.field;
   }
@@ -67,11 +63,6 @@ public class X {
   /* Factory for construction of generic values */
 
   public static final Factory<X> FACTORY = new Factory<X>() {
-    @Override
-    public X create() {
-      return new X();
-    }
-
     @Override
     public X create(X other) {
       return new X(other);

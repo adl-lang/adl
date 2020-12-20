@@ -38,14 +38,6 @@ public class Field {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
-  public Field() {
-    this.name = "";
-    this.serializedName = "";
-    this.typeExpr = new TypeExpr();
-    this.default_ = MaybeHelpers.factory(JsonBindings.JSON_FACTORY).create();
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create();
-  }
-
   public Field(Field other) {
     this.name = other.name;
     this.serializedName = other.serializedName;
@@ -178,11 +170,6 @@ public class Field {
   /* Factory for construction of generic values */
 
   public static final Factory<Field> FACTORY = new Factory<Field>() {
-    @Override
-    public Field create() {
-      return new Field();
-    }
-
     @Override
     public Field create(Field other) {
       return new Field(other);

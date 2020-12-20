@@ -36,11 +36,6 @@ public enum unsigned {
 
   public static final Factory<unsigned> FACTORY = new Factory<unsigned>() {
     @Override
-    public unsigned create() {
-      return NULL_;
-    }
-
-    @Override
     public unsigned create(unsigned other) {
       return other;
     }

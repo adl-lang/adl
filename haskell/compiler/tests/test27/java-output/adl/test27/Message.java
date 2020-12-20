@@ -30,11 +30,6 @@ public class Message {
     this.other2 = Objects.requireNonNull(other2);
   }
 
-  public Message() {
-    this.other = new adl.test27a.Message();
-    this.other2 = new Message2();
-  }
-
   public Message(Message other) {
     this.other = adl.test27a.Message.FACTORY.create(other.other);
     this.other2 = Message2.FACTORY.create(other.other2);
@@ -110,11 +105,6 @@ public class Message {
   /* Factory for construction of generic values */
 
   public static final Factory<Message> FACTORY = new Factory<Message>() {
-    @Override
-    public Message create() {
-      return new Message();
-    }
-
     @Override
     public Message create(Message other) {
       return new Message(other);

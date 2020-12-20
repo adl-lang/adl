@@ -73,11 +73,6 @@ public class Test {
 
   public static final Factory<Test> FACTORY = new Factory<Test>() {
     @Override
-    public Test create() {
-      return new Test();
-    }
-
-    @Override
     public Test create(Test other) {
       return new Test(other);
     }

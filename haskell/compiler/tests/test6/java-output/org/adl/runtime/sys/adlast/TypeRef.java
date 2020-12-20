@@ -42,11 +42,6 @@ public class TypeRef {
     return new TypeRef(Disc.REFERENCE, Objects.requireNonNull(v));
   }
 
-  public TypeRef() {
-    this.disc = Disc.PRIMITIVE;
-    this.value = "";
-  }
-
   public TypeRef(TypeRef other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -130,11 +125,6 @@ public class TypeRef {
   /* Factory for construction of generic values */
 
   public static final Factory<TypeRef> FACTORY = new Factory<TypeRef>() {
-    @Override
-    public TypeRef create() {
-      return new TypeRef();
-    }
-
     @Override
     public TypeRef create(TypeRef other) {
       return new TypeRef(other);

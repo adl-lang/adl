@@ -19,11 +19,6 @@ public class HashMapHelpers
   public static <K,V> Factory<Map<K,V>> factory(final Factory<K> keyFactory,final Factory <V> valueFactory) {
     return new Factory<Map<K,V>>() {
       @Override
-      public Map<K,V> create() {
-        return new HashMap<>();
-      }
-
-      @Override
       public Map<K,V> create(Map<K,V> other) {
         Map<K,V> result = new HashMap<>();
         for (Map.Entry<K,V> e : other.entrySet()) {

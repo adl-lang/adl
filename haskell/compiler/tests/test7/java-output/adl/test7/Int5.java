@@ -63,13 +63,6 @@ public class Int5<X> {
       final Lazy<Factory<Long>> value = new Lazy<>(() -> Factories.INT64);
 
       @Override
-      public Int5<X> create() {
-        return new Int5<X>(
-          value.get().create()
-          );
-      }
-
-      @Override
       public Int5<X> create(Int5<X> other) {
         return new Int5<X>(
           other.getValue()

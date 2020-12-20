@@ -45,11 +45,6 @@ public class U {
     return new U(Disc.F_VOID, null);
   }
 
-  public U() {
-    this.disc = Disc.F_INT;
-    this.value = (short)0;
-  }
-
   public U(U other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -142,11 +137,6 @@ public class U {
   /* Factory for construction of generic values */
 
   public static final Factory<U> FACTORY = new Factory<U>() {
-    @Override
-    public U create() {
-      return new U();
-    }
-
     @Override
     public U create(U other) {
       return new U(other);

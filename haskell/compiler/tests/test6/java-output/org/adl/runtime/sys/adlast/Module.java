@@ -35,13 +35,6 @@ public class Module {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
-  public Module() {
-    this.name = "";
-    this.imports = new ArrayList<Import>();
-    this.decls = new HashMap<String, Decl>();
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create();
-  }
-
   public Module(Module other) {
     this.name = other.name;
     this.imports = Factories.list(Import.FACTORY).create(other.imports);
@@ -155,11 +148,6 @@ public class Module {
   /* Factory for construction of generic values */
 
   public static final Factory<Module> FACTORY = new Factory<Module>() {
-    @Override
-    public Module create() {
-      return new Module();
-    }
-
     @Override
     public Module create(Module other) {
       return new Module(other);

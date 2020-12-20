@@ -27,11 +27,6 @@ public class ScopedDecl {
     this.decl = Objects.requireNonNull(decl);
   }
 
-  public ScopedDecl() {
-    this.moduleName = "";
-    this.decl = new Decl();
-  }
-
   public ScopedDecl(ScopedDecl other) {
     this.moduleName = other.moduleName;
     this.decl = Decl.FACTORY.create(other.decl);
@@ -107,11 +102,6 @@ public class ScopedDecl {
   /* Factory for construction of generic values */
 
   public static final Factory<ScopedDecl> FACTORY = new Factory<ScopedDecl>() {
-    @Override
-    public ScopedDecl create() {
-      return new ScopedDecl();
-    }
-
     @Override
     public ScopedDecl create(ScopedDecl other) {
       return new ScopedDecl(other);

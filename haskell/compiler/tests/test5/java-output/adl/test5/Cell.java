@@ -104,14 +104,6 @@ public class Cell<T> {
       final Lazy<Factory<List<T>>> tail = new Lazy<>(() -> List.factory(factoryT));
 
       @Override
-      public Cell<T> create() {
-        return new Cell<T>(
-          head.get().create(),
-          tail.get().create()
-          );
-      }
-
-      @Override
       public Cell<T> create(Cell<T> other) {
         return new Cell<T>(
           head.get().create(other.getHead()),

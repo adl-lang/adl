@@ -36,13 +36,6 @@ public class Decl {
     this.annotations = Objects.requireNonNull(annotations);
   }
 
-  public Decl() {
-    this.name = "";
-    this.version = MaybeHelpers.factory(Factories.WORD32).create();
-    this.type_ = new DeclType();
-    this.annotations = HashMapHelpers.factory(ScopedName.FACTORY, JsonBindings.JSON_FACTORY).create();
-  }
-
   public Decl(Decl other) {
     this.name = other.name;
     this.version = MaybeHelpers.factory(Factories.WORD32).create(other.version);
@@ -156,11 +149,6 @@ public class Decl {
   /* Factory for construction of generic values */
 
   public static final Factory<Decl> FACTORY = new Factory<Decl>() {
-    @Override
-    public Decl create() {
-      return new Decl();
-    }
-
     @Override
     public Decl create(Decl other) {
       return new Decl(other);

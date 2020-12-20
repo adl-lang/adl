@@ -27,10 +27,6 @@ public class S {
     this.f1 = Objects.requireNonNull(f1);
   }
 
-  public S() {
-    this.f1 = Point.factory(Factories.INT64).create();
-  }
-
   public S(S other) {
     this.f1 = Point.factory(Factories.INT64).create(other.f1);
   }
@@ -67,11 +63,6 @@ public class S {
   /* Factory for construction of generic values */
 
   public static final Factory<S> FACTORY = new Factory<S>() {
-    @Override
-    public S create() {
-      return new S();
-    }
-
     @Override
     public S create(S other) {
       return new S(other);

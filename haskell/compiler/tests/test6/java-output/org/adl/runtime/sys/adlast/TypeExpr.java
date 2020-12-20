@@ -28,11 +28,6 @@ public class TypeExpr {
     this.parameters = Objects.requireNonNull(parameters);
   }
 
-  public TypeExpr() {
-    this.typeRef = new TypeRef();
-    this.parameters = new ArrayList<TypeExpr>();
-  }
-
   public TypeExpr(TypeExpr other) {
     this.typeRef = TypeRef.FACTORY.create(other.typeRef);
     this.parameters = Factories.list(TypeExpr.FACTORY).create(other.parameters);
@@ -108,11 +103,6 @@ public class TypeExpr {
   /* Factory for construction of generic values */
 
   public static final Factory<TypeExpr> FACTORY = new Factory<TypeExpr>() {
-    @Override
-    public TypeExpr create() {
-      return new TypeExpr();
-    }
-
     @Override
     public TypeExpr create(TypeExpr other) {
       return new TypeExpr(other);

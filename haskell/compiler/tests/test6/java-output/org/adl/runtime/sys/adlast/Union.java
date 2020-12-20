@@ -28,11 +28,6 @@ public class Union {
     this.fields = Objects.requireNonNull(fields);
   }
 
-  public Union() {
-    this.typeParams = new ArrayList<String>();
-    this.fields = new ArrayList<Field>();
-  }
-
   public Union(Union other) {
     this.typeParams = Factories.list(Factories.STRING).create(other.typeParams);
     this.fields = Factories.list(Field.FACTORY).create(other.fields);
@@ -108,11 +103,6 @@ public class Union {
   /* Factory for construction of generic values */
 
   public static final Factory<Union> FACTORY = new Factory<Union>() {
-    @Override
-    public Union create() {
-      return new Union();
-    }
-
     @Override
     public Union create(Union other) {
       return new Union(other);

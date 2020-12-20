@@ -27,10 +27,6 @@ public class A {
     this.a = a;
   }
 
-  public A() {
-    this.a = 0;
-  }
-
   public A(A other) {
     this.a = other.a;
   }
@@ -67,11 +63,6 @@ public class A {
   /* Factory for construction of generic values */
 
   public static final Factory<A> FACTORY = new Factory<A>() {
-    @Override
-    public A create() {
-      return new A();
-    }
-
     @Override
     public A create(A other) {
       return new A(other);

@@ -67,11 +67,6 @@ public class String3 {
 
   public static final Factory<String3> FACTORY = new Factory<String3>() {
     @Override
-    public String3 create() {
-      return new String3();
-    }
-
-    @Override
     public String3 create(String3 other) {
       return new String3(other);
     }

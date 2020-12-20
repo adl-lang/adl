@@ -26,10 +26,6 @@ public class Int2 {
     this.value = value;
   }
 
-  public Int2() {
-    this.value = 0L;
-  }
-
   public Int2(Int2 other) {
     this.value = other.value;
   }
@@ -66,11 +62,6 @@ public class Int2 {
   /* Factory for construction of generic values */
 
   public static final Factory<Int2> FACTORY = new Factory<Int2>() {
-    @Override
-    public Int2 create() {
-      return new Int2();
-    }
-
     @Override
     public Int2 create(Int2 other) {
       return new Int2(other);

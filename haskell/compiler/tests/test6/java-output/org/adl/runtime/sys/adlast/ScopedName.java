@@ -27,11 +27,6 @@ public class ScopedName {
     this.name = Objects.requireNonNull(name);
   }
 
-  public ScopedName() {
-    this.moduleName = "";
-    this.name = "";
-  }
-
   public ScopedName(ScopedName other) {
     this.moduleName = other.moduleName;
     this.name = other.name;
@@ -107,11 +102,6 @@ public class ScopedName {
   /* Factory for construction of generic values */
 
   public static final Factory<ScopedName> FACTORY = new Factory<ScopedName>() {
-    @Override
-    public ScopedName create() {
-      return new ScopedName();
-    }
-
     @Override
     public ScopedName create(ScopedName other) {
       return new ScopedName(other);

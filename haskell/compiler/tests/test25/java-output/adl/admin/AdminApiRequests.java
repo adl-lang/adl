@@ -68,11 +68,6 @@ public class AdminApiRequests {
 
   public static final Factory<AdminApiRequests> FACTORY = new Factory<AdminApiRequests>() {
     @Override
-    public AdminApiRequests create() {
-      return new AdminApiRequests();
-    }
-
-    @Override
     public AdminApiRequests create(AdminApiRequests other) {
       return new AdminApiRequests(other);
     }

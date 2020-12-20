@@ -51,11 +51,6 @@ public class Picture {
     return new Picture(Disc.TRANSLATED, Objects.requireNonNull(v));
   }
 
-  public Picture() {
-    this.disc = Disc.CIRCLE;
-    this.value = new Circle();
-  }
-
   public Picture(Picture other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -159,11 +154,6 @@ public class Picture {
   /* Factory for construction of generic values */
 
   public static final Factory<Picture> FACTORY = new Factory<Picture>() {
-    @Override
-    public Picture create() {
-      return new Picture();
-    }
-
     @Override
     public Picture create(Picture other) {
       return new Picture(other);

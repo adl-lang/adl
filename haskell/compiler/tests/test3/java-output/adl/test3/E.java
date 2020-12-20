@@ -41,11 +41,6 @@ public enum E {
 
   public static final Factory<E> FACTORY = new Factory<E>() {
     @Override
-    public E create() {
-      return V1;
-    }
-
-    @Override
     public E create(E other) {
       return other;
     }

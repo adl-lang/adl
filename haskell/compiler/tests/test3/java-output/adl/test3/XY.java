@@ -104,14 +104,6 @@ public class XY<T> {
       final Lazy<Factory<T>> y = new Lazy<>(() -> factoryT);
 
       @Override
-      public XY<T> create() {
-        return new XY<T>(
-          x.get().create(),
-          y.get().create()
-          );
-      }
-
-      @Override
       public XY<T> create(XY<T> other) {
         return new XY<T>(
           x.get().create(other.getX()),

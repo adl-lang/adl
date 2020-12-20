@@ -45,11 +45,6 @@ public class S0 {
 
   public static final Factory<S0> FACTORY = new Factory<S0>() {
     @Override
-    public S0 create() {
-      return new S0();
-    }
-
-    @Override
     public S0 create(S0 other) {
       return new S0(other);
     }

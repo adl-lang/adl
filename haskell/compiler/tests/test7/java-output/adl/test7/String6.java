@@ -63,13 +63,6 @@ public class String6<X> {
       final Lazy<Factory<String>> value = new Lazy<>(() -> Factories.STRING);
 
       @Override
-      public String6<X> create() {
-        return new String6<X>(
-          "goodbye"
-          );
-      }
-
-      @Override
       public String6<X> create(String6<X> other) {
         return new String6<X>(
           other.getValue()

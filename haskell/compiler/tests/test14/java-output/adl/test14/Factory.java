@@ -25,10 +25,6 @@ public class Factory {
     this.value = Objects.requireNonNull(value);
   }
 
-  public Factory() {
-    this.value = "";
-  }
-
   public Factory(Factory other) {
     this.value = other.value;
   }
@@ -65,11 +61,6 @@ public class Factory {
   /* Factory for construction of generic values */
 
   public static final org.adl.runtime.Factory<Factory> FACTORY = new org.adl.runtime.Factory<Factory>() {
-    @Override
-    public Factory create() {
-      return new Factory();
-    }
-
     @Override
     public Factory create(Factory other) {
       return new Factory(other);

@@ -58,16 +58,16 @@ public class S {
     this.f_int3 = Objects.requireNonNull(f_int3);
   }
 
-  public S() {
-    this.f_pair = Pair.factory(Factories.INT32, Factories.DOUBLE).create();
-    this.f_either = Either.factory(Factories.STRING, Factories.INT32).create();
-    this.f_map = HashMapHelpers.factory(Factories.STRING, Factories.DOUBLE).create();
-    this.f_set = HashSetHelpers.factory(Factories.STRING).create();
-    this.f_mstring = MaybeHelpers.factory(Factories.STRING).create();
+  public S(Pair<Integer, Double> f_pair, Either<String, Integer> f_either, Map<String, Double> f_map, Set<String> f_set, Optional<String> f_mstring, Optional<String> f_nstring, Optional<Long> f_int) {
+    this.f_pair = Objects.requireNonNull(f_pair);
+    this.f_either = Objects.requireNonNull(f_either);
+    this.f_map = Objects.requireNonNull(f_map);
+    this.f_set = Objects.requireNonNull(f_set);
+    this.f_mstring = Objects.requireNonNull(f_mstring);
     this.f_mstring2 = MaybeHelpers.just("sukpeepolup");
-    this.f_nstring = Optional.<String>empty();
+    this.f_nstring = Objects.requireNonNull(f_nstring);
     this.f_nstring2 = Optional.<String>of("abcde");
-    this.f_int = Optional.<Long>empty();
+    this.f_int = Objects.requireNonNull(f_int);
     this.f_int2 = Optional.<Long>of(100L);
     this.f_int3 = Optional.<Long>empty();
   }
@@ -314,11 +314,6 @@ public class S {
   /* Factory for construction of generic values */
 
   public static final Factory<S> FACTORY = new Factory<S>() {
-    @Override
-    public S create() {
-      return new S();
-    }
-
     @Override
     public S create(S other) {
       return new S(other);

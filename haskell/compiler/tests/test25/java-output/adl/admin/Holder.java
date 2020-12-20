@@ -68,11 +68,6 @@ public class Holder {
 
   public static final Factory<Holder> FACTORY = new Factory<Holder>() {
     @Override
-    public Holder create() {
-      return new Holder();
-    }
-
-    @Override
     public Holder create(Holder other) {
       return new Holder(other);
     }

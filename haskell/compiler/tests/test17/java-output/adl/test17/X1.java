@@ -41,16 +41,6 @@ public class X1 {
     this.f7 = Objects.requireNonNull(f7);
   }
 
-  public X1() {
-    this.f1 = 0;
-    this.f2 = 0;
-    this.f3 = Pair.factory(Factories.STRING, Factories.INT32).create();
-    this.f4 = Pair.factory(Factories.STRING, Factories.STRING).create();
-    this.f5 = new ArrayList<Integer>();
-    this.f6 = new ArrayList<Pair<String, Integer>>();
-    this.f7 = new ArrayList<Pair<String, String>>();
-  }
-
   public X1(X1 other) {
     this.f1 = other.f1;
     this.f2 = other.f2;
@@ -221,11 +211,6 @@ public class X1 {
   /* Factory for construction of generic values */
 
   public static final Factory<X1> FACTORY = new Factory<X1>() {
-    @Override
-    public X1 create() {
-      return new X1();
-    }
-
     @Override
     public X1 create(X1 other) {
       return new X1(other);

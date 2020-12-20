@@ -34,11 +34,6 @@ public class U6 {
     return new U6(Disc.V, Objects.requireNonNull(v));
   }
 
-  public U6() {
-    this.disc = Disc.V;
-    this.value = new U3();
-  }
-
   public U6(U6 other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -92,11 +87,6 @@ public class U6 {
   /* Factory for construction of generic values */
 
   public static final Factory<U6> FACTORY = new Factory<U6>() {
-    @Override
-    public U6 create() {
-      return new U6();
-    }
-
     @Override
     public U6 create(U6 other) {
       return new U6(other);

@@ -63,18 +63,18 @@ public class S {
     this.v8a = Objects.requireNonNull(v8a);
   }
 
-  public S() {
-    this.v1 = DateHelpers.FACTORY.create();
+  public S(LocalDate v1, LocalDate v3, Optional<String> v5, Pair<String, Integer> v6, Set<Integer> v7a, Map<String, Integer> v8) {
+    this.v1 = Objects.requireNonNull(v1);
     this.v2 = DateHelpers.create("2000-01-01");
-    this.v3 = CDateHelpers.FACTORY.create();
+    this.v3 = Objects.requireNonNull(v3);
     this.v4 = CDateHelpers.create((short)2000, (short)1, (short)1);
-    this.v5 = MaybeHelpers.factory(Factories.STRING).create();
+    this.v5 = Objects.requireNonNull(v5);
     this.v5a = MaybeHelpers.nothing(null);
     this.v5b = MaybeHelpers.just("hello");
-    this.v6 = Pair.factory(Factories.STRING, Factories.INT32).create();
+    this.v6 = Objects.requireNonNull(v6);
     this.v7 = HashSetHelpers.create(Factories.list(1, 2, 3));
-    this.v7a = HashSetHelpers.factory(Factories.INT32).create();
-    this.v8 = HashMapHelpers.factory(Factories.STRING, Factories.INT32).create();
+    this.v7a = Objects.requireNonNull(v7a);
+    this.v8 = Objects.requireNonNull(v8);
     this.v8a = HashMapHelpers.create(Factories.list(new MapEntry<String, Integer>("X", 1), new MapEntry<String, Integer>("Y", 2)));
   }
 
@@ -337,11 +337,6 @@ public class S {
   /* Factory for construction of generic values */
 
   public static final Factory<S> FACTORY = new Factory<S>() {
-    @Override
-    public S create() {
-      return new S();
-    }
-
     @Override
     public S create(S other) {
       return new S(other);

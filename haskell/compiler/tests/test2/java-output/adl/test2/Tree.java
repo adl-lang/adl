@@ -106,14 +106,6 @@ public class Tree<T> {
       final Lazy<Factory<List<Tree<T>>>> children = new Lazy<>(() -> Factories.list(Tree.factory(factoryT)));
 
       @Override
-      public Tree<T> create() {
-        return new Tree<T>(
-          value.get().create(),
-          children.get().create()
-          );
-      }
-
-      @Override
       public Tree<T> create(Tree<T> other) {
         return new Tree<T>(
           value.get().create(other.getValue()),

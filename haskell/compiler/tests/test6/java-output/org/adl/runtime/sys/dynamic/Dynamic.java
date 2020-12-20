@@ -33,11 +33,6 @@ public class Dynamic {
     this.value = Objects.requireNonNull(value);
   }
 
-  public Dynamic() {
-    this.typeExpr = new TypeExpr();
-    this.value = JsonNull.INSTANCE;
-  }
-
   public Dynamic(Dynamic other) {
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
     this.value = other.value;
@@ -113,11 +108,6 @@ public class Dynamic {
   /* Factory for construction of generic values */
 
   public static final Factory<Dynamic> FACTORY = new Factory<Dynamic>() {
-    @Override
-    public Dynamic create() {
-      return new Dynamic();
-    }
-
     @Override
     public Dynamic create(Dynamic other) {
       return new Dynamic(other);

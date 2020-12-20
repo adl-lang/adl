@@ -132,11 +132,6 @@ public class Service {
 
   public static final Factory<Service> FACTORY = new Factory<Service>() {
     @Override
-    public Service create() {
-      return new Service();
-    }
-
-    @Override
     public Service create(Service other) {
       return new Service(other);
     }

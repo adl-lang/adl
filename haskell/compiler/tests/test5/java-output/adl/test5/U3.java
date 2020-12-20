@@ -35,11 +35,6 @@ public class U3 {
     return new U3(Disc.V, v);
   }
 
-  public U3() {
-    this.disc = Disc.V;
-    this.value = (short)100;
-  }
-
   public U3(U3 other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -93,11 +88,6 @@ public class U3 {
   /* Factory for construction of generic values */
 
   public static final Factory<U3> FACTORY = new Factory<U3>() {
-    @Override
-    public U3 create() {
-      return new U3();
-    }
-
     @Override
     public U3 create(U3 other) {
       return new U3(other);

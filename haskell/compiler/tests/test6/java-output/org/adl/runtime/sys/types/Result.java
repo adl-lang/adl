@@ -104,10 +104,6 @@ public class Result<T, E> {
       final Lazy<Factory<T>> ok = new Lazy<>(() -> factoryT);
       final Lazy<Factory<E>> error = new Lazy<>(() -> factoryE);
 
-      @Override
-      public Result<T, E> create() {
-        return new Result<T, E>(Disc.OK,ok.get().create());
-      }
 
       @Override
       public Result<T, E> create(Result<T, E> other) {

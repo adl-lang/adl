@@ -27,10 +27,6 @@ public class Circle {
     this.radius = radius;
   }
 
-  public Circle() {
-    this.radius = 0.0;
-  }
-
   public Circle(Circle other) {
     this.radius = other.radius;
   }
@@ -67,11 +63,6 @@ public class Circle {
   /* Factory for construction of generic values */
 
   public static final Factory<Circle> FACTORY = new Factory<Circle>() {
-    @Override
-    public Circle create() {
-      return new Circle();
-    }
-
     @Override
     public Circle create(Circle other) {
       return new Circle(other);

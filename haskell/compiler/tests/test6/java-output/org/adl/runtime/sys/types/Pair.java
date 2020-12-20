@@ -104,14 +104,6 @@ public class Pair<T1, T2> {
       final Lazy<Factory<T2>> v2 = new Lazy<>(() -> factoryT2);
 
       @Override
-      public Pair<T1, T2> create() {
-        return new Pair<T1, T2>(
-          v1.get().create(),
-          v2.get().create()
-          );
-      }
-
-      @Override
       public Pair<T1, T2> create(Pair<T1, T2> other) {
         return new Pair<T1, T2>(
           v1.get().create(other.getV1()),

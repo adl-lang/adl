@@ -549,36 +549,6 @@ public class S<T> {
       final Lazy<Factory<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
 
       @Override
-      public S<T> create() {
-        return new S<T>(
-          null,
-          true,
-          (byte)-5,
-          (short)-10000,
-          56,
-          40000L,
-          (byte)32,
-          (short)50000,
-          124456,
-          2344L,
-          0.5F,
-          0.45D,
-          new ByteArray("hello".getBytes()),
-          "abcd",
-          Factories.list("xy", "ab"),
-          new A((short)0, "xyz", false),
-          U.f_int((short)45),
-          U.f_void(),
-          E.V2,
-          f_t.get().create(),
-          new B<Short>((short)56, "yikes", Factories.list((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
-          Factories.stringMap("a", 45, "b", 47),
-          JsonHelpers.jsonFromString("null"),
-          JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]")
-          );
-      }
-
-      @Override
       public S<T> create(S<T> other) {
         return new S<T>(
           other.getF_void(),

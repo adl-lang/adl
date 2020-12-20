@@ -67,11 +67,6 @@ public class Int3 {
 
   public static final Factory<Int3> FACTORY = new Factory<Int3>() {
     @Override
-    public Int3 create() {
-      return new Int3();
-    }
-
-    @Override
     public Int3 create(Int3 other) {
       return new Int3(other);
     }

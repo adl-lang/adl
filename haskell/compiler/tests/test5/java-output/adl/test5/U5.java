@@ -34,11 +34,6 @@ public class U5 {
     return new U5(Disc.V, Objects.requireNonNull(v));
   }
 
-  public U5() {
-    this.disc = Disc.V;
-    this.value = new S1((short)200);
-  }
-
   public U5(U5 other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -92,11 +87,6 @@ public class U5 {
   /* Factory for construction of generic values */
 
   public static final Factory<U5> FACTORY = new Factory<U5>() {
-    @Override
-    public U5 create() {
-      return new U5();
-    }
-
     @Override
     public U5 create(U5 other) {
       return new U5(other);

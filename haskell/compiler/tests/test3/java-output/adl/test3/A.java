@@ -32,9 +32,9 @@ public class A {
     this.f_bool = f_bool;
   }
 
-  public A() {
-    this.f_int = (short)0;
-    this.f_string = "";
+  public A(short f_int, String f_string) {
+    this.f_int = Objects.requireNonNull(f_int);
+    this.f_string = Objects.requireNonNull(f_string);
     this.f_bool = false;
   }
 
@@ -131,11 +131,6 @@ public class A {
   /* Factory for construction of generic values */
 
   public static final Factory<A> FACTORY = new Factory<A>() {
-    @Override
-    public A create() {
-      return new A();
-    }
-
     @Override
     public A create(A other) {
       return new A(other);

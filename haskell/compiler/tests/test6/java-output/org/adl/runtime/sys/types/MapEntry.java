@@ -104,14 +104,6 @@ public class MapEntry<K, V> {
       final Lazy<Factory<V>> value = new Lazy<>(() -> factoryV);
 
       @Override
-      public MapEntry<K, V> create() {
-        return new MapEntry<K, V>(
-          key.get().create(),
-          value.get().create()
-          );
-      }
-
-      @Override
       public MapEntry<K, V> create(MapEntry<K, V> other) {
         return new MapEntry<K, V>(
           key.get().create(other.getKey()),

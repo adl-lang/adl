@@ -26,10 +26,6 @@ public class IntPoint2 {
     this.value = Objects.requireNonNull(value);
   }
 
-  public IntPoint2() {
-    this.value = Point.factory(Factories.INT64).create();
-  }
-
   public IntPoint2(IntPoint2 other) {
     this.value = Point.factory(Factories.INT64).create(other.value);
   }
@@ -66,11 +62,6 @@ public class IntPoint2 {
   /* Factory for construction of generic values */
 
   public static final Factory<IntPoint2> FACTORY = new Factory<IntPoint2>() {
-    @Override
-    public IntPoint2 create() {
-      return new IntPoint2();
-    }
-
     @Override
     public IntPoint2 create(IntPoint2 other) {
       return new IntPoint2(other);

@@ -34,13 +34,6 @@ public class Person {
     this.role = Objects.requireNonNull(role);
   }
 
-  public Person() {
-    this.firstName = "";
-    this.lastName = "";
-    this.age = (short)0;
-    this.role = Role.FACTORY.create();
-  }
-
   public Person(Person other) {
     this.firstName = other.firstName;
     this.lastName = other.lastName;
@@ -154,11 +147,6 @@ public class Person {
   /* Factory for construction of generic values */
 
   public static final Factory<Person> FACTORY = new Factory<Person>() {
-    @Override
-    public Person create() {
-      return new Person();
-    }
-
     @Override
     public Person create(Person other) {
       return new Person(other);

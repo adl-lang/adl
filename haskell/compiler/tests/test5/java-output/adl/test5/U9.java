@@ -132,10 +132,6 @@ public class U9<T> {
       final Lazy<Factory<Short>> v2 = new Lazy<>(() -> Factories.INT16);
       final Lazy<Factory<Void>> v3 = new Lazy<>(() -> Factories.VOID);
 
-      @Override
-      public U9<T> create() {
-        return new U9<T>(Disc.V1,v1.get().create());
-      }
 
       @Override
       public U9<T> create(U9<T> other) {

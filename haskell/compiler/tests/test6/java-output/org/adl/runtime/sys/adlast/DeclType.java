@@ -46,11 +46,6 @@ public class DeclType {
     return new DeclType(Disc.NEWTYPE_, Objects.requireNonNull(v));
   }
 
-  public DeclType() {
-    this.disc = Disc.STRUCT_;
-    this.value = new Struct();
-  }
-
   public DeclType(DeclType other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -149,11 +144,6 @@ public class DeclType {
   /* Factory for construction of generic values */
 
   public static final Factory<DeclType> FACTORY = new Factory<DeclType>() {
-    @Override
-    public DeclType create() {
-      return new DeclType();
-    }
-
     @Override
     public DeclType create(DeclType other) {
       return new DeclType(other);

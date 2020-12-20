@@ -22,11 +22,6 @@ public class DateHelpers {
 
   public static final Factory<LocalDate> FACTORY = new Factory<LocalDate>() {
     @Override
-    public LocalDate create() {
-      return LocalDate.parse("1970-01-01");
-    }
-
-    @Override
     public LocalDate create(LocalDate other) {
       return other;  // immutable type
     }

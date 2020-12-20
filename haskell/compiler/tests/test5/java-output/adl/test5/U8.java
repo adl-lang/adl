@@ -40,11 +40,6 @@ public class U8 {
     return new U8(Disc.V2, v);
   }
 
-  public U8() {
-    this.disc = Disc.V1;
-    this.value = new S1();
-  }
-
   public U8(U8 other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -113,11 +108,6 @@ public class U8 {
   /* Factory for construction of generic values */
 
   public static final Factory<U8> FACTORY = new Factory<U8>() {
-    @Override
-    public U8 create() {
-      return new U8();
-    }
-
     @Override
     public U8 create(U8 other) {
       return new U8(other);

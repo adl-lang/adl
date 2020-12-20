@@ -27,7 +27,7 @@ import qualified Data.Aeson as JSON
 import Data.Char(toUpper)
 import Data.Foldable(for_,fold)
 import Data.List(intersperse,replicate,sort)
-import Data.Maybe(catMaybes)
+import Data.Maybe(isJust, catMaybes)
 import Data.Monoid
 import Data.String(IsString(..))
 import Data.Traversable(for)
@@ -180,6 +180,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
     className = unreserveWord (d_name decl)
     state0 = classFile codeProfile moduleName javaPackageFn classDecl
     isEmpty = null (s_fields struct)
+    hasDefaults = any (isJust . f_default) (s_fields struct)
     classDecl = "public class " <> className <> typeArgs
     typeArgs = case s_typeParams struct of
       [] -> ""
@@ -204,11 +205,12 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
         addField (ctemplate "$1 $2 $3;" [T.intercalate " " modifiers,fd_typeExprStr fd,fd_memberVarName fd])
 
       -- Constructors
-      let ctorArgs =  T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_varName fd | fd <- fieldDetails]
+      let ctorAllArgs = T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_varName fd | fd <- fieldDetails]
+          ctorReqArgs = T.intercalate ", " [fd_typeExprStr fd <> " " <> fd_varName fd | fd <- fieldDetails, not (isJust (f_default (fd_field fd)))]
           isGeneric = length (s_typeParams struct) > 0
 
           ctor1 =
-            cblock (template "public $1($2)" [className,ctorArgs]) (
+            cblock (template "public $1($2)" [className,ctorAllArgs]) (
               clineN [
                 if needsNullCheck fd
                   then template "this.$1 = $2.requireNonNull($3);" [fd_memberVarName fd, objectsClass, fd_varName fd]
@@ -217,8 +219,15 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
             )
 
           ctor2 =
-            cblock (template "public $1()" [className]) (
-              clineN [template "this.$1 = $2;" [fd_memberVarName fd,fd_defValue fd] | fd <- fieldDetails]
+            cblock (template "public $1($2)" [className, ctorReqArgs]) (
+              clineN
+                [template "this.$1 = $2;"
+                  [ fd_memberVarName fd,
+                    if isJust (f_default (fd_field fd))
+                       then fd_defValue fd
+                       else template "$1.requireNonNull($2)" [objectsClass, fd_varName fd]
+                  ]
+                | fd <- fieldDetails]
             )
 
           ctor3 =
@@ -230,7 +239,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
       addMethod (cline "/* Constructors */")
 
       addMethod ctor1
-      when (not isGeneric && not isEmpty) (addMethod ctor2)
+      when (not isGeneric && hasDefaults) (addMethod ctor2)
       when (not isGeneric) (addMethod ctor3)
 
       -- Getters/Setters
@@ -324,12 +333,6 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
       -- factory
       let factory =
             cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (
-              coverride (template "public $1 create()" [className]) (
-                 ctemplate "return new $1();" [className]
-              )
-              <>
-              cline ""
-              <>
               coverride (template "public $1 create($1 other)" [className]) (
                  ctemplate "return new $1(other);" [className]
               )
@@ -349,14 +352,6 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
                 mconcat [ctemplate "final $1<$2<$3>> $4 = new $1<>(() -> $5);"
                                    [lazyC,factoryInterface,fd_boxedTypeExprStr fd,fd_varName fd,fd_factoryExprStr fd]
                         | fd <- fieldDetails]
-                <>
-                cline ""
-                <>
-                coverride (template "public $1$2 create()" [className,typeArgs]) (
-                   ctemplate "return new $1$2(" [className,typeArgs]
-                   <>
-                   indent (clineN (addTerminators "," "," ""  ctor1Args) <> cline ");")
-                   )
                 <>
                 cline ""
                 <>
@@ -475,12 +470,6 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
             ctemplate "this.$1 = value;" [valueVar]
             )
 
-          ctorDefault = cblock (template "public $1()" [className]) (
-            ctemplate "this.$1 = Disc.$2;" [discVar,discriminatorName fieldDetail0]
-            <>
-            ctemplate "this.$1 = $2;" [valueVar,fd_defValue fieldDetail0]
-            )
-
           ctorCopy = cblock (template "public $1($1 other)" [className]) (
             ctemplate "this.$1 = other.$1;" [discVar]
             <>
@@ -498,7 +487,6 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
             )
 
       when (not isGeneric) $ do
-          addMethod ctorDefault
           addMethod ctorCopy
       addMethod $ ctorPrivate
 
@@ -603,12 +591,6 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
 
       let factory =
             cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface]) (
-              coverride (template "public $1 create()" [className]) (
-                 ctemplate "return new $1();" [className]
-              )
-              <>
-              cline ""
-              <>
               coverride (template "public $1 create($1 other)" [className]) (
                  ctemplate "return new $1(other);" [className]
               )
@@ -631,13 +613,6 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                                    [lazyC,fd_boxedTypeExprStr fd,fd_varName fd,fd_factoryExprStr fd] | fd <- fieldDetails]
                 <>
                 cline ""
-                <>
-                coverride (template "public $1$2 create()" [className,typeArgs]) (
-                  let val = case f_default (fd_field fieldDetail0) of
-                        Nothing -> template "$1.get().create()" [fd_varName fieldDetail0]
-                        (Just _) -> replaceTypeVarsWithFactoryMethods (fd_defValue fieldDetail0)
-                  in ctemplate "return new $1$2(Disc.$3,$4);" [className,typeArgs,discriminatorName fieldDetail0,val]
-                )
                 <>
                 cline ""
                 <>
@@ -728,11 +703,7 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
       typeExprMethodCode <- genTypeExprMethod codeProfile moduleName decl
 
       addMethod $ cblock1 (template "public static final $2<$1> FACTORY = new $2<$1>()" [className,factoryInterface])
-        ( coverride (template "public $1 create()" [className])
-            ( ctemplate "return $1;" [discriminatorName fieldDetail0]
-            )
-        <> cline ""
-        <> coverride (template "public $1 create($1 other)" [className])
+        ( coverride (template "public $1 create($1 other)" [className])
             ( cline "return other;"
             )
         <> cline ""

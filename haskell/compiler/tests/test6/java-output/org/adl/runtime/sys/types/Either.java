@@ -104,10 +104,6 @@ public class Either<T1, T2> {
       final Lazy<Factory<T1>> left = new Lazy<>(() -> factoryT1);
       final Lazy<Factory<T2>> right = new Lazy<>(() -> factoryT2);
 
-      @Override
-      public Either<T1, T2> create() {
-        return new Either<T1, T2>(Disc.LEFT,left.get().create());
-      }
 
       @Override
       public Either<T1, T2> create(Either<T1, T2> other) {

@@ -314,8 +314,6 @@ public class JsonBindings
 
   public static final Factory<JsonElement> JSON_FACTORY = new Factory<JsonElement>() {
     @Override
-    public JsonElement create() { return JsonNull.INSTANCE; }
-    @Override
     public JsonElement create(JsonElement other) { return other; }
     @Override
     public TypeExpr typeExpr() { return new TypeExpr(TypeRef.primitive("Json"), new ArrayList<>()); }

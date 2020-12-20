@@ -28,11 +28,6 @@ public class TypeDef {
     this.typeExpr = Objects.requireNonNull(typeExpr);
   }
 
-  public TypeDef() {
-    this.typeParams = new ArrayList<String>();
-    this.typeExpr = new TypeExpr();
-  }
-
   public TypeDef(TypeDef other) {
     this.typeParams = Factories.list(Factories.STRING).create(other.typeParams);
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
@@ -108,11 +103,6 @@ public class TypeDef {
   /* Factory for construction of generic values */
 
   public static final Factory<TypeDef> FACTORY = new Factory<TypeDef>() {
-    @Override
-    public TypeDef create() {
-      return new TypeDef();
-    }
-
     @Override
     public TypeDef create(TypeDef other) {
       return new TypeDef(other);

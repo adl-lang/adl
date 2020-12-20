@@ -77,14 +77,6 @@ public class HttpGet<O> {
       final Lazy<Factory<TypeToken<O>>> otype = new Lazy<>(() -> Factories.typeProxy(factoryO));
 
       @Override
-      public HttpGet<O> create() {
-        return new HttpGet<O>(
-          path.get().create(),
-          new TypeToken<O>(factoryO.jsonBinding())
-          );
-      }
-
-      @Override
       public HttpGet<O> create(HttpGet<O> other) {
         return new HttpGet<O>(
           other.getPath(),

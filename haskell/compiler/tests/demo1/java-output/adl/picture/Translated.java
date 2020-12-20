@@ -124,15 +124,6 @@ public class Translated<T> {
       final Lazy<Factory<T>> object = new Lazy<>(() -> factoryT);
 
       @Override
-      public Translated<T> create() {
-        return new Translated<T>(
-          0D,
-          0D,
-          object.get().create()
-          );
-      }
-
-      @Override
       public Translated<T> create(Translated<T> other) {
         return new Translated<T>(
           other.getXoffset(),

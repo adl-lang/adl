@@ -28,11 +28,6 @@ public class Struct {
     this.fields = Objects.requireNonNull(fields);
   }
 
-  public Struct() {
-    this.typeParams = new ArrayList<String>();
-    this.fields = new ArrayList<Field>();
-  }
-
   public Struct(Struct other) {
     this.typeParams = Factories.list(Factories.STRING).create(other.typeParams);
     this.fields = Factories.list(Field.FACTORY).create(other.fields);
@@ -108,11 +103,6 @@ public class Struct {
   /* Factory for construction of generic values */
 
   public static final Factory<Struct> FACTORY = new Factory<Struct>() {
-    @Override
-    public Struct create() {
-      return new Struct();
-    }
-
     @Override
     public Struct create(Struct other) {
       return new Struct(other);

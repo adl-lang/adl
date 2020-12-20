@@ -32,12 +32,6 @@ public class NewType {
     this.default_ = Objects.requireNonNull(default_);
   }
 
-  public NewType() {
-    this.typeParams = new ArrayList<String>();
-    this.typeExpr = new TypeExpr();
-    this.default_ = MaybeHelpers.factory(JsonBindings.JSON_FACTORY).create();
-  }
-
   public NewType(NewType other) {
     this.typeParams = Factories.list(Factories.STRING).create(other.typeParams);
     this.typeExpr = TypeExpr.FACTORY.create(other.typeExpr);
@@ -132,11 +126,6 @@ public class NewType {
   /* Factory for construction of generic values */
 
   public static final Factory<NewType> FACTORY = new Factory<NewType>() {
-    @Override
-    public NewType create() {
-      return new NewType();
-    }
-
     @Override
     public NewType create(NewType other) {
       return new NewType(other);

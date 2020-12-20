@@ -17,11 +17,6 @@ public class HashSetHelpers
   public static <V> Factory<Set<V>> factory(final Factory <V> valueFactory) {
     return new Factory<Set<V>>() {
       @Override
-      public Set<V> create() {
-        return new HashSet<>();
-      }
-
-      @Override
       public Set<V> create(Set<V> other) {
         Set<V> result = new HashSet<V>();
         for (V v : other) {

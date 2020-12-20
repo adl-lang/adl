@@ -90,15 +90,6 @@ public class PostReq<I, O> {
       final Lazy<Factory<TypeToken<O>>> respType = new Lazy<>(() -> Factories.typeProxy(factoryO));
 
       @Override
-      public PostReq<I, O> create() {
-        return new PostReq<I, O>(
-          path.get().create(),
-          new TypeToken<I>(factoryI.jsonBinding()),
-          new TypeToken<O>(factoryO.jsonBinding())
-          );
-      }
-
-      @Override
       public PostReq<I, O> create(PostReq<I, O> other) {
         return new PostReq<I, O>(
           other.getPath(),

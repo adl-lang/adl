@@ -35,14 +35,6 @@ public class switch_ {
     this.Objects = java.util.Objects.requireNonNull(Objects);
   }
 
-  public switch_() {
-    this.double_ = 0.0;
-    this.int_ = 0;
-    this.string = "";
-    this.for_ = false;
-    this.Objects = "";
-  }
-
   public switch_(switch_ other) {
     this.double_ = other.double_;
     this.int_ = other.int_;
@@ -175,11 +167,6 @@ public class switch_ {
   /* Factory for construction of generic values */
 
   public static final Factory<switch_> FACTORY = new Factory<switch_>() {
-    @Override
-    public switch_ create() {
-      return new switch_();
-    }
-
     @Override
     public switch_ create(switch_ other) {
       return new switch_(other);

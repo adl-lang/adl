@@ -37,11 +37,6 @@ public class Import {
     return new Import(Disc.SCOPEDNAME, Objects.requireNonNull(v));
   }
 
-  public Import() {
-    this.disc = Disc.MODULENAME;
-    this.value = "";
-  }
-
   public Import(Import other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -110,11 +105,6 @@ public class Import {
   /* Factory for construction of generic values */
 
   public static final Factory<Import> FACTORY = new Factory<Import>() {
-    @Override
-    public Import create() {
-      return new Import();
-    }
-
     @Override
     public Import create(Import other) {
       return new Import(other);

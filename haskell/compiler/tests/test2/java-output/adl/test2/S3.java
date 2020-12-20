@@ -151,16 +151,6 @@ public class S3<T> {
       final Lazy<Factory<List<T>>> f4 = new Lazy<>(() -> Factories.list(factoryT));
 
       @Override
-      public S3<T> create() {
-        return new S3<T>(
-          f1.get().create(),
-          f2.get().create(),
-          f3.get().create(),
-          f4.get().create()
-          );
-      }
-
-      @Override
       public S3<T> create(S3<T> other) {
         return new S3<T>(
           other.getF1(),

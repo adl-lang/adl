@@ -130,11 +130,6 @@ public class S {
 
   public static final Factory<S> FACTORY = new Factory<S>() {
     @Override
-    public S create() {
-      return new S();
-    }
-
-    @Override
     public S create(S other) {
       return new S(other);
     }

@@ -46,11 +46,6 @@ public enum Role {
 
   public static final Factory<Role> FACTORY = new Factory<Role>() {
     @Override
-    public Role create() {
-      return UNDERLING;
-    }
-
-    @Override
     public Role create(Role other) {
       return other;
     }

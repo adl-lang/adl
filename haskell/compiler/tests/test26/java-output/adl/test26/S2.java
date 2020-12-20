@@ -27,10 +27,6 @@ public class S2 {
     this.f2 = f2;
   }
 
-  public S2() {
-    this.f2 = 0.0;
-  }
-
   public S2(S2 other) {
     this.f2 = other.f2;
   }
@@ -67,11 +63,6 @@ public class S2 {
   /* Factory for construction of generic values */
 
   public static final Factory<S2> FACTORY = new Factory<S2>() {
-    @Override
-    public S2 create() {
-      return new S2();
-    }
-
     @Override
     public S2 create(S2 other) {
       return new S2(other);

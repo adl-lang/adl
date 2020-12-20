@@ -110,10 +110,6 @@ public class List<T> {
       final Lazy<Factory<Void>> null_ = new Lazy<>(() -> Factories.VOID);
       final Lazy<Factory<Cell<T>>> cell = new Lazy<>(() -> Cell.factory(factoryT));
 
-      @Override
-      public List<T> create() {
-        return new List<T>(Disc.NULL_,null_.get().create());
-      }
 
       @Override
       public List<T> create(List<T> other) {

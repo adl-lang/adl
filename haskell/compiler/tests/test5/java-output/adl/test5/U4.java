@@ -34,11 +34,6 @@ public class U4 {
     return new U4(Disc.V, Objects.requireNonNull(v));
   }
 
-  public U4() {
-    this.disc = Disc.V;
-    this.value = new S1();
-  }
-
   public U4(U4 other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -92,11 +87,6 @@ public class U4 {
   /* Factory for construction of generic values */
 
   public static final Factory<U4> FACTORY = new Factory<U4>() {
-    @Override
-    public U4 create() {
-      return new U4();
-    }
-
     @Override
     public U4 create(U4 other) {
       return new U4(other);

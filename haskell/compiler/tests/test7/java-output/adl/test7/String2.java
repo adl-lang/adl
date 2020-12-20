@@ -26,10 +26,6 @@ public class String2 {
     this.value = Objects.requireNonNull(value);
   }
 
-  public String2() {
-    this.value = "";
-  }
-
   public String2(String2 other) {
     this.value = other.value;
   }
@@ -66,11 +62,6 @@ public class String2 {
   /* Factory for construction of generic values */
 
   public static final Factory<String2> FACTORY = new Factory<String2>() {
-    @Override
-    public String2 create() {
-      return new String2();
-    }
-
     @Override
     public String2 create(String2 other) {
       return new String2(other);

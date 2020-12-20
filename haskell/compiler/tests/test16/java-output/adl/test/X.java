@@ -25,10 +25,6 @@ public class X {
     this.value = Objects.requireNonNull(value);
   }
 
-  public X() {
-    this.value = new A();
-  }
-
   public X(X other) {
     this.value = A.FACTORY.create(other.value);
   }
@@ -65,11 +61,6 @@ public class X {
   /* Factory for construction of generic values */
 
   public static final Factory<X> FACTORY = new Factory<X>() {
-    @Override
-    public X create() {
-      return new X();
-    }
-
     @Override
     public X create(X other) {
       return new X(other);

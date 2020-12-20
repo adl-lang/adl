@@ -105,14 +105,6 @@ public class CrudReqs<T> {
       final Lazy<Factory<PostReq<String, T>>> read = new Lazy<>(() -> PostReq.factory(Factories.STRING, factoryT));
 
       @Override
-      public CrudReqs<T> create() {
-        return new CrudReqs<T>(
-          create.get().create(),
-          read.get().create()
-          );
-      }
-
-      @Override
       public CrudReqs<T> create(CrudReqs<T> other) {
         return new CrudReqs<T>(
           create.get().create(other.getCreate()),

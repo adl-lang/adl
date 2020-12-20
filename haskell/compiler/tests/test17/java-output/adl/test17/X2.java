@@ -66,11 +66,6 @@ public class X2 {
     return new X2(Disc.F7, Objects.requireNonNull(v));
   }
 
-  public X2() {
-    this.disc = Disc.F1;
-    this.value = 0;
-  }
-
   public X2(X2 other) {
     this.disc = other.disc;
     switch (other.disc) {
@@ -219,11 +214,6 @@ public class X2 {
   /* Factory for construction of generic values */
 
   public static final Factory<X2> FACTORY = new Factory<X2>() {
-    @Override
-    public X2 create() {
-      return new X2();
-    }
-
     @Override
     public X2 create(X2 other) {
       return new X2(other);

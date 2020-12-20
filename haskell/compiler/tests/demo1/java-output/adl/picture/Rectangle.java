@@ -30,11 +30,6 @@ public class Rectangle {
     this.height = height;
   }
 
-  public Rectangle() {
-    this.width = 0.0;
-    this.height = 0.0;
-  }
-
   public Rectangle(Rectangle other) {
     this.width = other.width;
     this.height = other.height;
@@ -110,11 +105,6 @@ public class Rectangle {
   /* Factory for construction of generic values */
 
   public static final Factory<Rectangle> FACTORY = new Factory<Rectangle>() {
-    @Override
-    public Rectangle create() {
-      return new Rectangle();
-    }
-
     @Override
     public Rectangle create(Rectangle other) {
       return new Rectangle(other);
