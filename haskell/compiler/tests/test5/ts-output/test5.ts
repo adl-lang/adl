@@ -2,9 +2,8 @@
 
 import * as ADL from './runtime/adl';
 
-export enum U1 {
-  v,
-}
+export type U1 = 'v';
+export const valuesU1 : U1[] = ['v'];
 
 const U1_AST : ADL.ScopedDecl =
   {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v","default":{"kind":"nothing"},"name":"v","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U1","version":{"kind":"nothing"}}};

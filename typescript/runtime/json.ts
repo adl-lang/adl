@@ -357,22 +357,22 @@ function structJsonBinding(dresolver : DeclResolver, struct : AST.Struct, params
 }
 
 function enumJsonBinding(_dresolver : DeclResolver, union : AST.Union, _params : AST.TypeExpr[], _boundTypeParams : BoundTypeParams ) : JsonBinding0<Unknown> {
-  const fieldSerializedNames : string[] = [];
-  const fieldNumbers : {[key:string]:number} = {};
-  union.fields.forEach( (field,i) => {
-    fieldSerializedNames.push(field.serializedName);
-    fieldNumbers[field.serializedName] = i;
+  const toSerialized: {[key:string]:string} = {};
+  const fromSerialized: {[key:string]:string} = {};
+  union.fields.forEach( field => {
+    toSerialized[field.name] = field.serializedName;
+    fromSerialized[field.serializedName] = field.name;
   });
 
   function toJson(v :Unknown) : Json {
-    return fieldSerializedNames[v as number];
+    return toSerialized[v as string];
   }
 
   function fromJson(json : Json) : Unknown {
     if (typeof(json) !== 'string') {
       throw jsonParseException("expected a string for enum");
     }
-    const result = fieldNumbers[json as string];
+    const result = fromSerialized[json as string];
     if (result === undefined) {
       throw jsonParseException("invalid string for enum: " + json);
     }

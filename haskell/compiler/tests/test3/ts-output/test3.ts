@@ -120,10 +120,8 @@ export function texprU(): ADL.ATypeExpr<U> {
   return {value : {typeRef : {kind: "reference", value : snU}, parameters : []}};
 }
 
-export enum E {
-  v1,
-  v2,
-}
+export type E = 'v1' | 'v2';
+export const valuesE : E[] = ['v1', 'v2'];
 
 const E_AST : ADL.ScopedDecl =
   {"moduleName":"test3","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"v2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"E","version":{"kind":"nothing"}}};
@@ -208,7 +206,7 @@ export function makeS<T>(
     f_a: input.f_a === undefined ? {f_int : 0, f_string : "xyz", f_bool : false} : input.f_a,
     f_u: input.f_u === undefined ? {kind : "f_int", value : 45} : input.f_u,
     f_u1: input.f_u1 === undefined ? {kind : "f_void"} : input.f_u1,
-    f_e: input.f_e === undefined ? 1 : input.f_e,
+    f_e: input.f_e === undefined ? "v2" : input.f_e,
     f_t: input.f_t,
     f_bint16: input.f_bint16 === undefined ? {f_t : 56, f_string : "yikes", f_tvec : [1, 2, 3], f_xy : {x : 5, y : 5}} : input.f_bint16,
     f_smap: input.f_smap === undefined ? {"a" : 45, "b" : 47} : input.f_smap,

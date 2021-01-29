@@ -141,8 +141,9 @@ genUnionEnum :: CModule -> CDecl -> Union CResolvedType -> CState ()
 genUnionEnum _ decl enum = do
   fds <- mapM genFieldDetails (u_fields enum)
   let enumName = capitalise (d_name decl)
-      enumFields = mconcat [ctemplate "$1," [fdName fd] | fd <- fds]
-      enumDecl = cblock (template "export enum $1" [enumName]) enumFields
+      enumValues = ["'" <> fdName fd <> "'" | fd <- fds]
+      enumDecl =  cline (template "export type $1 = $2;" [enumName, T.intercalate " | " enumValues])
+               <> cline (template "export const values$1 : $1[] = [$2];" [enumName, T.intercalate ", " enumValues])
   addDeclaration enumDecl
 
 genUnionInterface :: CModule -> CDecl -> Union CResolvedType -> CState ()

@@ -10,7 +10,7 @@ const personJsonBinding : JsonBinding<example.Person> = createJsonBinding(RESOLV
 const person1 : example.Person = {
   name : "Joe",
   age : 142,
-  gender : example.Gender.male,
+  gender : 'male',
   married : true
 };
 
@@ -27,7 +27,7 @@ describe('Person Structure', () => {
   it( 'constructs with correct defaulting', () => {
     const person = example.makePerson({
       name : 'Sarah',
-      gender : example.Gender.female
+      gender : 'female',
     });
     expect(person.age).toEqual(50);
     expect(person.married).toEqual(false);
@@ -133,14 +133,14 @@ const genderTreeJsonBinding : JsonBinding<example.Tree<example.Gender>>
     = createJsonBinding(RESOLVER,example.texprTree(example.texprGender()));
 
 const gtree1 : example.Tree<example.Gender> = {
-  value : example.Gender.female,
+  value : 'female',
   children : [
     {
-      value : example.Gender.male,
+      value : 'male',
       children : [],
     },
     {
-      value : example.Gender.female,
+      value : 'female',
       children : [],
     }
   ]
@@ -150,9 +150,9 @@ describe('GenderTree Constructed Concrete Type', () => {
   it( 'roundtrips via json', () => {
     const json = genderTreeJsonBinding.toJson(gtree1);
     const gtree2 = genderTreeJsonBinding.fromJson(json);
-    expect(gtree2.value).toEqual(example.Gender.female);
-    expect(gtree2.children[0].value).toEqual(example.Gender.male);
-    expect(gtree2.children[1].value).toEqual(example.Gender.female);
+    expect(gtree2.value).toEqual('female');
+    expect(gtree2.children[0].value).toEqual('male');
+    expect(gtree2.children[1].value).toEqual('female');
   })
 });
 

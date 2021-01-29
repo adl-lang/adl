@@ -253,7 +253,7 @@ getTypeDetails rt@(RT_Named (scopedName,Decl{d_customType=Nothing})) = TypeDetai
       lv <- genLiteralText l
       case te of
        te | refEnumeration te -> let (i,f) = findUnionField ctor (u_fields union)
-                                 in return (T.pack (show i))
+                                 in return (doubleQuote (f_name f))
           | isVoidLiteral l -> return (template "{kind : \"$1\"}" [ctor])
           | otherwise -> return (template "{kind : \"$1\", value : $2}" [ctor,lv])
     literalText l = error ("BUG: missing RT_Named literalText definition (" <> show l <> ")")
