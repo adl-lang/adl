@@ -391,12 +391,20 @@ getTypeDetails (RT_Param typeVar) = TypeDetails
 
 -- each primitive
 getTypeDetails (RT_Primitive P_Void) = TypeDetails
-  { td_type = \_ _ -> return "Void"
-  , td_genLiteralText = \_ -> return "null"
+  { td_type = \_ _   -> getType
+  , td_genLiteralText = genLiteralText'
   , td_mutable = False
   , td_factory = primitiveFactory "VOID"
   , td_hashfn = \_ -> "0"
   }
+  where
+    getType = do
+      rtpackage <- getRuntimePackage
+      addImport (javaClass rtpackage "AdlVoid")
+
+    genLiteralText' _ = do
+      iVoid <- getType
+      return (template "$1.INSTANCE" [iVoid])
 
 getTypeDetails (RT_Primitive P_Bool) = TypeDetails
   { td_type = unboxedPrimitive "boolean" "Boolean"

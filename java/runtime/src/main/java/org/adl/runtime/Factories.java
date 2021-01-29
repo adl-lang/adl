@@ -1,5 +1,6 @@
 package org.adl.runtime;
 
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 
@@ -16,13 +17,13 @@ import java.util.HashMap;
  * Useful standard implementations of the Factory interface.
  */
 public class Factories {
-  public static final Factory<Void> VOID = new Factory<Void>() {
+  public static final Factory<AdlVoid> VOID = new Factory<AdlVoid>() {
     @Override
-    public Void create(Void other) { return other; }
+    public AdlVoid create(AdlVoid other) { return other; }
     @Override
     public TypeExpr typeExpr() { return primTypeExpr("Void"); }
     @Override
-    public JsonBinding<Void> jsonBinding() { return JsonBindings.VOID; }
+    public JsonBinding<AdlVoid> jsonBinding() { return JsonBindings.VOID; }
   };
 
   public static final Factory<Boolean> BOOLEAN = new Factory<Boolean>() {

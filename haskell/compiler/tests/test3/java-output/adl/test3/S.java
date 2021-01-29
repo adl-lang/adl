@@ -4,6 +4,7 @@ package adl.test3;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.Builders;
 import org.adl.runtime.ByteArray;
 import org.adl.runtime.Factories;
@@ -25,7 +26,7 @@ public class S<T> {
 
   /* Members */
 
-  private Void f_void;
+  private AdlVoid f_void;
   private boolean f_bool;
   private byte f_int8;
   private short f_int16;
@@ -52,8 +53,8 @@ public class S<T> {
 
   /* Constructors */
 
-  public S(Void f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, List<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, Map<String, Integer> f_smap, JsonElement f_json1, JsonElement f_json2) {
-    this.f_void = f_void;
+  public S(AdlVoid f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, List<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, Map<String, Integer> f_smap, JsonElement f_json1, JsonElement f_json2) {
+    this.f_void = Objects.requireNonNull(f_void);
     this.f_bool = f_bool;
     this.f_int8 = f_int8;
     this.f_int16 = f_int16;
@@ -81,8 +82,8 @@ public class S<T> {
 
   /* Field defaults */
 
-  public static Void defF_void() {
-    return null;
+  public static AdlVoid defF_void() {
+    return AdlVoid.INSTANCE;
   }
 
   public static boolean defF_bool() {
@@ -175,12 +176,12 @@ public class S<T> {
 
   /* Accessors and mutators */
 
-  public Void getF_void() {
+  public AdlVoid getF_void() {
     return f_void;
   }
 
-  public S<T> setF_void(Void f_void) {
-    this.f_void = f_void;
+  public S<T> setF_void(AdlVoid f_void) {
+    this.f_void = Objects.requireNonNull(f_void);
     return this;
   }
 
@@ -459,7 +460,7 @@ public class S<T> {
   /* Builder */
 
   public static class Builder<T> {
-    private Void f_void;
+    private AdlVoid f_void;
     private Boolean f_bool;
     private Byte f_int8;
     private Short f_int16;
@@ -485,7 +486,7 @@ public class S<T> {
     private JsonElement f_json2;
 
     public Builder() {
-      this.f_void = null;
+      this.f_void = AdlVoid.INSTANCE;
       this.f_bool = true;
       this.f_int8 = (byte)-5;
       this.f_int16 = (short)-10000;
@@ -511,7 +512,7 @@ public class S<T> {
       this.f_json2 = JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]");
     }
 
-    public Builder<T> setF_void(Void f_void) {
+    public Builder<T> setF_void(AdlVoid f_void) {
       this.f_void = Objects.requireNonNull(f_void);
       return this;
     }
@@ -641,7 +642,7 @@ public class S<T> {
 
   public static <T> Factory<S<T>> factory(Factory<T> factoryT) {
     return new Factory<S<T>>() {
-      final Lazy<Factory<Void>> f_void = new Lazy<>(() -> Factories.VOID);
+      final Lazy<Factory<AdlVoid>> f_void = new Lazy<>(() -> Factories.VOID);
       final Lazy<Factory<Boolean>> f_bool = new Lazy<>(() -> Factories.BOOLEAN);
       final Lazy<Factory<Byte>> f_int8 = new Lazy<>(() -> Factories.INT8);
       final Lazy<Factory<Short>> f_int16 = new Lazy<>(() -> Factories.INT16);
@@ -714,7 +715,7 @@ public class S<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<S<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final Lazy<JsonBinding<Void>> f_void = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<AdlVoid>> f_void = new Lazy<>(() -> JsonBindings.VOID);
     final Lazy<JsonBinding<Boolean>> f_bool = new Lazy<>(() -> JsonBindings.BOOLEAN);
     final Lazy<JsonBinding<Byte>> f_int8 = new Lazy<>(() -> JsonBindings.INT8);
     final Lazy<JsonBinding<Short>> f_int16 = new Lazy<>(() -> JsonBindings.INT16);
@@ -781,7 +782,7 @@ public class S<T> {
       public S<T> fromJson(JsonElement _json) {
         JsonObject _obj = JsonBindings.objectFromJson(_json);
         return new S<T>(
-          _obj.has("f_void") ? JsonBindings.fieldFromJson(_obj, "f_void", f_void.get()) : null,
+          _obj.has("f_void") ? JsonBindings.fieldFromJson(_obj, "f_void", f_void.get()) : AdlVoid.INSTANCE,
           _obj.has("f_bool") ? JsonBindings.fieldFromJson(_obj, "f_bool", f_bool.get()) : true,
           _obj.has("f_int8") ? JsonBindings.fieldFromJson(_obj, "f_int8", f_int8.get()) : (byte)-5,
           _obj.has("f_int16") ? JsonBindings.fieldFromJson(_obj, "f_int16", f_int16.get()) : (short)-10000,

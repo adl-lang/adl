@@ -3,6 +3,7 @@
 package adl.test5;
 
 import com.google.gson.JsonElement;
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -130,7 +131,7 @@ public class U9<T> {
     return new Factory<U9<T>>() {
       final Lazy<Factory<T>> v1 = new Lazy<>(() -> factoryT);
       final Lazy<Factory<Short>> v2 = new Lazy<>(() -> Factories.INT16);
-      final Lazy<Factory<Void>> v3 = new Lazy<>(() -> Factories.VOID);
+      final Lazy<Factory<AdlVoid>> v3 = new Lazy<>(() -> Factories.VOID);
 
 
       @Override
@@ -166,7 +167,7 @@ public class U9<T> {
   public static<T> JsonBinding<U9<T>> jsonBinding(JsonBinding<T> bindingT) {
     final Lazy<JsonBinding<T>> v1 = new Lazy<>(() -> bindingT);
     final Lazy<JsonBinding<Short>> v2 = new Lazy<>(() -> JsonBindings.INT16);
-    final Lazy<JsonBinding<Void>> v3 = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<AdlVoid>> v3 = new Lazy<>(() -> JsonBindings.VOID);
     final Factory<T> factoryT = bindingT.factory();
     final Factory<U9<T>> _factory = factory(bindingT.factory());
 

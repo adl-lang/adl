@@ -3,6 +3,7 @@
 package adl.test5;
 
 import com.google.gson.JsonElement;
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -107,7 +108,7 @@ public class List<T> {
 
   public static <T> Factory<List <T>> factory(Factory<T> factoryT) {
     return new Factory<List<T>>() {
-      final Lazy<Factory<Void>> null_ = new Lazy<>(() -> Factories.VOID);
+      final Lazy<Factory<AdlVoid>> null_ = new Lazy<>(() -> Factories.VOID);
       final Lazy<Factory<Cell<T>>> cell = new Lazy<>(() -> Cell.factory(factoryT));
 
 
@@ -140,7 +141,7 @@ public class List<T> {
   /* Json serialization */
 
   public static<T> JsonBinding<List<T>> jsonBinding(JsonBinding<T> bindingT) {
-    final Lazy<JsonBinding<Void>> null_ = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<AdlVoid>> null_ = new Lazy<>(() -> JsonBindings.VOID);
     final Lazy<JsonBinding<Cell<T>>> cell = new Lazy<>(() -> Cell.jsonBinding(bindingT));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<List<T>> _factory = factory(bindingT.factory());

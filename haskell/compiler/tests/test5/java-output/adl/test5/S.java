@@ -4,6 +4,7 @@ package adl.test5;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;

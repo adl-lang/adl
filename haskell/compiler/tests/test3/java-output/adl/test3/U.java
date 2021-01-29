@@ -3,6 +3,7 @@
 package adl.test3;
 
 import com.google.gson.JsonElement;
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
 import org.adl.runtime.JsonBinding;
@@ -55,7 +56,7 @@ public class U {
         this.value = (String) other.value;
         break;
       case F_VOID:
-        this.value = (Void) other.value;
+        this.value = (AdlVoid) other.value;
         break;
     }
   }
@@ -160,7 +161,7 @@ public class U {
   public static JsonBinding<U> jsonBinding() {
     final Lazy<JsonBinding<Short>> f_int = new Lazy<>(() -> JsonBindings.INT16);
     final Lazy<JsonBinding<String>> f_string = new Lazy<>(() -> JsonBindings.STRING);
-    final Lazy<JsonBinding<Void>> f_void = new Lazy<>(() -> JsonBindings.VOID);
+    final Lazy<JsonBinding<AdlVoid>> f_void = new Lazy<>(() -> JsonBindings.VOID);
     final Factory<U> _factory = FACTORY;
 
     return new JsonBinding<U>() {

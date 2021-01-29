@@ -6,6 +6,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import org.adl.runtime.TypeToken;
@@ -23,22 +24,22 @@ import java.util.Set;
  */
 public class JsonBindings
 {
-  public static final JsonBinding<Void> VOID = new JsonBinding<Void>() {
+  public static final JsonBinding<AdlVoid> VOID = new JsonBinding<AdlVoid>() {
 
     @Override
-    public Factory<Void> factory() {
+    public Factory<AdlVoid> factory() {
       return Factories.VOID;
     }
 
     @Override
-    public JsonElement toJson(Void value) {
+    public JsonElement toJson(AdlVoid value) {
       return JsonNull.INSTANCE;
     }
 
     @Override
-    public Void fromJson(JsonElement json) {
+    public AdlVoid fromJson(JsonElement json) {
       if (json.isJsonNull()) {
-        return null;
+        return AdlVoid.INSTANCE;
       }
       throw new JsonParseException("expected null");
     }

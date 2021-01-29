@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonObject;
 
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.sys.adlast.TypeExpr;
 import org.adl.runtime.sys.adlast.TypeRef;
 import org.adl.runtime.sys.adlast.ScopedName;
@@ -35,7 +36,7 @@ public class MaybeHelpers
     };
   }
 
-  public static <T> Optional<T> nothing(@SuppressWarnings("unused") Void value) {
+  public static <T> Optional<T> nothing(@SuppressWarnings("unused") AdlVoid value) {
     return Optional.empty();
   }
 

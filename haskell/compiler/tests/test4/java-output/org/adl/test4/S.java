@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import helpers.CDateHelpers;
 import helpers.DateHelpers;
+import org.adl.runtime.AdlVoid;
 import org.adl.runtime.Builders;
 import org.adl.runtime.Factories;
 import org.adl.runtime.Factory;
@@ -104,7 +105,7 @@ public class S {
   }
 
   public static Optional<String> defV5a() {
-    return MaybeHelpers.nothing(null);
+    return MaybeHelpers.nothing(AdlVoid.INSTANCE);
   }
 
   public static Optional<String> defV5b() {
@@ -292,7 +293,7 @@ public class S {
       this.v3 = null;
       this.v4 = CDateHelpers.create((short)2000, (short)1, (short)1);
       this.v5 = null;
-      this.v5a = MaybeHelpers.nothing(null);
+      this.v5a = MaybeHelpers.nothing(AdlVoid.INSTANCE);
       this.v5b = MaybeHelpers.just("hello");
       this.v6 = null;
       this.v7 = HashSetHelpers.create(Factories.list(1, 2, 3));
@@ -442,7 +443,7 @@ public class S {
           JsonBindings.fieldFromJson(_obj, "v3", v3.get()),
           _obj.has("v4") ? JsonBindings.fieldFromJson(_obj, "v4", v4.get()) : CDateHelpers.create((short)2000, (short)1, (short)1),
           JsonBindings.fieldFromJson(_obj, "v5", v5.get()),
-          _obj.has("v5a") ? JsonBindings.fieldFromJson(_obj, "v5a", v5a.get()) : MaybeHelpers.nothing(null),
+          _obj.has("v5a") ? JsonBindings.fieldFromJson(_obj, "v5a", v5a.get()) : MaybeHelpers.nothing(AdlVoid.INSTANCE),
           _obj.has("v5b") ? JsonBindings.fieldFromJson(_obj, "v5b", v5b.get()) : MaybeHelpers.just("hello"),
           JsonBindings.fieldFromJson(_obj, "v6", v6.get()),
           _obj.has("v7") ? JsonBindings.fieldFromJson(_obj, "v7", v7.get()) : HashSetHelpers.create(Factories.list(1, 2, 3)),
