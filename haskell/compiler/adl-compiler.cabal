@@ -33,6 +33,7 @@ data-files:          lib/adl/adlc/config/cpp.adl
                      lib/haskell/runtime/ADL/Core/Value.hs
                      lib/haskell/runtime/ADL/Sys/Adlast.hs
                      lib/haskell/runtime/ADL/Sys/Types.hs
+                     lib/java/runtime/org/adl/runtime/AdlVoid.java
                      lib/java/runtime/org/adl/runtime/Builders.java
                      lib/java/runtime/org/adl/runtime/ByteArray.java
                      lib/java/runtime/org/adl/runtime/DynamicHelpers.java
