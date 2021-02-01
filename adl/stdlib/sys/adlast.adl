@@ -1,24 +1,28 @@
 /// Types to represent an ADL syntax tree
-module sys.adlast {
+module sys.adlast
+{
 
 import sys.types.*;
 
 type ModuleName = String;
 type Ident = String;
 
-type Annotations = Map<ScopedName, Json>;
+type Annotations = Map<ScopedName,Json>;
 
-struct ScopedName {
+struct ScopedName
+{
   ModuleName moduleName;
   Ident name;
 };
 
-struct ScopedNameTypeRef {
+struct ScopedNameTypeRef
+{
   ScopedName scopedName;
   Vector<TypeExpr> parameters;
 };
 
-union Primitive {
+union Primitive
+{
   Void Void;
   Void String;
   Void Boolean;
@@ -39,13 +43,15 @@ union Primitive {
   TypeExpr Nullable;
 };
 
-union TypeExpr {
+union TypeExpr
+{
   Primitive primitive;
   Ident typeParam;
   ScopedNameTypeRef reference;
 };
 
-struct Field {
+struct Field
+{
   Ident name;
   Ident serializedName;
   TypeExpr typeExpr;
@@ -53,46 +59,54 @@ struct Field {
   Annotations annotations;
 };
 
-struct Struct {
+struct Struct
+{
   Vector<Ident> typeParams;
   Vector<Field> fields;
 };
 
-struct Union {
+struct Union
+{
   Vector<Ident> typeParams;
   Vector<Field> fields;
 };
 
-struct TypeDef {
+struct TypeDef
+{
   Vector<Ident> typeParams;
   TypeExpr typeExpr;
 };
 
-struct NewType {
+struct NewType
+{
   Vector<Ident> typeParams;
   TypeExpr typeExpr;
   Maybe<Json> default;
 };
 
-union DeclType {
+union DeclType
+{
   Struct struct_;
   Union union_;
   TypeDef type_;
   NewType newtype_;
 };
 
-struct Decl {
+struct Decl
+{
   Ident name;
   DeclType type_;
   Annotations annotations;
 };
 
-struct ScopedDecl {
+struct ScopedDecl
+{
   ModuleName moduleName;
   Decl decl;
 };
 
-union Import {
+union Import
+{
   /// Import all names from a module
   ModuleName moduleName;
 
@@ -100,14 +114,16 @@ union Import {
   ScopedName scopedName;
 };
 
-struct Module {
+struct Module
+{
   ModuleName name;
   Vector<Import> imports;
   StringMap<Decl> decls;
   Annotations annotations;
 };
 
-struct Model {
+struct Model
+{
   StringMap<Module> modules;
 };
 
