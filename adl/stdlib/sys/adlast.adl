@@ -1,104 +1,114 @@
-module sys.adlast
-{
-// Types to represent an ADL syntax tree
+/// Types to represent an ADL syntax tree
+module sys.adlast {
 
 import sys.types.*;
 
 type ModuleName = String;
 type Ident = String;
 
-type Annotations = Map<ScopedName,Json>;
+type Annotations = Map<ScopedName, Json>;
 
-
-struct ScopedName
-{
-    ModuleName moduleName;
-    Ident name;
+struct ScopedName {
+  ModuleName moduleName;
+  Ident name;
 };
 
-union TypeRef
-{
-    Ident primitive;
-    Ident typeParam;
-    ScopedName reference;
+struct ScopedNameTypeRef {
+  ScopedName scopedName;
+  Vector<TypeExpr> parameters;
 };
 
-struct TypeExpr
-{
-    TypeRef typeRef;
-    Vector<TypeExpr> parameters;
+union Primitive {
+  Void Void;
+  Void String;
+  Void Boolean;
+  Void Float;
+  Void Double;
+  Void Int8;
+  Void Int16;
+  Void Int32;
+  Void Int64;
+  Void Word8;
+  Void Word16;
+  Void Word32;
+  Void Word64;
+  Void ByteVector;
+  Void Json;
+  TypeExpr Vector;
+  TypeExpr StringMap;
+  TypeExpr Nullable;
 };
 
-struct Field
-{
-    Ident name;
-    Ident serializedName;
-    TypeExpr typeExpr;
-    Maybe<Json> default;
-    Annotations annotations;
+union TypeExpr {
+  Primitive primitive;
+  Ident typeParam;
+  ScopedNameTypeRef reference;
 };
 
-struct Struct
-{
-    Vector<Ident> typeParams;
-    Vector<Field> fields;
+struct Field {
+  Ident name;
+  Ident serializedName;
+  TypeExpr typeExpr;
+  Maybe<Json> default;
+  Annotations annotations;
 };
 
-struct Union
-{
-    Vector<Ident> typeParams;
-    Vector<Field> fields;
+struct Struct {
+  Vector<Ident> typeParams;
+  Vector<Field> fields;
 };
 
-struct TypeDef
-{
-    Vector<Ident> typeParams;
-    TypeExpr typeExpr;
+struct Union {
+  Vector<Ident> typeParams;
+  Vector<Field> fields;
 };
 
-struct NewType
-{
-    Vector<Ident> typeParams;
-    TypeExpr typeExpr;
-    Maybe<Json> default;
+struct TypeDef {
+  Vector<Ident> typeParams;
+  TypeExpr typeExpr;
 };
 
-union DeclType
-{
-    Struct struct_;
-    Union union_;
-    TypeDef type_;
-    NewType newtype_;
+struct NewType {
+  Vector<Ident> typeParams;
+  TypeExpr typeExpr;
+  Maybe<Json> default;
 };
 
-struct Decl
-{
-    Ident name;
-    Maybe<Word32> version;
-    DeclType type_;
-    Annotations annotations;
+union DeclType {
+  Struct struct_;
+  Union union_;
+  TypeDef type_;
+  NewType newtype_;
 };
 
-struct ScopedDecl
-{
-    ModuleName moduleName;
-    Decl decl;
+struct Decl {
+  Ident name;
+  DeclType type_;
+  Annotations annotations;
 };
 
-type DeclVersions = Vector<Decl>;
-
-union Import
-{
-    ModuleName moduleName;
-    ScopedName scopedName;
+struct ScopedDecl {
+  ModuleName moduleName;
+  Decl decl;
 };
 
-struct Module
-{
-    ModuleName name;
-    Vector<Import> imports;
-    StringMap<Decl> decls;
-    Annotations annotations;
+union Import {
+  /// Import all names from a module
+  ModuleName moduleName;
+
+  /// Import a single name from a module
+  ScopedName scopedName;
+};
+
+struct Module {
+  ModuleName name;
+  Vector<Import> imports;
+  StringMap<Decl> decls;
+  Annotations annotations;
+};
+
+struct Model {
+  StringMap<Module> modules;
 };
 
 };
