@@ -261,6 +261,7 @@ function stringMapJsonBinding(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
         if (isJsonParseException(e)) {
           e.pushField(k);
         }
+        throw e;
       }
     }
     return result;
