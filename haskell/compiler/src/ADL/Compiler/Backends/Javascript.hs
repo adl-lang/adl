@@ -285,6 +285,7 @@ getTypeDetails (RT_Primitive P_ByteVector) = monomorphicPrimitive "ByteVector"
 getTypeDetails (RT_Primitive P_Vector) = polymorphicPrimitive "Vector"
 getTypeDetails (RT_Primitive P_StringMap) = polymorphicPrimitive "StringMap"
 getTypeDetails (RT_Primitive P_Nullable) = polymorphicPrimitive "Nullable"
+getTypeDetails (RT_Primitive P_TypeToken) = polymorphicPrimitive "TypeToken"
 
 monomorphicPrimitive :: T.Text -> TypeDetails
 monomorphicPrimitive name = TypeDetails

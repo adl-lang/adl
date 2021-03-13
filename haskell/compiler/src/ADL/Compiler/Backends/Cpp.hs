@@ -1317,6 +1317,8 @@ cPrimitiveType P_Nullable targs = do
 cPrimitiveType P_String targs = do
   includeStd ifile "string"
   return "std::string"
+cPrimitiveType P_TypeToken targs = do
+  return (template "TypeToken<$1>" targs)   -- placeholder, not fully implemented
 
 cPrimitiveDefault :: PrimitiveType -> Maybe T.Text
 cPrimitiveDefault P_Void = Nothing
@@ -1337,6 +1339,7 @@ cPrimitiveDefault P_Vector = Nothing
 cPrimitiveDefault P_StringMap = Nothing
 cPrimitiveDefault P_Nullable = Nothing
 cPrimitiveDefault P_String = Nothing
+cPrimitiveDefault P_TypeToken = Nothing
 
 cPrimitiveLiteral :: PrimitiveType -> JSON.Value -> T.Text
 cPrimitiveLiteral P_Void _ = "Void()"
