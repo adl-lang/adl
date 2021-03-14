@@ -1,0 +1,28 @@
+
+module adlc.codegen.ast {
+
+import adlc.codegen.types.AdlSources;
+import adlc.codegen.types.FilePath;
+import adlc.codegen.types.OutputParams;
+import sys.adlast.ModuleName;
+
+/// ADL type configuring the ast code generator
+struct AstParams {
+  AdlSources sources;
+
+  // Add the specifed adl file extension to merged on loading
+  Vector<String> mergeExts = [];
+
+  // The modules for which output is to be produced
+  Vector<ModuleName> modules;
+
+  // Also generate code for the transitive dependencies of the specified adl modules
+  Bool generateTransitive = true;
+
+  // Output is written to this file as a value of type StringMap<Module>
+  FilePath outputFile;
+};
+
+};
+
+

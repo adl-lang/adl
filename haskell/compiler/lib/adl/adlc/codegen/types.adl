@@ -1,0 +1,43 @@
+module adlc.codegen.types {
+
+import sys.adlast.Module;
+
+type FilePath = String;
+
+type AdlSources = Vector<AdlTreeSource>;
+
+union AdlTreeSource {
+   // Read modules from a local directory
+   FilePath localDir;
+
+   // Read modules from a remote git repo
+   GitTreeSource git;
+
+   // Embedded definitions
+   StringMap<Module> modules;
+};
+
+struct GitTreeSource {
+   // The URL of the repo
+   String url;
+
+   // The commit/branch/tag
+   String commit;
+
+   // The subdirectory in the repo containing the URL
+   FilePath subDir;
+};
+
+/// Config for the writing of output files
+struct OutputParams {
+    // The directory where generated code is written
+    FilePath outputDir;
+
+    // Don't update files that haven't changed
+    Bool noOverwrite = true;
+
+    // Write a manifest file recording generated files
+    Nullable<FilePath> manifest = ".adl-manifest";
+};
+
+};

@@ -1,10 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Compiler.Utils(
-  OutputArgs(..),
-  FileWriter,
-  writeOutputFile,
-  withManifest
-  )where
+module ADL.Compiler.Utils where
 
 import Prelude hiding (catch)
 import ADL.Compiler.EIO
@@ -22,8 +17,10 @@ import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Set as Set
 
+type LogFn = String -> IO ()
+
 data OutputArgs = OutputArgs {
-  oa_log :: String -> IO (),
+  oa_log :: LogFn,
   oa_noOverwrite :: Bool,
   oa_outputPath :: FilePath,
   oa_manifestFile :: Maybe FilePath

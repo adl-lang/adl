@@ -4,6 +4,7 @@ module Main where
 import qualified ADL.Compiler.Backends.Verify as V
 import qualified ADL.Compiler.Backends.Haskell as H
 import qualified ADL.Compiler.Backends.AST as A
+import qualified ADL.Compiler.Backends.Batch as B
 import qualified ADL.Compiler.Backends.Cpp as C
 import qualified ADL.Compiler.Backends.Java as J
 import qualified ADL.Compiler.Backends.Javascript as JS
@@ -146,6 +147,11 @@ runCpp args = do
       Option "" ["exclude-relops"]
         (NoArg ufn)
         "Exclude generated code for relational operators"
+
+runBatch args = do
+  case args of
+    [batchFile] -> B.generate batchFile
+    _ -> eioError "Usage: adlc batch <BATCHFILE>"
 
 runJava args = do
   libDir <- liftIO $ getLibDir
@@ -353,6 +359,7 @@ main = do
     ("javascript":args) -> runJavascript args
     ("typescript":args) -> runTypescript args
     ("rust":args) -> runRust args
+    ("batch":args) -> runBatch args
     ("show":args) -> runShow args
     _ -> eioError usage
   where

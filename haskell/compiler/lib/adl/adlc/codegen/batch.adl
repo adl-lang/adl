@@ -1,0 +1,16 @@
+module adlc.codegen.batch {
+
+import adlc.codegen.ast.AstParams;
+import adlc.codegen.java.JavaParams;
+
+union BatchItem {
+  AstParams ast;
+  JavaParams java;
+  // TODO other backends
+};
+
+type Batch = Vector<BatchItem>;
+
+};
+
+

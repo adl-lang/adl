@@ -156,6 +156,7 @@ library
                     , ADL.Utils.IndentedCode
                     , ADL.Utils.Resource
                     , ADL.Compiler.Backends.AST
+                    , ADL.Compiler.Backends.Batch
                     , ADL.Compiler.Backends.Cpp
                     , ADL.Compiler.Backends.Java
                     , ADL.Compiler.Backends.Java.Internal
@@ -170,6 +171,10 @@ library
                     , ADL.Adlc.Config.Haskell
                     , ADL.Adlc.Config.Java
                     , ADL.Adlc.Config.Rust
+                    , ADL.Adlc.Codegen.Ast
+                    , ADL.Adlc.Codegen.Batch
+                    , ADL.Adlc.Codegen.Java
+                    , ADL.Adlc.Codegen.Types
                     , HaskellCustomTypes
                     , Paths_adl_compiler
   if flag(bootstrap)

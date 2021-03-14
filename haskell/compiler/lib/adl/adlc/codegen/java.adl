@@ -1,0 +1,48 @@
+module adlc.codegen.java {
+
+import adlc.codegen.types.AdlSources;
+import adlc.codegen.types.FilePath;
+import adlc.codegen.types.OutputParams;
+import sys.adlast.ModuleName;
+
+/// ADL type configuring the java code generator
+struct JavaParams {
+  AdlSources sources;
+
+  // Add the specifed adl file extension to merged on loading
+  Vector<String> mergeExts = [".adl-java"];
+
+  // The modules for which output is to be produced
+  Vector<ModuleName> modules;
+
+  // The java package into which the generated ADL code will be placed
+  String package;
+
+  // How/where output files are written
+  OutputParams output;
+
+  // Also generate code for the transitive dependencies of the specified adl files
+  Bool generateTransitive = true;
+
+  // Generate the runtime code
+  Bool includeRuntime = true;
+
+  // Generated java code will include android parcellable implementations};
+  Bool parcellable = false;
+
+  // Use hungarian naming conventions
+  Bool hungarianNaming = false;
+
+  // Use hungarian naming conventions
+  Nullable<Word16> maxLineLength = null;
+
+  // A comment to be placed at the start of each java file};
+  String headerComment = "";
+
+  // The @SuppressWarnings annotations to be generated (comma separated)
+  String suppressWarnings = "";
+};
+
+};
+
+
