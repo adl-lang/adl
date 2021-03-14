@@ -1,72 +1,101 @@
+cabal-version:       2.4
 name:                adl-compiler
 version:             0.13
 synopsis:            A compiler for the Algebraic Data Language (ADL)
--- description:
-license:             BSD3
+license:             BSD-3-Clause
 license-file:        ../../LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
-copyright:           (c) 2013-2019 Tim Docker
+copyright:           (c) 2013-2021 Tim Docker
 category:            Network
 build-type:          Simple
-cabal-version:       >=1.8
 
-data-files:          lib/adl/adlc/config/cpp.adl
-                     lib/adl/adlc/config/haskell.adl
-                     lib/adl/adlc/config/java.adl
-                     lib/adl/adlc/config/rust.adl
-                     lib/adl/adlc/config/typescript.adl
-                     lib/adl/sys/adlast.adl
-                     lib/adl/sys/adlast.adl-java
-                     lib/adl/sys/annotations.adl
-                     lib/adl/sys/dynamic.adl
-                     lib/adl/sys/dynamic.adl-java
-                     lib/adl/sys/types.adl
-                     lib/adl/sys/types.adl-cpp
-                     lib/adl/sys/types.adl-hs
-                     lib/adl/sys/types.adl-java
-                     lib/adl/sys/types.adl-rs
-                     lib/haskell/runtime/ADL/Core.hs
-                     lib/haskell/runtime/ADL/Core/Nullable.hs
-                     lib/haskell/runtime/ADL/Core/StringMap.hs
-                     lib/haskell/runtime/ADL/Core/TypeToken.hs
-                     lib/haskell/runtime/ADL/Core/Value.hs
-                     lib/haskell/runtime/ADL/Sys/Adlast.hs
-                     lib/haskell/runtime/ADL/Sys/Types.hs
-                     lib/java/runtime/org/adl/runtime/AdlVoid.java
-                     lib/java/runtime/org/adl/runtime/Builders.java
-                     lib/java/runtime/org/adl/runtime/ByteArray.java
-                     lib/java/runtime/org/adl/runtime/DynamicHelpers.java
-                     lib/java/runtime/org/adl/runtime/Factories.java
-                     lib/java/runtime/org/adl/runtime/Factory.java
-                     lib/java/runtime/org/adl/runtime/HashMapHelpers.java
-                     lib/java/runtime/org/adl/runtime/HashSetHelpers.java
-                     lib/java/runtime/org/adl/runtime/JsonBinding.java
-                     lib/java/runtime/org/adl/runtime/JsonBindings.java
-                     lib/java/runtime/org/adl/runtime/JsonHelpers.java
-                     lib/java/runtime/org/adl/runtime/JsonParseException.java
-                     lib/java/runtime/org/adl/runtime/Lazy.java
-                     lib/java/runtime/org/adl/runtime/MaybeHelpers.java
-                     lib/java/runtime/org/adl/runtime/TypeToken.java
-                     lib/typescript/runtime/adl.ts
-                     lib/typescript/runtime/dynamic.ts
-                     lib/typescript/runtime/json.ts
-                     lib/typescript/runtime/sys/adlast.ts
-                     lib/typescript/runtime/sys/dynamic.ts
-                     lib/typescript/runtime/sys/types.ts
-                     lib/typescript/runtime/utils.ts
-                     lib/rust/runtime/custom/mod.rs
-                     lib/rust/runtime/custom/sys/mod.rs
-                     lib/rust/runtime/custom/sys/types/map.rs
-                     lib/rust/runtime/custom/sys/types/maybe.rs
-                     lib/rust/runtime/custom/sys/types/mod.rs
-                     lib/rust/runtime/custom/sys/types/pair.rs
-                     lib/rust/runtime/custom/sys/types/result.rs
-                     lib/rust/runtime/custom/sys/types/set.rs
-                     lib/rust/runtime/mod.rs
+data-files:           lib/adl/adlc/config/cpp.adl
+                    , lib/adl/adlc/config/haskell.adl
+                    , lib/adl/adlc/config/java.adl
+                    , lib/adl/adlc/config/rust.adl
+                    , lib/adl/adlc/config/typescript.adl
+                    , lib/adl/sys/adlast.adl
+                    , lib/adl/sys/adlast.adl-java
+                    , lib/adl/sys/annotations.adl
+                    , lib/adl/sys/dynamic.adl
+                    , lib/adl/sys/dynamic.adl-java
+                    , lib/adl/sys/types.adl
+                    , lib/adl/sys/types.adl-cpp
+                    , lib/adl/sys/types.adl-hs
+                    , lib/adl/sys/types.adl-java
+                    , lib/adl/sys/types.adl-rs
+                    , lib/haskell/runtime/ADL/Core.hs
+                    , lib/haskell/runtime/ADL/Core/Nullable.hs
+                    , lib/haskell/runtime/ADL/Core/StringMap.hs
+                    , lib/haskell/runtime/ADL/Core/TypeToken.hs
+                    , lib/haskell/runtime/ADL/Core/Value.hs
+                    , lib/haskell/runtime/ADL/Sys/Adlast.hs
+                    , lib/haskell/runtime/ADL/Sys/Types.hs
+                    , lib/java/runtime/org/adl/runtime/AdlVoid.java
+                    , lib/java/runtime/org/adl/runtime/Builders.java
+                    , lib/java/runtime/org/adl/runtime/ByteArray.java
+                    , lib/java/runtime/org/adl/runtime/DynamicHelpers.java
+                    , lib/java/runtime/org/adl/runtime/Factories.java
+                    , lib/java/runtime/org/adl/runtime/Factory.java
+                    , lib/java/runtime/org/adl/runtime/HashMapHelpers.java
+                    , lib/java/runtime/org/adl/runtime/HashSetHelpers.java
+                    , lib/java/runtime/org/adl/runtime/JsonBinding.java
+                    , lib/java/runtime/org/adl/runtime/JsonBindings.java
+                    , lib/java/runtime/org/adl/runtime/JsonHelpers.java
+                    , lib/java/runtime/org/adl/runtime/JsonParseException.java
+                    , lib/java/runtime/org/adl/runtime/Lazy.java
+                    , lib/java/runtime/org/adl/runtime/MaybeHelpers.java
+                    , lib/java/runtime/org/adl/runtime/TypeToken.java
+                    , lib/typescript/runtime/adl.ts
+                    , lib/typescript/runtime/dynamic.ts
+                    , lib/typescript/runtime/json.ts
+                    , lib/typescript/runtime/sys/adlast.ts
+                    , lib/typescript/runtime/sys/dynamic.ts
+                    , lib/typescript/runtime/sys/types.ts
+                    , lib/typescript/runtime/utils.ts
+                    , lib/rust/runtime/custom/mod.rs
+                    , lib/rust/runtime/custom/sys/mod.rs
+                    , lib/rust/runtime/custom/sys/types/map.rs
+                    , lib/rust/runtime/custom/sys/types/maybe.rs
+                    , lib/rust/runtime/custom/sys/types/mod.rs
+                    , lib/rust/runtime/custom/sys/types/pair.rs
+                    , lib/rust/runtime/custom/sys/types/result.rs
+                    , lib/rust/runtime/custom/sys/types/set.rs
+                    , lib/rust/runtime/mod.rs
 
+executable adlc
+  main-is:            Main.hs
+  ghc-options:       -fwarn-incomplete-patterns
+  other-modules:      Paths_adl_compiler
+  build-depends:      base
+                    , text
+                    , mtl
+                    , filepath
+                    , executable-path
+                    , adl-compiler-lib
+                    , adl-runtime
+                    , adlc-lib
 
-library
+test-suite adlc-tests
+  type:               exitcode-stdio-1.0
+  main-is:            Tests.hs
+  ghc-options:       -fwarn-incomplete-patterns
+  hs-source-dirs:     tests
+  build-depends:      base
+                    , bytestring
+                    , text
+                    , filepath
+                    , directory
+                    , hspec
+                    , stm
+                    , temporary
+                    , adl-compiler-lib
+                    , adl-runtime
+                    , adlc-lib
+
+library adlc-lib
+  ghc-options:       -fwarn-incomplete-patterns
   exposed-modules:    ADL.Compiler.Backends.AST
                     , ADL.Compiler.Backends.Cpp
                     , ADL.Compiler.Backends.Java
@@ -105,58 +134,3 @@ library
                     , adl-runtime
                     , aeson-pretty
                     , executable-path
-  ghc-options:       -fwarn-incomplete-patterns
-
-executable adlc
-  main-is:            Main.hs
-  other-modules:      Paths_adl_compiler
-  build-depends:      base
-                    , bytestring
-                    , text
-                    , containers
-                    , parsec
-                    , mtl
-                    , transformers
-                    , filepath
-                    , directory
-                    , unordered-containers
-                    , vector
-                    , base64-bytestring
-                    , attoparsec
-                    , aeson
-                    , scientific
-                    , adl-compiler-lib
-                    , adl-runtime
-                    , adl-compiler
-                    , aeson-pretty
-                    , executable-path
-  ghc-options:       -fwarn-incomplete-patterns
-
-test-suite adlc-tests
-  type:               exitcode-stdio-1.0
-  main-is:            Tests.hs
-  hs-source-dirs:     tests
-  build-depends:      base
-                    , bytestring
-                    , text
-                    , containers
-                    , parsec
-                    , mtl
-                    , transformers
-                    , filepath
-                    , directory
-                    , unordered-containers
-                    , hspec
-                    , vector
-                    , base64-bytestring
-                    , attoparsec
-                    , aeson
-                    , scientific
-                    , adl-compiler-lib
-                    , adl-runtime
-                    , adl-compiler
-                    , aeson-pretty
-                    , executable-path
-                    , stm
-                    , temporary
-  ghc-options:       -fwarn-incomplete-patterns
