@@ -64,11 +64,25 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/rust/runtime/custom/sys/types/set.rs
                     , lib/rust/runtime/mod.rs
 
+executable adlc-bootstrap
+  main-is:           Main.hs
+  hs-source-dirs:    adlc-bootstrap
+  ghc-options:       -fwarn-incomplete-patterns
+  other-modules:      BootstrapCustomTypes
+  build-depends:      base
+                    , containers
+                    , text
+                    , mtl
+                    , filepath
+                    , executable-path
+                    , adl-compiler-lib
+                    , adl-runtime
+
 executable adlc
   main-is:            Main.hs
+  hs-source-dirs:     adlc
   ghc-options:       -fwarn-incomplete-patterns
   other-modules:      Paths_adl_compiler
-  hs-source-dirs:     adlc
   build-depends:      base
                     , text
                     , mtl
@@ -76,13 +90,13 @@ executable adlc
                     , executable-path
                     , adl-compiler-lib
                     , adl-runtime
-                    , adlc-lib
+                    , adlc-lib1
 
 test-suite adlc-tests
   type:               exitcode-stdio-1.0
   main-is:            Main.hs
-  ghc-options:       -fwarn-incomplete-patterns
   hs-source-dirs:     tests
+  ghc-options:       -fwarn-incomplete-patterns
   build-depends:      base
                     , bytestring
                     , text
@@ -93,9 +107,11 @@ test-suite adlc-tests
                     , temporary
                     , adl-compiler-lib
                     , adl-runtime
-                    , adlc-lib
+                    , adlc-lib1
 
-library adlc-lib
+-- Library code depending on generated ADL (so not available to the bootstrap compiler)
+library adlc-lib1
+  hs-source-dirs:     adlc-lib1
   ghc-options:       -fwarn-incomplete-patterns
   exposed-modules:    ADL.Compiler.Backends.AST
                     , ADL.Compiler.Backends.Cpp
@@ -114,7 +130,6 @@ library adlc-lib
                     , ADL.Adlc.Config.Rust
                     , HaskellCustomTypes
                     , Paths_adl_compiler
-  hs-source-dirs:     adlc-lib
   build-depends:      base
                     , bytestring
                     , cases
@@ -135,3 +150,4 @@ library adlc-lib
                     , adl-runtime
                     , aeson-pretty
                     , executable-path
+
