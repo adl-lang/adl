@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Setup Stack
-        uses: timbod7/setup-stack@1f68f27
+        uses: timbod7/setup-stack@1f68f27c99094a718fe60a2790550aafd042f729
 
       - name: Clone project
         uses: actions/checkout@v2
