@@ -1,7 +1,5 @@
 flags: {}
 packages:
-- compiler-lib
-- compiler-bootstrap
 - runtime
 - compiler
 - generated-tests

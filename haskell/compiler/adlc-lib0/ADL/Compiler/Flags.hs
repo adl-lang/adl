@@ -9,8 +9,6 @@ import ADL.Compiler.Utils
 import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
 import System.Console.GetOpt
 
-import qualified Paths_adl_compiler_lib as P
-
 -- Hold a set of flags for the adl frontend, a given backend
 -- and the output writer
 data Flags b = Flags {
