@@ -591,7 +591,7 @@ generateLiteral te v =  generateLV Map.empty te v
     generateNullable m te js = do
       nmod <- nullableModule
       v <- generateLV m te js
-      return (template "($1.from ($2))" [unHaskellModule nmod, v])
+      return (template "($1.fromValue ($2))" [unHaskellModule nmod, v])
 
     generateType m te _ = do
       tmod <- typeTokenModule

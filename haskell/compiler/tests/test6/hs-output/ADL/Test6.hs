@@ -32,7 +32,7 @@ data S = S
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 mkS :: (ADL.Sys.Types.Pair Data.Int.Int32 Prelude.Double) -> (ADL.Sys.Types.Either T.Text Data.Int.Int32) -> (ADL.Sys.Types.Map T.Text Prelude.Double) -> (ADL.Sys.Types.Set T.Text) -> (ADL.Sys.Types.Maybe T.Text) -> (ADL.Core.Nullable.Nullable T.Text) -> (ADL.Core.Nullable.Nullable Data.Int.Int64) -> S
-mkS f_pair f_either f_map f_set f_mstring f_nstring f_int = S f_pair f_either f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (ADL.Core.Nullable.from ("abcde")) f_int (ADL.Core.Nullable.from (100)) (ADL.Core.Nullable.null)
+mkS f_pair f_either f_map f_set f_mstring f_nstring f_int = S f_pair f_either f_map f_set f_mstring (Prelude.Just "sukpeepolup") f_nstring (ADL.Core.Nullable.fromValue ("abcde")) f_int (ADL.Core.Nullable.fromValue (100)) (ADL.Core.Nullable.null)
 
 instance AdlValue S where
     atype _ = "test6.S"
@@ -59,7 +59,7 @@ instance AdlValue S where
         <*> parseField "f_mstring"
         <*> parseFieldDef "f_mstring2" (Prelude.Just "sukpeepolup")
         <*> parseField "f_nstring"
-        <*> parseFieldDef "f_nstring2" (ADL.Core.Nullable.from ("abcde"))
+        <*> parseFieldDef "f_nstring2" (ADL.Core.Nullable.fromValue ("abcde"))
         <*> parseField "f_int"
-        <*> parseFieldDef "f_int2" (ADL.Core.Nullable.from (100))
+        <*> parseFieldDef "f_int2" (ADL.Core.Nullable.fromValue (100))
         <*> parseFieldDef "f_int3" (ADL.Core.Nullable.null)
