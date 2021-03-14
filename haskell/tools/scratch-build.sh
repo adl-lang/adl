@@ -49,7 +49,7 @@ stack exec adlc -- cpp \
  $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
 
 # Run some tests for each target language
-stack build generated-haskell
+stack build generated-tests
 (cd ../typescript/tests; ./run-tests.sh)
 (cd ../java; gradle build; gradle test)
 (cd ../rust/tests; cargo build; cargo test)

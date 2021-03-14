@@ -1,4 +1,4 @@
-name:                generated-haskell
+name:                generated-tests
 version:             0.1.0.0
 synopsis:            Verify that the haskell runtime and all of the adlc test output builds ok
 license:             BSD3

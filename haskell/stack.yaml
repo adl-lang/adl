@@ -5,6 +5,6 @@ packages:
 - compiler-bootstrap
 - runtime
 - compiler
-- generated-haskell
+- generated-tests
 extra-deps:
 resolver: lts-17.5
