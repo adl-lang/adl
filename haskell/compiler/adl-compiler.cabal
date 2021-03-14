@@ -101,7 +101,6 @@ library
                     , attoparsec
                     , aeson
                     , scientific
-                    , adl-utils
                     , adl-compiler-lib
                     , adl-runtime
                     , aeson-pretty
@@ -126,7 +125,6 @@ executable adlc
                     , attoparsec
                     , aeson
                     , scientific
-                    , adl-utils
                     , adl-compiler-lib
                     , adl-runtime
                     , adl-compiler
@@ -154,7 +152,6 @@ test-suite adlc-tests
                     , attoparsec
                     , aeson
                     , scientific
-                    , adl-utils
                     , adl-compiler-lib
                     , adl-runtime
                     , adl-compiler

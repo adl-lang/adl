@@ -13,16 +13,26 @@ cabal-version:       >=1.8
 
 library
   hs-source-dirs:    src
-  exposed-modules:   ADL.Compiler.AST, ADL.Compiler.Primitive, ADL.Compiler.ParserP,
-                     ADL.Compiler.Utils, ADL.Compiler.EIO, ADL.Compiler.Processing,
-                     ADL.Compiler.Flags, ADL.Compiler.ExternalAST,
+  exposed-modules:   ADL.Compiler.AST,
+                     ADL.Compiler.Primitive,
+                     ADL.Compiler.ParserP,
+                     ADL.Compiler.Utils,
+                     ADL.Compiler.EIO,
+                     ADL.Compiler.Processing,
+                     ADL.Compiler.Flags,
+                     ADL.Compiler.ExternalAST,
                      ADL.Compiler.Backends.Verify,
-                     ADL.Compiler.Backends.Haskell
+                     ADL.Compiler.Backends.Haskell,
+                     ADL.Utils.DelayIO,
+                     ADL.Utils.FileDiff,
+                     ADL.Utils.Format,
+                     ADL.Utils.IndentedCode,
+                     ADL.Utils.Resource
   other-modules:     Paths_adl_compiler_lib
   build-depends:     base, text, containers, bytestring,
                      parsec, mtl, transformers,
                      filepath, directory, unordered-containers, vector,
                      base64-bytestring,
                      attoparsec, aeson, scientific, stm,
-                     adl-utils, adl-runtime
+                     adl-runtime
   ghc-options:       -fwarn-incomplete-patterns

@@ -1,6 +1,5 @@
 flags: {}
 packages:
-- utils
 - compiler-lib
 - compiler-bootstrap
 - runtime

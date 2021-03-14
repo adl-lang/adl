@@ -19,6 +19,6 @@ executable adlc-bootstrap
                      filepath, directory, unordered-containers, vector,
                      base64-bytestring,
                      attoparsec, aeson,
-                     adl-utils, adl-compiler-lib
+                     adl-compiler-lib
   other-modules:     BootstrapCustomTypes
   ghc-options:       -fwarn-incomplete-patterns
