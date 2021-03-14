@@ -28,5 +28,4 @@ library
                        stm, uuid, hslogger,
                        base64-bytestring,
                        attoparsec, aeson, scientific,
-                       network-transport,
-                       adl-utils
+                       network-transport
