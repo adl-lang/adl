@@ -68,6 +68,7 @@ executable adlc
   main-is:            Main.hs
   ghc-options:       -fwarn-incomplete-patterns
   other-modules:      Paths_adl_compiler
+  hs-source-dirs:     adlc
   build-depends:      base
                     , text
                     , mtl
@@ -79,7 +80,7 @@ executable adlc
 
 test-suite adlc-tests
   type:               exitcode-stdio-1.0
-  main-is:            Tests.hs
+  main-is:            Main.hs
   ghc-options:       -fwarn-incomplete-patterns
   hs-source-dirs:     tests
   build-depends:      base
@@ -113,7 +114,7 @@ library adlc-lib
                     , ADL.Adlc.Config.Rust
                     , HaskellCustomTypes
                     , Paths_adl_compiler
-  hs-source-dirs:     src
+  hs-source-dirs:     adlc-lib
   build-depends:      base
                     , bytestring
                     , cases
