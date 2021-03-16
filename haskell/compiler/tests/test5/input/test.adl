@@ -74,4 +74,36 @@ module test5
         T head;
         List<T> tail;
    };
+
+   union U10
+   {
+       Int16 v1;
+
+       Void v2;
+   };
+
+   struct S10
+   {
+       U10 f1 = "v2";
+       Nullable<U10> f2 = "v2";
+       U10 f3 = {"v1": 17};
+       Nullable<U10> f4 = {"v1": 17};
+   };
+
+   union U11
+   {
+       @SerializedName "VALUE1"
+       Int16 v1;
+
+       @SerializedName "VALUE2"
+       Void v2;
+   };
+
+   struct S11
+   {
+       U11 f1 = "VALUE2";
+       Nullable<U11> f2 = "VALUE2";
+       U11 f3 = {"VALUE1": 17};
+       Nullable<U11> f4 = {"VALUE1": 17};
+   };
 };

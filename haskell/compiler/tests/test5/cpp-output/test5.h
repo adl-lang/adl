@@ -2,6 +2,7 @@
 #ifndef TEST5_H
 #define TEST5_H
 #include <adl/adl.h>
+#include <optional>
 #include <stdint.h>
 #include <string>
 
@@ -267,6 +268,134 @@ bool operator==( const U1 &a, const U1 &b );
 inline U1::DiscType U1::d() const
 {
     return d_;
+}
+
+class U10
+{
+public:
+    U10();
+    static U10 mk_v1( const int16_t & v );
+    static U10 mk_v2();
+    
+    U10( const U10 & );
+    ~U10();
+    U10 & operator=( const U10 & );
+    
+    enum DiscType
+    {
+        V1,
+        V2
+    };
+    
+    DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V1: { vis.v1(v1()); break; }
+        case V2: { vis.v2(); break; }
+        }
+    }
+    
+    bool is_v1() const { return d_ == V1; };
+    bool is_v2() const { return d_ == V2; };
+    
+    int16_t & v1() const;
+    
+    const int16_t & set_v1(const int16_t & );
+    void set_v2();
+    
+private:
+    U10( DiscType d, void * v);
+    
+    DiscType d_;
+    void *p_;
+    
+    static void free( DiscType d, void *v );
+    static void *copy( DiscType d, void *v );
+};
+
+bool operator<( const U10 &a, const U10 &b );
+bool operator==( const U10 &a, const U10 &b );
+
+inline U10::DiscType U10::d() const
+{
+    return d_;
+}
+
+inline int16_t & U10::v1() const
+{
+    if( d_ == V1 )
+    {
+        return *(int16_t *)p_;
+    }
+    throw invalid_union_access();
+}
+
+class U11
+{
+public:
+    U11();
+    static U11 mk_v1( const int16_t & v );
+    static U11 mk_v2();
+    
+    U11( const U11 & );
+    ~U11();
+    U11 & operator=( const U11 & );
+    
+    enum DiscType
+    {
+        V1,
+        V2
+    };
+    
+    DiscType d() const;
+    
+    template<class Visitor>
+    void visit(Visitor vis) const
+    {
+        switch (d())
+        {
+        case V1: { vis.v1(v1()); break; }
+        case V2: { vis.v2(); break; }
+        }
+    }
+    
+    bool is_v1() const { return d_ == V1; };
+    bool is_v2() const { return d_ == V2; };
+    
+    int16_t & v1() const;
+    
+    const int16_t & set_v1(const int16_t & );
+    void set_v2();
+    
+private:
+    U11( DiscType d, void * v);
+    
+    DiscType d_;
+    void *p_;
+    
+    static void free( DiscType d, void *v );
+    static void *copy( DiscType d, void *v );
+};
+
+bool operator<( const U11 &a, const U11 &b );
+bool operator==( const U11 &a, const U11 &b );
+
+inline U11::DiscType U11::d() const
+{
+    return d_;
+}
+
+inline int16_t & U11::v1() const
+{
+    if( d_ == V1 )
+    {
+        return *(int16_t *)p_;
+    }
+    throw invalid_union_access();
 }
 
 class U2
@@ -1004,6 +1133,46 @@ struct S
 bool operator<( const S &a, const S &b );
 bool operator==( const S &a, const S &b );
 
+struct S10
+{
+    S10();
+    
+    S10(
+        const U10 & f1,
+        const std::optional<U10> & f2,
+        const U10 & f3,
+        const std::optional<U10> & f4
+        );
+    
+    U10 f1;
+    std::optional<U10> f2;
+    U10 f3;
+    std::optional<U10> f4;
+};
+
+bool operator<( const S10 &a, const S10 &b );
+bool operator==( const S10 &a, const S10 &b );
+
+struct S11
+{
+    S11();
+    
+    S11(
+        const U11 & f1,
+        const std::optional<U11> & f2,
+        const U11 & f3,
+        const std::optional<U11> & f4
+        );
+    
+    U11 f1;
+    std::optional<U11> f2;
+    U11 f3;
+    std::optional<U11> f4;
+};
+
+bool operator<( const S11 &a, const S11 &b );
+bool operator==( const S11 &a, const S11 &b );
+
 }}; // ADL::test5
 
 namespace ADL {
@@ -1095,6 +1264,18 @@ template <>
 struct Serialisable<ADL::test5::U1>
 {
     static Serialiser<ADL::test5::U1>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test5::U10>
+{
+    static Serialiser<ADL::test5::U10>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test5::U11>
+{
+    static Serialiser<ADL::test5::U11>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
@@ -1277,6 +1458,18 @@ template <>
 struct Serialisable<ADL::test5::S>
 {
     static Serialiser<ADL::test5::S>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test5::S10>
+{
+    static Serialiser<ADL::test5::S10>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test5::S11>
+{
+    static Serialiser<ADL::test5::S11>::Ptr serialiser(const SerialiserFlags &);
 };
 
 }; // ADL

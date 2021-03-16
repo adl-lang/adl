@@ -308,6 +308,122 @@ export function texprCell<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Cell<T>> 
   return {value : {typeRef : {kind: "reference", value : {moduleName : "test5",name : "Cell"}}, parameters : [texprT.value]}};
 }
 
+export interface U10_V1 {
+  kind: 'v1';
+  value: number;
+}
+export interface U10_V2 {
+  kind: 'v2';
+}
+
+export type U10 = U10_V1 | U10_V2;
+
+export interface U10Opts {
+  v1: number;
+  v2: null;
+}
+
+export function makeU10<K extends keyof U10Opts>(kind: K, value: U10Opts[K]) { return {kind, value}; }
+
+const U10_AST : ADL.ScopedDecl =
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"v1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"v2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U10","version":{"kind":"nothing"}}};
+
+export const snU10: ADL.ScopedName = {moduleName:"test5", name:"U10"};
+
+export function texprU10(): ADL.ATypeExpr<U10> {
+  return {value : {typeRef : {kind: "reference", value : snU10}, parameters : []}};
+}
+
+export interface S10 {
+  f1: U10;
+  f2: (U10|null);
+  f3: U10;
+  f4: (U10|null);
+}
+
+export function makeS10(
+  input: {
+    f1?: U10,
+    f2?: (U10|null),
+    f3?: U10,
+    f4?: (U10|null),
+  }
+): S10 {
+  return {
+    f1: input.f1 === undefined ? {kind : "v2"} : input.f1,
+    f2: input.f2 === undefined ? {kind : "v2"} : input.f2,
+    f3: input.f3 === undefined ? {kind : "v1", value : 17} : input.f3,
+    f4: input.f4 === undefined ? {kind : "v1", value : 17} : input.f4,
+  };
+}
+
+const S10_AST : ADL.ScopedDecl =
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"just","value":"v2"},"name":"f1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U10"}},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"just","value":"v2"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Nullable"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U10"}},"parameters":[]}]}},{"annotations":[],"serializedName":"f3","default":{"kind":"just","value":{"v1":17}},"name":"f3","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U10"}},"parameters":[]}},{"annotations":[],"serializedName":"f4","default":{"kind":"just","value":{"v1":17}},"name":"f4","typeExpr":{"typeRef":{"kind":"primitive","value":"Nullable"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U10"}},"parameters":[]}]}}]}},"name":"S10","version":{"kind":"nothing"}}};
+
+export const snS10: ADL.ScopedName = {moduleName:"test5", name:"S10"};
+
+export function texprS10(): ADL.ATypeExpr<S10> {
+  return {value : {typeRef : {kind: "reference", value : snS10}, parameters : []}};
+}
+
+export interface U11_V1 {
+  kind: 'v1';
+  value: number;
+}
+export interface U11_V2 {
+  kind: 'v2';
+}
+
+export type U11 = U11_V1 | U11_V2;
+
+export interface U11Opts {
+  v1: number;
+  v2: null;
+}
+
+export function makeU11<K extends keyof U11Opts>(kind: K, value: U11Opts[K]) { return {kind, value}; }
+
+const U11_AST : ADL.ScopedDecl =
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"VALUE1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"primitive","value":"Int16"},"parameters":[]}},{"annotations":[],"serializedName":"VALUE2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}]}},"name":"U11","version":{"kind":"nothing"}}};
+
+export const snU11: ADL.ScopedName = {moduleName:"test5", name:"U11"};
+
+export function texprU11(): ADL.ATypeExpr<U11> {
+  return {value : {typeRef : {kind: "reference", value : snU11}, parameters : []}};
+}
+
+export interface S11 {
+  f1: U11;
+  f2: (U11|null);
+  f3: U11;
+  f4: (U11|null);
+}
+
+export function makeS11(
+  input: {
+    f1?: U11,
+    f2?: (U11|null),
+    f3?: U11,
+    f4?: (U11|null),
+  }
+): S11 {
+  return {
+    f1: input.f1 === undefined ? {kind : "v2"} : input.f1,
+    f2: input.f2 === undefined ? {kind : "v2"} : input.f2,
+    f3: input.f3 === undefined ? {kind : "v1", value : 17} : input.f3,
+    f4: input.f4 === undefined ? {kind : "v1", value : 17} : input.f4,
+  };
+}
+
+const S11_AST : ADL.ScopedDecl =
+  {"moduleName":"test5","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"just","value":"VALUE2"},"name":"f1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U11"}},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"just","value":"VALUE2"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Nullable"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U11"}},"parameters":[]}]}},{"annotations":[],"serializedName":"f3","default":{"kind":"just","value":{"VALUE1":17}},"name":"f3","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U11"}},"parameters":[]}},{"annotations":[],"serializedName":"f4","default":{"kind":"just","value":{"VALUE1":17}},"name":"f4","typeExpr":{"typeRef":{"kind":"primitive","value":"Nullable"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"test5","name":"U11"}},"parameters":[]}]}}]}},"name":"S11","version":{"kind":"nothing"}}};
+
+export const snS11: ADL.ScopedName = {moduleName:"test5", name:"S11"};
+
+export function texprS11(): ADL.ATypeExpr<S11> {
+  return {value : {typeRef : {kind: "reference", value : snS11}, parameters : []}};
+}
+
 export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test5.U1" : U1_AST,
   "test5.U2" : U2_AST,
@@ -321,5 +437,9 @@ export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {
   "test5.U9" : U9_AST,
   "test5.S" : S_AST,
   "test5.List" : List_AST,
-  "test5.Cell" : Cell_AST
+  "test5.Cell" : Cell_AST,
+  "test5.U10" : U10_AST,
+  "test5.S10" : S10_AST,
+  "test5.U11" : U11_AST,
+  "test5.S11" : S11_AST
 };

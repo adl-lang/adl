@@ -4,7 +4,11 @@ module ADL.Test5(
     List(..),
     S(..),
     S1(..),
+    S10(..),
+    S11(..),
     U1(..),
+    U10(..),
+    U11(..),
     U2(..),
     U3(..),
     U4(..),
@@ -16,11 +20,14 @@ module ADL.Test5(
     mkCell,
     mkS,
     mkS1,
+    mkS10,
+    mkS11,
 ) where
 
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
 import Prelude( ($) )
+import qualified ADL.Core.Nullable
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
@@ -115,6 +122,60 @@ instance AdlValue S1 where
     jsonParser = S1
         <$> parseFieldDef "f" 100
 
+data S10 = S10
+    { s10_f1 :: U10
+    , s10_f2 :: (ADL.Core.Nullable.Nullable U10)
+    , s10_f3 :: U10
+    , s10_f4 :: (ADL.Core.Nullable.Nullable U10)
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS10 ::  S10
+mkS10  = S10 U10_v2 (ADL.Core.Nullable.fromValue (U10_v2)) (U10_v1 17) (ADL.Core.Nullable.fromValue ((U10_v1 17)))
+
+instance AdlValue S10 where
+    atype _ = "test5.S10"
+    
+    jsonGen = genObject
+        [ genField "f1" s10_f1
+        , genField "f2" s10_f2
+        , genField "f3" s10_f3
+        , genField "f4" s10_f4
+        ]
+    
+    jsonParser = S10
+        <$> parseFieldDef "f1" U10_v2
+        <*> parseFieldDef "f2" (ADL.Core.Nullable.fromValue (U10_v2))
+        <*> parseFieldDef "f3" (U10_v1 17)
+        <*> parseFieldDef "f4" (ADL.Core.Nullable.fromValue ((U10_v1 17)))
+
+data S11 = S11
+    { s11_f1 :: U11
+    , s11_f2 :: (ADL.Core.Nullable.Nullable U11)
+    , s11_f3 :: U11
+    , s11_f4 :: (ADL.Core.Nullable.Nullable U11)
+    }
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+mkS11 ::  S11
+mkS11  = S11 U11_v2 (ADL.Core.Nullable.fromValue (U11_v2)) (U11_v1 17) (ADL.Core.Nullable.fromValue ((U11_v1 17)))
+
+instance AdlValue S11 where
+    atype _ = "test5.S11"
+    
+    jsonGen = genObject
+        [ genField "f1" s11_f1
+        , genField "f2" s11_f2
+        , genField "f3" s11_f3
+        , genField "f4" s11_f4
+        ]
+    
+    jsonParser = S11
+        <$> parseFieldDef "f1" U11_v2
+        <*> parseFieldDef "f2" (ADL.Core.Nullable.fromValue (U11_v2))
+        <*> parseFieldDef "f3" (U11_v1 17)
+        <*> parseFieldDef "f4" (ADL.Core.Nullable.fromValue ((U11_v1 17)))
+
 data U1
     = U1_v
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
@@ -129,6 +190,42 @@ instance AdlValue U1 where
     jsonParser = parseUnion $ \disc -> case disc of
         "v" -> parseUnionVoid U1_v
         _ -> parseFail "expected a discriminator for U1 (v)" 
+
+data U10
+    = U10_v1 Data.Int.Int16
+    | U10_v2
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance AdlValue U10 where
+    atype _ = "test5.U10"
+    
+    jsonGen = genUnion (\jv -> case jv of
+        U10_v1 v -> genUnionValue "v1" v
+        U10_v2 -> genUnionVoid "v2"
+        )
+    
+    jsonParser = parseUnion $ \disc -> case disc of
+        "v1" ->  parseUnionValue U10_v1
+        "v2" -> parseUnionVoid U10_v2
+        _ -> parseFail "expected a discriminator for U10 (v1,v2)" 
+
+data U11
+    = U11_v1 Data.Int.Int16
+    | U11_v2
+    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
+
+instance AdlValue U11 where
+    atype _ = "test5.U11"
+    
+    jsonGen = genUnion (\jv -> case jv of
+        U11_v1 v -> genUnionValue "VALUE1" v
+        U11_v2 -> genUnionVoid "VALUE2"
+        )
+    
+    jsonParser = parseUnion $ \disc -> case disc of
+        "VALUE1" ->  parseUnionValue U11_v1
+        "VALUE2" -> parseUnionVoid U11_v2
+        _ -> parseFail "expected a discriminator for U11 (VALUE1,VALUE2)" 
 
 data U2
     = U2_v Data.Int.Int16

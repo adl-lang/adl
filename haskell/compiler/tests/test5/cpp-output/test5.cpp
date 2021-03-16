@@ -114,6 +114,220 @@ operator==( const U1 &a, const U1 &b )
     return false;
 }
 
+U10::U10()
+    : d_(V1), p_(new int16_t(0))
+{
+}
+
+U10 U10::mk_v1( const int16_t & v )
+{
+    return U10( V1, new int16_t(v) );
+}
+
+U10 U10::mk_v2()
+{
+    return U10( V2, 0 );
+}
+
+U10::U10( const U10 & v )
+    : d_(v.d_), p_(copy(v.d_,v.p_))
+{
+}
+
+U10::~U10()
+{
+    free(d_,p_);
+}
+
+U10 & U10::operator=( const U10 & o )
+{
+    free(d_,p_);
+    d_ = o.d_;
+    p_ = copy( o.d_, o.p_ );
+    return *this;
+}
+
+const int16_t & U10::set_v1(const int16_t &v)
+{
+    if( d_ == V1 )
+    {
+        *(int16_t *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = V1;
+        p_ = new int16_t(v);
+    }
+    return *(int16_t *)p_;
+}
+
+void U10::set_v2()
+{
+    if( d_ != V2 )
+    {
+        free(d_,p_);
+        d_ = V2;
+        p_ = 0;
+    }
+}
+
+U10::U10(DiscType d, void *p)
+    : d_(d), p_(p)
+{
+}
+
+void U10::free(DiscType d, void *p)
+{
+    switch( d )
+    {
+        case V1: delete (int16_t *)p; return;
+        case V2: return;
+    }
+}
+
+void * U10::copy( DiscType d, void *p )
+{
+    switch( d )
+    {
+        case V1: return new int16_t(*(int16_t *)p);
+        case V2: return 0;
+    }
+    return 0;
+}
+
+bool
+operator<( const U10 &a, const U10 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U10::V1: return a.v1() < b.v1();
+        case U10::V2: return false;
+    }
+    return false;
+}
+
+bool
+operator==( const U10 &a, const U10 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U10::V1: return a.v1() == b.v1();
+        case U10::V2: return true;
+    }
+    return false;
+}
+
+U11::U11()
+    : d_(V1), p_(new int16_t(0))
+{
+}
+
+U11 U11::mk_v1( const int16_t & v )
+{
+    return U11( V1, new int16_t(v) );
+}
+
+U11 U11::mk_v2()
+{
+    return U11( V2, 0 );
+}
+
+U11::U11( const U11 & v )
+    : d_(v.d_), p_(copy(v.d_,v.p_))
+{
+}
+
+U11::~U11()
+{
+    free(d_,p_);
+}
+
+U11 & U11::operator=( const U11 & o )
+{
+    free(d_,p_);
+    d_ = o.d_;
+    p_ = copy( o.d_, o.p_ );
+    return *this;
+}
+
+const int16_t & U11::set_v1(const int16_t &v)
+{
+    if( d_ == V1 )
+    {
+        *(int16_t *)p_ = v;
+    }
+    else
+    {
+        free(d_,p_);
+        d_ = V1;
+        p_ = new int16_t(v);
+    }
+    return *(int16_t *)p_;
+}
+
+void U11::set_v2()
+{
+    if( d_ != V2 )
+    {
+        free(d_,p_);
+        d_ = V2;
+        p_ = 0;
+    }
+}
+
+U11::U11(DiscType d, void *p)
+    : d_(d), p_(p)
+{
+}
+
+void U11::free(DiscType d, void *p)
+{
+    switch( d )
+    {
+        case V1: delete (int16_t *)p; return;
+        case V2: return;
+    }
+}
+
+void * U11::copy( DiscType d, void *p )
+{
+    switch( d )
+    {
+        case V1: return new int16_t(*(int16_t *)p);
+        case V2: return 0;
+    }
+    return 0;
+}
+
+bool
+operator<( const U11 &a, const U11 &b )
+{
+    if( a.d() < b.d() ) return true;
+    if( b.d() < a.d()) return false;
+    switch( a.d() )
+    {
+        case U11::V1: return a.v1() < b.v1();
+        case U11::V2: return false;
+    }
+    return false;
+}
+
+bool
+operator==( const U11 &a, const U11 &b )
+{
+    if( a.d() != b.d() ) return false;
+    switch( a.d() )
+    {
+        case U11::V1: return a.v1() == b.v1();
+        case U11::V2: return true;
+    }
+    return false;
+}
+
 U2::U2()
     : d_(V), p_(new int16_t(0))
 {
@@ -793,6 +1007,96 @@ operator==( const S &a, const S &b )
         a.f3 == b.f3 ;
 }
 
+S10::S10()
+    : f1(U10::mk_v2())
+    , f2(std::optional<U10>(U10::mk_v2()))
+    , f3(U10::mk_v1(17))
+    , f4(std::optional<U10>(U10::mk_v1(17)))
+{
+}
+
+S10::S10(
+    const U10 & f1_,
+    const std::optional<U10> & f2_,
+    const U10 & f3_,
+    const std::optional<U10> & f4_
+    )
+    : f1(f1_)
+    , f2(f2_)
+    , f3(f3_)
+    , f4(f4_)
+{
+}
+
+bool
+operator<( const S10 &a, const S10 &b )
+{
+    if( a.f1 < b.f1 ) return true;
+    if( b.f1 < a.f1 ) return false;
+    if( a.f2 < b.f2 ) return true;
+    if( b.f2 < a.f2 ) return false;
+    if( a.f3 < b.f3 ) return true;
+    if( b.f3 < a.f3 ) return false;
+    if( a.f4 < b.f4 ) return true;
+    if( b.f4 < a.f4 ) return false;
+    return false;
+}
+
+bool
+operator==( const S10 &a, const S10 &b )
+{
+    return
+        a.f1 == b.f1 &&
+        a.f2 == b.f2 &&
+        a.f3 == b.f3 &&
+        a.f4 == b.f4 ;
+}
+
+S11::S11()
+    : f1(U11::mk_v2())
+    , f2(std::optional<U11>(U11::mk_v2()))
+    , f3(U11::mk_v1(17))
+    , f4(std::optional<U11>(U11::mk_v1(17)))
+{
+}
+
+S11::S11(
+    const U11 & f1_,
+    const std::optional<U11> & f2_,
+    const U11 & f3_,
+    const std::optional<U11> & f4_
+    )
+    : f1(f1_)
+    , f2(f2_)
+    , f3(f3_)
+    , f4(f4_)
+{
+}
+
+bool
+operator<( const S11 &a, const S11 &b )
+{
+    if( a.f1 < b.f1 ) return true;
+    if( b.f1 < a.f1 ) return false;
+    if( a.f2 < b.f2 ) return true;
+    if( b.f2 < a.f2 ) return false;
+    if( a.f3 < b.f3 ) return true;
+    if( b.f3 < a.f3 ) return false;
+    if( a.f4 < b.f4 ) return true;
+    if( b.f4 < a.f4 ) return false;
+    return false;
+}
+
+bool
+operator==( const S11 &a, const S11 &b )
+{
+    return
+        a.f1 == b.f1 &&
+        a.f2 == b.f2 &&
+        a.f3 == b.f3 &&
+        a.f4 == b.f4 ;
+}
+
 }}; // ADL::test5
 
 namespace ADL {
@@ -870,6 +1174,146 @@ Serialisable<ADL::test5::U1>::serialiser( const SerialiserFlags &sf )
                 else
                     throw json_parse_failure();
                 json.next();
+                return;
+            }
+            throw json_parse_failure();
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
+}
+
+typename Serialiser<ADL::test5::U10>::Ptr
+Serialisable<ADL::test5::U10>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test5::U10 _T;
+    
+    struct U_ : public Serialiser<_T>
+    {
+        U_( const SerialiserFlags & sf )
+            : sf_(sf)
+            {}
+        
+        SerialiserFlags sf_;
+        mutable typename Serialiser<int16_t>::Ptr v1_;
+        mutable typename Serialiser<Void>::Ptr v2_;
+        
+        typename Serialiser<int16_t>::Ptr v1_s() const
+        {
+            if( !v1_ )
+                v1_ = Serialisable<int16_t>::serialiser(sf_);
+            return v1_;
+        }
+        
+        typename Serialiser<Void>::Ptr v2_s() const
+        {
+            if( !v2_ )
+                v2_ = Serialisable<Void>::serialiser(sf_);
+            return v2_;
+        }
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            switch( v.d() )
+            {
+                case ADL::test5::U10::V1: json.startObject(); writeField( json, v1_s(), "v1", v.v1() ); json.endObject(); break;
+                case ADL::test5::U10::V2: json.stringV( "v2" ); break;
+            }
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            if( json.type() == JsonReader::STRING )
+            {
+                if( json.stringV() == "v2" )
+                    v.set_v2();
+                else
+                    throw json_parse_failure();
+                json.next();
+                return;
+            }
+            if( json.type() == JsonReader::START_OBJECT )
+            {
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
+                    throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "v1", json ) )
+                        v.set_v1(v1_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
+                return;
+            }
+            throw json_parse_failure();
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new U_(sf) );
+}
+
+typename Serialiser<ADL::test5::U11>::Ptr
+Serialisable<ADL::test5::U11>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test5::U11 _T;
+    
+    struct U_ : public Serialiser<_T>
+    {
+        U_( const SerialiserFlags & sf )
+            : sf_(sf)
+            {}
+        
+        SerialiserFlags sf_;
+        mutable typename Serialiser<int16_t>::Ptr v1_;
+        mutable typename Serialiser<Void>::Ptr v2_;
+        
+        typename Serialiser<int16_t>::Ptr v1_s() const
+        {
+            if( !v1_ )
+                v1_ = Serialisable<int16_t>::serialiser(sf_);
+            return v1_;
+        }
+        
+        typename Serialiser<Void>::Ptr v2_s() const
+        {
+            if( !v2_ )
+                v2_ = Serialisable<Void>::serialiser(sf_);
+            return v2_;
+        }
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            switch( v.d() )
+            {
+                case ADL::test5::U11::V1: json.startObject(); writeField( json, v1_s(), "VALUE1", v.v1() ); json.endObject(); break;
+                case ADL::test5::U11::V2: json.stringV( "VALUE2" ); break;
+            }
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            if( json.type() == JsonReader::STRING )
+            {
+                if( json.stringV() == "VALUE2" )
+                    v.set_v2();
+                else
+                    throw json_parse_failure();
+                json.next();
+                return;
+            }
+            if( json.type() == JsonReader::START_OBJECT )
+            {
+                match( json, JsonReader::START_OBJECT );
+                if( json.type() == JsonReader::END_OBJECT )
+                    throw json_parse_failure();
+                while( !match0( json, JsonReader::END_OBJECT ) )
+                {
+                    if( matchField0( "VALUE1", json ) )
+                        v.set_v1(v1_s()->fromJson( json ));
+                    else
+                        throw json_parse_failure();
+                }
                 return;
             }
             throw json_parse_failure();
@@ -1289,6 +1733,100 @@ Serialisable<ADL::test5::S>::serialiser( const SerialiserFlags &sf )
                 readField( f1_s, v.f1, "f1", json ) ||
                 readField( f2_s, v.f2, "f2", json ) ||
                 readField( f3_s, v.f3, "f3", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
+
+typename Serialiser<ADL::test5::S10>::Ptr
+Serialisable<ADL::test5::S10>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test5::S10 _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : f1_s( Serialisable<ADL::test5::U10>::serialiser(sf) )
+            , f2_s( optionalSerialiser<ADL::test5::U10>(sf) )
+            , f3_s( Serialisable<ADL::test5::U10>::serialiser(sf) )
+            , f4_s( optionalSerialiser<ADL::test5::U10>(sf) )
+            {}
+        
+        
+        typename Serialiser<ADL::test5::U10>::Ptr f1_s;
+        typename Serialiser<std::optional<ADL::test5::U10>>::Ptr f2_s;
+        typename Serialiser<ADL::test5::U10>::Ptr f3_s;
+        typename Serialiser<std::optional<ADL::test5::U10>>::Ptr f4_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<ADL::test5::U10>( json, f1_s, "f1", v.f1 );
+            writeField<std::optional<ADL::test5::U10>>( json, f2_s, "f2", v.f2 );
+            writeField<ADL::test5::U10>( json, f3_s, "f3", v.f3 );
+            writeField<std::optional<ADL::test5::U10>>( json, f4_s, "f4", v.f4 );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( f1_s, v.f1, "f1", json ) ||
+                readField( f2_s, v.f2, "f2", json ) ||
+                readField( f3_s, v.f3, "f3", json ) ||
+                readField( f4_s, v.f4, "f4", json ) ||
+                ignoreField( json );
+            }
+        }
+    };
+    
+    return typename Serialiser<_T>::Ptr( new S_(sf) );
+};
+
+typename Serialiser<ADL::test5::S11>::Ptr
+Serialisable<ADL::test5::S11>::serialiser( const SerialiserFlags &sf )
+{
+    typedef ADL::test5::S11 _T;
+    
+    struct S_ : public Serialiser<_T>
+    {
+        S_( const SerialiserFlags & sf )
+            : f1_s( Serialisable<ADL::test5::U11>::serialiser(sf) )
+            , f2_s( optionalSerialiser<ADL::test5::U11>(sf) )
+            , f3_s( Serialisable<ADL::test5::U11>::serialiser(sf) )
+            , f4_s( optionalSerialiser<ADL::test5::U11>(sf) )
+            {}
+        
+        
+        typename Serialiser<ADL::test5::U11>::Ptr f1_s;
+        typename Serialiser<std::optional<ADL::test5::U11>>::Ptr f2_s;
+        typename Serialiser<ADL::test5::U11>::Ptr f3_s;
+        typename Serialiser<std::optional<ADL::test5::U11>>::Ptr f4_s;
+        
+        void toJson( JsonWriter &json, const _T & v ) const
+        {
+            json.startObject();
+            writeField<ADL::test5::U11>( json, f1_s, "f1", v.f1 );
+            writeField<std::optional<ADL::test5::U11>>( json, f2_s, "f2", v.f2 );
+            writeField<ADL::test5::U11>( json, f3_s, "f3", v.f3 );
+            writeField<std::optional<ADL::test5::U11>>( json, f4_s, "f4", v.f4 );
+            json.endObject();
+        }
+        
+        void fromJson( _T &v, JsonReader &json ) const
+        {
+            match( json, JsonReader::START_OBJECT );
+            while( !match0( json, JsonReader::END_OBJECT ) )
+            {
+                readField( f1_s, v.f1, "f1", json ) ||
+                readField( f2_s, v.f2, "f2", json ) ||
+                readField( f3_s, v.f3, "f3", json ) ||
+                readField( f4_s, v.f4, "f4", json ) ||
                 ignoreField( json );
             }
         }

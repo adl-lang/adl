@@ -624,7 +624,7 @@ generateLiteral te v =  generateLV Map.empty te v
         (fname,v) = case HM.toList hm of
           [v] -> v
           _ -> error "BUG: union literal must have a single key"
-        te = case L.find (\f -> f_name f == fname) (u_fields u) of
+        te = case L.find (\f -> f_serializedName f == fname) (u_fields u) of
           Just f -> f_type f
           Nothing -> error "BUG: union literal key must be a field"
         m2 = withTypeBindings (u_typeParams u) tes m
@@ -645,7 +645,7 @@ generateLiteral te v =  generateLV Map.empty te v
     unionCtor sn decl union fname = case d_customType decl of
       Nothing -> do
         let field :: CField
-            field = case L.find ((==fname) . f_name) (u_fields union) of
+            field = case L.find ((==fname) . f_serializedName) (u_fields union) of
               Just field -> field
               Nothing -> undefined
         scopedName (sn_moduleName sn) (hDiscName decl field)
