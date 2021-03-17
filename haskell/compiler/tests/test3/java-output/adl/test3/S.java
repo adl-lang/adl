@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class S<T> {
 
@@ -50,10 +51,11 @@ public class S<T> {
   private Map<String, Integer> f_smap;
   private JsonElement f_json1;
   private JsonElement f_json2;
+  private Optional<T> f_nt;
 
   /* Constructors */
 
-  public S(AdlVoid f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, List<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, Map<String, Integer> f_smap, JsonElement f_json1, JsonElement f_json2) {
+  public S(AdlVoid f_void, boolean f_bool, byte f_int8, short f_int16, int f_int32, long f_int64, byte f_word8, short f_word16, int f_word32, long f_word64, float f_float, double f_double, ByteArray f_bytes, String f_string, List<String> f_vstring, A f_a, U f_u, U f_u1, E f_e, T f_t, B<Short> f_bint16, Map<String, Integer> f_smap, JsonElement f_json1, JsonElement f_json2, Optional<T> f_nt) {
     this.f_void = Objects.requireNonNull(f_void);
     this.f_bool = f_bool;
     this.f_int8 = f_int8;
@@ -78,6 +80,7 @@ public class S<T> {
     this.f_smap = Objects.requireNonNull(f_smap);
     this.f_json1 = Objects.requireNonNull(f_json1);
     this.f_json2 = Objects.requireNonNull(f_json2);
+    this.f_nt = Objects.requireNonNull(f_nt);
   }
 
   /* Field defaults */
@@ -172,6 +175,10 @@ public class S<T> {
 
   public static JsonElement defF_json2() {
     return JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]");
+  }
+
+  public static <T> Optional<T> defF_nt() {
+    return Optional.<T>empty();
   }
 
   /* Accessors and mutators */
@@ -392,6 +399,15 @@ public class S<T> {
     return this;
   }
 
+  public Optional<T> getF_nt() {
+    return f_nt;
+  }
+
+  public S<T> setF_nt(Optional<T> f_nt) {
+    this.f_nt = Objects.requireNonNull(f_nt);
+    return this;
+  }
+
   /* Object level helpers */
 
   @Override
@@ -424,7 +440,8 @@ public class S<T> {
       f_bint16.equals(other.f_bint16) &&
       f_smap.equals(other.f_smap) &&
       f_json1.equals(other.f_json1) &&
-      f_json2.equals(other.f_json2);
+      f_json2.equals(other.f_json2) &&
+      f_nt.equals(other.f_nt);
   }
 
   @Override
@@ -454,6 +471,7 @@ public class S<T> {
     _result = _result * 37 + f_smap.hashCode();
     _result = _result * 37 + f_json1.hashCode();
     _result = _result * 37 + f_json2.hashCode();
+    _result = _result * 37 + f_nt.hashCode();
     return _result;
   }
 
@@ -484,6 +502,7 @@ public class S<T> {
     private Map<String, Integer> f_smap;
     private JsonElement f_json1;
     private JsonElement f_json2;
+    private Optional<T> f_nt;
 
     public Builder() {
       this.f_void = AdlVoid.INSTANCE;
@@ -510,6 +529,7 @@ public class S<T> {
       this.f_smap = Factories.stringMap("a", 45, "b", 47);
       this.f_json1 = JsonHelpers.jsonFromString("null");
       this.f_json2 = JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]");
+      this.f_nt = Optional.<T>empty();
     }
 
     public Builder<T> setF_void(AdlVoid f_void) {
@@ -632,9 +652,14 @@ public class S<T> {
       return this;
     }
 
+    public Builder<T> setF_nt(Optional<T> f_nt) {
+      this.f_nt = Objects.requireNonNull(f_nt);
+      return this;
+    }
+
     public S<T> create() {
       Builders.checkFieldInitialized("S", "f_t", f_t);
-      return new S<T>(f_void, f_bool, f_int8, f_int16, f_int32, f_int64, f_word8, f_word16, f_word32, f_word64, f_float, f_double, f_bytes, f_string, f_vstring, f_a, f_u, f_u1, f_e, f_t, f_bint16, f_smap, f_json1, f_json2);
+      return new S<T>(f_void, f_bool, f_int8, f_int16, f_int32, f_int64, f_word8, f_word16, f_word32, f_word64, f_float, f_double, f_bytes, f_string, f_vstring, f_a, f_u, f_u1, f_e, f_t, f_bint16, f_smap, f_json1, f_json2, f_nt);
     }
   }
 
@@ -666,6 +691,7 @@ public class S<T> {
       final Lazy<Factory<Map<String, Integer>>> f_smap = new Lazy<>(() -> Factories.stringMap(Factories.INT32));
       final Lazy<Factory<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
       final Lazy<Factory<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON_FACTORY);
+      final Lazy<Factory<Optional<T>>> f_nt = new Lazy<>(() -> Factories.nullable(factoryT));
 
       @Override
       public S<T> create(S<T> other) {
@@ -693,7 +719,8 @@ public class S<T> {
           f_bint16.get().create(other.getF_bint16()),
           f_smap.get().create(other.getF_smap()),
           other.getF_json1(),
-          other.getF_json2()
+          other.getF_json2(),
+          f_nt.get().create(other.getF_nt())
           );
       }
 
@@ -739,6 +766,7 @@ public class S<T> {
     final Lazy<JsonBinding<Map<String, Integer>>> f_smap = new Lazy<>(() -> JsonBindings.stringMap(JsonBindings.INT32));
     final Lazy<JsonBinding<JsonElement>> f_json1 = new Lazy<>(() -> JsonBindings.JSON);
     final Lazy<JsonBinding<JsonElement>> f_json2 = new Lazy<>(() -> JsonBindings.JSON);
+    final Lazy<JsonBinding<Optional<T>>> f_nt = new Lazy<>(() -> JsonBindings.nullable(bindingT));
     final Factory<T> factoryT = bindingT.factory();
     final Factory<S<T>> _factory = factory(bindingT.factory());
 
@@ -775,6 +803,7 @@ public class S<T> {
         _result.add("f_smap", f_smap.get().toJson(_value.f_smap));
         _result.add("f_json1", f_json1.get().toJson(_value.f_json1));
         _result.add("f_json2", f_json2.get().toJson(_value.f_json2));
+        _result.add("f_nt", f_nt.get().toJson(_value.f_nt));
         return _result;
       }
 
@@ -805,7 +834,8 @@ public class S<T> {
           _obj.has("f_bint16") ? JsonBindings.fieldFromJson(_obj, "f_bint16", f_bint16.get()) : new B<Short>((short)56, "yikes", Factories.list((short)1, (short)2, (short)3), new XY<Short>((short)5, (short)5)),
           _obj.has("f_smap") ? JsonBindings.fieldFromJson(_obj, "f_smap", f_smap.get()) : Factories.stringMap("a", 45, "b", 47),
           _obj.has("f_json1") ? JsonBindings.fieldFromJson(_obj, "f_json1", f_json1.get()) : JsonHelpers.jsonFromString("null"),
-          _obj.has("f_json2") ? JsonBindings.fieldFromJson(_obj, "f_json2", f_json2.get()) : JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]")
+          _obj.has("f_json2") ? JsonBindings.fieldFromJson(_obj, "f_json2", f_json2.get()) : JsonHelpers.jsonFromString("[{\"v1\":27,\"v2\":\"abcde\"},true]"),
+          _obj.has("f_nt") ? JsonBindings.fieldFromJson(_obj, "f_nt", f_nt.get()) : Optional.<T>empty()
         );
       }
     };

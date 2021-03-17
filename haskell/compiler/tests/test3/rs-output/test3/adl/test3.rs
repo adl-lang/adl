@@ -172,6 +172,9 @@ pub struct S<T> {
   #[serde(default="S::<T>::def_f_json_2")]
   #[serde(rename="f_json2")]
   pub f_json_2: serde_json::Value,
+
+  #[serde(default="S::<T>::def_f_nt")]
+  pub f_nt: Option<T>,
 }
 
 impl<T> S<T> {
@@ -201,6 +204,7 @@ impl<T> S<T> {
       f_smap: S::<T>::def_f_smap(),
       f_json_1: S::<T>::def_f_json_1(),
       f_json_2: S::<T>::def_f_json_2(),
+      f_nt: S::<T>::def_f_nt(),
     }
   }
 
@@ -294,5 +298,9 @@ impl<T> S<T> {
 
   pub fn def_f_json_2() -> serde_json::Value {
     serde_json::from_str("[{\"v1\":27,\"v2\":\"abcde\"},true]").unwrap()
+  }
+
+  pub fn def_f_nt() -> Option<T> {
+    None
   }
 }

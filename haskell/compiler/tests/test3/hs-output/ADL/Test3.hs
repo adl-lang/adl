@@ -15,6 +15,7 @@ module ADL.Test3(
 import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
 import Prelude( ($) )
+import qualified ADL.Core.Nullable
 import qualified Data.Aeson as JS
 import qualified Data.ByteString as B
 import qualified Data.HashMap.Strict as HM
@@ -123,11 +124,12 @@ data S t = S
     , s_f_smap :: StringMap (Data.Int.Int32)
     , s_f_json1 :: JS.Value
     , s_f_json2 :: JS.Value
+    , s_f_nt :: (ADL.Core.Nullable.Nullable t)
     }
     deriving (Prelude.Eq,Prelude.Show)
 
 mkS :: t -> S t
-mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.False) (U_f_int 45) U_f_void E_v2 f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)]) (Data.Maybe.fromJust (JS.decode "null")) (Data.Maybe.fromJust (JS.decode "[{\"v1\":27,\"v2\":\"abcde\"},true]"))
+mkS f_t = S () Prelude.True (-5) (-10000) 56 40000 32 50000 124456 2344 0.5 0.45 "hello" "abcd" [ "xy", "ab" ] (A 0 "xyz" Prelude.False) (U_f_int 45) U_f_void E_v2 f_t (B 56 "yikes" [ 1, 2, 3 ] (XY 5 5)) (stringMapFromList [("a", 45), ("b", 47)]) (Data.Maybe.fromJust (JS.decode "null")) (Data.Maybe.fromJust (JS.decode "[{\"v1\":27,\"v2\":\"abcde\"},true]")) (ADL.Core.Nullable.null)
 
 instance (AdlValue t) => AdlValue (S t) where
     atype _ = T.concat
@@ -160,6 +162,7 @@ instance (AdlValue t) => AdlValue (S t) where
         , genField "f_smap" s_f_smap
         , genField "f_json1" s_f_json1
         , genField "f_json2" s_f_json2
+        , genField "f_nt" s_f_nt
         ]
     
     jsonParser = S
@@ -187,6 +190,7 @@ instance (AdlValue t) => AdlValue (S t) where
         <*> parseFieldDef "f_smap" (stringMapFromList [("a", 45), ("b", 47)])
         <*> parseFieldDef "f_json1" (Data.Maybe.fromJust (JS.decode "null"))
         <*> parseFieldDef "f_json2" (Data.Maybe.fromJust (JS.decode "[{\"v1\":27,\"v2\":\"abcde\"},true]"))
+        <*> parseFieldDef "f_nt" (ADL.Core.Nullable.null)
 
 data U
     = U_f_int Data.Int.Int16

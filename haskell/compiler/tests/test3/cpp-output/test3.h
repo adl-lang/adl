@@ -3,6 +3,7 @@
 #define TEST3_H
 #include <adl/adl.h>
 #include <map>
+#include <optional>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -318,7 +319,8 @@ struct S
         const B<int16_t>  & f_bint16,
         const std::map<std::string,int32_t> & f_smap,
         const nlohmann::json & f_json1,
-        const nlohmann::json & f_json2
+        const nlohmann::json & f_json2,
+        const std::optional<T> & f_nt
         );
     
     Void f_void;
@@ -345,6 +347,7 @@ struct S
     std::map<std::string,int32_t> f_smap;
     nlohmann::json f_json1;
     nlohmann::json f_json2;
+    std::optional<T> f_nt;
 };
 
 template <class T>
@@ -377,6 +380,7 @@ S<T>::S()
     , f_smap(MapBuilder<std::string,int32_t>().add("a",45).add("b",47).result())
     , f_json1(nlohmann::json::parse("null"))
     , f_json2(nlohmann::json::parse("[{\"v1\":27,\"v2\":\"abcde\"},true]"))
+    , f_nt(std::optional<T>())
 {
 }
 
@@ -405,7 +409,8 @@ S<T>::S(
     const B<int16_t>  & f_bint16_,
     const std::map<std::string,int32_t> & f_smap_,
     const nlohmann::json & f_json1_,
-    const nlohmann::json & f_json2_
+    const nlohmann::json & f_json2_,
+    const std::optional<T> & f_nt_
     )
     : f_void(f_void_)
     , f_bool(f_bool_)
@@ -431,6 +436,7 @@ S<T>::S(
     , f_smap(f_smap_)
     , f_json1(f_json1_)
     , f_json2(f_json2_)
+    , f_nt(f_nt_)
 {
 }
 
@@ -486,6 +492,8 @@ operator<( const S<T> &a, const S<T> &b )
     if( b.f_json1 < a.f_json1 ) return false;
     if( a.f_json2 < b.f_json2 ) return true;
     if( b.f_json2 < a.f_json2 ) return false;
+    if( a.f_nt < b.f_nt ) return true;
+    if( b.f_nt < a.f_nt ) return false;
     return false;
 }
 
@@ -517,7 +525,8 @@ operator==( const S<T> &a, const S<T> &b )
         a.f_bint16 == b.f_bint16 &&
         a.f_smap == b.f_smap &&
         a.f_json1 == b.f_json1 &&
-        a.f_json2 == b.f_json2 ;
+        a.f_json2 == b.f_json2 &&
+        a.f_nt == b.f_nt ;
 }
 
 }}; // ADL::test3
@@ -681,6 +690,7 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
             , f_smap_s( stringMapSerialiser<int32_t>(sf) )
             , f_json1_s( Serialisable<nlohmann::json>::serialiser(sf) )
             , f_json2_s( Serialisable<nlohmann::json>::serialiser(sf) )
+            , f_nt_s( optionalSerialiser<T>(sf) )
             {}
         
         
@@ -708,6 +718,7 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
         typename Serialiser<std::map<std::string,int32_t>>::Ptr f_smap_s;
         typename Serialiser<nlohmann::json>::Ptr f_json1_s;
         typename Serialiser<nlohmann::json>::Ptr f_json2_s;
+        typename Serialiser<std::optional<T>>::Ptr f_nt_s;
         
         void toJson( JsonWriter &json, const _T & v ) const
         {
@@ -736,6 +747,7 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
             writeField<std::map<std::string,int32_t>>( json, f_smap_s, "f_smap", v.f_smap );
             writeField<nlohmann::json>( json, f_json1_s, "f_json1", v.f_json1 );
             writeField<nlohmann::json>( json, f_json2_s, "f_json2", v.f_json2 );
+            writeField<std::optional<T>>( json, f_nt_s, "f_nt", v.f_nt );
             json.endObject();
         }
         
@@ -768,6 +780,7 @@ Serialisable<ADL::test3::S<T>>::serialiser( const SerialiserFlags &sf )
                 readField( f_smap_s, v.f_smap, "f_smap", json ) ||
                 readField( f_json1_s, v.f_json1, "f_json1", json ) ||
                 readField( f_json2_s, v.f_json2, "f_json2", json ) ||
+                readField( f_nt_s, v.f_nt, "f_nt", json ) ||
                 ignoreField( json );
             }
         }

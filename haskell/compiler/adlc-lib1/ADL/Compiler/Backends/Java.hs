@@ -248,9 +248,19 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
         (addMethod (cline "/* Field defaults */"))
       for_ fieldsWithDefaults $ \fd -> do
         let deffn =
-              cblock (template "public static $1 $2()" [fd_typeExprStr fd,fd_defFnName fd]) (
+              cblock (template "public static $1$2 $3()" [tparams, fd_typeExprStr fd,fd_defFnName fd]) (
                 ctemplate "return $1;" [fd_defValue fd]
               )
+
+            tparams = case Set.toList (unboundTvars (f_type (fd_field fd))) of
+              [] -> ""
+              tvars -> "<" <> T.intercalate "," tvars <> "> "
+
+            unboundTvars :: TypeExprRT c -> Set.Set Ident
+            unboundTvars texpr =  foldMap rtVar texpr
+            rtVar (RT_Param i) = Set.singleton i
+            rtVar _ = Set.empty
+
         addMethod deffn
 
       -- Getters/Setters

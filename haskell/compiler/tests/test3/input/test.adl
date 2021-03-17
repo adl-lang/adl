@@ -78,6 +78,8 @@ struct S<T>
 
     Json f_json1 = null;
     Json f_json2 = [{"v1" : 27, "v2" : "abcde"}, true];
+
+    Nullable<T> f_nt = null;
 };
 
 };
