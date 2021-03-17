@@ -226,7 +226,9 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
                   [ fd_memberVarName fd,
                     if fd_hasDefault fd
                        then template "$1()" [fd_defFnName fd]
-                       else template "$1.requireNonNull($2)" [objectsClass, fd_varName fd]
+                       else if needsNullCheck fd
+                            then template "$1.requireNonNull($2)" [objectsClass, fd_varName fd]
+                            else template "$1" [fd_varName fd]
                   ]
                 | fd <- fieldDetails]
             )

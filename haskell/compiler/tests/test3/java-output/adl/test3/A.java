@@ -33,7 +33,7 @@ public class A {
   }
 
   public A(short f_int, String f_string) {
-    this.f_int = Objects.requireNonNull(f_int);
+    this.f_int = f_int;
     this.f_string = Objects.requireNonNull(f_string);
     this.f_bool = defF_bool();
   }
