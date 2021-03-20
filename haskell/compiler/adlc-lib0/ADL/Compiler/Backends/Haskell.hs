@@ -266,7 +266,7 @@ hTypeExprB m (TypeExpr (RT_Primitive P_StringMap) [te]) = do
   argt <- hTypeExprB m te
   importMap
   importText
-  return (template "StringMap ($1)" [argt])
+  return (template "(StringMap $1)" [argt])
 hTypeExprB m (TypeExpr c args) = do
   ct <- hTypeExprB1 m c
   argst <- mapM (hTypeExprB m) args

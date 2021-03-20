@@ -15,7 +15,7 @@ import qualified Data.Text as T
 import qualified Prelude
 
 data Test = Test
-    { test_foo :: StringMap (T.Text)
+    { test_foo :: (StringMap T.Text)
     }
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 

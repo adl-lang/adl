@@ -149,12 +149,12 @@ instance AdlValue Import where
 data Module = Module
     { module_name :: ModuleName
     , module_imports :: [Import]
-    , module_decls :: StringMap (Decl)
+    , module_decls :: (StringMap Decl)
     , module_annotations :: Annotations
     }
     deriving (Prelude.Eq,Prelude.Show)
 
-mkModule :: ModuleName -> [Import] -> StringMap (Decl) -> Annotations -> Module
+mkModule :: ModuleName -> [Import] -> (StringMap Decl) -> Annotations -> Module
 mkModule name imports decls annotations = Module name imports decls annotations
 
 instance AdlValue Module where

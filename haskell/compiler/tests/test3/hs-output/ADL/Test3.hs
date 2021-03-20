@@ -121,7 +121,7 @@ data S t = S
     , s_f_e :: E
     , s_f_t :: t
     , s_f_bint16 :: (B Data.Int.Int16)
-    , s_f_smap :: StringMap (Data.Int.Int32)
+    , s_f_smap :: (StringMap Data.Int.Int32)
     , s_f_json1 :: JS.Value
     , s_f_json2 :: JS.Value
     , s_f_nt :: (ADL.Core.Nullable.Nullable t)
