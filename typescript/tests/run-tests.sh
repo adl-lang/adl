@@ -6,10 +6,6 @@ HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HASKELLDIR=$HERE/../../haskell
 ADLSTDLIBDIR=$(cd $HASKELLDIR; stack exec adlc -- show --adlstdlib)
 
-# Build ADL and dependencies setup
-(cd $HASKELLDIR; stack build ./compiler)
-
-
 runtests() {
   echo "--------- testing $1 ---------"
   TESTDIR=$HERE/$1
