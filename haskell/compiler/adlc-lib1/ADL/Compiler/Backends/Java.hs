@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
 module ADL.Compiler.Backends.Java(
   generate,
+  generateBatch,
   JavaFlags(..),
   CodeGenProfile(..),
   defaultCodeGenProfile,
@@ -45,8 +46,12 @@ import ADL.Compiler.Utils
 import ADL.Core.Value
 import ADL.Utils.FileDiff(dirContents)
 import ADL.Utils.Format
+import ADL.Adlc.Codegen.Java(JavaParams(..))
 
 type JavaPackageFn = ModuleName -> JavaPackage
+
+generateBatch :: JavaParams -> EIOT ()
+generateBatch params = return ()
 
 generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do
