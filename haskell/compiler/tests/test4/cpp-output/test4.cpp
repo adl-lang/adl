@@ -70,39 +70,6 @@ operator==( const S2 &a, const S2 &b )
         a.intv == b.intv ;
 }
 
-S3::S3()
-    : intv1(0)
-    , intv2(0)
-{
-}
-
-S3::S3(
-    const int32_t & intv1_,
-    const int32_t & intv2_
-    )
-    : intv1(intv1_)
-    , intv2(intv2_)
-{
-}
-
-bool
-operator<( const S3 &a, const S3 &b )
-{
-    if( a.intv1 < b.intv1 ) return true;
-    if( b.intv1 < a.intv1 ) return false;
-    if( a.intv2 < b.intv2 ) return true;
-    if( b.intv2 < a.intv2 ) return false;
-    return false;
-}
-
-bool
-operator==( const S3 &a, const S3 &b )
-{
-    return
-        a.intv1 == b.intv1 &&
-        a.intv2 == b.intv2 ;
-}
-
 S::S()
     : v2(Date("2000-01-01"))
     , v4(CDate(2000,1,1))
@@ -264,45 +231,6 @@ Serialisable<ADL::test4::S2>::serialiser( const SerialiserFlags &sf )
             while( !match0( json, JsonReader::END_OBJECT ) )
             {
                 readField( intv_s, v.intv, "intv", json ) ||
-                ignoreField( json );
-            }
-        }
-    };
-    
-    return typename Serialiser<_T>::Ptr( new S_(sf) );
-};
-
-typename Serialiser<ADL::test4::S3>::Ptr
-Serialisable<ADL::test4::S3>::serialiser( const SerialiserFlags &sf )
-{
-    typedef ADL::test4::S3 _T;
-    
-    struct S_ : public Serialiser<_T>
-    {
-        S_( const SerialiserFlags & sf )
-            : intv1_s( Serialisable<int32_t>::serialiser(sf) )
-            , intv2_s( Serialisable<int32_t>::serialiser(sf) )
-            {}
-        
-        
-        typename Serialiser<int32_t>::Ptr intv1_s;
-        typename Serialiser<int32_t>::Ptr intv2_s;
-        
-        void toJson( JsonWriter &json, const _T & v ) const
-        {
-            json.startObject();
-            writeField<int32_t>( json, intv1_s, "intv1", v.intv1 );
-            writeField<int32_t>( json, intv2_s, "intv2", v.intv2 );
-            json.endObject();
-        }
-        
-        void fromJson( _T &v, JsonReader &json ) const
-        {
-            match( json, JsonReader::START_OBJECT );
-            while( !match0( json, JsonReader::END_OBJECT ) )
-            {
-                readField( intv1_s, v.intv1, "intv1", json ) ||
-                readField( intv2_s, v.intv2, "intv2", json ) ||
                 ignoreField( json );
             }
         }

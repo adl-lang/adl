@@ -4,11 +4,9 @@ module ADL.Test4(
     Date,
     S(..),
     S2(..),
-    S3(..),
     mkCDate,
     mkS,
     mkS2,
-    mkS3,
 ) where
 
 import ADL.Core
@@ -122,24 +120,3 @@ instance AdlValue S2 where
     
     jsonParser = S2
         <$> parseField "intv"
-
-data S3 = S3
-    { s3_intv1 :: Data.Int.Int32
-    , s3_intv2 :: Data.Int.Int32
-    }
-    deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
-
-mkS3 :: Data.Int.Int32 -> Data.Int.Int32 -> S3
-mkS3 intv1 intv2 = S3 intv1 intv2
-
-instance AdlValue S3 where
-    atype _ = "test4.S3"
-    
-    jsonGen = genObject
-        [ genField "intv1" s3_intv1
-        , genField "intv2" s3_intv2
-        ]
-    
-    jsonParser = S3
-        <$> parseField "intv1"
-        <*> parseField "intv2"

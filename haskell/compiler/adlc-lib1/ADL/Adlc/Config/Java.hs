@@ -2,7 +2,6 @@
 module ADL.Adlc.Config.Java(
     JavaCustomType(..),
     JavaGenerate,
-    JavaLegacyDefaultCtor,
     JavaPackage,
     mkJavaCustomType,
 ) where
@@ -44,7 +43,5 @@ instance AdlValue JavaCustomType where
         <*> parseFieldDef "generateType" Prelude.False
 
 type JavaGenerate = Prelude.Bool
-
-type JavaLegacyDefaultCtor = Prelude.Bool
 
 type JavaPackage = T.Text

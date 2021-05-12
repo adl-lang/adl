@@ -3,7 +3,6 @@ module test4
 
 import adlc.config.java.JavaCustomType;
 import adlc.config.java.JavaGenerate;
-import adlc.config.java.JavaLegacyDefaultCtor;
 
 annotation Date JavaCustomType {
   "javaname" : "java.time.LocalDate",
@@ -17,6 +16,4 @@ annotation CDate JavaCustomType {
   };
 
 annotation S2 JavaGenerate false;
-
-annotation S3 JavaLegacyDefaultCtor true;
 };

@@ -54,10 +54,4 @@ struct S2
     Int32 intv;
 };
 
-struct S3
-{
-    Int32 intv1;
-    Int32 intv2;
-};
-
 };

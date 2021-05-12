@@ -118,21 +118,3 @@ impl S {
     Map::new(vec![MapEntry::new("X".to_string(), 1_i32), MapEntry::new("Y".to_string(), 2_i32)])
   }
 }
-
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct S3 {
-  #[serde(rename="intv1")]
-  pub intv_1: i32,
-
-  #[serde(rename="intv2")]
-  pub intv_2: i32,
-}
-
-impl S3 {
-  pub fn new(intv_1: i32, intv_2: i32) -> S3 {
-    S3 {
-      intv_1: intv_1,
-      intv_2: intv_2,
-    }
-  }
-}
