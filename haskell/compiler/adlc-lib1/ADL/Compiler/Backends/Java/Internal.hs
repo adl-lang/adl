@@ -1219,6 +1219,13 @@ replaceTypeVarsWithJsonBindings = T.replace "{{{" "binding" . T.replace "}}}" ""
 replaceTypeVarsWithFactoryMethods:: T.Text -> T.Text
 replaceTypeVarsWithFactoryMethods = T.replace "{{{" "factory" . T.replace "}}}" ".jsonBinding()"
 
+genLegacyDefaultCtor :: Decl c r -> Bool
+genLegacyDefaultCtor decl = case Map.lookup javaLegacyDefaultCtor (d_annotations decl) of
+  Just (_,JSON.Bool enabled) -> enabled
+  _ -> False
+  where
+    javaLegacyDefaultCtor = ScopedName (ModuleName ["adlc","config","java"]) "JavaLegacyDefaultCtor"
+
 primJsonBinding :: CodeGenProfile -> PrimitiveType -> CState T.Text
 primJsonBinding cgp pt = do
   jsonBindingsI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonBindings")

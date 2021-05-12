@@ -28,4 +28,9 @@ struct JavaCustomType
     Bool generateType = false;
 };
 
+/// ADL annotation for a struct to have the java codegen emit
+/// a default constructor, using legacy default values from pre
+/// 1.0 adl
+type JavaLegacyDefaultCtor = Bool;
+
 };

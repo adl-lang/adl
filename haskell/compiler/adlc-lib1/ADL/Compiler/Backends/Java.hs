@@ -192,6 +192,7 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
       fieldDetails <- mapM genFieldDetails (s_fields struct)
       let fieldsWithDefaults = filter (\fd -> fd_hasDefault fd && not (isTypeToken fd)) fieldDetails
           hasDefaults = not (null fieldsWithDefaults)
+          allDefaults = length fieldsWithDefaults == length fieldDetails
       for_ fieldDetails (\fd -> preventImport (fd_memberVarName fd))
       for_ fieldDetails (\fd -> preventImport (fd_varName fd))
 
@@ -239,11 +240,21 @@ generateCoreStruct codeProfile moduleName javaPackageFn decl struct =  gen
                       | fd <- fieldDetails ]
             )
 
+          -- legacy ctor with all fields forced default. Enabled with an annotation
+          ctorLegacy =
+            cline "/* legacy default ctor */"
+            <>
+            cblock (template "public $1()" [className]) (
+              clineN [template "this.$1 = $2;" [fd_memberVarName fd,fd_defValue fd] | fd <- fieldDetails]
+            )
+
+
       addMethod (cline "/* Constructors */")
 
       addMethod ctor1
       when (not isGeneric && hasDefaults) (addMethod ctor2)
       when (not isGeneric) (addMethod ctor3)
+      when (genLegacyDefaultCtor decl && not allDefaults) (addMethod ctorLegacy)
 
       -- Default static fns
       when (not (null fieldsWithDefaults)) $ do

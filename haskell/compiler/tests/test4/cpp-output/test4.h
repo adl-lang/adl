@@ -61,6 +61,22 @@ struct S2
 bool operator<( const S2 &a, const S2 &b );
 bool operator==( const S2 &a, const S2 &b );
 
+struct S3
+{
+    S3();
+    
+    S3(
+        const int32_t & intv1,
+        const int32_t & intv2
+        );
+    
+    int32_t intv1;
+    int32_t intv2;
+};
+
+bool operator<( const S3 &a, const S3 &b );
+bool operator==( const S3 &a, const S3 &b );
+
 struct S
 {
     S();
@@ -137,6 +153,12 @@ template <>
 struct Serialisable<ADL::test4::S2>
 {
     static Serialiser<ADL::test4::S2>::Ptr serialiser(const SerialiserFlags &);
+};
+
+template <>
+struct Serialisable<ADL::test4::S3>
+{
+    static Serialiser<ADL::test4::S3>::Ptr serialiser(const SerialiserFlags &);
 };
 
 template <>
