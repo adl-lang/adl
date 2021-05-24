@@ -1,6 +1,6 @@
-import {typeExprsEqual} from './utils';
-import {JsonBinding} from './json';
-import {Dynamic} from './sys/dynamic';
+import {typeExprsEqual} from './utils$TSEXT';
+import {JsonBinding} from './json$TSEXT';
+import {Dynamic} from './sys/dynamic$TSEXT';
 
 /**
  * Convert an ADL value to a dynamically typed value

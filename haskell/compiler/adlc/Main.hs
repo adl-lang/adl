@@ -228,6 +228,7 @@ runTypescript args = do
     header = "Usage: adlc typescript [OPTION...] files..."
 
     flags0 libDir = TS.TypescriptFlags {
+      TS.tsStyle=TS.Tsc,
       TS.tsLibDir=libDir,
       TS.tsIncludeRuntime=False,
       TS.tsIncludeResolver=False,
@@ -240,6 +241,7 @@ runTypescript args = do
       standardOptions <>
       [ generateTransitiveOption setGenerateTransitive
       , includeRuntimeOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeRuntime=True}))
+      , tsStyle (\s -> updateBackendFlags (\tsf -> tsf{TS.tsStyle=parseStyle s}))
       , tsIncludeResolverOption (updateBackendFlags (\tsf ->tsf{TS.tsIncludeResolver=True}))
       , tsExcludeAstOption (updateBackendFlags (\tsf ->tsf{TS.tsExcludeAst=True}))
       , tsExcludedAstAnnotationsOption (\s -> updateBackendFlags (\tsf ->tsf{TS.tsExcludedAstAnnotations=Just (parseScopedNames s)}))
@@ -265,6 +267,19 @@ runTypescript args = do
       Option "R" ["runtime-dir"]
         (ReqArg ufn "DIR")
         "Set the directory where runtime code is written"
+
+
+    tsStyle ufn =
+      Option "" ["ts-style"]
+        (ReqArg ufn "tsc|deno")
+        "Select the style of typescript to be generated"
+
+    parseStyle :: String -> TS.TypescriptStyle
+    parseStyle s = case s of
+      "deno" -> TS.Deno
+      "tsc" -> TS.Tsc
+      "template" -> TS.Template
+      _ -> error "invalid ts-style"
 
     parseScopedNames :: String -> [ScopedName]
     parseScopedNames s = case PP.fromString (PP.parseScopedNameList) s of

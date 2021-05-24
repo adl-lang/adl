@@ -159,6 +159,7 @@ runTsBackend flagsfn ipaths mpaths epath = do
   tempDir <- createTempDirectory tdir "adlt.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
       js = flagsfn $ TS.TypescriptFlags {
+        TS.tsStyle=TS.Tsc,
         TS.tsIncludeRuntime=False,
         TS.tsIncludeResolver=True,
         TS.tsRuntimeDir="runtime",

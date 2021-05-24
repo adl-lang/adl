@@ -30,10 +30,13 @@ stack build adl-compiler:adlc
 stack test adl-compiler
 
 # Generate ADL specified elements of the typescript runtime
+# these are in the style "template" so they can be converted
+# to tsc or deno style later
 stack exec adlc -- typescript \
  --no-overwrite \
  --exclude-ast \
  --verbose \
+ --ts-style template \
  -O ../typescript/runtime \
  -I $ADL_STDLIB_DIR \
  $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl

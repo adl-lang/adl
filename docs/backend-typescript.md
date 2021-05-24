@@ -7,8 +7,10 @@ Usage: adlc typescript [OPTION...] files...
           --merge-adlext=EXT                      Add the specifed adl file extension to merged on loading
           --verbose                               Print extra diagnostic information, especially about files being read/written
           --no-overwrite                          Don't update files that haven't changed
+          --manifest=FILE                         Write a manifest file recording generated files
           --generate-transitive                   Also generate code for the transitive dependencies of the specified adl files
           --include-rt                            Generate the runtime code
+          --ts-style=tsc|deno                     Select the style of typescript to be generated
           --include-resolver                      Generate the resolver map for all generated adl files
           --exclude-ast                           Exclude the generated ASTs
           --excluded-ast-annotations=SCOPEDNAMES  Set the annotations to be excluded from the ast (comma separated, default=sys.annotations.Doc)

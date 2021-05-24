@@ -32,12 +32,19 @@ import System.FilePath(joinPath)
 -- (once we have them)
 data TypescriptFlags = TypescriptFlags {
   tsLibDir :: FilePath,
+  tsStyle :: TypescriptStyle,
   tsIncludeRuntime :: Bool,
   tsIncludeResolver :: Bool,
   tsExcludeAst :: Bool,
   tsExcludedAstAnnotations :: Maybe [ScopedName],
   tsRuntimeDir :: FilePath
 }
+
+data TypescriptStyle
+  = Tsc   -- classic tsc typescript
+  | Deno  -- deno
+  | Template -- to be rewritten as one of the other types
+  ;
 
 -- A variant of the AST that carries custom type
 -- information. A `CModule` value is the input to
@@ -552,20 +559,21 @@ moduleFilePath path = joinPath (map T.unpack path)
 genCode :: Code -> LBS.ByteString
 genCode code = LBS.fromStrict (T.encodeUtf8 (T.unlines (codeText Nothing code)))
 
-genModuleCode :: T.Text -> ModuleFile -> LBS.ByteString
-genModuleCode cmd mf = genCode code
+genModuleCode :: TypescriptFlags -> T.Text -> ModuleFile -> LBS.ByteString
+genModuleCode tf cmd mf = genCode code
   where
     code
       =  ctemplate "/* $1generated from adl module $2 */" ["@", formatText (mfModuleName mf)]
       <> cline ""
-      <> mconcat [genImport (mfModuleName mf) i | i <- M.elems (mfImports mf)]
+      <> mconcat [genImport tf (mfModuleName mf) i | i <- M.elems (mfImports mf)]
       <> cline ""
       <> mconcat (L.intersperse (cline "") (reverse (mfDeclarations mf)))
 
-genImport :: ModuleName -> TSImport -> Code
-genImport intoModule TSImport{iAsName=asName, iModulePath=importPath} = ctemplate "import * as $1 from \'$2\';" [asName, mpath]
+genImport :: TypescriptFlags -> ModuleName -> TSImport -> Code
+genImport tf intoModule TSImport{iAsName=asName, iModulePath=importPath} = ctemplate "import * as $1 from \'$2$3\';" [asName, mpath, mext]
   where
     mpath = T.intercalate "/" (".":relativeImport)
+    mext = moduleExt tf
 
     intoPath = unModuleName intoModule
     relativeImport = relativePath (init intoPath) (init importPath) ++ [last importPath]
@@ -573,6 +581,27 @@ genImport intoModule TSImport{iAsName=asName, iModulePath=importPath} = ctemplat
     relativePath [] ps2 = ps2
     relativePath (p1:ps1) (p2:ps2) | p1 == p2 = relativePath ps1 ps2
     relativePath ps1 ps2 = (map (const "..") ps1) <> ps2
+
+moduleExt:: TypescriptFlags -> T.Text
+moduleExt tf =
+  case tsStyle tf of
+    Tsc -> ""
+    Deno -> ".ts"
+    Template -> "$TSEXT"
+
+applyTypescriptStyle :: TypescriptFlags -> LBS.ByteString -> LBS.ByteString
+applyTypescriptStyle tf =  LBS.fromStrict . T.encodeUtf8 . applyStyle . T.decodeUtf8 . LBS.toStrict
+  where
+    applyStyle
+       = T.replace "$TSEXT" (moduleExt tf)
+       . T.replace "$TSB64IMPORT" (b64Import tf)
+
+    b64Import tf =
+      case tsStyle tf of
+        Tsc -> "import {fromByteArray as b64Encode, toByteArray as b64Decode} from 'base64-js'"
+        Deno -> "import {encode as b64Encode, decode as b64Decode} from 'https://deno.land/std@0.97.0/encoding/base64.ts'"
+        Template -> "$TSB64IMPORT"
+
 
 generateCode :: Annotations t -> Bool
 generateCode annotations = case M.lookup snTypescriptGenerate annotations of

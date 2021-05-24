@@ -6,7 +6,7 @@ HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HASKELLDIR=$HERE/../../haskell
 ADLSTDLIBDIR=$(cd $HASKELLDIR; stack exec adlc -- show --adlstdlib)
 
-runtests() {
+testts() {
   echo "--------- testing $1 ---------"
   TESTDIR=$HERE/$1
 
@@ -32,6 +32,23 @@ runtests() {
   yarn test
 }
 
-runtests ts-2.9.2
-runtests ts-3.5.2
-runtests ts-3.8.3
+testdeno() {
+  echo "--------- testing $1 ---------"
+  TESTDIR=$HERE/$1
+
+  cd $TESTDIR
+
+echo "### Generating typescript from adl"
+BUILDDIR=$TESTDIR/build
+rm -rf $BUILDDIR
+mkdir -p $BUILDDIR
+(cd $HASKELLDIR; stack exec adlc -- typescript -I $ADLSTDLIBDIR -O $BUILDDIR --ts-style deno --include-rt --include-resolver --runtime-dir runtime $HERE/example.adl $ADLSTDLIBDIR/sys/types.adl $ADLSTDLIBDIR/sys/adlast.adl $ADLSTDLIBDIR/sys/dynamic.adl)
+
+  echo "### Running tests"
+  deno test example.tests.ts
+}
+
+testts ts-2.9.2
+testts ts-3.5.2
+testts ts-3.8.3
+testdeno deno-1.10.2

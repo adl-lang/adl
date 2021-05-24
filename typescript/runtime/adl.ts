@@ -1,4 +1,4 @@
-import * as AST from './sys/adlast';
+import * as AST from './sys/adlast$TSEXT';
 
 export type ScopedName = AST.ScopedName;
 export type ScopedDecl = AST.ScopedDecl;

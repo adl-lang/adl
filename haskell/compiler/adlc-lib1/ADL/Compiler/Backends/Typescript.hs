@@ -9,6 +9,7 @@ a typescript backend from an ADL file.
 module ADL.Compiler.Backends.Typescript(
  generate,
   TypescriptFlags(..),
+  TypescriptStyle(..),
   ) where
 
 import           ADL.Compiler.AST
@@ -56,7 +57,8 @@ generateRuntime :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EI
 generateRuntime af tf fileWriter modulePaths = do
     files <- liftIO $ dirContents runtimeLibDir
     liftIO $ for_ files $ \inpath -> do
-      content <- LBS.readFile (runtimeLibDir </> inpath)
+      content0 <- LBS.readFile (runtimeLibDir </> inpath)
+      let content = applyTypescriptStyle tf content0
       fileWriter (tsRuntimeDir tf </> inpath) content
     where
       runtimeLibDir = typescriptRuntimeDir (tsLibDir tf)
@@ -68,8 +70,8 @@ generateResolver af tf fileWriter ms = do
     gms = sortOn m_name (filter (generateCode . m_annotations) ms)
     code
       =  cline "/* @generated from adl */"
-      <> ctemplate "import { declResolver, ScopedDecl } from \"./$1/adl\";" [T.pack (tsRuntimeDir tf)]
-      <> mconcat [ctemplate "import { _AST_MAP as $1 } from \"./$2\";" [moduleNameText m, modulePathText m] | m <- gms]
+      <> ctemplate "import { declResolver, ScopedDecl } from \"./$1/adl$2\";" [T.pack (tsRuntimeDir tf), mext]
+      <> mconcat [ctemplate "import { _AST_MAP as $1 } from \"./$2$3\";" [moduleNameText m, modulePathText m, mext] | m <- gms]
       <> cline ""
       <> cline "export const ADL: { [key: string]: ScopedDecl } = {"
       <> mconcat [ctemplate "  ...$1," [moduleNameText m] | m <- gms]
@@ -78,6 +80,7 @@ generateResolver af tf fileWriter ms = do
       <> cline "export const RESOLVER = declResolver(ADL);"
     moduleNameText m = T.intercalate "_" (unModuleName (m_name m))
     modulePathText m = T.intercalate "/" (unModuleName (m_name m))
+    mext = moduleExt tf
 
 -- | Generate and the typescript code for a single ADL module, and
 -- save the resulting code to the apppropriate file
@@ -96,7 +99,7 @@ generateModule tf fileWriter m0 = do
             (Just sns) -> (\sn -> sn `notElem` sns)
       }
       mf = execState (genModule m) (emptyModuleFile (m_name m) cgp)
-  liftIO $ fileWriter (moduleFilePath (unModuleName moduleName) <.> "ts") (genModuleCode "adlc" mf)
+  liftIO $ fileWriter (moduleFilePath (unModuleName moduleName) <.> "ts") (genModuleCode tf "adlc" mf)
 
 genModule :: CModule -> CState ()
 genModule m = do
