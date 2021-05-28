@@ -57,22 +57,20 @@ generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do
   let mf = moduleFinder af
 
-  (mods0,moddeps) <- loadAndCheckModules mf modulePaths
-  let mods = if (af_generateTransitive af) then moddeps else mods0
+  (reqmods,allmods) <- loadAndCheckModules mf modulePaths
+  let genmods = if af_generateTransitive af then allmods else reqmods
 
-  imports <- generateModules jf fileWriter mods
+  imports <- generateModules jf fileWriter genmods allmods
   when (jf_includeRuntime jf) $ do
     generateRuntime mf jf fileWriter imports
 
-generateModules :: JavaFlags -> FileWriter -> [RModule] -> EIOT (Set.Set JavaClass)
-generateModules jf fileWriter mods = do
+generateModules :: JavaFlags -> FileWriter -> [RModule] -> [RModule] -> EIOT (Set.Set JavaClass)
+generateModules jf fileWriter genmods allmods = do
   let cgp = (jf_codeGenProfile jf)
-  imports <- for mods $ \mod -> do
+      pkgfn = mkJavaPackageFn cgp allmods (jf_package jf)
+  imports <- for genmods $ \mod -> do
     if generateCode (m_annotations mod)
-      then generateModule jf fileWriter
-                          (const cgp)
-                          (mkJavaPackageFn cgp mods (jf_package jf))
-                          mod
+      then generateModule jf fileWriter (const cgp) pkgfn mod
       else return Set.empty
   return (mconcat imports)
 
@@ -750,14 +748,14 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
 
 generateRuntime:: ModuleFinder -> JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
 generateRuntime mf jf fileWriter imports1 = do
-    sysModules <- getSystemModules
-    imports2 <- generateModules jf fileWriter sysModules
+    sysmods <- loadSystemModules
+    imports2 <- generateModules jf fileWriter sysmods sysmods
     generateRuntime0 jf fileWriter (imports1 <> imports2)
   where
-    getSystemModules :: EIOT [RModule]
-    getSystemModules =  do
+    loadSystemModules :: EIOT [RModule]
+    loadSystemModules =  do
       sysModulePaths <- mapM (findModule mf "runtime") sysModules
-      return undefined
+      fmap fst (loadAndCheckModules mf sysModulePaths)
 
 generateRuntime0 :: JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
 generateRuntime0 jf fileWriter imports = liftIO $ do
