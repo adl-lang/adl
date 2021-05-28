@@ -1201,7 +1201,7 @@ fileGenerator mn = T.unpack (T.intercalate "." (unModuleName mn))
 
 generate :: AdlFlags -> CppFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af cf fileWriter modulePaths = catchAllExceptions  $ do
-  (mods0,moddeps) <- loadAndCheckModules af modulePaths
+  (mods0,moddeps) <- loadAndCheckModules (moduleFinder af) modulePaths
   let mods = if (af_generateTransitive af) then moddeps else mods0
   forM_ mods $ \m0 -> do
     let m = associateCustomTypes getCustomType (m_name m0) m0

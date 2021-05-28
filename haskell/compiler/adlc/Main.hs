@@ -338,6 +338,7 @@ runShow args0 =
 usage = T.intercalate "\n"
   [ "Usage: adlc verify [OPTION..] <modulePath>..."
   , "       adlc ast [OPTION..] <modulePath>..."
+  , "       adlc batch <batchfile>"
   , "       adlc haskell [OPTION..] <modulePath>..."
   , "       adlc cpp [OPTION..] <modulePath>..."
   , "       adlc java [OPTION..] <modulePath>..."

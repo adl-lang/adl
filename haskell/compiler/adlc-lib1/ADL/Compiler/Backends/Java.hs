@@ -55,30 +55,26 @@ generateBatch params = return ()
 
 generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do
-  imports1 <- generateModules af jf fileWriter modulePaths
-  when (jf_includeRuntime jf) $ do
-    sysModulePaths <- getSystemModulePaths
-    imports2 <- generateModules af jf fileWriter sysModulePaths
-    generateRuntime jf fileWriter (imports1 <> imports2)
-  where
-    getSystemModulePaths = liftIO $ do
-      libDir <- getLibDir
-      return [systemAdlDir libDir </> adl | adl <- sysModules]
+  let mf = moduleFinder af
 
-generateModules :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT (Set.Set JavaClass)
-generateModules af jf fileWriter modulePaths = do
-  let cgp = (jf_codeGenProfile jf)
-  (mods0,moddeps) <- loadAndCheckModules af modulePaths
+  (mods0,moddeps) <- loadAndCheckModules mf modulePaths
   let mods = if (af_generateTransitive af) then moddeps else mods0
+
+  imports <- generateModules jf fileWriter mods
+  when (jf_includeRuntime jf) $ do
+    generateRuntime mf jf fileWriter imports
+
+generateModules :: JavaFlags -> FileWriter -> [RModule] -> EIOT (Set.Set JavaClass)
+generateModules jf fileWriter mods = do
+  let cgp = (jf_codeGenProfile jf)
   imports <- for mods $ \mod -> do
     if generateCode (m_annotations mod)
       then generateModule jf fileWriter
                           (const cgp)
-                          (mkJavaPackageFn cgp (mod:moddeps) (jf_package jf))
+                          (mkJavaPackageFn cgp mods (jf_package jf))
                           mod
       else return Set.empty
   return (mconcat imports)
-
 
 -- | Generate and write the java code for a single ADL module
 -- The result value is the set of all java imports.
@@ -751,8 +747,20 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
       when (cgp_parcelable codeProfile) $ do
         error "Unimplemented: Parcellable for enums"
 
-generateRuntime :: JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
-generateRuntime jf fileWriter imports = liftIO $ do
+
+generateRuntime:: ModuleFinder -> JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
+generateRuntime mf jf fileWriter imports1 = do
+    sysModules <- getSystemModules
+    imports2 <- generateModules jf fileWriter sysModules
+    generateRuntime0 jf fileWriter (imports1 <> imports2)
+  where
+    getSystemModules :: EIOT [RModule]
+    getSystemModules =  do
+      sysModulePaths <- mapM (findModule mf "runtime") sysModules
+      return undefined
+
+generateRuntime0 :: JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
+generateRuntime0 jf fileWriter imports = liftIO $ do
     files <- dirContents runtimedir
     for_ files $ \inpath -> do
       let cls = javaClass rtpackage (T.pack (dropExtensions (takeFileName inpath)))
@@ -837,5 +845,9 @@ snJavaPackage = ScopedName (ModuleName ["adlc","config","java"]) "JavaPackage"
 snJavaGenerate :: ScopedName
 snJavaGenerate = ScopedName (ModuleName ["adlc","config","java"]) "JavaGenerate"
 
-sysModules :: [FilePath]
-sysModules = ["sys/types.adl", "sys/dynamic.adl", "sys/adlast.adl"]
+sysModules :: [ModuleName]
+sysModules = [
+  ModuleName ["sys", "types"],
+  ModuleName ["sys", "dynamic"],
+  ModuleName ["sys", "adlast"]
+  ]

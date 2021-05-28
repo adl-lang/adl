@@ -49,19 +49,21 @@ writeModuleFile fileWriter m = do
 
 generate :: AdlFlags -> AstFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af astFlags fileWriter modulePaths = case astf_combinedModuleFile astFlags of
-  Nothing -> generateIndividualModuleFiles af fileWriter modulePaths
-  (Just file) -> generateCombinedModuleFile af (fileWriter file) modulePaths
+  Nothing -> generateIndividualModuleFiles mf fileWriter modulePaths
+  (Just file) -> generateCombinedModuleFile mf (fileWriter file) modulePaths
+  where
+    mf = moduleFinder af
 
-generateIndividualModuleFiles af fileWriter modulePaths = do
+generateIndividualModuleFiles mf fileWriter modulePaths = do
   catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-    rm <- loadAndCheckModule af modulePath
+    rm <- loadAndCheckModule mf modulePath
     writeModuleFile fileWriter rm
 
 -- Write a combined single json file containing the specified modules, and all of the
 -- ADL files upon which they depend. The json in the file will have type
 --    StringMap<AST.Module>
-generateCombinedModuleFile af writeFile modulePaths = do
-  allModules <- catchAllExceptions  $ forM modulePaths (loadAndCheckModule1 af)
+generateCombinedModuleFile mf writeFile modulePaths = do
+  allModules <- catchAllExceptions  $ forM modulePaths (loadAndCheckModule1 mf)
   let modulesByName = mconcat (map merge1 allModules)
   liftIO $ writeFile (JSON.encodePretty' JSON.defConfig (adlToJson modulesByName))
   where

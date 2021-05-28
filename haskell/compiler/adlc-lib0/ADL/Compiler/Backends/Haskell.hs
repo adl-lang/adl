@@ -813,7 +813,7 @@ data HaskellFlags = HaskellFlags {
 
 generate :: AdlFlags -> HaskellFlags -> FileWriter -> (ScopedName -> RDecl -> Maybe CustomType) -> [FilePath] -> EIOT ()
 generate af hf fileWriter getCustomType modulePaths = catchAllExceptions $ do
-  (ms0,tms) <- loadAndCheckModules af modulePaths
+  (ms0,tms) <- loadAndCheckModules (moduleFinder af) modulePaths
   let rms = if (af_generateTransitive af) then tms else ms0
   forM_ rms $ \rm -> do
     writeModuleFile (moduleMapper (hf_modulePrefix hf))

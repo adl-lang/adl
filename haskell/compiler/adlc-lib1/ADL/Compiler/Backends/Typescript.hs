@@ -43,7 +43,7 @@ import           ADL.Compiler.DataFiles
 -- for validity, and then generate the code for it.
 generate :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af tf fileWriter modulePaths = catchAllExceptions  $ do
-  (ms0,tms) <- loadAndCheckModules af modulePaths
+  (ms0,tms) <- loadAndCheckModules (moduleFinder af) modulePaths
   let ms = if (af_generateTransitive af) then tms else ms0
   for ms $ \m -> do
     let m' = fullyScopedModule m
