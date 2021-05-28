@@ -157,6 +157,7 @@ library
                     , ADL.Utils.Resource
                     , ADL.Compiler.Backends.AST
                     , ADL.Compiler.Backends.Batch
+                    , ADL.Compiler.Backends.BatchUtils
                     , ADL.Compiler.Backends.Cpp
                     , ADL.Compiler.Backends.Java
                     , ADL.Compiler.Backends.Java.Internal

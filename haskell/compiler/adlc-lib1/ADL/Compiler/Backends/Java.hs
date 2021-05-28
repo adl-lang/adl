@@ -38,20 +38,52 @@ import ADL.Compiler.AST
 import ADL.Utils.IndentedCode
 import ADL.Compiler.Backends.Java.Internal
 import ADL.Compiler.Backends.Java.Parcelable
+import ADL.Compiler.Backends.BatchUtils
 import ADL.Compiler.EIO
 import ADL.Compiler.DataFiles
 import ADL.Compiler.Primitive
 import ADL.Compiler.Processing
 import ADL.Compiler.Utils
 import ADL.Core.Value
+import ADL.Core.Nullable(unNullable)
 import ADL.Utils.FileDiff(dirContents)
 import ADL.Utils.Format
 import ADL.Adlc.Codegen.Java(JavaParams(..))
+import ADL.Adlc.Codegen.Types(AdlSources, AdlTreeSource(..),OutputParams(..))
 
 type JavaPackageFn = ModuleName -> JavaPackage
 
-generateBatch :: JavaParams -> EIOT ()
-generateBatch params = return ()
+generateBatch :: FilePath -> JavaParams -> EIOT ()
+generateBatch libDir params = do
+  let log = batchLogFn (javaParams_verbose params)
+  let mf = batchModuleFinder log (javaParams_sources params) (javaParams_mergeExts params)
+  withBatchFileWriter log (javaParams_output params) $ \fileWriter -> do
+    modulePaths <- mapM (\m -> findModule mf "batch" (moduleNameFromText m)) (javaParams_modules params) 
+    (reqmods,allmods) <- loadAndCheckModules mf modulePaths
+    let genmods = if (javaParams_generateTransitive params) then allmods else reqmods
+    imports <- generateModules jf fileWriter genmods allmods
+    when (jf_includeRuntime jf) $ do
+      generateRuntime mf jf fileWriter imports
+  where
+    jf  = JavaFlags {
+      jf_libDir = libDir,
+      jf_package = javaPackage (javaParams_package params),
+      jf_includeRuntime = (javaParams_includeRuntime params),
+      jf_codeGenProfile = defaultCodeGenProfile {
+        cgp_header = javaParams_headerComment params,
+        cgp_mutable = True,
+        cgp_maxLineLength = case unNullable (javaParams_maxLineLength params) of
+           Nothing -> 10000
+           (Just v) -> fromIntegral v,
+        cgp_hungarianNaming = javaParams_hungarianNaming params,
+        cgp_publicMembers = False,
+        cgp_genericFactories = False,
+        cgp_builder = True,
+        cgp_parcelable = javaParams_parcellable params,
+        cgp_runtimePackage = defaultRuntimePackage,
+        cgp_supressWarnings = javaParams_suppressWarnings params
+      }
+    }
 
 generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do

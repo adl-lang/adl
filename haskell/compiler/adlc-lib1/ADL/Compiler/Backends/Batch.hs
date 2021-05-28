@@ -18,18 +18,18 @@ import ADL.Adlc.Codegen.Batch
 
 import ADL.Core(runJsonParser, decodeAdlParseResult, AdlValue(..), ParseResult(..))
 
-generate :: FilePath -> EIOT ()
-generate batchFile = do
+generate :: FilePath -> FilePath -> EIOT ()
+generate libDir batchFile = do
   ebatch <- liftIO $ (adlFromJsonFile batchFile :: IO (Either T.Text Batch))
   case ebatch of
     Left err -> eioError err
-    Right batch -> for_ batch generateBatchItem
+    Right batch -> for_ batch (generateBatchItem libDir)
 
-generateBatchItem :: BatchItem -> EIOT ()
-generateBatchItem bitem =
+generateBatchItem :: FilePath -> BatchItem -> EIOT ()
+generateBatchItem libDir bitem =
   case bitem of
      BatchItem_ast ast -> return ()
-     BatchItem_java java -> J.generateBatch java
+     BatchItem_java java -> J.generateBatch libDir java
 
 adlFromJsonFile :: AdlValue a => FilePath -> IO (Either T.Text a)
 adlFromJsonFile file = (decodeAdlParseResult from . adlFromJsonByteString) <$> (LBS.readFile file)

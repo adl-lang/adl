@@ -149,8 +149,9 @@ runCpp args = do
         "Exclude generated code for relational operators"
 
 runBatch args = do
+  libDir <- liftIO $ getLibDir
   case args of
-    [batchFile] -> B.generate batchFile
+    [batchFile] -> B.generate libDir batchFile
     _ -> eioError "Usage: adlc batch <BATCHFILE>"
 
 runJava args = do

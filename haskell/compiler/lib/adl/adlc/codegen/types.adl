@@ -37,6 +37,7 @@ struct OutputParams {
     Bool noOverwrite = true;
 
     // Write a manifest file recording generated files
+    // path is relative to outputDir
     Nullable<FilePath> manifest = ".adl-manifest";
 };
 

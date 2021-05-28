@@ -29,12 +29,13 @@ data JavaParams = JavaParams
     , javaParams_hungarianNaming :: Prelude.Bool
     , javaParams_maxLineLength :: (ADL.Core.Nullable.Nullable Data.Word.Word16)
     , javaParams_headerComment :: T.Text
-    , javaParams_suppressWarnings :: T.Text
+    , javaParams_suppressWarnings :: [T.Text]
+    , javaParams_verbose :: Prelude.Bool
     }
     deriving (Prelude.Eq,Prelude.Show)
 
 mkJavaParams :: ADL.Adlc.Codegen.Types.AdlSources -> [ADL.Sys.Adlast.ModuleName] -> T.Text -> ADL.Adlc.Codegen.Types.OutputParams -> JavaParams
-mkJavaParams sources modules package output = JavaParams sources [ ".adl-java" ] modules package output Prelude.True Prelude.True Prelude.False Prelude.False (ADL.Core.Nullable.null) "" ""
+mkJavaParams sources modules package output = JavaParams sources [ ".adl-java" ] modules package output Prelude.True Prelude.True Prelude.False Prelude.False (ADL.Core.Nullable.null) "" [  ] Prelude.False
 
 instance AdlValue JavaParams where
     atype _ = "adlc.codegen.java.JavaParams"
@@ -52,6 +53,7 @@ instance AdlValue JavaParams where
         , genField "maxLineLength" javaParams_maxLineLength
         , genField "headerComment" javaParams_headerComment
         , genField "suppressWarnings" javaParams_suppressWarnings
+        , genField "verbose" javaParams_verbose
         ]
     
     jsonParser = JavaParams
@@ -66,4 +68,5 @@ instance AdlValue JavaParams where
         <*> parseFieldDef "hungarianNaming" Prelude.False
         <*> parseFieldDef "maxLineLength" (ADL.Core.Nullable.null)
         <*> parseFieldDef "headerComment" ""
-        <*> parseFieldDef "suppressWarnings" ""
+        <*> parseFieldDef "suppressWarnings" [  ]
+        <*> parseFieldDef "verbose" Prelude.False

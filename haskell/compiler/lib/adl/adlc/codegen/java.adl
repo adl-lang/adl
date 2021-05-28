@@ -33,14 +33,17 @@ struct JavaParams {
   // Use hungarian naming conventions
   Bool hungarianNaming = false;
 
-  // Use hungarian naming conventions
+  // Reformat to a maximum line lengths
   Nullable<Word16> maxLineLength = null;
 
   // A comment to be placed at the start of each java file};
   String headerComment = "";
 
-  // The @SuppressWarnings annotations to be generated (comma separated)
-  String suppressWarnings = "";
+  // The @SuppressWarnings annotations to be generated
+  Vector<String> suppressWarnings = [];
+
+  // If true, log extra information
+  Bool verbose = false;
 };
 
 };

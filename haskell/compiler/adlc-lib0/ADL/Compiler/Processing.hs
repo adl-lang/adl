@@ -674,13 +674,13 @@ namescopeForModule m ns = ns
     nameInScope sn (Import_Module m) = (sn_moduleName sn) == m
 
 moduleFinder :: AdlFlags -> ModuleFinder
-moduleFinder af = ModuleFinder findfn (af_log af) (af_mergeFileExtensions af)
-  where 
-    findfn :: ModuleName -> [FilePath]
-    findfn (ModuleName mname) = [ joinPath ([path]++names++[name0++".adl"]) | path <- af_searchPath af ]
-      where
-        names = map T.unpack (init mname)
-        name0 = T.unpack (last mname)
+moduleFinder af = ModuleFinder (modulePathCandidates (af_searchPath af)) (af_log af) (af_mergeFileExtensions af)
+
+modulePathCandidates :: [FilePath] -> ModuleName -> [FilePath]
+modulePathCandidates rootpaths (ModuleName mname) = [ joinPath ([path]++names++[name0++".adl"]) | path <- rootpaths ]
+  where
+    names = map T.unpack (init mname)
+    name0 = T.unpack (last mname)
 
 -- | Generate the sets of files to be loaded based upon a
 -- list of path extensions.
