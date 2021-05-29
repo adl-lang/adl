@@ -56,14 +56,15 @@ type JavaPackageFn = ModuleName -> JavaPackage
 generateBatch :: FilePath -> JavaParams -> EIOT ()
 generateBatch libDir params = do
   let log = batchLogFn (javaParams_verbose params)
-  let mf = batchModuleFinder log (javaParams_sources params) (javaParams_mergeExts params)
+      mloader = batchModuleLoader log (javaParams_sources params) (javaParams_mergeExts params)
+      mlc = ModuleLoadContext mloader log "batch"
+
   withBatchFileWriter log (javaParams_output params) $ \fileWriter -> do
-    modulePaths <- mapM (\m -> findModule mf "batch" (moduleNameFromText m)) (javaParams_modules params) 
-    (reqmods,allmods) <- loadAndCheckModules mf modulePaths
+    (reqmods,allmods) <- findAndCheckModules mlc (map moduleNameFromText (javaParams_modules params))
     let genmods = if (javaParams_generateTransitive params) then allmods else reqmods
     imports <- generateModules jf fileWriter genmods allmods
     when (jf_includeRuntime jf) $ do
-      generateRuntime mf jf fileWriter imports
+      generateRuntime1 mlc jf fileWriter imports
   where
     jf  = JavaFlags {
       jf_libDir = libDir,
@@ -786,8 +787,18 @@ generateRuntime mf jf fileWriter imports1 = do
   where
     loadSystemModules :: EIOT [RModule]
     loadSystemModules =  do
-      sysModulePaths <- mapM (findModule mf "runtime") sysModules
+      sysModulePaths <- mapM (locateModule mf "runtime") sysModules
       fmap fst (loadAndCheckModules mf sysModulePaths)
+
+generateRuntime1:: ModuleLoadContext -> JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
+generateRuntime1 mlc jf fileWriter imports1 = do
+    sysmods <- loadSystemModules
+    imports2 <- generateModules jf fileWriter sysmods sysmods
+    generateRuntime0 jf fileWriter (imports1 <> imports2)
+  where
+    loadSystemModules :: EIOT [RModule]
+    loadSystemModules =  do
+      fmap fst (findAndCheckModules mlc sysModules)
 
 generateRuntime0 :: JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
 generateRuntime0 jf fileWriter imports = liftIO $ do

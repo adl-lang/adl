@@ -32,6 +32,12 @@ batchLogFn verbose = case verbose of
   True -> putStrLn
   False -> \s -> return ()
 
+batchModuleLoader :: LogFn -> AdlSources -> [T.Text] -> ModuleLoader
+batchModuleLoader log sources mergeExts =   mergedModuleLoader
+  [ modulesFromDirectory (T.unpack path) (map T.unpack mergeExts)
+    | (AdlTreeSource_localDir path) <- sources
+  ]
+
 batchModuleFinder :: LogFn -> AdlSources -> [T.Text] -> ModuleFinder
 batchModuleFinder log sources mergeExts = ModuleFinder {
   mf_finder = modulePathCandidates [T.unpack path | (AdlTreeSource_localDir path) <- sources],

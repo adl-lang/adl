@@ -18,7 +18,7 @@ import Data.List(find,partition,sortBy,nub)
 import Data.Foldable(foldMap)
 import Data.Traversable(for)
 import Data.Monoid
-import Data.Maybe(catMaybes,isJust)
+import Data.Maybe(catMaybes,isJust, fromJust)
 
 import qualified Data.Map.Strict as Map
 import qualified Data.List as L
@@ -44,6 +44,81 @@ type SModule = Module () ScopedName
 type SDecl = Decl () ScopedName
 type SModuleMap = Map.Map ModuleName SModule
 
+
+type ModuleLoader = LogFn -> ModuleName ->  EIOT (Maybe SModule)
+
+-- | A ModuleLoader that tries successive ModuleLoaders
+-- to find a module.
+mergedModuleLoader:: [ModuleLoader] -> ModuleLoader
+mergedModuleLoader (mloader:mloaders) = \log mname -> do
+  msmodule <- mloader log mname
+  case msmodule of
+    Nothing -> mergedModuleLoader mloaders log mname
+    Just smodule -> return (Just smodule)
+mergedModuleLoader [] = \log mname -> do
+  return Nothing
+
+-- | A ModuleLoader that reads from a directory tree
+modulesFromDirectory :: FilePath -> [String] -> ModuleLoader
+modulesFromDirectory dirPath mergeExts = \log (ModuleName mname) -> do
+  let modPath = joinPath ([dirPath]++names++[name0++".adl"])
+      names = map T.unpack (init mname)
+      name0 = T.unpack (last mname)
+  exists <- liftIO (doesFileExist modPath)
+  if exists
+    then Just <$> loadModuleFromFiles log modPath mergeExts
+    else return Nothing
+
+-- | Load and parse a module from a file, merging in associated
+-- definitions from corresponding files with extensions specified.
+loadModuleFromFiles:: LogFn -> FilePath -> [String] -> EIOT SModule
+loadModuleFromFiles log modPath mergeExts = do
+    extraFiles <- liftIO (filterM doesFileExist (filesetfn modPath))
+    parseAndCheckFile log modPath extraFiles
+  where    
+    filesetfn path = map (\ext -> replaceExtension modPath ext) mergeExts
+
+
+data ModuleLoadContext = ModuleLoadContext {
+  mlc_loader :: ModuleLoader,
+  mlc_log :: LogFn,
+  mlc_fromLoc :: T.Text
+}
+
+-- | Find and parse an adl module and all of its transitive dependencies,
+-- with a map to cache results.
+findModule :: ModuleLoadContext -> ModuleName -> SModuleMap -> EIOT (SModule,SModuleMap)
+findModule mlc mname mm = case Map.lookup mname mm of
+  Just smodule -> return (smodule,mm)
+  Nothing -> do
+    msmodule <- mlc_loader mlc (mlc_log mlc) mname
+    case msmodule of
+      Nothing -> eioError (template "\"$1\":\nUnable to find module '$2'" [mlc_fromLoc mlc,formatText mname] )
+      Just smodule -> do
+        mm' <- addDeps smodule (Map.insert mname smodule mm)
+        return (smodule, mm')
+  where
+    addDeps :: SModule -> SModuleMap -> EIOT SModuleMap
+    addDeps m mm = foldM addDep mm (Set.toList (getReferencedModules m))
+      where
+        addDep mm mname = case Map.member mname mm of
+            True -> return mm
+            False -> do
+              (m,mm') <- findModule mlc mname mm
+              addDeps m mm'
+
+findAndCheckModules :: ModuleLoadContext -> [ModuleName] -> EIOT ([RModule],[RModule])
+findAndCheckModules mlc mnames = do
+  smodulemap <- foldM load Map.empty mnames
+  rmodulemap <- mapM (\smodule -> fst <$> checkModule smodule smodulemap) smodulemap
+  let rmodules = map (\mname -> fromJust (Map.lookup mname rmodulemap)) mnames
+      allrmodules = Map.elems rmodulemap
+  return (rmodules,allrmodules)
+  where
+    load :: SModuleMap -> ModuleName ->EIOT SModuleMap
+    load mm mname = snd <$> findModule mlc mname mm
+
+
 -- | Maps a module name to the possible paths of the corresponding ADL file
 data ModuleFinder = ModuleFinder {
   mf_finder :: ModuleName -> [FilePath],
@@ -56,8 +131,8 @@ data ModuleFinder = ModuleFinder {
 type FileSetGenerator = FilePath -> [FilePath]
 
 -- | Find the source file for a given module
-findModule :: ModuleFinder -> T.Text -> ModuleName  -> EIO T.Text FilePath
-findModule mf fromloc mname = find mname (mf_finder mf mname)
+locateModule :: ModuleFinder -> T.Text -> ModuleName  -> EIOT FilePath
+locateModule mf fromloc mname = find mname (mf_finder mf mname)
   where
     find mname [] = eioError (template "\"$1\":\nUnable to find module '$2'" [fromloc,formatText mname] )
     find mname (fpath:fpaths) = do
@@ -67,33 +142,58 @@ findModule mf fromloc mname = find mname (mf_finder mf mname)
           else find mname fpaths
 
 -- | Load and parse an adl file and all of its dependencies
-loadModule :: FilePath -> ModuleFinder -> FileSetGenerator -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
-loadModule fpath0 mf filesetfn mm = do
+loadModule :: FilePath -> ModuleFinder -> SModuleMap -> EIOT (SModule,SModuleMap)
+loadModule fpath0 mf mm = do
     m0 <- parseAndCheckFileSet fpath0
     mm' <- addDeps m0 mm
     return (m0,mm')
   where
-    addDeps :: SModule -> SModuleMap -> EIO T.Text SModuleMap
+    addDeps :: SModule -> SModuleMap -> EIOT SModuleMap
     addDeps m mm = foldM addDep mm (Set.toList (getReferencedModules m))
       where
         addDep mm mname = case Map.member mname mm of
             True -> return mm
             False -> do
-              mpath <- findModule mf (T.pack fpath0) mname
+              mpath <- locateModule mf (T.pack fpath0) mname
               m <- parseAndCheckFileSet mpath
               let mm' = Map.insert mname m mm
               addDeps m mm'
 
-    parseAndCheckFileSet :: FilePath -> EIO T.Text SModule
+    parseAndCheckFileSet :: FilePath -> EIOT SModule
     parseAndCheckFileSet path = do
       extraFiles <- liftIO (filterM doesFileExist (filesetfn path))
       parseAndCheckFile (mf_log mf) path extraFiles
+
+    filesetfn path = map (\ext -> replaceExtension path ext) (mf_mergeFileExtensions mf)
+
+
+-- load and check each of the adl files.
+--
+-- Returns the specified modules, and all modules
+-- including transitive dependencies
+loadAndCheckModules :: ModuleFinder -> [FilePath] -> EIOT ([RModule],[RModule])
+loadAndCheckModules mf modulePaths = do
+  cms <- mapM (loadAndCheckModule1 mf) modulePaths
+  let ms = map fst cms
+      rms = Map.elems ((moduleMap ms) <> (mconcat (map (moduleMap . snd) cms)))
+  return (ms,rms)
+  where
+    moduleMap :: [RModule] -> Map.Map ModuleName RModule
+    moduleMap rms = Map.fromList [(m_name rm,rm) | rm <- rms]
+
+loadAndCheckModule :: ModuleFinder -> FilePath -> EIOT RModule
+loadAndCheckModule mf modulePath = fst <$> loadAndCheckModule1 mf modulePath
+
+loadAndCheckModule1 :: ModuleFinder -> FilePath -> EIOT (RModule,[RModule])
+loadAndCheckModule1 mf modulePath = do
+  (m,mm) <- loadModule modulePath mf Map.empty
+  checkModule m mm
 
 -- | Load and parse a single file, applying checks that can be
 -- done on that file alone. Extra files can be specified, that must
 -- exist and be for the same ADL module. They will be merged into the
 -- resulting module.
-parseAndCheckFile :: (String -> IO ()) -> FilePath -> [FilePath] -> EIO T.Text SModule
+parseAndCheckFile :: (String -> IO ()) -> FilePath -> [FilePath] -> EIOT SModule
 parseAndCheckFile log file extraFiles = do
     m0 <- parseFile file
     m0Extras <- mapM parseFile extraFiles
@@ -101,12 +201,12 @@ parseAndCheckFile log file extraFiles = do
     m <- mergeAnnotations' m1
     checkDeclarations m
   where
-    parseFile :: FilePath -> EIO T.Text (Module0 Decl0)
+    parseFile :: FilePath -> EIOT (Module0 Decl0)
     parseFile fpath = do
       liftIO (log ("Reading " <> fpath <> "..."))
       mapError (T.pack .show ) $ eioFromEither $ P.fromFile P.moduleFile fpath
 
-    mergeModules :: Module0 Decl0 -> [Module0 Decl0] -> EIO T.Text (Module0 Decl0)
+    mergeModules :: Module0 Decl0 -> [Module0 Decl0] -> EIOT (Module0 Decl0)
     mergeModules m extrams = case (filter (\em ->m0_name em /= (m0_name m))) extrams of
       [] -> return (foldr merge m extrams)
       badms -> eioError (template "Unable to merge module(s) $1 into module $2"
@@ -119,7 +219,7 @@ parseAndCheckFile log file extraFiles = do
           , m0_annotations=m0_annotations ma <> m0_annotations mb
           }
 
-    checkDeclarations :: Module0 SDecl -> EIO T.Text SModule
+    checkDeclarations :: Module0 SDecl -> EIOT SModule
     checkDeclarations (Module0 n i decls0 anns) = do
       let declMap = foldr (\d -> Map.insertWith (++)  (d_name d) [d]) Map.empty decls0
           declOrder = nub (fmap d_name decls0)
@@ -129,7 +229,7 @@ parseAndCheckFile log file extraFiles = do
     -- Ensure that for all the decls associated with a name, either
     --    * we have one unversioned decl
     --    * we have have a consistently versioned set
-    checkDeclList :: [SDecl] -> EIO T.Text SDecl
+    checkDeclList :: [SDecl] -> EIOT SDecl
     checkDeclList ds = case partition hasVersion ds of
         (ds,[]) -> do
           let ds' = sortBy (comparing fst) [ (i,d) | (d@Decl{d_version=Just i}) <- filter hasVersion ds ]
@@ -143,7 +243,7 @@ parseAndCheckFile log file extraFiles = do
         hasVersion Decl{d_version=Nothing} = False
         hasVersion _ = True
 
-    mergeAnnotations' :: Module0 Decl0 -> EIO T.Text (Module0 SDecl)
+    mergeAnnotations' :: Module0 Decl0 -> EIOT (Module0 SDecl)
     mergeAnnotations' m0 = do
       let (m,unusedAnnotations) = mergeAnnotations m0
       case unusedAnnotations of
@@ -682,11 +782,6 @@ modulePathCandidates rootpaths (ModuleName mname) = [ joinPath ([path]++names++[
     names = map T.unpack (init mname)
     name0 = T.unpack (last mname)
 
--- | Generate the sets of files to be loaded based upon a
--- list of path extensions.
-fileSetGenerator :: [String] -> FileSetGenerator
-fileSetGenerator extensions path = map (\ext -> replaceExtension path ext) extensions
-
 data AdlFlags = AdlFlags {
   af_searchPath :: [FilePath],
   af_mergeFileExtensions :: [String],
@@ -702,26 +797,8 @@ defaultAdlFlags = AdlFlags
   , af_generateTransitive = False
   }
 
--- load and check each of the adl files.
---
--- Returns the specified modules, and all modules
--- including transitive dependencies
-loadAndCheckModules :: ModuleFinder -> [FilePath] -> EIOT ([RModule],[RModule])
-loadAndCheckModules mf modulePaths = do
-  cms <- mapM (loadAndCheckModule1 mf) modulePaths
-  let ms = map fst cms
-      rms = Map.elems ((moduleMap ms) <> (mconcat (map (moduleMap . snd) cms)))
-  return (ms,rms)
-  where
-    moduleMap :: [RModule] -> Map.Map ModuleName RModule
-    moduleMap rms = Map.fromList [(m_name rm,rm) | rm <- rms]
-
-loadAndCheckModule :: ModuleFinder -> FilePath -> EIOT RModule
-loadAndCheckModule mf modulePath = fst <$> loadAndCheckModule1 mf modulePath
-
-loadAndCheckModule1 :: ModuleFinder -> FilePath -> EIOT (RModule,[RModule])
-loadAndCheckModule1 mf modulePath = do
-    (m,mm) <- loadModule1
+checkModule :: SModule -> SModuleMap -> EIOT (RModule,[RModule])
+checkModule m mm = do
     mapM_ checkModuleForDuplicates (m:Map.elems mm)
     case sortByDeps (Map.elems mm) of
       Nothing -> eioError (template "Mutually dependent modules are not allowed: $1" [T.intercalate ", " (map formatText (Map.keys mm))])
@@ -730,9 +807,6 @@ loadAndCheckModule1 mf modulePath = do
         (_,rm) <- resolve1 m ns
         return (rm,rms)
   where
-    loadModule1 :: EIOT (SModule, SModuleMap)
-    loadModule1 = loadModule modulePath mf (fileSetGenerator (mf_mergeFileExtensions mf)) Map.empty
-
     checkModuleForDuplicates :: SModule -> EIOT ()
     checkModuleForDuplicates m = failOnErrors m (checkDuplicates m)
 
@@ -896,7 +970,7 @@ associateCustomTypes getCustomType mname m = m{m_decls=decls',m_annotations=anns
 -- | Check that all declarations that are annotated with CustomSerialization
 -- actual have custom types. Returns the failing declarations
 
-checkCustomSerializations :: Module (Maybe ct) (ResolvedTypeT (Maybe ct)) -> EIO T.Text ()
+checkCustomSerializations :: Module (Maybe ct) (ResolvedTypeT (Maybe ct)) -> EIOT ()
 checkCustomSerializations m = when (not (Map.null badDecls)) $ do
   eioError (template "The declaration(s) for $1 specify a custom serialization without a corresponding custom type"
             [T.intercalate ", " (Map.keys badDecls)])
