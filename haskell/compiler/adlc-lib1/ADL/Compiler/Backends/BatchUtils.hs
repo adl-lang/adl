@@ -38,13 +38,6 @@ batchModuleLoader log sources mergeExts =   mergedModuleLoader
     | (AdlTreeSource_localDir path) <- sources
   ]
 
-batchModuleFinder :: LogFn -> AdlSources -> [T.Text] -> ModuleFinder
-batchModuleFinder log sources mergeExts = ModuleFinder {
-  mf_finder = modulePathCandidates [T.unpack path | (AdlTreeSource_localDir path) <- sources],
-  mf_log = log,
-  mf_mergeFileExtensions = map T.unpack mergeExts
-}
-
 withBatchFileWriter :: LogFn -> OutputParams -> (FileWriter -> EIOT a) -> EIOT a
 withBatchFileWriter log oparams fn = do
   wwm <- liftIO $ batchFileWriter log oparams

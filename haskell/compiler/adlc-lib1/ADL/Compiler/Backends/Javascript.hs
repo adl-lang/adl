@@ -97,7 +97,7 @@ emptyModuleFile mn = ModuleFile mn Set.empty [] []
 generate :: AdlFlags -> JavascriptFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af jf fileWriter modulePaths = catchAllExceptions  $ do
     for_ modulePaths $ \modulePath -> do
-      m <- loadAndCheckModule (moduleFinder af) modulePath
+      m <- fst <$> loadAndCheckModule (moduleFinder af) modulePath
       generateModule jf fileWriter m
 
 -- | Generate and write the javascript code for a single ADL module

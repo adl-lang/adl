@@ -64,7 +64,7 @@ generateBatch libDir params = do
     let genmods = if (javaParams_generateTransitive params) then allmods else reqmods
     imports <- generateModules jf fileWriter genmods allmods
     when (jf_includeRuntime jf) $ do
-      generateRuntime1 mlc jf fileWriter imports
+      generateRuntime mlc jf fileWriter imports
   where
     jf  = JavaFlags {
       jf_libDir = libDir,
@@ -95,7 +95,7 @@ generate af jf fileWriter modulePaths = catchAllExceptions  $ do
 
   imports <- generateModules jf fileWriter genmods allmods
   when (jf_includeRuntime jf) $ do
-    generateRuntime mf jf fileWriter imports
+    generateRuntime (loadContextFromFileContext mf "runtime") jf fileWriter imports
 
 generateModules :: JavaFlags -> FileWriter -> [RModule] -> [RModule] -> EIOT (Set.Set JavaClass)
 generateModules jf fileWriter genmods allmods = do
@@ -779,26 +779,11 @@ generateEnum codeProfile moduleName javaPackageFn decl union = execState gen sta
         error "Unimplemented: Parcellable for enums"
 
 
-generateRuntime:: ModuleFinder -> JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
-generateRuntime mf jf fileWriter imports1 = do
-    sysmods <- loadSystemModules
+generateRuntime:: ModuleLoadContext -> JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
+generateRuntime mlc jf fileWriter imports1 = do
+    sysmods <- fmap fst (findAndCheckModules mlc sysModules)
     imports2 <- generateModules jf fileWriter sysmods sysmods
     generateRuntime0 jf fileWriter (imports1 <> imports2)
-  where
-    loadSystemModules :: EIOT [RModule]
-    loadSystemModules =  do
-      sysModulePaths <- mapM (locateModule mf "runtime") sysModules
-      fmap fst (loadAndCheckModules mf sysModulePaths)
-
-generateRuntime1:: ModuleLoadContext -> JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
-generateRuntime1 mlc jf fileWriter imports1 = do
-    sysmods <- loadSystemModules
-    imports2 <- generateModules jf fileWriter sysmods sysmods
-    generateRuntime0 jf fileWriter (imports1 <> imports2)
-  where
-    loadSystemModules :: EIOT [RModule]
-    loadSystemModules =  do
-      fmap fst (findAndCheckModules mlc sysModules)
 
 generateRuntime0 :: JavaFlags -> FileWriter -> Set.Set JavaClass -> EIOT ()
 generateRuntime0 jf fileWriter imports = liftIO $ do

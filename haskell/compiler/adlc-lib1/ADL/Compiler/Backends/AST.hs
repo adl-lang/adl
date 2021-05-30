@@ -56,16 +56,15 @@ generate af astFlags fileWriter modulePaths = case astf_combinedModuleFile astFl
 
 generateIndividualModuleFiles mf fileWriter modulePaths = do
   catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-    rm <- loadAndCheckModule mf modulePath
+    rm <- fst <$> loadAndCheckModule mf modulePath
     writeModuleFile fileWriter rm
 
 -- Write a combined single json file containing the specified modules, and all of the
 -- ADL files upon which they depend. The json in the file will have type
 --    StringMap<AST.Module>
 generateCombinedModuleFile mf writeFile modulePaths = do
-  allModules <- catchAllExceptions  $ forM modulePaths (loadAndCheckModule1 mf)
-  let modulesByName = mconcat (map merge1 allModules)
+  allModules <- catchAllExceptions  $ (snd <$> loadAndCheckModules mf modulePaths)
+  let modulesByName = mconcat (map keyedModule allModules)
   liftIO $ writeFile (JSON.encodePretty' JSON.defConfig (adlToJson modulesByName))
   where
     keyedModule m = SM.singleton (moduleNameToA2 (m_name m)) (moduleToA2 (fullyScopedModule m))
-    merge1 (m,ms) = mconcat (keyedModule m : (map keyedModule ms))

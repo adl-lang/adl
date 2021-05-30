@@ -123,7 +123,7 @@ runJavaBackend :: [FilePath] -> [FilePath] -> FilePath -> (J.JavaFlags -> J.Java
 runJavaBackend ipaths mpaths epath updateflags = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-java"]}
+  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-java"], af_log=putStrLn}
       jf = J.JavaFlags {
         J.jf_libDir = "LIBDIR",
         J.jf_package = J.javaPackage "adl",
@@ -230,7 +230,7 @@ runTests = do
       collectResults (runHaskellBackend1 "test1/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      collectResults (runHaskellBackend1 "test2/input/test.adl")
+      collectResults (runHaskellBackend1 "test2/input/test2.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runHaskellBackend1 "test3/input/test.adl")
@@ -277,7 +277,7 @@ runTests = do
       collectResults (runCppBackend1 "test1/input/test.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      collectResults (runCppBackend1 "test2/input/test.adl")
+      collectResults (runCppBackend1 "test2/input/test2.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runCppBackend1 "test3/input/test.adl")
@@ -321,7 +321,7 @@ runTests = do
 
   describe "adlc java backend" $ do
     it "generates expected code for various structures" $ do
-      collectResults (runJavaBackend1 "test2/input/test.adl")
+      collectResults (runJavaBackend1 "test2/input/test2.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runJavaBackend1 "test3/input/test.adl")
@@ -392,7 +392,7 @@ runTests = do
 
   describe "adlc typescript backend" $ do
     it "generates expected output for various structures" $
-      collectResults (runTsBackend id [stdsrc] ["test2/input/test.adl"] "test2/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test2/input/test2.adl"] "test2/ts-output")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runTsBackend id [stdsrc] ["test3/input/test.adl"] "test3/ts-output")
@@ -425,7 +425,7 @@ runTests = do
       collectResults (runRsBackend [stdsrc] ["test1/input/test.adl"] "test1/rs-output" "test1::adl")
         `shouldReturn` MatchOutput
     it "generates expected output for various structures" $
-      collectResults (runRsBackend [stdsrc] ["test2/input/test.adl"] "test2/rs-output" "test2::adl")
+      collectResults (runRsBackend [stdsrc] ["test2/input/test2.adl"] "test2/rs-output" "test2::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runRsBackend [stdsrc] ["test3/input/test.adl"] "test3/rs-output" "test3::adl")
