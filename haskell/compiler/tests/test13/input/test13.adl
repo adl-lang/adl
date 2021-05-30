@@ -1,4 +1,4 @@
-module Test
+module test13
 {
     struct X<A,A>
     {
