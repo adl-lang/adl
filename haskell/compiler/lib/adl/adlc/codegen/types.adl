@@ -10,22 +10,8 @@ union AdlTreeSource {
    // Read modules from a local directory
    FilePath localDir;
 
-   // Read modules from a remote git repo
-   GitTreeSource git;
-
    // Embedded definitions
    StringMap<Module> modules;
-};
-
-struct GitTreeSource {
-   // The URL of the repo
-   String url;
-
-   // The commit/branch/tag
-   String commit;
-
-   // The subdirectory in the repo containing the URL
-   FilePath subDir;
 };
 
 /// Config for the writing of output files
