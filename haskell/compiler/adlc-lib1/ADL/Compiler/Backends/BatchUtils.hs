@@ -23,6 +23,12 @@ import ADL.Compiler.Processing
 import ADL.Compiler.Utils
 import ADL.Core.Value
 import ADL.Core.Nullable(unNullable)
+
+import qualified ADL.Core.StringMap as SM
+import qualified ADL.Sys.Adlast as A2
+import ADL.Compiler.ExternalAST(moduleFromA2, moduleNameFromA2)
+
+
 import ADL.Utils.FileDiff(dirContents)
 import ADL.Utils.Format
 import ADL.Adlc.Codegen.Types(AdlSources, AdlTreeSource(..),OutputParams(..))
@@ -33,10 +39,15 @@ batchLogFn verbose = case verbose of
   False -> \s -> return ()
 
 batchModuleLoader :: LogFn -> AdlSources -> [T.Text] -> ModuleLoader
-batchModuleLoader log sources mergeExts =   mergedModuleLoader
-  [ modulesFromDirectory (T.unpack path) (map T.unpack mergeExts)
-    | (AdlTreeSource_localDir path) <- sources
-  ]
+batchModuleLoader log sources mergeExts = 
+  mergedModuleLoader (map fromTreeSource sources)
+  where
+    fromTreeSource (AdlTreeSource_localDir path) = 
+      modulesFromDirectory (T.unpack path) (map T.unpack mergeExts)
+    fromTreeSource (AdlTreeSource_modules modules)  =
+      (modulesFromAst . Map.fromList . map translateModule . SM.elems) modules
+
+    translateModule a2module = (moduleNameFromA2 (A2.module_name a2module), moduleFromA2 a2module)
 
 withBatchFileWriter :: LogFn -> OutputParams -> (FileWriter -> EIOT a) -> EIOT a
 withBatchFileWriter log oparams fn = do

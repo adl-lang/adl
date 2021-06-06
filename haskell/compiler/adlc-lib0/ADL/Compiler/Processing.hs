@@ -67,6 +67,9 @@ modulesFromDirectory dirPath mergeExts = \log mname -> do
     then Just <$> loadModuleFromFiles log modPath mergeExts
     else return Nothing
 
+-- | A ModuleLoader that reads from an in memory AST.
+modulesFromAst :: Map.Map ModuleName SModule -> ModuleLoader
+modulesFromAst modules = \log mname -> return (Map.lookup mname modules)
 
 -- | Load and parse a module from a file, merging in associated
 -- definitions from corresponding files with extensions specified.

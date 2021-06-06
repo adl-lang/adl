@@ -3,6 +3,8 @@ module ADL.Compiler.ExternalAST(
   moduleNameToA2,
   moduleToA2,
   declToA2,
+  moduleNameFromA2,
+  moduleFromA2,
   ) where
 
 import qualified Data.Map as Map
@@ -71,3 +73,86 @@ typeRefToA2 (RT_Primitive p) = A2.TypeRef_primitive (ptToText p)
 
 annotationsToA2 :: Map.Map ScopedName (ResolvedType,JSON.Value) -> Map.Map A2.ScopedName JSON.Value
 annotationsToA2 = Map.fromList . map (\(k,(_,v)) -> (scopedNameToA2 k,v)) . Map.toList
+
+-- | Convert the external AST into the internal one, suitable for codegen etc.
+
+moduleFromA2 :: A2.Module -> SModule
+moduleFromA2 m = Module {
+  m_name = moduleNameFromA2 (A2.module_name m),
+  m_imports = map importFromA2 (A2.module_imports m),
+  m_decls = Map.fromList [(d_name d, d) | d <- decls],
+  m_declOrder = [d_name d | d <- decls],
+  m_annotations = annotationsFromA2 (A2.module_annotations m)
+  }
+  where
+    decls = map declFromA2 (SM.elems (A2.module_decls m))
+
+moduleNameFromA2 :: A2.ModuleName -> ModuleName 
+moduleNameFromA2 = ModuleName . T.splitOn "."
+
+importFromA2 :: A2.Import -> Import
+importFromA2 (A2.Import_moduleName mn) = Import_Module (moduleNameFromA2 mn)
+importFromA2 (A2.Import_scopedName sn) = Import_ScopedName (scopedNameFromA2 sn)
+
+declFromA2 :: A2.Decl -> SDecl
+declFromA2 decl = Decl {
+  d_name  = A2.decl_name decl,
+  d_version = fmap fromIntegral (A2.decl_version decl),
+  d_annotations = annotationsFromA2 (A2.decl_annotations decl),
+  d_type = declTypeFromA2 (A2.decl_type_ decl),
+  d_customType = ()
+}
+
+scopedNameFromA2 :: A2.ScopedName -> ScopedName
+scopedNameFromA2 sn = ScopedName {
+  sn_moduleName = moduleNameFromA2 (A2.scopedName_moduleName sn),
+  sn_name = A2.scopedName_name sn
+}
+
+annotationsFromA2 :: A2.Annotations -> Annotations ScopedName
+annotationsFromA2 = Map.fromList . map conv . Map.toList
+  where
+    conv (sn,jv) = let sn' = scopedNameFromA2 sn in (sn', (sn', jv))
+
+declTypeFromA2 :: A2.DeclType -> DeclType ScopedName
+declTypeFromA2 (A2.DeclType_struct_ s) = Decl_Struct $ Struct {
+  s_typeParams = A2.struct_typeParams s,
+  s_fields = map fieldFromA2 (A2.struct_fields s)
+}
+declTypeFromA2 (A2.DeclType_union_ u) = Decl_Union $ Union {
+  u_typeParams = A2.union_typeParams u,
+  u_fields = map fieldFromA2 (A2.union_fields u)
+}
+declTypeFromA2 (A2.DeclType_type_ t) = Decl_Typedef $ Typedef {
+  t_typeParams = A2.typeDef_typeParams t,
+  t_typeExpr =  typeExprFromA2 (A2.typeDef_typeExpr t)
+}
+
+declTypeFromA2 (A2.DeclType_newtype_ n) = Decl_Newtype $ Newtype {
+  n_typeParams = A2.newType_typeParams n,
+  n_typeExpr =  typeExprFromA2 (A2.newType_typeExpr n),
+  n_default = A2.newType_default n
+}
+
+fieldFromA2 :: A2.Field -> Field ScopedName
+fieldFromA2 f = Field {
+  f_name = A2.field_name f,
+  f_serializedName = A2.field_serializedName f,
+  f_type = typeExprFromA2 (A2.field_typeExpr f),
+  f_default = A2.field_default f,
+  f_annotations = annotationsFromA2 (A2.field_annotations f)
+}
+
+typeExprFromA2 :: A2.TypeExpr -> TypeExpr ScopedName
+typeExprFromA2 te = TypeExpr ref params 
+  where
+    ref = scopedNameFromTypeRefA2 (A2.typeExpr_typeRef te)
+    params = map typeExprFromA2 (A2.typeExpr_parameters te)
+
+scopedNameFromTypeRefA2 :: A2.TypeRef -> ScopedName
+scopedNameFromTypeRefA2 (A2.TypeRef_primitive ident) = scopedNameFromIdent ident
+scopedNameFromTypeRefA2 (A2.TypeRef_typeParam ident) = scopedNameFromIdent ident
+scopedNameFromTypeRefA2 (A2.TypeRef_reference sn) = scopedNameFromA2 sn
+
+scopedNameFromIdent :: Ident -> ScopedName
+scopedNameFromIdent ident = ScopedName (ModuleName []) ident
