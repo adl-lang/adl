@@ -2,6 +2,7 @@
 module ADL.Compiler.Backends.AST(
   AstFlags(..),
   generate,
+  generateBatch,
   ) where
 
 import qualified Data.Map as Map
@@ -23,6 +24,8 @@ import ADL.Compiler.AST
 import ADL.Compiler.Processing
 import ADL.Compiler.Primitive
 import ADL.Compiler.Utils
+import ADL.Compiler.Backends.BatchUtils
+import ADL.Adlc.Codegen.Ast(AstParams(..))
 import ADL.Compiler.ExternalAST(moduleNameToA2, moduleToA2)
 
 import ADL.Core.Value
@@ -46,6 +49,16 @@ writeModuleFile fileWriter m = do
       encodeDef = JSON.defConfig{JSON.confCompare=compare}
 
   liftIO $ fileWriter fpath (JSON.encodePretty' encodeDef v)
+
+
+generateBatch :: FilePath -> AstParams -> EIOT ()
+generateBatch fpath params = do
+  let log = batchLogFn (astParams_verbose params)
+      mloader = batchModuleLoader log (astParams_sources params) (astParams_mergeExts params)
+      mlc = ModuleLoadContext mloader log "batch"
+  withBatchFileWriter log (astParams_output params) $ \fileWriter -> do
+    return ()
+
 
 generate :: AdlFlags -> AstFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af astFlags fileWriter modulePaths = case astf_combinedModuleFile astFlags of

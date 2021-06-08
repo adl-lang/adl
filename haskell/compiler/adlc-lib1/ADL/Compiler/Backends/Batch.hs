@@ -28,7 +28,7 @@ generate libDir batchFile = do
 generateBatchItem :: FilePath -> BatchItem -> EIOT ()
 generateBatchItem libDir bitem =
   case bitem of
-     BatchItem_ast ast -> return ()
+     BatchItem_ast ast ->  A.generateBatch libDir ast
      BatchItem_java java -> J.generateBatch libDir java
 
 adlFromJsonFile :: AdlValue a => FilePath -> IO (Either T.Text a)

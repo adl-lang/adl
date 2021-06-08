@@ -21,6 +21,9 @@ struct AstParams {
 
   // Output is written to this file as a value of type StringMap<Module>
   FilePath outputFile;
+
+  // If true, log extra information
+  Bool verbose = false;
 };
 
 };
