@@ -10,6 +10,10 @@ copyright:           (c) 2013-2021 Tim Docker
 category:            Network
 build-type:          Simple
 
+Flag bootstrap
+  Description:   Build just the bootstrap compiler
+  Default:       False
+
 data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/adl/adlc/config/haskell.adl
                     , lib/adl/adlc/config/java.adl
@@ -65,24 +69,43 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/rust/runtime/mod.rs
 
 executable adlc-bootstrap
-  main-is:           Main.hs
-  hs-source-dirs:    adlc-bootstrap
+  main-is:            Main.hs
+  hs-source-dirs:     adlc-bootstrap
+                    , adlc-lib0
   ghc-options:       -fwarn-incomplete-patterns
   other-modules:      BootstrapCustomTypes
+  if flag(bootstrap)
+    buildable:        True
+  else
+    buildable:        False
   build-depends:      base
+                    , bytestring
                     , containers
+                    , directory
+                    , parsec
+                    , vector
                     , text
                     , mtl
+                    , unordered-containers
+                    , transformers
                     , filepath
+                    , base64-bytestring
+                    , attoparsec
+                    , aeson
+                    , scientific
+                    , stm
                     , executable-path
                     , adl-runtime
-                    , adlc-lib0
 
 executable adlc
   main-is:            Main.hs
   hs-source-dirs:     adlc
   ghc-options:       -fwarn-incomplete-patterns
   other-modules:      Paths_adl_compiler
+  if flag(bootstrap)
+    buildable:        False
+  else
+    buildable:        True
   build-depends:      base
                     , text
                     , mtl
@@ -96,6 +119,10 @@ test-suite adlc-tests
   main-is:            Main.hs
   hs-source-dirs:     tests
   ghc-options:       -fwarn-incomplete-patterns
+  if flag(bootstrap)
+    buildable:        False
+  else
+    buildable:        True
   build-depends:      base
                     , bytestring
                     , text
@@ -106,46 +133,6 @@ test-suite adlc-tests
                     , temporary
                     , adl-runtime
                     , adl-compiler
-
--- Library code without generated ADL (so available to the bootstrap compiler)
-library adlc-lib0
-  hs-source-dirs:     adlc-lib0
-  ghc-options:       -fwarn-incomplete-patterns
-  exposed-modules:   ADL.Compiler.AST,
-                     ADL.Compiler.Primitive,
-                     ADL.Compiler.ParserP,
-                     ADL.Compiler.Utils,
-                     ADL.Compiler.EIO,
-                     ADL.Compiler.Processing,
-                     ADL.Compiler.Flags,
-                     ADL.Compiler.ExternalAST,
-                     ADL.Compiler.Backends.Verify,
-                     ADL.Compiler.Backends.Haskell,
-                     ADL.Utils.DelayIO,
-                     ADL.Utils.FileDiff,
-                     ADL.Utils.Format,
-                     ADL.Utils.IndentedCode,
-                     ADL.Utils.Resource
-  build-depends:      base
-                    , bytestring
-                    , cases
-                    , text
-                    , containers
-                    , parsec
-                    , mtl
-                    , transformers
-                    , filepath
-                    , directory
-                    , unordered-containers
-                    , vector
-                    , base64-bytestring
-                    , attoparsec
-                    , stm
-                    , aeson
-                    , scientific
-                    , aeson-pretty
-                    , adl-runtime
-
 
 -- Library code including generated ADL (so not available to the bootstrap compiler)
 -- publically referenceable by other projects as `adl-compiler`
@@ -185,6 +172,10 @@ library
                     , ADL.Adlc.Config.Rust
                     , HaskellCustomTypes
                     , Paths_adl_compiler
+  if flag(bootstrap)
+    buildable:        False
+  else
+    buildable:        True
   build-depends:      base
                     , bytestring
                     , cases

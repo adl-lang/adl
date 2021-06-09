@@ -12,7 +12,7 @@ adlcb () {
 
 # Start clean, and build the bootstrap compiler
 stack clean
-stack build adl-compiler:adlc-bootstrap
+stack build --flag adl-compiler:bootstrap adl-compiler:adlc-bootstrap
 
 # Generate the haskell code for the per-language annotation types
 adlcb -I $CONFIG_ADL_DIR -O compiler/adlc-lib1 $CONFIG_ADL_DIR/haskell.adl
@@ -26,8 +26,7 @@ adlcb -O runtime/src $ADL_STDLIB_DIR/sys/types.adl
 adlcb -O runtime/src $ADL_STDLIB_DIR/sys/adlast.adl
 
 # Build and test the compiler itself
-stack build adl-compiler:adlc
-stack test adl-compiler
+stack build --test adl-compiler 
 
 # Generate ADL specified elements of the typescript runtime
 # these are in the style "template" so they can be converted
