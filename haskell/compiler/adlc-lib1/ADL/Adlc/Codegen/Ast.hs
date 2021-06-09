@@ -21,11 +21,12 @@ data AstParams = AstParams
     , astParams_modules :: [ADL.Sys.Adlast.ModuleName]
     , astParams_generateTransitive :: Prelude.Bool
     , astParams_outputFile :: ADL.Adlc.Codegen.Types.FilePath
+    , astParams_verbose :: Prelude.Bool
     }
     deriving (Prelude.Eq,Prelude.Show)
 
 mkAstParams :: ADL.Adlc.Codegen.Types.AdlSources -> [ADL.Sys.Adlast.ModuleName] -> ADL.Adlc.Codegen.Types.FilePath -> AstParams
-mkAstParams sources modules outputFile = AstParams sources [  ] modules Prelude.True outputFile
+mkAstParams sources modules outputFile = AstParams sources [  ] modules Prelude.True outputFile Prelude.False
 
 instance AdlValue AstParams where
     atype _ = "adlc.codegen.ast.AstParams"
@@ -36,6 +37,7 @@ instance AdlValue AstParams where
         , genField "modules" astParams_modules
         , genField "generateTransitive" astParams_generateTransitive
         , genField "outputFile" astParams_outputFile
+        , genField "verbose" astParams_verbose
         ]
     
     jsonParser = AstParams
@@ -44,3 +46,4 @@ instance AdlValue AstParams where
         <*> parseField "modules"
         <*> parseFieldDef "generateTransitive" Prelude.True
         <*> parseField "outputFile"
+        <*> parseFieldDef "verbose" Prelude.False

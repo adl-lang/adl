@@ -36,6 +36,47 @@ data AstFlags = AstFlags {
   astf_combinedModuleFile :: Maybe FilePath
   }
 
+generateBatch :: FilePath -> AstParams -> EIOT ()
+generateBatch fpath params = do
+  let log = batchLogFn (astParams_verbose params)
+      mloader = batchModuleLoader log (astParams_sources params) (astParams_mergeExts params)
+      mlc = ModuleLoadContext mloader log "batch"
+      oa = OutputArgs {
+        oa_log=log,
+        oa_noOverwrite=True,
+        oa_outputPath=".",
+        oa_manifestFile=Nothing
+        }
+      writeFile = writeOutputFile oa (T.unpack (astParams_outputFile params))
+  (reqmods,allmods) <- findAndCheckModules mlc (map moduleNameFromText (astParams_modules params)) 
+  writeCombinedModuleFile writeFile allmods
+
+generate :: AdlFlags -> AstFlags -> FileWriter -> [FilePath] -> EIOT ()
+generate af astFlags fileWriter modulePaths = case astf_combinedModuleFile astFlags of
+  Nothing -> genIndividual mf fileWriter modulePaths
+  (Just file) -> genCombined mf (fileWriter file) modulePaths
+  where
+    mf = moduleFinder af
+
+    genIndividual mf fileWriter modulePaths = do
+      catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
+        rm <- fst <$> loadAndCheckModule mf modulePath
+        writeModuleFile fileWriter rm
+
+    genCombined mf writeFile modulePaths = do
+      allModules <- catchAllExceptions  $ (snd <$> loadAndCheckModules mf modulePaths)
+      writeCombinedModuleFile writeFile allModules
+
+-- Write a combined single json file containing the specified modules, and all of the
+-- ADL files upon which they depend. The json in the file will have type
+--    StringMap<AST.Module>
+writeCombinedModuleFile :: (LBS.ByteString -> IO ()) -> [RModule] -> EIOT ()
+writeCombinedModuleFile writeFile allModules = do
+  let modulesByName = mconcat (map keyedModule allModules)
+  liftIO $ writeFile (JSON.encodePretty' JSON.defConfig (adlToJson modulesByName))
+  where
+    keyedModule m = SM.singleton (moduleNameToA2 (m_name m)) (moduleToA2 (fullyScopedModule m))
+
 writeModuleFile :: (FilePath -> LBS.ByteString -> IO ()) ->
                    RModule ->
                    EIO a ()
@@ -49,35 +90,3 @@ writeModuleFile fileWriter m = do
       encodeDef = JSON.defConfig{JSON.confCompare=compare}
 
   liftIO $ fileWriter fpath (JSON.encodePretty' encodeDef v)
-
-
-generateBatch :: FilePath -> AstParams -> EIOT ()
-generateBatch fpath params = do
-  let log = batchLogFn (astParams_verbose params)
-      mloader = batchModuleLoader log (astParams_sources params) (astParams_mergeExts params)
-      mlc = ModuleLoadContext mloader log "batch"
-  withBatchFileWriter log (astParams_output params) $ \fileWriter -> do
-    return ()
-
-
-generate :: AdlFlags -> AstFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af astFlags fileWriter modulePaths = case astf_combinedModuleFile astFlags of
-  Nothing -> generateIndividualModuleFiles mf fileWriter modulePaths
-  (Just file) -> generateCombinedModuleFile mf (fileWriter file) modulePaths
-  where
-    mf = moduleFinder af
-
-generateIndividualModuleFiles mf fileWriter modulePaths = do
-  catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-    rm <- fst <$> loadAndCheckModule mf modulePath
-    writeModuleFile fileWriter rm
-
--- Write a combined single json file containing the specified modules, and all of the
--- ADL files upon which they depend. The json in the file will have type
---    StringMap<AST.Module>
-generateCombinedModuleFile mf writeFile modulePaths = do
-  allModules <- catchAllExceptions  $ (snd <$> loadAndCheckModules mf modulePaths)
-  let modulesByName = mconcat (map keyedModule allModules)
-  liftIO $ writeFile (JSON.encodePretty' JSON.defConfig (adlToJson modulesByName))
-  where
-    keyedModule m = SM.singleton (moduleNameToA2 (m_name m)) (moduleToA2 (fullyScopedModule m))
