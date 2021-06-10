@@ -8,6 +8,7 @@ a typescript backend from an ADL file.
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Compiler.Backends.Typescript(
  generate,
+ generateBatch,
   TypescriptFlags(..),
   TypescriptStyle(..),
   ) where
@@ -25,6 +26,7 @@ import           ADL.Compiler.EIO
 import           ADL.Compiler.Processing
 import           ADL.Compiler.Utils
 import           ADL.Utils.IndentedCode
+
 import           Control.Monad                              (when)
 import           Control.Monad.Trans                        (liftIO)
 import           Control.Monad.Trans.State.Strict
@@ -37,7 +39,37 @@ import           System.FilePath                            (joinPath,
                                                              (<.>), (</>))
 
 import           ADL.Compiler.Backends.Typescript.Internal
+import           ADL.Compiler.Backends.BatchUtils
 import           ADL.Compiler.DataFiles
+import           ADL.Compiler.ExternalAST                   (scopedNameFromA2)
+import           ADL.Adlc.Codegen.Typescript                (TypescriptParams(..))
+import qualified ADL.Adlc.Codegen.Typescript                as CG
+
+generateBatch :: FilePath -> TypescriptParams -> EIOT ()
+generateBatch libDir params = do
+  let log = batchLogFn (typescriptParams_verbose params)
+      mloader = batchModuleLoader log (typescriptParams_sources params) (typescriptParams_mergeExts params)
+      mlc = ModuleLoadContext mloader log "batch"
+      tf = TypescriptFlags {
+        tsStyle= case typescriptParams_style params of
+          CG.TypescriptStyle_tsc -> Tsc
+          CG.TypescriptStyle_deno -> Deno,
+        tsLibDir=libDir,
+        tsIncludeRuntime=typescriptParams_includeRuntime params,
+        tsIncludeResolver=typescriptParams_includeResolver params,
+        tsExcludeAst=typescriptParams_excludeAst params,
+        tsExcludedAstAnnotations=Just (map scopedNameFromA2 (typescriptParams_excludedAstAnnotations params)),
+        tsRuntimeDir=T.unpack (typescriptParams_runtimeDir params)
+      }
+  withBatchFileWriter log (typescriptParams_output params) $ \fileWriter -> do
+    (reqmods,allmods) <- findAndCheckModules mlc (map moduleNameFromText (typescriptParams_modules params))
+    let genmods = if (typescriptParams_generateTransitive params) then allmods else reqmods
+    for genmods $ \m -> do
+      let m' = fullyScopedModule m
+      when (generateCode (m_annotations m')) (generateModule tf fileWriter m')
+      return m'
+    when (tsIncludeRuntime tf) (generateRuntime tf fileWriter)
+    when (tsIncludeResolver tf) (generateResolver tf fileWriter genmods)
 
 -- | Run this backend on a list of ADL modules. Check each module
 -- for validity, and then generate the code for it.
@@ -49,12 +81,12 @@ generate af tf fileWriter modulePaths = catchAllExceptions  $ do
     let m' = fullyScopedModule m
     when (generateCode (m_annotations m')) (generateModule tf fileWriter m')
     return m'
-  when (tsIncludeRuntime tf) (generateRuntime af tf fileWriter modulePaths)
-  when (tsIncludeResolver tf) (generateResolver af tf fileWriter ms)
+  when (tsIncludeRuntime tf) (generateRuntime tf fileWriter)
+  when (tsIncludeResolver tf) (generateResolver tf fileWriter ms)
 
 -- JS.generate af (JS.JavascriptFlags {}) fileWriter
-generateRuntime :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
-generateRuntime af tf fileWriter modulePaths = do
+generateRuntime :: TypescriptFlags -> FileWriter -> EIOT ()
+generateRuntime tf fileWriter = do
     files <- liftIO $ dirContents runtimeLibDir
     liftIO $ for_ files $ \inpath -> do
       content0 <- LBS.readFile (runtimeLibDir </> inpath)
@@ -63,8 +95,8 @@ generateRuntime af tf fileWriter modulePaths = do
     where
       runtimeLibDir = typescriptRuntimeDir (tsLibDir tf)
 
-generateResolver :: AdlFlags -> TypescriptFlags -> FileWriter -> [RModule] -> EIOT ()
-generateResolver af tf fileWriter ms = do
+generateResolver :: TypescriptFlags -> FileWriter -> [RModule] -> EIOT ()
+generateResolver tf fileWriter ms = do
   liftIO $ fileWriter "resolver.ts" (genCode code)
   where
     gms = sortOn m_name (filter (generateCode . m_annotations) ms)
@@ -244,3 +276,4 @@ genTypedef m decl typedef@Typedef{t_typeParams=typeParams0} = do
     typeDecl = ctemplate "export type $1$2 = $3;" [d_name decl, typeParamsExpr typeParams, typeExprOutput]
   addDeclaration (renderCommentForDeclaration decl <> typeDecl)
   addAstDeclaration m decl
+

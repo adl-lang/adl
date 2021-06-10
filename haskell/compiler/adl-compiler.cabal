@@ -175,6 +175,7 @@ library
                     , ADL.Adlc.Codegen.Ast
                     , ADL.Adlc.Codegen.Batch
                     , ADL.Adlc.Codegen.Java
+                    , ADL.Adlc.Codegen.Typescript
                     , ADL.Adlc.Codegen.Types
                     , HaskellCustomTypes
                     , Paths_adl_compiler

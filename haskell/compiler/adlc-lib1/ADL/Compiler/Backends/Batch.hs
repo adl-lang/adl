@@ -9,6 +9,8 @@ import qualified Data.Aeson as JSON
 
 import qualified ADL.Compiler.Backends.AST as A
 import qualified ADL.Compiler.Backends.Java as J
+import qualified ADL.Compiler.Backends.Typescript as T
+
 
 import Control.Monad.Trans(liftIO)
 import Data.Foldable(for_)
@@ -30,6 +32,8 @@ generateBatchItem libDir bitem =
   case bitem of
      BatchItem_ast ast ->  A.generateBatch libDir ast
      BatchItem_java java -> J.generateBatch libDir java
+     BatchItem_typescript ts -> T.generateBatch libDir ts
+
 
 adlFromJsonFile :: AdlValue a => FilePath -> IO (Either T.Text a)
 adlFromJsonFile file = (decodeAdlParseResult from . adlFromJsonByteString) <$> (LBS.readFile file)

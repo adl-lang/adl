@@ -9,6 +9,7 @@ import Control.Applicative( (<$>), (<*>), (<|>) )
 import Prelude( ($) )
 import qualified ADL.Adlc.Codegen.Ast
 import qualified ADL.Adlc.Codegen.Java
+import qualified ADL.Adlc.Codegen.Typescript
 import qualified Data.Aeson as JS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Proxy
@@ -19,6 +20,7 @@ type Batch = [BatchItem]
 data BatchItem
     = BatchItem_ast ADL.Adlc.Codegen.Ast.AstParams
     | BatchItem_java ADL.Adlc.Codegen.Java.JavaParams
+    | BatchItem_typescript ADL.Adlc.Codegen.Typescript.TypescriptParams
     deriving (Prelude.Eq,Prelude.Show)
 
 instance AdlValue BatchItem where
@@ -27,9 +29,11 @@ instance AdlValue BatchItem where
     jsonGen = genUnion (\jv -> case jv of
         BatchItem_ast v -> genUnionValue "ast" v
         BatchItem_java v -> genUnionValue "java" v
+        BatchItem_typescript v -> genUnionValue "typescript" v
         )
     
     jsonParser = parseUnion $ \disc -> case disc of
         "ast" ->  parseUnionValue BatchItem_ast
         "java" ->  parseUnionValue BatchItem_java
-        _ -> parseFail "expected a discriminator for BatchItem (ast,java)" 
+        "typescript" ->  parseUnionValue BatchItem_typescript
+        _ -> parseFail "expected a discriminator for BatchItem (ast,java,typescript)" 

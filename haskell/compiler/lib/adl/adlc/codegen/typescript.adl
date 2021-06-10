@@ -1,0 +1,57 @@
+module adlc.codegen.typescript {
+
+import adlc.codegen.types.AdlSources;
+import adlc.codegen.types.FilePath;
+import adlc.codegen.types.OutputParams;
+import sys.adlast.ModuleName;
+import sys.adlast.ScopedName;
+
+
+/// ADL type configuring the typescript code generator
+struct TypescriptParams {
+  AdlSources sources;
+
+  // Add the specifed adl file extension to merged on loading
+  Vector<String> mergeExts = [".adl-ts"];
+
+  // The modules for which output is to be produced
+  Vector<ModuleName> modules;
+
+  // The typescript dialect to be generated
+  TypescriptStyle style;
+
+  // How/where output files are written
+  OutputParams output;
+
+  // Location where theruntime should be placed
+  String runtimeDir = "runtime";
+
+  // Also generate code for the transitive dependencies of the specified adl files
+  Bool generateTransitive = true;
+
+  // Generate the runtime code
+  Bool includeRuntime = true;
+
+  // Generate the global resolver map for all ADL types
+  Bool includeResolver = true;
+
+  // Exclude the generated ASTs
+  Bool excludeAst = false;
+
+  // The annotationss to be excluded from the AST
+  Vector<ScopedName> excludedAstAnnotations = [
+    {"moduleName":"sys.annotations", "name":"Doc"}
+  ];
+
+  // If true, log extra information
+  Bool verbose = false;
+};
+
+union TypescriptStyle {
+  Void tsc;
+  Void deno;
+};
+
+};
+
+

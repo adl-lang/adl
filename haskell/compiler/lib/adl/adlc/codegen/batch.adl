@@ -2,10 +2,12 @@ module adlc.codegen.batch {
 
 import adlc.codegen.ast.AstParams;
 import adlc.codegen.java.JavaParams;
+import adlc.codegen.typescript.TypescriptParams;
 
 union BatchItem {
   AstParams ast;
   JavaParams java;
+  TypescriptParams typescript;
   // TODO other backends
 };
 

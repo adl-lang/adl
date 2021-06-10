@@ -23,6 +23,7 @@ adlcb -O compiler/adlc-lib1 $ADL_DIR/adlc/codegen/types.adl
 adlcb -O compiler/adlc-lib1 $ADL_DIR/adlc/codegen/java.adl
 adlcb -O compiler/adlc-lib1 $ADL_DIR/adlc/codegen/batch.adl
 adlcb -O compiler/adlc-lib1 $ADL_DIR/adlc/codegen/ast.adl
+adlcb -O compiler/adlc-lib1 $ADL_DIR/adlc/codegen/typescript.adl
 
 # Generate ADL specified elements of the haskell runtime
 adlcb -O runtime/src $ADL_DIR/sys/types.adl

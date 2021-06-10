@@ -5,6 +5,7 @@ module ADL.Compiler.ExternalAST(
   declToA2,
   moduleNameFromA2,
   moduleFromA2,
+  scopedNameFromA2,
   ) where
 
 import qualified Data.Map as Map
