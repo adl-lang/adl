@@ -8,7 +8,7 @@ type AdlSources = Vector<AdlTreeSource>;
 
 union AdlTreeSource {
    // Read modules from a local directory
-   FilePath localDir;
+   FilePath localPath;
 
    // Embedded definitions
    StringMap<Module> modules;
@@ -17,13 +17,13 @@ union AdlTreeSource {
 /// Config for the writing of output files
 struct OutputParams {
     // The directory where generated code is written
-    FilePath outputDir;
+    FilePath path;
 
     // Don't update files that haven't changed
     Bool noOverwrite = true;
 
     // Write a manifest file recording generated files
-    // path is relative to outputDir
+    // location is relative to path
     Nullable<FilePath> manifest = ".adl-manifest";
 };
 

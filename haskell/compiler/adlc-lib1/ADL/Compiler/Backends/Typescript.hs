@@ -59,7 +59,7 @@ generateBatch libDir params = do
         tsIncludeResolver=typescriptParams_includeResolver params,
         tsExcludeAst=typescriptParams_excludeAst params,
         tsExcludedAstAnnotations=Just (map scopedNameFromA2 (typescriptParams_excludedAstAnnotations params)),
-        tsRuntimeDir=T.unpack (typescriptParams_runtimeDir params)
+        tsRuntimeDir=T.unpack (typescriptParams_runtimePath params)
       }
   withBatchFileWriter log (typescriptParams_output params) $ \fileWriter -> do
     (reqmods,allmods) <- findAndCheckModules mlc (map moduleNameFromText (typescriptParams_modules params))

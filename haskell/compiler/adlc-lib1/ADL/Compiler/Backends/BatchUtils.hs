@@ -42,7 +42,7 @@ batchModuleLoader :: LogFn -> AdlSources -> [T.Text] -> ModuleLoader
 batchModuleLoader log sources mergeExts = 
   mergedModuleLoader (map fromTreeSource sources)
   where
-    fromTreeSource (AdlTreeSource_localDir path) = 
+    fromTreeSource (AdlTreeSource_localPath path) = 
       modulesFromDirectory (T.unpack path) (map T.unpack mergeExts)
     fromTreeSource (AdlTreeSource_modules modules)  =
       (modulesFromAst . Map.fromList . map translateModule . SM.elems) modules
@@ -65,7 +65,7 @@ batchFileWriter log oparams = writerWithManifest $ OutputArgs {
   }
   where
     manifestFile = fmap T.unpack (unNullable (outputParams_manifest oparams))
-    outputPath = T.unpack (outputParams_outputDir oparams)
+    outputPath = T.unpack (outputParams_path oparams)
 
 moduleNameFromText :: T.Text -> ModuleName
 moduleNameFromText = ModuleName . T.splitOn "."

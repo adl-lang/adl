@@ -24,7 +24,7 @@ struct TypescriptParams {
   OutputParams output;
 
   // Location where theruntime should be placed
-  String runtimeDir = "runtime";
+  String runtimePath = "runtime";
 
   // Also generate code for the transitive dependencies of the specified adl files
   Bool generateTransitive = true;

@@ -22,7 +22,7 @@ data TypescriptParams = TypescriptParams
     , typescriptParams_modules :: [ADL.Sys.Adlast.ModuleName]
     , typescriptParams_style :: TypescriptStyle
     , typescriptParams_output :: ADL.Adlc.Codegen.Types.OutputParams
-    , typescriptParams_runtimeDir :: T.Text
+    , typescriptParams_runtimePath :: T.Text
     , typescriptParams_generateTransitive :: Prelude.Bool
     , typescriptParams_includeRuntime :: Prelude.Bool
     , typescriptParams_includeResolver :: Prelude.Bool
@@ -44,7 +44,7 @@ instance AdlValue TypescriptParams where
         , genField "modules" typescriptParams_modules
         , genField "style" typescriptParams_style
         , genField "output" typescriptParams_output
-        , genField "runtimeDir" typescriptParams_runtimeDir
+        , genField "runtimePath" typescriptParams_runtimePath
         , genField "generateTransitive" typescriptParams_generateTransitive
         , genField "includeRuntime" typescriptParams_includeRuntime
         , genField "includeResolver" typescriptParams_includeResolver
@@ -59,7 +59,7 @@ instance AdlValue TypescriptParams where
         <*> parseField "modules"
         <*> parseField "style"
         <*> parseField "output"
-        <*> parseFieldDef "runtimeDir" "runtime"
+        <*> parseFieldDef "runtimePath" "runtime"
         <*> parseFieldDef "generateTransitive" Prelude.True
         <*> parseFieldDef "includeRuntime" Prelude.True
         <*> parseFieldDef "includeResolver" Prelude.True
