@@ -41,8 +41,23 @@ stack exec adlc -- typescript \
  --verbose \
  --ts-style template \
  -O ../typescript/runtime \
- -I $ADL_STDLIB_DIR \
+ -I $ADL_DIR \
  $ADL_DIR/sys/types.adl $ADL_DIR/sys/adlast.adl $ADL_DIR/sys/dynamic.adl
+
+ # Generate a deno ADL enviroment suitable for scripting the
+ # adl compiler
+ stack exec adlc -- typescript \
+ --ts-style deno \
+ -O ../typescript/deno \
+ --no-overwrite \
+ --verbose \
+ --include-rt \
+ --include-resolver \
+ --generate-transitive \
+ --runtime-dir runtime \
+ --manifest=../typescript/deno/.adl-manifest \
+ -I $ADL_DIR \
+ $ADL_DIR/adlc/codegen/batch.adl
 
 # Generate ADL specified elements of the c++ runtime
 CPP_RUNTIME_DIR=../cpp/runtime/src-generated 
@@ -51,7 +66,7 @@ stack exec adlc -- cpp \
  --verbose \
  --include-prefix adl \
  -O $CPP_RUNTIME_DIR \
- -I $ADL_STDLIB_DIR \
+ -I $ADL_DIR \
  $ADL_DIR/sys/types.adl $ADL_DIR/sys/adlast.adl $ADL_DIR/sys/dynamic.adl
 
 # Run some tests for each target language
