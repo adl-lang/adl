@@ -10,10 +10,6 @@ copyright:           (c) 2013-2021 Tim Docker
 category:            Network
 build-type:          Simple
 
-Flag bootstrap
-  Description:   Build just the bootstrap compiler
-  Default:       False
-
 data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/adl/adlc/config/haskell.adl
                     , lib/adl/adlc/config/java.adl
@@ -67,6 +63,10 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/rust/runtime/custom/sys/types/result.rs
                     , lib/rust/runtime/custom/sys/types/set.rs
                     , lib/rust/runtime/mod.rs
+
+Flag bootstrap
+  Description:   Build just the bootstrap compiler
+  Default:       False
 
 executable adlc-bootstrap
   main-is:            Main.hs
