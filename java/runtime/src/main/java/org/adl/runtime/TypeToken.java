@@ -17,4 +17,18 @@ public class TypeToken<T> {
   public static <T> JsonBinding<TypeToken<T>> jsonBinding(JsonBinding<T> jb) {
     return null;
   }
+
+  @Override
+  public boolean equals(Object other0) {
+    if (!(other0 instanceof TypeToken)) {
+      return false;
+    }
+    TypeToken other = (TypeToken) other0;
+    return getJsonBinding().factory().typeExpr().equals(other.getJsonBinding().factory().typeExpr());
+  }
+
+  @Override
+  public int hashCode() {
+    return getJsonBinding().factory().typeExpr().hashCode();
+  }
 };
