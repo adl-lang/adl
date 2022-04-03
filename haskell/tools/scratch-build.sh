@@ -50,6 +50,18 @@ stack exec adlc -- cpp \
  -I $ADL_STDLIB_DIR \
  $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
 
+ # Generate ADL modules for the rust compiler tooling
+stack exec adlc -- rust \
+ --no-overwrite \
+ --verbose \
+ --generate-transitive \
+ --outputdir ../rust/compiler/src \
+ --module adlgen \
+ --runtime-module adlrt \
+ --include-rt \
+ --searchdir  $ADL_STDLIB_DIR \
+ $ADL_STDLIB_DIR/sys/adlast.adl
+
 # Run some tests for each target language
 stack build generated-tests
 (cd ../typescript/tests; ./run-tests.sh)
