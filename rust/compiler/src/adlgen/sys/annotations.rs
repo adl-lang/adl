@@ -7,7 +7,7 @@ pub type Doc = String;
 
 pub type SerializedName = String;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct SerializedWithInternalTag {
   pub tag: String,
 }

@@ -1,0 +1,104 @@
+module sys.adlast2
+{
+// Types to represent an ADL syntax tree
+
+import sys.types.*;
+
+type ModuleName = String;
+type Ident = String;
+
+type Annotations = Map<ScopedName,Json>;
+
+
+struct ScopedName
+{
+    ModuleName moduleName;
+    Ident name;
+};
+
+union TypeRef
+{
+    Ident primitive;
+    Ident typeParam;
+    ScopedName reference;
+};
+
+struct TypeExpr<R>
+{
+    R typeRef;
+    Vector<TypeExpr<R>> parameters;
+};
+
+struct Field<TE>
+{
+    Ident name;
+    Ident serializedName;
+    TE typeExpr;
+    Maybe<Json> default;
+    Annotations annotations;
+};
+
+struct Struct<TE>
+{
+    Vector<Ident> typeParams;
+    Vector<Field<TE>> fields;
+};
+
+struct Union<TE>
+{
+    Vector<Ident> typeParams;
+    Vector<Field<TE>> fields;
+};
+
+struct TypeDef<TE>
+{
+    Vector<Ident> typeParams;
+    TE typeExpr;
+};
+
+struct NewType<TE>
+{
+    Vector<Ident> typeParams;
+    TE typeExpr;
+    Maybe<Json> default;
+};
+
+union DeclType<TE>
+{
+    Struct<TE> struct_;
+    Union<TE> union_;
+    TypeDef<TE> type_;
+    NewType<TE> newtype_;
+};
+
+struct Decl<TE>
+{
+    Ident name;
+    Maybe<Word32> version;
+    DeclType<TE> type_;
+    Annotations annotations;
+};
+
+struct ScopedDecl<TE>
+{
+    ModuleName moduleName;
+    Decl<TE> decl;
+};
+
+type DeclVersions<TE> = Vector<Decl<TE>>;
+
+union Import
+{
+    ModuleName moduleName;
+    ScopedName scopedName;
+};
+
+struct Module<TE>
+{
+    ModuleName name;
+    Vector<Import> imports;
+    StringMap<Decl<TE>> decls;
+    Annotations annotations;
+};
+
+};

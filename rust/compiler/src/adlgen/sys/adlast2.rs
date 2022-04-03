@@ -1,4 +1,4 @@
-// @generated from adl module sys.adlast
+// @generated from adl module sys.adlast2
 
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
@@ -11,7 +11,7 @@ pub type Ident = String;
 
 pub type Annotations = Map<ScopedName, serde_json::Value>;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct ScopedName {
   #[serde(rename="moduleName")]
   pub module_name: ModuleName,
@@ -28,7 +28,7 @@ impl ScopedName {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum TypeRef {
   #[serde(rename="primitive")]
   Primitive(Ident),
@@ -40,16 +40,16 @@ pub enum TypeRef {
   Reference(ScopedName),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct TypeExpr {
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
+pub struct TypeExpr<R> {
   #[serde(rename="typeRef")]
-  pub type_ref: TypeRef,
+  pub type_ref: R,
 
-  pub parameters: Vec<TypeExpr>,
+  pub parameters: Vec<TypeExpr<R>>,
 }
 
-impl TypeExpr {
-  pub fn new(type_ref: TypeRef, parameters: Vec<TypeExpr>) -> TypeExpr {
+impl<R> TypeExpr<R> {
+  pub fn new(type_ref: R, parameters: Vec<TypeExpr<R>>) -> TypeExpr<R> {
     TypeExpr {
       type_ref: type_ref,
       parameters: parameters,
@@ -58,22 +58,22 @@ impl TypeExpr {
 }
 
 #[derive(Deserialize,PartialEq,Serialize)]
-pub struct Field {
+pub struct Field<TE> {
   pub name: Ident,
 
   #[serde(rename="serializedName")]
   pub serialized_name: Ident,
 
   #[serde(rename="typeExpr")]
-  pub type_expr: TypeExpr,
+  pub type_expr: TE,
 
   pub default: Maybe<serde_json::Value>,
 
   pub annotations: Annotations,
 }
 
-impl Field {
-  pub fn new(name: Ident, serialized_name: Ident, type_expr: TypeExpr, default: Maybe<serde_json::Value>, annotations: Annotations) -> Field {
+impl<TE> Field<TE> {
+  pub fn new(name: Ident, serialized_name: Ident, type_expr: TE, default: Maybe<serde_json::Value>, annotations: Annotations) -> Field<TE> {
     Field {
       name: name,
       serialized_name: serialized_name,
@@ -85,15 +85,15 @@ impl Field {
 }
 
 #[derive(Deserialize,PartialEq,Serialize)]
-pub struct Struct {
+pub struct Struct<TE> {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
 
-  pub fields: Vec<Field>,
+  pub fields: Vec<Field<TE>>,
 }
 
-impl Struct {
-  pub fn new(type_params: Vec<Ident>, fields: Vec<Field>) -> Struct {
+impl<TE> Struct<TE> {
+  pub fn new(type_params: Vec<Ident>, fields: Vec<Field<TE>>) -> Struct<TE> {
     Struct {
       type_params: type_params,
       fields: fields,
@@ -102,15 +102,15 @@ impl Struct {
 }
 
 #[derive(Deserialize,PartialEq,Serialize)]
-pub struct Union {
+pub struct Union<TE> {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
 
-  pub fields: Vec<Field>,
+  pub fields: Vec<Field<TE>>,
 }
 
-impl Union {
-  pub fn new(type_params: Vec<Ident>, fields: Vec<Field>) -> Union {
+impl<TE> Union<TE> {
+  pub fn new(type_params: Vec<Ident>, fields: Vec<Field<TE>>) -> Union<TE> {
     Union {
       type_params: type_params,
       fields: fields,
@@ -118,17 +118,17 @@ impl Union {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct TypeDef {
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
+pub struct TypeDef<TE> {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
 
   #[serde(rename="typeExpr")]
-  pub type_expr: TypeExpr,
+  pub type_expr: TE,
 }
 
-impl TypeDef {
-  pub fn new(type_params: Vec<Ident>, type_expr: TypeExpr) -> TypeDef {
+impl<TE> TypeDef<TE> {
+  pub fn new(type_params: Vec<Ident>, type_expr: TE) -> TypeDef<TE> {
     TypeDef {
       type_params: type_params,
       type_expr: type_expr,
@@ -137,18 +137,18 @@ impl TypeDef {
 }
 
 #[derive(Deserialize,PartialEq,Serialize)]
-pub struct NewType {
+pub struct NewType<TE> {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
 
   #[serde(rename="typeExpr")]
-  pub type_expr: TypeExpr,
+  pub type_expr: TE,
 
   pub default: Maybe<serde_json::Value>,
 }
 
-impl NewType {
-  pub fn new(type_params: Vec<Ident>, type_expr: TypeExpr, default: Maybe<serde_json::Value>) -> NewType {
+impl<TE> NewType<TE> {
+  pub fn new(type_params: Vec<Ident>, type_expr: TE, default: Maybe<serde_json::Value>) -> NewType<TE> {
     NewType {
       type_params: type_params,
       type_expr: type_expr,
@@ -158,34 +158,34 @@ impl NewType {
 }
 
 #[derive(Deserialize,PartialEq,Serialize)]
-pub enum DeclType {
+pub enum DeclType<TE> {
   #[serde(rename="struct_")]
-  Struct(Struct),
+  Struct(Struct<TE>),
 
   #[serde(rename="union_")]
-  Union(Union),
+  Union(Union<TE>),
 
   #[serde(rename="type_")]
-  Type(TypeDef),
+  Type(TypeDef<TE>),
 
   #[serde(rename="newtype_")]
-  Newtype(NewType),
+  Newtype(NewType<TE>),
 }
 
 #[derive(Deserialize,PartialEq,Serialize)]
-pub struct Decl {
+pub struct Decl<TE> {
   pub name: Ident,
 
   pub version: Maybe<u32>,
 
   #[serde(rename="type_")]
-  pub r#type: DeclType,
+  pub r#type: DeclType<TE>,
 
   pub annotations: Annotations,
 }
 
-impl Decl {
-  pub fn new(name: Ident, version: Maybe<u32>, r#type: DeclType, annotations: Annotations) -> Decl {
+impl<TE> Decl<TE> {
+  pub fn new(name: Ident, version: Maybe<u32>, r#type: DeclType<TE>, annotations: Annotations) -> Decl<TE> {
     Decl {
       name: name,
       version: version,
@@ -196,15 +196,15 @@ impl Decl {
 }
 
 #[derive(Deserialize,PartialEq,Serialize)]
-pub struct ScopedDecl {
+pub struct ScopedDecl<TE> {
   #[serde(rename="moduleName")]
   pub module_name: ModuleName,
 
-  pub decl: Decl,
+  pub decl: Decl<TE>,
 }
 
-impl ScopedDecl {
-  pub fn new(module_name: ModuleName, decl: Decl) -> ScopedDecl {
+impl<TE> ScopedDecl<TE> {
+  pub fn new(module_name: ModuleName, decl: Decl<TE>) -> ScopedDecl<TE> {
     ScopedDecl {
       module_name: module_name,
       decl: decl,
@@ -212,9 +212,9 @@ impl ScopedDecl {
   }
 }
 
-pub type DeclVersions = Vec<Decl>;
+pub type DeclVersions<TE> = Vec<Decl<TE>>;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Import {
   #[serde(rename="moduleName")]
   ModuleName(ModuleName),
@@ -224,18 +224,18 @@ pub enum Import {
 }
 
 #[derive(Deserialize,PartialEq,Serialize)]
-pub struct Module {
+pub struct Module<TE> {
   pub name: ModuleName,
 
   pub imports: Vec<Import>,
 
-  pub decls: std::collections::HashMap<String,Decl>,
+  pub decls: std::collections::HashMap<String,Decl<TE>>,
 
   pub annotations: Annotations,
 }
 
-impl Module {
-  pub fn new(name: ModuleName, imports: Vec<Import>, decls: std::collections::HashMap<String,Decl>, annotations: Annotations) -> Module {
+impl<TE> Module<TE> {
+  pub fn new(name: ModuleName, imports: Vec<Import>, decls: std::collections::HashMap<String,Decl<TE>>, annotations: Annotations) -> Module<TE> {
     Module {
       name: name,
       imports: imports,

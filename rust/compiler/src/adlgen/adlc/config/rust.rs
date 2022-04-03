@@ -13,7 +13,7 @@ pub type RustGenerate = bool;
  * ADL field annotation giving explicit control over
  * how a field should be stored.
  */
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum RustStorageModel {
   /**
    * Standard inline storage
@@ -32,7 +32,7 @@ pub enum RustStorageModel {
  * ADL declaration annotation to specify that a custom type
  * should be used
  */
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct RustCustomType {
   pub rustname: String,
 
