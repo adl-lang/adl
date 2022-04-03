@@ -62,6 +62,7 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/rust/runtime/custom/sys/types/pair.rs
                     , lib/rust/runtime/custom/sys/types/result.rs
                     , lib/rust/runtime/custom/sys/types/set.rs
+                    , lib/rust/runtime/custom/sys/types/mapentry.rs
                     , lib/rust/runtime/mod.rs
 
 Flag bootstrap
