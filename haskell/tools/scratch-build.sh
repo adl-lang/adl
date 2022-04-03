@@ -60,7 +60,7 @@ stack exec adlc -- rust \
  --runtime-module adlrt \
  --include-rt \
  --searchdir  $ADL_STDLIB_DIR \
- $ADL_STDLIB_DIR/sys/adlast.adl
+ $ADL_STDLIB_DIR/sys/adlast2.adl
 
 # Run some tests for each target language
 stack build generated-tests
