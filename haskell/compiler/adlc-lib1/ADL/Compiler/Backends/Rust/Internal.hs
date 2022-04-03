@@ -497,8 +497,8 @@ stdTraitsForFields1 sns tbmap fields = foldr S.intersection defaultStdTraits [st
 stdTraitsForFields :: [Field CResolvedType] -> StdTraits
 stdTraitsForFields = stdTraitsForFields1 S.empty M.empty
 
-defaultStdTraits = S.fromList ["PartialEq", "Eq", "Hash", "Serialize", "Deserialize", "Clone"]
-noeqStdTraits = S.fromList ["PartialEq", "Serialize", "Deserialize", "Clone"]
+defaultStdTraits = S.fromList ["PartialEq", "Eq", "Hash", "Serialize", "Deserialize", "Clone", "Debug"]
+noeqStdTraits = S.fromList ["PartialEq", "Serialize", "Deserialize", "Clone", "Debug"]
 
 type TypeBindingMap = M.Map Ident (TypeExpr CResolvedType)
 

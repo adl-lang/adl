@@ -3,25 +3,25 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U1 {
   #[serde(rename="v")]
   V,
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U2 {
   #[serde(rename="v")]
   V(i16),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U3 {
   #[serde(rename="v")]
   V(i16),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct S1 {
   #[serde(default="S1::def_f")]
   pub f: i16,
@@ -39,31 +39,31 @@ impl S1 {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U4 {
   #[serde(rename="v")]
   V(S1),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U5 {
   #[serde(rename="v")]
   V(S1),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U6 {
   #[serde(rename="v")]
   V(U3),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U7 {
   #[serde(rename="v")]
   V(U3),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U8 {
   #[serde(rename="v1")]
   V1(S1),
@@ -72,7 +72,7 @@ pub enum U8 {
   V2(i16),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U9<T> {
   #[serde(rename="v1")]
   V1(T),
@@ -84,7 +84,7 @@ pub enum U9<T> {
   V3,
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct S {
   #[serde(default="S::def_f_1")]
   #[serde(rename="f1")]
@@ -121,7 +121,7 @@ impl S {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum List<T> {
   #[serde(rename="null")]
   Null,
@@ -130,7 +130,7 @@ pub enum List<T> {
   Cell(Cell<T>),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct Cell<T> {
   pub head: T,
 
@@ -146,7 +146,7 @@ impl<T> Cell<T> {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U10 {
   #[serde(rename="v1")]
   V1(i16),
@@ -155,7 +155,7 @@ pub enum U10 {
   V2,
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct S10 {
   #[serde(default="S10::def_f_1")]
   #[serde(rename="f1")]
@@ -201,7 +201,7 @@ impl S10 {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U11 {
   #[serde(rename="VALUE1")]
   V1(i16),
@@ -210,7 +210,7 @@ pub enum U11 {
   V2,
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct S11 {
   #[serde(default="S11::def_f_1")]
   #[serde(rename="f1")]

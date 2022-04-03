@@ -2,7 +2,7 @@ use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
 
 
-#[derive(Clone,Eq,Hash,PartialEq)]
+#[derive(Clone,Debug,Eq,Hash,PartialEq)]
 pub struct Result<T, E>(pub std::result::Result<T, E>);
 
 impl<T, E> Result<T, E> {

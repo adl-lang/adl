@@ -5,7 +5,7 @@ use std::result;
 // Maybe<T> is a custom mapping to Option<T>,
 // with ADL compatible serialization
 
-#[derive(Clone,Eq,Hash,PartialEq)]
+#[derive(Clone,Debug,Eq,Hash,PartialEq)]
 pub struct Maybe<T> (Option<T>);
 
 impl<T> Maybe<T> {

@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub enum Picture {
   #[serde(rename="circle")]
   Circle(Circle),
@@ -18,7 +18,7 @@ pub enum Picture {
   Translated(Box<Translated<Picture>>),
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Circle {
   pub radius: f64,
 }
@@ -31,7 +31,7 @@ impl Circle {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Rectangle {
   pub width: f64,
 
@@ -47,7 +47,7 @@ impl Rectangle {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Translated<T> {
   #[serde(default="Translated::<T>::def_xoffset")]
   pub xoffset: f64,

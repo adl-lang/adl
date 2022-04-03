@@ -12,7 +12,7 @@ use crate::test4::customtypes::datehelpers;
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct CDate0 {
   pub year: i16,
 
