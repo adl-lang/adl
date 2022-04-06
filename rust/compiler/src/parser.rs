@@ -25,6 +25,7 @@ use nom::{
     pair,
     delimited,
     preceded,
+    terminated,
   },
   error::{ 
     VerboseError,
@@ -49,6 +50,16 @@ fn ws<'a, F: 'a, O, E: ParseError<&'a str>>(inner: F) -> impl FnMut(&'a str) -> 
   delimited(
     multispace0,
     inner,
+    multispace0
+  )
+}
+
+// Match a tag and surrounding whitespace
+fn wtag<'a, E: ParseError<&'a str>>(t: &'static str) -> impl FnMut(&'a str) -> IResult<&'a str, &'a str, E>
+{
+  delimited(
+    multispace0,
+    tag(t),
     multispace0
   )
 }
@@ -94,9 +105,11 @@ pub fn module(i: &str) -> Res<&str,adlast::Module<TypeExpr0>>  {
   let (i,_) = ws(tag("module"))(i)?;
   let (i,name) = ws(module_name)(i)?;
   let (i,mut decls) = delimited(
-    ws(tag("{")),
-    many0(decl),
-    ws(tag("}")),
+    wtag("{"),
+    many0(
+      terminated(decl, wtag(";"))
+    ),
+    wtag("}"),
   )(i)?;
   let decls: HashMap<String,adlast::Decl<TypeExpr0>> = decls.drain(..).map( |d| (d.name.clone(),d) ).collect();
 
@@ -124,19 +137,21 @@ pub fn decl(i: &str) -> Res<&str,adlast::Decl<TypeExpr0>>  {
 pub fn decl_type(i: &str) -> Res<&str,(&str,adlast::DeclType<TypeExpr0>)>  {
   alt((
     map(struct_, |(name,s)| (name,adlast::DeclType::Struct(s))),
-    map(union, |(name,u)| (name,adlast::DeclType::Union(u))),
+    map(union,   |(name,u)| (name,adlast::DeclType::Union(u))),
+    map(typedef, |(name,t)| (name,adlast::DeclType::Type(t))),
+    map(newtype, |(name,n)| (name,adlast::DeclType::Newtype(n))),
   ))(i)
 }
 
 pub fn struct_(i: &str) -> Res<&str,(&str,adlast::Struct<TypeExpr0>)>  {
-  let (i,_) = ws(tag("struct"))(i)?;
+  let (i,_) = wtag("struct")(i)?;
   let (i,name) = ws(ident0)(i)?;
   let (i,type_params) = type_params(i)?;
   let (i,fields) = 
     delimited(
-      ws(tag("{")),
+      wtag("{"),
       many0(field),
-      ws(tag("}")),
+      wtag("}"),
     )(i)?;
   let struct_ = adlast::Struct{
     fields: fields,
@@ -147,14 +162,19 @@ pub fn struct_(i: &str) -> Res<&str,(&str,adlast::Struct<TypeExpr0>)>  {
 
 
 pub fn union(i: &str) -> Res<&str,(&str,adlast::Union<TypeExpr0>)>  {
-  let (i,_) = ws(tag("struct"))(i)?;
+  let (i,_) = wtag("struct")(i)?;
   let (i,name) = ws(ident0)(i)?;
   let (i,type_params) = type_params(i)?;
   let (i,fields) = 
     delimited(
-      ws(tag("{")),
-      many0(field),
-      ws(tag("}")),
+      wtag("{"),
+      many0(
+        terminated(
+          field,
+          wtag(";"),
+        )
+      ),
+      wtag("}"),
     )(i)?;
   let union = adlast::Union{
     fields: fields,
@@ -163,11 +183,49 @@ pub fn union(i: &str) -> Res<&str,(&str,adlast::Union<TypeExpr0>)>  {
   Ok((i,(name,union)))
 }
 
+pub fn typedef(i: &str) -> Res<&str,(&str,adlast::TypeDef<TypeExpr0>)>  {
+  let (i,_) = wtag("type")(i)?;
+  let (i,name) = ws(ident0)(i)?;
+  let (i,type_params) = type_params(i)?;
+  let (i,type_expr) = 
+    preceded(
+      wtag("="),
+      type_expr,
+    )(i)?;
+  let typedef = adlast::TypeDef{
+    type_params,
+    type_expr,
+  };
+  Ok((i,(name,typedef)))
+}
+
+pub fn newtype(i: &str) -> Res<&str,(&str,adlast::NewType<TypeExpr0>)>  {
+  let (i,_) = ws(tag("newtype"))(i)?;
+  let (i,name) = ws(ident0)(i)?;
+  let (i,type_params) = type_params(i)?;
+  let (i,type_expr) = preceded(
+    wtag("="),
+    type_expr,
+  )(i)?;
+  let (i,default) = opt(
+    preceded(
+      wtag("="),
+      json,
+    )
+  )(i)?;
+
+  let newtype = adlast::NewType{
+    type_params,
+    type_expr,
+    default: maybe_from_option(default),
+  };
+  Ok((i,(name,newtype)))
+}
+
 pub fn field(i: &str) -> Res<&str,adlast::Field<TypeExpr0>>  {
   let (i,texpr) = ws(type_expr)(i)?;
   let (i,name) = ws(ident0)(i)?;
-  let (i,default) = opt( preceded( ws(tag("=")), json))(i)?;
-  let (i,_) = ws(tag(";"))(i)?;
+  let (i,default) = opt( preceded( wtag("="), json))(i)?;
   let field = adlast::Field{
       name: name.to_string(),
       serialized_name: name.to_string(),
@@ -181,9 +239,9 @@ pub fn field(i: &str) -> Res<&str,adlast::Field<TypeExpr0>>  {
 pub fn type_params(i: &str) -> Res<&str,Vec<adlast::Ident>> {
   map(
     opt(delimited(
-      ws(tag("<")),
+      wtag("<"),
       separated_list0(ws(tag(",")), map( ident0, |i| i.to_string())),
-      ws(tag(">"))
+      wtag(">")
     )), 
     |idents| idents.unwrap_or_else( || Vec::new() )
   )(i)
@@ -202,9 +260,9 @@ pub fn type_expr(i: &str) -> Res<&str,TypeExpr0> {
 pub fn type_expr_params(i: &str) -> Res<&str,Vec<TypeExpr0>> {
   map(
     opt(delimited(
-      ws(tag("<")),
+      wtag("<"),
       separated_list0(ws(tag(",")), type_expr),
-      ws(tag(">"))
+      wtag(">")
     )),
     |texpr| texpr.unwrap_or_else( || Vec::new() )
   )(i)
@@ -301,6 +359,24 @@ mod tests {
         ]
       }))
     );
+  }
+
+  #[test]
+  fn parse_decl() {
+
+    assert_eq!(
+      decl("struct A { F f1; A<B> f2; }"),
+      Ok(("", adlast::Decl{
+        name: "A".to_string(),
+        version: crate::adlrt::custom::sys::types::maybe::Maybe::nothing(),
+        annotations: crate::adlrt::custom::sys::types::map::Map::new(Vec::new()),
+        r#type: adlast::DeclType::Struct(adlast::Struct{
+          type_params: Vec::new(),
+          fields: vec![
+          ],
+        }),
+      })),
+    )
   }
 
   #[test]
