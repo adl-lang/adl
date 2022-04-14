@@ -150,7 +150,12 @@ pub fn struct_(i: &str) -> Res<&str,(&str,adlast::Struct<TypeExpr0>)>  {
   let (i,fields) = 
     delimited(
       wtag("{"),
-      many0(field),
+      many0(
+        terminated(
+          field,
+          wtag(";"),
+        )
+      ),
       wtag("}"),
     )(i)?;
   let struct_ = adlast::Struct{
@@ -162,7 +167,7 @@ pub fn struct_(i: &str) -> Res<&str,(&str,adlast::Struct<TypeExpr0>)>  {
 
 
 pub fn union(i: &str) -> Res<&str,(&str,adlast::Union<TypeExpr0>)>  {
-  let (i,_) = wtag("struct")(i)?;
+  let (i,_) = wtag("union")(i)?;
   let (i,name) = ws(ident0)(i)?;
   let (i,type_params) = type_params(i)?;
   let (i,fields) = 
@@ -333,10 +338,7 @@ mod tests {
 
     assert_eq!(
       type_expr("a.X"), 
-      Ok(("", adlast::TypeExpr{
-        type_ref: mk_scoped_name("a", "X"),
-        parameters: Vec::new()
-      }))
+      Ok(("", mk_typeexpr0(  mk_scoped_name("a", "X"))))
     );
 
     assert_eq!(
@@ -344,7 +346,7 @@ mod tests {
       Ok(("", adlast::TypeExpr{
         type_ref: mk_scoped_name("a", "X"),
         parameters: vec![
-          adlast::TypeExpr::new( mk_scoped_name("y.z", "B"), Vec::new())
+          mk_typeexpr0(mk_scoped_name("y.z", "B"))
         ]
       }))
     );
@@ -354,8 +356,8 @@ mod tests {
       Ok(("", adlast::TypeExpr{
         type_ref: mk_scoped_name("a", "X"),
         parameters: vec![
-          adlast::TypeExpr::new( mk_scoped_name("y.z", "B"), Vec::new()),
-          adlast::TypeExpr::new( mk_scoped_name("", "C"), Vec::new()),
+          mk_typeexpr0( mk_scoped_name("y.z", "B")),
+          mk_typeexpr0(mk_scoped_name("", "C")),
         ]
       }))
     );
@@ -365,14 +367,28 @@ mod tests {
   fn parse_decl() {
 
     assert_eq!(
-      decl("struct A { F f1; A<B> f2; }"),
+      decl("struct A { F f1; G f2; }"),
       Ok(("", adlast::Decl{
         name: "A".to_string(),
-        version: crate::adlrt::custom::sys::types::maybe::Maybe::nothing(),
-        annotations: crate::adlrt::custom::sys::types::map::Map::new(Vec::new()),
+        version: mk_empty_maybe(),
+        annotations: mk_empty_annotations(),
         r#type: adlast::DeclType::Struct(adlast::Struct{
           type_params: Vec::new(),
           fields: vec![
+            adlast::Field{
+              name: "f1".to_string(),
+              annotations: mk_empty_annotations(),
+              default: mk_empty_maybe(),
+              serialized_name: "f1".to_string(),
+              type_expr: mk_typeexpr0(mk_scoped_name("", "F")),
+            },
+            adlast::Field{
+              name: "f2".to_string(),
+              annotations: mk_empty_annotations(),
+              default: mk_empty_maybe(),
+              serialized_name: "f2".to_string(),
+              type_expr: mk_typeexpr0(mk_scoped_name("", "G")),
+            }
           ],
         }),
       })),
@@ -380,7 +396,7 @@ mod tests {
   }
 
   #[test]
-  fn parse_module() {
+  fn parse_empty_module() {
     let pm =  module("module x {\n}");
     if let Ok((i, m)) = pm  {
       assert_eq!( m.name, "x".to_string());
@@ -391,5 +407,16 @@ mod tests {
 
   fn mk_scoped_name(mname: &str, name: &str) -> adlast::ScopedName {
     adlast::ScopedName::new(mname.to_string(), name.to_string())
+  }
+
+  fn mk_typeexpr0(type_ref: adlast::ScopedName) -> adlast::TypeExpr<adlast::ScopedName> {
+    adlast::TypeExpr{type_ref, parameters: vec![]}
+  }
+
+  fn mk_empty_annotations() -> crate::adlrt::custom::sys::types::map::Map<adlast::ScopedName,serde_json::Value> {
+    crate::adlrt::custom::sys::types::map::Map::new(Vec::new())
+  }
+  fn mk_empty_maybe<T>() -> crate::adlrt::custom::sys::types::maybe::Maybe<T> {
+    crate::adlrt::custom::sys::types::maybe::Maybe::nothing()
   }
 }

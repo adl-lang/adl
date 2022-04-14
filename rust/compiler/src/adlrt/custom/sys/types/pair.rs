@@ -2,7 +2,7 @@ use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
 use std::result;
 
-#[derive(Clone,Eq,Hash,PartialEq)]
+#[derive(Clone,Debug,Eq,Hash,PartialEq)]
 pub struct Pair<A,B> (pub (A,B));
 
 impl<A, B> Pair<A, B> {

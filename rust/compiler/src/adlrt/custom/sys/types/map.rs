@@ -6,7 +6,7 @@ use std::result;
 use super::mapentry::MapEntry;
 
 
-#[derive(Clone,Eq,PartialEq)]
+#[derive(Clone,Eq,PartialEq, Debug)]
 pub struct Map<K:Eq + Hash, V>(HashMap<K, V>);
 
 impl<K:Eq + Hash, V> Map<K, V> {
