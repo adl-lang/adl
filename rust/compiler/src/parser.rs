@@ -1,3 +1,9 @@
+// TODO: 
+// parse json
+// introduce cut combinator to improve error message
+// annotations
+
+
 use std::collections::HashMap;
 use crate::adlgen::sys::{adlast2 as adlast};
 
@@ -6,7 +12,9 @@ use nom::{
   character::{
     complete::{
       multispace0,
+      none_of,
       satisfy,
+      digit1,
     }
   },
   multi::{
@@ -16,11 +24,13 @@ use nom::{
   },
   branch::alt,
   combinator::{
+    cut,
     opt, 
     recognize,
     map,
     value,
   },
+  number::complete::{double},
   sequence::{
     pair,
     delimited,
@@ -32,7 +42,7 @@ use nom::{
     ParseError
   },
   character::complete::{alpha1, alphanumeric1},
-  bytes::complete::tag,
+  bytes::complete::{ tag, escaped },
 };
 
 type Res<T, U> = IResult<T, U, VerboseError<T>>;
@@ -274,7 +284,75 @@ pub fn type_expr_params(i: &str) -> Res<&str,Vec<TypeExpr0>> {
 }
 
 pub fn json(i: &str) -> Res<&str,serde_json::Value> {
-  value( serde_json::Value::Null, ws(tag("null")))(i)
+  alt((
+    value( serde_json::Value::Null, ws(tag("null"))),
+    value( serde_json::Value::Bool(true), ws(tag("true"))),
+    value( serde_json::Value::Bool(false), ws(tag("false"))),
+    json_string,
+    json_number,
+    json_object,
+    json_array,
+  ))(i)
+}
+
+
+pub fn json_string(i: &str) -> Res<&str, serde_json::Value> {
+  map( json_string0, |s: &str| serde_json::Value::from(s))(i)
+}
+
+pub fn json_string0(i: &str) -> Res<&str, &str> {
+  // TODO: consider non-quote escape sequences
+  let esc = escaped(none_of("\\\""), '\\', tag("\""));
+  let esc_or_empty = alt((esc, tag("")));
+  preceded(wtag("\""), cut(terminated(esc_or_empty, tag("\""))))(i)
+}
+
+pub fn json_number(i: &str) -> Res<&str, serde_json::Value> {
+  map( double, |v| {
+    if v.floor() == v {
+      if v >= 0.0 {
+        serde_json::Value::from(v as u64)
+      } else {
+        serde_json::Value::from(v as i64)
+      }
+    } else {
+     serde_json::Value::from(v)
+    }
+  })(i)
+}
+
+pub fn json_object(i: &str) -> Res<&str, serde_json::Value> {
+  let (i,fields) = 
+    preceded(
+      wtag("{"), 
+      cut(
+        terminated(
+          separated_list0(wtag(","), pair(terminated(json_string0, wtag(":")), json)),
+          wtag("}")
+        )
+      )
+    )(i)?;
+
+  let mut map = serde_json::Map::new();
+  for (k,v) in fields {
+    map.insert(k.to_string(),v);
+  }
+  Ok((i, serde_json::Value::Object(map)))
+}
+
+pub fn json_array(i: &str) -> Res<&str, serde_json::Value> {
+  map(
+    preceded(
+      wtag("["), 
+      cut(
+        terminated(
+          separated_list0(wtag(","), json),
+          wtag("]")
+        )
+      )
+    ),
+    |jv| serde_json::Value::from(jv)
+  )(i)
 }
 
 pub fn maybe_from_option<T>(v : Option<T>) -> crate::adlrt::custom::sys::types::maybe::Maybe<T> {
@@ -283,8 +361,6 @@ pub fn maybe_from_option<T>(v : Option<T>) -> crate::adlrt::custom::sys::types::
     None => crate::adlrt::custom::sys::types::maybe::Maybe::nothing(),
   }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -403,6 +479,54 @@ mod tests {
     } else {
       panic!("Failed to parse module" );
     }
+  }
+
+  #[test]
+  fn parse_json() {
+    assert_parse_eq( json("null"), serde_json::Value::Null);
+
+    assert_parse_eq( json("true"), serde_json::Value::Bool(true));
+    assert_parse_eq( json("false"), serde_json::Value::Bool(false));
+
+    assert_parse_eq( json("45"), serde_json::Value::from(45u32));
+    assert_parse_eq( json("+45"), serde_json::Value::from(45u32));
+    assert_parse_eq( json("-45"), serde_json::Value::from(-45i32));
+    assert_parse_eq( json("45.2"), serde_json::Value::from(45.2f64));
+    assert_parse_eq( json("+45.2"), serde_json::Value::from(45.2f64));
+    assert_parse_eq( json("-45.2"), serde_json::Value::from(-45.2f64));
+
+    assert_parse_eq( json("[]"), serde_json::Value::Array(Vec::new()));
+    assert_parse_eq( json("[ 45 ]"), serde_json::Value::Array(vec![
+      serde_json::Value::from(45u32)
+    ]));
+
+    assert_parse_eq( json("{}"), serde_json::Value::Object(serde_json::Map::new()));
+    assert_parse_eq( json(r#" {"f1": true, "f2": null} "#), serde_json::Value::Object(mk_json_map(vec!(
+      ("f1".to_owned(), serde_json::Value::Bool(true)),
+      ("f2".to_owned(), serde_json::Value::Null),
+    ))));
+
+
+    assert_parse_eq( json(r#" "" "#), serde_json::Value::String("".to_string()));
+    assert_parse_eq( json(r#" "xyz" "#), serde_json::Value::String("xyz".to_string()));
+    //assert_parse_eq( json(r#" "\"" "#), serde_json::Value::String("\"".to_string()));
+  }
+
+  fn assert_parse_eq<T>(  pr: Res<&str, T>, v:T) 
+    where T: std::fmt::Debug+PartialEq {
+    if let Ok((i, pv)) = pr  {
+      assert_eq!(pv, v);
+    } else {
+      panic!("Parse failed when succes expected" );
+    }
+  }
+
+  fn mk_json_map(vs: Vec<(String,serde_json::Value)>) -> serde_json::Map<String, serde_json::Value> {
+    let mut map = serde_json::Map::new();
+    for (k,jv) in vs {
+      map.insert(k,jv);
+    }
+    map
   }
 
   fn mk_scoped_name(mname: &str, name: &str) -> adlast::ScopedName {
