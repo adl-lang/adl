@@ -12,10 +12,8 @@ use nom::{
   character::{
     complete::{
       multispace0,
-      none_of,
-      one_of,
       satisfy,
-      digit1,
+      none_of,
     }
   },
   multi::{
@@ -43,35 +41,90 @@ use nom::{
     ParseError
   },
   character::complete::{alpha1, alphanumeric1},
-  bytes::complete::{ tag, take },
+  bytes::complete::{ tag, is_not},
 };
 
 type Res<T, U> = IResult<T, U, VerboseError<T>>;
 
-
 type TypeExpr0 = adlast::TypeExpr<adlast::ScopedName>;
+
+
+// Consumes whitespace and comments, but not docstrings
+pub fn whitespace(i: &str) -> Res<&str, ()>
+where
+{
+  let mut state = 0;
+  let mut chars = i.chars();
+  let mut first_slash = chars.clone();
+  loop {
+    let current = chars.clone();
+    if let Some(c) = chars.next() {
+      match state {
+        0 => match c {
+          '\n' => (),
+          '\r' => (),
+          '\t' => (),
+          ' ' => (),
+          '/' => {
+            first_slash = current.clone();
+            state = 1;
+          },
+          _ => return Ok((current.as_str(), ())),
+        },
+        1 => match c {
+          '/' => {
+            state = 2;
+          },
+          _ => return Ok((first_slash.as_str(), ())),
+        }
+        2 => match c {
+          '/' => return Ok((first_slash.as_str(), ())),
+          _ => {
+            state = 3;
+          }
+        }
+        _ => match c {
+          '\n' => { state = 0 }
+          '\r' => { state = 0 }
+          _ => ()
+        }
+      }
+    } else {
+      return Ok( (chars.as_str(), ()));
+    }
+  }
+}
+
+pub fn docstring(i: &str) -> Res<&str, &str> {
+  let (i,_) = preceded(whitespace, tag("///"))(i)?;
+  let (i,text) = i.split_at_position_complete(|item| {
+        let c = item.as_char();
+        c == '\r' || c == '\n'
+  })?;
+  Ok((i,text))
+}
 
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and 
 /// trailing whitespace, returning the output of `inner`.
-fn ws<'a, F: 'a, O, E: ParseError<&'a str>>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
+fn ws<'a, F: 'a, O>(inner: F) -> impl FnMut(&'a str) -> Res<&'a str, O>
   where
-  F: Fn(&'a str) -> IResult<&'a str, O, E>,
+  F: Fn(&'a str) -> Res<&'a str, O>,
 {
   delimited(
-    multispace0,
+    whitespace,
     inner,
-    multispace0
+    whitespace,
   )
 }
 
 // Match a tag and surrounding whitespace
-fn wtag<'a, E: ParseError<&'a str>>(t: &'static str) -> impl FnMut(&'a str) -> IResult<&'a str, &'a str, E>
+fn wtag<'a>(t: &'static str) -> impl FnMut(&'a str) -> Res<&'a str, &'a str>
 {
   delimited(
-    multispace0,
+    whitespace,
     tag(t),
-    multispace0
+    whitespace
   )
 }
 
@@ -135,14 +188,45 @@ pub fn module(i: &str) -> Res<&str,adlast::Module<TypeExpr0>>  {
 }
 
 pub fn decl(i: &str) -> Res<&str,adlast::Decl<TypeExpr0>>  {
+  let (i,annotations) = many0(prefix_annotation)(i)?;
   let (i,(name,dtype)) = decl_type(i)?;
+
   let decl = adlast::Decl{
     name: name.to_string(),
     r#type: dtype,
-    annotations: crate::adlrt::custom::sys::types::map::Map::new(Vec::new()),
+    annotations: merge_annotations(annotations),
     version: crate::adlrt::custom::sys::types::maybe::Maybe::nothing()
   };
   Ok((i,decl))
+}
+
+pub fn prefix_annotation(i: &str) -> Res<&str, (adlast::ScopedName, serde_json::Value)> {
+  alt((
+    preceded(wtag("@"), pair(scoped_name, json)),
+    map(docstring, |s| (docstring_scoped_name(), serde_json::Value::from(s))),
+  ))(i)
+}
+
+pub fn merge_annotations(anns: Vec<(adlast::ScopedName, serde_json::Value)>) -> adlast::Annotations {
+  // Create a map out of the annotations, but join any doc strings as separate lines
+  let mut hm = HashMap::new();
+  let mut ds =  Vec::new();
+
+  for (k,v) in anns {
+    if k == docstring_scoped_name() {
+      ds.push(v.as_str().unwrap().to_owned());
+    } else {
+      hm.insert(k,v);
+    }
+  }
+  if !ds.is_empty() {
+    hm.insert(docstring_scoped_name(), serde_json::Value::from(ds.join("\n")));
+  }
+  crate::adlrt::custom::sys::types::map::Map(hm)
+}
+
+pub fn docstring_scoped_name() -> adlast::ScopedName {
+  adlast::ScopedName::new("sys.annotations".to_owned(), "Doc".to_owned())
 }
 
 pub fn decl_type(i: &str) -> Res<&str,(&str,adlast::DeclType<TypeExpr0>)>  {
@@ -401,6 +485,20 @@ mod tests {
   };
 
   #[test]
+  fn parse_whitespace() {
+    assert_eq!(whitespace("x"), Ok(("x", ())));
+    assert_eq!(whitespace(" x"), Ok(("x", ())));
+    assert_eq!(whitespace("\n x"), Ok(("x", ())));
+    assert_eq!(whitespace(" / x"), Ok(("/ x", ())));
+    assert_eq!(whitespace(" // x"), Ok(("", ())));
+    assert_eq!(whitespace(" // x\ny"), Ok(("y", ())));
+    assert_eq!(whitespace("\n// a comment\n x"), Ok(("x", ())));
+    assert_eq!(whitespace(" /// docstring \ny"), Ok(("/// docstring \ny", ())));
+  }
+
+
+
+  #[test]
   fn parse_ident0() {
     assert_eq!(ident0("x"), Ok(("", "x")));
     assert_eq!(ident0("X"), Ok(("", "X")));
@@ -499,6 +597,61 @@ mod tests {
         }),
       })),
     )
+  }
+
+  #[test]
+  fn parse_decl_annotations() {
+
+    assert_eq!(
+      decl("@X.Z true @Y \"xyzzy\" struct A {}"),
+      Ok(("", adlast::Decl{
+        name: "A".to_string(),
+        version: mk_empty_maybe(),
+        annotations:  crate::adlrt::custom::sys::types::map::Map::from_iter(vec![
+          (mk_scoped_name("", "Y"), serde_json::Value::String("xyzzy".to_owned())),
+          (mk_scoped_name("X", "Z"), serde_json::Value::Bool(true)),
+        ]),
+        r#type: adlast::DeclType::Struct(adlast::Struct{
+          type_params: Vec::new(),
+          fields: vec![],
+        }),
+      })),
+    )
+  }
+
+  #[test]
+  fn parse_docstring() {
+    assert_eq!(docstring("  /// my doc string\n"), Ok(("\n", " my doc string")));
+
+    assert_eq!(
+      decl("/// Some doc\n struct A {}"),
+      Ok(("", adlast::Decl{
+        name: "A".to_string(),
+        version: mk_empty_maybe(),
+        annotations:  crate::adlrt::custom::sys::types::map::Map::from_iter(vec![
+          (docstring_scoped_name(), serde_json::Value::from(" Some doc")),
+        ]),
+        r#type: adlast::DeclType::Struct(adlast::Struct{
+          type_params: Vec::new(),
+          fields: vec![],
+        }),
+      })),
+    );
+
+    assert_eq!(
+      decl("/// Some doc\n /// with line 2\n struct A {}"),
+      Ok(("", adlast::Decl{
+        name: "A".to_string(),
+        version: mk_empty_maybe(),
+        annotations:  crate::adlrt::custom::sys::types::map::Map::from_iter(vec![
+          (mk_scoped_name("sys.annotations", "Doc"), serde_json::Value::from(" Some doc\n with line 2")),
+        ]),
+        r#type: adlast::DeclType::Struct(adlast::Struct{
+          type_params: Vec::new(),
+          fields: vec![],
+        }),
+      })),
+    );
   }
 
   #[test]

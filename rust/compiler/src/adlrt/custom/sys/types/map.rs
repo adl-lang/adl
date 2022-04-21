@@ -1,13 +1,14 @@
 use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
 use std::collections::HashMap;
+use std::iter::FromIterator;
 use std::hash::Hash;
 use std::result;
 use super::mapentry::MapEntry;
 
 
 #[derive(Clone,Eq,PartialEq, Debug)]
-pub struct Map<K:Eq + Hash, V>(HashMap<K, V>);
+pub struct Map<K:Eq + Hash, V>(pub HashMap<K, V>);
 
 impl<K:Eq + Hash, V> Map<K, V> {
     pub fn new(v: Vec<MapEntry<K, V>>) -> Map<K, V>
@@ -18,6 +19,20 @@ impl<K:Eq + Hash, V> Map<K, V> {
         }
         Map(hm)
     }
+}
+
+impl<K,V> FromIterator<(K,V)> for Map<K,V>
+where
+    K: Eq + Hash,
+{
+  fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Map<K, V> {
+    let mut hm = HashMap::new();
+    for (k,v) in iter {
+      hm.insert(k,v);
+    }
+    Map(hm)
+  }
+
 }
 
 impl<K, V> Serialize for Map<K, V>
