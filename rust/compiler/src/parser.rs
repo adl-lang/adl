@@ -13,6 +13,7 @@ use nom::{
     complete::{
       multispace0,
       none_of,
+      one_of,
       satisfy,
       digit1,
     }
@@ -42,7 +43,7 @@ use nom::{
     ParseError
   },
   character::complete::{alpha1, alphanumeric1},
-  bytes::complete::{ tag, escaped },
+  bytes::complete::{ tag, take },
 };
 
 type Res<T, U> = IResult<T, U, VerboseError<T>>;
@@ -297,14 +298,43 @@ pub fn json(i: &str) -> Res<&str,serde_json::Value> {
 
 
 pub fn json_string(i: &str) -> Res<&str, serde_json::Value> {
-  map( json_string0, |s: &str| serde_json::Value::from(s))(i)
+  map( json_string0, |s: String| serde_json::Value::from(s))(i)
 }
 
-pub fn json_string0(i: &str) -> Res<&str, &str> {
-  // TODO: consider non-quote escape sequences
-  let esc = escaped(none_of("\\\""), '\\', tag("\""));
-  let esc_or_empty = alt((esc, tag("")));
-  preceded(wtag("\""), cut(terminated(esc_or_empty, tag("\""))))(i)
+pub fn json_string0(i: &str) -> Res<&str, String> {
+  let mut result = String::new();
+  let mut esc = false;
+
+  let (i,_) = wtag("\"")(i)?;
+
+  let mut chars = i.chars();
+  loop {
+    if let Some(c) = chars.next() {
+      if esc {
+        match c {
+          'b' => result.push(0x08 as char),
+          'f' => result.push(0xc as char),
+          'n' => result.push('\n'),
+          'r' => result.push('\r'),
+          't' => result.push('\t'),
+          // TODO: implement \uXXXX 
+          c => result.push(c),
+        }
+        esc = false;
+      } else if c == '\\' {
+        esc = true;
+      } else if c == '"' {
+        return Ok( (chars.as_str(), result) );
+      } else {
+        result.push(c);
+      }
+    } else {
+      return Err(Err::Failure(VerboseError{errors: vec![(
+        chars.as_str(),
+        nom::error::VerboseErrorKind::Nom(nom::error::ErrorKind::Eof)
+      )]}));
+    }
+  }
 }
 
 pub fn json_number(i: &str) -> Res<&str, serde_json::Value> {
@@ -335,7 +365,7 @@ pub fn json_object(i: &str) -> Res<&str, serde_json::Value> {
 
   let mut map = serde_json::Map::new();
   for (k,v) in fields {
-    map.insert(k.to_string(),v);
+    map.insert(k,v);
   }
   Ok((i, serde_json::Value::Object(map)))
 }
@@ -495,29 +525,32 @@ mod tests {
     assert_parse_eq( json("+45.2"), serde_json::Value::from(45.2f64));
     assert_parse_eq( json("-45.2"), serde_json::Value::from(-45.2f64));
 
+    assert_parse_eq( json("\"\""), serde_json::Value::String("".to_string()));
+    assert_parse_eq( json("\"xyz\""), serde_json::Value::String("xyz".to_string()));
+    assert_parse_eq( json("\"\\\"\""), serde_json::Value::String("\"".to_string()));
+    assert_parse_eq( json("\"\\\\\""), serde_json::Value::String("\\".to_string()));
+    assert_parse_eq( json("\"\\n\""), serde_json::Value::String("\n".to_string()));
+
     assert_parse_eq( json("[]"), serde_json::Value::Array(Vec::new()));
     assert_parse_eq( json("[ 45 ]"), serde_json::Value::Array(vec![
       serde_json::Value::from(45u32)
     ]));
 
     assert_parse_eq( json("{}"), serde_json::Value::Object(serde_json::Map::new()));
-    assert_parse_eq( json(r#" {"f1": true, "f2": null} "#), serde_json::Value::Object(mk_json_map(vec!(
+    assert_parse_eq( json(r#" {"f1": true, "f2": null}"#), serde_json::Value::Object(mk_json_map(vec!(
       ("f1".to_owned(), serde_json::Value::Bool(true)),
       ("f2".to_owned(), serde_json::Value::Null),
     ))));
 
-
-    assert_parse_eq( json(r#" "" "#), serde_json::Value::String("".to_string()));
-    assert_parse_eq( json(r#" "xyz" "#), serde_json::Value::String("xyz".to_string()));
-    //assert_parse_eq( json(r#" "\"" "#), serde_json::Value::String("\"".to_string()));
   }
 
   fn assert_parse_eq<T>(  pr: Res<&str, T>, v:T) 
     where T: std::fmt::Debug+PartialEq {
     if let Ok((i, pv)) = pr  {
       assert_eq!(pv, v);
+      assert!(i.is_empty());
     } else {
-      panic!("Parse failed when succes expected" );
+      panic!("Unexpected parse failure" );
     }
   }
 
