@@ -7,6 +7,9 @@
 use std::collections::HashMap;
 use crate::adlgen::sys::{adlast2 as adlast};
 
+use crate::adlrt::custom::sys::types::map::Map; 
+use crate::adlrt::custom::sys::types::maybe::Maybe; 
+
 use nom::{
   *,
   character::{
@@ -181,7 +184,7 @@ pub fn module(i: &str) -> Res<&str,adlast::Module<TypeExpr0>>  {
     name,
     Vec::new(),
     decls,
-    crate::adlrt::custom::sys::types::map::Map::new(Vec::new()),
+    Map::new(Vec::new()),
   );
 
   Ok( (i,module) )
@@ -195,7 +198,7 @@ pub fn decl(i: &str) -> Res<&str,adlast::Decl<TypeExpr0>>  {
     name: name.to_string(),
     r#type: dtype,
     annotations: merge_annotations(annotations),
-    version: crate::adlrt::custom::sys::types::maybe::Maybe::nothing()
+    version: Maybe::nothing()
   };
   Ok((i,decl))
 }
@@ -222,7 +225,7 @@ pub fn merge_annotations(anns: Vec<(adlast::ScopedName, serde_json::Value)>) -> 
   if !ds.is_empty() {
     hm.insert(docstring_scoped_name(), serde_json::Value::from(ds.join("\n")));
   }
-  crate::adlrt::custom::sys::types::map::Map(hm)
+  Map(hm)
 }
 
 pub fn docstring_scoped_name() -> adlast::ScopedName {
@@ -331,7 +334,7 @@ pub fn field(i: &str) -> Res<&str,adlast::Field<TypeExpr0>>  {
       serialized_name: name.to_string(),
       type_expr: texpr,
       default: maybe_from_option(default),
-      annotations: crate::adlrt::custom::sys::types::map::Map::new(Vec::new()),
+      annotations: Map::new(Vec::new()),
   };
   Ok((i,field))
 }
@@ -469,10 +472,10 @@ pub fn json_array(i: &str) -> Res<&str, serde_json::Value> {
   )(i)
 }
 
-pub fn maybe_from_option<T>(v : Option<T>) -> crate::adlrt::custom::sys::types::maybe::Maybe<T> {
+pub fn maybe_from_option<T>(v : Option<T>) ->Maybe<T> {
   match v {
-    Some(v) => crate::adlrt::custom::sys::types::maybe::Maybe::just(v),
-    None => crate::adlrt::custom::sys::types::maybe::Maybe::nothing(),
+    Some(v) => Maybe::just(v),
+    None => Maybe::nothing(),
   }
 }
 
@@ -574,22 +577,22 @@ mod tests {
       decl("struct A { F f1; G f2; }"),
       Ok(("", adlast::Decl{
         name: "A".to_string(),
-        version: mk_empty_maybe(),
-        annotations: mk_empty_annotations(),
+        version:  Maybe::nothing(),
+        annotations:  Map::new(Vec::new()),
         r#type: adlast::DeclType::Struct(adlast::Struct{
           type_params: Vec::new(),
           fields: vec![
             adlast::Field{
               name: "f1".to_string(),
-              annotations: mk_empty_annotations(),
-              default: mk_empty_maybe(),
+              annotations:  Map::new(Vec::new()),
+              default:  Maybe::nothing(),
               serialized_name: "f1".to_string(),
               type_expr: mk_typeexpr0(mk_scoped_name("", "F")),
             },
             adlast::Field{
               name: "f2".to_string(),
-              annotations: mk_empty_annotations(),
-              default: mk_empty_maybe(),
+              annotations:  Map::new(Vec::new()),
+              default: Maybe::nothing(),
               serialized_name: "f2".to_string(),
               type_expr: mk_typeexpr0(mk_scoped_name("", "G")),
             }
@@ -606,8 +609,8 @@ mod tests {
       decl("@X.Z true @Y \"xyzzy\" struct A {}"),
       Ok(("", adlast::Decl{
         name: "A".to_string(),
-        version: mk_empty_maybe(),
-        annotations:  crate::adlrt::custom::sys::types::map::Map::from_iter(vec![
+        version:  Maybe::nothing(),
+        annotations:  Map::from_iter(vec![
           (mk_scoped_name("", "Y"), serde_json::Value::String("xyzzy".to_owned())),
           (mk_scoped_name("X", "Z"), serde_json::Value::Bool(true)),
         ]),
@@ -627,8 +630,8 @@ mod tests {
       decl("/// Some doc\n struct A {}"),
       Ok(("", adlast::Decl{
         name: "A".to_string(),
-        version: mk_empty_maybe(),
-        annotations:  crate::adlrt::custom::sys::types::map::Map::from_iter(vec![
+        version: Maybe::nothing(),
+        annotations:  Map::from_iter(vec![
           (docstring_scoped_name(), serde_json::Value::from(" Some doc")),
         ]),
         r#type: adlast::DeclType::Struct(adlast::Struct{
@@ -642,8 +645,8 @@ mod tests {
       decl("/// Some doc\n /// with line 2\n struct A {}"),
       Ok(("", adlast::Decl{
         name: "A".to_string(),
-        version: mk_empty_maybe(),
-        annotations:  crate::adlrt::custom::sys::types::map::Map::from_iter(vec![
+        version:  Maybe::nothing(),
+        annotations:  Map::from_iter(vec![
           (mk_scoped_name("sys.annotations", "Doc"), serde_json::Value::from(" Some doc\n with line 2")),
         ]),
         r#type: adlast::DeclType::Struct(adlast::Struct{
@@ -721,12 +724,5 @@ mod tests {
 
   fn mk_typeexpr0(type_ref: adlast::ScopedName) -> adlast::TypeExpr<adlast::ScopedName> {
     adlast::TypeExpr{type_ref, parameters: vec![]}
-  }
-
-  fn mk_empty_annotations() -> crate::adlrt::custom::sys::types::map::Map<adlast::ScopedName,serde_json::Value> {
-    crate::adlrt::custom::sys::types::map::Map::new(Vec::new())
-  }
-  fn mk_empty_maybe<T>() -> crate::adlrt::custom::sys::types::maybe::Maybe<T> {
-    crate::adlrt::custom::sys::types::maybe::Maybe::nothing()
   }
 }
