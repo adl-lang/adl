@@ -50,6 +50,26 @@ use nom::{
 type Res<T, U> = IResult<T, U, VerboseError<T>>;
 
 type TypeExpr0 = adlast::TypeExpr<adlast::ScopedName>;
+ 
+
+pub enum DeclOrAnnotation {
+  DADecl(adlast::Decl<adlast::TypeExpr<adlast::ScopedName>>),
+  DAAnnotation(ExplicitAnnotation),
+}
+
+#[derive(Eq, PartialEq, Debug)]
+pub struct ExplicitAnnotation {
+  refr: ExplicitAnnotationRef,
+  scoped_name: adlast::ScopedName,
+  value: serde_json::Value,
+}
+
+#[derive(Eq, PartialEq, Debug)]
+pub enum ExplicitAnnotationRef {
+  Module,
+  Decl(String),
+  Field((String,String)),
+}
 
 
 // Consumes whitespace and comments, but not docstrings
@@ -167,18 +187,25 @@ pub fn scoped_name(i: &str) -> Res<&str,adlast::ScopedName>  {
   Ok((i, scoped_name))
 }
 
-pub fn module(i: &str) -> Res<&str,adlast::Module<TypeExpr0>>  {
+pub fn module(i: &str) -> Res<&str,(adlast::Module<TypeExpr0>, Vec<ExplicitAnnotation>)>  {
 
   let (i,_) = ws(tag("module"))(i)?;
   let (i,name) = ws(module_name)(i)?;
-  let (i,mut decls) = delimited(
+  let (i,decls_or_annotations) = delimited(
     wtag("{"),
     many0(
-      terminated(decl, wtag(";"))
+      terminated(decl_or_annotation, wtag(";"))
     ),
     wtag("}"),
   )(i)?;
-  let decls: HashMap<String,adlast::Decl<TypeExpr0>> = decls.drain(..).map( |d| (d.name.clone(),d) ).collect();
+  let mut decls: HashMap<String,adlast::Decl<TypeExpr0>> = HashMap::new();
+  let mut explicit_annotations: Vec<ExplicitAnnotation> = Vec::new();
+  for da in decls_or_annotations {
+    match da {
+      DeclOrAnnotation::DADecl(decl) => {decls.insert(decl.name.clone(),decl); },
+      DeclOrAnnotation::DAAnnotation(ann) => {explicit_annotations.push(ann); },
+    }
+  }
 
   let module = adlast::Module::new(
     name,
@@ -187,7 +214,14 @@ pub fn module(i: &str) -> Res<&str,adlast::Module<TypeExpr0>>  {
     Map::new(Vec::new()),
   );
 
-  Ok( (i,module) )
+  Ok( (i,(module, explicit_annotations)) )
+}
+
+pub fn decl_or_annotation(i: &str) -> Res<&str,DeclOrAnnotation>  {
+  alt( (
+    map(explicit_annotation, |a| DeclOrAnnotation::DAAnnotation(a)),
+    map(decl, |d| DeclOrAnnotation::DADecl(d)),
+  ))(i)
 }
 
 pub fn decl(i: &str) -> Res<&str,adlast::Decl<TypeExpr0>>  {
@@ -337,6 +371,54 @@ pub fn field(i: &str) -> Res<&str,adlast::Field<TypeExpr0>>  {
       annotations: Map::new(Vec::new()),
   };
   Ok((i,field))
+}
+
+pub fn explicit_annotation(i: &str) -> Res<&str, ExplicitAnnotation> {
+  preceded(
+    wtag("annotation"),
+    cut(
+      alt( (
+        explicit_module_annotation,
+        explicit_decl_annotation,
+        explicit_field_annotation,
+      ))
+    )
+  )(i)
+}
+
+pub fn explicit_module_annotation(i: &str) -> Res<&str, ExplicitAnnotation> {
+  let (i,scoped_name) = ws(scoped_name)(i)?;
+  let (i,value) = json(i)?;
+  Ok((i,ExplicitAnnotation{
+    refr: ExplicitAnnotationRef::Module,
+    scoped_name,
+    value,
+  }))
+}
+
+pub fn explicit_decl_annotation(i: &str) -> Res<&str, ExplicitAnnotation> {
+  let (i,decl_name) = ws(ident0)(i)?;
+  let (i,scoped_name) = ws(scoped_name)(i)?;
+  let (i,value) = json(i)?;
+  Ok((i,ExplicitAnnotation{
+    refr: ExplicitAnnotationRef::Decl(decl_name.to_owned()),
+    scoped_name,
+    value,
+  }))
+}
+
+pub fn explicit_field_annotation(i: &str) -> Res<&str, ExplicitAnnotation> {
+  let (i,decl_name) = ws(ident0)(i)?;
+  let (i,_) = wtag(".")(i)?;
+  let (i,field_name) = ws(ident0)(i)?;
+  let (i,scoped_name) = ws(scoped_name)(i)?;
+  let (i,value) = json(i)?;
+
+  Ok((i,ExplicitAnnotation{
+    refr: ExplicitAnnotationRef::Field((decl_name.to_owned(), field_name.to_owned())),
+    scoped_name,
+    value,
+  }))
 }
 
 pub fn type_params(i: &str) -> Res<&str,Vec<adlast::Ident>> {
@@ -623,6 +705,36 @@ mod tests {
   }
 
   #[test]
+  fn parse_explicit_annotations() {
+    assert_eq!(
+      explicit_annotation("annotation Bool false"),
+      Ok(("", ExplicitAnnotation{
+        refr: ExplicitAnnotationRef::Module,
+        scoped_name: mk_scoped_name("", "Bool"),
+        value: serde_json::Value::from(false),
+      })),
+    );
+
+    assert_eq!(
+      explicit_annotation("annotation MyStruct Bool false"),
+      Ok(("", ExplicitAnnotation{
+        refr: ExplicitAnnotationRef::Decl("MyStruct".to_owned()),
+        scoped_name: mk_scoped_name("", "Bool"),
+        value: serde_json::Value::from(false),
+      })),
+    );
+
+    assert_eq!(
+      explicit_annotation("annotation MyStruct.f1 Bool false"),
+      Ok(("", ExplicitAnnotation{
+        refr: ExplicitAnnotationRef::Field(("MyStruct".to_owned(), "f1".to_owned())),
+        scoped_name: mk_scoped_name("", "Bool"),
+        value: serde_json::Value::from(false),
+      })),
+    );
+  }
+
+  #[test]
   fn parse_docstring() {
     assert_eq!(docstring("  /// my doc string\n"), Ok(("\n", " my doc string")));
 
@@ -660,7 +772,7 @@ mod tests {
   #[test]
   fn parse_empty_module() {
     let pm =  module("module x {\n}");
-    if let Ok((i, m)) = pm  {
+    if let Ok((i, (m, _))) = pm  {
       assert_eq!( m.name, "x".to_string());
     } else {
       panic!("Failed to parse module" );
