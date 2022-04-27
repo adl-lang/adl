@@ -41,8 +41,8 @@ use nom::{
   },
   error::{ 
     VerboseError,
-    ParseError,
     context,
+    convert_error,
   },
   character::complete::{alpha1, alphanumeric1},
   bytes::complete::{ tag, is_not},
@@ -393,6 +393,7 @@ pub fn newtype(i: &str) -> Res<&str,(&str,adlast::NewType<TypeExpr0>)>  {
 }
 
 pub fn field(i: &str) -> Res<&str,adlast::Field<TypeExpr0>>  {
+  let (i,annotations) = many0(prefix_annotation)(i)?;
   let (i,texpr) = ws(type_expr)(i)?;
   let (i,name) = ws(ident0)(i)?;
   let (i,default) = opt( preceded( wtag("="), json))(i)?;
@@ -401,7 +402,7 @@ pub fn field(i: &str) -> Res<&str,adlast::Field<TypeExpr0>>  {
       serialized_name: name.to_string(),
       type_expr: texpr,
       default: maybe_from_option(default),
-      annotations: Map::new(Vec::new()),
+      annotations:  merge_annotations(annotations),
   };
   Ok((i,field))
 }
@@ -856,15 +857,15 @@ mod tests {
 
 
   #[test]
-  fn parse_test_adl() {
+  fn parse_test_adl_files() {
     assert_module_file_ok("../../haskell/compiler/tests/test1/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test2/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test3/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test4/input/test.adl");
-    // assert_module_file_ok("../../haskell/compiler/tests/test5/input/test.adl");
-    // assert_module_file_ok("../../haskell/compiler/tests/test6/input/test.adl");
-    // assert_module_file_ok("../../haskell/compiler/tests/test7/input/test.adl");
-    // assert_module_file_ok("../../haskell/compiler/tests/test8/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test5/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test6/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test7/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test8/input/test.adl");
     // assert_module_file_ok("../../haskell/compiler/tests/test9/input/test.adl");
     // assert_module_file_ok("../../haskell/compiler/tests/test10/input/test.adl");
   }
@@ -883,8 +884,16 @@ mod tests {
     let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     d.push(path);
     let content = fs::read_to_string(d).expect(&format!("Failed to read file: {}", path) );
-    let parse_result = module(&content);
-    assert_eq!( parse_result.err(), Option::None);
+    let content_str: &str = &content;
+    let parse_result = module(content_str);
+    let err =  parse_result.err().and_then(|e| {
+      match e {
+        Err::Error(e) => Some(e),
+        Err::Failure(e) => Some(e),
+        Err::Incomplete(e) => None,
+      }
+    });
+    assert_eq!( err.map(|e| convert_error(content_str, e)), Option::None);
   }
 
   fn mk_json_map(vs: Vec<(String,serde_json::Value)>) -> serde_json::Map<String, serde_json::Value> {
