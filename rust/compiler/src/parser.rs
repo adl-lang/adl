@@ -41,7 +41,8 @@ use nom::{
   },
   error::{ 
     VerboseError,
-    ParseError
+    ParseError,
+    context,
   },
   character::complete::{alpha1, alphanumeric1},
   bytes::complete::{ tag, is_not},
@@ -191,10 +192,15 @@ pub fn module(i: &str) -> Res<&str,(adlast::Module<TypeExpr0>, Vec<ExplicitAnnot
 
   let (i,_) = ws(tag("module"))(i)?;
   let (i,name) = ws(module_name)(i)?;
-  let (i,decls_or_annotations) = delimited(
+  let (i,(imports,decls_or_annotations)) = delimited(
     wtag("{"),
-    many0(
-      terminated(decl_or_annotation, wtag(";"))
+    pair(
+      many0(
+        terminated(r#import, wtag(";"))
+      ),
+      many0(
+        terminated(decl_or_annotation, wtag(";"))
+      ),
     ),
     wtag("}"),
   )(i)?;
@@ -209,12 +215,39 @@ pub fn module(i: &str) -> Res<&str,(adlast::Module<TypeExpr0>, Vec<ExplicitAnnot
 
   let module = adlast::Module::new(
     name,
-    Vec::new(),
+    imports,
     decls,
     Map::new(Vec::new()),
   );
 
   Ok( (i,(module, explicit_annotations)) )
+}
+
+pub fn r#import(i: &str) -> Res<&str,adlast::Import>  {
+  let (i,_) = wtag("import")(i)?;
+  let (i,import) = context(
+    "import",
+    cut(
+      alt((
+        map( wildcard_import, |mn| adlast::Import::ModuleName(mn)),
+        map( scoped_name, |sn| adlast::Import::ScopedName(sn)),
+      ))
+    )
+  )(i)?;
+  Ok((i, import))
+}
+
+pub fn wildcard_import(i: &str) -> Res<&str,adlast::ModuleName>  {
+  let (i,m) = recognize(
+    pair(
+      ident0,
+      terminated(
+        many0( pair( satisfy(|c| c == '.'), ident0)),
+        tag(".*")
+      )
+    )
+  )(i)?;
+  Ok((i,m[..(m.len()-2)].to_string()))
 }
 
 pub fn decl_or_annotation(i: &str) -> Res<&str,DeclOrAnnotation>  {
@@ -268,10 +301,10 @@ pub fn docstring_scoped_name() -> adlast::ScopedName {
 
 pub fn decl_type(i: &str) -> Res<&str,(&str,adlast::DeclType<TypeExpr0>)>  {
   alt((
-    map(struct_, |(name,s)| (name,adlast::DeclType::Struct(s))),
-    map(union,   |(name,u)| (name,adlast::DeclType::Union(u))),
-    map(typedef, |(name,t)| (name,adlast::DeclType::Type(t))),
-    map(newtype, |(name,n)| (name,adlast::DeclType::Newtype(n))),
+    context( "struct", map(struct_, |(name,s)| (name,adlast::DeclType::Struct(s)))),
+    context( "union", map(union,   |(name,u)| (name,adlast::DeclType::Union(u)))),
+    context( "type", map(typedef, |(name,t)| (name,adlast::DeclType::Type(t)))),
+    context( "newtype", map(newtype, |(name,n)| (name,adlast::DeclType::Newtype(n)))),
   ))(i)
 }
 
@@ -563,6 +596,9 @@ pub fn maybe_from_option<T>(v : Option<T>) ->Maybe<T> {
 
 #[cfg(test)]
 mod tests {
+  use std::fs;
+  use std::path::PathBuf;
+
   use super::*;
   use nom::{
       error::{ErrorKind, VerboseError, VerboseErrorKind},
@@ -620,6 +656,12 @@ mod tests {
 
     assert_eq!(scoped_name("x"), Ok(("", adlast::ScopedName::new("".to_string(), "x".to_string()))));
     assert_eq!(scoped_name("x.y.z"), Ok(("", adlast::ScopedName::new("x.y".to_string(), "z".to_string()))));
+  }
+
+  #[test]
+  fn parse_import() {
+    assert_eq!(r#import("import x.y.z"), Ok(("",adlast::Import::ScopedName(mk_scoped_name("x.y", "z")))));
+    assert_eq!(r#import("import x.y.*"), Ok(("",adlast::Import::ModuleName("x.y".to_owned()))));
   }
 
   #[test]
@@ -812,6 +854,21 @@ mod tests {
 
   }
 
+
+  #[test]
+  fn parse_test_adl() {
+    assert_module_file_ok("../../haskell/compiler/tests/test1/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test2/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test3/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test4/input/test.adl");
+    // assert_module_file_ok("../../haskell/compiler/tests/test5/input/test.adl");
+    // assert_module_file_ok("../../haskell/compiler/tests/test6/input/test.adl");
+    // assert_module_file_ok("../../haskell/compiler/tests/test7/input/test.adl");
+    // assert_module_file_ok("../../haskell/compiler/tests/test8/input/test.adl");
+    // assert_module_file_ok("../../haskell/compiler/tests/test9/input/test.adl");
+    // assert_module_file_ok("../../haskell/compiler/tests/test10/input/test.adl");
+  }
+
   fn assert_parse_eq<T>(  pr: Res<&str, T>, v:T) 
     where T: std::fmt::Debug+PartialEq {
     if let Ok((i, pv)) = pr  {
@@ -820,6 +877,14 @@ mod tests {
     } else {
       panic!("Unexpected parse failure" );
     }
+  }
+
+  fn assert_module_file_ok(path: &str) {
+    let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    d.push(path);
+    let content = fs::read_to_string(d).expect(&format!("Failed to read file: {}", path) );
+    let parse_result = module(&content);
+    assert_eq!( parse_result.err(), Option::None);
   }
 
   fn mk_json_map(vs: Vec<(String,serde_json::Value)>) -> serde_json::Map<String, serde_json::Value> {
