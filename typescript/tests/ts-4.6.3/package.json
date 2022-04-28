@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "@types/base64-js": "^1.2.5",
+    "@types/jest": "^24.0.13",
+    "base64-js": "^1.2.3",
+    "jest": "^27",
+    "ts-jest": "^27",
+    "tslint": "^5.17.0",
+    "typescript": "4.6.3"
+  },
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ]
+  },
+  "scripts": {
+    "test": "jest --no-cache"
+  }
+}
