@@ -73,7 +73,7 @@ export interface JsonParseException {
 }
 
 // Map a JsonException to an Error value
-export function mapJsonException(exception:{}): {} {
+export function mapJsonException(exception:unknown): unknown {
   if (exception && (exception as {kind:string})['kind'] == "JsonParseException") {
     const jserr: JsonParseException = exception as JsonParseException;
     return new Error(jserr.getMessage());
@@ -114,7 +114,7 @@ export function jsonParseException(message: string): JsonParseException {
  * Check if a javascript error is of the json parse exception type.
  * @param exception The exception to check.
  */
-export function isJsonParseException(exception: {}): exception is JsonParseException {
+export function isJsonParseException(exception: unknown): exception is JsonParseException {
   return (<JsonParseException> exception).kind === 'JsonParseException';
 }
 
