@@ -51,4 +51,5 @@ mkdir -p $BUILDDIR
 testts ts-2.9.2
 testts ts-3.5.2
 testts ts-3.8.3
+testts ts-4.2.4
 testdeno deno-1.10.2
