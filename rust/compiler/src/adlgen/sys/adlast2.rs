@@ -59,7 +59,7 @@ impl<R> TypeExpr<R> {
 
 #[derive(Debug,Deserialize,PartialEq,Serialize)]
 pub struct Field<TE> {
-  pub name: Ident,
+  pub name: Spanned<Ident>,
 
   #[serde(rename="serializedName")]
   pub serialized_name: Ident,
@@ -67,13 +67,13 @@ pub struct Field<TE> {
   #[serde(rename="typeExpr")]
   pub type_expr: TE,
 
-  pub default: Maybe<serde_json::Value>,
+  pub default: Maybe<Spanned<serde_json::Value>>,
 
   pub annotations: Annotations,
 }
 
 impl<TE> Field<TE> {
-  pub fn new(name: Ident, serialized_name: Ident, type_expr: TE, default: Maybe<serde_json::Value>, annotations: Annotations) -> Field<TE> {
+  pub fn new(name: Spanned<Ident>, serialized_name: Ident, type_expr: TE, default: Maybe<Spanned<serde_json::Value>>, annotations: Annotations) -> Field<TE> {
     Field {
       name: name,
       serialized_name: serialized_name,
@@ -174,7 +174,7 @@ pub enum DeclType<TE> {
 
 #[derive(Debug,Deserialize,PartialEq,Serialize)]
 pub struct Decl<TE> {
-  pub name: Ident,
+  pub name: Spanned<Ident>,
 
   pub version: Maybe<u32>,
 
@@ -185,7 +185,7 @@ pub struct Decl<TE> {
 }
 
 impl<TE> Decl<TE> {
-  pub fn new(name: Ident, version: Maybe<u32>, r#type: DeclType<TE>, annotations: Annotations) -> Decl<TE> {
+  pub fn new(name: Spanned<Ident>, version: Maybe<u32>, r#type: DeclType<TE>, annotations: Annotations) -> Decl<TE> {
     Decl {
       name: name,
       version: version,
@@ -225,7 +225,7 @@ pub enum Import {
 
 #[derive(Debug,Deserialize,PartialEq,Serialize)]
 pub struct Module<TE> {
-  pub name: ModuleName,
+  pub name: Spanned<ModuleName>,
 
   pub imports: Vec<Import>,
 
@@ -235,12 +235,47 @@ pub struct Module<TE> {
 }
 
 impl<TE> Module<TE> {
-  pub fn new(name: ModuleName, imports: Vec<Import>, decls: std::collections::HashMap<String,Decl<TE>>, annotations: Annotations) -> Module<TE> {
+  pub fn new(name: Spanned<ModuleName>, imports: Vec<Import>, decls: std::collections::HashMap<String,Decl<TE>>, annotations: Annotations) -> Module<TE> {
     Module {
       name: name,
       imports: imports,
       decls: decls,
       annotations: annotations,
+    }
+  }
+}
+
+/**
+ * The Span start..end contains all values with start <= x < end. It is empty if start >= end.
+ */
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
+pub struct Span {
+  pub start: u64,
+
+  pub end: u64,
+}
+
+impl Span {
+  pub fn new(start: u64, end: u64) -> Span {
+    Span {
+      start: start,
+      end: end,
+    }
+  }
+}
+
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
+pub struct Spanned<T> {
+  pub value: T,
+
+  pub span: Span,
+}
+
+impl<T> Spanned<T> {
+  pub fn new(value: T, span: Span) -> Spanned<T> {
+    Spanned {
+      value: value,
+      span: span,
     }
   }
 }

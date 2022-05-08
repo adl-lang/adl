@@ -31,10 +31,10 @@ struct TypeExpr<R>
 
 struct Field<TE>
 {
-    Ident name;
+    Spanned<Ident> name;
     Ident serializedName;
     TE typeExpr;
-    Maybe<Json> default;
+    Maybe<Spanned<Json>> default;
     Annotations annotations;
 };
 
@@ -73,7 +73,7 @@ union DeclType<TE>
 
 struct Decl<TE>
 {
-    Ident name;
+    Spanned<Ident> name;
     Maybe<Word32> version;
     DeclType<TE> type_;
     Annotations annotations;
@@ -95,10 +95,21 @@ union Import
 
 struct Module<TE>
 {
-    ModuleName name;
+    Spanned<ModuleName> name;
     Vector<Import> imports;
     StringMap<Decl<TE>> decls;
     Annotations annotations;
+};
+
+/// The Span start..end contains all values with start <= x < end. It is empty if start >= end.
+struct Span {
+  Word64 start;
+  Word64 end;
+};
+
+struct Spanned<T> {
+  T value;
+  Span span;
 };
 
 };

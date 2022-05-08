@@ -75,6 +75,6 @@ run_tests() {
   (cd ../cpp/tests; ./run-tests.sh)
 }
 
-build_adlc
+# build_adlc
 build_runtimes
-run_tests
+# run_tests
