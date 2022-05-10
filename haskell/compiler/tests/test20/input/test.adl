@@ -17,9 +17,11 @@ module test20
         @SerializedName "fn"
         String firstName;
 
-        @SerializedName "ln"
         String lastName;
         Int16 age;
         Role role;
     };
+    
+
+    annotation Person::lastName SerializedName "ln";
 };

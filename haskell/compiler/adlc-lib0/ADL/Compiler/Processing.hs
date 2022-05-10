@@ -89,8 +89,10 @@ parseAndCheckFile log file extraFiles = do
     m0 <- parseFile file
     m0Extras <- mapM parseFile extraFiles
     m1 <- addDefaultImports <$> mergeModules m0 m0Extras
-    m <- mergeAnnotations' m1
-    checkDeclarations m
+    m2 <- mergeAnnotations' m1
+    m3 <- checkDeclarations m2
+    let m4 = liftSerializedNames m3
+    return m4
   where
     parseFile :: FilePath -> EIO T.Text (Module0 Decl0)
     parseFile fpath = do
@@ -245,6 +247,27 @@ mergeAnnotations m0 = (m,unusedAnnotation)
     insertAnnotation :: Annotation0 -> Annotations ScopedName -> Annotations ScopedName
     insertAnnotation a0 = Map.insert (a0_annotationName a0) (a0_annotationName a0,a0_value a0)
 
+-- Lift serialized names out of attributes up to the ast
+liftSerializedNames :: SModule -> SModule
+liftSerializedNames = lsnModule
+  where
+    lsnModule m = m{m_decls = Map.map lsnDecl (m_decls m)}
+
+    lsnDecl d@Decl{d_type=dt} = d{d_type=lsnDeclType dt}
+
+    lsnDeclType (Decl_Struct s@Struct{s_fields=fs}) = Decl_Struct s{s_fields=map lsnField fs}
+    lsnDeclType (Decl_Union u@Union{u_fields=fs}) = Decl_Union u{u_fields=map lsnField fs}
+    lsnDeclType dt = dt
+
+    lsnField f = 
+      case Map.lookup serializedNameAttr (f_annotations f) of
+        Just (_, JSON.String s) -> f{
+          f_serializedName = s,
+          f_annotations = Map.delete serializedNameAttr (f_annotations f)
+        }
+        _ -> f
+
+    serializedNameAttr = ScopedName (ModuleName []) "SerializedName"
 
 data ResolvedTypeT c
   = RT_Named (ScopedName,Decl c (ResolvedTypeT c))
