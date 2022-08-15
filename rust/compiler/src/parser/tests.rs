@@ -224,7 +224,7 @@ fn parse_docstring() {
 
 #[test]
 fn parse_empty_module() {
-  let pm =  module(inp("module x {\n}"));
+  let pm =  raw_module(inp("module x {\n}"));
   if let Ok((_i, (m, _))) = pm  {
     assert_eq!( m.name.value, "x".to_string());
   } else {
@@ -340,7 +340,7 @@ fn assert_module_file_ok(path: &str) {
   d.push(path);
   let content = fs::read_to_string(d).expect(&format!("Failed to read file: {}", path) );
   let content_str: &str = &content;
-  let parse_result = module(inp(content_str));
+  let parse_result = raw_module(inp(content_str));
   let err =  parse_result.err().and_then(|e| {
     match e {
       Err::Error(e) => Some(e),

@@ -52,7 +52,8 @@ type Res<T, U> = IResult<T, U, VerboseError<T>>;
 type Input<'a> = LocatedSpan<&'a str>;
 
 type TypeExpr0 = adlast::TypeExpr<adlast::ScopedName>;
- 
+type Module0 = adlast::Module<TypeExpr0>;
+pub type RawModule = (Module0, Vec<ExplicitAnnotation>);
 
 pub enum DeclOrAnnotation {
   DADecl(adlast::Decl<adlast::TypeExpr<adlast::ScopedName>>),
@@ -61,9 +62,9 @@ pub enum DeclOrAnnotation {
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct ExplicitAnnotation {
-  refr: ExplicitAnnotationRef,
-  scoped_name: adlast::ScopedName,
-  value: serde_json::Value,
+  pub refr: ExplicitAnnotationRef,
+  pub scoped_name: adlast::ScopedName,
+  pub value: serde_json::Value,
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -209,7 +210,7 @@ pub fn scoped_name(i: Input) -> Res<Input,adlast::ScopedName>  {
   Ok((i, scoped_name))
 }
 
-pub fn module(i: Input) -> Res<Input,(adlast::Module<TypeExpr0>, Vec<ExplicitAnnotation>)>  {
+pub fn raw_module(i: Input) -> Res<Input,RawModule>  {
   let (i,annotations) = many0(prefix_annotation)(i)?;
   let (i,_) = ws(tag("module"))(i)?;
   let (i,name) = ws( spanned(module_name))(i)?;
