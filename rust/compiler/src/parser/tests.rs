@@ -2,6 +2,8 @@
 use std::fs;
 use std::path::PathBuf;
 
+use crate::utils::ast::{mk_typeexpr0, mk_scoped_name};
+
 use super::*;
 use nom::{
     error::{ErrorKind, VerboseError, VerboseErrorKind},
@@ -360,10 +362,3 @@ fn mk_json_map(vs: Vec<(String,serde_json::Value)>) -> serde_json::Map<String, s
   map
 }
 
-fn mk_scoped_name(mname: &str, name: &str) -> adlast::ScopedName {
-  adlast::ScopedName::new(mname.to_string(), name.to_string())
-}
-
-fn mk_typeexpr0(type_ref: adlast::ScopedName) -> adlast::TypeExpr<adlast::ScopedName> {
-  adlast::TypeExpr{type_ref, parameters: vec![]}
-}
