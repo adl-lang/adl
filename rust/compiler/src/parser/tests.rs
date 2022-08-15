@@ -142,7 +142,7 @@ fn parse_decl_annotations() {
 
   assert_parse_eq(
     decl(inp("@X.Z true @Y \"xyzzy\" struct A {}")),
-      adlast::Decl{
+      adlast::Decl{ 
       name: adlast::Spanned::new("A".to_string(), adlast::Span::new(28, 29)),
       version:  Maybe::nothing(),
       annotations:  Map::from_iter(vec![
@@ -178,7 +178,7 @@ fn parse_explicit_annotations() {
   );
 
   assert_parse_eq(
-    explicit_annotation(inp("annotation MyStruct.f1 Bool false")),
+    explicit_annotation(inp("annotation MyStruct::f1 Bool false")),
     ExplicitAnnotation{
       refr: ExplicitAnnotationRef::Field(("MyStruct".to_owned(), "f1".to_owned())),
       scoped_name: mk_scoped_name("", "Bool"),
@@ -187,40 +187,40 @@ fn parse_explicit_annotations() {
   );
 }
 
-  // #[test]
-  // fn parse_docstring() {
-  //   assert_eq!(docstring("  /// my doc string\n"), Ok(("\n", " my doc string")));
+#[test]
+fn parse_docstring() {
+  assert_parse_eq(docstring(inp("  /// my doc string\n")), " my doc string");
 
-  //   assert_eq!(
-  //     decl("/// Some doc\n struct A {}"),
-  //     Ok(("", adlast::Decl{
-  //       name: "A".to_string(),
-  //       version: Maybe::nothing(),
-  //       annotations:  Map::from_iter(vec![
-  //         (docstring_scoped_name(), serde_json::Value::from(" Some doc")),
-  //       ]),
-  //       r#type: adlast::DeclType::Struct(adlast::Struct{
-  //         type_params: Vec::new(),
-  //         fields: vec![],
-  //       }),
-  //     })),
-  //   );
+  assert_parse_eq(
+    decl(inp("/// Some doc\n struct A {}")),
+    adlast::Decl{
+      name: adlast::Spanned::new("A".to_string(), adlast::Span::new(21, 22)),
+      version: Maybe::nothing(),
+      annotations:  Map::from_iter(vec![
+        (docstring_scoped_name(), serde_json::Value::from(" Some doc")),
+      ]),
+      r#type: adlast::DeclType::Struct(adlast::Struct{
+        type_params: Vec::new(),
+        fields: vec![],
+      }),
+    },
+  );
 
-  //   assert_eq!(
-  //     decl("/// Some doc\n /// with line 2\n struct A {}"),
-  //     Ok(("", adlast::Decl{
-  //       name: "A".to_string(),
-  //       version:  Maybe::nothing(),
-  //       annotations:  Map::from_iter(vec![
-  //         (mk_scoped_name("sys.annotations", "Doc"), serde_json::Value::from(" Some doc\n with line 2")),
-  //       ]),
-  //       r#type: adlast::DeclType::Struct(adlast::Struct{
-  //         type_params: Vec::new(),
-  //         fields: vec![],
-  //       }),
-  //     })),
-  //   );
-  // }
+  assert_parse_eq(
+    decl(inp("/// Some doc\n /// with line 2\n struct A {}")),
+    adlast::Decl{
+      name: adlast::Spanned::new("A".to_string(), adlast::Span::new(38, 39)),
+      version:  Maybe::nothing(),
+      annotations:  Map::from_iter(vec![
+        (mk_scoped_name("sys.annotations", "Doc"), serde_json::Value::from(" Some doc\n with line 2")),
+      ]),
+      r#type: adlast::DeclType::Struct(adlast::Struct{
+        type_params: Vec::new(),
+        fields: vec![],
+      }),
+    },
+  );
+}
 
 #[test]
 fn parse_empty_module() {
@@ -278,6 +278,29 @@ fn parse_json() {
     assert_module_file_ok("../../haskell/compiler/tests/test8/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test9/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test10/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test11/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test12/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test13/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test14/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test15/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test16/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test16/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test16/input/test2.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test17/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test18/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test19/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test20/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test21/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test22/input/test22a.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test22/input/test22b.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test23/input/test23.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test24/input/test24.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test25/input/admin.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test26/input/test26.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test27/input/test27.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test27/input/test27a.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test28/input/test28.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test29/input/test29.adl");
   }
 
   fn inp (s: &str) -> Input {

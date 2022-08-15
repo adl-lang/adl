@@ -120,11 +120,12 @@ where
 }
 
 pub fn docstring(i: Input) -> Res<Input, &str> {
-  let (i,_) = preceded(whitespace, tag("///"))(i)?;
+  let (i,_) = ws( tag("///"))(i)?;
   let (i,text) = i.split_at_position_complete(|item| {
         let c = item.as_char();
         c == '\r' || c == '\n'
   })?;
+  let (i,_) = i.take_split(1);  // drop newline
   Ok((i,&text))
 }
 
@@ -209,7 +210,7 @@ pub fn scoped_name(i: Input) -> Res<Input,adlast::ScopedName>  {
 }
 
 pub fn module(i: Input) -> Res<Input,(adlast::Module<TypeExpr0>, Vec<ExplicitAnnotation>)>  {
-
+  let (i,annotations) = many0(prefix_annotation)(i)?;
   let (i,_) = ws(tag("module"))(i)?;
   let (i,name) = ws( spanned(module_name))(i)?;
   let (i,(imports,decls_or_annotations)) = delimited(
@@ -237,7 +238,7 @@ pub fn module(i: Input) -> Res<Input,(adlast::Module<TypeExpr0>, Vec<ExplicitAnn
     name,
     imports,
     decls,
-    Map::new(Vec::new()),
+     merge_annotations(annotations)
   );
 
   Ok( (i,(module, explicit_annotations)) )
@@ -293,9 +294,16 @@ pub fn decl(i: Input) -> Res<Input,adlast::Decl<TypeExpr0>>  {
 
 pub fn prefix_annotation(i: Input) -> Res<Input, (adlast::ScopedName, serde_json::Value)> {
   alt((
-    preceded(wtag("@"), pair(scoped_name, json)),
+    prefix_annotation_,
     map(docstring, |s| (docstring_scoped_name(), serde_json::Value::from(s))),
   ))(i)
+}
+
+pub fn prefix_annotation_(i: Input) -> Res<Input, (adlast::ScopedName, serde_json::Value)> {
+  let (i,_) = wtag("@")(i)?;
+  let (i,sn) = scoped_name(i)?;
+  let (i,ojv) = opt(json)(i)?;
+  Ok((i,(sn, ojv.unwrap_or(serde_json::Value::Null))))
 }
 
 pub fn merge_annotations(anns: Vec<(adlast::ScopedName, serde_json::Value)>) -> adlast::Annotations {
@@ -478,7 +486,7 @@ pub fn explicit_decl_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
 
 pub fn explicit_field_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
   let (i,decl_name) = ws(ident0)(i)?;
-  let (i,_) = wtag(".")(i)?;
+  let (i,_) = wtag("::")(i)?;
   let (i,field_name) = ws(ident0)(i)?;
   let (i,scoped_name) = ws(scoped_name)(i)?;
   let (i,value) = json(i)?;
