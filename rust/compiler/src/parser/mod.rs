@@ -26,7 +26,7 @@ use nom::{
     map,
     value,
   },
-  number::complete::{double, u64},
+  number::complete::{double},
   sequence::{
     pair,
     delimited,

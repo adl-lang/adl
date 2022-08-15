@@ -225,7 +225,7 @@ fn parse_docstring() {
 #[test]
 fn parse_empty_module() {
   let pm =  module(inp("module x {\n}"));
-  if let Ok((i, (m, _))) = pm  {
+  if let Ok((_i, (m, _))) = pm  {
     assert_eq!( m.name.value, "x".to_string());
   } else {
     panic!("Failed to parse module" );
@@ -345,7 +345,7 @@ fn assert_module_file_ok(path: &str) {
     match e {
       Err::Error(e) => Some(e),
       Err::Failure(e) => Some(e),
-      Err::Incomplete(e) => None,
+      Err::Incomplete(_e) => None,
     }
   });
 
