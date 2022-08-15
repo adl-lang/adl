@@ -10,6 +10,7 @@ use nom::{
   character::{
     complete::{
       satisfy,
+      digit1,
     }
   },
   multi::{
@@ -25,7 +26,7 @@ use nom::{
     map,
     value,
   },
-  number::complete::{double},
+  number::complete::{double, u64},
   sequence::{
     pair,
     delimited,
@@ -331,6 +332,7 @@ pub fn decl_type(i: Input) -> Res<Input,(Spanned<&str>,adlast::DeclType<TypeExpr
 pub fn struct_(i: Input) -> Res<Input,(Spanned<&str>,adlast::Struct<TypeExpr0>)>  {
   let (i,_) = ws(tag("struct"))(i)?;
   let (i,name) = ws(spanned(ident0))(i)?;
+  let (i,_) = oversion(i)?;
   let (i,type_params) = type_params(i)?;
   let (i,fields) = 
     delimited(
@@ -350,10 +352,10 @@ pub fn struct_(i: Input) -> Res<Input,(Spanned<&str>,adlast::Struct<TypeExpr0>)>
   Ok((i,(name,struct_)))
 }
 
-
 pub fn union(i: Input) -> Res<Input,(Spanned<&str>,adlast::Union<TypeExpr0>)>  {
   let (i,_) = wtag("union")(i)?;
   let (i,name) = ws(spanned(ident0))(i)?;
+  let (i,_) = oversion(i)?;
   let (i,type_params) = type_params(i)?;
   let (i,fields) = 
     delimited(
@@ -376,6 +378,7 @@ pub fn union(i: Input) -> Res<Input,(Spanned<&str>,adlast::Union<TypeExpr0>)>  {
 pub fn typedef(i: Input) -> Res<Input,(Spanned<&str>,adlast::TypeDef<TypeExpr0>)>  {
   let (i,_) = wtag("type")(i)?;
   let (i,name) = ws(spanned(ident0))(i)?;
+  let (i,_) = oversion(i)?;
   let (i,type_params) = type_params(i)?;
   let (i,type_expr) = 
     preceded(
@@ -392,6 +395,7 @@ pub fn typedef(i: Input) -> Res<Input,(Spanned<&str>,adlast::TypeDef<TypeExpr0>)
 pub fn newtype(i: Input) -> Res<Input,(Spanned<&str>,adlast::NewType<TypeExpr0>)>  {
   let (i,_) = ws(tag("newtype"))(i)?;
   let (i,name) = ws(spanned(ident0))(i)?;
+  let (i,_) = oversion(i)?;
   let (i,type_params) = type_params(i)?;
   let (i,type_expr) = preceded(
     wtag("="),
@@ -410,6 +414,16 @@ pub fn newtype(i: Input) -> Res<Input,(Spanned<&str>,adlast::NewType<TypeExpr0>)
     default: maybe_from_option(default),
   };
   Ok((i,(name,newtype)))
+}
+
+fn oversion(i: Input) -> Res<Input,Option<u64>>  {
+  opt(oversion_)(i)
+}
+
+fn oversion_(i: Input) -> Res<Input,u64>  {
+  let (i,_) = ws(tag("#"))(i)?;
+  let (i,ds) = ws(digit1)(i)?;
+  Ok((i, ds.parse::<u64>().unwrap()))
 }
 
 pub fn field(i: Input) -> Res<Input,adlast::Field<TypeExpr0>>  {

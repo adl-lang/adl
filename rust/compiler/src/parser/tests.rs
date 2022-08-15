@@ -276,8 +276,8 @@ fn parse_json() {
     assert_module_file_ok("../../haskell/compiler/tests/test6/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test7/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test8/input/test.adl");
-    // assert_module_file_ok("../../haskell/compiler/tests/test9/input/test.adl");
-    // assert_module_file_ok("../../haskell/compiler/tests/test10/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test9/input/test.adl");
+    assert_module_file_ok("../../haskell/compiler/tests/test10/input/test.adl");
   }
 
   fn inp (s: &str) -> Input {
@@ -286,22 +286,30 @@ fn parse_json() {
   
   fn assert_parse_eq<T>(pr: Res<Input, T>, v:T) 
     where T: std::fmt::Debug+PartialEq {
-    if let Ok((i, pv)) = pr  {
-      assert_eq!(pv, v);
-      assert!(i.is_empty());
-    } else {
-      panic!("Unexpected parse failure" );
+    match pr {
+      Ok((i,pv)) => {
+        assert_eq!(pv, v);
+        assert!(i.is_empty());
+      }
+      Err(e) => {
+        panic!("Unexpected parse failure: {}", e);
+
+      }
     }
   }
 
   fn assert_parse_eq_2<T>(pr: Res<Input, T>, v:T, remaining: &str) 
-  where T: std::fmt::Debug+PartialEq {
-  if let Ok((i, pv)) = pr  {
-    assert_eq!(pv, v);
-    assert_eq!(*i.fragment(), remaining);
-  } else {
-    panic!("Unexpected parse failure" );
-  }
+    where T: std::fmt::Debug+PartialEq {
+    match pr {
+      Ok((i,pv)) => {
+        assert_eq!(pv, v);
+        assert_eq!(*i.fragment(), remaining);
+      }
+      Err(e) => {
+        panic!("Unexpected parse failure: {}", e);
+
+      }
+    }
 }
 
 fn assert_module_file_ok(path: &str) {
