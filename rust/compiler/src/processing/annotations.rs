@@ -1,9 +1,6 @@
 use crate::adlgen::sys::{adlast2 as adlast};
 use crate::parser::{RawModule, ExplicitAnnotationRef};
-
-type TypeExpr0 = adlast::TypeExpr<adlast::ScopedName>;
-type Module0 = adlast::Module<TypeExpr0>;
-
+use super::{Module0};
 
 /// Attach explicit annotations to the appropriate nodes in the AST. On failure, returns
 /// the nodes that could not be attached.
