@@ -3,10 +3,19 @@ use std::collections::{HashMap, HashSet};
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::adlrt::custom::sys::types::map::Map;
 
+use super::loader::AdlLoader;
 use super::primitives::PrimitiveType;
 use super::{Module0, TypeExpr0};
 
 type Result<T> = std::result::Result<T, ResolveError>;
+
+pub enum ResolveError {
+    NoDeclForAnnotation,
+    ModuleNotFound,
+    DeclNotFound,
+    LocalNotFound,
+    LoadFailed,
+}
 
 pub type TypeExpr1 = adlast::TypeExpr<TypeRef>;
 pub type Decl1 = adlast::Decl<TypeExpr1>;
@@ -16,10 +25,6 @@ pub enum TypeRef {
     ScopedName(adlast::ScopedName),
     Primitive(PrimitiveType),
     TypeParam(adlast::Ident),
-}
-pub trait AdlLoader {
-    /// Find and parse the specified ADL module
-    fn load(&self, module_name: &adlast::ModuleName) -> Result<Module0>;
 }
 
 pub struct Resolver {
@@ -39,7 +44,12 @@ impl Resolver {
         if self.modules.contains_key(module_name) {
             return Ok(());
         }
-        let module0 = self.loader.load(module_name)?;
+        let module0 = self
+            .loader
+            .load(module_name)
+            .map_err(|_| ResolveError::LoadFailed)?
+            .ok_or_else(|| ResolveError::ModuleNotFound)?;
+
         let type_params = HashSet::new();
         let expanded_imports = HashMap::new();
         let mut ctx = ResolveCtx {
@@ -81,13 +91,6 @@ pub fn resolve_module(ctx: &mut ResolveCtx, module0: &Module0) -> Result<Module1
         annotations1,
     );
     Ok(module1)
-}
-
-pub enum ResolveError {
-    NoDeclForAnnotation,
-    ModuleNotFound,
-    DeclNotFound,
-    LocalNotFound,
 }
 
 pub fn resolve_decl(

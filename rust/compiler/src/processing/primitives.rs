@@ -21,7 +21,7 @@ pub enum PrimitiveType {
 }
 
 impl PrimitiveType {
-    pub fn to_str(&self) -> &'static str {
+    pub fn to_str(&self) -> &str {
         match self {
             PrimitiveType::Void => "Void",
             PrimitiveType::Bool => "Bool",
