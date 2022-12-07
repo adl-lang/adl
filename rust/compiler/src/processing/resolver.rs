@@ -9,17 +9,20 @@ use super::{Module0, TypeExpr0};
 
 type Result<T> = std::result::Result<T, ResolveError>;
 
+#[derive(Debug)]
 pub enum ResolveError {
     NoDeclForAnnotation,
     ModuleNotFound,
     DeclNotFound,
-    LocalNotFound,
+    LocalNotFound(String),
+    CircularModules(ModuleName),
     LoadFailed,
 }
 
 pub type TypeExpr1 = adlast::TypeExpr<TypeRef>;
 pub type Decl1 = adlast::Decl<TypeExpr1>;
 pub type Module1 = adlast::Module<TypeExpr1>;
+pub type ModuleName = adlast::ModuleName;
 
 pub enum TypeRef {
     ScopedName(adlast::ScopedName),
@@ -29,7 +32,7 @@ pub enum TypeRef {
 
 pub struct Resolver {
     loader: Box<dyn AdlLoader>,
-    modules: HashMap<adlast::ModuleName, Module1>,
+    modules: HashMap<ModuleName, Module1>,
 }
 
 impl Resolver {
@@ -40,18 +43,40 @@ impl Resolver {
         }
     }
 
-    pub fn add_module(&mut self, module_name: &adlast::ModuleName) -> Result<()> {
+    pub fn add_module(&mut self, module_name: &ModuleName) -> Result<()> {
+        let mut in_progress = HashSet::new();
+        self.add_module_impl(&mut in_progress, module_name)
+    }
+
+    fn add_module_impl(
+        &mut self,
+        in_progress: &mut HashSet<ModuleName>,
+        module_name: &ModuleName,
+    ) -> Result<()> {
         if self.modules.contains_key(module_name) {
             return Ok(());
         }
-        let module0 = self
+
+        if in_progress.contains(module_name) {
+            return Err(ResolveError::CircularModules(module_name.clone()));
+        }
+
+        in_progress.insert(module_name.clone());
+
+        let mut module0 = self
             .loader
             .load(module_name)
             .map_err(|_| ResolveError::LoadFailed)?
             .ok_or_else(|| ResolveError::ModuleNotFound)?;
+        self.add_default_imports(&mut module0);
+
+        let module_refs = find_module_refs(&module0);
+        for m in &module_refs {
+            self.add_module(m)?;
+        }
 
         let type_params = HashSet::new();
-        let expanded_imports = HashMap::new();
+        let expanded_imports = self.get_expanded_imports(&module0);
         let mut ctx = ResolveCtx {
             resolver: self,
             module0: &module0,
@@ -60,17 +85,56 @@ impl Resolver {
         };
         let module1 = resolve_module(&mut ctx, &module0)?;
         self.modules.insert(module_name.clone(), module1);
+
+        in_progress.remove(module_name);
+
         Ok(())
     }
 
-    pub fn get_module(&self, module_name: &adlast::ModuleName) -> Option<&Module1> {
+    pub fn get_module(&self, module_name: &ModuleName) -> Option<&Module1> {
         self.modules.get(module_name)
     }
-    pub fn get_decl(&self, scoped_name: &adlast::ScopedName) -> Option<&Decl1> {
+
+    pub fn get_decl(&mut self, scoped_name: &adlast::ScopedName) -> Option<&Decl1> {
         match self.get_module(&scoped_name.module_name) {
             None => None,
             Some(module1) => return module1.decls.get(&scoped_name.name),
         }
+    }
+
+    pub fn add_default_imports(&self, module: &mut Module0) {
+        let default_imports = vec!["sys.annotations"];
+        for din in default_imports {
+            let di = adlast::Import::ModuleName(din.to_owned());
+            if module.name.value != din && !module.imports.contains(&di) {
+                module.imports.push(di);
+            }
+        }
+    }
+
+    pub fn get_expanded_imports(&self, module: &Module0) -> HashMap<String, adlast::ScopedName> {
+        let mut result = HashMap::new();
+        for i in &module.imports {
+            match i {
+                adlast::Import::ScopedName(sn) => {
+                    result.insert(sn.name.clone(), sn.clone());
+                }
+                adlast::Import::ModuleName(mn) => {
+                    if let Some(m) = self.get_module(&mn) {
+                        for decl_name in m.decls.keys() {
+                            result.insert(
+                                decl_name.clone(),
+                                adlast::ScopedName {
+                                    module_name: m.name.value.clone(),
+                                    name: decl_name.clone(),
+                                },
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        result
     }
 }
 
@@ -219,8 +283,8 @@ pub struct ResolveCtx<'a> {
 }
 
 impl<'a> ResolveCtx<'a> {
-    pub fn find_module(&self, _module_name: &adlast::ModuleName) -> Result<Option<&Module1>> {
-        Ok(None) // FIXME
+    pub fn find_module(&self, module_name: &ModuleName) -> Result<Option<&Module1>> {
+        Ok(self.resolver.get_module(module_name))
     }
 
     pub fn resolve_type_ref(&self, scoped_name0: &adlast::ScopedName) -> Result<TypeRef> {
@@ -241,7 +305,7 @@ impl<'a> ResolveCtx<'a> {
             if let Some(scoped_name) = self.expanded_imports.get(name) {
                 return Ok(TypeRef::ScopedName(scoped_name.clone()));
             }
-            Err(ResolveError::LocalNotFound)
+            Err(ResolveError::LocalNotFound(name.clone()))
         } else {
             match self.find_module(&scoped_name0.module_name)? {
                 None => return Err(ResolveError::ModuleNotFound),
@@ -271,4 +335,89 @@ fn type_params_set(type_params: &Vec<adlast::Ident>) -> HashSet<String> {
         .iter()
         .map(|i| i.clone())
         .collect::<HashSet<_>>()
+}
+
+fn find_module_refs(module: &Module0) -> HashSet<ModuleName> {
+    struct C {
+        refs: HashSet<ModuleName>,
+    }
+    impl AstConsumer<adlast::ScopedName> for C {
+        fn consume_typeref(&mut self, sn: adlast::ScopedName) -> () {
+            self.consume_scoped_name(sn)
+        }
+        fn consume_scoped_name(&mut self, sn: adlast::ScopedName) {
+            if sn.module_name != "" {
+                self.refs.insert(sn.module_name);
+            }
+        }
+    }
+    let mut ac = C {
+        refs: HashSet::new(),
+    };
+    consume_module(module, &mut ac);
+    for i in &module.imports {
+        match i {
+            adlast::Import::ModuleName(mn) => ac.refs.insert(mn.clone()),
+            adlast::Import::ScopedName(sn) => ac.refs.insert(sn.module_name.clone()),
+        };
+    }
+    ac.refs
+}
+
+pub fn consume_module<T: Clone>(
+    module: &adlast::Module<adlast::TypeExpr<T>>,
+    ac: &mut dyn AstConsumer<T>,
+) {
+    consume_annotations(&module.annotations, ac);
+    for (_, decl) in &module.decls {
+        consume_decl(decl, ac);
+    }
+}
+
+pub fn consume_decl<T: Clone>(
+    decl: &adlast::Decl<adlast::TypeExpr<T>>,
+    ac: &mut dyn AstConsumer<T>,
+) {
+    consume_annotations(&decl.annotations, ac);
+    match &decl.r#type {
+        adlast::DeclType::Struct(s) => consume_fields(&s.fields, ac),
+        adlast::DeclType::Union(u) => consume_fields(&u.fields, ac),
+        adlast::DeclType::Type(t) => consume_type_expr(&t.type_expr, ac),
+        adlast::DeclType::Newtype(n) => consume_type_expr(&n.type_expr, ac),
+    }
+}
+
+pub fn consume_fields<T: Clone>(
+    fields: &Vec<adlast::Field<adlast::TypeExpr<T>>>,
+    ac: &mut dyn AstConsumer<T>,
+) {
+    for f in fields {
+        consume_field(f, ac);
+    }
+}
+
+pub fn consume_field<T: Clone>(
+    field: &adlast::Field<adlast::TypeExpr<T>>,
+    ac: &mut dyn AstConsumer<T>,
+) {
+    consume_annotations(&field.annotations, ac);
+    consume_type_expr(&field.type_expr, ac);
+}
+
+pub fn consume_annotations<T>(annotations: &adlast::Annotations, ac: &mut dyn AstConsumer<T>) {
+    for a in annotations.0.keys() {
+        ac.consume_scoped_name(a.clone());
+    }
+}
+
+pub fn consume_type_expr<T: Clone>(typeexpr: &adlast::TypeExpr<T>, ac: &mut dyn AstConsumer<T>) {
+    ac.consume_typeref(typeexpr.type_ref.clone());
+    for p in &typeexpr.parameters {
+        consume_type_expr(p, ac);
+    }
+}
+
+pub trait AstConsumer<TR> {
+    fn consume_typeref(&mut self, t: TR) -> ();
+    fn consume_scoped_name(&mut self, sn: adlast::ScopedName) -> ();
 }
