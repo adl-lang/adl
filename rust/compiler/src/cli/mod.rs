@@ -1,6 +1,8 @@
 use gumdrop::Options;
 use std::path::PathBuf;
 
+pub mod verify;
+
 // Define options for the program.
 #[derive(Debug, Options)]
 pub struct CliOptions {

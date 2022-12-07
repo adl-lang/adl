@@ -363,6 +363,11 @@ fn oversion_(i: Input) -> Res<Input, u64> {
 }
 
 pub fn field(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
+    context("field", field0)(i)
+}
+
+
+pub fn field0(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
     let (i, texpr) = ws(type_expr)(i)?;
     let (i, name_) = ws(spanned(ident0))(i)?;
@@ -437,7 +442,7 @@ pub fn type_params(i: Input) -> Res<Input, Vec<adlast::Ident>> {
     map(
         opt(delimited(
             wtag("<"),
-            separated_list0(ws(tag(",")), map(ident0, |i| i.to_string())),
+            separated_list0(ws(tag(",")), map(ws(ident0), |i| i.to_string())),
             wtag(">"),
         )),
         |idents| idents.unwrap_or_else(|| Vec::new()),
@@ -574,17 +579,16 @@ where
 pub fn process_parse_error(e: Err<VerboseError<Input>>) -> anyhow::Error {
     match e {
         Err::Incomplete(_) => return anyhow!("incomplete input"),
-        Err::Error(e) => process_parse_error1(e),
+        Err::Error(e) => process_parse_error1( e),
         Err::Failure(e) => process_parse_error1(e),
     }
 }
 
-fn process_parse_error1(_e: VerboseError<Input>) -> anyhow::Error {
-    //    let errors = e
-    //        .errors
-    //        .into_iter()
-    //        .map(|(input, error)| (*input.fragment(), error))
-    //        .collect();
-    //    let x = convert_error(
-    anyhow!("error")
+fn process_parse_error1(e: VerboseError<Input>) -> anyhow::Error {
+    let messages: Vec<_> = e
+        .errors
+        .into_iter()
+        .map(|(input, error)| format!("line: {}, column: {}, error: {:?}",input.location_line(), input.get_column(), error))
+        .collect();
+    anyhow!("parse error: {:#?}", messages)
 }
