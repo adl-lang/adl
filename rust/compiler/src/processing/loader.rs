@@ -1,10 +1,13 @@
 use nom_locate::LocatedSpan;
+use nom::Finish;
 use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
+use anyhow::anyhow;
+
 
 use crate::adlgen::sys::adlast2 as adlast;
-use crate::parser::{process_parse_error, raw_module};
+use crate::parser::{convert_error, raw_module};
 use crate::processing::annotations::apply_explicit_annotations;
 
 use super::Module0;
@@ -67,7 +70,7 @@ impl AdlLoader for DirTreeLoader {
 
 fn parse(content: &str) -> Result<Module0, anyhow::Error> {
     let inp = LocatedSpan::new(content);
-    let (_, raw_module) = raw_module(inp).map_err(process_parse_error)?;
+    let (_, raw_module) = raw_module(inp).finish().map_err(|e| anyhow!(convert_error(inp,e)))?;
     match apply_explicit_annotations(raw_module) {
         Ok(module0) => Ok(module0),
         Err(err) => Err(anyhow::Error::from(err)),

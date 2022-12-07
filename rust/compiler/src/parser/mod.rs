@@ -1,7 +1,6 @@
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::adlgen::sys::adlast2::Spanned;
-use anyhow::anyhow;
-use std::collections::HashMap;
+use std::{collections::HashMap, iter::repeat};
 
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
@@ -12,7 +11,7 @@ use nom::{
     character::complete::{alpha1, alphanumeric1},
     character::complete::{digit1, satisfy},
     combinator::{cut, map, opt, recognize, value},
-    error::{context, VerboseError},
+    error::{context, VerboseError, VerboseErrorKind},
     multi::{many0, many0_count, separated_list0},
     number::complete::double,
     sequence::{delimited, pair, preceded, terminated},
@@ -24,7 +23,7 @@ use nom_locate::{position, LocatedSpan};
 #[cfg(test)]
 mod tests;
 
-type Res<T, U> = IResult<T, U, VerboseError<T>>;
+type Res<I, T> = IResult<I, T, VerboseError<I>>;
 
 type Input<'a> = LocatedSpan<&'a str>;
 
@@ -162,8 +161,11 @@ pub fn scoped_name(i: Input) -> Res<Input, adlast::ScopedName> {
     };
     Ok((i, scoped_name))
 }
-
 pub fn raw_module(i: Input) -> Res<Input, RawModule> {
+    context("module", raw_module0)(i)
+}
+
+pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
     let (i, _) = ws(tag("module"))(i)?;
     let (i, name) = ws(spanned(module_name))(i)?;
@@ -297,59 +299,68 @@ pub fn decl_type(i: Input) -> Res<Input, (Spanned<&str>, adlast::DeclType<TypeEx
     ))(i)
 }
 
+
 pub fn struct_(i: Input) -> Res<Input, (Spanned<&str>, adlast::Struct<TypeExpr0>)> {
     let (i, _) = ws(tag("struct"))(i)?;
-    let (i, name) = ws(spanned(ident0))(i)?;
-    let (i, _) = oversion(i)?;
-    let (i, type_params) = type_params(i)?;
-    let (i, fields) = delimited(wtag("{"), many0(terminated(field, wtag(";"))), wtag("}"))(i)?;
-    let struct_ = adlast::Struct {
-        fields,
-        type_params,
-    };
-    Ok((i, (name, struct_)))
+    cut( |i| {
+        let (i, name) = ws(spanned(ident0))(i)?;
+        let (i, _) = oversion(i)?;
+        let (i, type_params) = type_params(i)?;
+        let (i, fields) = delimited(wtag("{"), many0(terminated(field, wtag(";"))), wtag("}"))(i)?;
+        let struct_ = adlast::Struct {
+            fields,
+            type_params,
+        };
+        Ok((i, (name, struct_)))
+    })(i)
 }
 
 pub fn union(i: Input) -> Res<Input, (Spanned<&str>, adlast::Union<TypeExpr0>)> {
     let (i, _) = wtag("union")(i)?;
-    let (i, name) = ws(spanned(ident0))(i)?;
-    let (i, _) = oversion(i)?;
-    let (i, type_params) = type_params(i)?;
-    let (i, fields) = delimited(wtag("{"), many0(terminated(field, wtag(";"))), wtag("}"))(i)?;
-    let union = adlast::Union {
-        fields,
-        type_params,
-    };
-    Ok((i, (name, union)))
+    cut( |i| {
+        let (i, name) = ws(spanned(ident0))(i)?;
+        let (i, _) = oversion(i)?;
+        let (i, type_params) = type_params(i)?;
+        let (i, fields) = delimited(wtag("{"), many0(terminated(field, wtag(";"))), wtag("}"))(i)?;
+        let union = adlast::Union {
+            fields,
+            type_params,
+        };
+        Ok((i, (name, union)))
+    })(i)
 }
 
 pub fn typedef(i: Input) -> Res<Input, (Spanned<&str>, adlast::TypeDef<TypeExpr0>)> {
     let (i, _) = wtag("type")(i)?;
-    let (i, name) = ws(spanned(ident0))(i)?;
-    let (i, _) = oversion(i)?;
-    let (i, type_params) = type_params(i)?;
-    let (i, type_expr) = preceded(wtag("="), type_expr)(i)?;
-    let typedef = adlast::TypeDef {
-        type_params,
-        type_expr,
-    };
-    Ok((i, (name, typedef)))
+    cut( |i| {
+        let (i, name) = ws(spanned(ident0))(i)?;
+        let (i, _) = oversion(i)?;
+        let (i, type_params) = type_params(i)?;
+        let (i, type_expr) = preceded(wtag("="), type_expr)(i)?;
+        let typedef = adlast::TypeDef {
+            type_params,
+            type_expr,
+        };
+        Ok((i, (name, typedef)))
+    })(i)
 }
 
 pub fn newtype(i: Input) -> Res<Input, (Spanned<&str>, adlast::NewType<TypeExpr0>)> {
     let (i, _) = ws(tag("newtype"))(i)?;
-    let (i, name) = ws(spanned(ident0))(i)?;
-    let (i, _) = oversion(i)?;
-    let (i, type_params) = type_params(i)?;
-    let (i, type_expr) = preceded(wtag("="), type_expr)(i)?;
-    let (i, default) = opt(preceded(wtag("="), json))(i)?;
+    cut( |i| {
+        let (i, name) = ws(spanned(ident0))(i)?;
+        let (i, _) = oversion(i)?;
+        let (i, type_params) = type_params(i)?;
+        let (i, type_expr) = preceded(wtag("="), type_expr)(i)?;
+        let (i, default) = opt(preceded(wtag("="), json))(i)?;
 
-    let newtype = adlast::NewType {
-        type_params,
-        type_expr,
-        default: maybe_from_option(default),
-    };
-    Ok((i, (name, newtype)))
+        let newtype = adlast::NewType {
+            type_params,
+            type_expr,
+            default: maybe_from_option(default),
+        };
+        Ok((i, (name, newtype)))
+    })(i)
 }
 
 fn oversion(i: Input) -> Res<Input, Option<u64>> {
@@ -575,20 +586,60 @@ where
     Spanned::new(f(sa.value), sa.span)
 }
 
-// Turn the error into something readable
-pub fn process_parse_error(e: Err<VerboseError<Input>>) -> anyhow::Error {
-    match e {
-        Err::Incomplete(_) => return anyhow!("incomplete input"),
-        Err::Error(e) => process_parse_error1( e),
-        Err::Failure(e) => process_parse_error1(e),
+// Lifted from nom source, but with our custom input type.
+pub fn convert_error(input: Input, e: VerboseError<Input>) -> String {
+    let lines: Vec<_> = input.lines().map(String::from).collect();
+  
+    let mut result = String::new();
+  
+    for (i, (substring, kind)) in e.errors.iter().enumerate() {
+      let mut offset = input.offset(substring);
+  
+      let mut line = 0;
+      let mut column = 0;
+  
+      for (j, l) in lines.iter().enumerate() {
+        if offset <= l.len() {
+          line = j;
+          column = offset;
+          break;
+        } else {
+          offset = offset - l.len() - 1;
+        }
+      }
+  
+      match kind {
+        VerboseErrorKind::Char(c) => {
+          result += &format!("{}: at line {}:\n", i, line);
+          result += &lines[line];
+          result += "\n";
+  
+          if column > 0 {
+            result += &repeat(' ').take(column).collect::<String>();
+          }
+          result += "^\n";
+          result += &format!("expected '{}', found {}\n\n", c, substring.chars().next().unwrap());
+        }
+        VerboseErrorKind::Context(s) => {
+          result += &format!("{}: at line {}, in {}:\n", i, line, s);
+          result += &lines[line];
+          result += "\n";
+          if column > 0 {
+            result += &repeat(' ').take(column).collect::<String>();
+          }
+          result += "^\n\n";
+        },
+        VerboseErrorKind::Nom(e) => {
+          result += &format!("{}: at line {}, in {:?}:\n", i, line, e);
+          result += &lines[line];
+          result += "\n";
+          if column > 0 {
+            result += &repeat(' ').take(column).collect::<String>();
+          }
+          result += "^\n\n";
+        }
+      }
     }
-}
-
-fn process_parse_error1(e: VerboseError<Input>) -> anyhow::Error {
-    let messages: Vec<_> = e
-        .errors
-        .into_iter()
-        .map(|(input, error)| format!("line: {}, column: {}, error: {:?}",input.location_line(), input.get_column(), error))
-        .collect();
-    anyhow!("parse error: {:#?}", messages)
-}
+  
+    result
+  }
