@@ -11,6 +11,17 @@ use crate::processing::annotations::apply_explicit_annotations;
 
 use super::Module0;
 
+
+pub fn loader_from_search_paths(paths: &Vec<PathBuf>) -> Box<dyn AdlLoader> {
+    let loaders = paths.iter().map(loader_from_dir_tree).collect();
+    Box::new(MultiLoader::new(loaders))
+}
+
+pub fn loader_from_dir_tree(path: &PathBuf) -> Box<dyn AdlLoader> {
+    Box::new(DirTreeLoader::new(path.clone()))
+}
+
+
 pub trait AdlLoader {
     /// Find and load the specified ADL module
     fn load(&mut self, module_name: &adlast::ModuleName) -> Result<Option<Module0>, anyhow::Error>;

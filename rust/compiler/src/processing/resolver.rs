@@ -1,3 +1,4 @@
+use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 
 use crate::adlgen::sys::adlast2 as adlast;
@@ -24,6 +25,7 @@ pub type Decl1 = adlast::Decl<TypeExpr1>;
 pub type Module1 = adlast::Module<TypeExpr1>;
 pub type ModuleName = adlast::ModuleName;
 
+#[derive(Serialize)]
 pub enum TypeRef {
     ScopedName(adlast::ScopedName),
     Primitive(PrimitiveType),
@@ -89,6 +91,10 @@ impl Resolver {
         in_progress.remove(module_name);
 
         Ok(())
+    }
+
+    pub fn get_module_names(&self) -> Vec<ModuleName> {
+        self.modules.keys().cloned().collect()
     }
 
     pub fn get_module(&self, module_name: &ModuleName) -> Option<&Module1> {

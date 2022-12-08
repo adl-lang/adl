@@ -1,13 +1,6 @@
-use compiler::cli::{CliOptions, Command};
-use gumdrop::Options;
-
-use compiler::cli::verify::verify;
+use compiler::cli::run_cli;
 
 fn main() {
-    let opts = CliOptions::parse_args_default_or_exit();
-
-    match opts.command {
-        None => println!("{}", CliOptions::self_usage(&opts)),
-        Some(Command::Verify(opts)) => verify(&opts),
-    }
+    let exit_code = run_cli();
+    std::process::exit(exit_code);
 }
