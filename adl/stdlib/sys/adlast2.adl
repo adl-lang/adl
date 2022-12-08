@@ -16,13 +16,6 @@ struct ScopedName
     Ident name;
 };
 
-union TypeRef
-{
-    Ident primitive;
-    Ident typeParam;
-    ScopedName reference;
-};
-
 struct TypeExpr<R>
 {
     R typeRef;
@@ -111,5 +104,44 @@ struct Spanned<T> {
   T value;
   Span span;
 };
+
+union PrimitiveType {
+  Void Void;
+  Void Bool;
+  Void Int8;
+  Void Int16;
+  Void Int32;
+  Void Int64;
+  Void Word8;
+  Void Word16;
+  Void Word32;
+  Void Word64;
+  Void Float;
+  Void Double;
+  Void Json;
+  Void ByteVector;
+  Void String;
+  Void Vector;
+  Void StringMap;
+  Void Nullable;
+  Void TypeToken;
+};
+
+union TypeRef {
+  ScopedName scopedName;
+  Ident localName;
+  PrimitiveType primitive;
+  Ident typeParam;
+};
+
+// AST after initial parsing
+type TypeExpr0 = TypeExpr<ScopedName>;
+type Module0 = Module<TypeExpr0>;
+
+
+// AST after name resolution
+type TypeExpr1 = TypeExpr<TypeRef>;
+type Decl1 = Decl<TypeExpr1>;
+type Module1 = Module<TypeExpr1>;
 
 };

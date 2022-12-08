@@ -29,18 +29,6 @@ impl ScopedName {
 }
 
 #[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub enum TypeRef {
-  #[serde(rename="primitive")]
-  Primitive(Ident),
-
-  #[serde(rename="typeParam")]
-  TypeParam(Ident),
-
-  #[serde(rename="reference")]
-  Reference(ScopedName),
-}
-
-#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct TypeExpr<R> {
   #[serde(rename="typeRef")]
   pub type_ref: R,
@@ -279,3 +267,69 @@ impl<T> Spanned<T> {
     }
   }
 }
+
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
+pub enum PrimitiveType {
+  Void,
+
+  Bool,
+
+  Int8,
+
+  Int16,
+
+  Int32,
+
+  Int64,
+
+  Word8,
+
+  Word16,
+
+  Word32,
+
+  Word64,
+
+  Float,
+
+  Double,
+
+  Json,
+
+  ByteVector,
+
+  String,
+
+  Vector,
+
+  StringMap,
+
+  Nullable,
+
+  TypeToken,
+}
+
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
+pub enum TypeRef {
+  #[serde(rename="scopedName")]
+  ScopedName(ScopedName),
+
+  #[serde(rename="localName")]
+  LocalName(Ident),
+
+  #[serde(rename="primitive")]
+  Primitive(PrimitiveType),
+
+  #[serde(rename="typeParam")]
+  TypeParam(Ident),
+}
+
+pub type TypeExpr0 = TypeExpr<ScopedName>;
+
+pub type Module0 = Module<TypeExpr0>;
+
+pub type TypeExpr1 = TypeExpr<TypeRef>;
+
+pub type Decl1 = Decl<TypeExpr1>;
+
+pub type Module1 = Module<TypeExpr1>;

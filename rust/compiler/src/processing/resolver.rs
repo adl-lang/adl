@@ -1,11 +1,10 @@
-use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::adlrt::custom::sys::types::map::Map;
 
 use super::loader::AdlLoader;
-use super::primitives::PrimitiveType;
+use super::primitives::{prim_from_str, str_from_prim};
 use super::{Module0, TypeExpr0};
 
 type Result<T> = std::result::Result<T, ResolveError>;
@@ -20,17 +19,11 @@ pub enum ResolveError {
     LoadFailed,
 }
 
-pub type TypeExpr1 = adlast::TypeExpr<TypeRef>;
-pub type Decl1 = adlast::Decl<TypeExpr1>;
-pub type Module1 = adlast::Module<TypeExpr1>;
+pub type TypeRef = adlast::TypeRef;
+pub type TypeExpr1 = adlast::TypeExpr1;
+pub type Decl1 = adlast::Decl1;
+pub type Module1 = adlast::Module1;
 pub type ModuleName = adlast::ModuleName;
-
-#[derive(Serialize)]
-pub enum TypeRef {
-    ScopedName(adlast::ScopedName),
-    Primitive(PrimitiveType),
-    TypeParam(adlast::Ident),
-}
 
 pub struct Resolver {
     loader: Box<dyn AdlLoader>,
@@ -299,14 +292,11 @@ impl<'a> ResolveCtx<'a> {
             if self.type_params.contains(name.as_str()) {
                 return Ok(TypeRef::TypeParam(name.clone()));
             }
-            if let Some(ptype) = PrimitiveType::from_str(&name) {
+            if let Some(ptype) = prim_from_str(&name) {
                 return Ok(TypeRef::Primitive(ptype));
             }
             if self.module0.decls.contains_key(name) {
-                return Ok(TypeRef::ScopedName(adlast::ScopedName::new(
-                    self.module0.name.value.clone(),
-                    name.clone(),
-                )));
+                return Ok(TypeRef::LocalName(name.clone()));
             }
             if let Some(scoped_name) = self.expanded_imports.get(name) {
                 return Ok(TypeRef::ScopedName(scoped_name.clone()));
