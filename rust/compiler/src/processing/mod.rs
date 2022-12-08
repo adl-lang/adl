@@ -25,7 +25,7 @@ impl ErrorLogger {
 
 impl ErrorConsumer for ErrorLogger {
     fn consume_error(&mut self, error: String) {
-        eprintln!("{}", error);
+        log::error!("{}", error);
         self.failed = true;
     }
 }

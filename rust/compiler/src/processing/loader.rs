@@ -11,7 +11,6 @@ use crate::processing::annotations::apply_explicit_annotations;
 
 use super::Module0;
 
-
 pub fn loader_from_search_paths(paths: &Vec<PathBuf>) -> Box<dyn AdlLoader> {
     let loaders = paths.iter().map(loader_from_dir_tree).collect();
     Box::new(MultiLoader::new(loaders))
@@ -20,7 +19,6 @@ pub fn loader_from_search_paths(paths: &Vec<PathBuf>) -> Box<dyn AdlLoader> {
 pub fn loader_from_dir_tree(path: &PathBuf) -> Box<dyn AdlLoader> {
     Box::new(DirTreeLoader::new(path.clone()))
 }
-
 
 pub trait AdlLoader {
     /// Find and load the specified ADL module
@@ -74,7 +72,7 @@ impl AdlLoader for DirTreeLoader {
             },
             Ok(content) => content,
         };
-        println!("loaded {} from {}", module_name, path.display());
+        log::info!("loaded {} from {}", module_name, path.display());
         parse(&content).map(|m| Some(m))
     }
 }

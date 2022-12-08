@@ -18,7 +18,7 @@ pub fn run_cli() -> i32 {
     match r {
         Ok(_) => 0,
         Err(err) => {
-            eprintln!("Error: {}", err);
+            log::error!("{}", err);
             1
         }
     }
