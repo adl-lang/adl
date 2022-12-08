@@ -15,8 +15,8 @@ pub fn get_fields<T>(d: &adlast::Decl<T>) -> Option<&Vec<adlast::Field<T>>> {
     match &d.r#type {
         adlast::DeclType::Struct(s) => Some(&s.fields),
         adlast::DeclType::Union(u) => Some(&u.fields),
-        adlast::DeclType::Type(t) => None,
-        adlast::DeclType::Newtype(n) => None,
+        adlast::DeclType::Type(_) => None,
+        adlast::DeclType::Newtype(_) => None,
     }
 }
 

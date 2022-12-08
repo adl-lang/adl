@@ -1,24 +1,14 @@
+use anyhow::anyhow;
 use std::collections::{HashMap, HashSet};
 
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::adlrt::custom::sys::types::map::Map;
 
 use super::loader::AdlLoader;
-use super::primitives::{prim_from_str, str_from_prim};
-use super::{ErrorConsumer, ErrorLogger, Module0, TypeExpr0};
+use super::primitives::prim_from_str;
+use super::{Module0, TypeExpr0};
 
-type Result<T> = std::result::Result<T, ResolveError>;
-
-#[derive(Debug)]
-pub enum ResolveError {
-    NoDeclForAnnotation,
-    ModuleNotFound,
-    DeclNotFound,
-    LocalNotFound(String),
-    CircularModules(ModuleName),
-    LoadFailed,
-    OtherError,
-}
+type Result<T> = anyhow::Result<T>;
 
 pub type TypeRef = adlast::TypeRef;
 pub type TypeExpr1 = adlast::TypeExpr1;
@@ -69,16 +59,15 @@ impl Resolver {
         }
 
         if in_progress.contains(module_name) {
-            return Err(ResolveError::CircularModules(module_name.clone()));
+            return Err(anyhow!("Circular reference loop including {}", module_name));
         }
 
         in_progress.insert(module_name.clone());
 
         let mut module0 = self
             .loader
-            .load(module_name)
-            .map_err(|_| ResolveError::LoadFailed)?
-            .ok_or_else(|| ResolveError::ModuleNotFound)?;
+            .load(module_name)?
+            .ok_or_else(|| anyhow!("Module {} not found", module_name))?;
         self.add_default_imports(&mut module0);
 
         let module_refs = find_module_refs(&module0);
@@ -143,7 +132,7 @@ pub fn check_module(m: &Module1) -> Result<()> {
     let mut elog = super::ErrorLogger::new();
     super::checks::check_duplicates::module(m, &mut elog);
     if elog.failed {
-        Err(ResolveError::OtherError)
+        Err(anyhow!("checks failed"))
     } else {
         Ok(())
     }
@@ -268,7 +257,10 @@ pub fn resolve_annotations(
             if let TypeRef::ScopedName(sn1) = tr1 {
                 Ok((sn1, jv.clone()))
             } else {
-                Err(ResolveError::NoDeclForAnnotation)
+                Err(anyhow!(
+                    "no decl {} found for explicit annotation",
+                    sn0.name
+                ))
             }
         })
         .collect::<Result<HashMap<_, _>>>()?;
@@ -313,12 +305,18 @@ impl<'a> ResolveCtx<'a> {
             if let Some(scoped_name) = self.expanded_imports.get(name) {
                 return Ok(TypeRef::ScopedName(scoped_name.clone()));
             }
-            Err(ResolveError::LocalNotFound(name.clone()))
+            Err(anyhow!("type {} not found", name))
         } else {
             match self.find_module(&scoped_name0.module_name)? {
-                None => return Err(ResolveError::ModuleNotFound),
+                None => return Err(anyhow!("module {} not found", scoped_name0.module_name)),
                 Some(module1) => match module1.decls.get(&scoped_name0.name) {
-                    None => return Err(ResolveError::DeclNotFound),
+                    None => {
+                        return Err(anyhow!(
+                            "type {}.{} not found",
+                            scoped_name0.module_name,
+                            scoped_name0.name
+                        ))
+                    }
                     Some(_) => return Ok(TypeRef::ScopedName(scoped_name0.clone())),
                 },
             }

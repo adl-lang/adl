@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::utils::ast::{get_fields, get_type_params};
 
-use super::{ErrorConsumer, ErrorLogger};
+use super::ErrorConsumer;
 
 pub mod check_duplicates {
     use super::*;
