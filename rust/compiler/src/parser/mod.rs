@@ -11,7 +11,7 @@ use nom::{
     character::complete::{alpha1, alphanumeric1},
     character::complete::{digit1, satisfy},
     combinator::{cut, map, opt, recognize, value},
-    error::{context, VerboseError, VerboseErrorKind},
+    error::{context, ErrorKind, ParseError, VerboseError, VerboseErrorKind},
     multi::{many0, many0_count, separated_list0},
     number::complete::double,
     sequence::{delimited, pair, preceded, terminated},
@@ -182,7 +182,10 @@ pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
     for da in decls_or_annotations {
         match da {
             DeclOrAnnotation::DADecl(decl) => {
-                decls.insert(decl.name.value.clone(), decl);
+                let dname = decl.name.value.clone();
+                if let Some(_) = decls.insert(dname.clone(), decl) {
+                    return Err(custom_error(i, format!("found duplicate decl: {}", dname)));
+                }
             }
             DeclOrAnnotation::DAAnnotation(ann) => {
                 explicit_annotations.push(ann);
@@ -299,10 +302,9 @@ pub fn decl_type(i: Input) -> Res<Input, (Spanned<&str>, adlast::DeclType<TypeEx
     ))(i)
 }
 
-
 pub fn struct_(i: Input) -> Res<Input, (Spanned<&str>, adlast::Struct<TypeExpr0>)> {
     let (i, _) = ws(tag("struct"))(i)?;
-    cut( |i| {
+    cut(|i| {
         let (i, name) = ws(spanned(ident0))(i)?;
         let (i, _) = oversion(i)?;
         let (i, type_params) = type_params(i)?;
@@ -317,7 +319,7 @@ pub fn struct_(i: Input) -> Res<Input, (Spanned<&str>, adlast::Struct<TypeExpr0>
 
 pub fn union(i: Input) -> Res<Input, (Spanned<&str>, adlast::Union<TypeExpr0>)> {
     let (i, _) = wtag("union")(i)?;
-    cut( |i| {
+    cut(|i| {
         let (i, name) = ws(spanned(ident0))(i)?;
         let (i, _) = oversion(i)?;
         let (i, type_params) = type_params(i)?;
@@ -332,7 +334,7 @@ pub fn union(i: Input) -> Res<Input, (Spanned<&str>, adlast::Union<TypeExpr0>)> 
 
 pub fn typedef(i: Input) -> Res<Input, (Spanned<&str>, adlast::TypeDef<TypeExpr0>)> {
     let (i, _) = wtag("type")(i)?;
-    cut( |i| {
+    cut(|i| {
         let (i, name) = ws(spanned(ident0))(i)?;
         let (i, _) = oversion(i)?;
         let (i, type_params) = type_params(i)?;
@@ -347,7 +349,7 @@ pub fn typedef(i: Input) -> Res<Input, (Spanned<&str>, adlast::TypeDef<TypeExpr0
 
 pub fn newtype(i: Input) -> Res<Input, (Spanned<&str>, adlast::NewType<TypeExpr0>)> {
     let (i, _) = ws(tag("newtype"))(i)?;
-    cut( |i| {
+    cut(|i| {
         let (i, name) = ws(spanned(ident0))(i)?;
         let (i, _) = oversion(i)?;
         let (i, type_params) = type_params(i)?;
@@ -376,7 +378,6 @@ fn oversion_(i: Input) -> Res<Input, u64> {
 pub fn field(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
     context("field", field0)(i)
 }
-
 
 pub fn field0(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
@@ -586,60 +587,70 @@ where
     Spanned::new(f(sa.value), sa.span)
 }
 
+fn custom_error(i: Input, msg: String) -> nom::Err<VerboseError<Input>> {
+    use log::error;
+    error!("{}", msg);
+    return nom::Err::Failure(VerboseError::from_error_kind(i, ErrorKind::Tag));
+}
+
 // Lifted from nom source, but with our custom input type.
 pub fn convert_error(input: Input, e: VerboseError<Input>) -> String {
     let lines: Vec<_> = input.lines().map(String::from).collect();
-  
+
     let mut result = String::new();
-  
+
     for (i, (substring, kind)) in e.errors.iter().enumerate() {
-      let mut offset = input.offset(substring);
-  
-      let mut line = 0;
-      let mut column = 0;
-  
-      for (j, l) in lines.iter().enumerate() {
-        if offset <= l.len() {
-          line = j;
-          column = offset;
-          break;
-        } else {
-          offset = offset - l.len() - 1;
+        let mut offset = input.offset(substring);
+
+        let mut line = 0;
+        let mut column = 0;
+
+        for (j, l) in lines.iter().enumerate() {
+            if offset <= l.len() {
+                line = j;
+                column = offset;
+                break;
+            } else {
+                offset = offset - l.len() - 1;
+            }
         }
-      }
-  
-      match kind {
-        VerboseErrorKind::Char(c) => {
-          result += &format!("{}: at line {}:\n", i, line);
-          result += &lines[line];
-          result += "\n";
-  
-          if column > 0 {
-            result += &repeat(' ').take(column).collect::<String>();
-          }
-          result += "^\n";
-          result += &format!("expected '{}', found {}\n\n", c, substring.chars().next().unwrap());
+
+        match kind {
+            VerboseErrorKind::Char(c) => {
+                result += &format!("{}: at line {}:\n", i, line);
+                result += &lines[line];
+                result += "\n";
+
+                if column > 0 {
+                    result += &repeat(' ').take(column).collect::<String>();
+                }
+                result += "^\n";
+                result += &format!(
+                    "expected '{}', found {}\n\n",
+                    c,
+                    substring.chars().next().unwrap()
+                );
+            }
+            VerboseErrorKind::Context(s) => {
+                result += &format!("{}: at line {}, in {}:\n", i, line, s);
+                result += &lines[line];
+                result += "\n";
+                if column > 0 {
+                    result += &repeat(' ').take(column).collect::<String>();
+                }
+                result += "^\n\n";
+            }
+            VerboseErrorKind::Nom(e) => {
+                result += &format!("{}: at line {}, in {:?}:\n", i, line, e);
+                result += &lines[line];
+                result += "\n";
+                if column > 0 {
+                    result += &repeat(' ').take(column).collect::<String>();
+                }
+                result += "^\n\n";
+            }
         }
-        VerboseErrorKind::Context(s) => {
-          result += &format!("{}: at line {}, in {}:\n", i, line, s);
-          result += &lines[line];
-          result += "\n";
-          if column > 0 {
-            result += &repeat(' ').take(column).collect::<String>();
-          }
-          result += "^\n\n";
-        },
-        VerboseErrorKind::Nom(e) => {
-          result += &format!("{}: at line {}, in {:?}:\n", i, line, e);
-          result += &lines[line];
-          result += "\n";
-          if column > 0 {
-            result += &repeat(' ').take(column).collect::<String>();
-          }
-          result += "^\n\n";
-        }
-      }
     }
-  
+
     result
-  }
+}
