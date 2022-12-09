@@ -47,7 +47,7 @@ impl<R> TypeExpr<R> {
 
 #[derive(Debug,Deserialize,PartialEq,Serialize)]
 pub struct Field<TE> {
-  pub name: Spanned<Ident>,
+  pub name: Ident,
 
   #[serde(rename="serializedName")]
   pub serialized_name: Ident,
@@ -55,13 +55,13 @@ pub struct Field<TE> {
   #[serde(rename="typeExpr")]
   pub type_expr: TE,
 
-  pub default: Maybe<Spanned<serde_json::Value>>,
+  pub default: Maybe<serde_json::Value>,
 
   pub annotations: Annotations,
 }
 
 impl<TE> Field<TE> {
-  pub fn new(name: Spanned<Ident>, serialized_name: Ident, type_expr: TE, default: Maybe<Spanned<serde_json::Value>>, annotations: Annotations) -> Field<TE> {
+  pub fn new(name: Ident, serialized_name: Ident, type_expr: TE, default: Maybe<serde_json::Value>, annotations: Annotations) -> Field<TE> {
     Field {
       name: name,
       serialized_name: serialized_name,
@@ -162,7 +162,7 @@ pub enum DeclType<TE> {
 
 #[derive(Debug,Deserialize,PartialEq,Serialize)]
 pub struct Decl<TE> {
-  pub name: Spanned<Ident>,
+  pub name: Ident,
 
   pub version: Maybe<u32>,
 
@@ -173,7 +173,7 @@ pub struct Decl<TE> {
 }
 
 impl<TE> Decl<TE> {
-  pub fn new(name: Spanned<Ident>, version: Maybe<u32>, r#type: DeclType<TE>, annotations: Annotations) -> Decl<TE> {
+  pub fn new(name: Ident, version: Maybe<u32>, r#type: DeclType<TE>, annotations: Annotations) -> Decl<TE> {
     Decl {
       name: name,
       version: version,
@@ -213,7 +213,7 @@ pub enum Import {
 
 #[derive(Debug,Deserialize,PartialEq,Serialize)]
 pub struct Module<TE> {
-  pub name: Spanned<ModuleName>,
+  pub name: ModuleName,
 
   pub imports: Vec<Import>,
 
@@ -223,7 +223,7 @@ pub struct Module<TE> {
 }
 
 impl<TE> Module<TE> {
-  pub fn new(name: Spanned<ModuleName>, imports: Vec<Import>, decls: std::collections::HashMap<String,Decl<TE>>, annotations: Annotations) -> Module<TE> {
+  pub fn new(name: ModuleName, imports: Vec<Import>, decls: std::collections::HashMap<String,Decl<TE>>, annotations: Annotations) -> Module<TE> {
     Module {
       name: name,
       imports: imports,

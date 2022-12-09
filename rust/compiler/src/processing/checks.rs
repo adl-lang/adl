@@ -10,17 +10,17 @@ pub mod check_duplicates {
 
     pub fn module<T>(m: &adlast::Module<adlast::TypeExpr<T>>, ec: &mut dyn ErrorConsumer) {
         for (_, d) in &m.decls {
-            decl(&m.name.value, d, ec);
+            decl(&m.name, d, ec);
         }
     }
 
     pub fn decl<T>(mname: &str, d: &adlast::Decl<adlast::TypeExpr<T>>, ec: &mut dyn ErrorConsumer) {
         if let Some(fs) = get_fields(d) {
-            let dnames = find_duplicates(fs.iter().map(|f| f.name.value.clone()).collect());
+            let dnames = find_duplicates(fs.iter().map(|f| f.name.clone()).collect());
             for dname in dnames {
                 ec.consume_error(format!(
                     "decl {}.{} has duplicated field {}",
-                    mname, d.name.value, dname
+                    mname, d.name, dname
                 ));
             }
         }
@@ -28,7 +28,7 @@ pub mod check_duplicates {
         for dname in dnames {
             ec.consume_error(format!(
                 "decl {}.{} has duplicated type parameter {}",
-                mname, d.name.value, dname
+                mname, d.name, dname
             ));
         }
     }

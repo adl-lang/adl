@@ -124,7 +124,7 @@ fn wtag<'a>(t: &'a str) -> impl FnMut(Input<'a>) -> Res<Input<'a>, ()> {
 }
 
 // Run a parser, recording the span of it's result
-fn spanned<'a, P: 'a, O>(inner: P) -> impl FnMut(Input<'a>) -> Res<Input<'a>, adlast::Spanned<O>>
+fn _spanned<'a, P: 'a, O>(inner: P) -> impl FnMut(Input<'a>) -> Res<Input<'a>, adlast::Spanned<O>>
 where
     P: Fn(Input<'a>) -> Res<Input<'a>, O>,
 {
@@ -168,7 +168,7 @@ pub fn raw_module(i: Input) -> Res<Input, RawModule> {
 pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
     let (i, _) = ws(tag("module"))(i)?;
-    let (i, name) = ws(spanned(module_name))(i)?;
+    let (i, name) = ws(module_name)(i)?;
     let (i, (imports, decls_or_annotations)) = delimited(
         wtag("{"),
         pair(
@@ -182,7 +182,7 @@ pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
     for da in decls_or_annotations {
         match da {
             DeclOrAnnotation::DADecl(decl) => {
-                let dname = decl.name.value.clone();
+                let dname = decl.name.clone();
                 if let Some(_) = decls.insert(dname.clone(), decl) {
                     return Err(custom_error(i, format!("found duplicate decl: {}", dname)));
                 }
@@ -230,7 +230,7 @@ pub fn decl(i: Input) -> Res<Input, adlast::Decl<TypeExpr0>> {
     let (i, (name, dtype)) = decl_type(i)?;
 
     let decl = adlast::Decl {
-        name: map_spanned(name, |s| s.to_owned()),
+        name: name.to_owned(),
         r#type: dtype,
         annotations: merge_annotations(annotations),
         version: Maybe::nothing(),
@@ -281,7 +281,7 @@ pub fn docstring_scoped_name() -> adlast::ScopedName {
     adlast::ScopedName::new("sys.annotations".to_owned(), "Doc".to_owned())
 }
 
-pub fn decl_type(i: Input) -> Res<Input, (Spanned<&str>, adlast::DeclType<TypeExpr0>)> {
+pub fn decl_type(i: Input) -> Res<Input, (&str, adlast::DeclType<TypeExpr0>)> {
     alt((
         context(
             "struct",
@@ -302,10 +302,10 @@ pub fn decl_type(i: Input) -> Res<Input, (Spanned<&str>, adlast::DeclType<TypeEx
     ))(i)
 }
 
-pub fn struct_(i: Input) -> Res<Input, (Spanned<&str>, adlast::Struct<TypeExpr0>)> {
+pub fn struct_(i: Input) -> Res<Input, (&str, adlast::Struct<TypeExpr0>)> {
     let (i, _) = ws(tag("struct"))(i)?;
     cut(|i| {
-        let (i, name) = ws(spanned(ident0))(i)?;
+        let (i, name) = ws(ident0)(i)?;
         let (i, _) = oversion(i)?;
         let (i, type_params) = type_params(i)?;
         let (i, fields) = delimited(wtag("{"), many0(terminated(field, wtag(";"))), wtag("}"))(i)?;
@@ -317,10 +317,10 @@ pub fn struct_(i: Input) -> Res<Input, (Spanned<&str>, adlast::Struct<TypeExpr0>
     })(i)
 }
 
-pub fn union(i: Input) -> Res<Input, (Spanned<&str>, adlast::Union<TypeExpr0>)> {
+pub fn union(i: Input) -> Res<Input, (&str, adlast::Union<TypeExpr0>)> {
     let (i, _) = wtag("union")(i)?;
     cut(|i| {
-        let (i, name) = ws(spanned(ident0))(i)?;
+        let (i, name) = ws(ident0)(i)?;
         let (i, _) = oversion(i)?;
         let (i, type_params) = type_params(i)?;
         let (i, fields) = delimited(wtag("{"), many0(terminated(field, wtag(";"))), wtag("}"))(i)?;
@@ -332,10 +332,10 @@ pub fn union(i: Input) -> Res<Input, (Spanned<&str>, adlast::Union<TypeExpr0>)> 
     })(i)
 }
 
-pub fn typedef(i: Input) -> Res<Input, (Spanned<&str>, adlast::TypeDef<TypeExpr0>)> {
+pub fn typedef(i: Input) -> Res<Input, (&str, adlast::TypeDef<TypeExpr0>)> {
     let (i, _) = wtag("type")(i)?;
     cut(|i| {
-        let (i, name) = ws(spanned(ident0))(i)?;
+        let (i, name) = ws(ident0)(i)?;
         let (i, _) = oversion(i)?;
         let (i, type_params) = type_params(i)?;
         let (i, type_expr) = preceded(wtag("="), type_expr)(i)?;
@@ -347,10 +347,10 @@ pub fn typedef(i: Input) -> Res<Input, (Spanned<&str>, adlast::TypeDef<TypeExpr0
     })(i)
 }
 
-pub fn newtype(i: Input) -> Res<Input, (Spanned<&str>, adlast::NewType<TypeExpr0>)> {
+pub fn newtype(i: Input) -> Res<Input, (&str, adlast::NewType<TypeExpr0>)> {
     let (i, _) = ws(tag("newtype"))(i)?;
     cut(|i| {
-        let (i, name) = ws(spanned(ident0))(i)?;
+        let (i, name) = ws(ident0)(i)?;
         let (i, _) = oversion(i)?;
         let (i, type_params) = type_params(i)?;
         let (i, type_expr) = preceded(wtag("="), type_expr)(i)?;
@@ -382,12 +382,11 @@ pub fn field(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
 pub fn field0(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
     let (i, texpr) = ws(type_expr)(i)?;
-    let (i, name_) = ws(spanned(ident0))(i)?;
-    let (i, default) = opt(preceded(wtag("="), spanned(json)))(i)?;
-    let name = map_spanned(name_, |s| s.to_owned());
+    let (i, name) = ws(ident0)(i)?;
+    let (i, default) = opt(preceded(wtag("="), json))(i)?;
     let field = adlast::Field {
-        name: name.clone(),
-        serialized_name: name.value,
+        name: name.to_owned(),
+        serialized_name: name.to_owned(),
         type_expr: texpr,
         default: maybe_from_option(default),
         annotations: merge_annotations(annotations),

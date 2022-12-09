@@ -24,10 +24,10 @@ struct TypeExpr<R>
 
 struct Field<TE>
 {
-    Spanned<Ident> name;
+    Ident name;
     Ident serializedName;
     TE typeExpr;
-    Maybe<Spanned<Json>> default;
+    Maybe<Json> default;
     Annotations annotations;
 };
 
@@ -66,7 +66,7 @@ union DeclType<TE>
 
 struct Decl<TE>
 {
-    Spanned<Ident> name;
+    Ident name;
     Maybe<Word32> version;
     DeclType<TE> type_;
     Annotations annotations;
@@ -88,7 +88,7 @@ union Import
 
 struct Module<TE>
 {
-    Spanned<ModuleName> name;
+    ModuleName name;
     Vector<Import> imports;
     StringMap<Decl<TE>> decls;
     Annotations annotations;

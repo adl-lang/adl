@@ -96,7 +96,7 @@ impl Resolver {
         let default_imports = vec!["sys.annotations"];
         for din in default_imports {
             let di = adlast::Import::ModuleName(din.to_owned());
-            if module.name.value != din && !module.imports.contains(&di) {
+            if module.name != din && !module.imports.contains(&di) {
                 module.imports.push(di);
             }
         }
@@ -115,7 +115,7 @@ impl Resolver {
                             result.insert(
                                 decl_name.clone(),
                                 adlast::ScopedName {
-                                    module_name: m.name.value.clone(),
+                                    module_name: m.name.clone(),
                                     name: decl_name.clone(),
                                 },
                             );

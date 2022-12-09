@@ -52,7 +52,7 @@ fn find_annotations_ref<'a>(
                     _ => None,
                 };
                 if let Some(fields) = ofields {
-                    let ofield = fields.iter_mut().find(|f| f.name.value == *field_name);
+                    let ofield = fields.iter_mut().find(|f| f.name == *field_name);
                     if let Some(field) = ofield {
                         return Some(&mut field.annotations);
                     }
@@ -118,7 +118,7 @@ mod tests {
         );
 
         let field = if let adlast::DeclType::Struct(s) = &decl.r#type {
-            s.fields.iter().find(|f| f.name.value == "z")
+            s.fields.iter().find(|f| f.name == "z")
         } else {
             None
         }
