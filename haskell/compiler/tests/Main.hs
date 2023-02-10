@@ -188,6 +188,9 @@ runRsBackend ipaths mpaths epath rsModule = do
 stdsrc :: FilePath
 stdsrc = "../../../haskell/compiler/lib/adl"
 
+testsrc :: FilePath
+testsrc = "../../../adl/tests"
+
 stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
 stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/adlast.adl", "sys/dynamic.adl"]
 stdHsCustomTypes = ["../../compiler/lib/adl/sys/types/hs-custom-types.json"]
@@ -227,10 +230,10 @@ runTests = do
 
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runHaskellBackend1 "test1/input/test.adl")
+      collectResults (runHaskellBackend [stdsrc] [testsrc </> "test1/test1.adl"] "test1/hs-output")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      collectResults (runHaskellBackend1 "test2/input/test.adl")
+      collectResults (runHaskellBackend [stdsrc] [testsrc </> "test2/test2.adl"] "test2/hs-output")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runHaskellBackend1 "test3/input/test.adl")
@@ -274,10 +277,10 @@ runTests = do
 
   describe "adlc cpp backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runCppBackend1 "test1/input/test.adl")
+      collectResults (runCppBackend [stdsrc] [testsrc </> "test1/test1.adl"] "test1/cpp-output" "")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      collectResults (runCppBackend1 "test2/input/test.adl")
+      collectResults (runCppBackend [stdsrc] [testsrc </> "test2/test2.adl"] "test2/cpp-output" "")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runCppBackend1 "test3/input/test.adl")
@@ -321,7 +324,7 @@ runTests = do
 
   describe "adlc java backend" $ do
     it "generates expected code for various structures" $ do
-      collectResults (runJavaBackend1 "test2/input/test.adl")
+      collectResults (runJavaBackend [stdsrc] [testsrc </> "test2/test2.adl"]  "test2/java-output" id)
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runJavaBackend1 "test3/input/test.adl")
@@ -392,7 +395,7 @@ runTests = do
 
   describe "adlc typescript backend" $ do
     it "generates expected output for various structures" $
-      collectResults (runTsBackend id [stdsrc] ["test2/input/test.adl"] "test2/ts-output")
+      collectResults (runTsBackend id [stdsrc] [testsrc </> "test2/test2.adl"] "test2/ts-output")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runTsBackend id [stdsrc] ["test3/input/test.adl"] "test3/ts-output")
@@ -422,10 +425,10 @@ runTests = do
 
   describe "adlc rust backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runRsBackend [stdsrc] ["test1/input/test.adl"] "test1/rs-output" "test1::adl")
+      collectResults (runRsBackend [stdsrc] [testsrc </> "test1/test1.adl"] "test1/rs-output" "test1::adl")
         `shouldReturn` MatchOutput
     it "generates expected output for various structures" $
-      collectResults (runRsBackend [stdsrc] ["test2/input/test.adl"] "test2/rs-output" "test2::adl")
+      collectResults (runRsBackend [stdsrc] [testsrc </> "test2/test2.adl"] "test2/rs-output" "test2::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
       collectResults (runRsBackend [stdsrc] ["test3/input/test.adl"] "test3/rs-output" "test3::adl")
