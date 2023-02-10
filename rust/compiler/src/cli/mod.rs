@@ -2,6 +2,7 @@ use gumdrop::Options;
 use std::path::PathBuf;
 
 pub mod ast;
+pub mod rust;
 pub mod verify;
 
 pub fn run_cli() -> i32 {
@@ -14,6 +15,7 @@ pub fn run_cli() -> i32 {
         }
         Some(Command::Verify(opts)) => verify::verify(&opts),
         Some(Command::Ast(opts)) => ast::ast(&opts),
+        Some(Command::Rust(opts)) => rust::rust(&opts),
     };
     match r {
         Ok(_) => 0,
@@ -39,6 +41,8 @@ pub enum Command {
     Verify(VerifyOpts),
     #[options(help = "generate the json AST for some ADL")]
     Ast(AstOpts),
+    #[options(help = "generate rust code for the specified ADL")]
+    Rust(RustOpts),
 }
 
 #[derive(Debug, Options)]
@@ -56,6 +60,21 @@ pub struct AstOpts {
 
     #[options(help = "writes the AST to the specified file", meta = "O")]
     pub outfile: Option<PathBuf>,
+
+    #[options(free)]
+    pub modules: Vec<String>,
+}
+
+#[derive(Debug, Options)]
+pub struct RustOpts {
+    #[options(help = "adds the given directory to the ADL search path", meta = "I")]
+    pub searchdir: Vec<PathBuf>,
+
+    #[options(
+        help = "writes the generated rust to the specified directory",
+        meta = "O"
+    )]
+    pub outdir: PathBuf,
 
     #[options(free)]
     pub modules: Vec<String>,
