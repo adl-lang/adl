@@ -1,21 +1,21 @@
-use gumdrop::Options;
+use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 
 pub mod ast;
 pub mod rust;
 pub mod verify;
 
-pub fn run_cli() -> i32 {
-    let opts = CliOptions::parse_args_default_or_exit();
 
-    let r = match opts.command {
-        None => {
-            println!("{}", CliOptions::self_usage(&opts));
-            Ok(())
-        }
-        Some(Command::Verify(opts)) => verify::verify(&opts),
-        Some(Command::Ast(opts)) => ast::ast(&opts),
-        Some(Command::Rust(opts)) => rust::rust(&opts),
+
+
+
+pub fn run_cli() -> i32 {
+    let cli = Cli::parse();
+
+    let r = match cli.command {
+        Command::Verify(opts) => verify::verify(&opts),
+        Command::Ast(opts) => ast::ast(&opts),
+        Command::Rust(opts) => rust::rust(&opts),
     };
     match r {
         Ok(_) => 0,
@@ -26,56 +26,69 @@ pub fn run_cli() -> i32 {
     }
 }
 
-// Define options for the program.
-#[derive(Debug, Options)]
-pub struct CliOptions {
-    #[options(help = "print help message")]
-    pub help: bool,
-    #[options(command)]
-    pub command: Option<Command>,
+#[derive(Parser)]
+#[command(name = "adlc")]
+#[command(author = "Tim Docker")]
+#[command(version = "0.1")]
+#[command(about = "ADL code generation cli tool", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Command,
 }
 
-#[derive(Debug, Options)]
+#[derive(Debug, Parser)]
 pub enum Command {
-    #[options(help = "verify ADL")]
+    /// verify ADL
     Verify(VerifyOpts),
-    #[options(help = "generate the json AST for some ADL")]
+    /// generate the json AST for some ADL modules
     Ast(AstOpts),
-    #[options(help = "generate rust code for the specified ADL")]
+    /// generate rust code for the some ADL modules
     Rust(RustOpts),
 }
 
-#[derive(Debug, Options)]
+#[derive(Debug, Args)]
 pub struct VerifyOpts {
-    #[options(help = "adds the given directory to the ADL search path", meta = "I")]
-    pub searchdir: Vec<PathBuf>,
-    #[options(free)]
+    #[clap(flatten)]
+    pub search: AdlSearchOpts,
+
     pub modules: Vec<String>,
 }
 
-#[derive(Debug, Options)]
+#[derive(Debug, Args)]
 pub struct AstOpts {
-    #[options(help = "adds the given directory to the ADL search path", meta = "I")]
-    pub searchdir: Vec<PathBuf>,
+    #[clap(flatten)]
+    pub search: AdlSearchOpts,
 
-    #[options(help = "writes the AST to the specified file", meta = "O")]
+    /// writes the AST to the specified file"
+    #[arg(long, short='O', value_name="FILE")]
     pub outfile: Option<PathBuf>,
 
-    #[options(free)]
     pub modules: Vec<String>,
 }
 
-#[derive(Debug, Options)]
+#[derive(Debug, Args)]
 pub struct RustOpts {
-    #[options(help = "adds the given directory to the ADL search path", meta = "I")]
-    pub searchdir: Vec<PathBuf>,
+    #[clap(flatten)]
+    pub search: AdlSearchOpts,
 
-    #[options(
-        help = "writes the generated rust to the specified directory",
-        meta = "O"
-    )]
-    pub outdir: PathBuf,
+    #[clap(flatten)]
+    pub output: OutputOpts,
 
-    #[options(free)]
     pub modules: Vec<String>,
 }
+
+
+#[derive(Debug, Args)]
+pub struct AdlSearchOpts {
+    /// adds the given directory to the ADL search path
+    #[arg(long="searchdir", short='I', value_name="DIR")]
+    pub path: Vec<PathBuf>,
+}
+
+#[derive(Debug, Args)]
+pub struct OutputOpts {
+    /// writes generated code to the specified directory
+    #[arg(long, short='O', value_name="DIR")]
+    pub outdir: PathBuf,
+}
+

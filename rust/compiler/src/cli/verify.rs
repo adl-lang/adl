@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use crate::processing::{loader::loader_from_search_paths, resolver::Resolver};
 
 pub fn verify(opts: &VerifyOpts) -> anyhow::Result<()> {
-    let loader = loader_from_search_paths(&opts.searchdir);
+    let loader = loader_from_search_paths(&opts.search.path);
     let mut resolver = Resolver::new(loader);
     for m in &opts.modules {
         let r = resolver.add_module(m);

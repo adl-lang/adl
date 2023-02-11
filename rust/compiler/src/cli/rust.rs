@@ -10,7 +10,7 @@ use crate::processing::resolver::{Module1, Resolver, TypeExpr1};
 use crate::processing::writer::TreeWriter;
 
 pub fn rust(opts: &RustOpts) -> anyhow::Result<()> {
-    let loader = loader_from_search_paths(&opts.searchdir);
+    let loader = loader_from_search_paths(&opts.search.path);
     let mut resolver = Resolver::new(loader);
     for m in &opts.modules {
         let r = resolver.add_module(m);
@@ -25,7 +25,7 @@ pub fn rust(opts: &RustOpts) -> anyhow::Result<()> {
         .map(|mn| resolver.get_module(&mn).unwrap())
         .collect();
 
-    let writer = TreeWriter::new(opts.outdir.clone());
+    let writer = TreeWriter::new(opts.output.outdir.clone());
 
     for m in modules {
         let path = path_from_module_name(m.name.to_owned());
@@ -58,7 +58,7 @@ fn generate_code(m: &Module1) -> anyhow::Result<String> {
 }
 
 fn gen_struct(
-    m: &Module1,
+    _m: &Module1,
     d: &adlast::Decl<TypeExpr1>,
     s: &adlast::Struct<TypeExpr1>,
     out: &mut String,
@@ -71,6 +71,6 @@ fn gen_struct(
     Ok(())
 }
 
-fn gen_type_expr(te: &TypeExpr1) -> String {
+fn gen_type_expr(_te: &TypeExpr1) -> String {
     "TYPE".to_owned()
 }
