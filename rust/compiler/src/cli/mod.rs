@@ -1,4 +1,4 @@
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser};
 use std::path::PathBuf;
 
 pub mod ast;
@@ -74,6 +74,19 @@ pub struct RustOpts {
     #[clap(flatten)]
     pub output: OutputOpts,
 
+    /// Generate the runtime code
+    #[arg(long)]
+    pub include_runtime: bool,
+
+    /// The module where the code is generated, relative to crate root
+    #[arg(long, value_name="RSMODULE", default_value_t={"adl".to_string()})]
+    pub module: String,
+
+    /// The module where the runtime is located, relative to crate root
+    #[arg(long, value_name="RSMODULE", default_value_t={"adlrt".to_string()})]
+    pub runtime_module: String,
+
+    #[arg(value_name="ADLMODULE")]
     pub modules: Vec<String>,
 }
 
@@ -90,5 +103,9 @@ pub struct OutputOpts {
     /// writes generated code to the specified directory
     #[arg(long, short='O', value_name="DIR")]
     pub outdir: PathBuf,
+
+    /// write a manifest file recording generated files
+    #[arg(long, value_name="FILE")]
+    pub manifest: Option<PathBuf>,
 }
 

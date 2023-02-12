@@ -1,4 +1,5 @@
 use super::RustOpts;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
 
@@ -25,19 +26,25 @@ pub fn rust(opts: &RustOpts) -> anyhow::Result<()> {
         .map(|mn| resolver.get_module(&mn).unwrap())
         .collect();
 
-    let writer = TreeWriter::new(opts.output.outdir.clone());
+    let mut writer = TreeWriter::new(
+        opts.output.outdir.clone(),
+        opts.output.manifest.clone(),
+    )?;
 
     for m in modules {
-        let path = path_from_module_name(m.name.to_owned());
-        let code = generate_code(m).unwrap();
+        let path = path_from_module_name(opts, m.name.to_owned());
+        let code = gen_module(m).unwrap();
         writer.write(path.as_path(), code)?;
     }
+
+    gen_rs_mod_files(opts, &resolver, &mut writer)?;
 
     Ok(())
 }
 
-fn path_from_module_name(mname: adlast::ModuleName) -> PathBuf {
+fn path_from_module_name(opts: &RustOpts, mname: adlast::ModuleName) -> PathBuf {
     let mut path = PathBuf::new();
+    path.push(opts.module.clone());
     for el in mname.split(".") {
         path.push(el);
     }
@@ -45,7 +52,39 @@ fn path_from_module_name(mname: adlast::ModuleName) -> PathBuf {
     return path;
 }
 
-fn generate_code(m: &Module1) -> anyhow::Result<String> {
+/// Generate the tree of mod.rs files that link together the generated code
+fn gen_rs_mod_files(opts: &RustOpts, resolver: &Resolver, writer: &mut TreeWriter) -> anyhow::Result<()> {
+
+    // build a map of parent rust modules and their children
+    let mut modfiles: HashMap<Vec<String>,HashSet<String>> = HashMap::new();
+    for m in resolver.get_module_names() {
+        let msplit: Vec<&str> = m.split(".").collect();
+        for i in 0..msplit.len() {
+            let rsmod = msplit.get(i).unwrap();
+            let parent = &msplit[0..i];
+            let parent: Vec<String> = parent.iter().map(|m| m.to_string()).collect();
+            let e = modfiles.entry(parent).or_default();
+            e.insert(rsmod.to_string());
+        }
+    }
+
+    for (rsmod,children) in modfiles {
+        let mut path = PathBuf::new();
+        path.push(opts.module.clone());
+        for el in rsmod {
+            path.push(el);
+        }
+        path.push("mod.rs");
+        let lines: Vec<String> = children
+            .iter()
+            .map( |m| format!("pub mod {};", m))
+            .collect();
+        writer.write(&path, lines.join("\n"))?
+    };
+    Ok(())
+}
+
+fn gen_module(m: &Module1) -> anyhow::Result<String> {
     let mut out = String::new();
 
     for d in m.decls.values() {
