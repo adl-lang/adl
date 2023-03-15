@@ -270,8 +270,8 @@ fn parse_json() {
 
   #[test]
   fn parse_test_adl_files() {
-    assert_module_file_ok("../../haskell/compiler/tests/test1/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test2/input/test.adl");
+    assert_module_file_ok("../../adl/tests/test1/test1.adl");
+    assert_module_file_ok("../../adl/tests/test2/test2.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test3/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test4/input/test.adl");
     assert_module_file_ok("../../haskell/compiler/tests/test5/input/test.adl");
