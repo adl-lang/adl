@@ -14,3 +14,4 @@ nom = "7.0.0"
 nom_locate = "4.0.0"
 env_logger = "0.10.0"
 log = "0.4.17"
+indexmap = { version = "1.9.2", features=["serde"] }

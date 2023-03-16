@@ -1,6 +1,9 @@
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::adlgen::sys::adlast2::Spanned;
-use std::{collections::HashMap, iter::repeat};
+use std::{iter::repeat};
+
+use indexmap::IndexMap as HashMap;
+
 
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;

@@ -1,5 +1,7 @@
 use anyhow::anyhow;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
+
+use indexmap::IndexMap as HashMap;
 
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::adlrt::custom::sys::types::map::Map;

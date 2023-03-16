@@ -1,10 +1,11 @@
 use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
-use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::hash::Hash;
 use std::result;
 use super::mapentry::MapEntry;
+
+use indexmap::IndexMap as HashMap;
 
 
 #[derive(Clone,Eq,PartialEq, Debug)]
