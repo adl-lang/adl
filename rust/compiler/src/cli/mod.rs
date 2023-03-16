@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 pub mod ast;
 pub mod rust;
+pub mod tsgen;
 pub mod verify;
 
 
@@ -16,6 +17,7 @@ pub fn run_cli() -> i32 {
         Command::Verify(opts) => verify::verify(&opts),
         Command::Ast(opts) => ast::ast(&opts),
         Command::Rust(opts) => rust::rust(&opts),
+        Command::Tsgen(opts) => tsgen::tsgen(&opts),
     };
     match r {
         Ok(_) => 0,
@@ -44,6 +46,8 @@ pub enum Command {
     Ast(AstOpts),
     /// generate rust code for the some ADL modules
     Rust(RustOpts),
+    /// generate typescript code for the some ADL modules
+    Tsgen(TsOpts),
 }
 
 #[derive(Debug, Args)]
@@ -90,6 +94,22 @@ pub struct RustOpts {
     pub modules: Vec<String>,
 }
 
+
+#[derive(Debug, Args)]
+pub struct TsOpts {
+    #[clap(flatten)]
+    pub search: AdlSearchOpts,
+
+    // #[clap(flatten)]
+    // pub output: OutputOpts,
+
+    /// Generate the runtime code
+    #[arg(long)]
+    pub include_runtime: bool,
+
+    #[arg(value_name="ADLMODULE")]
+    pub modules: Vec<String>,
+}
 
 #[derive(Debug, Args)]
 pub struct AdlSearchOpts {

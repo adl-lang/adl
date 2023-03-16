@@ -217,13 +217,13 @@ pub struct Module<TE> {
 
   pub imports: Vec<Import>,
 
-  pub decls: std::collections::HashMap<String,Decl<TE>>,
+  pub decls: Vec<Decl<TE>>,
 
   pub annotations: Annotations,
 }
 
 impl<TE> Module<TE> {
-  pub fn new(name: ModuleName, imports: Vec<Import>, decls: std::collections::HashMap<String,Decl<TE>>, annotations: Annotations) -> Module<TE> {
+  pub fn new(name: ModuleName, imports: Vec<Import>, decls: Vec<Decl<TE>>, annotations: Annotations) -> Module<TE> {
     Module {
       name: name,
       imports: imports,

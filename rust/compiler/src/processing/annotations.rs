@@ -39,13 +39,13 @@ fn find_annotations_ref<'a>(
     match ear {
         ExplicitAnnotationRef::Module => Some(&mut module0.annotations),
         ExplicitAnnotationRef::Decl(decl_name) => {
-            if let Some(decl) = module0.decls.get_mut(decl_name) {
+            if let Some(decl) = module0.decls.iter_mut().find(|d| d.name == *decl_name) {
                 return Some(&mut decl.annotations);
             }
             None
         }
         ExplicitAnnotationRef::Field((decl_name, field_name)) => {
-            if let Some(decl) = module0.decls.get_mut(decl_name) {
+            if let Some(decl) = module0.decls.iter_mut().find(|d| d.name == *decl_name) {
                 let ofields = match &mut decl.r#type {
                     adlast::DeclType::Struct(s) => Some(&mut s.fields),
                     adlast::DeclType::Union(u) => Some(&mut u.fields),
@@ -107,7 +107,7 @@ mod tests {
             Some(&serde_json::Value::from(6i32))
         );
 
-        let decl = m0.decls.get("Y").unwrap();
+        let decl = m0.decls.iter().find(|d| d.name == "Y").unwrap();
         assert_eq!(
             decl.annotations.0.get(&mk_scoped_name("", "B")),
             Some(&serde_json::Value::from(2i32))

@@ -87,7 +87,7 @@ fn gen_rs_mod_files(opts: &RustOpts, resolver: &Resolver, writer: &mut TreeWrite
 fn gen_module(m: &Module1) -> anyhow::Result<String> {
     let mut out = String::new();
 
-    for d in m.decls.values() {
+    for d in m.decls.iter() {
         match &d.r#type {
             adlast::DeclType::Struct(s) => gen_struct(m, d, &s, &mut out)?,
             _ => {}

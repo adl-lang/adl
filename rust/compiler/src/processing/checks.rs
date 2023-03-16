@@ -9,7 +9,7 @@ pub mod check_duplicates {
     use super::*;
 
     pub fn module<T>(m: &adlast::Module<adlast::TypeExpr<T>>, ec: &mut dyn ErrorConsumer) {
-        for (_, d) in &m.decls {
+        for d in &m.decls {
             decl(&m.name, d, ec);
         }
     }
