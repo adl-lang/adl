@@ -90,7 +90,7 @@ struct Module<TE>
 {
     ModuleName name;
     Vector<Import> imports;
-    StringMap<Decl<TE>> decls;
+    Vector<Decl<TE>> decls;
     Annotations annotations;
 };
 

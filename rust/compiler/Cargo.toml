@@ -5,6 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "adlc"
+path = "src/main.rs"
+
 [dependencies]
 anyhow = "1.0.61"
 clap = { version = "4.1.4", features = ["derive"] }
@@ -14,3 +18,4 @@ nom = "7.0.0"
 nom_locate = "4.0.0"
 env_logger = "0.10.0"
 log = "0.4.17"
+genco = "0.17.3"

@@ -1,5 +1,6 @@
 use anyhow::anyhow;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
+use std::collections::HashMap;
 
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::adlrt::custom::sys::types::map::Map;
@@ -45,7 +46,7 @@ impl Resolver {
     pub fn get_decl(&mut self, scoped_name: &adlast::ScopedName) -> Option<&Decl1> {
         match self.get_module(&scoped_name.module_name) {
             None => None,
-            Some(module1) => return module1.decls.get(&scoped_name.name),
+            Some(module1) => return module1.decls.iter().find(|d| d.name == scoped_name.name),
         }
     }
 
@@ -111,7 +112,7 @@ impl Resolver {
                 }
                 adlast::Import::ModuleName(mn) => {
                     if let Some(m) = self.get_module(&mn) {
-                        for decl_name in m.decls.keys() {
+                        for decl_name in m.decls.iter().map(|d| &d.name) {
                             result.insert(
                                 decl_name.clone(),
                                 adlast::ScopedName {
@@ -142,11 +143,11 @@ pub fn resolve_module(ctx: &mut ResolveCtx, module0: &Module0) -> Result<Module1
     let decls1 = module0
         .decls
         .iter()
-        .map(|(n, decl0)| {
+        .map(|decl0| {
             let decl1 = resolve_decl(ctx, &decl0)?;
-            Ok((n.clone(), decl1))
+            Ok(decl1)
         })
-        .collect::<Result<HashMap<_, _>>>()?;
+        .collect::<Result<Vec<_>>>()?;
     let annotations1 = resolve_annotations(ctx, &module0.annotations)?;
     let module1 = adlast::Module::new(
         module0.name.clone(),
@@ -299,7 +300,7 @@ impl<'a> ResolveCtx<'a> {
             if let Some(ptype) = prim_from_str(&name) {
                 return Ok(TypeRef::Primitive(ptype));
             }
-            if self.module0.decls.contains_key(name) {
+            if let Some(_) = self.module0.decls.iter().find(|d| d.name == *name) {
                 return Ok(TypeRef::LocalName(name.clone()));
             }
             if let Some(scoped_name) = self.expanded_imports.get(name) {
@@ -309,7 +310,7 @@ impl<'a> ResolveCtx<'a> {
         } else {
             match self.find_module(&scoped_name0.module_name)? {
                 None => return Err(anyhow!("module {} not found", scoped_name0.module_name)),
-                Some(module1) => match module1.decls.get(&scoped_name0.name) {
+                Some(module1) => match module1.decls.iter().find(|d| d.name == scoped_name0.name) {
                     None => {
                         return Err(anyhow!(
                             "type {}.{} not found",
@@ -375,7 +376,7 @@ mod consume {
 
     pub fn module<T: Clone>(m: &adlast::Module<adlast::TypeExpr<T>>, ac: &mut dyn AstConsumer<T>) {
         annotations(&m.annotations, ac);
-        for (_, d) in &m.decls {
+        for d in &m.decls {
             decl(d, ac);
         }
     }

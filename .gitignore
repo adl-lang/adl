@@ -18,3 +18,5 @@ cpp/runtime/ltmain.sh
 cpp/runtime/missing
 cpp/runtime/build/
 cpp/runtime/test-driver
+
+target/
