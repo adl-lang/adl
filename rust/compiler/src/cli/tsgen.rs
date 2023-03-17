@@ -25,7 +25,6 @@ pub fn tsgen(opts: &TsOpts) -> anyhow::Result<()> {
         }
     }
     for mn in &opts.modules {
-        // TODO why is the resolver by the filename not the module name
         if let Some(m) = resolver.get_module(mn) {
             gen_module(m);
             // println!("// gen {}", m.name);
