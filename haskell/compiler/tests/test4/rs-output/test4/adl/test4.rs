@@ -31,7 +31,7 @@ impl CDate0 {
   }
 }
 
-#[derive(Deserialize,Eq,PartialEq,Serialize)]
+#[derive(Clone,Deserialize,Eq,PartialEq,Serialize)]
 pub struct S {
   #[serde(rename="v1")]
   pub v_1: Date,

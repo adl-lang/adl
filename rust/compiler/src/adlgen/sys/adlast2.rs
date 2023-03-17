@@ -45,7 +45,7 @@ impl<R> TypeExpr<R> {
   }
 }
 
-#[derive(Debug,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Field<TE> {
   pub name: Ident,
 
@@ -72,7 +72,7 @@ impl<TE> Field<TE> {
   }
 }
 
-#[derive(Debug,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Struct<TE> {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -89,7 +89,7 @@ impl<TE> Struct<TE> {
   }
 }
 
-#[derive(Debug,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Union<TE> {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -124,7 +124,7 @@ impl<TE> TypeDef<TE> {
   }
 }
 
-#[derive(Debug,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct NewType<TE> {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -145,7 +145,7 @@ impl<TE> NewType<TE> {
   }
 }
 
-#[derive(Debug,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub enum DeclType<TE> {
   #[serde(rename="struct_")]
   Struct(Struct<TE>),
@@ -160,7 +160,7 @@ pub enum DeclType<TE> {
   Newtype(NewType<TE>),
 }
 
-#[derive(Debug,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Decl<TE> {
   pub name: Ident,
 
@@ -183,7 +183,7 @@ impl<TE> Decl<TE> {
   }
 }
 
-#[derive(Debug,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct ScopedDecl<TE> {
   #[serde(rename="moduleName")]
   pub module_name: ModuleName,
@@ -211,7 +211,7 @@ pub enum Import {
   ScopedName(ScopedName),
 }
 
-#[derive(Debug,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Module<TE> {
   pub name: ModuleName,
 

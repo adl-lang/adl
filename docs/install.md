@@ -48,8 +48,8 @@ After checking out the git repository (as `$REPO`), run the following:
 
 ```
 cd $REPO/haskell
-stack build ./compiler-bootstrap
-stack install ./compiler
+stack build --fast adl-compiler
+stack install
 ```
 
 Then, you should be able to run the compiler installed into your home
