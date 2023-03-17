@@ -5,36 +5,36 @@ import adlc.config.rust.*;
 annotation Maybe RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::custom::sys::types::maybe::Maybe",
   "helpers" : "{{STDLIBMODULE}}::custom::sys::types::maybe::Maybe",
-  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize", "Clone"]
   };
 
 annotation MapEntry RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::custom::sys::types::mapentry::MapEntry",
   "helpers" : "{{STDLIBMODULE}}::custom::sys::types::mapentry::MapEntry",
-  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize", "Clone"]
   };
 
 annotation Map RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::custom::sys::types::map::Map",
   "helpers" : "{{STDLIBMODULE}}::custom::sys::types::map::Map",
-  "stdTraits": ["Eq", "PartialEq", "Serialize", "Deserialize"]
+  "stdTraits": ["Eq", "PartialEq", "Serialize", "Deserialize", "Clone"]
   };
 
 annotation Set RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::custom::sys::types::set::Set",
   "helpers" : "{{STDLIBMODULE}}::custom::sys::types::set::Set",
-  "stdTraits": ["Eq", "PartialEq", "Serialize", "Deserialize"]
+  "stdTraits": ["Eq", "PartialEq", "Serialize", "Deserialize", "Clone"]
   };
 
 annotation Pair RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::custom::sys::types::pair::Pair",
   "helpers" : "{{STDLIBMODULE}}::custom::sys::types::pair::Pair",
-  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize", "Clone"]
   };
 
 annotation Result RustCustomType {
   "rustname" : "{{STDLIBMODULE}}::custom::sys::types::result::Result",
   "helpers" : "{{STDLIBMODULE}}::custom::sys::types::result::Result",
-  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize"]
+  "stdTraits": ["Eq", "PartialEq", "Hash", "Serialize", "Deserialize", "Clone"]
   };
 };
