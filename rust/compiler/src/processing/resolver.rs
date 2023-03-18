@@ -1,8 +1,8 @@
 use anyhow::anyhow;
-use std::collections::{HashSet};
 use std::collections::HashMap;
+use std::collections::HashSet;
 
-use crate::adlgen::sys::adlast2 as adlast;
+use crate::adlgen::sys::adlast2::{self as adlast, Annotation, ScopedName};
 use crate::adlrt::custom::sys::types::map::Map;
 
 use super::loader::AdlLoader;
@@ -246,26 +246,44 @@ pub fn resolve_field(
     Ok(field1)
 }
 
+// TODO document this fn, I don't quite understand what it does.
 pub fn resolve_annotations(
     ctx: &ResolveCtx,
     annotations0: &adlast::Annotations,
 ) -> Result<adlast::Annotations> {
     let hm1 = annotations0
-        .0
         .iter()
-        .map(|(sn0, jv)| {
+        .map(|ann| {
+            let sn0 = &ann.key;
+            let jv = &ann.value;
             let tr1 = ctx.resolve_type_ref(sn0)?;
-            if let TypeRef::ScopedName(sn1) = tr1 {
-                Ok((sn1, jv.clone()))
-            } else {
-                Err(anyhow!(
-                    "no decl {} found for explicit annotation",
-                    sn0.name
-                ))
+            match tr1 {
+                TypeRef::ScopedName(sn1) => Ok(Annotation {
+                    key: sn1,
+                    value: jv.clone(),
+                }),
+                TypeRef::LocalName(ln1) => Ok(Annotation {
+                    key: ScopedName {
+                        module_name: ctx.module0.name.clone(),
+                        name: ln1,
+                    },
+                    value: jv.clone(),
+                }),
+                TypeRef::Primitive(_) => Err(anyhow!("primitives can't be annotations")),
+                TypeRef::TypeParam(_) => Err(anyhow!("typeparams can't be annotations")),
             }
+            // if let TypeRef::ScopedName(sn1) = tr1 {
+            //     Ok((sn1, jv.clone()))
+            // } else {
+            //     Err(anyhow!(
+            //         "no decl {}.{} found for explicit annotation",
+            //         sn0.module_name,
+            //         sn0.name
+            //     ))
+            // }
         })
-        .collect::<Result<HashMap<_, _>>>()?;
-    Ok(Map(hm1))
+        .collect::<Result<Vec<_>>>()?;
+    Ok(hm1)
 }
 
 pub fn resolve_type_expr(ctx: &ResolveCtx, typeexpr0: &TypeExpr0) -> Result<TypeExpr1> {
@@ -292,6 +310,7 @@ impl<'a> ResolveCtx<'a> {
     }
 
     pub fn resolve_type_ref(&self, scoped_name0: &adlast::ScopedName) -> Result<TypeRef> {
+        // TODO is does this mean its a localname?
         if scoped_name0.module_name.is_empty() {
             let name = &scoped_name0.name;
             if self.type_params.contains(name.as_str()) {
@@ -406,8 +425,8 @@ mod consume {
     }
 
     pub fn annotations<T>(annotations: &adlast::Annotations, ac: &mut dyn AstConsumer<T>) {
-        for a in annotations.0.keys() {
-            ac.consume_scoped_name(a.clone());
+        for a in annotations {
+            ac.consume_scoped_name(a.key.clone());
         }
     }
 

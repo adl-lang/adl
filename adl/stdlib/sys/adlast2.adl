@@ -7,8 +7,12 @@ import sys.types.*;
 type ModuleName = String;
 type Ident = String;
 
-type Annotations = Map<ScopedName,Json>;
+type Annotations = Vector<Annotation>;
 
+struct Annotation {
+    ScopedName key; // this could be TypeExpr1, but it makes things more complicated
+    Json value;
+};
 
 struct ScopedName
 {
