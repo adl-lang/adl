@@ -2,17 +2,19 @@ use super::TsOpts;
 
 use std::collections::HashMap;
 use std::error::Error;
+use std::str::Chars;
 
 use anyhow::anyhow;
 use genco::prelude::js::Import as JsImport;
 use genco::tokens::{Item, ItemStr};
 
 use crate::adlgen::sys::adlast2::{
-    Decl, DeclType, Field, Ident, Import, Module, NewType, PrimitiveType, ScopedName, Struct,
-    TypeDef, TypeExpr, TypeRef, Union, Annotation,
+    Annotation, Decl, DeclType, Field, Ident, Import, Module, NewType, PrimitiveType, ScopedName,
+    Struct, TypeDef, TypeExpr, TypeRef, Union,
 };
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
+use crate::parser::docstring_scoped_name;
 use crate::processing::loader::loader_from_search_paths;
 use crate::processing::resolver::Resolver;
 use genco::fmt;
@@ -89,8 +91,11 @@ impl TsScopedDeclGenVisitor<'_> {
     fn visit_annotations(&mut self, d: &Vec<Annotation>) {
         quote_in! { self.toks =>  "annotations":$("[") };
         d.iter().fold(false, |rest, a| {
+            if a.key == crate::parser::docstring_scoped_name() {
+                return rest;
+            }
             if rest {
-                    self.lit(",");
+                self.lit(",");
             }
             self.lit("{");
             let jv = &serde_json::to_string(&a.value).unwrap();
@@ -134,13 +139,13 @@ impl TsScopedDeclGenVisitor<'_> {
         self.visit_type_params(&dt.type_params);
         self.lit(",");
         self.lit("\"fields\":[");
-        let mut it = dt.fields.iter().peekable();
-        while let Some(f) = it.next() {
-            self.visit_field(f);
-            if it.peek().is_some() {
+        dt.fields.iter().fold(false, |rest, f| {
+            if rest {
                 self.lit(",");
             }
-        }
+            self.visit_field(f);
+            return true;
+        });
         self.lit("]");
         self.lit("}");
     }
@@ -149,13 +154,13 @@ impl TsScopedDeclGenVisitor<'_> {
         self.visit_type_params(&dt.type_params);
         self.lit(",");
         self.lit("\"fields\":[");
-        let mut it = dt.fields.iter().peekable();
-        while let Some(f) = it.next() {
-            self.visit_field(f);
-            if it.peek().is_some() {
+        dt.fields.iter().fold(false, |rest, f| {
+            if rest {
                 self.lit(",");
             }
-        }
+            self.visit_field(f);
+            return true;
+        });
         self.lit("]");
         self.lit("}");
     }
@@ -199,13 +204,13 @@ impl TsScopedDeclGenVisitor<'_> {
         quote_in! { self.toks =>  "typeExpr":$("{")}
         self.visit_type_ref(&te.type_ref);
         quote_in! { self.toks => ,"parameters":$("[")}
-        let mut it = te.parameters.iter().peekable();
-        while let Some(p) = it.next() {
-            self.visit_type_expr(p);
-            if it.peek().is_some() {
+        te.parameters.iter().fold(false, |rest, p| {
+            if rest {
                 self.lit(",");
             }
-        }
+            self.visit_type_expr(p);
+            return true;
+        });
         self.lit("]");
         self.lit("}");
     }
@@ -236,20 +241,62 @@ struct TsGenVisitor<'a> {
     map: HashMap<String, JsImport>,
 }
 
+// struct TsComment<'a> {
+//     toks: &'a mut Tokens<JavaScript>,
+// }
+
+// impl std::io::Write for TsComment<'_> {
+//     fn write(&mut self, buf: &[u8]) -> Result<usize, std::io::Error> {
+//         // buf.to
+//         // let string = String::from_utf8_lossy(buf).;
+//         // let string = unsafe {
+//         //     // We do not emit invalid UTF-8.
+//         //     String::from
+//         //     String::from_utf8_unchecked(buf)
+//         // };
+//         // quote_in! { self.toks => $(string)}
+//         return Ok(buf.len());
+//     }
+
+//     fn flush(&mut self) -> std::io::Result<()> {
+//         todo!()
+//     }
+// }
+
 impl TsGenVisitor<'_> {
     fn lit(&mut self, s: &'static str) {
         self.toks.append(Item::Literal(ItemStr::Static(s)));
     }
+    // fn to_comment(&mut self, val: &serde_json::Value) {
+    //     serde_json::to_writer(TsComment { toks: self.toks }, val);
+    // }
 }
 
 impl TsGenVisitor<'_> {
+    fn gen_doc_comment(&mut self, value: &serde_json::Value) -> anyhow::Result<()> {
+        self.lit("/**\n");
+        for c in value.as_array().unwrap().iter() {
+            if let Ok(x) = serde_json::to_string(&c.clone()) {
+                let y = x[1..x.len() - 1].trim();
+                quote_in! {self.toks => $[' ']* $(y)$['\r']};
+            }
+        }
+        self.lit(" */\n");
+        Ok(())
+    }
     fn gen_module(&mut self, m: &Module<TypeExpr<TypeRef>>) -> anyhow::Result<()> {
         quote_in! { self.toks =>
             $("/* @generated from adl module") $(m.name.clone()) $("*/")
             $['\n']
         };
         for decl in m.decls.iter() {
-            // decl.annotations
+            if let Some(ds) = decl
+                .annotations
+                .iter()
+                .find(|a| a.key == docstring_scoped_name())
+            {
+                self.gen_doc_comment(&ds.value);
+            }
             let r = match &decl.r#type {
                 DeclType::Struct(d) => self.gen_struct(d),
                 DeclType::Union(d) => self.gen_union(d, GenUnionPayload(decl)),
@@ -336,6 +383,13 @@ impl TsGenVisitor<'_> {
             let mut bnames_up = vec![];
             let mut opts = vec![];
             for b in m.fields.iter() {
+                if let Some(ds) = b
+                    .annotations
+                    .iter()
+                    .find(|a| a.key == docstring_scoped_name())
+                {
+                    self.gen_doc_comment(&ds.value);
+                }
                 let bname = b.name.clone();
                 let bname_up = capitalize_first(&b.name);
                 bnames_up.push(bname_up.clone());
@@ -359,7 +413,6 @@ impl TsGenVisitor<'_> {
                 export function make$(name)<K extends keyof $(name)Opts>(kind: K, value: $(name)Opts[K]) { return {kind, value}; }$['\n']
             }
         } else {
-            // enum
             let b_names: Vec<&String> = m.fields.iter().map(|f| &f.name).collect();
             let b_len = b_names.len();
             let b1 = if b_len > 0 { b_names[0] } else { "" };

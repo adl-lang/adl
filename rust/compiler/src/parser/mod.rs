@@ -277,7 +277,8 @@ pub fn merge_annotations(
         }
     }
     if !ds.is_empty() {
-        an.push(Annotation{key: docstring_scoped_name(), value: serde_json::Value::from(ds.join("\n"))});
+        // ADL Doc string is (in ADL) `type Doc = Vector<String>` not `type Doc = String`
+        an.push(Annotation{key: docstring_scoped_name(), value: serde_json::Value::from(ds)});
     }
     return an;
 }
