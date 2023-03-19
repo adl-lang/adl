@@ -9,15 +9,15 @@ use genco::prelude::js::Import as JsImport;
 use genco::tokens::{Item, ItemStr};
 
 use crate::adlgen::sys::adlast2::{
-    Annotation, Decl, DeclType, Field, Ident, Import, Module, NewType, PrimitiveType, ScopedName,
-    Struct, TypeDef, TypeExpr, TypeRef, Union,
+    Annotation, Annotations, Decl, DeclType, Field, Ident, Import, Module, NewType, PrimitiveType,
+    ScopedName, Struct, TypeDef, TypeExpr, TypeRef, Union,
 };
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
 use crate::parser::docstring_scoped_name;
 use crate::processing::loader::loader_from_search_paths;
 use crate::processing::resolver::Resolver;
-use genco::fmt;
+use genco::fmt::{self, Indentation};
 use genco::prelude::*;
 
 pub fn tsgen(opts: &TsOpts) -> anyhow::Result<()> {
@@ -40,11 +40,15 @@ pub fn tsgen(opts: &TsOpts) -> anyhow::Result<()> {
                 toks: &mut tokens,
             };
             mgen.gen_module(m);
-
             let stdout = std::io::stdout();
             let mut w = fmt::IoWriter::new(stdout.lock());
             let fmt = fmt::Config::from_lang::<JavaScript>();
+            let fmt = fmt::Config::with_indentation(fmt, Indentation::Space(2));
+
             let config = js::Config::default();
+            // let config = js::Config{
+            //     ..Default::default()
+            // };
             tokens.format_file(&mut w.as_formatter(&fmt), &config)?;
         }
     }
@@ -55,25 +59,6 @@ pub fn tsgen(opts: &TsOpts) -> anyhow::Result<()> {
     //     .collect();
     // println!("{}", serde_json::to_string_pretty(&modules).unwrap());
     Ok(())
-}
-
-trait Visitor {
-    fn visit_Module(&mut self, m: &Module<TypeExpr<TypeRef>>);
-    fn visit_annotations(&mut self, d: &Map<ScopedName, serde_json::Value>);
-    fn visit_module_name(&mut self, n: &String);
-    fn visit_import(&mut self, i: &Import);
-    fn visit_decl(&mut self, d: &Decl<TypeExpr<TypeRef>>);
-    fn visit_decl_name(&mut self, n: &String);
-    fn visit_decl_type(&mut self, r#type: &DeclType<TypeExpr<TypeRef>>);
-    fn visit_struct(&mut self, dt: &Struct<TypeExpr<TypeRef>>);
-    fn visit_union(&mut self, dt: &Union<TypeExpr<TypeRef>>);
-    fn visit_newtype(&mut self, dt: &NewType<TypeExpr<TypeRef>>);
-    fn visit_typealias(&mut self, dt: &TypeDef<TypeExpr<TypeRef>>);
-    fn visit_type_params(&mut self, tps: &Vec<Ident>);
-    fn visit_field(&mut self, f: &Field<TypeExpr<TypeRef>>);
-    fn visit_default(&mut self, f: &Maybe<serde_json::Value>);
-    fn visit_type_expr(&mut self, te: &TypeExpr<TypeRef>);
-    fn visit_type_ref(&mut self, te: &TypeRef);
 }
 
 struct TsScopedDeclGenVisitor<'a> {
@@ -182,9 +167,9 @@ impl TsScopedDeclGenVisitor<'_> {
         quote_in! { self.toks =>  "serializedName":$("\"")$(&f.serialized_name)$("\""), }
         self.visit_default(&f.default);
         self.lit(",");
-        self.visit_type_expr(&f.type_expr);
-        self.lit(",");
         quote_in! { self.toks =>  "name":$("\"")$(&f.name)$("\"")};
+        self.lit(",");
+        self.visit_type_expr(&f.type_expr);
         self.lit("}");
     }
     fn visit_default(&mut self, f: &Maybe<serde_json::Value>) {
@@ -215,7 +200,7 @@ impl TsScopedDeclGenVisitor<'_> {
         self.lit("}");
     }
     fn visit_type_ref(&mut self, te: &TypeRef) {
-        quote_in! { self.toks => "typeExpr":$("{")}
+        quote_in! { self.toks => "typeRef":$("{")}
         match te {
             TypeRef::ScopedName(n) => {
                 quote_in! { self.toks =>  "kind":"reference","value":{"moduleName":$("\""):$(&n.module_name)$("\""),"name":$("\"")$(&n.name)$("\"")}};
@@ -273,15 +258,20 @@ impl TsGenVisitor<'_> {
 }
 
 impl TsGenVisitor<'_> {
-    fn gen_doc_comment(&mut self, value: &serde_json::Value) -> anyhow::Result<()> {
-        self.lit("/**\n");
-        for c in value.as_array().unwrap().iter() {
-            if let Ok(x) = serde_json::to_string(&c.clone()) {
-                let y = x[1..x.len() - 1].trim();
-                quote_in! {self.toks => $[' ']* $(y)$['\r']};
+    fn gen_doc_comment(&mut self, annotations: &Annotations) -> anyhow::Result<()> {
+        if let Some(ds) = annotations
+            .iter()
+            .find(|a| a.key == docstring_scoped_name())
+        {
+            self.lit("/**\n");
+            for c in ds.value.as_array().unwrap().iter() {
+                if let Ok(x) = serde_json::to_string(&c.clone()) {
+                    let y = x[1..x.len() - 1].trim();
+                    quote_in! {self.toks => $[' ']* $(y)$['\r']};
+                }
             }
+            self.lit(" */\n");
         }
-        self.lit(" */\n");
         Ok(())
     }
     fn gen_module(&mut self, m: &Module<TypeExpr<TypeRef>>) -> anyhow::Result<()> {
@@ -290,29 +280,24 @@ impl TsGenVisitor<'_> {
             $['\n']
         };
         for decl in m.decls.iter() {
-            if let Some(ds) = decl
-                .annotations
-                .iter()
-                .find(|a| a.key == docstring_scoped_name())
-            {
-                self.gen_doc_comment(&ds.value);
-            }
+            self.gen_doc_comment(&decl.annotations);
             let r = match &decl.r#type {
-                DeclType::Struct(d) => self.gen_struct(d),
-                DeclType::Union(d) => self.gen_union(d, GenUnionPayload(decl)),
+                DeclType::Struct(d) => self.gen_struct(d, DeclPayload(decl)),
+                DeclType::Union(d) => self.gen_union(d, DeclPayload(decl)),
                 DeclType::Newtype(d) => self.gen_newtype(d),
                 DeclType::Type(d) => self.gen_type(d),
             };
             // Generation AST holder
             let name = &decl.name;
+            let name_up = capitalize_first(name);
             let mname = m.name.clone();
             quote_in! { self.toks =>
                 $['\n']
-                const $(name)_AST : $(&self.adlr).ScopedDecl =
+                const $(name_up)_AST : $(&self.adlr).ScopedDecl =
                   {"moduleName":$("\"")$(mname.clone())$("\""),"decl":$(ref tok => {
                     let mut sdg = TsScopedDeclGenVisitor{module_name: &mname.clone(), toks: tok};
                     sdg.visit_decl(decl);
-                  })}
+                  })};
 
                 export const sn$(name): $(&self.adlr).ScopedName = {moduleName:$("\"")$mname$("\""), name:$("\"")$name$("\"")};
 
@@ -329,7 +314,7 @@ impl TsGenVisitor<'_> {
         self.lit("export const _AST_MAP: { [key: string]: ADL.ScopedDecl } = {\n");
         for decl in m.decls.iter() {
             quote_in! { self.toks =>
-                $[' ']$[' ']$("\"")$(m.name.clone()).$(&decl.name)$("\"") : $(&decl.name)_AST,$['\r']
+                $[' ']$[' ']$("\"")$(m.name.clone()).$(&decl.name)$("\"") : $(capitalize_first(&decl.name))_AST,$['\r']
             }
         }
         self.lit("}");
@@ -337,34 +322,75 @@ impl TsGenVisitor<'_> {
     }
 }
 
-impl TsGenVisitor<'_> {
-    fn gen_struct(&mut self, m: &Struct<TypeExpr<TypeRef>>) -> anyhow::Result<()> {
-        quote_in! { self.toks =>
-            $("// struct")
-            // export type $name;
+const oc: &str = "{";
+const cc: &str = "}";
+const dq: &str = "\"";
+const sp: &str = " ";
 
-            // const $(name)_AST : $(&imports.adlr).ScopedDecl
-            // export const sn$(name): $(&imports.adlr).ScopedName = {moduleName:"test5", name:"U1"};
-            $['\n']
+impl TsGenVisitor<'_> {
+    fn gen_struct(
+        &mut self,
+        m: &Struct<TypeExpr<TypeRef>>,
+        payload: DeclPayload,
+    ) -> anyhow::Result<()> {
+        let (decl, name) = (&payload.0, &payload.0.name);
+        let name_up = &capitalize_first(name);
+        quote_in! { self.toks =>
+            $("// struct")$['\n']
+        }
+        self.gen_doc_comment(&decl.annotations);
+        quote_in! { self.toks =>
+            export interface $(name_up) $oc$['\r']
+        }
+
+        for f in m.fields.iter() {
+            self.gen_doc_comment(&f.annotations);
+            quote_in! { self.toks =>
+                $sp$sp$(&f.name): $(rust_type(&f.type_expr));$['\r']
+            }
+        }
+        quote_in! { self.toks =>
+            $cc$['\r']$['\n']
+        }
+        quote_in! { self.toks =>
+            export function make$(name_up)(
+              input: {
+                $(ref tok => struct_field_make_input(tok, &m.fields))
+              }
+            ): $(name_up) {
+              return {
+                $(ref tok => struct_field_make_return(tok, &m.fields))
+              };
+            }
         }
         Ok(())
     }
+
 }
 
-pub fn capitalize_first(input: &String) -> String {
-    let mut c = input.chars();
-    match c.next() {
-        None => String::new(),
-        Some(first) => first.to_uppercase().to_string() + &String::from(&input[1..]),
+fn struct_field_make_input(toks: &mut Tokens<JavaScript>, fs: &Vec<Field<TypeExpr<TypeRef>>>) {
+    for f in fs {
+        quote_in! { *toks =>
+          $(&f.name): $(rust_type(&f.type_expr)),
+        }
     }
 }
-struct GenUnionPayload<'a>(&'a Decl<TypeExpr<TypeRef>>);
+
+fn struct_field_make_return(toks: &mut Tokens<JavaScript>, fs: &Vec<Field<TypeExpr<TypeRef>>>) {
+    for f in fs {
+        quote_in! { *toks =>
+          $(&f.name): input.$(&f.name),
+        }
+    }
+}
+
+struct DeclPayload<'a>(&'a Decl<TypeExpr<TypeRef>>);
 
 impl TsGenVisitor<'_> {
     fn gen_union(
         &mut self,
         m: &Union<TypeExpr<TypeRef>>,
-        payload: GenUnionPayload,
+        payload: DeclPayload,
     ) -> anyhow::Result<()> {
         let (name) = (&payload.0.name);
         self.lit("// union \n");
@@ -383,13 +409,7 @@ impl TsGenVisitor<'_> {
             let mut bnames_up = vec![];
             let mut opts = vec![];
             for b in m.fields.iter() {
-                if let Some(ds) = b
-                    .annotations
-                    .iter()
-                    .find(|a| a.key == docstring_scoped_name())
-                {
-                    self.gen_doc_comment(&ds.value);
-                }
+                self.gen_doc_comment(&b.annotations);
                 let bname = b.name.clone();
                 let bname_up = capitalize_first(&b.name);
                 bnames_up.push(bname_up.clone());
@@ -441,6 +461,14 @@ impl TsGenVisitor<'_> {
             $("// type")
         }
         Ok(())
+    }
+}
+
+pub fn capitalize_first(input: &String) -> String {
+    let mut c = input.chars();
+    match c.next() {
+        None => String::new(),
+        Some(first) => first.to_uppercase().to_string() + &String::from(&input[1..]),
     }
 }
 

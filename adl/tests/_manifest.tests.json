@@ -1,0 +1,4 @@
+[
+    { "module" : "struct01", "description" : "struct with no fields, title case" },
+    {}
+]

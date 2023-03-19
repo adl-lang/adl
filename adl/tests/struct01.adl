@@ -1,0 +1,5 @@
+module struct01 {
+
+struct Abc {};
+
+};
