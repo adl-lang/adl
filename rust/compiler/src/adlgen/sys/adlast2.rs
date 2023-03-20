@@ -11,7 +11,7 @@ pub type Ident = String;
 
 pub type Annotations = Map<ScopedName, serde_json::Value>;
 
-#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize,PartialOrd,Ord)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct ScopedName {
   #[serde(rename="moduleName")]
   pub module_name: ModuleName,

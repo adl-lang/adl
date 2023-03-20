@@ -1,5 +1,6 @@
 use super::TsOpts;
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::error::Error;
 use std::str::Chars;
@@ -9,8 +10,8 @@ use genco::prelude::js::Import as JsImport;
 use genco::tokens::{Item, ItemStr};
 
 use crate::adlgen::sys::adlast2::{
-    Annotations, Decl, DeclType, Field, Ident, Import, Module, NewType, PrimitiveType,
-    ScopedName, Struct, TypeDef, TypeExpr, TypeRef, Union,
+    Annotations, Decl, DeclType, Field, Ident, Import, Module, NewType, PrimitiveType, ScopedName,
+    Struct, TypeDef, TypeExpr, TypeRef, Union,
 };
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
@@ -72,10 +73,40 @@ impl TsScopedDeclGenVisitor<'_> {
     }
 }
 
+fn ScopedNameCompare(a: &ScopedName, b: &ScopedName) -> std::cmp::Ordering {
+    if &a.module_name == &b.module_name {
+        if a.name == b.name {
+            Ordering::Equal
+        } else if a.name > b.name {
+            Ordering::Greater
+        } else {
+            Ordering::Less
+        }
+    } else if a.module_name > b.module_name {
+        Ordering::Greater
+    } else {
+        Ordering::Less
+    }
+}
+
 impl TsScopedDeclGenVisitor<'_> {
     fn visit_annotations(&mut self, d: &Annotations) {
         let mut keys: Vec<&ScopedName> = d.0.keys().collect();
-        keys.sort();
+        keys.sort_by(|a, b| {
+            if &a.module_name == &b.module_name {
+                if a.name == b.name {
+                    Ordering::Equal
+                } else if a.name > b.name {
+                    Ordering::Greater
+                } else {
+                    Ordering::Less
+                }
+            } else if a.module_name > b.module_name {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }
+        });
         quote_in! { self.toks =>  "annotations":$("[") };
         keys.iter().fold(false, |rest, key| {
             if **key == crate::parser::docstring_scoped_name() {
