@@ -268,17 +268,8 @@ pub fn resolve_annotations(
                 TypeRef::Primitive(_) => Err(anyhow!("primitives can't be annotations")),
                 TypeRef::TypeParam(_) => Err(anyhow!("typeparams can't be annotations")),
             }
-            // if let TypeRef::ScopedName(sn1) = tr1 {
-            //     Ok((sn1, jv.clone()))
-            // } else {
-            //     Err(anyhow!(
-            //         "no decl {}.{} found for explicit annotation",
-            //         sn0.module_name,
-            //         sn0.name
-            //     ))
-            // }
         })
-        .collect::<Result<HashMap<_,_>>>()?;
+        .collect::<Result<HashMap<_, _>>>()?;
     Ok(Map(hm1))
 }
 
@@ -306,7 +297,7 @@ impl<'a> ResolveCtx<'a> {
     }
 
     pub fn resolve_type_ref(&self, scoped_name0: &adlast::ScopedName) -> Result<TypeRef> {
-        // TODO is does this mean its a localname?
+        // TODO does this mean its a localname?
         if scoped_name0.module_name.is_empty() {
             let name = &scoped_name0.name;
             if self.type_params.contains(name.as_str()) {

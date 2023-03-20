@@ -4,8 +4,9 @@ use crate::processing::annotations::AnnotationError;
 use std::iter::repeat;
 use std::collections::HashMap;
 
-use crate::adlrt::custom::sys::types::maybe::Maybe;
+
 use crate::adlrt::custom::sys::types::map::Map;
+use crate::adlrt::custom::sys::types::maybe::Maybe;
 
 use nom::{
     branch::alt,
@@ -268,6 +269,7 @@ pub fn merge_annotations(
 ) -> Result<adlast::Annotations,AnnotationError> {
     let mut hm = HashMap::new();
     let mut ds = Vec::new();
+
     for (k, v) in anns {
         if k == docstring_scoped_name() {
             ds.push(v.as_str().unwrap().to_owned());

@@ -185,9 +185,12 @@ module X {
     #[test]
     fn explicit_annotations_bad() {
         let rm = raw_module(LocatedSpan::new(BAD_ADL)).unwrap().1;
+
         // We should have 3 explicit annotations to attach
         assert_eq!(rm.1.len(), 3);
+
         let err = super::apply_explicit_annotations(rm).unwrap_err();
+
         // All of which should have failed
         match err {
             super::AnnotationError::Unresolved(err) => assert_eq!(err.unresolved.len(), 3),
