@@ -1,7 +1,7 @@
 use std::fmt;
 
 use super::Module0;
-use crate::adlgen::sys::adlast2::{self as adlast, Annotation};
+use crate::adlgen::sys::adlast2::{self as adlast};
 use crate::parser::{ExplicitAnnotationRef, RawModule};
 
 /// Attach explicit annotations to the appropriate nodes in the AST. On failure, returns
@@ -16,11 +16,11 @@ pub fn apply_explicit_annotations(
         let aref = find_annotations_ref(&ea.refr, &mut module0);
         match aref {
             Some(aref) => {
-                if let Some(ea) = aref.iter().find(|a| a.key == ea.scoped_name) {
+                if let Some(_) = aref.0.get(&ea.scoped_name) {
                     // TODO fix error
-                    println!("explicit annotations can't override prefix annotation. Target {}.{}", ea.key.module_name, ea.key.name);
+                    println!("explicit annotations can't override prefix annotation. Target {}.{}", ea.scoped_name.module_name, ea.scoped_name.name);
                 } else {
-                    aref.push(Annotation{key: ea.scoped_name, value: ea.value});
+                    aref.0.insert(ea.scoped_name, ea.value);
                 }
             }
             None => {
@@ -104,22 +104,22 @@ mod tests {
 
         let m0 = super::apply_explicit_annotations(rm).unwrap();
         assert_eq!(
-            m0.annotations.iter().find(|a| a.key == mk_scoped_name("", "A")).unwrap().value,
-            serde_json::Value::from(1i32)
+            m0.annotations.0.get(&mk_scoped_name("", "A")),
+            Some(&serde_json::Value::from(1i32))
         );
         assert_eq!(
-            m0.annotations.iter().find(|a| a.key == mk_scoped_name("", "E")).unwrap().value,
-            serde_json::Value::from(6i32)
+            m0.annotations.0.get(&mk_scoped_name("", "E")),
+            Some(&serde_json::Value::from(6i32))
         );
 
         let decl = m0.decls.iter().find(|d| d.name == "Y").unwrap();
         assert_eq!(
-            m0.annotations.iter().find(|a| a.key == mk_scoped_name("", "B")).unwrap().value,
-            serde_json::Value::from(2i32)
+            decl.annotations.0.get(&mk_scoped_name("", "B")),
+            Some(&serde_json::Value::from(2i32))
         );
         assert_eq!(
-            m0.annotations.iter().find(|a| a.key == mk_scoped_name("", "F")).unwrap().value,
-            serde_json::Value::from(7i32)
+            decl.annotations.0.get(&mk_scoped_name("", "F")),
+            Some(&serde_json::Value::from(7i32))
         );
 
         let field = if let adlast::DeclType::Struct(s) = &decl.r#type {
@@ -129,12 +129,12 @@ mod tests {
         }
         .unwrap();
         assert_eq!(
-            m0.annotations.iter().find(|a| a.key == mk_scoped_name("", "C")).unwrap().value,
-            serde_json::Value::from(3i32)
+            field.annotations.0.get(&mk_scoped_name("", "C")),
+            Some(&serde_json::Value::from(3i32))
         );
         assert_eq!(
-            m0.annotations.iter().find(|a| a.key == mk_scoped_name("", "G")).unwrap().value,
-            serde_json::Value::from(8i32)
+            field.annotations.0.get(&mk_scoped_name("", "G")),
+            Some(&serde_json::Value::from(8i32))
         );
     }
 

@@ -1,5 +1,6 @@
 // @generated from adl module sys.adlast2
 
+use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
 use serde::Deserialize;
 use serde::Serialize;
@@ -8,25 +9,9 @@ pub type ModuleName = String;
 
 pub type Ident = String;
 
-pub type Annotations = Vec<Annotation>;
+pub type Annotations = Map<ScopedName, serde_json::Value>;
 
-#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
-pub struct Annotation {
-  pub key: ScopedName,
-
-  pub value: serde_json::Value,
-}
-
-impl Annotation {
-  pub fn new(key: ScopedName, value: serde_json::Value) -> Annotation {
-    Annotation {
-      key: key,
-      value: value,
-    }
-  }
-}
-
-#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize,PartialOrd,Ord)]
 pub struct ScopedName {
   #[serde(rename="moduleName")]
   pub module_name: ModuleName,

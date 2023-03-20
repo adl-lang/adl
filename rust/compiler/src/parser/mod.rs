@@ -1,9 +1,10 @@
-use crate::adlgen::sys::adlast2::{self as adlast, Annotation, ScopedName};
+use crate::adlgen::sys::adlast2::{self as adlast, ScopedName};
 use crate::adlgen::sys::adlast2::Spanned;
 use std::iter::repeat;
-use std::collections::{HashSet};
+use std::collections::HashMap;
 
 use crate::adlrt::custom::sys::types::maybe::Maybe;
+use crate::adlrt::custom::sys::types::map::Map;
 
 use nom::{
     branch::alt,
@@ -259,28 +260,25 @@ pub fn merge_annotations(
     anns: Vec<(adlast::ScopedName, serde_json::Value)>,
 ) -> adlast::Annotations {
     // Create a map out of the annotations, but join any doc strings as separate lines
-    let mut hm = HashSet::new();
+    let mut hm = HashMap::new();
     let mut ds = Vec::new();
-    let mut an = Vec::new();
     for (k, v) in anns {
-        if k.clone() == docstring_scoped_name() {
+        if k == docstring_scoped_name() {
             ds.push(v.as_str().unwrap().to_owned());
         } else {
             // TODO this should have been an error (i.e. an annotation was overrode)
             // with a vector multiple annotation of the same type could be catered for,
             // but this should probably error
-            if hm.insert(k.clone()) {
-                an.push(Annotation{key: k.clone(), value: v});
-            } else {
+            if let Some(_) = hm.insert(k.clone(), v) {
                 println!("Error duplicate annotation {}.{}", &k.module_name, &k.name);
             }
         }
     }
     if !ds.is_empty() {
         // ADL Doc string is (in ADL) `type Doc = Vector<String>` not `type Doc = String`
-        an.push(Annotation{key: docstring_scoped_name(), value: serde_json::Value::from(ds)});
-    }
-    return an;
+        hm.insert(docstring_scoped_name(), serde_json::Value::from(ds));
+    };
+    Map(hm)
 }
 
 pub fn docstring_scoped_name() -> adlast::ScopedName {

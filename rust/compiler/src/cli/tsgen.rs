@@ -9,7 +9,7 @@ use genco::prelude::js::Import as JsImport;
 use genco::tokens::{Item, ItemStr};
 
 use crate::adlgen::sys::adlast2::{
-    Annotation, Annotations, Decl, DeclType, Field, Ident, Import, Module, NewType, PrimitiveType,
+    Annotations, Decl, DeclType, Field, Ident, Import, Module, NewType, PrimitiveType,
     ScopedName, Struct, TypeDef, TypeExpr, TypeRef, Union,
 };
 use crate::adlrt::custom::sys::types::map::Map;
@@ -73,21 +73,23 @@ impl TsScopedDeclGenVisitor<'_> {
 }
 
 impl TsScopedDeclGenVisitor<'_> {
-    fn visit_annotations(&mut self, d: &Vec<Annotation>) {
+    fn visit_annotations(&mut self, d: &Annotations) {
+        let mut keys: Vec<&ScopedName> = d.0.keys().collect();
+        keys.sort();
         quote_in! { self.toks =>  "annotations":$("[") };
-        d.iter().fold(false, |rest, a| {
-            if a.key == crate::parser::docstring_scoped_name() {
+        keys.iter().fold(false, |rest, key| {
+            if **key == crate::parser::docstring_scoped_name() {
                 return rest;
             }
             if rest {
                 self.lit(",");
             }
             self.lit("{");
-            let jv = &serde_json::to_string(&a.value).unwrap();
+            let jv = &serde_json::to_string(d.0.get(key).unwrap()).unwrap();
             quote_in! { self.toks => "value":$jv,}
             quote_in! { self.toks => "key": }
             self.lit("{");
-            quote_in! { self.toks => "moduleName":$("\"")$(&a.key.module_name)$("\""),"name": $("\"")$(&a.key.name)$("\"") }
+            quote_in! { self.toks => "moduleName":$DQ$(&key.module_name)$DQ,"name":$DQ$(&key.name)$DQ }
             self.lit("}");
             self.lit("}");
             return true;
@@ -259,12 +261,9 @@ impl TsGenVisitor<'_> {
 
 impl TsGenVisitor<'_> {
     fn gen_doc_comment(&mut self, annotations: &Annotations) -> anyhow::Result<()> {
-        if let Some(ds) = annotations
-            .iter()
-            .find(|a| a.key == docstring_scoped_name())
-        {
+        if let Some(ds) = annotations.0.get(&docstring_scoped_name()) {
             self.lit("/**\n");
-            for c in ds.value.as_array().unwrap().iter() {
+            for c in ds.as_array().unwrap().iter() {
                 if let Ok(x) = serde_json::to_string(&c.clone()) {
                     let y = x[1..x.len() - 1].trim();
                     quote_in! {self.toks => $[' ']* $(y)$['\r']};
@@ -322,10 +321,10 @@ impl TsGenVisitor<'_> {
     }
 }
 
-const oc: &str = "{";
-const cc: &str = "}";
-const dq: &str = "\"";
-const sp: &str = " ";
+const OC: &str = "{";
+const CC: &str = "}";
+const DQ: &str = "\"";
+const SP: &str = " ";
 
 impl TsGenVisitor<'_> {
     fn gen_struct(
@@ -340,17 +339,17 @@ impl TsGenVisitor<'_> {
         }
         self.gen_doc_comment(&decl.annotations);
         quote_in! { self.toks =>
-            export interface $(name_up) $oc$['\r']
+            export interface $(name_up) $OC$['\r']
         }
 
         for f in m.fields.iter() {
             self.gen_doc_comment(&f.annotations);
             quote_in! { self.toks =>
-                $sp$sp$(&f.name): $(rust_type(&f.type_expr));$['\r']
+                $SP$SP$(&f.name): $(rust_type(&f.type_expr));$['\r']
             }
         }
         quote_in! { self.toks =>
-            $cc$['\r']$['\n']
+            $CC$['\r']$['\n']
         }
         quote_in! { self.toks =>
             export function make$(name_up)(
@@ -365,7 +364,6 @@ impl TsGenVisitor<'_> {
         }
         Ok(())
     }
-
 }
 
 fn struct_field_make_input(toks: &mut Tokens<JavaScript>, fs: &Vec<Field<TypeExpr<TypeRef>>>) {

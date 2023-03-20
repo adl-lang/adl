@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::adlgen::sys::adlast2::{self as adlast, Annotation, ScopedName};
+use crate::adlgen::sys::adlast2::{self as adlast, ScopedName};
 use crate::adlrt::custom::sys::types::map::Map;
 
 use super::loader::AdlLoader;
@@ -252,23 +252,19 @@ pub fn resolve_annotations(
     annotations0: &adlast::Annotations,
 ) -> Result<adlast::Annotations> {
     let hm1 = annotations0
+        .0
         .iter()
-        .map(|ann| {
-            let sn0 = &ann.key;
-            let jv = &ann.value;
+        .map(|(sn0, jv)| {
             let tr1 = ctx.resolve_type_ref(sn0)?;
             match tr1 {
-                TypeRef::ScopedName(sn1) => Ok(Annotation {
-                    key: sn1,
-                    value: jv.clone(),
-                }),
-                TypeRef::LocalName(ln1) => Ok(Annotation {
-                    key: ScopedName {
+                TypeRef::ScopedName(sn1) => Ok((sn1, jv.clone())),
+                TypeRef::LocalName(ln1) => Ok((
+                    ScopedName {
                         module_name: ctx.module0.name.clone(),
                         name: ln1,
                     },
-                    value: jv.clone(),
-                }),
+                    jv.clone(),
+                )),
                 TypeRef::Primitive(_) => Err(anyhow!("primitives can't be annotations")),
                 TypeRef::TypeParam(_) => Err(anyhow!("typeparams can't be annotations")),
             }
@@ -282,8 +278,8 @@ pub fn resolve_annotations(
             //     ))
             // }
         })
-        .collect::<Result<Vec<_>>>()?;
-    Ok(hm1)
+        .collect::<Result<HashMap<_,_>>>()?;
+    Ok(Map(hm1))
 }
 
 pub fn resolve_type_expr(ctx: &ResolveCtx, typeexpr0: &TypeExpr0) -> Result<TypeExpr1> {
@@ -425,8 +421,8 @@ mod consume {
     }
 
     pub fn annotations<T>(annotations: &adlast::Annotations, ac: &mut dyn AstConsumer<T>) {
-        for a in annotations {
-            ac.consume_scoped_name(a.key.clone());
+        for a in annotations.0.keys() {
+            ac.consume_scoped_name(a.clone());
         }
     }
 
