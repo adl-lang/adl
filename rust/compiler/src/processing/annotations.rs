@@ -16,8 +16,10 @@ pub fn apply_explicit_annotations(raw_module: RawModule) -> Result<Module0, Anno
             Some(aref) => {
                 if let Some(_) = aref.0.get(&ea.scoped_name) {
                     return Err(AnnotationError::Override(format!(
-                        "explicit annotations can't override prefix annotation. Target {}.{}",
-                        ea.scoped_name.module_name, ea.scoped_name.name
+                        "explicit annotations can't override prefix annotation. Target '{}.{}'",
+                        module0.name,
+                        // ea.scoped_name.module_name,
+                        ea.scoped_name.name
                     )));
                 } else {
                     aref.0.insert(ea.scoped_name, ea.value);

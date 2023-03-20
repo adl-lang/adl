@@ -1,5 +1,6 @@
 use crate::adlgen::sys::adlast2::{self as adlast, ScopedName};
 use crate::adlgen::sys::adlast2::Spanned;
+use crate::processing::annotations::AnnotationError;
 use std::iter::repeat;
 use std::collections::HashMap;
 
@@ -194,8 +195,11 @@ pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
             }
         }
     }
-
-    let module = adlast::Module::new(name, imports, decls, merge_annotations(annotations));
+    let ma = merge_annotations(annotations);
+    if let Err(e) = ma {
+        return Err(custom_error(i, e.to_string()));
+    }
+    let module = adlast::Module::new(name, imports, decls, ma.unwrap());
 
     Ok((i, (module, explicit_annotations)))
 }
@@ -230,11 +234,14 @@ pub fn decl_or_annotation(i: Input) -> Res<Input, DeclOrAnnotation> {
 pub fn decl(i: Input) -> Res<Input, adlast::Decl<TypeExpr0>> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
     let (i, (name, dtype)) = decl_type(i)?;
-
+    let ma = merge_annotations(annotations);
+    if let Err(e) = ma {
+        return Err(custom_error(i, e.to_string()));
+    }
     let decl = adlast::Decl {
         name: name.to_owned(),
         r#type: dtype,
-        annotations: merge_annotations(annotations),
+        annotations: ma.unwrap(),
         version: Maybe::nothing(),
     };
     Ok((i, decl))
@@ -258,19 +265,17 @@ pub fn prefix_annotation_(i: Input) -> Res<Input, (adlast::ScopedName, serde_jso
 
 pub fn merge_annotations(
     anns: Vec<(adlast::ScopedName, serde_json::Value)>,
-) -> adlast::Annotations {
-    // Create a map out of the annotations, but join any doc strings as separate lines
+) -> Result<adlast::Annotations,AnnotationError> {
     let mut hm = HashMap::new();
     let mut ds = Vec::new();
     for (k, v) in anns {
         if k == docstring_scoped_name() {
             ds.push(v.as_str().unwrap().to_owned());
         } else {
-            // TODO this should have been an error (i.e. an annotation was overrode)
-            // with a vector multiple annotation of the same type could be catered for,
-            // but this should probably error
             if let Some(_) = hm.insert(k.clone(), v) {
-                println!("Error duplicate annotation {}.{}", &k.module_name, &k.name);
+                return Err(AnnotationError::Override(
+                    format!("Error duplicate annotation '{}.{}'", &k.module_name, &k.name)
+                ))
             }
         }
     }
@@ -278,7 +283,7 @@ pub fn merge_annotations(
         // ADL Doc string is (in ADL) `type Doc = Vector<String>` not `type Doc = String`
         hm.insert(docstring_scoped_name(), serde_json::Value::from(ds));
     };
-    Map(hm)
+    Ok(Map(hm))
 }
 
 pub fn docstring_scoped_name() -> adlast::ScopedName {
@@ -388,12 +393,16 @@ pub fn field0(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
     let (i, texpr) = ws(type_expr)(i)?;
     let (i, name) = ws(ident0)(i)?;
     let (i, default) = opt(preceded(wtag("="), json))(i)?;
+    let ma = merge_annotations(annotations);
+    if let Err(e) = ma {
+        return Err(custom_error(i, e.to_string()));
+    }
     let field = adlast::Field {
         name: name.to_owned(),
         serialized_name: name.to_owned(),
         type_expr: texpr,
         default: maybe_from_option(default),
-        annotations: merge_annotations(annotations),
+        annotations: ma.unwrap(),
     };
     Ok((i, field))
 }
