@@ -246,7 +246,7 @@ pub fn resolve_field(
     Ok(field1)
 }
 
-// TODO document this fn, I don't quite understand what it does.
+/// This function checks that each annotation refers to an actual declaration
 pub fn resolve_annotations(
     ctx: &ResolveCtx,
     annotations0: &adlast::Annotations,
@@ -297,7 +297,6 @@ impl<'a> ResolveCtx<'a> {
     }
 
     pub fn resolve_type_ref(&self, scoped_name0: &adlast::ScopedName) -> Result<TypeRef> {
-        // TODO does this mean its a localname?
         if scoped_name0.module_name.is_empty() {
             let name = &scoped_name0.name;
             if self.type_params.contains(name.as_str()) {
@@ -312,7 +311,7 @@ impl<'a> ResolveCtx<'a> {
             if let Some(scoped_name) = self.expanded_imports.get(name) {
                 return Ok(TypeRef::ScopedName(scoped_name.clone()));
             }
-            Err(anyhow!("type {} not found", name))
+            Err(anyhow!("Local type {} not found", name))
         } else {
             match self.find_module(&scoped_name0.module_name)? {
                 None => return Err(anyhow!("module {} not found", scoped_name0.module_name)),
