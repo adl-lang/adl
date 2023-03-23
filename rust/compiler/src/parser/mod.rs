@@ -259,6 +259,7 @@ pub fn prefix_annotation_(i: Input) -> Res<Input, (adlast::ScopedName, serde_jso
 pub fn merge_annotations(
     anns: Vec<(adlast::ScopedName, serde_json::Value)>,
 ) -> Result<adlast::Annotations,String> {
+    // Create a map out of the annotations, but join any doc strings as separate lines
     let mut hm = HashMap::new();
     let mut ds = Vec::new();
 
@@ -275,9 +276,11 @@ pub fn merge_annotations(
         }
     }
     if !ds.is_empty() {
-        // ADL Doc string is (in ADL) `type Doc = Vector<String>` not `type Doc = String`
-        hm.insert(docstring_scoped_name(), serde_json::Value::from(ds));
-    };
+        hm.insert(
+            docstring_scoped_name(),
+            serde_json::Value::from(ds.join("\n")),
+        );
+    }
 
     Ok(Map(hm))
 }
