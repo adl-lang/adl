@@ -5,7 +5,7 @@ use convert_case::{Case, Casing};
 
 
 use crate::adlgen::sys::adlast2::{self as adlast, PrimitiveType};
-use crate::processing::resolver::{Module1, Resolver, TypeExpr1, TypeRef};
+use crate::processing::resolver::{Module1, Resolver, TypeExpr1};
 use crate::processing::writer::TreeWriter;
 
 use crate::cli::rust::rsfile::RSFile;
@@ -29,6 +29,9 @@ pub fn gen_rs_mod_files(opts: &RustOpts, resolver: &Resolver, writer: &mut TreeW
     }
 
     for (rsmod,children) in modfiles {
+        let mut children = children.into_iter().collect::<Vec<String>>();
+        children.sort();
+
         let mut path = PathBuf::new();
         path.push(opts.module.clone());
         for el in rsmod {
@@ -52,6 +55,7 @@ pub fn gen_module(m: &Module1) -> anyhow::Result<String> {
     for d in m.decls.iter() {
         match &d.r#type {
             adlast::DeclType::Struct(s) => gen_struct(m, d, &s, &mut out)?,
+            adlast::DeclType::Type(t) => gen_type(m, d, &t, &mut out)?,
             _ => {}
         }
     }
@@ -76,13 +80,14 @@ fn gen_struct(
     .collect::<Vec<String>>()
     .join(", ");
 
+    let type_name = rs_type_name_from_adl(&d.name);
     let type_params = fmt_type_params(&s.type_params);
 
     if let Some(serde_json::Value::String(doc)) = d.annotations.0.get(&ann_doc()) {
       out.pushlns(fmt_doc_comment(doc));
     }
 
-    fmtln!(out, "pub struct {}{} {{", d.name, type_params );
+    fmtln!(out, "pub struct {}{} {{", type_name, type_params );
     for (i,ef) in efields.iter().enumerate() {
         if i != 0 {
           fmtln!(out, "");
@@ -94,9 +99,9 @@ fn gen_struct(
     }
     fmtln!(out, "}}");
     fmtln!(out, "");
-    fmtln!(out, "impl{} {}{} {{", type_params, d.name, type_params);
-    fmtln!(out, "  pub fn new({}) -> {}{} {{", ctor_params, d.name, type_params);
-    fmtln!(out, "    {} {{", d.name);
+    fmtln!(out, "impl{} {}{} {{", type_params, type_name, type_params);
+    fmtln!(out, "  pub fn new({}) -> {}{} {{", ctor_params, type_name, type_params);
+    fmtln!(out, "    {} {{", type_name);
     for ef in &efields {
       fmtln!(out, "      {}: {},",  ef.rs_field_name,  ef.rs_field_name);
     }
@@ -105,6 +110,23 @@ fn gen_struct(
     fmtln!(out, "}}");
     fmtln!(out, "");
     Ok(())
+}
+
+fn gen_type(
+  _m: &Module1,
+  d: &adlast::Decl<TypeExpr1>,
+  t: &adlast::TypeDef<TypeExpr1>,
+  out: &mut RSFile,
+) -> anyhow::Result<()> {
+
+  let teg = TypeExprGen::new(&t.type_expr);
+  let type_name = rs_type_name_from_adl(&d.name);
+  let type_params = fmt_type_params(&t.type_params);
+  let aliased_type =  teg.gen_type(out);
+  fmtln!(out, "pub type {}{} = {};", type_name, type_params, aliased_type);
+  fmtln!(out, "");
+
+  Ok(())
 }
 
 struct ExtendedField<'a> {
@@ -118,7 +140,7 @@ impl <'a> ExtendedField<'a> {
   fn new(field: &'a adlast::Field<TypeExpr1>, out: &mut RSFile) -> Self {
     let type_expr_gen = TypeExprGen::new(&field.type_expr);
     let type_str = type_expr_gen.gen_type(out);
-    let rs_field_name = field.name.to_case(Case::Snake);
+    let rs_field_name = rs_field_name_from_adl(&field.name);
     ExtendedField{field, rs_field_name, type_str, type_expr_gen}
   }
 }
@@ -195,7 +217,6 @@ impl TypeCodeGen for TypeExprGen {
   }
 }
 
-
 fn fmt_type_params(params: &[String]) -> String {
   if params.len() == 0 {
     "".to_owned()
@@ -215,6 +236,16 @@ fn fmt_doc_comment(doc_str: &str) -> Vec<String> {
   }
   lines.push(" */".to_owned());
   lines
+}
+
+fn rs_field_name_from_adl(adl_field_name: &str) -> String {
+  // TODO: deal with reserved words
+  adl_field_name.to_case(Case::Snake)
+}
+
+fn rs_type_name_from_adl(adl_type_name: &str) -> String {
+  // TODO: deal with reserved words
+  adl_type_name.to_case(Case::UpperCamel)
 }
 
 fn ann_doc() ->  adlast::ScopedName {
