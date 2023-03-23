@@ -1,8 +1,8 @@
 use anyhow::anyhow;
-use std::collections::{HashSet};
 use std::collections::HashMap;
+use std::collections::HashSet;
 
-use crate::adlgen::sys::adlast2 as adlast;
+use crate::adlgen::sys::adlast2::{self as adlast, ScopedName};
 use crate::adlrt::custom::sys::types::map::Map;
 
 use super::loader::AdlLoader;
@@ -266,6 +266,7 @@ pub fn resolve_field(
     Ok(field1)
 }
 
+/// This function checks that each annotation refers to an actual declaration
 pub fn resolve_annotations(
     ctx: &ResolveCtx,
     annotations0: &adlast::Annotations,
@@ -275,13 +276,17 @@ pub fn resolve_annotations(
         .iter()
         .map(|(sn0, jv)| {
             let tr1 = ctx.resolve_type_ref(sn0)?;
-            if let TypeRef::ScopedName(sn1) = tr1 {
-                Ok((sn1, jv.clone()))
-            } else {
-                Err(anyhow!(
-                    "no decl {} found for explicit annotation",
-                    sn0.name
-                ))
+            match tr1 {
+                TypeRef::ScopedName(sn1) => Ok((sn1, jv.clone())),
+                TypeRef::LocalName(ln1) => Ok((
+                    ScopedName {
+                        module_name: ctx.module0.name.clone(),
+                        name: ln1,
+                    },
+                    jv.clone(),
+                )),
+                TypeRef::Primitive(_) => Err(anyhow!("primitives can't be annotations")),
+                TypeRef::TypeParam(_) => Err(anyhow!("typeparams can't be annotations")),
             }
         })
         .collect::<Result<HashMap<_, _>>>()?;
@@ -327,7 +332,7 @@ impl<'a> ResolveCtx<'a> {
             if let Some(scoped_name) = self.expanded_imports.get(name) {
                 return Ok(TypeRef::ScopedName(scoped_name.clone()));
             }
-            Err(anyhow!("type {} not found", name))
+            Err(anyhow!("Local type {} not found", name))
         } else {
             match self.resolver.get_rmodule(&scoped_name0.module_name) {
                 None => return Err(anyhow!("module {} not found", scoped_name0.module_name)),

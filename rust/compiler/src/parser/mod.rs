@@ -1,8 +1,7 @@
-use crate::adlgen::sys::adlast2 as adlast;
+use crate::adlgen::sys::adlast2::{self as adlast};
 use crate::adlgen::sys::adlast2::Spanned;
 use std::iter::repeat;
 use std::collections::HashMap;
-
 
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
@@ -169,6 +168,7 @@ pub fn raw_module(i: Input) -> Res<Input, RawModule> {
 
 pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
+    let ma = merge_annotations(annotations).map_err(|emsg| custom_error(i, emsg))?;
     let (i, _) = ws(tag("module"))(i)?;
     let (i, name) = ws(module_name)(i)?;
     let (i, (imports, decls_or_annotations)) = delimited(
@@ -195,8 +195,7 @@ pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
             }
         }
     }
-
-    let module = adlast::Module::new(name, imports, decls, merge_annotations(annotations));
+    let module = adlast::Module::new(name, imports, decls, ma);
 
     Ok((i, (module, explicit_annotations)))
 }
@@ -230,12 +229,12 @@ pub fn decl_or_annotation(i: Input) -> Res<Input, DeclOrAnnotation> {
 
 pub fn decl(i: Input) -> Res<Input, adlast::Decl<TypeExpr0>> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
+    let ma = merge_annotations(annotations).map_err(|emsg| custom_error(i, emsg))?;
     let (i, (name, dtype)) = decl_type(i)?;
-
     let decl = adlast::Decl {
         name: name.to_owned(),
         r#type: dtype,
-        annotations: merge_annotations(annotations),
+        annotations: ma,
         version: Maybe::nothing(),
     };
     Ok((i, decl))
@@ -259,8 +258,7 @@ pub fn prefix_annotation_(i: Input) -> Res<Input, (adlast::ScopedName, serde_jso
 
 pub fn merge_annotations(
     anns: Vec<(adlast::ScopedName, serde_json::Value)>,
-) -> adlast::Annotations {
-    // Create a map out of the annotations, but join any doc strings as separate lines
+) -> Result<adlast::Annotations,String> {
     let mut hm = HashMap::new();
     let mut ds = Vec::new();
 
@@ -268,16 +266,20 @@ pub fn merge_annotations(
         if k == docstring_scoped_name() {
             ds.push(v.as_str().unwrap().to_owned());
         } else {
-            hm.insert(k, v);
+            if let Some(_) = hm.insert(k.clone(), v) {
+                return Err(format!(
+                    "Error duplicate annotation '{}.{}'",
+                    &k.module_name, &k.name
+                ));
+            }
         }
     }
     if !ds.is_empty() {
-        hm.insert(
-            docstring_scoped_name(),
-            serde_json::Value::from(ds.join("\n")),
-        );
-    }
-    Map(hm)
+        // ADL Doc string is (in ADL) `type Doc = Vector<String>` not `type Doc = String`
+        hm.insert(docstring_scoped_name(), serde_json::Value::from(ds));
+    };
+
+    Ok(Map(hm))
 }
 
 pub fn docstring_scoped_name() -> adlast::ScopedName {
@@ -384,6 +386,7 @@ pub fn field(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
 
 pub fn field0(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
+    let ma = merge_annotations(annotations).map_err(|emsg| custom_error(i, emsg))?;
     let (i, texpr) = ws(type_expr)(i)?;
     let (i, name) = ws(ident0)(i)?;
     let (i, default) = opt(preceded(wtag("="), json))(i)?;
@@ -392,7 +395,7 @@ pub fn field0(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
         serialized_name: name.to_owned(),
         type_expr: texpr,
         default: maybe_from_option(default),
-        annotations: merge_annotations(annotations),
+        annotations: ma,
     };
     Ok((i, field))
 }
