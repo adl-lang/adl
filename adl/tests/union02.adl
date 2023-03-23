@@ -1,0 +1,7 @@
+module union02 {
+
+union Def<S,T> {
+    Vector<S> E;
+};
+
+};

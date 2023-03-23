@@ -1,0 +1,36 @@
+[
+    {
+        "module": "struct01",
+        "description": [
+            "struct with no fields",
+            "title case"
+        ]
+    },
+    {
+        "module": "struct02",
+        "description": [
+            "struct with one fields",
+            "lower case struct name"
+        ]
+    },
+    {
+        "module": "annotations01",
+        "description": [
+            "multiple annotations on a field, testing sort order"
+        ]
+    },
+    {
+        "module": "annotations02",
+        "fail": true,
+        "description": [
+            "multiple of the same annotation on a field"
+        ]
+    },
+    {
+        "module": "annotations03",
+        "fail": true,
+        "description": [
+            "prefix and explicit annotation of the same type on a field"
+        ]
+    }
+]

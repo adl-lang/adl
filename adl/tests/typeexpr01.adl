@@ -1,0 +1,42 @@
+module typeexpr01 {
+
+struct Abc {
+    Void a;
+    Bool b;
+    Int8 c;
+    Int32 d;
+    Int64 e;
+    Word8 f;
+    Word32 g;
+    Word64 h;
+    Float i;
+    Double j;
+    Json k;
+    Bytes l;
+    String m;
+    Vector<Int64> n;
+    StringMap<Int64> o;
+    Nullable<Int64> p;
+};
+
+// def is not constructable because it contains a TypeToken
+// e.g. in TS no `export function makeDef`
+struct def {
+    TypeToken<Int64> q;
+};
+
+// def02 is not constructable because it transitively contains a TypeToken
+// e.g. in TS no `export function makeDef02`
+//
+// Current adlc generates make
+// Current adlc doesn't title case the type in 'ADL.ATypeExpr<xxx>'
+struct def02 {
+    Vector<TypeToken<Int64>> q;
+};
+
+struct hij {
+    Vector<Vector<Int64>> r;
+    Vector<StringMap<Nullable<Int64>>> s;
+};
+
+};

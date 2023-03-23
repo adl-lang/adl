@@ -6,7 +6,7 @@ use std::result;
 // with ADL compatible serialization
 
 #[derive(Clone,Debug,Eq,Hash,PartialEq)]
-pub struct Maybe<T> (Option<T>);
+pub struct Maybe<T> (pub Option<T>);
 
 impl<T> Maybe<T> {
   pub fn nothing() -> Maybe<T> {

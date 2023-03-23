@@ -1,0 +1,16 @@
+module annotations01 {
+
+type X = String;
+type Y = String;
+
+struct abc {
+    @X "a"
+    @Y "b"
+    String x;
+
+    @Y "c"
+    @X "d"
+    String y;
+};
+
+};

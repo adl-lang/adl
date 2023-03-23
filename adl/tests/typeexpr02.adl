@@ -1,0 +1,27 @@
+module typeexpr02 {
+
+struct X {};
+
+struct x {};
+
+struct Abc<T> {
+    X a;
+    T b;
+};
+
+struct Def<t,S,r> {
+    X c;
+    x c2;
+    t d;
+    Vector<S> e;
+};
+
+struct Ghi {
+    Abc<String> f;
+};
+
+struct DbKey<T> {
+    String g;
+};
+
+};

@@ -1,0 +1,11 @@
+module annotations03 {
+
+type X = String;
+
+struct abc {
+    @X "a"
+    String x;
+};
+
+annotation abc::x X "b";
+};

@@ -1,0 +1,7 @@
+module struct02 {
+
+struct abc {
+    String x;
+};
+
+};

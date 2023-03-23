@@ -1,0 +1,7 @@
+module union01 {
+
+union Xyz {
+    String x;
+};
+
+};
