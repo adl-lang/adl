@@ -1,14 +1,12 @@
 use std::fmt;
 
 use super::Module0;
-use crate::adlgen::sys::adlast2 as adlast;
+use crate::adlgen::sys::adlast2::{self as adlast};
 use crate::parser::{ExplicitAnnotationRef, RawModule};
 
 /// Attach explicit annotations to the appropriate nodes in the AST. On failure, returns
 /// the nodes that could not be attached.
-pub fn apply_explicit_annotations(
-    raw_module: RawModule,
-) -> Result<Module0, UnresolvedExplicitAnnotations> {
+pub fn apply_explicit_annotations(raw_module: RawModule) -> Result<Module0, AnnotationError> {
     let (mut module0, explicit_annotations) = raw_module;
     let mut unresolved = Vec::new();
 
@@ -16,7 +14,16 @@ pub fn apply_explicit_annotations(
         let aref = find_annotations_ref(&ea.refr, &mut module0);
         match aref {
             Some(aref) => {
-                aref.0.insert(ea.scoped_name, ea.value);
+                if let Some(_) = aref.0.get(&ea.scoped_name) {
+                    return Err(AnnotationError::Override(format!(
+                        "explicit annotations can't override prefix annotation. Target '{}.{}'",
+                        module0.name,
+                        // ea.scoped_name.module_name,
+                        ea.scoped_name.name
+                    )));
+                } else {
+                    aref.0.insert(ea.scoped_name, ea.value);
+                }
             }
             None => {
                 unresolved.push(ea.refr);
@@ -27,7 +34,9 @@ pub fn apply_explicit_annotations(
     if unresolved.is_empty() {
         Ok(module0)
     } else {
-        Err(UnresolvedExplicitAnnotations { unresolved })
+        Err(AnnotationError::Unresolved(UnresolvedExplicitAnnotations {
+            unresolved,
+        }))
     }
 }
 
@@ -60,6 +69,30 @@ fn find_annotations_ref<'a>(
             }
             None
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum AnnotationError {
+    Unresolved(UnresolvedExplicitAnnotations),
+    Override(String),
+}
+
+impl std::error::Error for AnnotationError {}
+
+impl fmt::Display for AnnotationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AnnotationError::Unresolved(urefs) => {
+                urefs.fmt(f)?;
+                // Ok(())
+            }
+            AnnotationError::Override(o) => {
+                write!(f, "Forbidden override: {}", o)?;
+                // Ok(())
+            }
+        }
+        Ok(())
     }
 }
 
@@ -159,7 +192,10 @@ module X {
         let err = super::apply_explicit_annotations(rm).unwrap_err();
 
         // All of which should have failed
-        assert_eq!(err.unresolved.len(), 3);
+        match err {
+            super::AnnotationError::Unresolved(err) => assert_eq!(err.unresolved.len(), 3),
+            _ => assert!(false),
+        }
     }
 
     const BAD_ADL: &str = "
