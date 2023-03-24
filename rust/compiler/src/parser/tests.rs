@@ -199,7 +199,7 @@ fn parse_docstring() {
       name: "A".to_string(),
       version: Maybe::nothing(),
       annotations:  Map::from_iter(vec![
-        (docstring_scoped_name(), serde_json::Value::from(" Some doc")),
+        (docstring_scoped_name(), serde_json::Value::from(vec![" Some doc"])),
       ]),
       r#type: adlast::DeclType::Struct(adlast::Struct{
         type_params: Vec::new(),
@@ -214,7 +214,7 @@ fn parse_docstring() {
       name: "A".to_string(),
       version:  Maybe::nothing(),
       annotations:  Map::from_iter(vec![
-        (mk_scoped_name("sys.annotations", "Doc"), serde_json::Value::from(" Some doc\n with line 2")),
+        (mk_scoped_name("sys.annotations", "Doc"), serde_json::Value::from(vec![" Some doc"," with line 2"])),
       ]),
       r#type: adlast::DeclType::Struct(adlast::Struct{
         type_params: Vec::new(),
