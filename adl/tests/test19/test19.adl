@@ -1,4 +1,4 @@
-module test
+module test19
 {
 struct Pair<A,B>
 {

@@ -1,5 +1,5 @@
 @Ann1 100
-module test
+module test21
 {
     // Some annotation types;
 
