@@ -278,11 +278,11 @@ fn parse_json() {
     assert_module_file_ok("../../adl/tests/test6/test6.adl");
     assert_module_file_ok("../../adl/tests/test7/test7.adl");
     // duplicate struct name
-    // assert_module_file_ok("../../adl/tests/test8/test8.adl");
+    assert_module_file_err("../../adl/tests/test8/test8.adl");
     // versions not implemented
-    // assert_module_file_ok("../../adl/tests/test9/test9.adl");
-    // assert_module_file_ok("../../adl/tests/test10/test10.adl");
-    // assert_module_file_ok("../../adl/tests/test11/test11.adl");
+    assert_module_file_err("../../adl/tests/test9/test9.adl");
+    assert_module_file_err("../../adl/tests/test10/test10.adl");
+    assert_module_file_err("../../adl/tests/test11/test11.adl");
     assert_module_file_ok("../../adl/tests/test12/test12.adl");
     assert_module_file_ok("../../adl/tests/test13/test13.adl");
     assert_module_file_ok("../../adl/tests/test14/test14.adl");
@@ -337,6 +337,18 @@ fn parse_json() {
 
       }
     }
+}
+
+fn assert_module_file_err(path: &str) {
+  let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+  d.push(path);
+  let content = fs::read_to_string(d).expect(&format!("Failed to read file: {}", path) );
+  let content_str: &str = &content;
+  let parse_result = raw_module(inp(content_str));
+  match parse_result {
+    Ok(_) => assert!(false, "expected a parse error"),
+    Result::Err(_) => {},
+  }
 }
 
 fn assert_module_file_ok(path: &str) {
