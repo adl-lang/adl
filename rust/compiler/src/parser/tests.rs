@@ -272,39 +272,39 @@ fn parse_json() {
   fn parse_test_adl_files() {
     assert_module_file_ok("../../adl/tests/test1/test1.adl");
     assert_module_file_ok("../../adl/tests/test2/test2.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test3/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test4/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test5/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test6/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test7/input/test.adl");
+    assert_module_file_ok("../../adl/tests/test3/test3.adl");
+    assert_module_file_ok("../../adl/tests/test4/test4.adl");
+    assert_module_file_ok("../../adl/tests/test5/test5.adl");
+    assert_module_file_ok("../../adl/tests/test6/test6.adl");
+    assert_module_file_ok("../../adl/tests/test7/test7.adl");
     // duplicate struct name
-    // assert_module_file_ok("../../haskell/compiler/tests/test8/input/test.adl");
+    // assert_module_file_ok("../../adl/tests/test8/test8.adl");
     // versions not implemented
-    // assert_module_file_ok("../../haskell/compiler/tests/test9/input/test.adl");
-    // assert_module_file_ok("../../haskell/compiler/tests/test10/input/test.adl");
-    // assert_module_file_ok("../../haskell/compiler/tests/test11/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test12/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test13/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test14/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test15/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test16/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test16/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test16/input/test2.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test17/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test18/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test19/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test20/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test21/input/test.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test22/input/test22a.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test22/input/test22b.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test23/input/test23.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test24/input/test24.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test25/input/admin.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test26/input/test26.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test27/input/test27.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test27/input/test27a.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test28/input/test28.adl");
-    assert_module_file_ok("../../haskell/compiler/tests/test29/input/test29.adl");
+    // assert_module_file_ok("../../adl/tests/test9/test9.adl");
+    // assert_module_file_ok("../../adl/tests/test10/test10.adl");
+    // assert_module_file_ok("../../adl/tests/test11/test11.adl");
+    assert_module_file_ok("../../adl/tests/test12/test12.adl");
+    assert_module_file_ok("../../adl/tests/test13/test13.adl");
+    assert_module_file_ok("../../adl/tests/test14/test14.adl");
+    assert_module_file_ok("../../adl/tests/test15/test15.adl");
+    assert_module_file_ok("../../adl/tests/test16/test16.adl");
+    assert_module_file_ok("../../adl/tests/test16/test16.adl");
+    assert_module_file_ok("../../adl/tests/test16/test2.adl");
+    assert_module_file_ok("../../adl/tests/test17/test17.adl");
+    assert_module_file_ok("../../adl/tests/test18/test18.adl");
+    assert_module_file_ok("../../adl/tests/test19/test19.adl");
+    assert_module_file_ok("../../adl/tests/test20/test20.adl");
+    assert_module_file_ok("../../adl/tests/test21/test21.adl");
+    assert_module_file_ok("../../adl/tests/test22/test22a.adl");
+    assert_module_file_ok("../../adl/tests/test22/test22b.adl");
+    assert_module_file_ok("../../adl/tests/test23/test23.adl");
+    assert_module_file_ok("../../adl/tests/test24/test24.adl");
+    assert_module_file_ok("../../adl/tests/test25/admin.adl");
+    assert_module_file_ok("../../adl/tests/test26/test26.adl");
+    assert_module_file_ok("../../adl/tests/test27/test27.adl");
+    assert_module_file_ok("../../adl/tests/test27/test27a.adl");
+    assert_module_file_ok("../../adl/tests/test28/test28.adl");
+    assert_module_file_ok("../../adl/tests/test29/test29.adl");
   }
 
   fn inp (s: &str) -> Input {
