@@ -1,4 +1,4 @@
-module Test
+module test10
 {
     struct X#1
     {

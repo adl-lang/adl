@@ -1,4 +1,4 @@
-module test
+module test16
 {
     import test2.A;
 
