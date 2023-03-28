@@ -1,7 +1,7 @@
-use crate::adlgen::sys::adlast2::{self as adlast};
 use crate::adlgen::sys::adlast2::Spanned;
-use std::iter::repeat;
+use crate::adlgen::sys::adlast2::{self as adlast};
 use std::collections::HashMap;
+use std::iter::repeat;
 
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
@@ -258,8 +258,9 @@ pub fn prefix_annotation_(i: Input) -> Res<Input, (adlast::ScopedName, serde_jso
 
 pub fn merge_annotations(
     anns: Vec<(adlast::ScopedName, serde_json::Value)>,
-) -> Result<adlast::Annotations,String> {
-    // Create a map out of the annotations, but join any doc strings as separate lines
+) -> Result<adlast::Annotations, String> {
+    // Create a map out of the annotations
+    // Keep doc strings as a vector of string (saves having to split them later for Javadoc type comments with a leading *)
     let mut hm = HashMap::new();
     let mut ds = Vec::new();
 
@@ -276,11 +277,9 @@ pub fn merge_annotations(
         }
     }
     if !ds.is_empty() {
-        hm.insert(
-            docstring_scoped_name(),
-            serde_json::Value::from(ds.join("\n")),
-        );
-    }
+        // ADL Doc string is (in ADL) `type Doc = Vector<String>` not `type Doc = String`
+        hm.insert(docstring_scoped_name(), serde_json::Value::from(ds));
+    };
 
     Ok(Map(hm))
 }

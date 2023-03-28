@@ -83,8 +83,9 @@ fn gen_struct(
     let type_name = rs_type_name_from_adl(&d.name);
     let type_params = fmt_type_params(&s.type_params);
 
-    if let Some(serde_json::Value::String(doc)) = d.annotations.0.get(&ann_doc()) {
-      out.pushlns(fmt_doc_comment(doc));
+    if let Some(serde_json::Value::Array(docs)) = d.annotations.0.get(&ann_doc()) {
+      let doc_v: Vec<&str> = docs.iter().map(|doc| doc.as_str().unwrap()).collect();
+      out.pushlns(fmt_doc_comment(&doc_v));
     }
 
     fmtln!(out, "pub struct {}{} {{", type_name, type_params );
@@ -225,10 +226,10 @@ fn fmt_type_params(params: &[String]) -> String {
   }
 }
 
-fn fmt_doc_comment(doc_str: &str) -> Vec<String> {
+fn fmt_doc_comment(doc_str: &Vec<&str>) -> Vec<String> {
   let mut lines = Vec::new();
   lines.push("/**".to_owned());
-  for s in doc_str.lines() {
+  for s in doc_str {
     let s = s.trim();
     if s != "" {
       lines.push(format!(" * {}", s))
