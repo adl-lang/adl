@@ -1,19 +1,19 @@
 [
     { "search_path": "test1", "modules": ["test1" ] },
-    { "search_path": "test2", "modules": ["test2" ] },
-    { "search_path": "test3", "modules": ["test3" ] },
-    { "search_path": "test4", "modules": ["test4" ] },
-    { "search_path": "test5", "modules": ["test5" ] },
+    { "search_path": "test2", "modules": ["test2" ], "keywords": ["@Doc", "doc comment", "recursive type", "generic"]},
+    { "search_path": "test3", "modules": ["test3" ], "keywords": ["default values"]},
+    { "search_path": "test4", "modules": ["test4" ], "keywords": ["default values", "newtype with default", "custom mappers"] },
+    { "search_path": "test5", "modules": ["test5" ], "keywords": ["union", "mutual recursion"] },
     { "search_path": "test6", "modules": ["test6" ] },
     { "search_path": "test7", "modules": ["test7" ] },
-    { "search_path": "test8", "modules": ["test8" ], "fail": true },
-    { "search_path": "test9", "modules": ["test9" ], "fail": true },
-    { "search_path": "test10", "modules": ["test10" ], "fail": true },
-    { "search_path": "test11", "modules": ["test11" ], "fail": true },
-    { "search_path": "test12", "modules": ["test12" ] },
-    { "search_path": "test13", "modules": ["test13" ] },
-    { "search_path": "test14", "modules": ["test14" ] },
-    { "search_path": "test15", "modules": ["test15" ] },
+    { "search_path": "test8", "modules": ["test8" ], "fail": true, "title": "dup decl name" },
+    { "search_path": "test9", "modules": ["test9" ], "fail": true, "title": "decl version numbers" },
+    { "search_path": "test10", "modules": ["test10" ], "fail": true, "title": "decl version numbers" },
+    { "search_path": "test11", "modules": ["test11" ], "fail": true, "title": "decl version numbers - missing numbers" },
+    { "search_path": "test12", "modules": ["test12" ], "fail": true, "title": "dup field name" },
+    { "search_path": "test13", "modules": ["test13" ], "fail": true, "title": "dup & missing type params" },
+    { "search_path": "test14", "modules": ["test14" ], "keywords": ["language keywords"]},
+    { "search_path": "test15", "modules": ["test15" ], "keywords": ["doc comment", "monomorphic struct", "polymorphic union"] },
     { "search_path": "test16", "modules": ["test16" ] },
     { "search_path": "test16", "modules": ["test16" ] },
     { "search_path": "test16", "modules": ["test2" ] },
@@ -22,8 +22,7 @@
     { "search_path": "test19", "modules": ["test19" ] },
     { "search_path": "test20", "modules": ["test20" ] },
     { "search_path": "test21", "modules": ["test21" ] },
-    { "search_path": "test22", "modules": ["test22a" ] },
-    { "search_path": "test22", "modules": ["test22b" ] },
+    { "search_path": "test22", "modules": ["test22a", "test22b"] },
     { "search_path": "test23", "modules": ["test23" ] },
     { "search_path": "test24", "modules": ["test24" ] },
     { "search_path": "test25", "modules": ["admin" ] },
@@ -32,5 +31,47 @@
     { "search_path": "test27", "modules": ["test27a" ] },
     { "search_path": "test28", "modules": ["test28" ] },
     { "search_path": "test29", "modules": ["test29" ] },
+    { 
+        "search_path": "test30",
+        "modules": ["test30" ],
+        "title": "adlc ✅, cargo run ast ✅"
+    },
+    {
+        "search_path": "test30",
+        "modules": ["test30_01" ],
+        "title": "adlc ❌, cargo run ast ✅",
+        "description": [
+            "\n  error message from adlc",
+            "In module test30_01 :",
+            "Invalid literal for annotation Doc of Doc: expected an object",
+            "  Invalid literal for annotation Doc of SerializedName: expected an object"
+        ]
+    },
+    {
+        "search_path": "test30",
+        "modules": ["test30_02" ],
+        "title": "adlc ❌, cargo run ast ✅",
+        "fail": true,
+        "skip": true,
+        "description": [
+            "\n  cargo run ast currently succeeds, but the output is incorrect.",
+            "The annotations scoped_name moduleName is test30_02, but the v is a string primative"
+        ]
+    },
+    {
+        "search_path": "test30",
+        "modules": ["test30_03" ],
+        "title": "adlc ✅, cargo run ast ✅",
+        "description": ["This one works"]
+    },
+    {
+        "search_path": "test30",
+        "modules": ["test30_04" ],
+        "title": "adlc ✅, cargo run ast ✅",
+        "description": [
+            "This one works - but there an ambiguit as to what the annotation should refer to.",
+            "It is resolved as sys.annotation.SerializedName"
+        ]
+    },
     { "search_path": "demo1", "modules": ["picture" ] }
 ]

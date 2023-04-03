@@ -9,7 +9,6 @@ type Ident = String;
 
 type Annotations = Map<ScopedName,Json>;
 
-
 struct ScopedName
 {
     ModuleName moduleName;
@@ -143,5 +142,16 @@ type Module0 = Module<TypeExpr0>;
 type TypeExpr1 = TypeExpr<TypeRef>;
 type Decl1 = Decl<TypeExpr1>;
 type Module1 = Module<TypeExpr1>;
+
+// Used to output the ADL AST
+type AdlAst = StringMap<AstModule>;
+struct AstModule
+{
+    ModuleName name;
+    Vector<Import> imports;
+    StringMap<Decl<TypeExpr1>> decls;
+    Annotations annotations;
+};
+
 
 };

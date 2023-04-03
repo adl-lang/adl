@@ -52,7 +52,7 @@ impl Resolver {
         self.modules.get(module_name).map(|rm| &rm.module1)
     }
 
-    pub fn get_decl(&mut self, scoped_name: &adlast::ScopedName) -> Option<&Decl1> {
+    pub fn get_decl(&self, scoped_name: &adlast::ScopedName) -> Option<&Decl1> {
         match  self.modules.get(&scoped_name.module_name) {
             None => None,
             Some(rmodule) => return rmodule.decls.get(&scoped_name.name),

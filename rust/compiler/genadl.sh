@@ -16,3 +16,14 @@ adlc rust \
   --searchdir  $ADL_STDLIB_DIR \
   $ADL_STDLIB_DIR/sys/adlast2.adl
 
+ADL_DIR=../../adl
+
+adlc rust \
+  --no-overwrite \
+  --verbose \
+  --generate-transitive \
+  --outputdir ./src \
+  --module adlgen_dev \
+  --runtime-module adlrt \
+  --searchdir  $ADL_DIR/stdlib \
+  $ADL_DIR/adlc_dev/testing_table.adl

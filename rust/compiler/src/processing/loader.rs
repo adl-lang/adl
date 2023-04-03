@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use crate::adlgen::sys::adlast2 as adlast;
 use crate::parser::{convert_error, raw_module};
-use crate::processing::annotations::apply_explicit_annotations;
+use crate::processing::annotations::apply_explicit_annotations_and_serialized_name;
 
 use super::Module0;
 
@@ -82,7 +82,7 @@ fn parse(content: &str) -> Result<Module0, anyhow::Error> {
     let (_, raw_module) = raw_module(inp)
         .finish()
         .map_err(|e| anyhow!(convert_error(inp, e)))?;
-    match apply_explicit_annotations(raw_module) {
+    match apply_explicit_annotations_and_serialized_name(raw_module) {
         Ok(module0) => Ok(module0),
         Err(err) => Err(anyhow::Error::from(err)),
     }

@@ -1,7 +1,7 @@
-use crate::adlgen::sys::adlast2::{self as adlast};
 use crate::adlgen::sys::adlast2::Spanned;
-use std::iter::repeat;
+use crate::adlgen::sys::adlast2::{self as adlast};
 use std::collections::HashMap;
+use std::iter::repeat;
 
 use crate::adlrt::custom::sys::types::map::Map;
 use crate::adlrt::custom::sys::types::maybe::Maybe;
@@ -287,6 +287,11 @@ pub fn merge_annotations(
 
 pub fn docstring_scoped_name() -> adlast::ScopedName {
     adlast::ScopedName::new("sys.annotations".to_owned(), "Doc".to_owned())
+}
+
+pub fn serializedname_scoped_name() -> adlast::ScopedName {
+    // adlast::ScopedName::new("sys.annotations".to_owned(), "SerializedName".to_owned())
+    adlast::ScopedName::new("".to_owned(), "SerializedName".to_owned())
 }
 
 pub fn decl_type(i: Input) -> Res<Input, (&str, adlast::DeclType<TypeExpr0>)> {

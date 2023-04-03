@@ -2,11 +2,55 @@ use std::fmt;
 
 use super::Module0;
 use crate::adlgen::sys::adlast2::{self as adlast};
-use crate::parser::{ExplicitAnnotationRef, RawModule};
+use crate::parser::{serializedname_scoped_name, ExplicitAnnotationRef, RawModule};
+
+fn apply_serialized_name(m0: &mut Module0) {
+    for decl in m0.decls.iter_mut() {
+        // if the match variable isn't '&mut' the the branches need '(ref mut dt)'
+        //eg adlast::DeclType::Struct(ref mut dt)
+        match &mut decl.r#type {
+            adlast::DeclType::Struct(dt) => {
+                for f in dt.fields.iter_mut() {
+                    if let Some(ser_value) = f.annotations.0.remove(&serializedname_scoped_name()) {
+                        // currently there is a bug where a local_name SerializedName can get confussed with sys.annotation.SerializedName
+                        // this is to mitigate this
+                        match ser_value.as_str() {
+                            Some(ser_name) => {
+                                f.serialized_name = String::from(ser_name);
+                            }
+                            None => {
+                                // TODO print warning?
+                            }
+                        }
+                    }
+                }
+            }
+            adlast::DeclType::Union(dt) => {
+                for f in dt.fields.iter_mut() {
+                    if let Some(ser_value) = f.annotations.0.remove(&serializedname_scoped_name()) {
+                        // currently there is a bug where a local_name SerializedName can get confussed with sys.annotation.SerializedName
+                        // this is to mitigate this
+                        match ser_value.as_str() {
+                            Some(ser_name) => {
+                                f.serialized_name = String::from(ser_name);
+                            }
+                            None => {
+                                // TODO print warning?
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
 
 /// Attach explicit annotations to the appropriate nodes in the AST. On failure, returns
 /// the nodes that could not be attached.
-pub fn apply_explicit_annotations(raw_module: RawModule) -> Result<Module0, AnnotationError> {
+pub fn apply_explicit_annotations_and_serialized_name(
+    raw_module: RawModule,
+) -> Result<Module0, AnnotationError> {
     let (mut module0, explicit_annotations) = raw_module;
     let mut unresolved = Vec::new();
 
@@ -32,6 +76,7 @@ pub fn apply_explicit_annotations(raw_module: RawModule) -> Result<Module0, Anno
     }
 
     if unresolved.is_empty() {
+        apply_serialized_name(&mut module0);
         Ok(module0)
     } else {
         Err(AnnotationError::Unresolved(UnresolvedExplicitAnnotations {
@@ -130,7 +175,7 @@ mod tests {
         // We should have 3 explicit annotations to attach
         assert_eq!(rm.1.len(), 3);
 
-        let m0 = super::apply_explicit_annotations(rm).unwrap();
+        let m0 = super::apply_explicit_annotations_and_serialized_name(rm).unwrap();
         assert_eq!(
             m0.annotations.0.get(&mk_scoped_name("", "A")),
             Some(&serde_json::Value::from(1i32))
@@ -183,13 +228,55 @@ module X {
 ";
 
     #[test]
+    fn test_serialized_name() {
+        let rm = raw_module(LocatedSpan::new(SER_ADL)).unwrap().1;
+
+        assert_eq!(rm.1.len(), 1);
+
+        let mut m1 = super::apply_explicit_annotations_and_serialized_name(rm).unwrap();
+
+        super::apply_serialized_name(&mut m1);
+
+        let decl = m1.decls.iter().find(|d| d.name == "Y").unwrap();
+
+        let field_z = if let adlast::DeclType::Struct(s) = &decl.r#type {
+            s.fields.iter().find(|f| f.name == "z")
+        } else {
+            None
+        }
+        .unwrap();
+        assert_eq!(field_z.serialized_name, "a");
+
+        let field_y = if let adlast::DeclType::Struct(s) = &decl.r#type {
+            s.fields.iter().find(|f| f.name == "y")
+        } else {
+            None
+        }
+        .unwrap();
+        assert_eq!(field_y.serialized_name, "b");
+    }
+
+    const SER_ADL: &str = "
+module X {
+  struct Y {
+    @SerializedName \"a\"
+    Word64 z;
+    Int64  y;
+  };
+
+  annotation Y::y SerializedName \"b\";
+}
+
+";
+
+    #[test]
     fn explicit_annotations_bad() {
         let rm = raw_module(LocatedSpan::new(BAD_ADL)).unwrap().1;
 
         // We should have 3 explicit annotations to attach
         assert_eq!(rm.1.len(), 3);
 
-        let err = super::apply_explicit_annotations(rm).unwrap_err();
+        let err = super::apply_explicit_annotations_and_serialized_name(rm).unwrap_err();
 
         // All of which should have failed
         match err {

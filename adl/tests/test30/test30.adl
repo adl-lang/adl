@@ -1,0 +1,19 @@
+// Testing the edge cases the Doc and SerializedName annotations.
+module test30 {
+
+/// Stuff bugs bunny says to Docs -- note the "Docs" not "Doc".
+struct Docs {
+    String quote;
+};
+
+/// Alternate names for serialized TV formats.
+// @Doc "alterate ways of doing a doc comment"
+struct SerializedName {
+    @SerializedName "xzy"
+    String title;
+    String country;
+    Vector<SerializedName> alternates;
+};
+
+
+};

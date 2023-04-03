@@ -333,3 +333,27 @@ pub type TypeExpr1 = TypeExpr<TypeRef>;
 pub type Decl1 = Decl<TypeExpr1>;
 
 pub type Module1 = Module<TypeExpr1>;
+
+pub type AdlAst = std::collections::HashMap<String,AstModule>;
+
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
+pub struct AstModule {
+  pub name: ModuleName,
+
+  pub imports: Vec<Import>,
+
+  pub decls: std::collections::HashMap<String,Decl<TypeExpr1>>,
+
+  pub annotations: Annotations,
+}
+
+impl AstModule {
+  pub fn new(name: ModuleName, imports: Vec<Import>, decls: std::collections::HashMap<String,Decl<TypeExpr1>>, annotations: Annotations) -> AstModule {
+    AstModule {
+      name: name,
+      imports: imports,
+      decls: decls,
+      annotations: annotations,
+    }
+  }
+}
