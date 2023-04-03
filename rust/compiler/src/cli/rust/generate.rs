@@ -69,7 +69,7 @@ fn gen_struct(
     s: &adlast::Struct<TypeExpr1>,
     out: &mut RSFile,
 ) -> anyhow::Result<()> {
-    let efields: Vec<ExtendedField> = s.fields
+    let efields: Vec<ExtendedField<'_>> = s.fields
     .iter()
     .map(|field| ExtendedField::new(field, out))
     .collect();

@@ -52,7 +52,7 @@ pub enum ExplicitAnnotationRef {
 }
 
 // Consumes whitespace and comments, but not docstrings
-pub fn whitespace(i: Input) -> Res<Input, ()>
+pub fn whitespace(i: Input<'_>) -> Res<Input<'_>, ()>
 where
 {
     let mut state = 0;
@@ -96,7 +96,7 @@ where
     }
 }
 
-pub fn docstring(i: Input) -> Res<Input, &str> {
+pub fn docstring(i: Input<'_>) -> Res<Input<'_>, &str> {
     let (i, _) = ws(tag("///"))(i)?;
     let (i, text) = i.split_at_position_complete(|item| {
         let c = item.as_char();
@@ -141,17 +141,17 @@ where
     }
 }
 
-pub fn ident0(i: Input) -> Res<Input, &str> {
+pub fn ident0(i: Input<'_>) -> Res<Input<'_>, &str> {
     let (i, id) = recognize(pair(alpha1, many0_count(alt((alphanumeric1, tag("_"))))))(i)?;
     Ok((i, id.fragment()))
 }
 
-pub fn module_name(i: Input) -> Res<Input, adlast::ModuleName> {
+pub fn module_name(i: Input<'_>) -> Res<Input<'_>, adlast::ModuleName> {
     let (i, m) = recognize(pair(ident0, many0(pair(satisfy(|c| c == '.'), ident0))))(i)?;
     Ok((i, m.to_string()))
 }
 
-pub fn scoped_name(i: Input) -> Res<Input, adlast::ScopedName> {
+pub fn scoped_name(i: Input<'_>) -> Res<Input<'_>, adlast::ScopedName> {
     let (i, (n0, mut ns)) = pair(ws(ident0), many0(preceded(satisfy(|c| c == '.'), ident0)))(i)?;
     ns.insert(0, n0);
     let ns: Vec<String> = ns.iter().map(|n| n.to_string()).collect();
@@ -162,11 +162,11 @@ pub fn scoped_name(i: Input) -> Res<Input, adlast::ScopedName> {
     };
     Ok((i, scoped_name))
 }
-pub fn raw_module(i: Input) -> Res<Input, RawModule> {
+pub fn raw_module(i: Input<'_>) -> Res<Input<'_>, RawModule> {
     context("module", raw_module0)(i)
 }
 
-pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
+pub fn raw_module0(i: Input<'_>) -> Res<Input<'_>, RawModule> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
     let ma = merge_annotations(annotations).map_err(|emsg| custom_error(i, emsg))?;
     let (i, _) = ws(tag("module"))(i)?;
@@ -200,7 +200,7 @@ pub fn raw_module0(i: Input) -> Res<Input, RawModule> {
     Ok((i, (module, explicit_annotations)))
 }
 
-pub fn r#import(i: Input) -> Res<Input, adlast::Import> {
+pub fn r#import(i: Input<'_>) -> Res<Input<'_>, adlast::Import> {
     let (i, _) = wtag("import")(i)?;
     let (i, import) = context(
         "import",
@@ -212,7 +212,7 @@ pub fn r#import(i: Input) -> Res<Input, adlast::Import> {
     Ok((i, import))
 }
 
-pub fn wildcard_import(i: Input) -> Res<Input, adlast::ModuleName> {
+pub fn wildcard_import(i: Input<'_>) -> Res<Input<'_>, adlast::ModuleName> {
     let (i, m) = ws(recognize(pair(
         ident0,
         terminated(many0(pair(satisfy(|c| c == '.'), ident0)), tag(".*")),
@@ -220,14 +220,14 @@ pub fn wildcard_import(i: Input) -> Res<Input, adlast::ModuleName> {
     Ok((i, m[..(m.len() - 2)].to_string()))
 }
 
-pub fn decl_or_annotation(i: Input) -> Res<Input, DeclOrAnnotation> {
+pub fn decl_or_annotation(i: Input<'_>) -> Res<Input<'_>, DeclOrAnnotation> {
     alt((
         map(explicit_annotation, |a| DeclOrAnnotation::DAAnnotation(a)),
         map(decl, |d| DeclOrAnnotation::DADecl(d)),
     ))(i)
 }
 
-pub fn decl(i: Input) -> Res<Input, adlast::Decl<TypeExpr0>> {
+pub fn decl(i: Input<'_>) -> Res<Input<'_>, adlast::Decl<TypeExpr0>> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
     let ma = merge_annotations(annotations).map_err(|emsg| custom_error(i, emsg))?;
     let (i, (name, dtype)) = decl_type(i)?;
@@ -240,7 +240,7 @@ pub fn decl(i: Input) -> Res<Input, adlast::Decl<TypeExpr0>> {
     Ok((i, decl))
 }
 
-pub fn prefix_annotation(i: Input) -> Res<Input, (adlast::ScopedName, serde_json::Value)> {
+pub fn prefix_annotation(i: Input<'_>) -> Res<Input<'_>, (adlast::ScopedName, serde_json::Value)> {
     alt((
         prefix_annotation_,
         map(docstring, |s| {
@@ -249,7 +249,7 @@ pub fn prefix_annotation(i: Input) -> Res<Input, (adlast::ScopedName, serde_json
     ))(i)
 }
 
-pub fn prefix_annotation_(i: Input) -> Res<Input, (adlast::ScopedName, serde_json::Value)> {
+pub fn prefix_annotation_(i: Input<'_>) -> Res<Input<'_>, (adlast::ScopedName, serde_json::Value)> {
     let (i, _) = wtag("@")(i)?;
     let (i, sn) = scoped_name(i)?;
     let (i, ojv) = opt(json)(i)?;
@@ -289,7 +289,7 @@ pub fn docstring_scoped_name() -> adlast::ScopedName {
     adlast::ScopedName::new("sys.annotations".to_owned(), "Doc".to_owned())
 }
 
-pub fn decl_type(i: Input) -> Res<Input, (&str, adlast::DeclType<TypeExpr0>)> {
+pub fn decl_type(i: Input<'_>) -> Res<Input<'_>, (&str, adlast::DeclType<TypeExpr0>)> {
     alt((
         context(
             "struct",
@@ -310,7 +310,7 @@ pub fn decl_type(i: Input) -> Res<Input, (&str, adlast::DeclType<TypeExpr0>)> {
     ))(i)
 }
 
-pub fn struct_(i: Input) -> Res<Input, (&str, adlast::Struct<TypeExpr0>)> {
+pub fn struct_(i: Input<'_>) -> Res<Input<'_>, (&str, adlast::Struct<TypeExpr0>)> {
     let (i, _) = ws(tag("struct"))(i)?;
     cut(|i| {
         let (i, name) = ws(ident0)(i)?;
@@ -325,7 +325,7 @@ pub fn struct_(i: Input) -> Res<Input, (&str, adlast::Struct<TypeExpr0>)> {
     })(i)
 }
 
-pub fn union(i: Input) -> Res<Input, (&str, adlast::Union<TypeExpr0>)> {
+pub fn union(i: Input<'_>) -> Res<Input<'_>, (&str, adlast::Union<TypeExpr0>)> {
     let (i, _) = wtag("union")(i)?;
     cut(|i| {
         let (i, name) = ws(ident0)(i)?;
@@ -340,7 +340,7 @@ pub fn union(i: Input) -> Res<Input, (&str, adlast::Union<TypeExpr0>)> {
     })(i)
 }
 
-pub fn typedef(i: Input) -> Res<Input, (&str, adlast::TypeDef<TypeExpr0>)> {
+pub fn typedef(i: Input<'_>) -> Res<Input<'_>, (&str, adlast::TypeDef<TypeExpr0>)> {
     let (i, _) = wtag("type")(i)?;
     cut(|i| {
         let (i, name) = ws(ident0)(i)?;
@@ -355,7 +355,7 @@ pub fn typedef(i: Input) -> Res<Input, (&str, adlast::TypeDef<TypeExpr0>)> {
     })(i)
 }
 
-pub fn newtype(i: Input) -> Res<Input, (&str, adlast::NewType<TypeExpr0>)> {
+pub fn newtype(i: Input<'_>) -> Res<Input<'_>, (&str, adlast::NewType<TypeExpr0>)> {
     let (i, _) = ws(tag("newtype"))(i)?;
     cut(|i| {
         let (i, name) = ws(ident0)(i)?;
@@ -373,21 +373,21 @@ pub fn newtype(i: Input) -> Res<Input, (&str, adlast::NewType<TypeExpr0>)> {
     })(i)
 }
 
-fn oversion(i: Input) -> Res<Input, Option<u64>> {
+fn oversion(i: Input<'_>) -> Res<Input<'_>, Option<u64>> {
     opt(oversion_)(i)
 }
 
-fn oversion_(i: Input) -> Res<Input, u64> {
+fn oversion_(i: Input<'_>) -> Res<Input<'_>, u64> {
     let (i, _) = ws(tag("#"))(i)?;
     let (i, ds) = ws(digit1)(i)?;
     Ok((i, ds.parse::<u64>().unwrap()))
 }
 
-pub fn field(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
+pub fn field(i: Input<'_>) -> Res<Input<'_>, adlast::Field<TypeExpr0>> {
     context("field", field0)(i)
 }
 
-pub fn field0(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
+pub fn field0(i: Input<'_>) -> Res<Input<'_>, adlast::Field<TypeExpr0>> {
     let (i, annotations) = many0(prefix_annotation)(i)?;
     let ma = merge_annotations(annotations).map_err(|emsg| custom_error(i, emsg))?;
     let (i, texpr) = ws(type_expr)(i)?;
@@ -403,7 +403,7 @@ pub fn field0(i: Input) -> Res<Input, adlast::Field<TypeExpr0>> {
     Ok((i, field))
 }
 
-pub fn explicit_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
+pub fn explicit_annotation(i: Input<'_>) -> Res<Input<'_>, ExplicitAnnotation> {
     preceded(
         wtag("annotation"),
         cut(alt((
@@ -414,7 +414,7 @@ pub fn explicit_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
     )(i)
 }
 
-pub fn explicit_module_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
+pub fn explicit_module_annotation(i: Input<'_>) -> Res<Input<'_>, ExplicitAnnotation> {
     let (i, scoped_name) = ws(scoped_name)(i)?;
     let (i, value) = json(i)?;
     Ok((
@@ -427,7 +427,7 @@ pub fn explicit_module_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
     ))
 }
 
-pub fn explicit_decl_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
+pub fn explicit_decl_annotation(i: Input<'_>) -> Res<Input<'_>, ExplicitAnnotation> {
     let (i, decl_name) = ws(ident0)(i)?;
     let (i, scoped_name) = ws(scoped_name)(i)?;
     let (i, value) = json(i)?;
@@ -441,7 +441,7 @@ pub fn explicit_decl_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
     ))
 }
 
-pub fn explicit_field_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
+pub fn explicit_field_annotation(i: Input<'_>) -> Res<Input<'_>, ExplicitAnnotation> {
     let (i, decl_name) = ws(ident0)(i)?;
     let (i, _) = wtag("::")(i)?;
     let (i, field_name) = ws(ident0)(i)?;
@@ -458,7 +458,7 @@ pub fn explicit_field_annotation(i: Input) -> Res<Input, ExplicitAnnotation> {
     ))
 }
 
-pub fn type_params(i: Input) -> Res<Input, Vec<adlast::Ident>> {
+pub fn type_params(i: Input<'_>) -> Res<Input<'_>, Vec<adlast::Ident>> {
     map(
         opt(delimited(
             wtag("<"),
@@ -469,13 +469,13 @@ pub fn type_params(i: Input) -> Res<Input, Vec<adlast::Ident>> {
     )(i)
 }
 
-pub fn type_expr(i: Input) -> Res<Input, TypeExpr0> {
+pub fn type_expr(i: Input<'_>) -> Res<Input<'_>, TypeExpr0> {
     map(pair(scoped_name, type_expr_params), |(tref, params)| {
         adlast::TypeExpr::new(tref, params)
     })(i)
 }
 
-pub fn type_expr_params(i: Input) -> Res<Input, Vec<TypeExpr0>> {
+pub fn type_expr_params(i: Input<'_>) -> Res<Input<'_>, Vec<TypeExpr0>> {
     map(
         opt(delimited(
             wtag("<"),
@@ -486,7 +486,7 @@ pub fn type_expr_params(i: Input) -> Res<Input, Vec<TypeExpr0>> {
     )(i)
 }
 
-pub fn json(i: Input) -> Res<Input, serde_json::Value> {
+pub fn json(i: Input<'_>) -> Res<Input<'_>, serde_json::Value> {
     alt((
         value(serde_json::Value::Null, ws(tag("null"))),
         value(serde_json::Value::Bool(true), ws(tag("true"))),
@@ -498,11 +498,11 @@ pub fn json(i: Input) -> Res<Input, serde_json::Value> {
     ))(i)
 }
 
-pub fn json_string(i: Input) -> Res<Input, serde_json::Value> {
+pub fn json_string(i: Input<'_>) -> Res<Input<'_>, serde_json::Value> {
     map(json_string0, |s: String| serde_json::Value::from(s))(i)
 }
 
-pub fn json_string0(i: Input) -> Res<Input, String> {
+pub fn json_string0(i: Input<'_>) -> Res<Input<'_>, String> {
     let mut result = String::new();
     let mut esc = false;
 
@@ -541,7 +541,7 @@ pub fn json_string0(i: Input) -> Res<Input, String> {
     }
 }
 
-pub fn json_number(i: Input) -> Res<Input, serde_json::Value> {
+pub fn json_number(i: Input<'_>) -> Res<Input<'_>, serde_json::Value> {
     map(ws(double), |v| {
         if v.floor() == v {
             if v >= 0.0 {
@@ -555,7 +555,7 @@ pub fn json_number(i: Input) -> Res<Input, serde_json::Value> {
     })(i)
 }
 
-pub fn json_object(i: Input) -> Res<Input, serde_json::Value> {
+pub fn json_object(i: Input<'_>) -> Res<Input<'_>, serde_json::Value> {
     let (i, fields) = preceded(
         ws(tag("{")),
         cut(terminated(
@@ -571,7 +571,7 @@ pub fn json_object(i: Input) -> Res<Input, serde_json::Value> {
     Ok((i, serde_json::Value::Object(map)))
 }
 
-pub fn json_array(i: Input) -> Res<Input, serde_json::Value> {
+pub fn json_array(i: Input<'_>) -> Res<Input<'_>, serde_json::Value> {
     map(
         preceded(
             ws(tag("[")),
@@ -595,14 +595,14 @@ where
     Spanned::new(f(sa.value), sa.span)
 }
 
-fn custom_error(i: Input, msg: String) -> nom::Err<VerboseError<Input>> {
+fn custom_error(i: Input<'_>, msg: String) -> nom::Err<VerboseError<Input<'_>>> {
     use log::error;
     error!("{}", msg);
     return nom::Err::Failure(VerboseError::from_error_kind(i, ErrorKind::Tag));
 }
 
 // Lifted from nom source, but with our custom input type.
-pub fn convert_error(input: Input, e: VerboseError<Input>) -> String {
+pub fn convert_error(input: Input<'_>, e: VerboseError<Input<'_>>) -> String {
     let lines: Vec<_> = input.lines().map(String::from).collect();
 
     let mut result = String::new();

@@ -81,7 +81,7 @@ pub enum AnnotationError {
 impl std::error::Error for AnnotationError {}
 
 impl fmt::Display for AnnotationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AnnotationError::Unresolved(urefs) => {
                 urefs.fmt(f)?;
@@ -104,7 +104,7 @@ pub struct UnresolvedExplicitAnnotations {
 impl std::error::Error for UnresolvedExplicitAnnotations {}
 
 impl fmt::Display for UnresolvedExplicitAnnotations {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Unresolved explicit annotations: ")?;
         for uref in &self.unresolved {
             match uref {

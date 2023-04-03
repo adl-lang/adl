@@ -159,7 +159,7 @@ pub fn check_module(m: &Module1) -> Result<()> {
     }
 }
 
-pub fn resolve_module(ctx: &mut ResolveCtx, module0: &Module0) -> Result<Module1> {
+pub fn resolve_module(ctx: &mut ResolveCtx<'_>, module0: &Module0) -> Result<Module1> {
     let decls1 = module0
         .decls
         .iter()
@@ -179,7 +179,7 @@ pub fn resolve_module(ctx: &mut ResolveCtx, module0: &Module0) -> Result<Module1
 }
 
 pub fn resolve_decl(
-    ctx: &mut ResolveCtx,
+    ctx: &mut ResolveCtx<'_>,
     decl0: &adlast::Decl<TypeExpr0>,
 ) -> Result<adlast::Decl<TypeExpr1>> {
     let dtype = match &decl0.r#type {
@@ -199,7 +199,7 @@ pub fn resolve_decl(
 }
 
 pub fn resolve_struct(
-    ctx0: &mut ResolveCtx,
+    ctx0: &mut ResolveCtx<'_>,
     struct0: &adlast::Struct<TypeExpr0>,
 ) -> Result<adlast::DeclType<TypeExpr1>> {
     let ctx = with_type_params(ctx0, &struct0.type_params);
@@ -209,7 +209,7 @@ pub fn resolve_struct(
 }
 
 pub fn resolve_union(
-    ctx0: &mut ResolveCtx,
+    ctx0: &mut ResolveCtx<'_>,
     union0: &adlast::Union<TypeExpr0>,
 ) -> Result<adlast::DeclType<TypeExpr1>> {
     let ctx = with_type_params(ctx0, &union0.type_params);
@@ -219,7 +219,7 @@ pub fn resolve_union(
 }
 
 pub fn resolve_type_alias(
-    ctx0: &mut ResolveCtx,
+    ctx0: &mut ResolveCtx<'_>,
     type0: &adlast::TypeDef<TypeExpr0>,
 ) -> Result<adlast::DeclType<TypeExpr1>> {
     let ctx = with_type_params(ctx0, &type0.type_params);
@@ -229,7 +229,7 @@ pub fn resolve_type_alias(
 }
 
 pub fn resolve_newtype(
-    ctx0: &mut ResolveCtx,
+    ctx0: &mut ResolveCtx<'_>,
     newtype0: &adlast::NewType<TypeExpr0>,
 ) -> Result<adlast::DeclType<TypeExpr1>> {
     let ctx = with_type_params(ctx0, &newtype0.type_params);
@@ -243,7 +243,7 @@ pub fn resolve_newtype(
 }
 
 pub fn resolve_fields(
-    ctx: &ResolveCtx,
+    ctx: &ResolveCtx<'_>,
     fields0: &Vec<adlast::Field<TypeExpr0>>,
 ) -> Result<Vec<adlast::Field<TypeExpr1>>> {
     fields0
@@ -253,7 +253,7 @@ pub fn resolve_fields(
 }
 
 pub fn resolve_field(
-    ctx: &ResolveCtx,
+    ctx: &ResolveCtx<'_>,
     field0: &adlast::Field<TypeExpr0>,
 ) -> Result<adlast::Field<TypeExpr1>> {
     let field1 = adlast::Field::new(
@@ -268,7 +268,7 @@ pub fn resolve_field(
 
 /// This function checks that each annotation refers to an actual declaration
 pub fn resolve_annotations(
-    ctx: &ResolveCtx,
+    ctx: &ResolveCtx<'_>,
     annotations0: &adlast::Annotations,
 ) -> Result<adlast::Annotations> {
     let hm1 = annotations0
@@ -293,7 +293,7 @@ pub fn resolve_annotations(
     Ok(Map(hm1))
 }
 
-pub fn resolve_type_expr(ctx: &ResolveCtx, typeexpr0: &TypeExpr0) -> Result<TypeExpr1> {
+pub fn resolve_type_expr(ctx: &ResolveCtx<'_>, typeexpr0: &TypeExpr0) -> Result<TypeExpr1> {
     let type_ref = ctx.resolve_type_ref(&typeexpr0.type_ref)?;
     let parameters = typeexpr0
         .parameters
@@ -352,7 +352,7 @@ impl<'a> ResolveCtx<'a> {
 }
 
 fn with_type_params<'a>(
-    ctx0: &'a mut ResolveCtx,
+    ctx0: &'a mut ResolveCtx<'_>,
     type_params: &'a Vec<adlast::Ident>,
 ) -> ResolveCtx<'a> {
     ResolveCtx {

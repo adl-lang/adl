@@ -23,7 +23,7 @@ fn parse_whitespace() {
   assert_parse_ws(whitespace(inp(" /// docstring \ny")), "/// docstring \ny");
 }
 
-fn assert_parse_ws<T>(pr: Res<Input, T>, remaining: &str) 
+fn assert_parse_ws<T>(pr: Res<Input<'_>, T>, remaining: &str) 
   where T: std::fmt::Debug+PartialEq {
   if let Ok((i, _)) = pr  {
     assert_eq!(i.fragment(), &remaining);
@@ -307,11 +307,11 @@ fn parse_json() {
     assert_module_file_ok("../../adl/tests/test29/test29.adl");
   }
 
-  fn inp (s: &str) -> Input {
+  fn inp (s: &str) -> Input<'_> {
     LocatedSpan::new(s)
   }
   
-  fn assert_parse_eq<T>(pr: Res<Input, T>, v:T) 
+  fn assert_parse_eq<T>(pr: Res<Input<'_>, T>, v:T) 
     where T: std::fmt::Debug+PartialEq {
     match pr {
       Ok((i,pv)) => {
@@ -325,7 +325,7 @@ fn parse_json() {
     }
   }
 
-  fn assert_parse_eq_2<T>(pr: Res<Input, T>, v:T, remaining: &str) 
+  fn assert_parse_eq_2<T>(pr: Res<Input<'_>, T>, v:T, remaining: &str) 
     where T: std::fmt::Debug+PartialEq {
     match pr {
       Ok((i,pv)) => {

@@ -271,7 +271,7 @@ impl TsGenVisitor<'_> {
     fn gen_rtti(
         &mut self,
         decl: &Decl<TypeExpr<TypeRef>>,
-        payload: &RttiPayload,
+        payload: &RttiPayload<'_>,
     ) -> anyhow::Result<()> {
         // Generation AST holder
         let name = &decl.name;
@@ -403,7 +403,7 @@ impl TsGenVisitor<'_> {
     fn gen_struct(
         &mut self,
         m: &Struct<TypeExpr<TypeRef>>,
-        payload: DeclPayload,
+        payload: DeclPayload<'_>,
     ) -> anyhow::Result<()> {
         let (decl, name) = (payload.decl, &payload.decl.name);
         // let name_up = &title(name);
@@ -481,7 +481,7 @@ impl TsGenVisitor<'_> {
     fn gen_union(
         &mut self,
         m: &Union<TypeExpr<TypeRef>>,
-        payload: DeclPayload,
+        payload: DeclPayload<'_>,
     ) -> anyhow::Result<()> {
         let name = &payload.decl.name;
         // self.lit("// union \n");
