@@ -14,7 +14,12 @@ jobs:
 
     steps:
       - name: Setup Stack
-        uses: timbod7/setup-stack@1f68f27c99094a718fe60a2790550aafd042f729
+        uses: haskell/actions/setup@v2
+        with:
+          ghc-version: '8.8.4' # Exact version of ghc to use
+          # cabal-version: 'latest'. Omitted, but defaults to 'latest'
+          enable-stack: true
+          stack-version: 'latest'
 
       - name: Clone project
         uses: actions/checkout@v2
