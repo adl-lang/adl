@@ -31,10 +31,10 @@ pub struct Int3(pub i64);
 pub type Int4 = i64;
 
 #[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct Int5<X>(pub i64, PhantomData<X>);
+pub struct Int5<X>(pub i64, pub PhantomData<X>);
 
 #[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct Int6<X>(pub i64, PhantomData<X>);
+pub struct Int6<X>(pub i64, pub PhantomData<X>);
 
 pub type String1 = String;
 
@@ -47,10 +47,10 @@ pub struct String3(pub String);
 pub type String4 = String;
 
 #[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct String5<X>(pub String, PhantomData<X>);
+pub struct String5<X>(pub String, pub PhantomData<X>);
 
 #[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
-pub struct String6<X>(pub String, PhantomData<X>);
+pub struct String6<X>(pub String, pub PhantomData<X>);
 
 pub type IntPoint1 = Point<i64>;
 

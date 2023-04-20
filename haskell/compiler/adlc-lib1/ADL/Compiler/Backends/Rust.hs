@@ -249,7 +249,7 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
     render name typeParams typeExprStr phantomFields
       =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (stdTraitsFor te))]
       <> ctemplate "pub struct $1$2($3);"
-          [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> phantomFields)]
+          [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> (map ("pub " <>)  phantomFields))]
     phantomTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))
 
 
