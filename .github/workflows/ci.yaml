@@ -21,13 +21,21 @@ jobs:
       - name: Clone project
         uses: actions/checkout@v2
 
-      - name: Cache dependencies
-        uses: actions/cache@v1
+      - name: Cache ~/.stack
+        uses: actions/cache@v3
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-${{ hashFiles('haskell/stack.yaml') }}
+          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-
+            ${{ runner.os }}-stack-global-
+
+      - name: Cache .stack-work
+        uses: actions/cache@v3
+        with:
+          path: haskell/.stack-work
+          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+          restore-keys: |
+            ${{ runner.os }}-stack-work-
 
       - name: Build and run tests
         run: "cd haskell; stack build --fast adl-compiler; stack test --fast --no-terminal adl-compiler"

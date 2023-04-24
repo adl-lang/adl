@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Setup Stack
@@ -27,13 +27,21 @@ jobs:
       - run: |
           git fetch --prune --unshallow
 
-      - name: Cache dependencies
-        uses: actions/cache@v1
+      - name: Cache ~/.stack
+        uses: actions/cache@v3
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-2-${{ hashFiles('haskell/stack.yaml') }}
+          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-2
+            ${{ runner.os }}-stack-global-
+
+      - name: Cache .stack-work
+        uses: actions/cache@v3
+        with:
+          path: haskell/.stack-work
+          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+          restore-keys: |
+            ${{ runner.os }}-stack-work-
 
       - name: Build compiler and generate zip
         run: "cd haskell; stack build adl-compiler; ./tools/make-dist.hs"
