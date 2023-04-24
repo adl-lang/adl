@@ -243,14 +243,44 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
   phantomFields <- mapM phantomData phantomTypeParams
   rustUse (rustScopedName "serde::Serialize")
   rustUse (rustScopedName "serde::Deserialize")
+  rustUse (rustScopedName "serde::Serializer")
+  rustUse (rustScopedName "serde::Deserializer")
+
   addDeclaration $ renderCommentForDeclaration decl <> render typeName typeParams typeExprStr phantomFields
   where
     render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> Code
     render name typeParams typeExprStr phantomFields
-      =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (stdTraitsFor te))]
+      =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList traits)]
       <> ctemplate "pub struct $1$2($3);"
           [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> (map ("pub " <>)  phantomFields))]
+      <> cline ""
+      <> ctemplate "impl$2 Serialize for $1$2" [name, typeParamsExpr typeParams]
+      <> (if null (typeExprTypeParams te) then mempty else ctemplate "  where $1: Serialize" [typeExprStr])
+      <> cline "{"
+      <> cline "  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>"
+      <> cline "  where"
+      <> cline "      S: Serializer,"
+      <> cline "  {"
+      <> cline "      self.0.serialize(serializer)"
+      <> cline "  }"
+      <> cline "}"
+      <> cline ""
+      <> ctemplate "impl$1 Deserialize<'de> for $2$3" [typeParamsExpr (["'de"] <>typeParams), name, typeParamsExpr typeParams]
+      <> (if null (typeExprTypeParams te) then mempty else ctemplate "  where $1: Deserialize<'de>" [typeExprStr])
+      <> cline "{"
+      <> ctemplate "  fn deserialize<D>(deserializer: D) -> Result<$1$2, D::Error>" [name, typeParamsExpr typeParams]
+      <> cline "  where"
+      <> cline "      D: Deserializer<'de>,"
+      <> cline "  {"
+      <> ctemplate "      let v = $1::deserialize(deserializer)?;" [turboize typeExprStr]
+      <> ctemplate "      Ok($1($2))" [name, T.intercalate ", " (["v"] <> map (\_ -> "PhantomData") phantomFields)]
+      <> cline "  }"
+      <> cline "}"
+    realTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))
     phantomTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))
+    traits = S.difference (stdTraitsFor te) (S.fromList ["Serialize", "Deserialize"])
+    turboize s = let (a,b) = T.breakOn "<" s in if T.null b then a else (a <> "::" <> b) -- hack
+
 
 
 serdeRenameAttribute :: FieldDetails -> Ident -> Code

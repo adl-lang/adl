@@ -1,7 +1,9 @@
 // @generated from adl module test14
 
 use serde::Deserialize;
+use serde::Deserializer;
 use serde::Serialize;
+use serde::Serializer;
 
 #[derive(Clone,Deserialize,PartialEq,Serialize)]
 pub struct Switch {
@@ -36,5 +38,26 @@ pub enum Unsigned {
   Null,
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Eq,Hash,PartialEq)]
 pub struct Factory(pub String);
+
+impl Serialize for Factory
+{
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: Serializer,
+  {
+      self.0.serialize(serializer)
+  }
+}
+
+impl<'de> Deserialize<'de> for Factory
+{
+  fn deserialize<D>(deserializer: D) -> Result<Factory, D::Error>
+  where
+      D: Deserializer<'de>,
+  {
+      let v = String::deserialize(deserializer)?;
+      Ok(Factory(v))
+  }
+}
