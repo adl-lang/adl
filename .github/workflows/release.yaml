@@ -22,7 +22,7 @@ jobs:
           stack-version: 'latest'
 
       - name: Clone project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # Fetch all history so git describe works
       - run: |
           git fetch --prune --unshallow
@@ -47,7 +47,7 @@ jobs:
         run: "cd haskell; stack build adl-compiler; ./tools/make-dist.hs"
 
       - name: Upload dist directory artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: dist-${{ runner.os }}
           path: dist
@@ -58,49 +58,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+    # strip "refs/tags/v"
     - name: Determine version
       id: version
-      run: "echo ::set-output name=version::${GITHUB_REF:11}"
+      run:
+        echo "version=${GITHUB_REF:24}" >> $GITHUB_OUTPUT
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-     
     - name: Fetch macOS build
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
         name: dist-macOS
         path: dist-macOS
 
     - name: Fetch linux build
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
-        name: dist-linux
-        path: dist-linux
+        name: dist-Linux
+        path: dist-Linux
 
-    - name: Upload macOS build
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist-macOS/adl-bindist.zip
-        asset_name: adl-bindist-${{ steps.version.outputs.version }}-osx.zip
-        asset_content_type: application/zip
+    - run: |
+        mv dist-macOS/adl-bindist.zip ./adl-bindist-${{ steps.version.outputs.version }}-osx.zip
+        mv dist-Linux/adl-bindist.zip ./adl-bindist-${{ steps.version.outputs.version }}-linux.zip
+        ls -al
 
-    - name: Upload linux build
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist-linux/adl-bindist.zip
-        asset_name: adl-bindist-${{ steps.version.outputs.version }}-linux.zip
-        asset_content_type: application/zip
+        name: Release rust/compiler ${{ steps.version.outputs.version }}
+        files: |
+          adl-bindist-${{ steps.version.outputs.version }}-osx.zip
+          adl-bindist-${{ steps.version.outputs.version }}-linux.zip
