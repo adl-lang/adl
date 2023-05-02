@@ -85,7 +85,7 @@ jobs:
       id: create_release
       uses: softprops/action-gh-release@v1
       with:
-        name: Release rust/compiler ${{ steps.version.outputs.version }}
+        name: Release ${{ steps.version.outputs.version }}
         files: |
           adl-bindist-${{ steps.version.outputs.version }}-osx.zip
           adl-bindist-${{ steps.version.outputs.version }}-linux.zip
