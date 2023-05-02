@@ -7,7 +7,7 @@ use std::io::ErrorKind;
 use std::path::PathBuf;
 
 use crate::adlgen::adlc::packaging::{
-    EmbeddedPkg, InjectAnnotation, InjectAnnotations, LoaderRefType, LoaderWorkspace,
+    EmbeddedPkg, InjectAnnotation, InjectAnnotations, LoaderRefType, LoaderWorkspace, AdlPackage,
 };
 use crate::adlgen::sys::adlast2::{self as adlast, Module0};
 use crate::parser::{convert_error, raw_module};
@@ -35,7 +35,7 @@ pub trait AdlLoader {
     fn load(
         &mut self,
         module_name: &adlast::ModuleName,
-    ) -> Result<Option<(Module0, Option<InjectAnnotations>)>, anyhow::Error>;
+    ) -> Result<Option<(Module0,Option<AdlPackage>, Option<InjectAnnotations>)>, anyhow::Error>;
     fn debug(&self);
 }
 
@@ -59,7 +59,7 @@ impl AdlLoader for WorkspaceLoader {
     fn load(
         &mut self,
         module_name: &adlast::ModuleName,
-    ) -> Result<Option<(Module0, Option<InjectAnnotations>)>, anyhow::Error> {
+    ) -> Result<Option<(Module0,Option<AdlPackage>, Option<InjectAnnotations>)>, anyhow::Error> {
         // if let Some(embedded_sys_loader_ref) = &self.workspace.embedded_sys_loader.0 {
         //     if let Some(mut module) = self.embedded.load(module_name)? {
         //         if module_name != "sys.annotations" {
@@ -115,7 +115,7 @@ impl AdlLoader for WorkspaceLoader {
             let module0 = loader.load(module_name);
             match module0 {
                 Ok(module2) => {
-                    if let Some((mut module1, _)) = module2.clone() {
+                    if let Some((mut module1, _, _)) = module2.clone() {
                         for an in &pkg.loader_inject_annotate {
                             match an {
                                 InjectAnnotation::Module(man) => {
@@ -138,7 +138,7 @@ impl AdlLoader for WorkspaceLoader {
                                 }
                             }
                         }
-                        return Ok(Some((module1, Some(pkg.resolver_inject_annotate.clone()))));
+                        return Ok(Some((module1, Some(pkg.pkg.clone()), Some(pkg.resolver_inject_annotate.clone()))));
                     } else {
                         // return Ok(None);
                         // return Err(anyhow!("Module not found '{}'", module_name));
@@ -173,7 +173,7 @@ impl AdlLoader for MultiLoader {
     fn load(
         &mut self,
         module_name: &adlast::ModuleName,
-    ) -> Result<Option<(Module0, Option<InjectAnnotations>)>, anyhow::Error> {
+    ) -> Result<Option<(Module0,Option<AdlPackage>, Option<InjectAnnotations>)>, anyhow::Error> {
         for loader in &mut self.loaders {
             if let Some(module) = loader.load(module_name)? {
                 return Ok(Some(module));
@@ -195,24 +195,32 @@ impl AdlLoader for EmbeddedStdlibLoader {
     fn load(
         &mut self,
         module_name: &adlast::ModuleName,
-    ) -> Result<Option<(Module0, Option<InjectAnnotations>)>, anyhow::Error> {
-        match crate::adlstdlib::get_stdlib(self.pkg.clone(), module_name, "") {
-            Some(data) => match std::str::from_utf8(data.as_ref()) {
-                Ok(content) => return parse(&content).map(|m| Some((m, None))),
+    ) -> Result<Option<(Module0,Option<AdlPackage>, Option<InjectAnnotations>)>, anyhow::Error> {
+        if let Some((pkg, data)) = crate::adlstdlib::get_stdlib(&self.pkg, module_name, "") {
+            match std::str::from_utf8(data.as_ref()) {
+                Ok(content) => return parse(&content).map(|m| Some((m, Some(pkg), None))),
                 Err(err) => return Err(anyhow::Error::from(err)),
-            },
-            None => return Ok(None),
+            }
+        } else {
+            Ok(None)
         }
     }
 }
 
 pub struct DirTreeLoader {
     root: PathBuf,
+    // pkg:Option<AdlPackage>,
 }
 
 impl DirTreeLoader {
-    pub fn new(root: PathBuf) -> Self {
-        DirTreeLoader { root }
+    pub fn new(
+        root: PathBuf, 
+        // pkg:Option<AdlPackage>,
+    ) -> Self {
+        DirTreeLoader { 
+            root,
+            // pkg,
+        }
     }
 }
 
@@ -224,7 +232,7 @@ impl AdlLoader for DirTreeLoader {
     fn load(
         &mut self,
         module_name: &adlast::ModuleName,
-    ) -> Result<Option<(Module0, Option<InjectAnnotations>)>, anyhow::Error> {
+    ) -> Result<Option<(Module0,Option<AdlPackage>, Option<InjectAnnotations>)>, anyhow::Error> {
         let mut path = self.root.clone();
         for mp in module_name.split(".") {
             path.push(mp);
@@ -239,7 +247,7 @@ impl AdlLoader for DirTreeLoader {
             Ok(content) => content,
         };
         log::info!("loaded {} from {}", module_name, path.display());
-        parse(&content).map(|m| Some((m, None)))
+        parse(&content).map(|m| Some((m, None, None)))
     }
 }
 

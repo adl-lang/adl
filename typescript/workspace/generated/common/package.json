@@ -10,7 +10,7 @@
     "@adl-lang/sys": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^4.9.3",
-    "tsconfig": "workspace:*"
+    "tsconfig": "workspace:*",
+    "typescript": "^4.9.3"
   }
 }

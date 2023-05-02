@@ -6,17 +6,22 @@ use serde::Deserialize;
 
 use crate::{
     adlgen::adlc::{
-        packaging::{GenOutput, ModuleSrc, ReferenceableScopeOption, TsGenRuntime, DirectoryRef},
+        packaging::{DirectoryRef, GenOutput, ModuleSrc, ReferenceableScopeOption, TsGenRuntime},
         testing_table::TestFilesMetaData,
     },
-    processing::loader::loader_from_search_paths, cli::formatter,
+    cli::formatter,
+    processing::loader::loader_from_search_paths,
 };
 
 use super::*;
 
 #[test]
 fn generate_ts_from_test_files() {
-    let _ = env_logger::builder().is_test(true).format(formatter).filter_level(log::LevelFilter::Info).try_init();
+    let _ = env_logger::builder()
+        .is_test(true)
+        .format(formatter)
+        .filter_level(log::LevelFilter::Info)
+        .try_init();
 
     let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     d.push("../../adl/tests/testing_table.json");
@@ -78,6 +83,8 @@ fn generate_ts_from_test_files() {
                 let ts_opts = TypescriptGenOptions {
                     npm_pkg_name: "testing".to_string(),
                     npm_version: "0.0.0".to_string(),
+                    scripts: TypescriptGenOptions::def_scripts(),
+                    tsconfig: TypescriptGenOptions::def_tsconfig(),
                     extra_dependencies: TypescriptGenOptions::def_extra_dependencies(),
                     extra_dev_dependencies: TypescriptGenOptions::def_extra_dev_dependencies(),
                     outputs: Some(crate::adlgen::adlc::packaging::OutputOpts::Gen(GenOutput {
@@ -139,7 +146,18 @@ fn generate_ts_from_test_files() {
                 // TODO consider failed.
                 // t.fail
                 let dep_adl_pkgs = vec![];
-                match tsgen(false, false, loader_from_search_paths(&search_path), &ts_opts, None, AdlPackageRefType::Dir(DirectoryRef{ path: ".".to_string() }), dep_adl_pkgs) {
+                match tsgen(
+                    false,
+                    false,
+                    loader_from_search_paths(&search_path),
+                    None,
+                    &ts_opts,
+                    None,
+                    AdlPackageRefType::Dir(DirectoryRef {
+                        path: ".".to_string(),
+                    }),
+                    dep_adl_pkgs,
+                ) {
                     Ok(_) => {
                         println!(
                             "{} {} - ts gen output;  {}",

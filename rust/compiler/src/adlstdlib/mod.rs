@@ -3,9 +3,10 @@ use std::{borrow::Cow, path::PathBuf};
 use anyhow::anyhow;
 
 use rust_embed::{EmbeddedFile, RustEmbed};
+use serde::Deserialize;
 
 use crate::{
-    adlgen::{adlc::packaging::EmbeddedPkg, sys::adlast2::ModuleName},
+    adlgen::{adlc::packaging::{EmbeddedPkg, AdlPackage}, sys::adlast2::ModuleName},
     cli::StdlibOpt,
 };
 
@@ -29,7 +30,7 @@ pub fn get_file_names(em: EmbeddedPkg) -> Vec<PathBuf> {
 //     path.to_str().unwrap().to_string()
 // }
 
-pub fn get_adl_pkg(em: EmbeddedPkg) -> Option<Cow<'static, [u8]>> {
+pub fn get_adl_pkg(em: &EmbeddedPkg) -> Option<Cow<'static, [u8]>> {
     let d = match em {
         EmbeddedPkg::Sys => StdlibAsset::get("adl.pkg.json"),
         EmbeddedPkg::Adlc => AdlcAsset::get("adl.pkg.json"),
@@ -37,19 +38,23 @@ pub fn get_adl_pkg(em: EmbeddedPkg) -> Option<Cow<'static, [u8]>> {
     d.map(|d| d.data)
 }
 
-pub fn get_stdlib(em: EmbeddedPkg, mn: &ModuleName, ext: &str) -> Option<Cow<'static, [u8]>> {
+pub fn get_stdlib(em: &EmbeddedPkg, mn: &ModuleName, ext: &str) -> Option<(AdlPackage, Cow<'static, [u8]>)> {
     let mut fname = mn.replace(".", "/");
     fname.push_str(".adl");
     if ext != "" {
         fname.push_str("-");
         fname.push_str(ext);
     }
+    let pkg_content = get_adl_pkg(em);
+    let content = std::str::from_utf8(pkg_content.as_ref().unwrap()).unwrap();
+    let de = &mut serde_json::Deserializer::from_str(&content);
+    let pkg = AdlPackage::deserialize(de).unwrap();
     let get = match em {
         EmbeddedPkg::Sys => StdlibAsset::get,
         EmbeddedPkg::Adlc => AdlcAsset::get,
     };
     if let Some(f) = get(fname.as_str()) {
-        return Some(f.data);
+        return Some((pkg, f.data));
     };
     None
 }

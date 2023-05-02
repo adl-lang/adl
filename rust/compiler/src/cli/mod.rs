@@ -122,7 +122,7 @@ pub fn run_cli() -> i32 {
                 capitalize_type_names: opts.capitalize_type_names,
             };
             let empty = vec![];
-            tsgen::tsgen(false, false, loader, &ts_opts, None, AdlPackageRefType::Dir(DirectoryRef{ path: ".".to_string() }), empty)
+            tsgen::tsgen(false, false, loader, None, &ts_opts, None, AdlPackageRefType::Dir(DirectoryRef{ path: ".".to_string() }), empty)
         }
         Command::WriteStdlib(opts) => crate::adlstdlib::dump_stdlib(&opts),
     };
@@ -309,9 +309,9 @@ pub struct TsOpts {
     #[arg(value_name = "ADLMODULE")]
     pub modules: Vec<String>,
 
-    /// When creating the path for output ts files delete the first part of the module name
-    #[arg(long, default_value_t = true)]
-    pub strip_first: bool,
+    // /// When creating the path for output ts files delete the first part of the module name
+    // #[arg(long, default_value_t = true)]
+    // pub strip_first: bool,
 
     /// If set capitalizes branch (field) name in the exported interfaces (used to generate backward code).
     ///

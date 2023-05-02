@@ -1,6 +1,5 @@
 {
     "adlc": "0.0.0",
-    "use_embedded_sys_loader": true,
     "runtimes": [
         {
             "ts_runtime": {
@@ -9,10 +8,13 @@
             }
         }
     ],
-    "embedded_sys_loader": "nothing",
     "use": [
         {
-            "path": "./adlc",
+            "ref": {
+                "dir": {
+                    "path": "./adlc"
+                }
+            },
             "ts_opts": {
                 "npm_pkg_name": "@adl-lang/adlc",
                 "extra_dev_dependencies": {
@@ -32,7 +34,11 @@
             }
         },
         {
-            "path": "./tests/test31/lib",
+            "ref": {
+                "dir": {
+                    "path": "./tests/test31/lib"
+                }
+            },
             "ts_opts": {
                 "npm_pkg_name": "@adl-lang/common",
                 "extra_dev_dependencies": {
@@ -45,15 +51,18 @@
                 "outputs": {
                     "gen": {
                         "output_dir": "../generated2/common",
-                        "manifest": "../generated2/common/.adl-manifest",
-                        "strip_first": false
+                        "manifest": "../generated2/common/.adl-manifest"
                     }
                 },
                 "include_resolver": false
             }
         },
         {
-            "path": "./stdlib",
+            "ref": {
+                "dir": {
+                    "path": "./stdlib"
+                }
+            },
             "ts_opts": {
                 "npm_pkg_name": "@adl-lang/sys",
                 "extra_dev_dependencies": {
@@ -73,7 +82,11 @@
             }
         },
         {
-            "path": "./tests/test31/proj",
+            "ref": {
+                "dir": {
+                    "path": "./tests/test31/proj"
+                }
+            },
             "ts_opts": {
                 "npm_pkg_name": "@adl-lang/protoclient",
                 "extra_dependencies": {

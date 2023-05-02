@@ -42,7 +42,7 @@ pub(crate) fn workspace(opts: &super::GenOpts) -> Result<(), anyhow::Error> {
                 }
                 return false;
             }).collect();
-            tsgen::tsgen(true, true, loader, &opts, Some(wrk_root), pkg.p_ref.r#ref.clone(), deps)?;
+            tsgen::tsgen(!opts.generate_transitive, true, loader, Some(pkg.pkg.clone()), &opts, Some(wrk_root), pkg.p_ref.r#ref.clone(), deps)?;
             tsgen::gen_npm_package(pkg, &wrk1.1)?;
         }
     }
@@ -89,6 +89,7 @@ fn payload1_to_loader_ref(payload1: &Payload1) -> Result<LoaderRef, anyhow::Erro
         },
         loader_inject_annotate: vec![],
         resolver_inject_annotate: vec![],
+        pkg: payload1.pkg.clone(),
     };
 
     if let Some(ts_opts) = &payload1.p_ref.ts_opts {
@@ -243,7 +244,7 @@ impl AdlPackager for AdlPackageRef {
                 (format!("{:?}", p_path), content)
             }
             AdlPackageRefType::Embedded(e) => {
-                if let Some(c) = get_adl_pkg(e.alias.clone()) {
+                if let Some(c) = get_adl_pkg(&e.alias) {
                     let x = std::str::from_utf8(c.as_ref()).map_err(|err| {
                         anyhow!(
                             "Error converting adl.pkg.json from embedded pkg {:?}. err: {}",

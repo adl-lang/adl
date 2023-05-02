@@ -14,7 +14,7 @@ importers:
   generated/common:
     dependencies:
       '@adl-lang/runtime':
-        specifier: workspace:*
+        specifier: ^1.0.0
         version: link:../runtime
       '@adl-lang/sys':
         specifier: workspace:*
@@ -33,7 +33,7 @@ importers:
         specifier: workspace:*
         version: link:../common
       '@adl-lang/runtime':
-        specifier: workspace:*
+        specifier: ^1.0.0
         version: link:../runtime
       '@adl-lang/sys':
         specifier: workspace:*
@@ -65,7 +65,7 @@ importers:
   generated/sys:
     dependencies:
       '@adl-lang/runtime':
-        specifier: workspace:*
+        specifier: ^1.0.0
         version: link:../runtime
       base64-js:
         specifier: ^1.5.1

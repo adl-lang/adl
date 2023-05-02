@@ -208,7 +208,7 @@ impl TsDefaultValue<'_> {
         match &type_expr.type_ref {
             TypeRef::ScopedName(sn) => {
                 let resolver = self.ctx.resolver;
-                if let Some(m_remote) = resolver.get_module(&sn.module_name) {
+                if let Some((m_remote, _)) = resolver.get_module(&sn.module_name) {
                     if let Some(decl) = resolver.get_decl(sn) {
                         let dvg = TsDefaultValue {
                             ctx: &ResolverModule {

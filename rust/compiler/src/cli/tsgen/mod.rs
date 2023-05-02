@@ -15,8 +15,8 @@ use genco::fmt::{self, Indentation};
 use genco::prelude::*;
 
 use crate::adlgen::adlc::packaging::{
-    AdlPackageRefType, AdlWorkspace, ModuleSrc, NpmPackage, Payload1, TsRuntimeOpt,
-    TsStyle, TsWriteRuntime, TypescriptGenOptions,
+    AdlPackageRefType, AdlWorkspace, ModuleSrc, NpmPackage, Payload1, TsRuntimeOpt, TsStyle,
+    TsWriteRuntime, TypescriptGenOptions, AdlPackage,
 };
 use crate::adlgen::sys::adlast2::Module1;
 use crate::adlgen::sys::adlast2::{self as adlast};
@@ -114,6 +114,7 @@ pub fn tsgen(
     strip_first: bool,
     packageable: bool,
     loader: Box<dyn AdlLoader>,
+    pkg: Option<AdlPackage>,
     opts: &TypescriptGenOptions,
     wrk_root: Option<PathBuf>,
     r#ref: AdlPackageRefType,
@@ -145,7 +146,7 @@ pub fn tsgen(
 
     let _parent = outputdir.file_name().unwrap().to_str().unwrap().to_string();
 
-    let modules: Vec<Module1> = resolver
+    let modules: Vec<(Module1,Option<&AdlPackage>)> = resolver
         .get_module_names()
         .into_iter()
         .map(|mn| resolver.get_module(&mn).unwrap())
@@ -153,12 +154,14 @@ pub fn tsgen(
 
     let index_map = &mut HashMap::new();
 
-    for m in &modules {
+    for (m,pkg2) in &modules {
         let does_contain = module_names.contains(&m.name);
         if opts.generate_transitive || does_contain {
             let path = path_from_module_name(strip_first, m.name.to_owned());
 
-            utils::collect_indexes(path.clone(), index_map);
+            if pkg2.eq(&pkg.as_ref()) {
+                utils::collect_indexes(path.clone(), index_map);
+            }
 
             let path = path.as_path();
             // if None == path.components().next() {
@@ -281,7 +284,7 @@ pub fn gen_npm_package(payload: &Payload1, wrk1: &AdlWorkspace<Payload1>) -> any
         }
         TsRuntimeOpt::Generate(_) => {}
     };
-    for (k,v) in &opts.scripts {
+    for (k, v) in &opts.scripts {
         npm_package.scripts.entry(k.clone()).or_insert(v.clone());
     }
 
@@ -357,7 +360,7 @@ pub fn gen_npm_package(payload: &Payload1, wrk1: &AdlWorkspace<Payload1>) -> any
     if let Some(ts_config) = &opts.tsconfig {
         let content = serde_json::to_string_pretty(ts_config)?;
         writer.write(Path::new("tsconfig.json"), content)?;
-        log::info!("generated {:?}", outputdir.clone().join("tsconfig.json"));    
+        log::info!("generated {:?}", outputdir.clone().join("tsconfig.json"));
     }
 
     Ok(())
@@ -438,27 +441,29 @@ fn gen_resolver(
     generate_transitive: bool,
     runtime_opts: &TsRuntimeOpt,
     resolver: &Resolver,
-    modules: &Vec<Module1>,
+    modules: &Vec<(Module1, Option<&AdlPackage>)>,
     adl_pkg_resolvers: HashSet<String>,
 ) -> anyhow::Result<()> {
     let mut local_keys = vec![];
     let m_imports: Vec<js::Import> = modules
         .iter()
-        .map(|m| {
-            let npm_pkg2 = if let Some(m2) = resolver.get_module(&m.name) {
+        .map(|(m, _)| {
+            let npm_pkg2 = if let Some((m2,_)) = resolver.get_module(&m.name) {
                 get_npm_pkg(&m2)
             } else {
                 None
             };
 
-            if let Some(npm_pkg2) = &npm_pkg2 {
-                if adl_pkg_resolvers.contains(npm_pkg2) {
-                    let alias = npm_pkg2
-                        .replace("@", "")
-                        .replace("-", "_")
-                        .replace("/", "_");
-                    return js::import(format!("{}/resolver", npm_pkg2), "ADL_local")
-                        .with_alias(alias);
+            if !generate_transitive {
+                if let Some(npm_pkg2) = &npm_pkg2 {
+                    if adl_pkg_resolvers.contains(npm_pkg2) {
+                        let alias = npm_pkg2
+                            .replace("@", "")
+                            .replace("-", "_")
+                            .replace("/", "_");
+                        return js::import(format!("{}/resolver", npm_pkg2), "ADL_local")
+                            .with_alias(alias);
+                    }
                 }
             }
             if !generate_transitive && npm_pkg2 != None {
@@ -469,7 +474,7 @@ fn gen_resolver(
                     return js::import(npm_pkg_import(npm_pkg2, m.name.clone()), "_AST_MAP")
                         .with_alias(alias);
                 } else {
-                    let name = rel_import_in_resolver(m);
+                    let name = rel_import_in_resolver(!generate_transitive, m);
                     let alias = m.name.replace(".", "_");
                     local_keys.push(alias.clone());
                     return js::import(format!("./{}", name), "_AST_MAP").with_alias(alias);
@@ -481,7 +486,7 @@ fn gen_resolver(
                     return js::import(format!("./{}", m.name.replace(".", "/")), "_AST_MAP")
                         .with_alias(alias);
                 } else {
-                    let name = rel_import_in_resolver(m);
+                    let name = rel_import_in_resolver(!generate_transitive, m);
                     let alias = m.name.replace(".", "_");
                     local_keys.push(alias.clone());
                     return js::import(format!("./{}", name), "_AST_MAP").with_alias(alias);
@@ -506,7 +511,11 @@ fn gen_resolver(
     };
     let gened = "/* @generated from adl */";
 
-    let mut dep_keys: Vec<&String> = adl_pkg_resolvers.iter().collect();
+    let mut dep_keys: Vec<&String> = if !generate_transitive {
+        adl_pkg_resolvers.iter().collect()
+    } else {
+        vec![]
+    };
     dep_keys.sort();
     local_keys.sort();
     quote_in! { *t =>
@@ -521,7 +530,7 @@ fn gen_resolver(
     };$['\r']
 
     export const ADL: { [key: string]: ScopedDecl } = {$['\r']
-      ...ADL_local,
+      ...ADL_local,$['\r']
       $(for m in dep_keys => ...$(m.replace("@", "").replace("-", "_").replace("/", "_")),$['\r'])
     };$['\r']
 
@@ -531,9 +540,11 @@ fn gen_resolver(
     Ok(())
 }
 
-fn rel_import_in_resolver(m: &adlast::Module<adlast::TypeExpr<adlast::TypeRef>>) -> String {
+fn rel_import_in_resolver(strip_first: bool, m: &adlast::Module<adlast::TypeExpr<adlast::TypeRef>>) -> String {
     let mut it = m.name.split(".").into_iter().peekable();
-    it.next();
+    if strip_first {
+        it.next();
+    }
     let mut name = String::new();
     while let Some(n) = it.next() {
         name.push_str(n);

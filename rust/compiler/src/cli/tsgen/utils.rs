@@ -100,7 +100,7 @@ pub fn npm_pkg_import(npm_pkg2: String, module_name: String) -> String {
     path
 }
 
-pub fn rel_import(same_adl_pkg: bool, src: &String, dst: &String) -> String {
+pub fn rel_import(strip_first:bool, same_adl_pkg: bool, src: &String, dst: &String) -> String {
     let src_v: Vec<&str> = src.split(['.']).collect();
     let src_v = &src_v[..src_v.len() - 1];
     let dst_v0: Vec<&str> = dst.split(['.']).collect();
@@ -111,7 +111,11 @@ pub fn rel_import(same_adl_pkg: bool, src: &String, dst: &String) -> String {
     let mut import = String::new();
     if !same_adl_pkg {
         if src_v.len() == 0 {
-            import.push_str("../");
+            if strip_first {
+                import.push_str("../");
+            } else {
+                import.push_str("./");
+            }
         } else {
             while let Some(_) = &src_i.next() {
                 import.push_str("../");
@@ -130,7 +134,11 @@ pub fn rel_import(same_adl_pkg: bool, src: &String, dst: &String) -> String {
         return import;
     }
     if src_v.len() == 0 && dst_v.len() != 0 {
-        import.push_str("..");
+        if strip_first {
+            import.push_str("..");
+        } else {
+            import.push_str(".");
+        }
         dst_i.next();
         while let Some(del) = &dst_i.next() {
             import.push_str("/");
@@ -349,7 +357,7 @@ mod tests {
 
         for t in tests {
             assert_eq!(
-                rel_import(t.1, &t.2.to_string(), &t.3.to_string()),
+                rel_import(true, t.1, &t.2.to_string(), &t.3.to_string()),
                 t.4,
                 "{}",
                 t.0

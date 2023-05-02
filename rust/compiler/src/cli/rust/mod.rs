@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use anyhow::anyhow;
 
+use crate::adlgen::adlc::packaging::AdlPackage;
 use crate::adlgen::sys::adlast2::{self as adlast};
 use crate::processing::loader::loader_from_search_paths;
 use crate::processing::resolver::{Module1, Resolver};
@@ -23,7 +24,7 @@ pub fn rust(opts: &RustOpts) -> anyhow::Result<()> {
             Err(e) => return Err(anyhow!("Failed to load module {}: {:?}", m, e)),
         }
     }
-    let modules: Vec<Module1> = resolver
+    let modules: Vec<(Module1, Option<&AdlPackage>)> = resolver
         .get_module_names()
         .into_iter()
         .map(|mn| resolver.get_module(&mn).unwrap())
@@ -34,7 +35,7 @@ pub fn rust(opts: &RustOpts) -> anyhow::Result<()> {
         opts.output.manifest.clone(),
     )?;
 
-    for m in modules {
+    for (m,_) in modules {
         let path = path_from_module_name(opts, m.name.to_owned());
         let code = gen_module(&m).unwrap();
         writer.write(path.as_path(), code)?;

@@ -6,11 +6,11 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@adl-lang/runtime": "^1.0.0",
-    "base64-js": "^1.5.1"
+    "base64-js": "^1.5.1",
+    "@adl-lang/runtime": "^1.0.0"
   },
   "devDependencies": {
-    "typescript": "^4.9.3",
-    "tsconfig": "workspace:*"
+    "tsconfig": "workspace:*",
+    "typescript": "^4.9.3"
   }
 }

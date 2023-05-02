@@ -23,7 +23,7 @@ pub fn ast(opts: &AstOpts) -> anyhow::Result<()> {
     let mut adlast = AdlAst::new();
 
     resolver.get_module_names().iter().for_each(|mn| {
-        let m = resolver.get_module(&mn).unwrap();
+        let (m, _) = resolver.get_module(&mn).unwrap();
         let decls: HashMap<_, _> = m.decls.iter().map(|d| (d.name.clone(), d.clone())).collect();
         let m_ast = AstModule {
             name: m.name.clone(),

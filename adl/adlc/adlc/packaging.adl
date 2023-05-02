@@ -64,6 +64,7 @@ struct TsWriteRuntime {
 /// The struct in AdlWorkspace::use required by the WorkspaceLoader
 struct LoaderRef {
     LoaderRefType ref;
+    AdlPackage pkg;
     InjectAnnotations loader_inject_annotate = [];
     InjectAnnotations resolver_inject_annotate = [];
 };

@@ -206,6 +206,8 @@ pub struct LoaderRef {
   #[serde(rename="ref")]
   pub r#ref: LoaderRefType,
 
+  pub pkg: AdlPackage,
+
   #[serde(default="LoaderRef::def_loader_inject_annotate")]
   pub loader_inject_annotate: InjectAnnotations,
 
@@ -214,9 +216,10 @@ pub struct LoaderRef {
 }
 
 impl LoaderRef {
-  pub fn new(r#ref: LoaderRefType) -> LoaderRef {
+  pub fn new(r#ref: LoaderRefType, pkg: AdlPackage) -> LoaderRef {
     LoaderRef {
       r#ref: r#ref,
+      pkg: pkg,
       loader_inject_annotate: LoaderRef::def_loader_inject_annotate(),
       resolver_inject_annotate: LoaderRef::def_resolver_inject_annotate(),
     }

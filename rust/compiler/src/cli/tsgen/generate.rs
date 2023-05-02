@@ -370,7 +370,7 @@ impl TsGenVisitor<'_> {
         scoped_name: &ScopedName,
         params: &Vec<TypeExpr<TypeRef>>,
     ) -> Result<(bool, String), String> {
-        let npm_pkg2 = if let Some(m2) = self.resolver.get_module(&scoped_name.module_name) {
+        let npm_pkg2 = if let Some((m2,_)) = self.resolver.get_module(&scoped_name.module_name) {
             get_npm_pkg(&m2)
         } else {
             None
@@ -381,8 +381,7 @@ impl TsGenVisitor<'_> {
                 npm_pkg_import(npm_pkg2.unwrap(), scoped_name.module_name.clone())
             } else {
                 let same_pkg = npm_pkg2 == self.npm_pkg.clone();
-
-                rel_import(same_pkg, &self.module.name, &scoped_name.module_name)
+                rel_import(!self.opts.generate_transitive, same_pkg, &self.module.name, &scoped_name.module_name)
             };
             let i_name = scoped_name
                 .module_name

@@ -2,6 +2,7 @@ use anyhow::anyhow;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+use crate::adlgen::adlc::packaging::AdlPackage;
 use crate::adlgen::adlc::packaging::InjectAnnotation;
 use crate::adlgen::adlc::packaging::InjectAnnotations;
 use crate::adlgen::sys::adlast2::{self as adlast, ScopedName};
@@ -27,6 +28,7 @@ pub struct Resolver {
 #[derive(Debug)]
 pub struct ResolvedModule {
     module1: Module1,
+    pkg: Option<AdlPackage>,
     inject_annotions: Option<InjectAnnotations>,
     decls: HashMap<String, Decl1>,
 }
@@ -52,7 +54,7 @@ impl Resolver {
         self.modules.get(module_name)
     }
 
-    pub fn get_module(&self, module_name: &ModuleName) -> Option<Module1> {
+    pub fn get_module(&self, module_name: &ModuleName) -> Option<(Module1, Option<&AdlPackage>)> {
         let rm0 = self.modules.get(module_name);
         if let Some(rm1) = rm0 {
             let inject_annotions = &rm1.inject_annotions;
@@ -63,15 +65,15 @@ impl Resolver {
                     for an in inj {
                         match an {
                             InjectAnnotation::Module(man) => {
-                                ann.insert(man.0.0.clone(), man.0.1.clone());
-                            },
+                                ann.insert(man.0 .0.clone(), man.0 .1.clone());
+                            }
                         }
                     }
                     module1.annotations = Map(ann);
-                    return Some(module1);
+                    return Some((module1, rm1.pkg.as_ref()));
                 }
             }
-            return Some(rm1.module1.to_owned());
+            return Some((rm1.module1.to_owned(), rm1.pkg.as_ref()));
         } else {
             return None;
         }
@@ -98,18 +100,26 @@ impl Resolver {
                 let inp1 = self.loader.load(inp).unwrap().unwrap().0;
                 eprintln!("IN PROGRESS {} IMPORTS {:?}", inp, inp1);
             }
-            return Err(anyhow!("Circular reference loop including module_name: '{}' in_progress: {:?}", module_name, in_progress));
+            return Err(anyhow!(
+                "Circular reference loop including module_name: '{}' in_progress: {:?}",
+                module_name,
+                in_progress
+            ));
         }
 
         in_progress.insert(module_name.clone());
 
-        let mut module0 = self
-            .loader
-            .load(module_name)?
-            .ok_or_else(|| {
-                self.loader.debug();
-                anyhow!("Module {} not found", module_name)
-            })?;
+        let mut module0 = match self.loader.load(module_name) {
+            Ok(x) => match x {
+                Some(y) => y,
+                None => return Err(anyhow!("Module {} not found", module_name)),
+            },
+            Err(er) => return Err(anyhow!("Module {} not found with error {:?}", module_name, er.to_string())),
+        };
+        // .ok_or_else(|| {
+        //     // self.loader.debug();
+        //     anyhow!("Module {} not found", module_name)
+        // })?;
         self.add_default_imports(&mut module0.0);
 
         let module_refs = find_module_refs(&module0.0);
@@ -137,7 +147,8 @@ impl Resolver {
 
         let rmodule = ResolvedModule {
             module1,
-            inject_annotions: module0.1,
+            pkg: module0.1.map(|p| p.clone()),
+            inject_annotions: module0.2,
             decls,
         };
         self.modules.insert(module_name.clone(), rmodule);
@@ -167,7 +178,7 @@ impl Resolver {
                     result.insert(sn.name.clone(), sn.clone());
                 }
                 adlast::Import::ModuleName(mn) => {
-                    if let Some(m) = self.get_module(&mn) {
+                    if let Some((m, _)) = self.get_module(&mn) {
                         for decl_name in m.decls.iter().map(|d| &d.name) {
                             result.insert(
                                 decl_name.clone(),
