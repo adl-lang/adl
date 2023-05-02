@@ -62,7 +62,7 @@ jobs:
     - name: Determine version
       id: version
       run:
-        echo "version=${GITHUB_REF:24}" >> $GITHUB_OUTPUT
+        echo "version=${GITHUB_REF:11}" >> $GITHUB_OUTPUT
 
     - name: Fetch macOS build
       uses: actions/download-artifact@v3
