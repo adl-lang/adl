@@ -1,0 +1,7 @@
+module common.config.aws
+{
+
+import adlc.config.java.*;
+
+annotation JavaPackage "au.com.helixta.adl.common.config.aws";
+};

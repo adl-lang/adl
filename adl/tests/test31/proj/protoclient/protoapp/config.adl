@@ -1,0 +1,51 @@
+module protoclient.protoapp.config {
+
+import common.config.frontend.ThreadPoolConfig;
+import common.config.log.LogConfig;
+import common.config.log.FluentdConfig;
+import common.config.db.PostgreSqlConfig;
+
+/// Configuration for the server
+struct ServerConfig {
+  /// Port to listen for requests
+  Int16 port;
+
+  /// Environment name, e.g. dev, uat, prod
+  String environment;
+
+  /// Name of the release / code version
+  String releaseName;
+
+  /// The shared secret that will be present on requests
+  /// made by the cron webhook system.
+  String cronSharedSecret;
+
+  /// Secret used to sign JWT tokens
+  String jwtSecret;
+
+  /// Database config
+  PostgreSqlConfig db;
+
+  /// Server-side logging config
+  LogConfig logging;
+
+  /// Client-side logging config
+  /// If not provided all client logs will appear in the server logs
+  Nullable<ClientLogConfig> clientLogging = null;
+
+  /// Frontend threadpool configuration
+  ThreadPoolConfig threadPool;
+
+  // If set, apply automatic migrations on startup
+  Nullable<LocalFlywayConfig> flyway = null;
+};
+
+type ClientLogConfig = FluentdConfig;
+
+union LocalFlywayConfig {
+  Void fastdev;
+  Void deployed;
+  common.flyway.internals.FlywayCommand advanced;
+};
+
+};

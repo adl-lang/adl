@@ -1,0 +1,22 @@
+module common.config.emailer
+{
+import common.config.aws.AwsCredentialsProvider;
+import common.config.aws.AwsRegionProvider;
+
+/// Configuration for the emailer used 
+union EmailerConfig {
+  /// Fake emailer, just prints outgoing email info to stdout
+  Void fake;
+
+  /// SES emailer implementation
+  SesConfig ses;
+  
+};
+
+/// Configuration for AWS SES emailer implementation
+struct SesConfig {
+  AwsCredentialsProvider credentials;
+  AwsRegionProvider region;
+};
+
+};

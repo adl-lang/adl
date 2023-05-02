@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Either<T1, T2> {
   #[serde(rename="left")]
   Left(T1),

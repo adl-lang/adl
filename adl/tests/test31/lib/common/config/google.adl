@@ -1,0 +1,12 @@
+module common.config.google
+{
+
+/// Connection parameters for google services
+struct GoogleConfig {
+  String clientId;
+  String clientSecret;
+  String accessToken;
+  String refreshToken;
+};
+
+};

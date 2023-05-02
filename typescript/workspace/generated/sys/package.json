@@ -1,0 +1,16 @@
+{
+  "name": "@adl-lang/sys",
+  "version": "1.0.0",
+  "scripts": {
+    "clean": "rm -rf dist && rm -rf node_modules",
+    "tsc": "tsc"
+  },
+  "dependencies": {
+    "base64-js": "^1.5.1",
+    "@adl-lang/runtime": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsconfig": "workspace:*",
+    "typescript": "^4.9.3"
+  }
+}

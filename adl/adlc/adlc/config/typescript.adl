@@ -1,0 +1,11 @@
+module adlc.config.typescript {
+
+/// ADL module annotation to specify a target npm package this module belongs to.
+type NpmPackage = String;
+
+/// ADL module or declaration annotation to control
+/// whether code is actually generated.
+
+type TypescriptGenerate = Bool;
+
+};

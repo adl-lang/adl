@@ -1,0 +1,57 @@
+module protoclient.protoapp.db {
+
+import common.strings.StringML;
+import common.strings.StringNE;
+import common.db.DbTable;
+import common.db.DbKey;
+import common.Instant;
+
+
+struct Trade {
+  Vector<Commodity> commodities;
+  Instant date;
+};
+
+annotation Trade DbTable {
+  "withIdPrimaryKey" : true
+};
+
+
+struct Commodity {
+  String code;
+};
+
+/// Details for a user
+struct AppUser {
+  StringNE fullname;
+  StringNE email;
+  Bool isAdmin;
+  StringNE hashedPassword = "";
+};
+
+// Annotation to specify that there is a db table for user,
+// with an id primary key, and a index over username.
+annotation AppUser DbTable {
+  "withIdPrimaryKey" : true,
+  "indexes" : [["email"]],
+  "label" : ["fullname"]
+};
+
+type AppUserId = DbKey<AppUser>;
+
+/// messages posted on the noticeboard
+struct Message {
+  Instant postedAt;
+  DbKey<AppUser> postedBy;
+  StringML message;
+};
+
+annotation Message DbTable {
+  "withIdPrimaryKey" : true,
+  "indexes" : [["posted_at"]]
+};
+
+type MessageId = DbKey<Message>;
+
+
+};

@@ -1,0 +1,32 @@
+module common.db
+{
+import adlc.config.java.*;
+
+annotation JavaPackage "au.com.helixta.adl.common.db";
+
+/// Annotation to control how java custom types are mapped to the
+/// database
+struct JavaDbCustomType {
+  /// The type returned from a db query
+  String javaDbType;
+
+  /// The class in which to look for fromDb and toDb static functions
+  String helpers;
+};
+
+/// Annotation to control which format of java db table class is emitted
+union JavaDbTableVersion {
+  Void v1;
+  Void v2;
+};
+
+
+// Use a custom type for DbKey, primarily so that we can override the
+// toString implementation
+annotation DbKey JavaCustomType {
+    "javaname" : "au.com.helixta.adl.custom.DbKey",
+    "helpers": "au.com.helixta.adl.custom.DbKeyHelpers"
+};
+
+};
+

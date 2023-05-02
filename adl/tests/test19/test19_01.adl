@@ -1,0 +1,11 @@
+module test19_01
+{
+struct Pair<A,B>
+{
+    A a;
+    B b;
+};
+
+// ERROR: Incorrect number of arguments
+newtype T3 = Pair<Int32>;
+};

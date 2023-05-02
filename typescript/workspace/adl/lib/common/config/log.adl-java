@@ -1,0 +1,12 @@
+module common.config.log
+{
+
+import adlc.config.java.*;
+
+annotation JavaPackage "au.com.helixta.adl.common.config.log";
+
+annotation LogLevel JavaCustomType {
+    "javaname" : "au.com.helixta.log.Log.Level",
+    "helpers" : "au.com.helixta.adl.custom.LogLevelHelpers"
+};
+};

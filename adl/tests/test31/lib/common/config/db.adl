@@ -1,0 +1,67 @@
+module common.config.db
+{
+
+// Connection details for a postgres server
+struct PostgreSqlConfig
+{
+  String host;
+  Int32 port;
+
+  // the database name
+  String dbname;
+
+  // login parameters
+  String user;
+  String password;
+
+  // The size of the connection pool
+  Int32 poolSize = 5;
+
+  // true to enable the postgis extensions
+  Bool postgisEnabled = false;
+
+  /// The amount of time to wait before refreshing a connection
+  Int32 minRefreshDelayMillis = 60000;
+
+  /// The amount of time to wait for a free connection before timing out
+  Int32 connectionWaitMillis = 5000;
+
+  /// The root cert to be used for ssl connections
+  Nullable<String> sslRootCert = null;
+
+  /// The ssl connection mode
+  PostgresqlSslMode sslMode = "prefer";
+};
+
+union PostgresqlSslMode {
+ Void disable;
+ Void allow;
+ Void prefer;
+ Void require;
+
+ @SerializedName "verify-ca"
+ Void verifyCa;
+
+ @SerializedName "verify-full"
+ Void verifyFull;
+};
+
+
+// Connection details for a microsoft SQL server
+struct SqlServerConfig
+{
+  String host;
+  Int32 port;
+
+  // the database name
+  String dbname;
+
+  // login parameters
+  String user;
+  String password;
+
+  // The size of the connection pool
+  Int32 poolSize = 5;
+};
+
+};

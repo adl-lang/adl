@@ -1,0 +1,83 @@
+/// Common definitions for querying tabular data
+module common.tabular
+{
+
+import common.strings.StringNE;
+import common.Instant;
+import common.LocalDate;
+
+type FieldName = StringNE;
+
+struct ExprLike { Expr expr; String pattern; Bool caseSensitive = true; };
+struct ExprIn { Expr expr; Vector<Expr> exprs; };
+struct ExprComparison { Expr expr1; Expr expr2; };
+
+union FieldPredicate {
+  ExprComparison equalTo;
+  ExprIn in;
+  ExprLike like;
+  Expr isnull;
+  FieldPredicate not;
+  ExprComparison greaterThan;
+  ExprComparison lessThan;
+  Vector<FieldPredicate> and;
+  Vector<FieldPredicate> or;
+  Bool literal;
+};
+
+union Expr {
+  String string;
+  Int32 int;
+  Bool bool;
+  LocalDate date;
+  Instant instant;
+
+  FieldName field;
+  Void currentDate;
+  Vector<Expr> concat;
+};
+
+union SortDirection {
+  Void ascending;
+  Void descending;
+};
+
+struct SortField { FieldName field; SortDirection direction; };
+
+
+// A view of a table
+struct TableView
+{
+    // The columns to show
+    Vector<FieldName> columns;
+
+    // A filter controlling which rows to show
+    FieldPredicate filter = {"literal":true};
+
+    // How the results should be sorted
+    Vector<SortField> sorting = [];
+};
+
+// The structure we pass to specify a page of values to be
+// loaded.
+struct TableQuery {
+  // By default we match all rows
+  FieldPredicate filter = {"literal":true};
+
+  // Sorting order 
+  Vector<SortField> sorting = [];
+
+  // Pagination offset
+  Int32 offset = 0;
+
+  // Number of items to return (-1 => all)
+  Int32 count = -1;
+};
+
+// A trivial single element struct, to enable non-struct
+// values to be shown in tables
+struct SingleField<T> {
+   T value;
+};
+
+};

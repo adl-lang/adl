@@ -1,0 +1,82 @@
+module common
+{
+import adlc.config.java.*;
+import common.db.JavaDbCustomType;
+import sys.types.Set;
+
+annotation JavaPackage "au.com.helixta.adl.common";
+
+annotation Instant JavaCustomType {
+    "javaname" : "java.time.Instant",
+    "helpers" : "au.com.helixta.adl.custom.InstantHelpers"
+};
+
+annotation LocalDate JavaCustomType {
+    "javaname" : "java.time.LocalDate",
+    "helpers" : "au.com.helixta.adl.custom.LocalDateHelpers"
+};
+
+annotation LocalTime JavaCustomType {
+    "javaname" : "java.time.LocalTime",
+    "helpers" : "au.com.helixta.adl.custom.LocalTimeHelpers"
+};
+
+annotation LocalDateTime JavaCustomType {
+    "javaname" : "java.time.LocalDateTime",
+    "helpers" : "au.com.helixta.adl.custom.LocalDateTimeHelpers"
+};
+
+annotation DayOfWeek JavaCustomType {
+    "javaname" : "java.time.DayOfWeek",
+    "helpers" : "au.com.helixta.adl.custom.DayOfWeekHelpers"
+};
+
+annotation GeographyGeoJson JavaCustomType {
+    "javaname" : "org.postgis.PGgeometry",
+    "helpers": "au.com.helixta.adl.custom.PGgeometryHelpers"
+};
+
+annotation GeographyGeoJson JavaDbCustomType {
+    "javaDbType": "org.postgis.PGgeometry",
+    "helpers": "au.com.helixta.adl.custom.PGgeometryHelpers"
+};
+
+annotation GeometryWKT JavaCustomType {
+    "javaname" : "org.postgis.PGgeometry",
+    "helpers": "au.com.helixta.adl.custom.PGgeometryWKTHelpers"
+};
+
+annotation GeometryWKT JavaDbCustomType {
+    "javaDbType" : "org.postgis.PGgeometry",
+    "helpers": "au.com.helixta.adl.custom.PGgeometryWKTHelpers"
+};
+
+annotation TSVector JavaDbCustomType {
+    "javaDbType" : "String",
+    "helpers": "au.com.helixta.adl.custom.TSVectorHelpers"
+};
+
+annotation StringList JavaDbCustomType {
+    "javaDbType" : "au.com.helixta.nofrills.sql.StringList",
+    "helpers": "au.com.helixta.adl.custom.StringListHelpers"
+};
+
+annotation StringList JavaCustomType {
+    "javaname" : "au.com.helixta.nofrills.sql.StringList",
+    "helpers": "au.com.helixta.adl.custom.StringListHelpers"
+};
+
+annotation BigDecimal JavaCustomType {
+    "javaname" : "java.math.BigDecimal",
+    "helpers": "au.com.helixta.adl.custom.BigDecimalHelpers"
+};
+
+annotation BigDecimal JavaDbCustomType {
+    "javaDbType" : "java.math.BigDecimal",
+    "helpers": "au.com.helixta.adl.custom.BigDecimalHelpers"
+};
+
+/// Force adlc java runtime to include HashSetHelpers.java
+newtype SetStrings = Set<String>;
+
+};

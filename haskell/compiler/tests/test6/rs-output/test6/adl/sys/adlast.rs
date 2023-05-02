@@ -11,7 +11,7 @@ pub type Ident = String;
 
 pub type Annotations = Map<ScopedName, serde_json::Value>;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct ScopedName {
   #[serde(rename="moduleName")]
   pub module_name: ModuleName,
@@ -28,7 +28,7 @@ impl ScopedName {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum TypeRef {
   #[serde(rename="primitive")]
   Primitive(Ident),
@@ -40,7 +40,7 @@ pub enum TypeRef {
   Reference(ScopedName),
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct TypeExpr {
   #[serde(rename="typeRef")]
   pub type_ref: TypeRef,
@@ -57,7 +57,7 @@ impl TypeExpr {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Field {
   pub name: Ident,
 
@@ -84,7 +84,7 @@ impl Field {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Struct {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -101,7 +101,7 @@ impl Struct {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Union {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -118,7 +118,7 @@ impl Union {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct TypeDef {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -136,7 +136,7 @@ impl TypeDef {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct NewType {
   #[serde(rename="typeParams")]
   pub type_params: Vec<Ident>,
@@ -157,7 +157,7 @@ impl NewType {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub enum DeclType {
   #[serde(rename="struct_")]
   Struct(Struct),
@@ -172,7 +172,7 @@ pub enum DeclType {
   Newtype(NewType),
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Decl {
   pub name: Ident,
 
@@ -195,7 +195,7 @@ impl Decl {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct ScopedDecl {
   #[serde(rename="moduleName")]
   pub module_name: ModuleName,
@@ -214,7 +214,7 @@ impl ScopedDecl {
 
 pub type DeclVersions = Vec<Decl>;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum Import {
   #[serde(rename="moduleName")]
   ModuleName(ModuleName),
@@ -223,7 +223,7 @@ pub enum Import {
   ScopedName(ScopedName),
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Module {
   pub name: ModuleName,
 

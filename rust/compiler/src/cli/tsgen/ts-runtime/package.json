@@ -1,0 +1,18 @@
+{
+  "name": "@adl-lang/runtime",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "author": "Helix",
+  "license": "CLOSED",
+  "private": true,
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "dependencies": {
+    "base64-js": "^1.5.1"
+  },
+  "devDependencies": {
+    "tsconfig": "workspace:*",
+    "typescript": "^4.9.3"
+  }
+}

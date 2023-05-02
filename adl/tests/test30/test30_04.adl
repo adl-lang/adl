@@ -1,0 +1,15 @@
+// Testing the edge cases the Doc and SerializedName annotations.
+module test30_04 {
+
+type SerializedName = String;
+
+struct Names {
+    @SerializedName "aaa"
+    String title;
+    String country;
+    @SerializedName "zyx"
+    Vector<SerializedName> alternates = ["bbb","country"];
+};
+
+
+};

@@ -1,0 +1,7 @@
+module common.http
+{
+
+import adlc.config.java.*;
+
+annotation JavaPackage "au.com.helixta.adl.common.http";
+};

@@ -6,7 +6,7 @@ use serde::Serialize;
 /**
  * An empty structure.
  */
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct S0 {
 }
 
@@ -21,7 +21,7 @@ impl S0 {
  * A structure containing primitives.
  * It has two fields: an integer x and a String y.
  */
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct S1 {
   pub x: i32,
 
@@ -40,7 +40,7 @@ impl S1 {
 /**
  * A structure containing a vector.
  */
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct S2 {
   #[serde(rename="f1")]
   pub f_1: String,
@@ -65,7 +65,7 @@ impl S2 {
 /**
  * A generic structure.
  */
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct S3<T> {
   #[serde(rename="f1")]
   pub f_1: String,
@@ -91,7 +91,7 @@ impl<T> S3<T> {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct S4<T> {
   #[serde(rename="f1")]
   pub f_1: S3<String>,
@@ -109,7 +109,7 @@ impl<T> S4<T> {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct Tree<T> {
   pub value: T,
 

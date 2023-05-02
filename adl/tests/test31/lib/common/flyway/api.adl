@@ -1,0 +1,119 @@
+module common.flyway.api {
+
+import common.flyway.internals.FlywayAction;
+import common.flyway.internals.FlywayContext;
+import common.http.HttpPost;
+
+type FlywayApi = HttpPost<FlywayReq,FlywayResp>;
+
+union  FlywayReq {
+  /// Show pending migrations
+  Void plan;
+  /// Apply pending migrations
+  Void apply;
+  /// Something customized
+  AdvancedFlywayReq advanced;
+};
+
+/// Information passed when access via API
+struct AdvancedFlywayReq {
+  FlywayReqContextOpt context = "application";
+  FlywayAction action;
+};
+
+union FlywayReqContextOpt {
+  /// Derive the context from the app config
+  /// Throw exception if it app is not configured with a flyway context
+  Void application;
+  /// The first ctx in bootstrapable->bootstrap.
+  /// Throw exception if it doesn't exist
+  Void bootstrap;
+  /// Overide the application flyway config
+  FlywayContext customCtx;
+};
+
+union FlywayResp {
+  String error;
+  String msg;
+  FlywayCleanResult clean;
+  FlywayInfo info;
+  FlywayMigrateResult migrationResult;
+  FlywayBaselineResult baselineResult;
+  Vector<FlywayResp> sequence;
+};
+
+struct FlywayInfo {
+  String schemaVersion;
+  Vector<FlywayMigrationInfo> migrations;
+};
+
+struct FlywayMigrationInfo {
+  String category;
+  String version;
+  String description;
+  String type_;
+  String installed_on;
+  String state;
+};
+
+struct FlywayMigrateResult {
+  String message;
+  // OperationResultBase
+  String flywayVersion;
+  String database;
+  Vector<String> warnings;
+  String operation;
+  // MigrateResult
+  Nullable<String> initialSchemaVersion;
+  Nullable<String> targetSchemaVersion;
+  Nullable<String> schemaName;
+  Vector<FlywayMigrateOutput> migrations;
+  Nullable<Int32> migrationsExecuted;
+};
+
+struct FlywayBaselineResult {
+  // OperationResultBase
+  String flywayVersion;
+  String database;
+  Vector<String> warnings;
+  String operation;
+  // BaselineResult
+  Bool successfullyBaselined;
+  Nullable<String> baselineVersion;
+};
+
+struct FlywayCleanResult {
+  // OperationResultBase
+  String flywayVersion;
+  String database;
+  Vector<String> warnings;
+  String operation;
+  // BaselineResult
+  Vector<String> schemasCleaned;
+  Vector<String> schemasDropped;
+};
+
+struct FlywayMigrateOutput {
+  String category;
+  String version;
+  String description;
+  String type_;
+  String filepath;
+  Int32 executionTime;
+};
+
+// struct FlywaySchemaHistory {
+//   Int32 installed_rank;     //  | integer                     | not null
+//   Nullable<String> version; //  | character varying(50)       | 
+//   String description;       //  | character varying(200)      | not null
+//   String type_;             //  | character varying(20)       | not null
+//   String script;            //  | character varying(1000)     | not null
+//   Nullable<Int32> checksum; //  | integer                     | 
+//   String installed_by;      //  | character varying(100)      | not null
+//   Instant installed_on;     //  | timestamp without time zone | not null default now()
+//   Int32 execution_time;     //  | integer                     | not null
+//   Bool success;             //  | boolean                     | not null
+// };
+
+
+};

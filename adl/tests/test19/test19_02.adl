@@ -1,0 +1,12 @@
+module test19_02
+{
+// ERROR: Type parameters should never take arguments
+struct A<T> {
+    T<Int32> abc;
+};
+
+type I<X> = X<Int32>;
+
+
+
+};

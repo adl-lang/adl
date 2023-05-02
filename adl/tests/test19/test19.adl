@@ -1,0 +1,15 @@
+module test19
+{
+struct Pair<A,B>
+{
+    A a;
+    B b;
+};
+
+// OK:
+newtype T1 = Pair<Int32,Int32>;
+
+// OK:
+newtype T2<X> = Pair<Int32,X>;
+
+};

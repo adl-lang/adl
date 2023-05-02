@@ -1,0 +1,103 @@
+// These are example configs which in a project would likely be constructed in code
+// and used when calling FlywayUtils
+module common.flyway.example_patterns {
+
+import common.flyway.internals.FlywayCommand;
+
+
+// Example application config.
+union FlywayConfig {
+  // bootstraps by applying "create migrations" & baseline existing migrations
+  // startup applies new migrations.
+  Void mixed_mode_latest;
+  // bootstraps by applying "create migrations" & baseline existing migrations
+  // startup does not apply migrations. Migrations can be applied via adminui.
+  Void mixed_mode_manual;
+  // bootstraps by applying all migrations from scratch.
+  // startup applies new migrations.
+  Void migration_mode_latest;
+  // customize the flyway app startup
+  FlywayCommand advanced;
+};
+
+
+type ExampleFlywayCommand = StringMap<FlywayCommand>;
+
+annotation ExampleFlywayCommand {
+// Tim's preferred model for fastdev, which works the same, but runs
+// any pending migrations when the server is started
+  "mixedmode_latest": 
+  {
+    "ctx": {
+      "sqlMigrationDir": "/app/sql/migrations",
+      "javaMigrationPackage": "app/java/migrations"
+    },
+    "bootstrap": [
+      {
+        "withContext": {
+          "ctx": {
+            "schemaHistoryTable": "flyway_bootstrap_schema_history",
+            "sqlMigrationDir": "/app/sql/create",
+            "javaMigrationPackage": "app/java/createmigrations"
+          },
+          "action": {
+            "sequence": [
+              "baseline_zero",
+              "migrate"
+            ]
+          }
+        }
+      },
+      "baseline_latest",
+      "migrate"
+    ],
+    "action": "migrate"
+  }
+,
+// Tim's preferred model for prod, which bootstraps a new db from create scripts
+// and baselines to the last migration. Subsequent migrations are run from the adminui
+  "mixedmode_manual": 
+  {
+    "ctx": {
+      "sqlMigrationDir": "/app/sql/migrations",
+      "javaMigrationPackage": "app/java/migrations"
+    },
+    "bootstrap": [
+      {
+        "withContext": {
+          "ctx": {
+            "schemaHistoryTable": "flyway_bootstrap_schema_history",
+            "sqlMigrationDir": "/app/sql/create",
+            "javaMigrationPackage": "app/java/createmigrations"
+          },
+          "action": {
+            "sequence": [
+              "baseline_zero",
+              "migrate"
+            ]
+          }
+        }
+      },
+      "baseline_latest",
+      "migrate"
+    ],
+    "action": null
+  }
+,
+// Paul's preferred model for prod (I think) which bootstraps
+// by applying all migrations from scratch
+  "migration_mode_latest": 
+  {
+    "ctx": {
+      "sqlMigrationDir": "/app/sql/migrations",
+      "javaMigrationPackage": "app/java/migrations"
+    },
+    "bootstrap": [
+      "baseline_zero",
+      "migrate"
+    ],
+    "action": "migrate"
+  }
+};
+
+};

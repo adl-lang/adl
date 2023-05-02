@@ -1,0 +1,8 @@
+module common.config.google
+{
+
+import adlc.config.java.*;
+
+annotation JavaPackage "au.com.helixta.adl.common.config.google";
+};
+

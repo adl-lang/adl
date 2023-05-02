@@ -1,0 +1,69 @@
+module common.config.log
+{
+
+import common.config.aws.AwsCredentialsProvider;
+import common.config.aws.AwsRegionProvider;
+
+// Configuration for logging
+union LogLevel {
+  Void DEBUG;
+  Void INFO;
+  Void WARN;
+  Void ERROR;
+  Void NONE;
+  Void TRACE;
+};
+
+struct StdoutConfig {
+  LogLevel level;
+};
+
+struct FluentdConfig {
+  LogLevel level;
+  String hostname;
+  Int32 port;
+  String tag;
+};
+
+/// Server side Rollbar config
+/// NOTE: Name is `ServerRollbarConfig` due to being named prior to adding
+/// `ClientRollbarConfig`
+struct RollbarConfig {
+  LogLevel level;
+  String serverToken;
+  String env = "";
+};
+
+/// Server side logging, i.e. reporting errors originating from the server
+/// NOTE: Name is not `ServerLogConfig` due to being named prior to adding
+/// `ClientLogConfig`
+struct LogConfig {
+  Nullable<StdoutConfig> stdout = {"level" : "INFO"};
+  Nullable<FluentdConfig> fluentd = null;
+  Nullable<RollbarConfig> rollbar = null;
+  Nullable<CloudWatchMetricLogConfig> cloudwatch = null;
+};
+
+/// Client side Rollbar config, i.e. from Rollbar JS
+struct ClientRollbarConfig {
+  String accessToken;
+  String env = "";
+};
+
+/// Client side logging, i.e. reporting errors originating from the client
+struct ClientLogConfig {
+  Nullable<ClientRollbarConfig> rollbar = null;
+};
+
+/// Logging of metrics to cloudwatch
+struct CloudWatchMetricLogConfig {
+  AwsCredentialsProvider credentials;
+  AwsRegionProvider region;
+  String env;
+  String namespace;
+  /// A whitelist of metrics that should be sent to CloudWatch. Users should be
+  /// aware that making this list too big can quickly cause costs to increase
+  Vector<String> metricsToSend;
+};
+
+};

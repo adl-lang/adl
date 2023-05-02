@@ -1,0 +1,9 @@
+
+module test32b
+{
+   import test32a.X;
+
+   struct Y {
+      X field;
+   };
+};

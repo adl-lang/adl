@@ -1,0 +1,10 @@
+module test9
+{
+    struct X
+    {
+    };
+
+    struct X#2
+    {
+    };
+};

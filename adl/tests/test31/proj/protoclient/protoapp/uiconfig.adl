@@ -1,0 +1,17 @@
+module protoclient.protoapp.uiconfig {
+
+import common.config.log.ClientRollbarConfig;
+
+/// Configuration for the web frontend.
+struct UiConfig {
+  /// Application title
+  String title = "";
+
+  /// Environment name, e.g. dev, uat, prod
+  String environment;
+
+  /// Name of the release / code version
+  String releaseName;
+};
+
+};

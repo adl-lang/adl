@@ -1,0 +1,10 @@
+module common.config.jwt
+{
+
+/// Secret and expiry of the JWT token
+struct JwtConfig {
+  String secret;
+  Double expiryInMinutes;
+};
+
+};

@@ -1,0 +1,53 @@
+module test2
+{
+
+// Simple structures
+
+@sys.annotations.Doc "An empty structure."
+struct S0
+{
+};
+
+/// A structure containing primitives.
+///
+/// It has two fields: an integer x and a String y.
+struct S1
+{
+    Int32 x;
+    String y;
+};
+
+@sys.annotations.Doc "A structure containing a vector."
+struct S2
+{
+    String f1;
+    Double f2;
+    Vector<Int32> f3;           
+};
+
+@sys.annotations.Doc "A generic structure."
+struct S3<T>
+{
+    String f1;
+    Double f2;
+    T f3;
+    Vector<T> f4;
+};
+
+struct S4<T>
+{
+    S3<String> f1;
+    S3<T> f2;
+};
+
+// A recursive type
+
+struct Tree<T>
+{
+    T value;
+    Vector<Tree<T>> children;
+};
+
+type IntTree = Tree<Int32>;
+
+};

@@ -1,0 +1,42 @@
+module test2_01
+{
+
+/// A structure containing primitives.
+///
+/// It has two fields: an integer x and a String y.
+struct s1
+{
+    /// here is x
+    Int32 x;
+    /// why is a crooked letter
+    String y;
+};
+
+/// This is a union
+union U1 {
+    /// a is for apple;
+    String a;
+    ///
+    Void b;
+    /// c is for cookie
+    Void c;
+};
+
+
+/// This is an enum
+union E1 {
+    /// a is for apple;
+    Void a;
+    ///
+    Void b;
+    /// c is for cookie
+    Void c;
+};
+
+/// this is a type alias
+type T1 = String;
+
+///    this is a new type
+newtype NT1 = String;
+
+};

@@ -1,0 +1,51 @@
+module common.ui
+{
+
+import sys.types.Pair;
+
+// UI Annotations
+
+// field annotation specifying the label to be shown on forms and
+// table headings
+type FormLabel = String;
+
+// field annotation allocating a field to a display group. An empty
+// group key means that the field is to be shown ungrouped.
+type FormGroupKey = String;
+
+// struct annotation for groups
+struct FormGroups {
+  // The default group for unannotated fields
+  FormGroupKey defaultKey;
+
+  // The text labels for each group
+  Vector<Pair<FormGroupKey,String>> labels;
+};
+
+/// An field/type alias annotation to constrain the
+/// values allowed by a string to the enumerated values
+struct ValidValues {
+  /// The allowed values
+  Vector<String> values;
+
+  /// A (short) user readable string describing the
+  /// expected text.
+  String description;
+};
+
+/// An field/type alias annotation to constrain the
+/// values allowed by a string to a regular expression
+struct ValidRegex {
+  /// The regexp that must be matched
+  String regex;
+
+  /// A (short) user readable string describing the
+  /// expected text.
+  String description;
+
+  /// The regex group index to return if matches
+  /// 0 is the entire string
+  Int8 returnGroup = 0;
+};
+
+};
