@@ -19,7 +19,7 @@ jobs:
           stack-version: 'latest'
 
       - name: Clone project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache ~/.stack
         uses: actions/cache@v3
