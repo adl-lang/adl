@@ -1,0 +1,32 @@
+module common.config.sms
+{
+import common.config.aws.AwsCredentialsProvider;
+import common.config.aws.AwsRegionProvider;
+import common.strings.StringNE;
+
+/// Configuration for the sms provider used 
+union SmsConfig {
+  /// Fake sms, just prints outgoing message info to stdout
+  Void fake;
+
+  /// Twilio implementation
+  TwilioConfig twilio;
+
+  /// AWS SNS  implementation
+  AwsSnsConfig sns;
+  
+};
+
+/// Configuration for twilio
+struct TwilioConfig {
+    StringNE accountSid;
+    StringNE authToken;
+};
+
+/// Configuration for AWS SMS implementation
+struct AwsSnsConfig {
+  AwsCredentialsProvider credentials;
+  AwsRegionProvider region;
+};
+
+};

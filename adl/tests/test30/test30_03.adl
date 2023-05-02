@@ -1,0 +1,14 @@
+// Testing the edge cases the Doc and SerializedName annotations.
+module test30_03 {
+
+/// Alternate names for serialized TV formats.
+struct SerializedName {
+    @SerializedName "aaa"
+    String title;
+    String country;
+    @SerializedName {"aaa":"zyx","country":"","alternates":[]}
+    Vector<SerializedName> alternates = [{"aaa":"bbb","country":"","alternates":[]}];
+};
+
+
+};

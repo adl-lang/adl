@@ -1,0 +1,97 @@
+lockfileVersion: '6.0'
+
+importers:
+
+  .:
+    devDependencies:
+      '@types/node':
+        specifier: ^18.16.1
+        version: 18.16.1
+      typescript:
+        specifier: ^4.9.3
+        version: 4.9.3
+
+  generated/common:
+    dependencies:
+      '@adl-lang/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@adl-lang/sys':
+        specifier: workspace:*
+        version: link:../sys
+    devDependencies:
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      typescript:
+        specifier: ^4.9.3
+        version: 4.9.3
+
+  generated/protoclient:
+    dependencies:
+      '@adl-lang/common':
+        specifier: workspace:*
+        version: link:../common
+      '@adl-lang/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@adl-lang/sys':
+        specifier: workspace:*
+        version: link:../sys
+      base64-js:
+        specifier: ^1.5.1
+        version: 1.5.1
+    devDependencies:
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      typescript:
+        specifier: ^4.9.3
+        version: 4.9.3
+
+  generated/runtime:
+    dependencies:
+      base64-js:
+        specifier: ^1.5.1
+        version: 1.5.1
+    devDependencies:
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      typescript:
+        specifier: ^4.9.3
+        version: 4.9.3
+
+  generated/sys:
+    dependencies:
+      '@adl-lang/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      base64-js:
+        specifier: ^1.5.1
+        version: 1.5.1
+    devDependencies:
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      typescript:
+        specifier: ^4.9.3
+        version: 4.9.3
+
+  packages/tsconfig: {}
+
+packages:
+
+  /@types/node@18.16.1:
+    resolution: {integrity: sha512-DZxSZWXxFfOlx7k7Rv4LAyiMroaxa3Ly/7OOzZO8cBNho0YzAi4qlbrx8W27JGqG57IgR/6J7r+nOJWw6kcvZA==}
+    dev: true
+
+  /base64-js@1.5.1:
+    resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
+    dev: false
+
+  /typescript@4.9.3:
+    resolution: {integrity: sha512-CIfGzTelbKNEnLpLdGFgdyKhG23CKdKgQPOBc+OUNrkJ2vr+KSzsSV5kq5iWhEQbok+quxgGzrAtGWCyU7tHnA==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true

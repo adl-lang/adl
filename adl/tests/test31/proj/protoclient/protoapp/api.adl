@@ -1,0 +1,149 @@
+module protoclient.protoapp.api {
+
+import sys.types.Map;
+
+import common.Instant;
+import common.db.WithDbId;
+import common.config.log.LogLevel;
+import common.tabular.TableQuery;
+import common.Paginated;
+import common.Unit;
+import common.http.HttpPost;
+import common.http.HttpGet;
+import common.strings.Password;
+import common.strings.StringML;
+import common.strings.StringNE;
+
+import protoclient.protoapp.db.AppUser;
+import protoclient.protoapp.db.AppUserId;
+import protoclient.protoapp.db.MessageId;
+
+struct X<A> {
+
+};
+
+/// The app API
+struct ApiRequests {
+  X<String> x;
+  // Vector y;
+  Map<String,String> imamap;
+  /// Login a user
+  HttpPost<String, Vector<StringMap<Int64>>> with_prim = {
+    "path": "/login",
+    "security" : "public"
+  };
+
+  /// Login a user
+  HttpPost<LoginReq, LoginResp> login = {
+    "path": "/login",
+    "security" : "public"
+  };
+
+  /// Post a message to the noticeboard
+  HttpPost<NewMessageReq, Unit> newMessage = {
+    "path": "/messages/new",
+    "security" : "token"
+  };
+
+  /// Get recent noticeboard messages
+  HttpPost<RecentMessagesReq, Paginated<Message> > recentMessages = {
+    "path": "/messages/recent",
+    "security" : "token"
+  };
+
+  /// Gets the logged in user details
+  // NOTE: Fails with 401 if the token is invalid or user does not exist
+  HttpGet<UserProfile> whoAmI = {
+    "path": "/whoami",
+    "security" : "token"
+  };
+
+  /// Create a new user
+  HttpPost<UserReq, AppUserId> createUser = {
+    "path": "/users/create",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Update an existing user
+  HttpPost<WithDbId<UserReq>, Unit> updateUser = {
+    "path": "/users/update",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Delete an existing user
+  HttpPost<AppUserId, Unit> deleteUser = {
+    "path": "/users/delete",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Query existing users sorted and filters according to the
+  /// TableQuery request.
+  HttpPost<TableQuery, Paginated<WithDbId<AppUser>>> queryUsers = {
+    "path": "/users/query",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Logs an error from the client app without user information, i.e. when the
+  /// user has not logged in
+  HttpPost<ClientLogReq, Unit> logClientErrorPublic = {
+    "path": "/client/log/public",
+    "security": "public",
+    "rateLimit": { "maxRequests": 6, "perTimeUnit": "minute" }
+  };
+
+  /// Logs an error from the client app and includes user information
+  HttpPost<ClientLogReq, Unit> logClientErrorUser = {
+    "path": "/client/log/user",
+    "security": "token"
+  };
+};
+
+struct UserProfile {
+  AppUserId id;
+  String fullname;
+  String email;
+  Bool isAdmin;
+};
+
+/// Details for a user
+struct UserReq {
+  String fullname;
+  String email;
+  Password password;
+};
+
+struct LoginReq {
+  StringNE email;
+  Password password;
+};
+
+union LoginResp {
+  StringNE accessToken;
+  Void invalidCredentials;
+};
+
+struct NewMessageReq {
+  StringML message;
+};
+
+struct RecentMessagesReq {
+  // Pagination offset
+  Int32 offset = 0;
+
+  // Number of items to return
+  Int32 count = 20;
+};
+
+struct Message {
+  MessageId id;
+  Instant postedAt;
+  String userFullName;
+  StringML message;
+};
+
+struct ClientLogReq {
+  LogLevel level;
+  String error;
+  Nullable<String> stacktrace;
+};
+};

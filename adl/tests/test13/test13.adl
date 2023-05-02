@@ -1,0 +1,18 @@
+module test13
+{
+    struct X<A,A>
+    {
+        T v1;
+        String v2;
+    };
+
+    union Y<B,B>
+    {
+        T v1;
+        String v2;
+    };
+
+    type A<T,T> = Vector<T>;
+
+    newtype B<T,T> = Vector<T>;
+};

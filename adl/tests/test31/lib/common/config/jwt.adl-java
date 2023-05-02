@@ -1,0 +1,7 @@
+module common.config.jwt
+{
+  import adlc.config.java.*;
+  
+  annotation JavaPackage "au.com.helixta.adl.common.config.jwt";
+
+};

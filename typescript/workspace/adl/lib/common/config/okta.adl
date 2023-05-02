@@ -1,0 +1,32 @@
+module common.config.okta
+{
+import sys.types.Maybe;
+
+/// Config parameters for setting up open ID authentication using Okta
+struct OktaConfig {
+
+  // NOTE(Barry): The following parameters are sufficient to use for the
+  // majority of our applications; however, the Okta implementation was written
+  // for Sydney Airport which has many other features that are bespoke to that
+  // application. The Java binding for this ADL type ignores all of the extra
+  // config parameters that are not necessary (i.e. sets them to empty
+  // strings).
+
+  /// ID of the client application
+  String clientId;
+  /// Secret of the client application
+  String clientSecret;
+  /// Hostname of the okta instance
+  String clientHost;
+  /// Endpoint which users should be redirected to to complete authorization
+  String authorizeEndpoint;
+  /// The URL supplied to okta to redirect the user to after authorization is
+  /// complete
+  String redirectUrl;
+  /// API key used for performing actions in okta, not required if the app does
+  /// not use this functionality 
+  Maybe<String> apiKey;
+};
+
+
+};

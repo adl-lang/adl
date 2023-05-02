@@ -1,0 +1,35 @@
+module common.adminui.config {
+
+import common.config.frontend.ThreadPoolConfig;
+import common.config.log.LogConfig;
+import common.config.log.ClientLogConfig;
+import common.config.db.PostgreSqlConfig;
+
+/// Configuration for the adminui server
+struct ServerConfig {
+  /// Port to listen for requests
+  Int16 port;
+
+  /// Environment name, e.g. dev, uat, prod
+  String environment;
+
+  /// Name of the release / code version
+  String releaseName;
+
+  /// Secret used to sign JWT tokens
+  String jwtSecret;
+
+  /// Database config
+  PostgreSqlConfig db;
+
+  /// Server-side logging config
+  LogConfig logging;
+
+  /// Frontend threadpool configuration
+  ThreadPoolConfig threadPool;
+
+  // DB Migration config, if null flyway is not available.
+  Nullable<common.flyway.example_patterns.FlywayConfig> flyway = null;
+};
+
+};

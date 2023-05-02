@@ -1,0 +1,259 @@
+// This is based on Golang's modules and workspace.
+// e.g. see https://go.dev/ref/mod#workspaces
+
+module adlc.packaging {
+
+import sys.types.Pair;
+import sys.types.Maybe;
+import sys.adlast2.ScopedName;
+import sys.adlast2.Module1;
+
+// AdlWorkspace0 is the serilization format
+type AdlWorkspace0 = AdlWorkspace<Payload0>;
+type AdlWorkspace1 = AdlWorkspace<Payload1>;
+type AdlWorkspace2 = AdlWorkspace<Payload2>;
+
+type LoaderWorkspace = AdlWorkspace<LoaderRef>;
+
+type Payload0 = AdlPackageRef;
+
+struct Payload1 {
+    AdlPackageRef p_ref;
+    AdlPackage pkg;
+};
+
+struct Payload2 {
+    AdlPackageRef p_ref;
+    AdlPackage pkg;
+    Vector<Module1> modules;
+};
+
+/// Expected to live in a file named `adl.work.json`
+struct AdlWorkspace<T> {
+    String adlc;
+    Vector<T> use;
+    StringMap<NamedOpts> named_options = {};
+    Vector<RuntimeOpts> runtimes = [];
+    // Maybe<T> embedded_sys_loader;
+};
+
+struct NamedOpts {
+    TsNamedOpts ts_opts = {};
+};
+
+struct TsNamedOpts {
+    Nullable<TsRuntimeOpt> runtime_opts = null;
+    Nullable<StringMap<String>> scripts = null;
+    Nullable<StringMap<String>> dependencies = null;
+    Nullable<StringMap<String>> dev_dependencies = null;
+    Nullable<TsConfig> tsconfig = null;
+};
+
+union RuntimeOpts {
+    TsWriteRuntime ts_runtime;
+};
+
+struct TsWriteRuntime {
+    String output_dir;
+    ReferenceableScopeOption referenceable = "local";
+    String npm_pkg_name = "@adl-lang/runtime";
+    TsStyle ts_style = "tsc";
+    // Bool strip_first = true;
+};
+
+/// The struct in AdlWorkspace::use required by the WorkspaceLoader
+struct LoaderRef {
+    LoaderRefType ref;
+    InjectAnnotations loader_inject_annotate = [];
+    InjectAnnotations resolver_inject_annotate = [];
+};
+
+union LoaderRefType {
+    DirLoaderRef dir;
+    EmbeddedLoaderRef embedded;
+};
+
+struct DirLoaderRef {
+    String path;
+    Nullable<String> global_alias = null;
+};
+
+struct EmbeddedLoaderRef {
+    EmbeddedPkg alias;
+};
+
+type InjectAnnotations = Vector<InjectAnnotation>;
+
+union InjectAnnotation {
+    Pair<ScopedName,Json> module_;
+};
+
+struct AdlPackageRef {
+    AdlPackageRefType ref;
+    Nullable<String> named_opts = null;
+    Nullable<TypescriptGenOptions> ts_opts = null; 
+};
+
+union AdlPackageRefType {
+    DirectoryRef dir;
+    /// An ADL module embed in the ADL compiler
+    EmbeddedRef embedded;
+};
+
+struct EmbeddedRef {
+    EmbeddedPkg alias;
+};
+
+union EmbeddedPkg {
+    Void sys;
+    Void adlc;
+};
+
+struct DirectoryRef {
+    // path must be to a directory directly under the folder containing the `adl.work.json` file.
+    String path;
+};
+
+struct TypescriptGenOptions {
+    String npm_pkg_name;
+    String npm_version = "1.0.0";
+    StringMap<VersionSpec> extra_dependencies = {};
+    StringMap<VersionSpec> extra_dev_dependencies = {};
+    Nullable<OutputOpts> outputs = null;
+    Nullable<TsConfig> tsconfig = null;
+    StringMap<String> scripts = {};
+    TsRuntimeOpt runtime_opts = {"package_ref": {"name": "@adl-lang/runtime", "version": "^1.0.0"}};
+    Bool generate_transitive = false;
+    Bool include_resolver = false;
+    TsStyle ts_style = "tsc";
+    ModuleSrc modules = "all";
+    Bool capitalize_branch_names_in_types = true;
+    Bool capitalize_type_names = true;
+
+// Vector<> searchDir;
+// --merge-adlext=EXT
+// --verbose
+// --no-overwrite
+// --exclude-ast
+// --excluded-ast-annotations=SCOPEDNAMES
+};
+
+union TsRuntimeOpt {
+    String workspace_ref;
+    NpmPackageRef package_ref;
+    TsGenRuntime generate;
+};
+
+struct TsGenRuntime {
+    // this is currently hardcoded to "./runtime"
+    // String runtimeDir;
+};
+
+union OutputOpts {
+    GenOutput gen;
+    // PkgRef ref;
+};
+
+// struct PkgRef {
+// };
+
+struct GenOutput {
+    ReferenceableScopeOption referenceable = "local";
+    String output_dir;
+    Nullable<String> manifest = null;
+    // When creating the path for output ts files delete the first part of the module name
+    // This needs to be false for "generate_transitive" and 
+    // packages like "common" where the module and directory at the top level named the same.
+    // Bool strip_first = true;
+};
+
+union TsStyle {
+    Void tsc;
+    Void deno;
+};
+
+union ModuleSrc {
+    Void all;
+    Vector<String> modules;
+};
+
+union ReferenceableScopeOption {
+    /// Generated code will only be referred internal to the repo
+    Void local;
+    /// Generated code can be published via a package manager (e.g. npm)
+    Void remote;
+};
+
+/// Expected to live in a file named `adl.pkg.json`
+struct AdlPackage {
+    String path;
+    Nullable<String> global_alias = null;
+    /// Version
+    String adlc;
+    Vector<Require> requires = [];
+    Vector<Exclude> excludes = [];
+    Vector<Replace> replaces = [];
+    Vector<Retract> retracts = [];
+};
+
+struct PackageDirective {
+    String path;
+    Nullable<String> repo = null;
+};
+
+struct Require {
+    PkgRef ref;
+    Nullable<String> version = null;
+    Bool indirect = false;
+};
+
+union PkgRef {
+    String path;
+    String alias;
+};
+
+struct Exclude {
+    String path;
+    String version;
+};
+
+struct Replace {
+    String path;
+    Nullable<String> version;
+};
+
+struct Retract {
+    String version;
+    Nullable<String> comment = null;
+};
+
+struct NpmPackage {
+    String name;
+    String version;
+    StringMap<String> scripts = {};
+    StringMap<String> dependencies = {};
+    @SerializedName "devDependencies"
+    StringMap<String> dev_dependencies = {};
+};
+
+// the bits of tsconfig we need
+struct TsConfig {
+    Nullable<String> extends;
+    Vector<String> include;
+    Vector<String> exclude;
+    TsCompilerOptions compilerOptions;
+};
+
+struct TsCompilerOptions {
+    String outDir;
+    Vector<String> lib;
+};
+
+struct NpmPackageRef {
+    String name;
+    VersionSpec version;
+};
+
+type VersionSpec = String;
+
+};

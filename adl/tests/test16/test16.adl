@@ -1,0 +1,6 @@
+module test16
+{
+    import test2.A;
+
+    newtype X = A;
+};

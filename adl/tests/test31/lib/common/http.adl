@@ -1,0 +1,152 @@
+module common.http {
+
+import sys.types.Set;
+
+/// A marker type to associate the output response
+/// type for an http Get request.
+type Get<I> = Void;
+
+/// A marker type to associate the input request and output response
+/// types for an http put request.
+type Put<I,O> = Void;
+
+/// A marker type to associate the input request and output response
+/// types for an http post request.
+type Post<I,O> = Void;
+
+/// An annotation indicating the URL path for a request
+type Path = String;
+
+/// An annotation indicating that a request requires an Authorization http header
+type AuthHeader = Void;
+
+/// An annotation indicating that a request is idemponent, and can hence be safely
+/// retried on failure.
+type Idempotent = Void;
+
+/// An annotation indicating that a request can be made idempotent if the caller
+/// provides an Idempotency-Key header with a unique value.
+type IdempotentWithKey = Void;
+
+/// The standard message body for errors
+struct PublicErrorData {
+   String publicMessage;
+};
+
+/// New request types
+
+struct HttpGet<O> {
+  String path;
+  HttpSecurity security;
+  Nullable<HttpRateLimit> rateLimit = null;
+  TypeToken<O> respType = null;
+};
+
+struct HttpGetStream<O> {
+  String path;
+  HttpSecurity security;
+  TypeToken<O> respItemType = null;
+};
+
+struct HttpGet2<P,O> {
+  String path;
+  HttpSecurity security;
+  Nullable<HttpRateLimit> rateLimit = null;
+  TypeToken<P> paramsType = null;
+  TypeToken<O> respType = null;
+};
+
+struct HttpPut<I,O> {
+  String path;
+  HttpSecurity security;
+  Nullable<HttpRateLimit> rateLimit = null;
+  TypeToken<I> reqType = null;
+  TypeToken<O> respType = null;
+};
+
+struct HttpPost<I,O> {
+  String path;
+  HttpSecurity security;
+  Nullable<HttpRateLimit> rateLimit = null;
+  TypeToken<I> reqType = null;
+  TypeToken<O> respType = null;
+};
+
+struct HttpPost2<P,I,O> {
+  String path;
+  HttpSecurity security;
+  Nullable<HttpRateLimit> rateLimit = null;
+  TypeToken<P> paramsType = null;
+  TypeToken<I> reqType = null;
+  TypeToken<O> respType = null;
+};
+
+struct HttpDelete<P,O> {
+  String path;
+  HttpSecurity security;
+  TypeToken<P> paramsType = null;
+  TypeToken<O> respType = null;
+};
+
+union HttpSecurity {
+  // The endpoint is publically accessible
+  Void public;
+
+  // A token is required to access the endpoint
+  Void token;
+
+  // A token containing the specified role is required
+  // for access
+  String tokenWithRole;
+};
+
+
+struct HttpRateLimit {
+  Word32 maxRequests;
+  RateLimitTimeUnit perTimeUnit;
+};
+
+union RateLimitTimeUnit {
+  Void second;
+  Void minute;
+  Void hour;
+};
+
+/// API decl or request annotation to specify
+/// the non-success response codes we want
+/// included in the generated open API. The
+/// Json should have exactly the structure of
+/// the OpenApi responses map
+type OpenApiOtherResponses = Json;
+
+
+/// API annotation to specify the available
+/// server endpoints. The Json should have
+/// exactly the structure of the OpenApi
+/// servers map
+type OpenApiServers = Json;
+
+/// Marker annotation to indicate that an endpoint
+/// or (defaulted) field should be left out of the
+/// generated openapi
+type OpenApiExclude = Bool;
+
+/// API annotation to specify additional api
+/// information. The Json should have
+/// exactly the structure of the OpenApi
+/// info map
+type OpenApiInfo = Json;
+
+/// API decl annotation to specify
+/// the security schema in use
+union SecurityScheme {
+  Void httpBearer;
+  HeaderApiKeyScheme apiKey;
+};
+
+struct HeaderApiKeyScheme {
+  String headerName;
+};
+
+};
+

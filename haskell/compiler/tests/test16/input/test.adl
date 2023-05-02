@@ -1,6 +1,0 @@
-module test
-{
-    import test2.A;
-
-    newtype X = A;
-};

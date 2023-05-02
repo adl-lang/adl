@@ -1,0 +1,13 @@
+{
+  "extends": "tsconfig/base.json",
+  "include": ["."],
+  "exclude": ["dist", "build", "node_modules"],
+  "compilerOptions": {
+    "outDir": "dist",
+    // "target": "es2020",
+    // "module": "es2020",
+    "lib": [
+      "es2020",
+    ]
+  }
+}

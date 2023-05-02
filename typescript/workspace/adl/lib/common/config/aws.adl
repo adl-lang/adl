@@ -1,0 +1,46 @@
+module common.config.aws
+{
+
+struct AwsCredentials {
+    String accessKey;
+    String secretKey;
+};
+
+/// The methods available to obtain AWS credentials
+union AwsCredentialsProvider {
+    Void useEnvVariables;
+    Void useInstanceProfile;
+    AwsCredentials value;
+};
+
+/// The methods available to determine the AWS region
+union AwsRegionProvider {
+    Void fromInstance;
+    String value;
+};
+
+struct S3Location {
+    /// The name on of an S3 bucket
+    String s3Bucket;
+
+    /// The S3 path prefix for the storage
+    String s3Prefix;
+};
+
+/// Description of an AWS SQS queue
+struct QueueDetails {
+  /// The amount of time to keep the connection open while waiting for queue messages.
+  Int32 waitTimeSeconds = 10;
+  String queueUrl = "";
+};
+
+
+/// Configuration of an S3 client
+struct S3ClientConfig {
+  S3Location location;
+  AwsRegionProvider region;
+  AwsCredentialsProvider credentials;
+};
+
+
+};

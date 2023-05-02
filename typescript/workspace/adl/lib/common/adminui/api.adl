@@ -1,0 +1,168 @@
+module common.adminui.api {
+
+import sys.adlast.TypeExpr;
+import sys.adlast.ModuleName;
+import sys.adlast.ScopedName;
+import sys.types.Maybe;
+import common.Unit;
+import common.db.DbKey;
+import common.db.WithDbId;
+import common.Paginated;
+import common.tabular.TableQuery;
+import common.http.HttpPost;
+import common.adminui.db.MetaAdlDecl;
+
+import common.flyway.api.FlywayReq;
+import common.flyway.api.FlywayResp;
+
+// An adl value serialised via the standard schema
+type AdlValue = Json;
+
+// A Row in a table is a map of Adl values
+type DbRow = StringMap<AdlValue>;
+type DbId = DbKey<DbRow>;
+
+/// Endpoints supporting CRUD for the Admin UI,
+/// along with metadata access.
+struct AdminApiRequests {
+
+  /// Query the tables available for admin access
+  HttpPost<TableQuery,Paginated<Table>> queryTables = {
+    "path" : "/admin/meta/tables",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Query the ADL declarations used in the column
+  /// type declarations
+  HttpPost<TableQuery,Paginated<MetaAdlDecl>> queryDecls = {
+    "path" : "/admin/meta/decls",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Query rows from a table, specifying pagination,
+  /// filtering and sorting. As per it's return type, this method
+  /// can only be used for tables with a string primary key
+  /// called `id`.
+  HttpPost<QueryReq,Paginated<WithDbId<DbRow>>> query = {
+    "path" : "/admin/query",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Query rows from a table without requiring a primary key, specifying pagination,
+  /// filtering and sorting.
+  HttpPost<QueryReq,Paginated<DbRow>> queryWithoutIds = {
+    "path" : "/admin/query-without-ids",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Create a new row in a table
+  HttpPost<CreateReq,DbResult<DbId>> create = {
+    "path" : "/admin/create",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Update a single existing row in a table
+  HttpPost<UpdateReq,DbResult<Unit>> update = {
+    "path" : "/admin/update",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Delete a single existing row in a table
+  HttpPost<DeleteReq,DbResult<Unit>> delete = {
+    "path" : "/admin/delete",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Fetch descriptive strings for db keys
+  HttpPost<Vector<DbKeyLabelReq>,Vector<DbKeyLabelResp>> dbKeyLabels = {
+    "path" : "/admin/dbkeylabels",
+    "security" : {"tokenWithRole": "admin"}
+  };
+
+  /// Flyway migration handled by adminui
+  HttpPost<FlywayReq,FlywayResp> flyway = {
+      "path" : "/admin/flyway",
+      "security" : {"tokenWithRole": "admin"}
+  };
+};
+
+struct QueryReq {
+  String table;
+
+  /// The columns to be included in the result. If empty, all
+  /// columns will be included.
+  Vector<String> columns;
+
+  TableQuery query;
+};
+
+struct Table {
+   String name;
+   String label;
+   String description;
+   Bool hasIdPrimaryKey;
+
+   /// If true, the current user is allowed to query existingRows
+   Bool allowQuery;
+
+   /// If true, the current user is allowed to insert new rows
+   Bool allowInsert;
+
+   /// If true, the current user is allowed to delete rows
+   Bool allowDelete;
+
+   /// If true, the current user is allowed to update rows
+   Bool allowUpdate;
+
+   Vector<TableColumn> columns;
+   ModuleName declModuleName;
+   String declName;
+};
+
+union Access {
+  Void readOnly;
+  Void readWrite;
+};
+
+struct TableColumn {
+  String name;
+  String label;
+  String description;
+  TypeExpr typeExpr;
+  Maybe<Json> defaultValue;
+  Bool generated;
+  Access access;
+};
+
+struct CreateReq {
+  String table;
+  DbRow values;
+};
+
+struct UpdateReq {
+  String table;
+  WithDbId<DbRow> values;
+};
+
+struct DeleteReq {
+  String table;
+  DbId id;
+};
+
+union DbResult<T> {
+  T ok;
+  String dbError;
+};
+
+struct DbKeyLabelReq {
+  ScopedName scopedName;
+  String id;
+};
+
+struct DbKeyLabelResp {
+  ScopedName scopedName;
+  String id;
+  String label;
+};
+
+};

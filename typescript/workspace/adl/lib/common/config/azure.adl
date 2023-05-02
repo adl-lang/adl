@@ -1,0 +1,15 @@
+module common.config.azure {
+
+  /// Methods available to obtain Azure credentials
+  union AzureCredentialsProvider {
+    /// A shared access signature string
+    String sharedAccessSignature;
+  };
+
+  /// Config parameters for an Azure Blob Client
+  struct AzureBlobClientConfig {
+    String blobstoreUri;
+    AzureCredentialsProvider credentials;
+    String container;
+  };
+};

@@ -1,0 +1,30 @@
+module common.config.storage {
+
+  struct LocalBlobstoreConfig {
+    /// The directory in which the blobstore files will be stored
+    String directory;
+
+    /// The host of the server to be used for serving public files, e.g. "http://localhost" 
+    String publicHost;
+
+    /// The path on which blobstore objects are publically accessible e.g. "/files" 
+    String publicPath;
+  };
+
+  struct LocalFileStoreConfig {
+    /// The directory in which the blobstore files will be stored
+    String directory;
+
+    /// The host of the server to be used for serving public files, e.g. "http://localhost" 
+    String publicHost;
+
+    /// The path on which blobstore objects are publically accessible e.g. "/files" 
+    String publicPath;
+
+    /// False if the data in the FileStore is to be immutable
+    Bool allowOverwrite;
+  };
+
+
+  
+};

@@ -1,0 +1,8 @@
+module common.config.frontend
+{
+
+import adlc.config.java.*;
+
+annotation JavaPackage "au.com.helixta.adl.common.config.frontend";
+};
+

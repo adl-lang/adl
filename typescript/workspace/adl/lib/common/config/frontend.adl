@@ -1,0 +1,22 @@
+module common.config.frontend {
+
+/// Configuration for a consumer which processes work from a queue with a bounded thread pool.
+///
+/// e.g. Useful for configuring jetty's request thread pool.
+///
+// TODO: Java custom type to map this to au.com.helixta.util.concurrent.ThreadPoolConfig
+struct ThreadPoolConfig {
+   /// Maximum number of threads that can be spawned to handle requests
+   Int32 maxThreads;
+
+   /// Minimum number of threads ready for jetty to handle requests
+   Int32 minThreads;
+
+   /// How long a thread can be idle before it is candidate to be stopped
+   Int32 idleTimeoutMillis;
+
+   /// Maximum number of pending requests before new ones are dropped
+   Int32 queueSize;
+};
+
+};

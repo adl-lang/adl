@@ -1,0 +1,17 @@
+{
+    "path": "github.com/adl-lang/adl/adl/tests/test31/proj",
+    "global_alias": "protoclient",
+    "adlc": "0.0.0",
+    "requires": [
+        {
+            "ref": {
+                "alias": "sys"
+            }
+        },
+        {
+            "ref": {
+                "alias": "common"
+            }
+        }
+    ]
+}

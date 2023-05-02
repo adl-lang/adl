@@ -1,0 +1,109 @@
+{
+    "adlc": "0.0.0",
+    "named_options": {
+        "base": {
+            "ts_opts": {
+                "runtime_opts": {
+                    "workspace_ref": "@adl-lang/runtime"
+                },
+                "dev_dependencies": {
+                    "tsconfig": "workspace:*",
+                    "typescript": "^4.9.3"
+                },
+                "scripts": {
+                    "tsc": "tsc",
+                    "clean": "rm -rf dist && rm -rf node_modules"
+                },
+                "tsconfig": {
+                    "extends": "tsconfig/base.json",
+                    "include": [
+                        "."
+                    ],
+                    "exclude": [
+                        "dist",
+                        "build",
+                        "node_modules"
+                    ],
+                    "compilerOptions": {
+                        "outDir": "dist",
+                        "lib": [
+                            "es2020"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "runtimes": [
+        {
+            "ts_runtime": {
+                "output_dir": "./generated/runtime",
+                "npm_pkg_name": "@adl-lang/runtime"
+            }
+        }
+    ],
+    "use": [
+        {
+            "named_opts": "base",
+            "ref": {
+                "embedded": {
+                    "alias": "sys"
+                }
+            },
+            "ts_opts": {
+                "npm_pkg_name": "@adl-lang/sys",
+                "npm_version": "1.0.0",
+                "extra_dependencies": {
+                    "base64-js": "^1.5.1"
+                },
+                "outputs": {
+                    "gen": {
+                        "output_dir": "./generated/sys",
+                        "manifest": "./generated/sys/.adl-manifest"
+                    }
+                },
+                "include_resolver": true
+            }
+        },
+        {
+            "named_opts": "base",
+            "ref": {
+                "dir": {
+                    "path": "./adl/lib"
+                }
+            },
+            "ts_opts": {
+                "npm_pkg_name": "@adl-lang/common",
+                "outputs": {
+                    "gen": {
+                        "output_dir": "./generated/common",
+                        "manifest": "./generated/common/.adl-manifest"
+                    }
+                },
+                "include_resolver": true
+            }
+        },
+        {
+            "named_opts": "base",
+            "ref": {
+                "dir": {
+                    "path": "./adl/proj"
+                }
+            },
+            "ts_opts": {
+                "npm_pkg_name": "@adl-lang/protoclient",
+                "generate_transitive": false,
+                "extra_dependencies": {
+                    "base64-js": "^1.5.1"
+                },
+                "outputs": {
+                    "gen": {
+                        "output_dir": "./generated/protoclient",
+                        "manifest": "./generated/protoclient/.adl-manifest"
+                    }
+                },
+                "include_resolver": true
+            }
+        }
+    ]
+}

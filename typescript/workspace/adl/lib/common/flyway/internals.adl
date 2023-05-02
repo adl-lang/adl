@@ -1,0 +1,112 @@
+module common.flyway.internals {
+
+struct FlywayCommand {
+  FlywayContext ctx;
+  /// The action to take on application startup
+  Vector<FlywayAction> bootstrap = [];
+  Nullable<FlywayAction> action;
+};
+
+/// Contextual information required to run flyway
+struct FlywayContext {
+  /// The name of the flyway history table.
+  /// Useful to override for bootstraping.
+  String schemaHistoryTable = "flyway_schema_history";
+  /// The location from which db migrations are loaded
+  String sqlMigrationDir = "/app/sql/migrations";
+  /// The package from which java based db migrations are loaded
+  Nullable<String> javaMigrationPackage = "app/java/migrations";
+  /// DB connection retries, with 1 second between retries
+  Int32 connect_retries = 3;
+};
+
+union FlywayAction {
+  /// Get migration info, the a combintation of the flyway schema history and future migrations.
+  Void info;
+  // Baseline actions
+  Void baseline_zero;
+  Void baseline_one;
+  Void baseline_latest;
+  String baseline_version;
+  // Migration actions
+  /// Migrate to lastest with default options
+  Void migrate;
+  MigrateLatestAction migrate_latest;
+  MigrateAction migrate_to_version;
+  // other
+  Vector<FlywayAction> sequence;
+  FlywayCtxAction withContext;
+};
+
+struct FlywayCtxAction {
+  /// The context in normal (non-bootstrap) mode
+  FlywayContext ctx;
+  /// Array of actions to run on bootstrap
+  FlywayAction action;
+};
+
+struct MigrateLatestAction {
+  /// migration options
+  MigrateOptionsOptions options = "defaults";
+};
+
+struct MigrateAction {
+  /// migration options
+  MigrateOptionsOptions options = "defaults";
+  String version;
+};
+
+union MigrateOptionsOptions {
+  Void defaults;
+  Void ignoreMissingMigrations;
+  Void ignoreIgnoredMigrations;
+  Void outOfOrder;
+  Void dontValidateOnMigrate;
+  MigrateOptions custom = {};
+};
+
+struct MigrateOptions {
+  /// Ignore missing migrations when reading the schema history table. These are migrations that were performed by an
+  /// older deployment of the application that are no longer available in this version.
+  // Not the Flyway default
+  Bool ignoreMissingMigrations = true;
+  /// Ignore ignored migrations when reading the schema history table. These are migrations that were added in between
+  /// already migrated migrations in this version.
+  // Not the Flyway default
+  Bool ignoreIgnoredMigrations= true;
+  /// Ignore pending migrations when reading the schema history table. These are migrations that are available on the
+  /// classpath but have not yet been performed by an application deployment.
+  /// This can be useful for verifying that in-development migration changes don't contain any validation-breaking changes
+  /// of migrations that have already been applied to a production environment, e.g. as part of a CI/CD process, without
+  /// failing because of the existence of new migration versions.
+  Bool ignorePendingMigrations = false;
+  /// Ignore future migrations when reading the schema history table. These are migrations that were performed by a
+  /// newer deployment of the application that are not yet available in this version. For example: we have migrations
+  /// available on the classpath up to version 3.0. The schema history table indicates that a migration to version 4.0
+  /// (unknown to us) has already been applied. Instead of bombing out (fail fast) with an exception, a
+  /// warning is logged and Flyway continues normally. This is useful for situations where one must be able to redeploy
+  /// an older version of the application after the database has been migrated by a newer one.
+  Bool ignoreFutureMigrations = true;
+  /// Whether to validate migrations and callbacks whose scripts do not obey the correct naming convention. A failure can be
+  /// useful to check that errors such as case sensitivity in migration prefixes have been corrected.
+  Bool validateMigrationNaming = false;
+  /// Whether to automatically call validate or not when running migrate. (default: {@code true})
+  Bool validateOnMigrate = true;
+  /// Whether to automatically call clean or not when a validation error occurs. (default: {@code false})
+  /// <p> This is exclusively intended as a convenience for development. even though we
+  /// strongly recommend not to change migration scripts once they have been checked into SCM and run, this provides a
+  /// way of dealing with this case in a smooth manner. The database will be wiped clean automatically, ensuring that
+  /// the next migration will bring you back to the state checked into SCM.</p>
+  /// <p><b>Warning ! Do not enable in production !</b></p>
+  Bool cleanOnValidationError = false;
+  /// Whether to disable clean. (default: {@code false})
+  /// <p>This is especially useful for production environments where running clean can be quite a career limiting move.</p>
+  Bool cleanDisabled = false;
+  /// Allows migrations to be run "out of order".
+  /// <p>If you already have versions 1 and 3 applied, and now a version 2 is found,
+  /// it will be applied too instead of being ignored.</p>
+  Bool outOfOrder = false;
+};
+
+
+};

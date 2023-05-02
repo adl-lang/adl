@@ -1,0 +1,90 @@
+[
+    { "module_root": "test1", "modules": ["test1" ] },
+    { "module_root": "test2", "modules": ["test2" ], "keywords": ["@Doc", "doc comment", "recursive type", "generic"]},
+    { "module_root": "test2", "modules": ["test2_01" ], "keywords": ["doc comments for each decl type"]},
+    { "module_root": "test3", "modules": ["test3" ], "keywords": ["default values"]},
+    { "module_root": "test4", "modules": ["test4" ], "keywords": ["default values", "newtype with default", "custom mappers"] },
+    { "module_root": "test5", "modules": ["test5" ], "keywords": ["union", "mutual recursion"] },
+    { "module_root": "test6", "modules": ["test6" ] },
+    { "module_root": "test7", "modules": ["test7" ] },
+    { "module_root": "test8", "modules": ["test8" ], "fail": true, "title": "dup decl name" },
+    { "module_root": "test9", "modules": ["test9" ], "fail": true, "title": "decl version numbers" },
+    { "module_root": "test10", "modules": ["test10" ], "fail": true, "title": "decl version numbers" },
+    { "module_root": "test11", "modules": ["test11" ], "fail": true, "title": "decl version numbers - missing numbers" },
+    { "module_root": "test12", "modules": ["test12" ], "fail": true, "title": "dup field name" },
+    { "module_root": "test13", "modules": ["test13" ], "fail": true, "title": "dup & missing type params" },
+    { "module_root": "test14", "modules": ["test14" ], "keywords": ["language keywords"]},
+    { "module_root": "test15", "modules": ["test15" ], "keywords": ["doc comment", "monomorphic struct", "polymorphic union"] },
+    { "module_root": "test16", "modules": ["test16" ] },
+    { "module_root": "test16", "modules": ["test16" ] },
+    { "module_root": "test16", "modules": ["test2" ] },
+    { "module_root": "test17", "modules": ["test17" ] },
+    { "module_root": "test18", "modules": ["test18" ], "keywords": ["mutual recursion"] },
+    { "module_root": "test19", "modules": ["test19" ] },
+    { "module_root": "test19", "modules": ["test19_01"], "fail": true, "title": "Mismatch number of type params." },
+    { "module_root": "test19", "modules": ["test19_02"], "fail": true },
+    { "module_root": "test20", "modules": ["test20" ] },
+    { "module_root": "test21", "modules": ["test21" ] },
+    { "module_root": "test22", "modules": ["test22a", "test22b"] },
+    { "module_root": "test23", "modules": ["test23" ] },
+    { "module_root": "test24", "modules": ["test24" ] },
+    { "module_root": "test24", "modules": ["test24_01"], "fail": true, "title": "token type with hanging type param" },
+    { "module_root": "test24", "modules": ["test24_02"], "fail": true, "title": "default value with hanging type param" },
+    { "module_root": "test25", "modules": ["admin" ] },
+    { "module_root": "test26", "modules": ["test26" ] },
+    { "module_root": "test27", "modules": ["test27" ] },
+    { "module_root": "test27", "modules": ["test27a" ] },
+    { "module_root": "test28", "modules": ["test28" ] },
+    { "module_root": "test29", "modules": ["test29" ] },
+    { 
+        "module_root": "test30",
+        "modules": ["test30" ],
+        "title": "adlc ✅, cargo run ast ✅"
+    },
+    {
+        "module_root": "test30",
+        "modules": ["test30_01" ],
+        "title": "adlc ❌, cargo run ast ✅",
+        "description": [
+            "\n  error message from adlc",
+            "In module test30_01 :",
+            "Invalid literal for annotation Doc of Doc: expected an object",
+            "  Invalid literal for annotation Doc of SerializedName: expected an object"
+        ]
+    },
+    {
+        "module_root": "test30",
+        "modules": ["test30_02" ],
+        "title": "adlc ❌, cargo run ast ✅",
+        "fail": true,
+        "skip": true,
+        "description": [
+            "\n  cargo run ast currently succeeds, but the output is incorrect.",
+            "The annotations scoped_name moduleName is test30_02, but the v is a string primative"
+        ]
+    },
+    {
+        "module_root": "test30",
+        "modules": ["test30_03" ],
+        "title": "adlc ✅, cargo run ast ✅",
+        "description": ["This one works"]
+    },
+    {
+        "module_root": "test30",
+        "modules": ["test30_04" ],
+        "title": "adlc ✅, cargo run ast ✅",
+        "description": [
+            "This one works - but there an ambiguit as to what the annotation should refer to.",
+            "It is resolved as sys.annotation.SerializedName"
+        ]
+    },
+    {
+        "module_root": "test31/proj",
+        "output_dir": "test_app/protoapp/src/adlgen",
+        "modules": ["protoclient.protoapp.api" ],
+        "title": "protoapp",
+        "lib_paths": [ "test31/lib" ]
+    },
+    { "module_root": "test32", "modules": ["test32a", "test32b"], "fail": true, "title": "Circular module reference"},
+    { "module_root": "demo1", "modules": ["picture" ] }
+]

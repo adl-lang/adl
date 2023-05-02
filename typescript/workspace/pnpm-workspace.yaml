@@ -1,0 +1,7 @@
+packages:
+  # launchable things: applications, story-book (maybe tests)
+  - "solutions/*"
+  # hand coded non-launchable things: components, libraries etc.
+  - "packages/*"
+  # generated code
+  - "generated/*"

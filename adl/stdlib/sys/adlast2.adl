@@ -1,0 +1,166 @@
+module sys.adlast2
+{
+// Types to represent an ADL syntax tree
+
+import sys.types.*;
+
+type ModuleName = String;
+type Ident = String;
+
+type Annotations = Map<ScopedName,Json>;
+
+struct ScopedName
+{
+    ModuleName moduleName;
+    Ident name;
+};
+
+struct TypeExpr<R>
+{
+    R typeRef;
+    Vector<TypeExpr<R>> parameters;
+};
+
+struct Field<TE>
+{
+    Ident name;
+    Ident serializedName;
+    TE typeExpr;
+    Maybe<Json> default;
+    Annotations annotations;
+};
+
+struct Struct<TE>
+{
+    Vector<Ident> typeParams;
+    Vector<Field<TE>> fields;
+};
+
+struct Union<TE>
+{
+    Vector<Ident> typeParams;
+    Vector<Field<TE>> fields;
+};
+
+struct TypeDef<TE>
+{
+    Vector<Ident> typeParams;
+    TE typeExpr;
+};
+
+struct NewType<TE>
+{
+    Vector<Ident> typeParams;
+    TE typeExpr;
+    Maybe<Json> default;
+};
+
+union DeclType<TE>
+{
+    Struct<TE> struct_;
+    Union<TE> union_;
+    TypeDef<TE> type_;
+    NewType<TE> newtype_;
+};
+
+struct Decl<TE>
+{
+    Ident name;
+    Maybe<Word32> version;
+    DeclType<TE> type_;
+    Annotations annotations;
+};
+
+struct ScopedDecl<TE>
+{
+    ModuleName moduleName;
+    Decl<TE> decl;
+};
+
+type DeclVersions<TE> = Vector<Decl<TE>>;
+
+union Import
+{
+    ModuleName moduleName;
+    ScopedName scopedName;
+};
+
+struct Module<TE>
+{
+    ModuleName name;
+    Vector<Import> imports;
+    Vector<Decl<TE>> decls;
+    Annotations annotations;
+};
+
+/// The Span start..end contains all values with start <= x < end. It is empty if start >= end.
+struct Span {
+  Word64 start;
+  Word64 end;
+};
+
+struct Spanned<T> {
+  T value;
+  Span span;
+};
+
+union PrimitiveType {
+  Void Void;
+  Void Bool;
+  Void Int8;
+  Void Int16;
+  Void Int32;
+  Void Int64;
+  Void Word8;
+  Void Word16;
+  Void Word32;
+  Void Word64;
+  Void Float;
+  Void Double;
+  Void Json;
+  Void ByteVector;
+  Void String;
+  Void Vector;
+  Void StringMap;
+  Void Nullable;
+  Void TypeToken;
+};
+
+union TypeRef {
+  ScopedName scopedName;
+  Ident localName;
+  PrimitiveType primitive;
+  Ident typeParam;
+};
+
+// AST after initial parsing
+type TypeExpr0 = TypeExpr<ScopedName>;
+type Field0 = Field<TypeExpr0>;
+type Struct0 = Struct<TypeExpr0>;
+type Union0 = Union<TypeExpr0>;
+type DeclType0 = DeclType<TypeExpr0>;
+type Decl0 = Decl<TypeExpr0>;
+type Module0 = Module<TypeExpr0>;
+
+
+// AST after name resolution
+type TypeExpr1 = TypeExpr<TypeRef>;
+type Field1 = Field<TypeExpr1>;
+type Struct1 = Struct<TypeExpr1>;
+type Union1 = Union<TypeExpr1>;
+type DeclType1 = DeclType<TypeExpr1>;
+type Decl1 = Decl<TypeExpr1>;
+type Module1 = Module<TypeExpr1>;
+
+// Used to output the ADL AST
+type AdlAst = StringMap<AstModule>;
+struct AstModule
+{
+    ModuleName name;
+    Vector<Import> imports;
+    StringMap<Decl<TypeExpr1>> decls;
+    Annotations annotations;
+};
+
+
+};

@@ -1,0 +1,12 @@
+{
+    "path" : "github.com/adl-lang/adl/adl/adlc",
+    "global_alias": "adlc",
+    "adlc": "0.0.0",
+    "requires": [
+        {
+            "ref": {
+                "alias": "sys"
+            }
+        }
+    ]
+}

@@ -1,0 +1,78 @@
+module common.db {
+
+// Annotation to indicate that an ADL struct is to be
+// mapped to a database table
+struct DbTable
+{
+  // If non empty, specifies the table name in the
+  // database. Otherwise it will be derived from the
+  // name of the adl struct
+  String tableName = "";
+
+  // If true, the generated db table will containing
+  // a text column `id`, which will be the primary key.
+  Bool withIdPrimaryKey = false;
+
+  // If provided, use the given fields as the table's primary key
+  Vector<String> withPrimaryKey = [];
+
+  // Indexes for the table
+  Vector<Vector<String>> indexes = [];
+
+  // Uniqueness constraints over the table
+  Vector<Vector<String>> uniquenessConstraints = [];
+
+  // Additional SQL to be run after all tables have been
+  // created
+  Vector<String> extraSql = [];
+
+  // The textual columns used to assemble a label for the row
+  // (to be shown in UIs alongside  the id)
+  Vector<String> label = [];
+};
+
+// Annotation to indicate that an ADL struct is to be
+// mapped to a database view.
+struct DbView {
+
+  // If non empty, specifies the view name in the
+  // database. Otherwise it will be derived from the
+  // name of the adl struct
+  String viewName = "";
+
+    // If true, the view will containing
+  // a text column `id`, which will be the primary key.
+  Bool withIdPrimaryKey = false;
+
+  // If non empty the sql required to create the view.
+  // If empty, then it's assumed that the view corresponding
+  // is created by some other means
+  Vector<String> viewSql = [];
+};
+
+
+/// Field level annotation to override the name of the
+/// database column.
+type DbColumnName = String;
+
+/// Field or type level annotation to override the type of the
+/// database column.
+type DbColumnType = String;
+
+/// Field level annotation to indicate that a column value
+/// is generated, and hence need not be requested from or edited
+/// by a user.
+type DbColumnGenerated = Void;
+
+/// A reference for a database stored value, referenced by a
+/// string primary key.
+newtype DbKey<T> = String;
+
+/// A value of type T along with a unique db identifier
+struct WithDbId<T>
+{
+  DbKey<T> id;
+  T value;
+};
+
+};

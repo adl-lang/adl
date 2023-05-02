@@ -1,0 +1,18 @@
+module adlc.testing_table {
+
+type TestFilesMetaData = Vector<TestFileMetaData>;
+
+struct TestFileMetaData {
+    String module_root;
+    Vector<String> lib_paths = [];
+    /// If null then 'build/adlc_out/$module_root' is used
+    Nullable<String> output_dir = null;
+    Vector<String> modules;
+    Bool fail = false;
+    Bool skip = false;
+    String title = "";
+    Vector<String> description = [];
+    Vector<String> keywords = [];
+};
+
+};

@@ -1,0 +1,7 @@
+module common.ui
+{
+
+import adlc.config.java.*;
+
+annotation JavaPackage "au.com.helixta.adl.common.ui";
+};

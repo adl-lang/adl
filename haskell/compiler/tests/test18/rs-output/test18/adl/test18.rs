@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub enum X1 {
   #[serde(rename="f1")]
   F1(f64),
@@ -12,7 +12,7 @@ pub enum X1 {
   F2(Box<Y1>),
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub enum Y1 {
   #[serde(rename="f1")]
   F1(String),
@@ -21,7 +21,7 @@ pub enum Y1 {
   F2(Box<X1>),
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct X2 {
   #[serde(rename="f1")]
   pub f_1: f64,
@@ -39,7 +39,7 @@ impl X2 {
   }
 }
 
-#[derive(Clone,Deserialize,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,PartialEq,Serialize)]
 pub struct Y2 {
   #[serde(rename="f1")]
   pub f_1: String,

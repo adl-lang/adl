@@ -1,0 +1,20 @@
+module test15
+{
+    /// A monomorphic struct
+    struct A
+    {
+        Int32 x;
+        String v;
+    };
+
+    /// A polymorphic union
+    union B<T>
+    {
+        T x;
+        String v;
+    };
+
+    type X = B<Vector<String>>;
+
+    newtype Y = B<Float>;
+};          

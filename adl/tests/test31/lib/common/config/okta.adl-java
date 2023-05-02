@@ -1,0 +1,12 @@
+module common.config.okta
+{
+
+import adlc.config.java.*;
+
+annotation JavaPackage "au.com.helixta.adl.common.config.okta";
+
+annotation OktaConfig JavaCustomType {
+    "javaname" : "au.com.helixta.service.auth.OktaCfg",
+    "helpers" : "au.com.helixta.adl.custom.OktaConfigHelpers"
+};
+};

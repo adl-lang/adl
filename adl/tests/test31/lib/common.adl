@@ -1,0 +1,94 @@
+module common {
+
+import common.strings.StringNE;
+import common.db.DbColumnType;
+
+/// A instant in time, represented as milliseconds from
+/// the epoch of "1970-01-01T00:00:00Z
+newtype Instant = Int64;
+
+/// A date in ISO8601 format
+newtype LocalDate = String = "1970-01-01";
+
+/// A time in ISO8601 format
+newtype LocalTime = String = "00:00:00";
+
+/// A datetime in ISO8601 format
+newtype LocalDateTime = String = "1970-01-01T00:00:00";
+
+/// The day of the week
+union DayOfWeek {
+  Void monday;
+  Void tuesday;
+  Void wednesday;
+  Void thursday;
+  Void friday;
+  Void saturday;
+  Void sunday;
+};
+
+/// A duration in ISO8601 format
+@DbColumnType "interval"
+newtype Duration = String = "P1D";
+
+/// An IANA timezone
+newtype Timezone = StringNE;
+
+/// A holder for paginated results
+struct Paginated<T> {
+
+  /// The paginated items
+  Vector<T> items;
+
+  /// The offset used for this query
+  Int64 current_offset;
+
+  /// The size of the entire date set
+  Int64 total_size;
+};
+
+/// Empty Struct (Used mostly for Void RPC responses)
+struct Unit {};
+
+/// Phantom type to capture a StringMap with a named string key type:
+type StringKeyMap<K,V> = StringMap<V>;
+
+/// Naming aid for strings used as keys
+type Key<T> = String;
+
+/// A value of type T along with the Key<T>
+struct WithKey<T> {
+  Key<T> key;
+  T value;
+};
+
+/// Postgres array of strings type that is serialized in to a list of Strings
+@DbColumnType "text[]"
+newtype StringList = Vector<String>;
+
+// Postgres tsvector type for plain text searching
+@DbColumnType "tsvector"
+newtype TSVector = String;
+
+/// Postgres Geography type that is serialized using GeoJson
+// Maps to postgres database as 'geography' column
+// See https://postgis.net/workshops/postgis-intro/geography.html#casting-to-geometry
+@DbColumnType "geography"
+newtype GeographyGeoJson = String;
+
+/// Postgres Geometry type
+// Maps to postgres database as 'geometry' column
+// Serialise to/from WKT (Well Known Text) in the string
+@DbColumnType "geometry"
+newtype GeometryWKT = String;
+
+
+/// A floating point decimal value
+//
+// In principle, the json format allows numbers with arbitrary decimal precision. However
+// support for this is dependent on individual client libraries, and crucially the
+// JSON.parse() function in browsers converts json numbers to a binary floating point
+// double representation. Hence we take the safe option and serialize as JSON strings.
+@DbColumnType "numeric"
+newtype BigDecimal = String;
+};

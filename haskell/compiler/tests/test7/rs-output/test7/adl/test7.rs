@@ -6,7 +6,7 @@ use serde::Serialize;
 use serde::Serializer;
 use std::marker::PhantomData;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct Point<T> {
   pub x: T,
 
@@ -302,7 +302,7 @@ impl<'de, X> Deserialize<'de> for Point2<X>
 
 pub type IntPoint1A = IntPoint1;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct S {
   #[serde(rename="f1")]
   pub f_1: IntPoint1A,

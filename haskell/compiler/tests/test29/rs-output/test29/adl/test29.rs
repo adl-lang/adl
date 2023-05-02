@@ -6,7 +6,7 @@ use serde::Serialize;
 /**
  * An example with weird "quoting" conventions, designed to break things
  */
-#[derive(Clone,Deserialize,Eq,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,PartialEq,Serialize)]
 pub struct Test {
   /**
    * "foo" as a field

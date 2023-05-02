@@ -1,0 +1,74 @@
+name: rust release
+
+on:
+  push:
+    tags:
+      - rust/compiler/v[0-9]*
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+        # Fetch all history so git describe works
+      - run: |
+          git fetch --prune --unshallow
+
+      # When rustup is updated, it tries to replace its binary, which on Windows is somehow locked.
+      # This can result in the CI failure, see: https://github.com/rust-lang/rustup/issues/3029
+      - run: |
+          rustup set auto-self-update disable
+          rustup toolchain install nightly --profile minimal
+
+      # caching doesn't work across tags
+      # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache
+      # - uses: Swatinem/rust-cache@v2
+
+      - run: cargo +nightly build --release
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: radlc-${{ runner.os }}
+          path: target/release/radlc
+
+  release:
+    name: Create Github Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Determine version
+      id: version
+      run:
+        echo "version=${GITHUB_REF:24}" >> $GITHUB_OUTPUT
+
+    - name: Fetch macOS build
+      uses: actions/download-artifact@v3
+      with:
+        name: radlc-macOS
+        path: radlc-macOS
+
+    - name: Fetch linux build
+      uses: actions/download-artifact@v3
+      with:
+        name: radlc-Linux
+        path: radlc-Linux
+
+    - run: |
+        mv radlc-macOS/radlc ./radlc-${{ steps.version.outputs.version }}-osx
+        mv radlc-Linux/radlc ./radlc-${{ steps.version.outputs.version }}-linux
+        ls -al
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release rust/compiler ${{ steps.version.outputs.version }}
+        files: |
+          radlc-${{ steps.version.outputs.version }}-linux
+          radlc-${{ steps.version.outputs.version }}-osx
