@@ -201,7 +201,7 @@ getTypeDetails (RT_Primitive pt) =
     P_Word64 -> numTypeDetails "u64"
     P_Bool -> primTypeDetails "bool" toBool
     P_Void -> primTypeDetails "()" toVoid
-    P_ByteVector -> primTypeDetails "Vec<u8>" toByteVector
+    P_ByteVector -> byteVectorTypeDetails
     P_Json -> primTypeDetails "serde_json::Value" toJson
     P_Vector -> vectorTypeDetails
     P_StringMap -> stringMapTypeDetails
@@ -224,15 +224,19 @@ getTypeDetails (RT_Primitive pt) =
 
     toVoid _= return "()"
 
-    toByteVector (Literal _ (LPrimitive (JS.String v))) =  do
-      rbase64 <- rustUse (rustScopedName "base64")
-      return (template "$1::decode(\"$2\").unwrap()" [rbase64, v])
-    toByteVector _ = error "BUG: expected a string literal for ByteVector"
-
     toJson (Literal _ (LPrimitive jv)) = do
       rserdejson <- rustUse (rustScopedName "serde_json")
       return (template "$1::from_str(\"$2\").unwrap()" [rserdejson, T.replace "\"" "\\\"" (jsonToText jv)])
     toJson _ = error "BUG: expected a json literal for JSson"
+
+    byteVectorTypeDetails = TypeDetails typeExpr literalText
+      where
+        typeExpr _ = do
+          rustUse (rustScopedName "crate::adlrt::ByteVector")
+        literalText (Literal _ (LPrimitive (JS.String s))) = do
+          rbvector <- rustUse (rustScopedName "crate::adlrt::ByteVector")
+          return (template "$1::from_literal(\"$2\")" [rbvector, s])
+        literalText _ = error "BUG: invalid literal for ByteVector"
 
     vectorTypeDetails = TypeDetails typeExpr literalText
       where

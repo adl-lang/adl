@@ -55,7 +55,7 @@ The ADL primitive types are mapped to rust types as follows:
 | `Void`                       | `()`                         |
 | `Float,Double`               | `f32,f64`                 |
 | `String`                     | `String`                  |
-| `ByteVector`                 | `Vec<u8>`                   |
+| `Bytes`                      | `adlrt::ByteVector`       |
 | `Vector<T>`                  | `Vec<T>`               |
 | `StringMap<T>`               | `std::collections::HashMap<String,T>`      |
 | `Nullable<T>`                | `Option<T>`                |

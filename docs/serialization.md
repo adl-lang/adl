@@ -26,7 +26,7 @@ determined by the repeated application of these rules.
 | Void                         | null                                                   |
 | Float,Double                 | number                                                 |
 | String                       | string                                                 |
-| ByteArray                    | string containing base 64 encoded data                 |
+| Bytes                        | string containing base 64 encoded data                 |
 | `Vector<T>`                    | json array containing serialized values of type T      |
 | `StringMap<T>`                 | A json object containing values of type T              |
 | `Nullable<T>`                  | A serialized value T or null                           |

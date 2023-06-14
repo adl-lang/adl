@@ -1,6 +1,6 @@
 // @generated from adl module test3
 
-use base64;
+use crate::adlrt::ByteVector;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json;
@@ -135,7 +135,7 @@ pub struct S<T> {
   pub f_double: f64,
 
   #[serde(default="S::<T>::def_f_bytes")]
-  pub f_bytes: Vec<u8>,
+  pub f_bytes: ByteVector,
 
   #[serde(default="S::<T>::def_f_string")]
   pub f_string: String,
@@ -256,8 +256,8 @@ impl<T> S<T> {
     0.45_f64
   }
 
-  pub fn def_f_bytes() -> Vec<u8> {
-    base64::decode("aGVsbG8=").unwrap()
+  pub fn def_f_bytes() -> ByteVector {
+    ByteVector::from_literal("aGVsbG8=")
   }
 
   pub fn def_f_string() -> String {
