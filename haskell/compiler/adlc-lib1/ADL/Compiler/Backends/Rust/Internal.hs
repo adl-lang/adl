@@ -87,7 +87,10 @@ data ModuleFile = ModuleFile {
   mf_rustModuleFn :: RustModuleFn,
 
   -- Details to control the code generate
-  mf_codeGenProfile :: CodeGenProfile
+  mf_codeGenProfile :: CodeGenProfile,
+
+  -- The absolute rust module path containing the runtime
+  mf_runtimeModule :: RustScopedName
 }
 
 -- A variant of the AST that carries custom type
@@ -232,9 +235,11 @@ getTypeDetails (RT_Primitive pt) =
     byteVectorTypeDetails = TypeDetails typeExpr literalText
       where
         typeExpr _ = do
-          rustUse (rustScopedName "crate::adlrt::ByteVector")
+          adlrt <- rtPackage
+          rustUse (rustScopedName (adlrt <> "::ByteVector"))
         literalText (Literal _ (LPrimitive (JS.String s))) = do
-          rbvector <- rustUse (rustScopedName "crate::adlrt::ByteVector")
+          adlrt <- rtPackage
+          rbvector <- rustUse (rustScopedName (adlrt <> "::ByteVector"))
           return (template "$1::from_literal(\"$2\")" [rbvector, s])
         literalText _ = error "BUG: invalid literal for ByteVector"
 
@@ -431,7 +436,7 @@ getCustomType runtimeModule sn decl = case getTypedAnnotation rustCustomType (d_
       _ -> rsn
    
 emptyModuleFile :: ModuleName -> RustFlags -> CodeGenProfile -> ModuleFile
-emptyModuleFile mn rf cgp = ModuleFile mn M.empty [] (rustModuleFn rf) cgp
+emptyModuleFile mn rf cgp = ModuleFile mn M.empty [] (rustModuleFn rf) cgp (rs_runtimeModule rf)
 
 rustModuleFn :: RustFlags -> RustModuleFn
 rustModuleFn rf = \mn -> RustScopedName (["crate"] <> unRustScopedName (rs_module rf) <> unModuleName mn)
@@ -447,7 +452,7 @@ phantomData typeParam = do
 rustUse :: RustScopedName -> CState T.Text
 rustUse rsname = do
   state <- get
-  let userRefs =mf_useRefs state
+  let userRefs = mf_useRefs state
       shortName = last (unRustScopedName rsname)
       asCandidates = [shortName] <> [shortName <> "_" <> fshow n | n <- [1,2..]]
       uniqueShortName = head (filter (shortNameOk userRefs) asCandidates)
@@ -458,6 +463,11 @@ rustUse rsname = do
     shortNameOk userRefs n = case M.lookup n userRefs of
       Nothing -> True
       Just rsname1 -> rsname == rsname1
+
+rtPackage:: CState T.Text
+rtPackage = do
+  state <- get
+  return (T.intercalate "::" ("crate" : unRustScopedName (mf_runtimeModule state)))
 
 jsonToText :: JS.Value -> T.Text
 jsonToText = LT.toStrict . JS.encodeToLazyText
