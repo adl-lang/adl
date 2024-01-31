@@ -18,6 +18,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Simple functions to reduce boilerplate in working with json for ADL values
@@ -168,13 +169,13 @@ public class JsonHelpers {
       JsonObject result = new JsonObject();
       String lastMergedField = null;
 
-      for(Map.Entry<String,JsonElement> me : jv1.getAsJsonObject().entrySet()) {
+      for(Map.Entry<String,JsonElement> me : jobj1.entrySet()) {
         if (!me.getKey().equals(LAST_MERGED_FIELD)) {
           result.add(me.getKey(), me.getValue());
           lastMergedField = me.getKey();
         }
       }
-      for(Map.Entry<String,JsonElement> me : jv2.getAsJsonObject().entrySet()) {
+      for(Map.Entry<String,JsonElement> me : jobj2.entrySet()) {
         if (!me.getKey().equals(LAST_MERGED_FIELD)) {
           if (result.has(me.getKey())) {
             result.add(me.getKey(), mergeJson(result.get(me.getKey()), me.getValue()));
@@ -184,7 +185,10 @@ public class JsonHelpers {
           lastMergedField = me.getKey();
         }
       }
-      result.add(LAST_MERGED_FIELD, new JsonPrimitive(lastMergedField));
+
+      if (Objects.nonNull(lastMergedField)) {
+        result.add(LAST_MERGED_FIELD, new JsonPrimitive(lastMergedField));
+      }
       return result;
     } else {
       return jv2;

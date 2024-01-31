@@ -17,6 +17,7 @@ import org.adl.runtime.JsonHelpers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import adl.test2.S1;
 import adl.test5.U8;
@@ -76,6 +77,13 @@ public class TestMerging {
     assertEquals(U9.Disc.V1, s.getF1().getDisc());
     assertEquals("aa", s.getF1().getV1());
     assertEquals(U9.Disc.V3, s.getF2().getDisc());
+  }
+
+  @Test
+  public void testMergeEmptyObjects() {
+    // Shouldn't crash.
+    JsonElement empty = JsonHelpers.mergeJson(new JsonObject(), new JsonObject());
+    assertEquals(gson.toJson(empty), "{}");
   }
 
   static Gson gson = new GsonBuilder()
