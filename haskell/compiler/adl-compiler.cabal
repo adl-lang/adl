@@ -1,6 +1,6 @@
 cabal-version:       2.4
 name:                adl-compiler
-version:             1.1.6
+version:             1.2
 synopsis:            A compiler for the Algebraic Data Language (ADL)
 license:             BSD-3-Clause
 license-file:        ../../LICENSE
@@ -30,6 +30,7 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/haskell/runtime/ADL/Core/StringMap.hs
                     , lib/haskell/runtime/ADL/Core/TypeToken.hs
                     , lib/haskell/runtime/ADL/Core/Value.hs
+                    , lib/haskell/runtime/ADL/Core/Map.hs
                     , lib/haskell/runtime/ADL/Sys/Adlast.hs
                     , lib/haskell/runtime/ADL/Sys/Types.hs
                     , lib/java/runtime/org/adl/runtime/AdlVoid.java
