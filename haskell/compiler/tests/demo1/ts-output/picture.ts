@@ -31,7 +31,7 @@ export interface PictureOpts {
 export function makePicture<K extends keyof PictureOpts>(kind: K, value: PictureOpts[K]) { return {kind, value}; }
 
 const Picture_AST : ADL.ScopedDecl =
-  {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"circle","default":{"kind":"nothing"},"name":"circle","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Circle"}},"parameters":[]}},{"annotations":[],"serializedName":"rectangle","default":{"kind":"nothing"},"name":"rectangle","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Rectangle"}},"parameters":[]}},{"annotations":[],"serializedName":"composed","default":{"kind":"nothing"},"name":"composed","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}},"parameters":[]}]}},{"annotations":[],"serializedName":"translated","default":{"kind":"nothing"},"name":"translated","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Translated"}},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}},"parameters":[]}]}}]}},"name":"Picture","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Picture","type_":{"kind":"union_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"circle","serializedName":"circle","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Circle"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"rectangle","serializedName":"rectangle","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Rectangle"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"composed","serializedName":"composed","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"translated","serializedName":"translated","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Picture"}}}],"typeRef":{"kind":"reference","value":{"moduleName":"picture","name":"Translated"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"picture"};
 
 export const snPicture: ADL.ScopedName = {moduleName:"picture", name:"Picture"};
 
@@ -54,7 +54,7 @@ export function makeCircle(
 }
 
 const Circle_AST : ADL.ScopedDecl =
-  {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"radius","default":{"kind":"nothing"},"name":"radius","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}}]}},"name":"Circle","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Circle","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"radius","serializedName":"radius","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Double"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"picture"};
 
 export const snCircle: ADL.ScopedName = {moduleName:"picture", name:"Circle"};
 
@@ -80,7 +80,7 @@ export function makeRectangle(
 }
 
 const Rectangle_AST : ADL.ScopedDecl =
-  {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"width","default":{"kind":"nothing"},"name":"width","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"height","default":{"kind":"nothing"},"name":"height","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}}]}},"name":"Rectangle","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Rectangle","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"width","serializedName":"width","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Double"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"height","serializedName":"height","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Double"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"picture"};
 
 export const snRectangle: ADL.ScopedName = {moduleName:"picture", name:"Rectangle"};
 
@@ -109,7 +109,7 @@ export function makeTranslated<T>(
 }
 
 const Translated_AST : ADL.ScopedDecl =
-  {"moduleName":"picture","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"xoffset","default":{"kind":"just","value":0},"name":"xoffset","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"yoffset","default":{"kind":"just","value":0},"name":"yoffset","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"object","default":{"kind":"nothing"},"name":"object","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Translated","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Translated","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"just","value":0},"name":"xoffset","serializedName":"xoffset","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Double"}}},{"annotations":[],"default":{"kind":"just","value":0},"name":"yoffset","serializedName":"yoffset","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Double"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"object","serializedName":"object","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}}],"typeParams":["T"]}},"version":{"kind":"nothing"}},"moduleName":"picture"};
 
 export const snTranslated: ADL.ScopedName = {moduleName:"picture", name:"Translated"};
 

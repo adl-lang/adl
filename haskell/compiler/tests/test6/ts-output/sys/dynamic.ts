@@ -24,7 +24,7 @@ export function makeDynamic(
 }
 
 const Dynamic_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.dynamic","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"typeExpr","default":{"kind":"nothing"},"name":"typeExpr","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}},"parameters":[]}},{"annotations":[],"serializedName":"value","default":{"kind":"nothing"},"name":"value","typeExpr":{"typeRef":{"kind":"primitive","value":"Json"},"parameters":[]}}]}},"name":"Dynamic","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Dynamic","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"typeExpr","serializedName":"typeExpr","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"value","serializedName":"value","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Json"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.dynamic"};
 
 export const snDynamic: ADL.ScopedName = {moduleName:"sys.dynamic", name:"Dynamic"};
 

@@ -16,7 +16,8 @@ module ADL.Core.StringMap(
 import Prelude hiding(lookup)
 
 import qualified Data.Aeson as JS
-import qualified Data.HashMap.Strict as HM
+import qualified Data.Aeson.KeyMap as KM
+import qualified Data.Aeson.Key as AKey
 import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Semigroup as S
@@ -37,13 +38,13 @@ instance Monoid (StringMap a) where
 
 instance forall a . (AdlValue a) => AdlValue (StringMap a) where
   atype _ = T.concat ["StringMap<",atype (Proxy :: Proxy a),">"]
-  jsonGen = JsonGen (JS.Object . HM.fromList . (map toPair) . M.toList . toMap)
+  jsonGen = JsonGen (JS.Object . KM.fromList . (map toPair) . M.toList . toMap)
     where
-      toPair (k,a) = (k,adlToJson a)
+      toPair (k,a) = (AKey.fromText k,adlToJson a)
 
   jsonParser = withJsonObject $ \ctx hm ->
-    let parse (k,jv) = (\jv -> (k,jv)) <$> runJsonParser jsonParser (ParseField k:ctx) jv
-    in (StringMap . M.fromList) <$> traverse parse (HM.toList hm)
+    let parse (k,jv) = (\jv -> (AKey.toText k,jv)) <$> runJsonParser jsonParser (ParseField k:ctx) jv
+    in (StringMap . M.fromList) <$> traverse parse (KM.toList hm)
 
 singleton :: T.Text -> a -> StringMap a
 singleton key value = StringMap (M.singleton key value)

@@ -27,8 +27,9 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.Parsec as P
 import qualified Data.Vector as V
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson as JSON
+import qualified Data.Aeson.KeyMap as KM
+import qualified Data.Aeson.Key as AKey
 import qualified Data.Scientific as S
 
 import qualified ADL.Compiler.ParserP as P
@@ -602,11 +603,11 @@ literalForTypeExpr te v = litForTE Map.empty te v
     vecLiteral m te (JSON.Array v) = mapM (litForTE m te) (V.toList v)
     vecLiteral _ _ _ = Left "expected an array"
 
-    stringMapLiteral m te (JSON.Object o) = Map.fromList <$> mapM mkItem (HM.toList o)
+    stringMapLiteral m te (JSON.Object o) = Map.fromList <$> mapM mkItem (KM.toList o)
       where
          mkItem (key,jv) = do
            lit <- litForTE m te jv
-           return (key,lit)
+           return (AKey.toText key,lit)
     stringMapLiteral _ _ _ = Left "expected an object"
 
     nullableLiteral m te JSON.Null = Right Nothing
@@ -621,7 +622,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
     structFields pm0 decl s tes (JSON.Object hm) = for (s_fields s) $ \f -> do
       pm <- createParamMap (s_typeParams s) tes pm0
       ftype <- substTypeParams pm (f_type f)
-      case HM.lookup (f_serializedName f) hm of
+      case KM.lookup (AKey.fromText (f_serializedName f)) hm of
        (Just jv) -> litForTE pm ftype jv
        Nothing -> case f_default f of
          (Just jv) -> litForTE pm ftype jv
@@ -630,14 +631,14 @@ literalForTypeExpr te v = litForTE Map.empty te v
 
     unionField m decl u tes (JSON.Object hm) = do
       pm <- createParamMap (u_typeParams u) tes m
-      case HM.toList hm of
-        [(k,v)] -> case find ((k==).f_serializedName) (u_fields u) of
+      case KM.toList hm of
+        [(k,v)] -> case find ((k==).(AKey.fromText).f_serializedName) (u_fields u) of
           (Just f) -> do
             ftype <- substTypeParams pm (f_type f)
             lit <- litForTE pm ftype v
             Right (f_name f,lit)
           Nothing ->
-            Left (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
+            Left (T.concat ["Field ",AKey.toText k, " in literal doesn't match any in union definition for", d_name decl])
         _ -> Left "literal union must have a single key/value pair"
     unionField m decl u tes (JSON.String k) = do
       pm <- createParamMap (u_typeParams u) tes m
@@ -944,7 +945,7 @@ checkSerializedWithInternalTag m = map mkError (filter (not . declOK) (Map.elems
 
 getSerializedWithInternalTag :: Annotations a -> Maybe T.Text
 getSerializedWithInternalTag annotations = case Map.lookup serializedWithInternalTag  annotations of
-   (Just (_,JSON.Object hm)) -> case HM.lookup "tag" hm of
+   (Just (_,JSON.Object hm)) -> case KM.lookup "tag" hm of
       (Just (JSON.String tag)) -> Just tag
       _ -> Nothing
    _ -> Nothing

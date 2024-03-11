@@ -18,7 +18,6 @@ import Prelude( ($) )
 import qualified ADL.Core.Nullable
 import qualified Data.Aeson as JS
 import qualified Data.ByteString as B
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
 import qualified Data.Map as M
 import qualified Data.Maybe

@@ -33,7 +33,7 @@ const Map = {
   module : "sys.types",
   kind : "newtype",
   typevars : ["K","V"],
-  type : {"args":[{"args":[{"var":"K"},{"var":"V"}],"app":{"ref":"sys.types.MapEntry"}}],"app":{"primitive":"Vector"}},
+  type : {"app":{"primitive":"Vector"},"args":[{"app":{"ref":"sys.types.MapEntry"},"args":[{"var":"K"},{"var":"V"}]}]},
   defaultv : null,
   annotations : [
   ]
@@ -144,7 +144,7 @@ const Set = {
   module : "sys.types",
   kind : "newtype",
   typevars : ["T"],
-  type : {"args":[{"var":"T"}],"app":{"primitive":"Vector"}},
+  type : {"app":{"primitive":"Vector"},"args":[{"var":"T"}]},
   defaultv : null,
   annotations : [
   ]

@@ -23,7 +23,7 @@ export function makeTest(
 }
 
 const Test_AST : ADL.ScopedDecl =
-  {"moduleName":"test29","decl":{"annotations":[{"value":"An example with weird \"quoting\" conventions, designed to break things\n","key":{"moduleName":"sys.annotations","name":"Doc"}}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[{"value":"\"foo\" as a field\n","key":{"moduleName":"sys.annotations","name":"Doc"}}],"serializedName":"foo","default":{"kind":"just","value":{"'":"baz","degrees":"°"," ":"baz","$":"bar","\"":"baz"}},"name":"foo","typeExpr":{"typeRef":{"kind":"primitive","value":"StringMap"},"parameters":[{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}]}}]}},"name":"Test","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[{"key":{"moduleName":"sys.annotations","name":"Doc"},"value":"An example with weird \"quoting\" conventions, designed to break things\n"}],"name":"Test","type_":{"kind":"struct_","value":{"fields":[{"annotations":[{"key":{"moduleName":"sys.annotations","name":"Doc"},"value":"\"foo\" as a field\n"}],"default":{"kind":"just","value":{" ":"baz","\"":"baz","$":"bar","'":"baz","degrees":"°"}},"name":"foo","serializedName":"foo","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}}],"typeRef":{"kind":"primitive","value":"StringMap"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test29"};
 
 export const snTest: ADL.ScopedName = {moduleName:"test29", name:"Test"};
 

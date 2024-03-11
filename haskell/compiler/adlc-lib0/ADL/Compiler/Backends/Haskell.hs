@@ -21,8 +21,9 @@ import Data.Ord (comparing)
 import System.FilePath(takeDirectory,joinPath,addExtension, splitDirectories, splitExtension, (</>))
 
 import qualified Data.Vector as V
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson as JS
+import qualified Data.Aeson.KeyMap as KM
+import qualified Data.Aeson.Key as AKey
 import qualified Data.Scientific as S
 
 import qualified Data.Text as T
@@ -577,12 +578,12 @@ generateLiteral te v =  generateLV Map.empty te v
     generateVec m te _ = error "BUG: vector literal requires a json array"
 
     generateStringMap m te (JS.Object hm) = do
-      pairs <- mapM genPair (HM.toList hm)
+      pairs <- mapM genPair (KM.toList hm)
       return (template "(stringMapFromList [$1])" [T.intercalate ", " pairs])
       where
         genPair (k,jv) = do
           v <- generateLV m te jv
-          return (template "($1, $2)" [doubleQuote k,v])
+          return (template "($1, $2)" [doubleQuote (AKey.toText k),v])
     generateStringMap m te _ = error "BUG: stringmap literal requires a json object"
 
     generateNullable m te JS.Null = do
@@ -600,7 +601,7 @@ generateLiteral te v =  generateLV Map.empty te v
 
     generateStruct m sn d s tes (JS.Object hm) = do
       fields <- forM (s_fields s) $ \f -> do
-        let mjv = HM.lookup (f_serializedName f) hm <|> f_default f
+        let mjv = KM.lookup (serializedNameKey f) hm <|> f_default f
             jv = case mjv of
               Just jv -> jv
               Nothing -> error ("BUG: missing default value for field " <> T.unpack (f_name f))
@@ -614,17 +615,17 @@ generateLiteral te v =  generateLV Map.empty te v
     generateUnion m sn d u tes (JS.String fname) = do
       unionCtor sn d u fname
     generateUnion m sn d u tes (JS.Object hm) = do
-      ctor <- unionCtor sn d u fname
+      ctor <- unionCtor sn d u (AKey.toText fname)
       if isVoidType te
         then return ctor
         else do
           lit <- generateLV m2 te v
           return (template "($1 $2)" [ctor,lit])
       where
-        (fname,v) = case HM.toList hm of
+        (fname,v) = case KM.toList hm of
           [v] -> v
           _ -> error "BUG: union literal must have a single key"
-        te = case L.find (\f -> f_serializedName f == fname) (u_fields u) of
+        te = case L.find (\f -> serializedNameKey f == fname) (u_fields u) of
           Just f -> f_type f
           Nothing -> error "BUG: union literal key must be a field"
         m2 = withTypeBindings (u_typeParams u) tes m
@@ -671,6 +672,9 @@ scopedName mn name = do
        hm <- importADLModule mn
        return (T.intercalate "." [formatText hm,name])
 
+serializedNameKey:: Field a -> KM.Key
+serializedNameKey f = AKey.fromText (f_serializedName f)
+
 generateCustomType :: Ident -> CDecl -> CustomType -> HGen ()
 generateCustomType n d ct = do
   -- imports and exports
@@ -704,7 +708,6 @@ generateModule m = do
   addImport "import Control.Applicative( (<$>), (<*>), (<|>) )"
   importModule (HaskellModule (ms_runtimePackage ms))
   importQualifiedModuleAs (HaskellModule "Data.Aeson") "JS"
-  importQualifiedModuleAs (HaskellModule "Data.HashMap.Strict") "HM"
 
   let mname = ms_name ms
       genDecl (n,d) = do

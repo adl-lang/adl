@@ -6,7 +6,7 @@ import * as sys_types from './types';
 export type ModuleName = string;
 
 const ModuleName_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"ModuleName","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"ModuleName","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snModuleName: ADL.ScopedName = {moduleName:"sys.adlast", name:"ModuleName"};
 
@@ -17,7 +17,7 @@ export function texprModuleName(): ADL.ATypeExpr<ModuleName> {
 export type Ident = string;
 
 const Ident_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"Ident","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Ident","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snIdent: ADL.ScopedName = {moduleName:"sys.adlast", name:"Ident"};
 
@@ -28,7 +28,7 @@ export function texprIdent(): ADL.ATypeExpr<Ident> {
 export type Annotations = sys_types.Map<ScopedName, {}|null>;
 
 const Annotations_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Map"}},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ScopedName"}},"parameters":[]},{"typeRef":{"kind":"primitive","value":"Json"},"parameters":[]}]}}},"name":"Annotations","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Annotations","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ScopedName"}}},{"parameters":[],"typeRef":{"kind":"primitive","value":"Json"}}],"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Map"}}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snAnnotations: ADL.ScopedName = {moduleName:"sys.adlast", name:"Annotations"};
 
@@ -54,7 +54,7 @@ export function makeScopedName(
 }
 
 const ScopedName_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"moduleName","default":{"kind":"nothing"},"name":"moduleName","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}},"parameters":[]}},{"annotations":[],"serializedName":"name","default":{"kind":"nothing"},"name":"name","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}}]}},"name":"ScopedName","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"ScopedName","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"moduleName","serializedName":"moduleName","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"name","serializedName":"name","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snScopedName: ADL.ScopedName = {moduleName:"sys.adlast", name:"ScopedName"};
 
@@ -86,7 +86,7 @@ export interface TypeRefOpts {
 export function makeTypeRef<K extends keyof TypeRefOpts>(kind: K, value: TypeRefOpts[K]) { return {kind, value}; }
 
 const TypeRef_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"primitive","default":{"kind":"nothing"},"name":"primitive","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}},{"annotations":[],"serializedName":"typeParam","default":{"kind":"nothing"},"name":"typeParam","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}},{"annotations":[],"serializedName":"reference","default":{"kind":"nothing"},"name":"reference","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ScopedName"}},"parameters":[]}}]}},"name":"TypeRef","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"TypeRef","type_":{"kind":"union_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"primitive","serializedName":"primitive","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"typeParam","serializedName":"typeParam","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"reference","serializedName":"reference","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ScopedName"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snTypeRef: ADL.ScopedName = {moduleName:"sys.adlast", name:"TypeRef"};
 
@@ -112,7 +112,7 @@ export function makeTypeExpr(
 }
 
 const TypeExpr_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"typeRef","default":{"kind":"nothing"},"name":"typeRef","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeRef"}},"parameters":[]}},{"annotations":[],"serializedName":"parameters","default":{"kind":"nothing"},"name":"parameters","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}},"parameters":[]}]}}]}},"name":"TypeExpr","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"TypeExpr","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"typeRef","serializedName":"typeRef","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeRef"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"parameters","serializedName":"parameters","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snTypeExpr: ADL.ScopedName = {moduleName:"sys.adlast", name:"TypeExpr"};
 
@@ -147,7 +147,7 @@ export function makeField(
 }
 
 const Field_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"name","default":{"kind":"nothing"},"name":"name","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}},{"annotations":[],"serializedName":"serializedName","default":{"kind":"nothing"},"name":"serializedName","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}},{"annotations":[],"serializedName":"typeExpr","default":{"kind":"nothing"},"name":"typeExpr","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}},"parameters":[]}},{"annotations":[],"serializedName":"default","default":{"kind":"nothing"},"name":"default","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Maybe"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Json"},"parameters":[]}]}},{"annotations":[],"serializedName":"annotations","default":{"kind":"nothing"},"name":"annotations","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Annotations"}},"parameters":[]}}]}},"name":"Field","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Field","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"name","serializedName":"name","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"serializedName","serializedName":"serializedName","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"typeExpr","serializedName":"typeExpr","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"default","serializedName":"default","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"Json"}}],"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Maybe"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"annotations","serializedName":"annotations","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Annotations"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snField: ADL.ScopedName = {moduleName:"sys.adlast", name:"Field"};
 
@@ -173,7 +173,7 @@ export function makeStruct(
 }
 
 const Struct_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"typeParams","default":{"kind":"nothing"},"name":"typeParams","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}]}},{"annotations":[],"serializedName":"fields","default":{"kind":"nothing"},"name":"fields","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Field"}},"parameters":[]}]}}]}},"name":"Struct","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Struct","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"typeParams","serializedName":"typeParams","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"fields","serializedName":"fields","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Field"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snStruct: ADL.ScopedName = {moduleName:"sys.adlast", name:"Struct"};
 
@@ -199,7 +199,7 @@ export function makeUnion(
 }
 
 const Union_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"typeParams","default":{"kind":"nothing"},"name":"typeParams","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}]}},{"annotations":[],"serializedName":"fields","default":{"kind":"nothing"},"name":"fields","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Field"}},"parameters":[]}]}}]}},"name":"Union","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Union","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"typeParams","serializedName":"typeParams","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"fields","serializedName":"fields","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Field"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snUnion: ADL.ScopedName = {moduleName:"sys.adlast", name:"Union"};
 
@@ -225,7 +225,7 @@ export function makeTypeDef(
 }
 
 const TypeDef_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"typeParams","default":{"kind":"nothing"},"name":"typeParams","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}]}},{"annotations":[],"serializedName":"typeExpr","default":{"kind":"nothing"},"name":"typeExpr","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}},"parameters":[]}}]}},"name":"TypeDef","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"TypeDef","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"typeParams","serializedName":"typeParams","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"typeExpr","serializedName":"typeExpr","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snTypeDef: ADL.ScopedName = {moduleName:"sys.adlast", name:"TypeDef"};
 
@@ -254,7 +254,7 @@ export function makeNewType(
 }
 
 const NewType_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"typeParams","default":{"kind":"nothing"},"name":"typeParams","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}]}},{"annotations":[],"serializedName":"typeExpr","default":{"kind":"nothing"},"name":"typeExpr","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}},"parameters":[]}},{"annotations":[],"serializedName":"default","default":{"kind":"nothing"},"name":"default","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Maybe"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Json"},"parameters":[]}]}}]}},"name":"NewType","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"NewType","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"typeParams","serializedName":"typeParams","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"typeExpr","serializedName":"typeExpr","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeExpr"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"default","serializedName":"default","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"Json"}}],"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Maybe"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snNewType: ADL.ScopedName = {moduleName:"sys.adlast", name:"NewType"};
 
@@ -291,7 +291,7 @@ export interface DeclTypeOpts {
 export function makeDeclType<K extends keyof DeclTypeOpts>(kind: K, value: DeclTypeOpts[K]) { return {kind, value}; }
 
 const DeclType_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"struct_","default":{"kind":"nothing"},"name":"struct_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Struct"}},"parameters":[]}},{"annotations":[],"serializedName":"union_","default":{"kind":"nothing"},"name":"union_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Union"}},"parameters":[]}},{"annotations":[],"serializedName":"type_","default":{"kind":"nothing"},"name":"type_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeDef"}},"parameters":[]}},{"annotations":[],"serializedName":"newtype_","default":{"kind":"nothing"},"name":"newtype_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"NewType"}},"parameters":[]}}]}},"name":"DeclType","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"DeclType","type_":{"kind":"union_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"struct_","serializedName":"struct_","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Struct"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"union_","serializedName":"union_","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Union"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"type_","serializedName":"type_","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"TypeDef"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"newtype_","serializedName":"newtype_","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"NewType"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snDeclType: ADL.ScopedName = {moduleName:"sys.adlast", name:"DeclType"};
 
@@ -323,7 +323,7 @@ export function makeDecl(
 }
 
 const Decl_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"name","default":{"kind":"nothing"},"name":"name","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}},"parameters":[]}},{"annotations":[],"serializedName":"version","default":{"kind":"nothing"},"name":"version","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Maybe"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Word32"},"parameters":[]}]}},{"annotations":[],"serializedName":"type_","default":{"kind":"nothing"},"name":"type_","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"DeclType"}},"parameters":[]}},{"annotations":[],"serializedName":"annotations","default":{"kind":"nothing"},"name":"annotations","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Annotations"}},"parameters":[]}}]}},"name":"Decl","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Decl","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"name","serializedName":"name","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Ident"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"version","serializedName":"version","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"Word32"}}],"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"Maybe"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"type_","serializedName":"type_","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"DeclType"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"annotations","serializedName":"annotations","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Annotations"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snDecl: ADL.ScopedName = {moduleName:"sys.adlast", name:"Decl"};
 
@@ -349,7 +349,7 @@ export function makeScopedDecl(
 }
 
 const ScopedDecl_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"moduleName","default":{"kind":"nothing"},"name":"moduleName","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}},"parameters":[]}},{"annotations":[],"serializedName":"decl","default":{"kind":"nothing"},"name":"decl","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Decl"}},"parameters":[]}}]}},"name":"ScopedDecl","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"ScopedDecl","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"moduleName","serializedName":"moduleName","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"decl","serializedName":"decl","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Decl"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snScopedDecl: ADL.ScopedName = {moduleName:"sys.adlast", name:"ScopedDecl"};
 
@@ -360,7 +360,7 @@ export function texprScopedDecl(): ADL.ATypeExpr<ScopedDecl> {
 export type DeclVersions = Decl[];
 
 const DeclVersions_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Decl"}},"parameters":[]}]}}},"name":"DeclVersions","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"DeclVersions","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Decl"}}}],"typeRef":{"kind":"primitive","value":"Vector"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snDeclVersions: ADL.ScopedName = {moduleName:"sys.adlast", name:"DeclVersions"};
 
@@ -387,7 +387,7 @@ export interface ImportOpts {
 export function makeImport<K extends keyof ImportOpts>(kind: K, value: ImportOpts[K]) { return {kind, value}; }
 
 const Import_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"moduleName","default":{"kind":"nothing"},"name":"moduleName","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}},"parameters":[]}},{"annotations":[],"serializedName":"scopedName","default":{"kind":"nothing"},"name":"scopedName","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ScopedName"}},"parameters":[]}}]}},"name":"Import","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Import","type_":{"kind":"union_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"moduleName","serializedName":"moduleName","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"scopedName","serializedName":"scopedName","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ScopedName"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snImport: ADL.ScopedName = {moduleName:"sys.adlast", name:"Import"};
 
@@ -419,7 +419,7 @@ export function makeModule(
 }
 
 const Module_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.adlast","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"name","default":{"kind":"nothing"},"name":"name","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}},"parameters":[]}},{"annotations":[],"serializedName":"imports","default":{"kind":"nothing"},"name":"imports","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Import"}},"parameters":[]}]}},{"annotations":[],"serializedName":"decls","default":{"kind":"nothing"},"name":"decls","typeExpr":{"typeRef":{"kind":"primitive","value":"StringMap"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Decl"}},"parameters":[]}]}},{"annotations":[],"serializedName":"annotations","default":{"kind":"nothing"},"name":"annotations","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Annotations"}},"parameters":[]}}]}},"name":"Module","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Module","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"name","serializedName":"name","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"ModuleName"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"imports","serializedName":"imports","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Import"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"decls","serializedName":"decls","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Decl"}}}],"typeRef":{"kind":"primitive","value":"StringMap"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"annotations","serializedName":"annotations","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"sys.adlast","name":"Annotations"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"sys.adlast"};
 
 export const snModule: ADL.ScopedName = {moduleName:"sys.adlast", name:"Module"};
 

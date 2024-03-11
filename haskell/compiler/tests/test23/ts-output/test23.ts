@@ -23,7 +23,7 @@ export function makeS1(
 }
 
 const S1_AST : ADL.ScopedDecl =
-  {"moduleName":"test23","decl":{"annotations":[{"value":null,"key":{"moduleName":"test23","name":"X"}}],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[{"value":null,"key":{"moduleName":"test23","name":"X"}}],"serializedName":"field","default":{"kind":"nothing"},"name":"field","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[{"key":{"moduleName":"test23","name":"X"},"value":null}],"name":"S1","type_":{"kind":"struct_","value":{"fields":[{"annotations":[{"key":{"moduleName":"test23","name":"X"},"value":null}],"default":{"kind":"nothing"},"name":"field","serializedName":"field","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test23"};
 
 export const snS1: ADL.ScopedName = {moduleName:"test23", name:"S1"};
 
@@ -34,7 +34,7 @@ export function texprS1(): ADL.ATypeExpr<S1> {
 export type X = null;
 
 const X_AST : ADL.ScopedDecl =
-  {"moduleName":"test23","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}}},"name":"X","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"X","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Void"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test23"};
 
 export const snX: ADL.ScopedName = {moduleName:"test23", name:"X"};
 

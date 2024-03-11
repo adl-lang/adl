@@ -20,7 +20,7 @@ export function makePoint<T>(
 }
 
 const Point_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"x","default":{"kind":"nothing"},"name":"x","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"y","default":{"kind":"nothing"},"name":"y","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Point","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Point","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"x","serializedName":"x","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"y","serializedName":"y","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}}],"typeParams":["T"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snPoint: ADL.ScopedName = {moduleName:"test7", name:"Point"};
 
@@ -31,7 +31,7 @@ export function texprPoint<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Point<T>
 export type Int1 = number;
 
 const Int1_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int1","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Int1","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snInt1: ADL.ScopedName = {moduleName:"test7", name:"Int1"};
 
@@ -42,7 +42,7 @@ export function texprInt1(): ADL.ATypeExpr<Int1> {
 export type Int2 = number;
 
 const Int2_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int2","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Int2","type_":{"kind":"newtype_","value":{"default":{"kind":"nothing"},"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snInt2: ADL.ScopedName = {moduleName:"test7", name:"Int2"};
 
@@ -53,7 +53,7 @@ export function texprInt2(): ADL.ATypeExpr<Int2> {
 export type Int3 = number;
 
 const Int3_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":42},"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int3","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Int3","type_":{"kind":"newtype_","value":{"default":{"kind":"just","value":42},"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snInt3: ADL.ScopedName = {moduleName:"test7", name:"Int3"};
 
@@ -64,7 +64,7 @@ export function texprInt3(): ADL.ATypeExpr<Int3> {
 export type Int4<_X> = number;
 
 const Int4_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":["X"],"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int4","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Int4","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}},"typeParams":["X"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snInt4: ADL.ScopedName = {moduleName:"test7", name:"Int4"};
 
@@ -75,7 +75,7 @@ export function texprInt4<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Int4<X>> 
 export type Int5<_X> = number;
 
 const Int5_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int5","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Int5","type_":{"kind":"newtype_","value":{"default":{"kind":"nothing"},"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}},"typeParams":["X"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snInt5: ADL.ScopedName = {moduleName:"test7", name:"Int5"};
 
@@ -86,7 +86,7 @@ export function texprInt5<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Int5<X>> 
 export type Int6<_X> = number;
 
 const Int6_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"just","value":43},"typeExpr":{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}}},"name":"Int6","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Int6","type_":{"kind":"newtype_","value":{"default":{"kind":"just","value":43},"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}},"typeParams":["X"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snInt6: ADL.ScopedName = {moduleName:"test7", name:"Int6"};
 
@@ -97,7 +97,7 @@ export function texprInt6<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Int6<X>> 
 export type String1 = string;
 
 const String1_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String1","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"String1","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snString1: ADL.ScopedName = {moduleName:"test7", name:"String1"};
 
@@ -108,7 +108,7 @@ export function texprString1(): ADL.ATypeExpr<String1> {
 export type String2 = string;
 
 const String2_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String2","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"String2","type_":{"kind":"newtype_","value":{"default":{"kind":"nothing"},"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snString2: ADL.ScopedName = {moduleName:"test7", name:"String2"};
 
@@ -119,7 +119,7 @@ export function texprString2(): ADL.ATypeExpr<String2> {
 export type String3 = string;
 
 const String3_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":"hello"},"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String3","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"String3","type_":{"kind":"newtype_","value":{"default":{"kind":"just","value":"hello"},"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snString3: ADL.ScopedName = {moduleName:"test7", name:"String3"};
 
@@ -130,7 +130,7 @@ export function texprString3(): ADL.ATypeExpr<String3> {
 export type String4<_X> = string;
 
 const String4_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":["X"],"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String4","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"String4","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}},"typeParams":["X"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snString4: ADL.ScopedName = {moduleName:"test7", name:"String4"};
 
@@ -141,7 +141,7 @@ export function texprString4<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<String
 export type String5<_X> = string;
 
 const String5_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String5","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"String5","type_":{"kind":"newtype_","value":{"default":{"kind":"nothing"},"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}},"typeParams":["X"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snString5: ADL.ScopedName = {moduleName:"test7", name:"String5"};
 
@@ -152,7 +152,7 @@ export function texprString5<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<String
 export type String6<_X> = string;
 
 const String6_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"just","value":"goodbye"},"typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}},"name":"String6","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"String6","type_":{"kind":"newtype_","value":{"default":{"kind":"just","value":"goodbye"},"typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}},"typeParams":["X"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snString6: ADL.ScopedName = {moduleName:"test7", name:"String6"};
 
@@ -163,7 +163,7 @@ export function texprString6<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<String
 export type IntPoint1 = Point<number>;
 
 const IntPoint1_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}]}}},"name":"IntPoint1","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"IntPoint1","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snIntPoint1: ADL.ScopedName = {moduleName:"test7", name:"IntPoint1"};
 
@@ -174,7 +174,7 @@ export function texprIntPoint1(): ADL.ATypeExpr<IntPoint1> {
 export type IntPoint2 = Point<number>;
 
 const IntPoint2_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}]}}},"name":"IntPoint2","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"IntPoint2","type_":{"kind":"newtype_","value":{"default":{"kind":"nothing"},"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snIntPoint2: ADL.ScopedName = {moduleName:"test7", name:"IntPoint2"};
 
@@ -185,7 +185,7 @@ export function texprIntPoint2(): ADL.ATypeExpr<IntPoint2> {
 export type IntPoint3 = Point<number>;
 
 const IntPoint3_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":[],"default":{"kind":"just","value":{"x":5,"y":27}},"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int64"},"parameters":[]}]}}},"name":"IntPoint3","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"IntPoint3","type_":{"kind":"newtype_","value":{"default":{"kind":"just","value":{"x":5,"y":27}},"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"Int64"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snIntPoint3: ADL.ScopedName = {moduleName:"test7", name:"IntPoint3"};
 
@@ -196,7 +196,7 @@ export function texprIntPoint3(): ADL.ATypeExpr<IntPoint3> {
 export type Point1<X> = Point<X>;
 
 const Point1_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":["X"],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"X"},"parameters":[]}]}}},"name":"Point1","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Point1","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"typeParam","value":"X"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}}},"typeParams":["X"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snPoint1: ADL.ScopedName = {moduleName:"test7", name:"Point1"};
 
@@ -207,7 +207,7 @@ export function texprPoint1<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Point1<
 export type Point2<X> = Point<X>;
 
 const Point2_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["X"],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"X"},"parameters":[]}]}}},"name":"Point2","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Point2","type_":{"kind":"newtype_","value":{"default":{"kind":"nothing"},"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"typeParam","value":"X"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"Point"}}},"typeParams":["X"]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snPoint2: ADL.ScopedName = {moduleName:"test7", name:"Point2"};
 
@@ -218,7 +218,7 @@ export function texprPoint2<X>(texprX : ADL.ATypeExpr<X>): ADL.ATypeExpr<Point2<
 export type IntPoint1A = IntPoint1;
 
 const IntPoint1A_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"IntPoint1"}},"parameters":[]}}},"name":"IntPoint1A","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"IntPoint1A","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"IntPoint1"}}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snIntPoint1A: ADL.ScopedName = {moduleName:"test7", name:"IntPoint1A"};
 
@@ -241,7 +241,7 @@ export function makeS(
 }
 
 const S_AST : ADL.ScopedDecl =
-  {"moduleName":"test7","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"IntPoint1A"}},"parameters":[]}}]}},"name":"S","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"S","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"f1","serializedName":"f1","typeExpr":{"parameters":[],"typeRef":{"kind":"reference","value":{"moduleName":"test7","name":"IntPoint1A"}}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test7"};
 
 export const snS: ADL.ScopedName = {moduleName:"test7", name:"S"};
 

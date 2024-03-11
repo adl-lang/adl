@@ -15,7 +15,6 @@ import Control.Applicative( (<$>), (<*>), (<|>) )
 import Prelude( ($) )
 import qualified ADL.Core.Map
 import qualified Data.Aeson as JS
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Map
 import qualified Data.Proxy
 import qualified Data.Set

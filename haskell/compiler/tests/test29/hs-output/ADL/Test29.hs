@@ -8,7 +8,6 @@ import ADL.Core
 import Control.Applicative( (<$>), (<*>), (<|>) )
 import Prelude( ($) )
 import qualified Data.Aeson as JS
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Map as M
 import qualified Data.Proxy
 import qualified Data.Text as T
@@ -20,7 +19,7 @@ data Test = Test
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 mkTest ::  Test
-mkTest  = Test (stringMapFromList [("'", "baz"), ("degrees", "°"), (" ", "baz"), ("$", "bar"), ("\"", "baz")])
+mkTest  = Test (stringMapFromList [(" ", "baz"), ("\"", "baz"), ("$", "bar"), ("'", "baz"), ("degrees", "°")])
 
 instance AdlValue Test where
     atype _ = "test29.Test"
@@ -30,4 +29,4 @@ instance AdlValue Test where
         ]
     
     jsonParser = Test
-        <$> parseFieldDef "foo" (stringMapFromList [("'", "baz"), ("degrees", "°"), (" ", "baz"), ("$", "bar"), ("\"", "baz")])
+        <$> parseFieldDef "foo" (stringMapFromList [(" ", "baz"), ("\"", "baz"), ("$", "bar"), ("'", "baz"), ("degrees", "°")])

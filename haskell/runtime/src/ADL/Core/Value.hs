@@ -30,10 +30,11 @@ module ADL.Core.Value(
 ) where
 
 import qualified Data.Aeson as JS
+import qualified Data.Aeson.KeyMap as KM
+import qualified Data.Aeson.Key as AKey
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as LBS
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Scientific as SC
 import qualified Data.Set as S
 import qualified Data.Text as T
@@ -56,7 +57,7 @@ newtype JsonParser a = JsonParser {runJsonParser :: ParseContext -> JS.Value -> 
 type ParseContext = [ParseContextItem]
 
 data ParseContextItem
-  = ParseField T.Text
+  = ParseField KM.Key
   | ParseItem Int
 
 data ParseResult a
@@ -154,43 +155,43 @@ textFromParseContext :: ParseContext -> T.Text
 textFromParseContext [] = "$"
 textFromParseContext pc = T.intercalate "." (map fmt (reverse pc))
   where
-    fmt (ParseField f) = f
+    fmt (ParseField f) = AKey.toText f
     fmt (ParseItem i) = "[" <> T.pack (show i) <> "]"
 
-genObject :: [o -> (T.Text, JS.Value)] -> JsonGen o
+genObject :: [o -> (KM.Key, JS.Value)] -> JsonGen o
 genObject fieldfns = JsonGen (\o -> JS.object [f o | f <- fieldfns])
 
-genField :: AdlValue a => T.Text -> (o -> a) -> o -> (T.Text, JS.Value)
+genField :: AdlValue a => KM.Key -> (o -> a) -> o -> (KM.Key, JS.Value)
 genField label f o = (label,adlToJson (f o))
 
 genUnion :: (u -> JS.Value) -> JsonGen u
 genUnion f = JsonGen f
 
-genUnionValue :: AdlValue a => T.Text -> a -> JS.Value
+genUnionValue :: AdlValue a => KM.Key -> a -> JS.Value
 genUnionValue disc a = JS.object [(disc,adlToJson a)]
 
-genUnionVoid :: T.Text -> JS.Value
+genUnionVoid :: KM.Key -> JS.Value
 genUnionVoid disc = JS.toJSON disc
 
-parseField :: AdlValue a => T.Text -> JsonParser a
-parseField label = withJsonObject $ \ctx hm -> case HM.lookup label hm of
+parseField :: AdlValue a => KM.Key -> JsonParser a
+parseField label = withJsonObject $ \ctx hm -> case KM.lookup label hm of
   (Just b) -> runJsonParser jsonParser (ParseField label:ctx) b
-  _ -> ParseFailure ("expected field " <> label) ctx
+  _ -> ParseFailure ("expected field " <> AKey.toText label) ctx
 
-parseFieldDef :: AdlValue a => T.Text -> a -> JsonParser a
-parseFieldDef label defv = withJsonObject $ \ctx hm -> case HM.lookup label hm of
+parseFieldDef :: AdlValue a => KM.Key -> a -> JsonParser a
+parseFieldDef label defv = withJsonObject $ \ctx hm -> case KM.lookup label hm of
   (Just b) -> runJsonParser jsonParser (ParseField label:ctx) b
   _ -> pure defv
 
-parseUnion  :: ( T.Text -> JsonParser a) -> JsonParser a
+parseUnion  :: (KM.Key -> JsonParser a) -> JsonParser a
 parseUnion parseCase = JsonParser $ \ctx jv0 -> case parse0 ctx jv0 of
   ParseFailure emesg ctx -> ParseFailure emesg ctx
   ParseSuccess (disc,jv) -> runJsonParser (parseCase disc) (ParseField disc:ctx) jv
   where
     parse0 ctx jv = case jv of
-      (JS.String disc) -> ParseSuccess (disc,JS.Null)
-      (JS.Object hm) | HM.size hm == 1 ->
-        let [(disc,v)] = HM.toList hm in  (ParseSuccess (disc,v))
+      (JS.String disc) -> ParseSuccess (AKey.fromText disc,JS.Null)
+      (JS.Object hm) | KM.size hm == 1 ->
+        let [(disc,v)] = KM.toList hm in  (ParseSuccess (disc,v))
       _ -> ParseFailure "expected string or singleton object for union" ctx
 
 parseUnionVoid :: a -> JsonParser a

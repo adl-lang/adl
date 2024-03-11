@@ -20,7 +20,7 @@ export function makePair<T1, T2>(
 }
 
 const Pair_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T1","T2"],"fields":[{"annotations":[],"serializedName":"v1","default":{"kind":"nothing"},"name":"v1","typeExpr":{"typeRef":{"kind":"typeParam","value":"T1"},"parameters":[]}},{"annotations":[],"serializedName":"v2","default":{"kind":"nothing"},"name":"v2","typeExpr":{"typeRef":{"kind":"typeParam","value":"T2"},"parameters":[]}}]}},"name":"Pair","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Pair","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"v1","serializedName":"v1","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T1"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"v2","serializedName":"v2","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T2"}}}],"typeParams":["T1","T2"]}},"version":{"kind":"nothing"}},"moduleName":"sys.types"};
 
 export const snPair: ADL.ScopedName = {moduleName:"sys.types", name:"Pair"};
 
@@ -47,7 +47,7 @@ export interface EitherOpts<T1, T2> {
 export function makeEither<T1, T2, K extends keyof EitherOpts<T1, T2>>(kind: K, value: EitherOpts<T1, T2>[K]) { return {kind, value}; }
 
 const Either_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T1","T2"],"fields":[{"annotations":[],"serializedName":"left","default":{"kind":"nothing"},"name":"left","typeExpr":{"typeRef":{"kind":"typeParam","value":"T1"},"parameters":[]}},{"annotations":[],"serializedName":"right","default":{"kind":"nothing"},"name":"right","typeExpr":{"typeRef":{"kind":"typeParam","value":"T2"},"parameters":[]}}]}},"name":"Either","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Either","type_":{"kind":"union_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"left","serializedName":"left","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T1"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"right","serializedName":"right","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T2"}}}],"typeParams":["T1","T2"]}},"version":{"kind":"nothing"}},"moduleName":"sys.types"};
 
 export const snEither: ADL.ScopedName = {moduleName:"sys.types", name:"Either"};
 
@@ -73,7 +73,7 @@ export interface MaybeOpts<T> {
 export function makeMaybe<T, K extends keyof MaybeOpts<T>>(kind: K, value: MaybeOpts<T>[K]) { return {kind, value}; }
 
 const Maybe_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"nothing","default":{"kind":"nothing"},"name":"nothing","typeExpr":{"typeRef":{"kind":"primitive","value":"Void"},"parameters":[]}},{"annotations":[],"serializedName":"just","default":{"kind":"nothing"},"name":"just","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}}]}},"name":"Maybe","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Maybe","type_":{"kind":"union_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"nothing","serializedName":"nothing","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Void"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"just","serializedName":"just","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}}],"typeParams":["T"]}},"version":{"kind":"nothing"}},"moduleName":"sys.types"};
 
 export const snMaybe: ADL.ScopedName = {moduleName:"sys.types", name:"Maybe"};
 
@@ -100,7 +100,7 @@ export interface ResultOpts<T, E> {
 export function makeResult<T, E, K extends keyof ResultOpts<T, E>>(kind: K, value: ResultOpts<T, E>[K]) { return {kind, value}; }
 
 const Result_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"union_","value":{"typeParams":["T","E"],"fields":[{"annotations":[],"serializedName":"ok","default":{"kind":"nothing"},"name":"ok","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"error","default":{"kind":"nothing"},"name":"error","typeExpr":{"typeRef":{"kind":"typeParam","value":"E"},"parameters":[]}}]}},"name":"Result","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Result","type_":{"kind":"union_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"ok","serializedName":"ok","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"error","serializedName":"error","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"E"}}}],"typeParams":["T","E"]}},"version":{"kind":"nothing"}},"moduleName":"sys.types"};
 
 export const snResult: ADL.ScopedName = {moduleName:"sys.types", name:"Result"};
 
@@ -126,7 +126,7 @@ export function makeMapEntry<K, V>(
 }
 
 const MapEntry_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["K","V"],"fields":[{"annotations":[],"serializedName":"k","default":{"kind":"nothing"},"name":"key","typeExpr":{"typeRef":{"kind":"typeParam","value":"K"},"parameters":[]}},{"annotations":[],"serializedName":"v","default":{"kind":"nothing"},"name":"value","typeExpr":{"typeRef":{"kind":"typeParam","value":"V"},"parameters":[]}}]}},"name":"MapEntry","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"MapEntry","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"key","serializedName":"k","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"K"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"value","serializedName":"v","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"V"}}}],"typeParams":["K","V"]}},"version":{"kind":"nothing"}},"moduleName":"sys.types"};
 
 export const snMapEntry: ADL.ScopedName = {moduleName:"sys.types", name:"MapEntry"};
 
@@ -137,7 +137,7 @@ export function texprMapEntry<K, V>(texprK : ADL.ATypeExpr<K>, texprV : ADL.ATyp
 export type Map<K, V> = MapEntry<K, V>[];
 
 const Map_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["K","V"],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"MapEntry"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"K"},"parameters":[]},{"typeRef":{"kind":"typeParam","value":"V"},"parameters":[]}]}]}}},"name":"Map","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Map","type_":{"kind":"newtype_","value":{"default":{"kind":"nothing"},"typeExpr":{"parameters":[{"parameters":[{"parameters":[],"typeRef":{"kind":"typeParam","value":"K"}},{"parameters":[],"typeRef":{"kind":"typeParam","value":"V"}}],"typeRef":{"kind":"reference","value":{"moduleName":"sys.types","name":"MapEntry"}}}],"typeRef":{"kind":"primitive","value":"Vector"}},"typeParams":["K","V"]}},"version":{"kind":"nothing"}},"moduleName":"sys.types"};
 
 export const snMap: ADL.ScopedName = {moduleName:"sys.types", name:"Map"};
 
@@ -148,7 +148,7 @@ export function texprMap<K, V>(texprK : ADL.ATypeExpr<K>, texprV : ADL.ATypeExpr
 export type Set<T> = T[];
 
 const Set_AST : ADL.ScopedDecl =
-  {"moduleName":"sys.types","decl":{"annotations":[],"type_":{"kind":"newtype_","value":{"typeParams":["T"],"default":{"kind":"nothing"},"typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}},"name":"Set","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Set","type_":{"kind":"newtype_","value":{"default":{"kind":"nothing"},"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}],"typeRef":{"kind":"primitive","value":"Vector"}},"typeParams":["T"]}},"version":{"kind":"nothing"}},"moduleName":"sys.types"};
 
 export const snSet: ADL.ScopedName = {moduleName:"sys.types", name:"Set"};
 

@@ -17,7 +17,7 @@ export function makeS0(
 }
 
 const S0_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[]}},"name":"S0","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"S0","type_":{"kind":"struct_","value":{"fields":[],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test2"};
 
 export const snS0: ADL.ScopedName = {moduleName:"test2", name:"S0"};
 
@@ -47,7 +47,7 @@ export function makeS1(
 }
 
 const S1_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"x","default":{"kind":"nothing"},"name":"x","typeExpr":{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}},{"annotations":[],"serializedName":"y","default":{"kind":"nothing"},"name":"y","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}}]}},"name":"S1","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"S1","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"x","serializedName":"x","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Int32"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"y","serializedName":"y","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test2"};
 
 export const snS1: ADL.ScopedName = {moduleName:"test2", name:"S1"};
 
@@ -79,7 +79,7 @@ export function makeS2(
 }
 
 const S2_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":[],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f3","default":{"kind":"nothing"},"name":"f3","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}}]}},"name":"S2","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"S2","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"f1","serializedName":"f1","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"f2","serializedName":"f2","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Double"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"f3","serializedName":"f3","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"Int32"}}],"typeRef":{"kind":"primitive","value":"Vector"}}}],"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test2"};
 
 export const snS2: ADL.ScopedName = {moduleName:"test2", name:"S2"};
 
@@ -114,7 +114,7 @@ export function makeS3<T>(
 }
 
 const S3_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"primitive","value":"Double"},"parameters":[]}},{"annotations":[],"serializedName":"f3","default":{"kind":"nothing"},"name":"f3","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"f4","default":{"kind":"nothing"},"name":"f4","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"S3","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"S3","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"f1","serializedName":"f1","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"f2","serializedName":"f2","typeExpr":{"parameters":[],"typeRef":{"kind":"primitive","value":"Double"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"f3","serializedName":"f3","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"f4","serializedName":"f4","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}],"typeRef":{"kind":"primitive","value":"Vector"}}}],"typeParams":["T"]}},"version":{"kind":"nothing"}},"moduleName":"test2"};
 
 export const snS3: ADL.ScopedName = {moduleName:"test2", name:"S3"};
 
@@ -140,7 +140,7 @@ export function makeS4<T>(
 }
 
 const S4_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"f1","default":{"kind":"nothing"},"name":"f1","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"S3"}},"parameters":[{"typeRef":{"kind":"primitive","value":"String"},"parameters":[]}]}},{"annotations":[],"serializedName":"f2","default":{"kind":"nothing"},"name":"f2","typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"S3"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}}]}},"name":"S4","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"S4","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"f1","serializedName":"f1","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"String"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"S3"}}}},{"annotations":[],"default":{"kind":"nothing"},"name":"f2","serializedName":"f2","typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"S3"}}}}],"typeParams":["T"]}},"version":{"kind":"nothing"}},"moduleName":"test2"};
 
 export const snS4: ADL.ScopedName = {moduleName:"test2", name:"S4"};
 
@@ -166,7 +166,7 @@ export function makeTree<T>(
 }
 
 const Tree_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"struct_","value":{"typeParams":["T"],"fields":[{"annotations":[],"serializedName":"value","default":{"kind":"nothing"},"name":"value","typeExpr":{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}},{"annotations":[],"serializedName":"children","default":{"kind":"nothing"},"name":"children","typeExpr":{"typeRef":{"kind":"primitive","value":"Vector"},"parameters":[{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"Tree"}},"parameters":[{"typeRef":{"kind":"typeParam","value":"T"},"parameters":[]}]}]}}]}},"name":"Tree","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"Tree","type_":{"kind":"struct_","value":{"fields":[{"annotations":[],"default":{"kind":"nothing"},"name":"value","serializedName":"value","typeExpr":{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}},{"annotations":[],"default":{"kind":"nothing"},"name":"children","serializedName":"children","typeExpr":{"parameters":[{"parameters":[{"parameters":[],"typeRef":{"kind":"typeParam","value":"T"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"Tree"}}}],"typeRef":{"kind":"primitive","value":"Vector"}}}],"typeParams":["T"]}},"version":{"kind":"nothing"}},"moduleName":"test2"};
 
 export const snTree: ADL.ScopedName = {moduleName:"test2", name:"Tree"};
 
@@ -177,7 +177,7 @@ export function texprTree<T>(texprT : ADL.ATypeExpr<T>): ADL.ATypeExpr<Tree<T>> 
 export type IntTree = Tree<number>;
 
 const IntTree_AST : ADL.ScopedDecl =
-  {"moduleName":"test2","decl":{"annotations":[],"type_":{"kind":"type_","value":{"typeParams":[],"typeExpr":{"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"Tree"}},"parameters":[{"typeRef":{"kind":"primitive","value":"Int32"},"parameters":[]}]}}},"name":"IntTree","version":{"kind":"nothing"}}};
+  {"decl":{"annotations":[],"name":"IntTree","type_":{"kind":"type_","value":{"typeExpr":{"parameters":[{"parameters":[],"typeRef":{"kind":"primitive","value":"Int32"}}],"typeRef":{"kind":"reference","value":{"moduleName":"test2","name":"Tree"}}},"typeParams":[]}},"version":{"kind":"nothing"}},"moduleName":"test2"};
 
 export const snIntTree: ADL.ScopedName = {moduleName:"test2", name:"IntTree"};
 

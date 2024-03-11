@@ -9,7 +9,7 @@ const Annotations = {
   module : "sys.adlast",
   kind : "typedef",
   typevars : [],
-  type : {"args":[{"ref":"sys.adlast.ScopedName"},{"primitive":"Json"}],"app":{"ref":"sys.types.Map"}},
+  type : {"app":{"ref":"sys.types.Map"},"args":[{"ref":"sys.adlast.ScopedName"},{"primitive":"Json"}]},
   annotations : [
   ]
 };
@@ -29,7 +29,7 @@ const Decl = {
     },
     {
       name : "version",
-      type : {"args":[{"primitive":"Word32"}],"app":{"ref":"sys.types.Maybe"}},
+      type : {"app":{"ref":"sys.types.Maybe"},"args":[{"primitive":"Word32"}]},
       defaultv : null,
       annotations : [
       ]
@@ -97,7 +97,7 @@ const DeclVersions = {
   module : "sys.adlast",
   kind : "typedef",
   typevars : [],
-  type : {"args":[{"ref":"sys.adlast.Decl"}],"app":{"primitive":"Vector"}},
+  type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.Decl"}]},
   annotations : [
   ]
 };
@@ -131,7 +131,7 @@ const Field = {
     },
     {
       name : "default",
-      type : {"args":[{"primitive":"Json"}],"app":{"ref":"sys.types.Maybe"}},
+      type : {"app":{"ref":"sys.types.Maybe"},"args":[{"primitive":"Json"}]},
       defaultv : null,
       annotations : [
       ]
@@ -198,14 +198,14 @@ const Module = {
     },
     {
       name : "imports",
-      type : {"args":[{"ref":"sys.adlast.Import"}],"app":{"primitive":"Vector"}},
+      type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.Import"}]},
       defaultv : null,
       annotations : [
       ]
     },
     {
       name : "decls",
-      type : {"args":[{"ref":"sys.adlast.Decl"}],"app":{"primitive":"StringMap"}},
+      type : {"app":{"primitive":"StringMap"},"args":[{"ref":"sys.adlast.Decl"}]},
       defaultv : null,
       annotations : [
       ]
@@ -240,7 +240,7 @@ const NewType = {
   fields : [
     {
       name : "typeParams",
-      type : {"args":[{"ref":"sys.adlast.Ident"}],"app":{"primitive":"Vector"}},
+      type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.Ident"}]},
       defaultv : null,
       annotations : [
       ]
@@ -254,7 +254,7 @@ const NewType = {
     },
     {
       name : "default",
-      type : {"args":[{"primitive":"Json"}],"app":{"ref":"sys.types.Maybe"}},
+      type : {"app":{"ref":"sys.types.Maybe"},"args":[{"primitive":"Json"}]},
       defaultv : null,
       annotations : [
       ]
@@ -322,14 +322,14 @@ const Struct = {
   fields : [
     {
       name : "typeParams",
-      type : {"args":[{"ref":"sys.adlast.Ident"}],"app":{"primitive":"Vector"}},
+      type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.Ident"}]},
       defaultv : null,
       annotations : [
       ]
     },
     {
       name : "fields",
-      type : {"args":[{"ref":"sys.adlast.Field"}],"app":{"primitive":"Vector"}},
+      type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.Field"}]},
       defaultv : null,
       annotations : [
       ]
@@ -347,7 +347,7 @@ const TypeDef = {
   fields : [
     {
       name : "typeParams",
-      type : {"args":[{"ref":"sys.adlast.Ident"}],"app":{"primitive":"Vector"}},
+      type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.Ident"}]},
       defaultv : null,
       annotations : [
       ]
@@ -379,7 +379,7 @@ const TypeExpr = {
     },
     {
       name : "parameters",
-      type : {"args":[{"ref":"sys.adlast.TypeExpr"}],"app":{"primitive":"Vector"}},
+      type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.TypeExpr"}]},
       defaultv : null,
       annotations : [
       ]
@@ -429,14 +429,14 @@ const Union = {
   fields : [
     {
       name : "typeParams",
-      type : {"args":[{"ref":"sys.adlast.Ident"}],"app":{"primitive":"Vector"}},
+      type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.Ident"}]},
       defaultv : null,
       annotations : [
       ]
     },
     {
       name : "fields",
-      type : {"args":[{"ref":"sys.adlast.Field"}],"app":{"primitive":"Vector"}},
+      type : {"app":{"primitive":"Vector"},"args":[{"ref":"sys.adlast.Field"}]},
       defaultv : null,
       annotations : [
       ]

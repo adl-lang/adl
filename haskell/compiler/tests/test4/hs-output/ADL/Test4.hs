@@ -16,7 +16,6 @@ import Prelude( ($) )
 import qualified ADL.Core.Map
 import qualified ADL.Sys.Types
 import qualified Data.Aeson as JS
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Int
 import qualified Data.Map
 import qualified Data.Proxy
