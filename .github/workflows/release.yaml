@@ -10,13 +10,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-12, macos-14]
 
     steps:
       - name: Setup Stack
-        uses: haskell/actions/setup@v2
+        uses: haskell-actions/setup@v2.6.2
         with:
-          ghc-version: '8.8.4' # Exact version of ghc to use
+          ghc-version: '9.6.4' # Exact version of ghc to use, should match the stackage resolver ghc version
           # cabal-version: 'latest'. Omitted, but defaults to 'latest'
           enable-stack: true
           stack-version: 'latest'
@@ -39,9 +39,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: haskell/.stack-work
-          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: |
-            ${{ runner.os }}-stack-work-
+            ${{ runner.os }}-$${{ runner.arch }}-stack-work-
 
       - name: Build compiler and generate zip
         run: "cd haskell; stack build adl-compiler; ./tools/make-dist.hs"
@@ -49,7 +49,7 @@ jobs:
       - name: Upload dist directory artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: dist-${{ runner.os }}
+          name: dist-${{ runner.os }}-${{ runner.arch }}
           path: dist
 
   release:
@@ -66,21 +66,29 @@ jobs:
       run:
         echo "version=${GITHUB_REF:11}" >> $GITHUB_OUTPUT
 
-    - name: Fetch macOS build
-      uses: actions/download-artifact@v3
-      with:
-        name: dist-macOS
-        path: dist-macOS
-
     - name: Fetch linux build
       uses: actions/download-artifact@v3
       with:
-        name: dist-Linux
-        path: dist-Linux
+        name: dist-Linux-X64
+        path: dist-Linux-X64
+
+    - name: Fetch macOS X64 build
+      uses: actions/download-artifact@v3
+      with:
+        name: dist-macOS-X64
+        path: dist-macOS-X64
+          
+    - name: Fetch macOS ARM64 build
+      uses: actions/download-artifact@v3
+      with:
+        name: dist-macOS-ARM64
+        path: dist-macOS-ARM64
+
 
     - run: |
-        mv dist-macOS/adl-bindist.zip ./adl-bindist-${{ steps.version.outputs.version }}-osx.zip
-        mv dist-Linux/adl-bindist.zip ./adl-bindist-${{ steps.version.outputs.version }}-linux.zip
+        mv dist-Linux-X64/adl-bindist.zip ./adl-bindist-${{ steps.version.outputs.version }}-linux-x64.zip
+        mv dist-macOS-X64/adl-bindist.zip ./adl-bindist-${{ steps.version.outputs.version }}-macos-x64.zip
+        mv dist-macOS-ARM64/adl-bindist.zip ./adl-bindist-${{ steps.version.outputs.version }}-macos-arm64.zip
         ls -al
 
     - name: Create Release
