@@ -31,17 +31,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-stack-global-
-
-      - name: Cache .stack-work
-        uses: actions/cache@v3
-        with:
-          path: haskell/.stack-work
-          key: ${{ runner.os }}-${{ runner.arch }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
-          restore-keys: |
-            ${{ runner.os }}-$${{ runner.arch }}-stack-work-
+          key: stack-${{ runner.os }}-${{ runner.arch }}
 
       - name: Build compiler and generate zip
         run: "cd haskell; stack build adl-compiler; ./tools/make-dist.hs"
