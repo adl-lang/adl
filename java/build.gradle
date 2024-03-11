@@ -1,6 +1,6 @@
 subprojects {
   repositories {
-     jcenter();
+     mavenCentral();
   }
   tasks.withType(JavaCompile) {
      options.compilerArgs << "-Xlint"
