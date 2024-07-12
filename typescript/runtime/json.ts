@@ -139,7 +139,7 @@ function buildJsonBinding0(dresolver : DeclResolver, texpr : AST.TypeExpr, bound
       if (isEnum(union)) {
         return enumJsonBinding(dresolver, union, texpr.parameters, boundTypeParams);
       } else {
-        return unionJsonBinding(dresolver, union, texpr.parameters, boundTypeParams);
+        return unionJsonBinding(dresolver, union, ast.decl.annotations, texpr.parameters, boundTypeParams);
       }
     } else if (ast.decl.type_.kind === "newtype_") {
       return newtypeJsonBinding(dresolver, ast.decl.type_.value, texpr.parameters, boundTypeParams);
@@ -397,8 +397,13 @@ interface FieldDetails {
   jsonBinding : () => JsonBinding0<unknown>;
 };
 
-function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
-
+function unionJsonBinding(
+  dresolver: DeclResolver,
+  union: AST.Union,
+  annotations: AST.Annotations,
+  params: AST.TypeExpr[],
+  boundTypeParams: BoundTypeParams
+): JsonBinding0<unknown> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, union.typeParams, params, boundTypeParams);
   const detailsByName : {[key: string]: FieldDetails} = {};
   const detailsBySerializedName : {[key: string]: FieldDetails} = {};
@@ -411,6 +416,8 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
     detailsByName[field.name] = details;
     detailsBySerializedName[field.serializedName] = details;
   });
+
+  const audofb = annotations.find(el => scopedNamesEqual(el.key, SN_AllowUntaggedDeserializeOfFirstBranch)) != undefined
 
   function toJson(v0 : unknown) : Json {
     const v = v0 as {kind:string, value:unknown};
@@ -432,31 +439,55 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
     return details;
   }
 
-  function fromJson(json : Json) : unknown {
-    if (typeof(json) === "string") {
+  function fromJson(json: Json): unknown {
+    if (typeof (json) === "string") {
       let details = lookupDetails(json);
       if (!details.isVoid) {
         throw jsonParseException("union field " + json + "needs an associated value");
       }
-      return { kind : details.field.name };
+      return { kind: details.field.name };
     }
-    const jobj = asJsonObject(json);
-    if (jobj) {
-      for (let k in jobj) {
-        let details = lookupDetails(k);
-        try {
-          return {
-            kind : details.field.name,
-            value : details.jsonBinding().fromJson(jobj[k])
-          }
-        } catch(e) {
-          if (isJsonParseException(e)) {
-            e.pushField(k);
-          }
-          throw e;
+    if (typeof json !== "object") {
+      return fromLiftedFirstBranch(json)
+    }
+    const jobj = json as JsonObject; 
+    const keys = Object.keys(jobj)
+    if (keys.length != 1) {
+      return fromLiftedFirstBranch(json)
+    } else {
+      let details = lookupDetails(keys[0]);
+      try {
+        return {
+          kind: details.field.name,
+          value: details.jsonBinding().fromJson(jobj[keys[0]])
+        };
+      } catch (e) {
+        if (isJsonParseException(e)) {
+          e.pushField(keys[0]);
         }
+        return fromLiftedFirstBranch(json, e)
+        // if we want to avoid protential ambiguity (eg struct of only one field)
+        // then maybe the potential lifted branch could be inspectd to see it has more than one field
+        // if would then be possible to change the above `return from..` to
+        // throw e
       }
-      throw jsonParseException("union without a property");
+    }
+  }
+
+  const SN_AllowUntaggedDeserializeOfFirstBranch = {"moduleName": "sys.annotations", "name": "AllowUntaggedDeserializeOfFirstBranch"}
+
+  function fromLiftedFirstBranch(json: Json, e?: any): unknown {
+    if (union.fields.length == 0) {
+      throw jsonParseException("union has no branches");
+    }
+    if (audofb) {
+      let details = detailsBySerializedName[union.fields[0].serializedName];
+      return {
+        kind: details.field.name,
+        value: details.jsonBinding().fromJson(json)
+      };
+    } else if (e !== undefined) {
+      throw e
     } else {
       throw jsonParseException("expected an object or string");
     }
