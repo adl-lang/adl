@@ -381,6 +381,9 @@ runTests = do
     it "generates correct keys for stringmap literals" $ do
       collectResults (runJavaBackend1 "test29/input/test29.adl")
         `shouldReturn` MatchOutput
+    it "AllowUntaggedDeserializeOfFirstBranch lifting" $ do
+      collectResults (runJavaBackend1 "test30/input/test30.adl")
+        `shouldReturn` MatchOutput
 
   describe "adlc javascript backend" $ do
     it "generates expected code for the standard library" $ do

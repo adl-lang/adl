@@ -950,6 +950,12 @@ getSerializedWithInternalTag annotations = case Map.lookup serializedWithInterna
       _ -> Nothing
    _ -> Nothing
 
+getAudofb :: Annotations a -> Bool
+getAudofb annotations = case Map.lookup audofb  annotations of
+   (Just _) -> True
+   _ -> False
+
 customSerialization = ScopedName (ModuleName ["sys","annotations"]) "CustomSerialization"
 serializedWithInternalTag = ScopedName (ModuleName ["sys", "annotations"]) "SerializedWithInternalTag"
+audofb = ScopedName (ModuleName ["sys", "annotations"]) "AllowUntaggedDeserializeOfFirstBranch"
 

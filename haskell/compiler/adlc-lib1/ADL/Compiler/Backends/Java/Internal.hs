@@ -1071,6 +1071,7 @@ generateUnionJson cgp decl union fieldDetails = do
   jsonParseExceptionI <- addImport (javaClass (cgp_runtimePackage cgp) "JsonParseException")
   jsonBindings <- mapM (genJsonBindingExpr cgp . f_type . fd_field) fieldDetails
   let isInternallyTagged = getSerializedWithInternalTag (d_annotations decl)
+  let isAudofb = getAudofb (d_annotations decl)
 
   let bindingArgs = commaSep [template "$1<$2> $3" [jsonBindingI,arg,"binding" <> arg] | arg <- u_typeParams union]
 
@@ -1122,7 +1123,12 @@ generateUnionJson cgp decl union fieldDetails = do
                 <>
                 cline ""
                 <>
-                coverride (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
+                cblock (
+                  if isAudofb then
+                      template "private $1 fromJsonUnion($2 _json)" [className,jsonElementI]
+                    else
+                      template "@Override\n      public $1 fromJson($2 _json)" [className,jsonElementI]
+                ) (
                   case isInternallyTagged of
                     (Just tag) -> 
                       ctemplate "String _key = $1.unionNameFromItJson(\"$2\", _json);" [jsonBindingsI, tag]
@@ -1154,6 +1160,28 @@ generateUnionJson cgp decl union fieldDetails = do
                   <>
                   ctemplate "throw new $1(\"Invalid discriminator \" + _key + \" for union $2\");" [jsonParseExceptionI,className]
                   )
+                  <>
+                  if isAudofb then
+                    cline ""
+                    <>
+                    coverride (template "public $1 fromJson($2 _json)" [className,jsonElementI]) (
+                      cline "try {"
+                      <> indent (cline "return fromJsonUnion(_json);")
+                      <> cline "} catch (Exception e) {"
+                      <> indent (cline "try {")
+                      <> indent (cline "  _json.getAsString();")
+                      <> indent (cline "} catch (UnsupportedOperationException | ClassCastException e0) {")
+                      <> indent (indent (cline "try {"))
+                      <> indent (indent (indent (cline (template "return $1.$2($2.get().fromJson(_json));" [className,fd_varName (head fieldDetails)]))))
+                      <> indent (indent (cline "} catch(JsonParseException e2) {"))
+                      <> indent (indent (cline "  throw e;"))
+                      <> indent (indent (cline "}"))
+                      <> indent (cline "}")
+                      <> indent (cline "throw new JsonParseException( \"can't lift String or Void using AllowUntaggedDeserializeOfFirstBranch\");")
+                      <> cline "}"
+                    )
+                    else
+                      mempty
                 )
               )
 
