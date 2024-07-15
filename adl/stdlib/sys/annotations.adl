@@ -24,6 +24,7 @@ type CustomSerialization = Bool;
 // That is a backward compatiblity feature.
 // In effect(*) the deserializer will try to deserialize into the union first,
 // is this fails it will try deserializing into a type of the first branch.
+// If both of these fail, the exception for the union (not the first branch) is thrown.
 // eg
 // struct X { Y a; };
 // where Y is a struct, can be changed to

@@ -474,9 +474,7 @@ function unionJsonBinding(
     }
   }
 
-  const SN_AllowUntaggedDeserializeOfFirstBranch = {"moduleName": "sys.annotations", "name": "AllowUntaggedDeserializeOfFirstBranch"}
-
-  function fromLiftedFirstBranch(json: Json, e?: any): unknown {
+  function fromLiftedFirstBranch(json: Json, e?: unknown): unknown {
     if (union.fields.length == 0) {
       throw jsonParseException("union has no branches");
     }
@@ -495,6 +493,8 @@ function unionJsonBinding(
 
   return {toJson, fromJson};
 }
+
+const SN_AllowUntaggedDeserializeOfFirstBranch = {"moduleName": "sys.annotations", "name": "AllowUntaggedDeserializeOfFirstBranch"}
 
 function newtypeJsonBinding(dresolver : DeclResolver, newtype : AST.NewType, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
   const newBoundTypeParams = createBoundTypeParams(dresolver, newtype.typeParams, params, boundTypeParams);
