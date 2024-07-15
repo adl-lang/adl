@@ -1168,16 +1168,15 @@ generateUnionJson cgp decl union fieldDetails = do
                       cline "try {"
                       <> indent (cline "return fromJsonUnion(_json);")
                       <> cline "} catch (Exception e) {"
-                      <> indent (cline "try {")
-                      <> indent (cline "  _json.getAsString();")
-                      <> indent (cline "} catch (UnsupportedOperationException | ClassCastException e0) {")
+                      <> indent (cline "if (_json.isJsonPrimitive() && _json.getAsJsonPrimitive().isString()) {")
+                      <> indent (cline "  throw new JsonParseException( \"can't lift String or Void using AllowUntaggedDeserializeOfFirstBranch\");")
+                      <> indent (cline "} else {")
                       <> indent (indent (cline "try {"))
                       <> indent (indent (indent (cline (template "return $1.$2($2.get().fromJson(_json));" [className,fd_varName (head fieldDetails)]))))
                       <> indent (indent (cline "} catch(JsonParseException e2) {"))
                       <> indent (indent (cline "  throw e;"))
                       <> indent (indent (cline "}"))
                       <> indent (cline "}")
-                      <> indent (cline "throw new JsonParseException( \"can't lift String or Void using AllowUntaggedDeserializeOfFirstBranch\");")
                       <> cline "}"
                     )
                     else

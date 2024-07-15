@@ -173,16 +173,15 @@ public class LiftedVector {
         try {
           return fromJsonUnion(_json);
         } catch (Exception e) {
-          try {
-            _json.getAsString();
-          } catch (UnsupportedOperationException | ClassCastException e0) {
+          if (_json.isJsonPrimitive() && _json.getAsJsonPrimitive().isString()) {
+            throw new JsonParseException( "can't lift String or Void using AllowUntaggedDeserializeOfFirstBranch");
+          } else {
             try {
               return LiftedVector.str_arr(str_arr.get().fromJson(_json));
             } catch(JsonParseException e2) {
               throw e;
             }
           }
-          throw new JsonParseException( "can't lift String or Void using AllowUntaggedDeserializeOfFirstBranch");
         }
       }
     };
