@@ -14,7 +14,19 @@ testts() {
   BUILDDIR=$TESTDIR/build
   rm -rf $BUILDDIR
   mkdir -p $BUILDDIR
-  (cd $HASKELLDIR; stack exec adlc -- typescript -I $ADLSTDLIBDIR -O $BUILDDIR --include-rt --include-resolver --runtime-dir runtime $HERE/example.adl $ADLSTDLIBDIR/sys/types.adl $ADLSTDLIBDIR/sys/adlast.adl $ADLSTDLIBDIR/sys/dynamic.adl)
+  (cd $HASKELLDIR; stack exec adlc -- typescript \
+    -I $ADLSTDLIBDIR \
+    -O $BUILDDIR \
+    --include-rt \
+    --include-resolver \
+    --runtime-dir runtime \
+    $HERE/example.adl \
+    $HERE/lifting.adl \
+    $ADLSTDLIBDIR/sys/annotations.adl \
+    $ADLSTDLIBDIR/sys/types.adl \
+    $ADLSTDLIBDIR/sys/adlast.adl \
+    $ADLSTDLIBDIR/sys/dynamic.adl \
+  )
 
   echo "### Setting up node_modules"
   cd $TESTDIR
@@ -38,11 +50,52 @@ testdeno() {
 
   cd $TESTDIR
 
-echo "### Generating typescript from adl"
-BUILDDIR=$TESTDIR/build
-rm -rf $BUILDDIR
-mkdir -p $BUILDDIR
-(cd $HASKELLDIR; stack exec adlc -- typescript -I $ADLSTDLIBDIR -O $BUILDDIR --ts-style deno --include-rt --include-resolver --runtime-dir runtime $HERE/example.adl $ADLSTDLIBDIR/sys/types.adl $ADLSTDLIBDIR/sys/adlast.adl $ADLSTDLIBDIR/sys/dynamic.adl)
+  echo $ADLSTDLIBDIR
+  echo "### Generating typescript from adl"
+  BUILDDIR=$TESTDIR/build
+  rm -rf $BUILDDIR
+  mkdir -p $BUILDDIR
+  (cd $HASKELLDIR; stack exec adlc -- typescript \
+    -I $ADLSTDLIBDIR \
+    -O $BUILDDIR \
+    --ts-style deno \
+    --include-rt \
+    --include-resolver \
+    --runtime-dir runtime \
+    $HERE/example.adl \
+    $HERE/lifting.adl \
+    $ADLSTDLIBDIR/sys/annotations.adl \
+    $ADLSTDLIBDIR/sys/types.adl \
+    $ADLSTDLIBDIR/sys/adlast.adl \
+    $ADLSTDLIBDIR/sys/dynamic.adl \
+  )
+
+  echo "### Running tests"
+  deno test example.tests.ts
+}
+
+devdeno() {
+  echo "--------- deving on deno - no gen runtime $1 ---------"
+  TESTDIR=$HERE/$1
+
+  cd $TESTDIR
+
+  echo $ADLSTDLIBDIR
+  echo "### Generating typescript from adl"
+  BUILDDIR=$TESTDIR/build
+  (cd $HASKELLDIR; stack exec adlc -- typescript \
+    -I $ADLSTDLIBDIR \
+    -O $BUILDDIR \
+    --ts-style deno \
+    --include-resolver \
+    --runtime-dir runtime \
+    $HERE/example.adl \
+    $HERE/lifting.adl \
+    $ADLSTDLIBDIR/sys/annotations.adl \
+    $ADLSTDLIBDIR/sys/types.adl \
+    $ADLSTDLIBDIR/sys/adlast.adl \
+    $ADLSTDLIBDIR/sys/dynamic.adl \
+  )
 
   echo "### Running tests"
   deno test example.tests.ts
@@ -53,3 +106,5 @@ testts ts-3.8.3
 testts ts-4.2.4
 testts ts-4.6.3
 testdeno deno-1.10.2
+
+# devdeno deno-1.10.2

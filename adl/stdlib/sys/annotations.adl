@@ -19,4 +19,82 @@ struct SerializedWithInternalTag {
 
 type CustomSerialization = Bool;
 
+
+// Experimental annotation to allow the lifting of struct fields to unions.
+// That is a backward compatiblity feature.
+// In effect(*) the deserializer will try to deserialize into the union first,
+// is this fails it will try deserializing into a type of the first branch.
+// If both of these fail, the exception for the union (not the first branch) is thrown.
+// eg
+// struct X { Y a; };
+// where Y is a struct, can be changed to
+// // struct X { Z a; };
+// where Z is
+// @AllowUntaggedDeserializeOfFirstBranch union Z { Y a; ... };
+
+// NOTES:
+// - The annotation can(**) only be applied to monomorphic unions.
+// - Strings can't be lifted
+// - There are cases where this tag can't(***) be used as (see example at the end of this file);
+//   - it create ambiguities
+//   - causes branches to be unreachably shadowed.
+//   Rule of thumb, it is SAFE if the first branch is;
+//   - a struct with 2 of more NON DEFAULTED fields.
+//   - a vector
+//   - a nullable of one of the above
+//   Lifting of the following should be avoid;
+//     - simple primitives (repeating String primitives can't be lifted),
+//     - nullable of simple primitives,
+//     - stringmaps
+//     - unions
+//     - structs of 0 or 1 field should be avoided (not counting defaulted fields)
+
+// (*) There are cases where the union does not need to be tried;
+//     - if the value has multiple elements,
+//     - no branch matches the tag.
+// (**) This is not checked
+// (***) This is not checked USE WITH CARE
+
+type AllowUntaggedDeserializeOfFirstBranch = Void;
+
+// Example error cases
+// ```
+// This is ambiguous since "b" fits into both.
+// An old value "b" will be decoded as the `String b` branch, instead of the intended `StructWithOnlyOneFieldNamedB a` branch.
+// ```
+// @AllowUntaggedDeserializeOfFirstBranch
+// union Y {
+//   StructWithOnlyOneFieldNamedB a;
+//   String b;
+// };
+// struct StructWithOnlyOneFieldNamedB {
+//   String b;
+// };
+// ```
+// and
+// ```
+// @AllowUntaggedDeserializeOfFirstBranch
+// union Y {
+//   MyStruct1 a;
+//   MyStruct2 b;
+// };
+// struct MyStruct1 {
+//   MyStruct2 b;
+// };
+// ```
+// This is a structural type problem (not just nominal)
+// e.g. the following would also have the same problem
+// ```
+// @AllowUntaggedDeserializeOfFirstBranch
+// union Y {
+//   MyStruct1 a;
+//   MyStruct2 b;
+// };
+// struct MyStruct1 {
+//   MyStruct3 b;
+// };
+// struct MyStruct2{};
+// struct MyStruct3{};
+// ```
+
 };

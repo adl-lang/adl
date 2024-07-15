@@ -1,10 +1,53 @@
 import {JsonBinding,createJsonBinding} from './build/runtime/json.ts'
 import {fromDynamic, toDynamic} from './build/runtime/dynamic.ts'
 import * as example from './build/example.ts'
+import * as lifting from './build/lifting.ts'
 import {Dynamic} from './build/sys/dynamic.ts'
 import {RESOLVER} from './build/resolver.ts'
 
 import { assert, assertEquals } from "https://deno.land/std@0.85.0/testing/asserts.ts";
+
+const liftedJsonBinding: JsonBinding<lifting.Lifted> = createJsonBinding(RESOLVER, lifting.texprLifted());
+const orgFldJsonBinding: JsonBinding<lifting.OrgField> = createJsonBinding(RESOLVER, lifting.texprOrgField());
+const oldOutterJB: JsonBinding<lifting.OldOutter> = createJsonBinding(RESOLVER, lifting.texprOldOutter());
+const newOutterJB: JsonBinding<lifting.NewOutter> = createJsonBinding(RESOLVER, lifting.texprNewOutter());
+
+const orgFld: lifting.OrgField = { "a": "abc", "b": 42 };
+const lifted1 = lifting.makeLifted("org_field", orgFld);
+
+Deno.test('Lifted - decode01', () => {
+  // this is not necessary since the json of orgFld and its toJson are the same.
+  // only here for completeness
+  const json = orgFldJsonBinding.toJson(orgFld);
+  const lifted = liftedJsonBinding.fromJson(json);
+  assertEquals(lifted.kind, lifted1.kind);
+});
+
+Deno.test('Lifted - decode02', () => {
+  const oldO = lifting.makeOldOutter({field0: orgFld})
+  const newO = lifting.makeNewOutter({field0: lifting.makeLifted("org_field", { "a": "abc", "b": 42 })})
+  const json = oldOutterJB.toJson(oldO);
+  const lifted = newOutterJB.fromJson(json);
+  assertEquals(lifted, newO);
+});
+
+Deno.test('Lifted - decode03', () => {
+  const jb: JsonBinding<lifting.LiftedVector> = createJsonBinding(RESOLVER, lifting.texprLiftedVector());
+  const json = ["a", "b", "c"]
+  const lifted = jb.fromJson(json);
+  assertEquals(lifted.kind, "str_arr");
+  if ( lifted.kind == "str_arr" ) {
+    assertEquals(lifted.value.length, 3);
+  }
+  const nonlifted = jb.fromJson({"count_strs": {"v1": 42, "v2": ["d", "e", "f"]}});
+  assertEquals(nonlifted.kind, "count_strs");
+  if ( nonlifted.kind == "count_strs" ) {
+    assertEquals(nonlifted.value.v1, 42);
+    assertEquals(nonlifted.value.v2, ["d","e","f"]);
+  }
+});
+
+//----------------------------------------------------------------------
 
 const personJsonBinding : JsonBinding<example.Person> = createJsonBinding(RESOLVER,example.texprPerson());
 
@@ -99,21 +142,29 @@ const dataSource4 : example.DataSource = {
   value : new Uint8Array([100,56,233])
 };
 
-Deno.test('DataSource union - roundtrips', () => {
+Deno.test('DataSource union - roundtrips - dataSource1', () => {
   const jb = dataSourceJsonBinding;
   const dataSource1r = jb.fromJson(jb.toJson(dataSource1));
   assertEquals(dataSource1r.kind, "implicit");
+});
+Deno.test('DataSource union - roundtrips - dataSource2', () => {
+  const jb = dataSourceJsonBinding;
   const dataSource2r = jb.fromJson(jb.toJson(dataSource2));
   assertEquals(dataSource2r.kind, "inline");
   if (dataSource2r.kind == "inline") {
     assertEquals(dataSource2r.value.encoding, "utf-8");
   }
+});
+Deno.test('DataSource union - roundtrips - dataSource3', () => {
+  const jb = dataSourceJsonBinding;
   const dataSource3r = jb.fromJson(jb.toJson(dataSource3));
   assertEquals(dataSource3r.kind, "file");
   if (dataSource3r.kind == "file") {
     assertEquals(dataSource3r.value, "/tmp/testdata.txt");
   }
-
+});
+Deno.test('DataSource union - roundtrips - dataSource4', () => {
+  const jb = dataSourceJsonBinding;
   const dataSource4r = jb.fromJson(jb.toJson(dataSource4));
   assertEquals(dataSource4r.kind, "inlinebinary");
   if (dataSource4r.kind == "inlinebinary") {

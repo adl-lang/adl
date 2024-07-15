@@ -1,0 +1,34 @@
+module lifting {
+
+struct OldOutter {
+    OrgField field0;
+};
+
+struct NewOutter {
+    Lifted field0;
+};
+
+@AllowUntaggedDeserializeOfFirstBranch
+union Lifted {
+    OrgField org_field;
+    AddedField option2;
+};
+
+struct OrgField {
+    String a;
+    Int64 b;
+};
+
+struct AddedField {
+    Double quantity;
+    Int64 value;
+};
+
+@AllowUntaggedDeserializeOfFirstBranch
+union LiftedVector {
+    Vector<String> str_arr;
+    sys.types.Pair<Int64,Vector<String>> count_strs;
+};
+
+
+};
