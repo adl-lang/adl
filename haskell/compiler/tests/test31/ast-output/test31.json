@@ -1,0 +1,124 @@
+{
+    "annotations": [],
+    "decls": {
+        "Measure": {
+            "annotations": [],
+            "name": "Measure",
+            "type_": {
+                "union_": {
+                    "fields": [
+                        {
+                            "annotations": [
+                                {
+                                    "k": {
+                                        "moduleName": "sys.annotations",
+                                        "name": "AllowUntaggedDisc"
+                                    },
+                                    "v": {
+                                        "@v": 0
+                                    }
+                                }
+                            ],
+                            "default": "nothing",
+                            "name": "count",
+                            "serializedName": "count",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "Word64"
+                                }
+                            }
+                        },
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "multiple",
+                            "serializedName": "multiple",
+                            "typeExpr": {
+                                "parameters": [
+                                    {
+                                        "parameters": [],
+                                        "typeRef": {
+                                            "primitive": "Word64"
+                                        }
+                                    },
+                                    {
+                                        "parameters": [],
+                                        "typeRef": {
+                                            "primitive": "Double"
+                                        }
+                                    }
+                                ],
+                                "typeRef": {
+                                    "reference": {
+                                        "moduleName": "sys.types",
+                                        "name": "Pair"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        },
+        "MyStructV1": {
+            "annotations": [],
+            "name": "MyStructV1",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "quantity",
+                            "serializedName": "quantity",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "Word64"
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        },
+        "MyStructV2": {
+            "annotations": [],
+            "name": "MyStructV2",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "quantity",
+                            "serializedName": "quantity",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "reference": {
+                                        "moduleName": "",
+                                        "name": "Measure"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        }
+    },
+    "imports": [
+        {
+            "moduleName": "sys.annotations"
+        }
+    ],
+    "name": "test31"
+}

@@ -1,0 +1,17 @@
+module test31 {
+
+struct MyStructV1 {
+    Word64 quantity;
+};
+
+struct MyStructV2 {
+    Measure quantity;
+};
+
+union Measure {
+    @AllowUntaggedDisc { "@v": 0 }
+    Word64 count;
+    sys.types.Pair<Word64,Double> multiple;
+};
+
+};

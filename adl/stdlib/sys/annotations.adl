@@ -7,6 +7,89 @@ type Doc = String;
 
 type SerializedName = String;
 
+/// This annotation allows properties of a type to be used to discriminate untagged union branches.
+/// It can be used;
+///   - by a json->json transformer to up-lift old (untagged) values to new (tagged) values
+///   - by a deserializer to allow backward compatiblity (the above transformer could be used)
+/// This annotation can be used to make json value more humanly readable (see ObjectProperties as an example).
+
+// Examples
+// For the union below the json `"abc"` would be interpreted as branch 'a'
+// ```
+// union X { 
+//   @AllowUntaggedDisc { "@v": 1 }
+//   String a;
+// };
+// ```
+
+// Notes:
+// It can only be used on union branches.
+// Effects union serialization.
+// Unconstrained used of this annotation CAN create ambiguities.
+// A unification algorithm can be implemented to check that a union annotationed branches is unambiguous.
+
+// Union Serialization
+// ===================
+// Unions are normally serialized with an external tag ie `{"<tag>":{ ... }}`
+// Unions with one or more AllowUntaggedDisc are serialized with an addition field ie `{"@v":<MaxVersion>, "<tag>":{ ... }}`
+
+// JSON->JSON transformer
+// ======================
+// `uplifter :: json_in -> union_type_expr -> json_out`
+// If json_in has not @v field then "@v":-1 is assumed.
+// json_in_body = json_in minus the @v field
+// json_in_body is;
+//   - compared against all branches annotated with AllowUntaggedDisc
+//      - where version is < @v and the json_in_body matches the disc_cfg, then
+//        - json_out = {"<match_tag>": json_in_body}
+//  - else json_out = json_in_body
+
+// Ambiguity Checker
+// =================
+// In effect the untagged branches get looked at first.
+// This means tagged branches can be shadowed by untagged branches.
+// The purpose of an ambiguity checher is to report on any/all ambiguties (and importantion about the allow untagged branches).
+// eg as func `untagged_checker :: union_type_expr -> ([Ambiguity],MaxVersion,[(Text,DiscriminatorConfig)])`
+// Example ambiguties;
+// - an annotated string branch will totally shadow all Void branches, making them unreachable.
+// - an annotated struct branch will shadow all struct it is a "super-type" of,
+//   - the nature of the shadowing depends on whether the "sub-type" has defaults and the completeness of the json value.
+// - an annotated union with branches of the same name and shape.
+// - an annotated union with annotated branches creates addition complexity (eg would require recursive checking and uplifting).
+
+
+struct AllowUntaggedDisc {
+  /// The discrimination method to use, either by type or object properties.
+  DiscriminatorConfig disc_cfg = "by_type";
+  /// The version of the union decl this annotation was applied to.
+  // The max version across all AllowUntaggedDisc annotated branched is used when serializing the union.
+  // This is used to identify when branches need up-lifting.
+  // NOT related to version field in the ADLAST.
+  @SerializedName "@v"
+  Word32 version;
+};
+union DiscriminatorConfig {
+  /// Indicates that the json type should be used as the discriminator.
+  /// The minimal type discrimination is primitive vs object vs array.
+  /// Primitive can be further discriminated in string, number, bool (depending on the implementation).
+  /// Void CAN'T be discrimination.
+  /// Nullable<T> ???
+  Void by_type;
+  /// Indicates an object should be discriminated on its fields, using the properties specified.
+  /// Can't be used to specify fields with default values.
+  ObjectProperties obj_props;
+};
+union ObjectProperties {
+  @AllowUntaggedDisc { "@v": 0 }
+  String field;
+  @AllowUntaggedDisc { "@v": 0 }
+  Vector<ObjectProperties> and;
+  Vector<ObjectProperties> or;
+  // Vector<ObjectProperties> xor;
+  ObjectProperties not;
+};
+
+
 // Experimental annotation to switch union serialization
 // to be "internally tagged". The use of this annotation is
 // not recommended unless required for compatibility with external systems.
