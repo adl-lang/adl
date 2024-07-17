@@ -12,7 +12,7 @@ export interface JsonObject {
   [key: string]: Json
 };
 
-function asJsonObject(jv: Json): JsonObject | undefined {
+export function asJsonObject(jv: Json): JsonObject | undefined {
   if (jv instanceof Object && !(jv instanceof Array)) {
     return jv as JsonObject;
   }
@@ -451,7 +451,7 @@ function unionJsonBinding(
       return fromLiftedFirstBranch(json)
     }
     const jobj = json as JsonObject; 
-    const keys = Object.keys(jobj)
+    const keys = Object.keys(jobj).filter(k => k != "@v")
     if (keys.length != 1) {
       return fromLiftedFirstBranch(json)
     } else {
@@ -544,6 +544,4 @@ export function getAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotation
   return jb.fromJsonE(ann.value);
 }
 
-export function liftAllowUntagged() {
-  
-}
+

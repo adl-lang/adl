@@ -98,4 +98,8 @@ union Uc {
     Vector<String> a;
 };
 
+union UofMaybe {
+    sys.types.Maybe<UnionUnion> a;
+};
+
 };

@@ -1,5 +1,6 @@
 import {JsonBinding,createJsonBinding} from './build/runtime/json.ts'
 import * as J from './build/runtime/json.ts'
+import * as LU from './build/runtime/lifting.ts'
 import {fromDynamic, toDynamic} from './build/runtime/dynamic.ts'
 import * as example from './build/example.ts'
 import * as L from './build/lifting.ts'
@@ -166,7 +167,19 @@ Deno.test('TypeDiscrimination01', () => {
           T31.makeUc("a",["def"])
         ])
       ]),
-    }
+    },
+    {
+      name: "UofMaybe",
+      texpr: T31.texprUofMaybe(),
+      json: `{"a":{"just":{"abc":{"a":"a string"}}}}`,
+      want: T31.makeUofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
+    },
+    // {
+    //   name: "UofMaybe - lifting",
+    //   texpr: T31.texprUofMaybe(),
+    //   json: `{"a":{"just":{"a":"a string"}}}`,
+    //   want: T31.makeUofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
+    // },
   ]
   for (const tt of tests) {
     // if (tt.name != "VectorOfTypeDiscriminationUnionTest") {
@@ -176,7 +189,7 @@ Deno.test('TypeDiscrimination01', () => {
     let j_out: J.Json = null
     // console.log(tt.name)
     try {
-      j_out = J.liftIntoUnion(RESOLVER, tt.texpr, j_in)
+      j_out = LU.liftIntoUnion(RESOLVER, tt.texpr, j_in)
     } catch (e) {
       if (tt.wantErr === undefined) {
         console.log(`UNEXPECTED error - '${tt.name}'\n\t${e}`)

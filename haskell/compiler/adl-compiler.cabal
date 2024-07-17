@@ -51,6 +51,7 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/typescript/runtime/adl.ts
                     , lib/typescript/runtime/dynamic.ts
                     , lib/typescript/runtime/json.ts
+                    , lib/typescript/runtime/lifting.ts
                     , lib/typescript/runtime/sys/adlast.ts
                     , lib/typescript/runtime/sys/dynamic.ts
                     , lib/typescript/runtime/sys/types.ts
