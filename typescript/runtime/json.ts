@@ -543,3 +543,7 @@ export function getAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotation
   }
   return jb.fromJsonE(ann.value);
 }
+
+export function liftAllowUntagged() {
+  
+}

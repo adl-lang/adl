@@ -1,19 +1,216 @@
 import {JsonBinding,createJsonBinding} from './build/runtime/json.ts'
+import * as J from './build/runtime/json.ts'
 import {fromDynamic, toDynamic} from './build/runtime/dynamic.ts'
 import * as example from './build/example.ts'
-import * as lifting from './build/lifting.ts'
+import * as L from './build/lifting.ts'
 import {Dynamic} from './build/sys/dynamic.ts'
 import {RESOLVER} from './build/resolver.ts'
 
-import { assert, assertEquals } from "https://deno.land/std@0.85.0/testing/asserts.ts";
+import { assert, assertEquals, fail } from "https://deno.land/std@0.85.0/testing/asserts.ts";
+import * as T31 from './build/test31.ts';
+import { ATypeExpr } from './build/runtime/adl.ts';
 
-const liftedJsonBinding: JsonBinding<lifting.Lifted> = createJsonBinding(RESOLVER, lifting.texprLifted());
-const orgFldJsonBinding: JsonBinding<lifting.OrgField> = createJsonBinding(RESOLVER, lifting.texprOrgField());
-const oldOutterJB: JsonBinding<lifting.OldOutter> = createJsonBinding(RESOLVER, lifting.texprOldOutter());
-const newOutterJB: JsonBinding<lifting.NewOutter> = createJsonBinding(RESOLVER, lifting.texprNewOutter());
+// Deno.test('TypeDiscrimination01', () => {
+//   const td = J.getTypeDiscriminations(RESOLVER, T31.texprMeasure().value)
+//   assertEquals(td.max_version, 0)
+//   assertEquals(td.type_discs.length, 1)
+//   const j1 = JSON.parse(`42`)
+//   const j2 = J.liftTypeDiscriminations(RESOLVER, j1, td)
+//   assertEquals(j2, JSON.parse(`{"@v":0,"count":42}`))
+// });
 
-const orgFld: lifting.OrgField = { "a": "abc", "b": 42 };
-const lifted1 = lifting.makeLifted("org_field", orgFld);
+interface TypeDiscTest {
+  name: string
+  texpr: ATypeExpr<unknown>
+  json: string
+  want: unknown
+  wantErr?: string
+}
+
+Deno.test('TypeDiscrimination01', () => {
+  const tests: TypeDiscTest[] = [
+    {
+      name: "count into measure",
+      texpr: T31.texprMeasure(),
+      json: `42`,
+      want: T31.makeMeasure("count", 42)
+    },
+    {
+      name: "s1 into structtest",
+      texpr: T31.texprStructTest(),
+      json: `{"quant": 2, "value": 3}`,
+      want: T31.makeStructTest("abc", T31.makeS1({ quant: 2, value: 3.0 }))
+    },
+    {
+      name: "void error test",
+      texpr: T31.texprVoidTest(),
+      json: `null`,
+      want: null,
+      wantErr: `cannot use Json or Void as a type discriminator`,
+    },
+    {
+      name: "UnionOfLiftedUnion type mismatch error test",
+      texpr: T31.texprUnionOfLiftedUnion(),
+      json: `null`,
+      want: null,
+      wantErr: `primitive type mismatch. expected Nullable received {"kind":"reference","value":{"moduleName":"test31","name":"UnionOfLiftedUnion"}}`,
+    },
+    {
+      name: "UnionOfLiftedUnion error test",
+      texpr: T31.texprUnionOfLiftedUnion(),
+      json: `{"def": {"quant": 2, "value": 3}}`,
+      want: null,
+      wantErr: `union of union containing TypeDiscrimination branches not supported : ...`,
+    },
+    {
+      name: "UnionUnion a",
+      texpr: T31.texprUnionUnion(),
+      json: `{"a": "is an a"}`,
+      want: T31.makeUnionUnion("abc", T31.makeU1("a", "is an a")),
+    },
+    {
+      name: "UnionUnion b",
+      texpr: T31.texprUnionUnion(),
+      json: `{"b": 99}`,
+      want: T31.makeUnionUnion("abc", T31.makeU1("b", 99)),
+    },
+    {
+      name: "UnionUnion def",
+      texpr: T31.texprUnionUnion(),
+      json: `{"def": {"quant": 2, "value": 3}}`,
+      want: T31.makeUnionUnion("def", T31.makeS1({ quant: 2, value: 3.0 })),
+    },
+    {
+      name: "Struct02Test u1",
+      texpr: T31.texprStruct02Test(),
+      json: `{"a": "is an a"}`,
+      want: T31.makeStruct02Test("u1", T31.makeU1("a", "is an a")),
+    },
+    {
+      name: "Struct02Test u1:b",
+      texpr: T31.texprStruct02Test(),
+      json: `{"b": 99}`,
+      want: T31.makeStruct02Test("u1", T31.makeU1("b", 99)),
+    },
+    {
+      name: "Struct02Test s1",
+      texpr: T31.texprStruct02Test(),
+      json: `{"quant": 2, "value": 3}`,
+      want: T31.makeStruct02Test("s1", T31.makeS1({ quant: 2, value: 3.0 }))
+    },
+    {
+      name: "Struct02Test s1 - no lifting",
+      texpr: T31.texprStruct02Test(),
+      json: `{"s1":{"quant": 2, "value": 3}}`,
+      want: T31.makeStruct02Test("s1", T31.makeS1({ quant: 2, value: 3.0 }))
+    },
+    {
+      name: "NullableTest - a",
+      texpr: T31.texprNullableTest(),
+      json: `null`,
+      want: T31.makeNullableTest("a", null)
+    },
+    {
+      name: "NullableTest - a:sdf",
+      texpr: T31.texprNullableTest(),
+      json: `"sdf"`,
+      want: T31.makeNullableTest("a", "sdf")
+    },
+    {
+      name: "VectorTest - a",
+      texpr: T31.texprVectorTest(),
+      json: `[]`,
+      want: T31.makeVectorTest("a", [])
+    },
+    {
+      name: "VectorErrorTest",
+      texpr: T31.texprVectorErrorTest(),
+      json: `[]`,
+      want: T31.makeVectorErrorTest("a", []),
+      wantErr: `ambiguous matching type discriminators a,b`
+    },
+    {
+      name: "VectorOfTypeDiscriminationUnionTest",
+      texpr: T31.texprVectorOfTypeDiscriminationUnionTest(),
+      json: `{"b":[{"quant": 2, "value": 3},{"a": "is an a"},{"b": 99},{"s1":{"quant": 2, "value": 3}}]}`,
+      want: T31.makeVectorOfTypeDiscriminationUnionTest("b", [
+        T31.makeStruct02Test("s1", T31.makeS1({ quant: 2, value: 3.0 })),
+        T31.makeStruct02Test("u1", T31.makeU1("a", "is an a")),
+        T31.makeStruct02Test("u1", T31.makeU1("b", 99)),
+        T31.makeStruct02Test("s1", T31.makeS1({ quant: 2, value: 3.0 })),
+      ]),
+    },
+    {
+      name: "UnionOfVectorOfTypeDiscriminationUnionTest",
+      texpr: T31.texprUnionOfVectorOfTypeDiscriminationUnionTest(),
+      json: `[]`,
+      want: null,
+      wantErr: `union of union containing TypeDiscrimination branches not supported`,
+    },
+    {
+      name: "Ua",
+      texpr: T31.texprUa(),
+      json: `{"u_b":[{"u_c":[{"a":["def"]}]}]}`,
+      want: T31.makeUa("u_b", [
+        T31.makeUb("u_c", [
+          T31.makeUc("a",["def"])
+        ])
+      ]),
+    },
+    {
+      name: "Ua - with lifting",
+      texpr: T31.texprUa(),
+      json: `{"u_b":[{"u_c":[["def"]]}]}`,
+      want: T31.makeUa("u_b", [
+        T31.makeUb("u_c", [
+          T31.makeUc("a",["def"])
+        ])
+      ]),
+    }
+  ]
+  for (const tt of tests) {
+    // if (tt.name != "VectorOfTypeDiscriminationUnionTest") {
+    //   continue
+    // }
+    const j_in = JSON.parse(tt.json)
+    let j_out: J.Json = null
+    // console.log(tt.name)
+    try {
+      j_out = J.liftIntoUnion(RESOLVER, tt.texpr, j_in)
+    } catch (e) {
+      if (tt.wantErr === undefined) {
+        console.log(`UNEXPECTED error - '${tt.name}'\n\t${e}`)
+        throw e
+      }
+      console.log(`expected an error - ${tt.name}\n\t${e}`)
+      continue
+    }
+    if (tt.wantErr !== undefined) {
+      fail(`EXPECTED AN ERROR : ${tt.name} : '${tt.wantErr}'`)
+    }
+    const jb = createJsonBinding(RESOLVER, tt.texpr)
+    let o_out: unknown = null
+    try {
+      o_out = jb.fromJson(j_out)
+    } catch (e) {
+      const j_wanted = jb.toJson(tt.want)
+      console.log(`Exception in ${tt.name}\n  json:    ${JSON.stringify(j_out)}\n  j_wanted:${JSON.stringify(j_wanted)}\n`, e)
+      fail(e)
+    }
+    assertEquals(o_out, tt.want)
+  }
+
+})
+
+//----------------------------------------------------------------------
+
+const liftedJsonBinding: JsonBinding<L.Lifted> = createJsonBinding(RESOLVER, L.texprLifted());
+const orgFldJsonBinding: JsonBinding<L.OrgField> = createJsonBinding(RESOLVER, L.texprOrgField());
+const oldOutterJB: JsonBinding<L.OldOutter> = createJsonBinding(RESOLVER, L.texprOldOutter());
+const newOutterJB: JsonBinding<L.NewOutter> = createJsonBinding(RESOLVER, L.texprNewOutter());
+
+const orgFld: L.OrgField = { "a": "abc", "b": 42 };
+const lifted1 = L.makeLifted("org_field", orgFld);
 
 Deno.test('Lifted - decode01', () => {
   // this is not necessary since the json of orgFld and its toJson are the same.
@@ -24,15 +221,15 @@ Deno.test('Lifted - decode01', () => {
 });
 
 Deno.test('Lifted - decode02', () => {
-  const oldO = lifting.makeOldOutter({field0: orgFld})
-  const newO = lifting.makeNewOutter({field0: lifting.makeLifted("org_field", { "a": "abc", "b": 42 })})
+  const oldO = L.makeOldOutter({field0: orgFld})
+  const newO = L.makeNewOutter({field0: L.makeLifted("org_field", { "a": "abc", "b": 42 })})
   const json = oldOutterJB.toJson(oldO);
   const lifted = newOutterJB.fromJson(json);
   assertEquals(lifted, newO);
 });
 
 Deno.test('Lifted - decode03', () => {
-  const jb: JsonBinding<lifting.LiftedVector> = createJsonBinding(RESOLVER, lifting.texprLiftedVector());
+  const jb: JsonBinding<L.LiftedVector> = createJsonBinding(RESOLVER, L.texprLiftedVector());
   const json = ["a", "b", "c"]
   const lifted = jb.fromJson(json);
   assertEquals(lifted.kind, "str_arr");

@@ -17,7 +17,7 @@ type SerializedName = String;
 // For the union below the json `"abc"` would be interpreted as branch 'a'
 // ```
 // union X { 
-//   @AllowUntaggedDisc { "@v": 1 }
+//   @TypeDiscrimination { "@v": 1 }
 //   String a;
 // };
 // ```
@@ -31,7 +31,7 @@ type SerializedName = String;
 // Union Serialization
 // ===================
 // Unions are normally serialized with an external tag ie `{"<tag>":{ ... }}`
-// Unions with one or more AllowUntaggedDisc are serialized with an addition field ie `{"@v":<MaxVersion>, "<tag>":{ ... }}`
+// Unions with one or more TypeDiscrimination are serialized with an addition field ie `{"@v":<MaxVersion>, "<tag>":{ ... }}`
 
 // JSON->JSON transformer
 // ======================
@@ -39,7 +39,7 @@ type SerializedName = String;
 // If json_in has not @v field then "@v":-1 is assumed.
 // json_in_body = json_in minus the @v field
 // json_in_body is;
-//   - compared against all branches annotated with AllowUntaggedDisc
+//   - compared against all branches annotated with TypeDiscrimination
 //      - where version is < @v and the json_in_body matches the disc_cfg, then
 //        - json_out = {"<match_tag>": json_in_body}
 //  - else json_out = json_in_body
@@ -58,11 +58,11 @@ type SerializedName = String;
 // - an annotated union with annotated branches creates addition complexity (eg would require recursive checking and uplifting).
 
 
-struct AllowUntaggedDisc {
+struct TypeDiscrimination {
   /// The discrimination method to use, either by type or object properties.
   DiscriminatorConfig disc_cfg = "by_type";
   /// The version of the union decl this annotation was applied to.
-  // The max version across all AllowUntaggedDisc annotated branched is used when serializing the union.
+  // The max version across all TypeDiscrimination annotated branched is used when serializing the union.
   // This is used to identify when branches need up-lifting.
   // NOT related to version field in the ADLAST.
   @SerializedName "@v"
@@ -80,9 +80,9 @@ union DiscriminatorConfig {
   ObjectProperties obj_props;
 };
 union ObjectProperties {
-  @AllowUntaggedDisc { "@v": 0 }
+  @TypeDiscrimination { "@v": 0 }
   String field;
-  @AllowUntaggedDisc { "@v": 0 }
+  @TypeDiscrimination { "@v": 0 }
   Vector<ObjectProperties> and;
   Vector<ObjectProperties> or;
   // Vector<ObjectProperties> xor;

@@ -91,6 +91,7 @@ devdeno() {
     --runtime-dir runtime \
     $HERE/example.adl \
     $HERE/lifting.adl \
+    $HASKELLDIR/compiler/tests/test31/input/test31.adl \
     $ADLSTDLIBDIR/sys/annotations.adl \
     $ADLSTDLIBDIR/sys/types.adl \
     $ADLSTDLIBDIR/sys/adlast.adl \
@@ -98,13 +99,14 @@ devdeno() {
   )
 
   echo "### Running tests"
-  deno test example.tests.ts
+  deno test --coverage example.tests.ts
+  # deno test --inspect-wait example.tests.ts
 }
 
-testts ts-3.5.2
-testts ts-3.8.3
-testts ts-4.2.4
-testts ts-4.6.3
-testdeno deno-1.10.2
+# testts ts-3.5.2
+# testts ts-3.8.3
+# testts ts-4.2.4
+# testts ts-4.6.3
+# testdeno deno-1.10.2
 
-# devdeno deno-1.10.2
+devdeno deno-1.10.2

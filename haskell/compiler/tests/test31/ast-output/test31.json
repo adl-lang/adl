@@ -12,7 +12,7 @@
                                 {
                                     "k": {
                                         "moduleName": "sys.annotations",
-                                        "name": "AllowUntaggedDisc"
+                                        "name": "TypeDiscrimination"
                                     },
                                     "v": {
                                         "@v": 0

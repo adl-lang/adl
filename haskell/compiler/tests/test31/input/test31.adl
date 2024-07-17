@@ -9,9 +9,93 @@ struct MyStructV2 {
 };
 
 union Measure {
-    @AllowUntaggedDisc { "@v": 0 }
+    @TypeDiscrimination { "@v": 0 }
     Word64 count;
     sys.types.Pair<Word64,Double> multiple;
+};
+
+union StructTest {
+    @TypeDiscrimination { "@v": 0 }
+    S1 abc;
+    S1 def;
+};
+
+struct S1 {
+    Word64 quant;
+    Double value;
+};
+
+// will cause an error
+union VoidTest {
+    @TypeDiscrimination { "@v": 0 }
+    Void abc;
+    S1 def;
+};
+
+// will cause an error
+union UnionOfLiftedUnion {
+    @TypeDiscrimination { "@v": 0 }
+    UnionOfLiftedUnion abc;
+    S1 def;
+};
+
+union UnionUnion {
+    @TypeDiscrimination { "@v": 0 }
+    U1 abc;
+    S1 def;
+};
+
+union U1 {
+    String a;
+    Int64 b;
+};
+
+union Struct02Test {
+    @TypeDiscrimination { "@v": 0 }
+    U1 u1;
+    @TypeDiscrimination { "@v": 0 }
+    S1 s1;
+};
+
+union NullableTest {
+    @TypeDiscrimination { "@v": 0 }
+    Nullable<String> a;
+    Void b;
+};
+
+union VectorTest {
+    @TypeDiscrimination { "@v": 0 }
+    Vector<String> a;
+    Vector<Struct02Test> b;
+};
+
+union VectorErrorTest {
+    @TypeDiscrimination { "@v": 0 }
+    Vector<String> a;
+    @TypeDiscrimination { "@v": 0 }
+    Vector<Struct02Test> b;
+};
+
+union VectorOfTypeDiscriminationUnionTest {
+    Vector<Struct02Test> b;
+};
+
+union UnionOfVectorOfTypeDiscriminationUnionTest {
+    @TypeDiscrimination { "@v": 0 }
+    Vector<Struct02Test> b;
+};
+
+union Ua {
+    Vector<Ub> u_b;
+};
+
+union Ub {
+    Vector<Uc> u_c;
+};
+
+union Uc {
+    @TypeDiscrimination { "@v": 0 }
+    Vector<String> a;
 };
 
 };
