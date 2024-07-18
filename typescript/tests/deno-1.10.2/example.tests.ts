@@ -10,6 +10,7 @@ import {RESOLVER} from './build/resolver.ts'
 import { assert, assertEquals, fail } from "https://deno.land/std@0.85.0/testing/asserts.ts";
 import * as T31 from './build/test31.ts';
 import { ATypeExpr } from './build/runtime/adl.ts';
+import { makeMaybe, texprMaybe } from './build/sys/types.ts';
 
 // Deno.test('TypeDiscrimination01', () => {
 //   const td = J.getTypeDiscriminations(RESOLVER, T31.texprMeasure().value)
@@ -145,8 +146,8 @@ Deno.test('TypeDiscrimination01', () => {
       name: "UnionOfVectorOfTypeDiscriminationUnionTest",
       texpr: T31.texprUnionOfVectorOfTypeDiscriminationUnionTest(),
       json: `[]`,
-      want: null,
-      wantErr: `union of union containing TypeDiscrimination branches not supported`,
+      want: T31.makeUnionOfVectorOfTypeDiscriminationUnionTest("b", []),
+      // wantErr: `union of union containing TypeDiscrimination branches not supported`,
     },
     {
       name: "Ua",
@@ -174,22 +175,79 @@ Deno.test('TypeDiscrimination01', () => {
       json: `{"a":{"just":{"abc":{"a":"a string"}}}}`,
       want: T31.makeUofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
     },
+    {
+      name: "UofMaybe - lifting",
+      texpr: T31.texprUofMaybe(),
+      json: `{"a":{"just":{"a":"a string"}}}`,
+      want: T31.makeUofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
+    },
+    {
+      name: "UTypeDiscriminationofMaybe - lifting U1",
+      texpr: T31.texprUTypeDiscriminationofMaybe(),
+      json: `{"a":{"just":{"a":"a string"}}}`,
+      want: T31.makeUTypeDiscriminationofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
+    },
+    {
+      name: "UTypeDiscriminationofMaybe - lifting U1 & top",
+      texpr: T31.texprUTypeDiscriminationofMaybe(),
+      json: `{"just":{"a":"a string"}}`,
+      want: T31.makeUTypeDiscriminationofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
+    },
+    {
+      name: "Maybe - lifting ",
+      texpr: texprMaybe( T31.texprU1()),
+      json: `{"just":"a string"}`,
+      want: makeMaybe("just", T31.makeU1("a", "a string")),
+    },
+    {
+      name: "U1 - lifting ",
+      texpr: T31.texprU1(),
+      json: `"a string"`,
+      want: T31.makeU1("a", "a string"),
+    },
     // {
-    //   name: "UofMaybe - lifting",
-    //   texpr: T31.texprUofMaybe(),
-    //   json: `{"a":{"just":{"a":"a string"}}}`,
-    //   want: T31.makeUofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
+    //   name: "A2",
+    //   texpr: T31.texprA2(),
+    //   json: `{"a":"a string"}`,
+    //   want: T31.makeA2("a", T31.makeA1("a", "a string")),
     // },
+    // {
+    //   name: "A2 - 2",
+    //   texpr: T31.texprA2(),
+    //   json: `"a string"`,
+    //   want: T31.makeA2("a", T31.makeA1("a", "a string")),
+    //   wantErr: "primitive type mismatch. expected String received"
+    // },
+    {
+      name: "Deep",
+      texpr: T31.texprA1(),
+      json: `"sdaf"`,
+      want: T31.makeA1("a", T31.makeA2("b", T31.makeA3("c", T31.makeA4("d", "sdaf"))))
+    },
+    {
+      name: "UnionUnion - lifting all",
+      texpr: T31.texprUnionUnion(),
+      json: `"a string"`,
+      // want: T31.makeUnionUnion("a", "a string"),
+      want: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")),
+    },
+    {
+      name: "UTypeDiscriminationofMaybe - lifting all ",
+      texpr: T31.texprUTypeDiscriminationofMaybe(),
+      json: `{"just":"a string"}`,
+      want: T31.makeUTypeDiscriminationofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
+    },
   ]
   for (const tt of tests) {
-    // if (tt.name != "VectorOfTypeDiscriminationUnionTest") {
+    // if (tt.name != "Deep") {
     //   continue
     // }
     const j_in = JSON.parse(tt.json)
     let j_out: J.Json = null
     // console.log(tt.name)
     try {
-      j_out = LU.liftIntoUnion(RESOLVER, tt.texpr, j_in)
+      const lter = LU.createLifter(RESOLVER, tt.texpr.value)
+      j_out = lter.lift(j_in)
     } catch (e) {
       if (tt.wantErr === undefined) {
         console.log(`UNEXPECTED error - '${tt.name}'\n\t${e}`)
@@ -199,7 +257,7 @@ Deno.test('TypeDiscrimination01', () => {
       continue
     }
     if (tt.wantErr !== undefined) {
-      fail(`EXPECTED AN ERROR : ${tt.name} : '${tt.wantErr}'`)
+      fail(`EXPECTED AN ERROR : ${tt.name}:\nreceived:${JSON.stringify(j_out)}\n '${tt.wantErr}'`)
     }
     const jb = createJsonBinding(RESOLVER, tt.texpr)
     let o_out: unknown = null
@@ -207,10 +265,11 @@ Deno.test('TypeDiscrimination01', () => {
       o_out = jb.fromJson(j_out)
     } catch (e) {
       const j_wanted = jb.toJson(tt.want)
-      console.log(`Exception in ${tt.name}\n  json:    ${JSON.stringify(j_out)}\n  j_wanted:${JSON.stringify(j_wanted)}\n`, e)
+      console.log(`Exception in ${tt.name}\n  json:    ${JSON.stringify(j_out)}\n  j_wanted:${JSON.stringify(j_wanted)}\n${e.toString()}`, e)
       fail(e)
     }
     assertEquals(o_out, tt.want)
+    assertEquals(j_out, jb.toJson(tt.want))
   }
 
 })

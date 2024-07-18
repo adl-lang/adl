@@ -40,12 +40,15 @@ union UnionOfLiftedUnion {
 };
 
 union UnionUnion {
-    @TypeDiscrimination { "@v": 0 }
+    // @TypeDiscrimination { "@v": 0 }
+    // String a;
+    @TypeDiscrimination { "@v": 1 }
     U1 abc;
     S1 def;
 };
 
 union U1 {
+    @TypeDiscrimination { "@v": 3 }
     String a;
     Int64 b;
 };
@@ -101,5 +104,38 @@ union Uc {
 union UofMaybe {
     sys.types.Maybe<UnionUnion> a;
 };
+
+union UTypeDiscriminationofMaybe {
+    @TypeDiscrimination { "@v": 0 }
+    sys.types.Maybe<UnionUnion> a;
+};
+
+// union A1 {
+//     @TypeDiscrimination { "@v": 0 }
+//     String a;
+// };
+
+// union A2 {
+//     @TypeDiscrimination { "@v": 0 }
+//     A1 a;
+// };
+
+union A1 {
+    @TypeDiscrimination { "@v": 6 }
+    A2 a;
+};
+union A2 {
+    @TypeDiscrimination { "@v": 7 }
+    A3 b;
+};
+union A3 {
+    @TypeDiscrimination { "@v": 8 }
+    A4 c;
+};
+union A4 {
+    @TypeDiscrimination { "@v": 9 }
+    String d;
+};
+
 
 };

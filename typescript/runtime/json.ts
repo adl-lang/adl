@@ -1,5 +1,6 @@
 import {DeclResolver,ATypeExpr} from './adl$TSEXT';
 import * as AST from './sys/adlast$TSEXT';
+import * as ANN from '../sys/annotations$TSEXT';
 $TSB64IMPORT;
 import {isVoid, isEnum, scopedNamesEqual} from './utils$TSEXT';
 
@@ -407,6 +408,8 @@ function unionJsonBinding(
   const newBoundTypeParams = createBoundTypeParams(dresolver, union.typeParams, params, boundTypeParams);
   const detailsByName : {[key: string]: FieldDetails} = {};
   const detailsBySerializedName : {[key: string]: FieldDetails} = {};
+  const jb = createJsonBinding(dresolver, ANN.texprTypeDiscrimination())
+  let max_version = -1
   union.fields.forEach( (field) => {
     const details = {
       field : field,
@@ -415,6 +418,12 @@ function unionJsonBinding(
     };
     detailsByName[field.name] = details;
     detailsBySerializedName[field.serializedName] = details;
+    const disc = getAnnotation(jb, field.annotations)
+    if (disc) {
+      if (disc.version > max_version) {
+        max_version = disc.version
+      }
+    }
   });
 
   const audofb = annotations.find(el => scopedNamesEqual(el.key, SN_AllowUntaggedDeserializeOfFirstBranch)) != undefined
@@ -427,6 +436,9 @@ function unionJsonBinding(
     } else {
       const result: JsonObject = {};
       result[details.field.serializedName] = details.jsonBinding().toJson(v.value);
+      if (max_version != -1) {
+        result["@v"] = max_version
+      }
       return result;
     }
   }
@@ -544,4 +556,15 @@ export function getAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotation
   return jb.fromJsonE(ann.value);
 }
 
+export function hasAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotations): boolean {
+  if (jb.typeExpr.typeRef.kind != 'reference') {
+    return false;
+  }
+  const annScopedName :AST.ScopedName = jb.typeExpr.typeRef.value;
+  const ann = annotations.find(el => scopedNamesEqual(el.key, annScopedName));
+  if (ann === undefined) {
+    return false;
+  }
+  return true;
+}
 
