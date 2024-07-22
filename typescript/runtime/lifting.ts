@@ -84,7 +84,7 @@ function buildLifter(
       const ast = dresolver(texpr.typeRef.value);
       switch (ast.decl.type_.kind) {
         case "struct_": {
-          const newBoundTypeParams = createBoundTypeParams(dresolver, ast.decl.type_.value.typeParams, texpr.parameters, boundTypeParams);
+          const newBoundTypeParams = bindTypeParams(ast.decl.type_.value.typeParams, texpr.parameters, (te: AST.TypeExpr) => buildLifter(dresolver, te, boundTypeParams));
           const fieldDetails: Record<string, Lifter> = {}
           ast.decl.type_.value.fields.forEach(fld => {
             fieldDetails[fld.serializedName] = buildLifter(dresolver, fld.typeExpr, newBoundTypeParams)
@@ -111,14 +111,14 @@ function buildLifter(
           if (isEnum(ast.decl.type_.value)) {
             return idLifter
           } else {
-            return createUnionLifter(dresolver, ast.decl.type_.value, texpr, boundTypeParams)
+            return buildUnionLifter(dresolver, ast.decl.type_.value, texpr, boundTypeParams)
           }
         case "type_": {
-          const newBoundTypeParams = createBoundTypeParams(dresolver, ast.decl.type_.value.typeParams, texpr.parameters, boundTypeParams);
+          const newBoundTypeParams = bindTypeParams(ast.decl.type_.value.typeParams, texpr.parameters, (te: AST.TypeExpr) => buildLifter(dresolver, te, boundTypeParams));
           return buildLifter(dresolver, ast.decl.type_.value.typeExpr, newBoundTypeParams)
         }
         case "newtype_": {
-          const newBoundTypeParams = createBoundTypeParams(dresolver, ast.decl.type_.value.typeParams, texpr.parameters, boundTypeParams);
+          const newBoundTypeParams = bindTypeParams(ast.decl.type_.value.typeParams, texpr.parameters, (te: AST.TypeExpr) => buildLifter(dresolver, te, boundTypeParams));
           return buildLifter(dresolver, ast.decl.type_.value.typeExpr, newBoundTypeParams)
         }
       }
@@ -132,39 +132,36 @@ interface Ancestor {
 interface UnionFieldDetails {
   ancestors: Ancestor[],
   max_version: number,
-  // disc?: ANN.TypeDiscrimination
   lifter: Lifter
 }
 interface TypeDiscs {
   max_version: number,
   type_discs: TypeDisc[],
-  // record of vector branches where the element has of TypeDiscs
-  // vector_discs: Record<string, TypeDiscs>,
 }
-interface TypeDisc {
-  // field: AST.Field,
-  ancestors: Ancestor[],
-  name: string,
-  serializedName: string,
-  typeExpr: AST.TypeExpr,
+type TypeDisc = AST.Field & {
   disc: ANN.TypeDiscrimination,
+  // max_version: number,
+  // lifter: Lifter
 }
 
-
-export function createUnionLifter(
+function buildUnionLifter(
   dresolver: DeclResolver,
   union: AST.Union,
   texpr: AST.TypeExpr,
   boundTypeParams: Record<string, Lifter>,
 ): Lifter {
-  const newBoundTypeParams = createBoundTypeParams(dresolver, union.typeParams, texpr.parameters, boundTypeParams);
+  const newBoundTypeParams = bindTypeParams(union.typeParams, texpr.parameters, (te: AST.TypeExpr) => buildLifter(dresolver, te, boundTypeParams));
   const fields: Record<string, UnionFieldDetails> = {}
-    const jb = createJsonBinding(dresolver, ANN.texprTypeDiscrimination())
+  const jb = createJsonBinding(dresolver, ANN.texprTypeDiscrimination())
   const type_discs: TypeDisc[] = union.fields.flatMap(fld => {
     const disc = getAnnotation(jb, fld.annotations)
     if (disc) {
-      return [{ ...fld, disc, ancestors: [] }]
-        }
+      // const lifter = createLifter(dresolver, fld.typeExpr)
+      return [{
+        ...fld,
+        disc,
+      }]
+    }
     return []
   })
   const max_version = type_discs.reduce((p, td) => td.disc.version > p ? td.disc.version : p, -1)
@@ -173,28 +170,36 @@ export function createUnionLifter(
       max_version,
       ancestors: [],
       lifter: buildLifter(dresolver, fld.typeExpr, newBoundTypeParams),
-          }
+    }
   })
   union.fields.forEach(fld => {
     const anc: Ancestor = {
       name: fld.serializedName,
       max_version: max_version,
-        }
+    }
     const trans_discs = transitiveTypeDisc(dresolver, fld.typeExpr, [anc], newBoundTypeParams, jb)
     for (const tdtd of trans_discs) {
-      if (fields[tdtd.serializedName] !== undefined) {
-        throw Error(`union of union branch ambiguity '${tdtd.serializedName}' ${JSON.stringify(texpr.typeRef)}`)
+      if (fields[tdtd.fld.serializedName] !== undefined) {
+        throw Error(`union of union branch ambiguity '${tdtd.fld.serializedName}' ${JSON.stringify(texpr.typeRef)}`)
       }
-      fields[tdtd.serializedName] = {
-        max_version: tdtd.disc.version,
-        ancestors: tdtd.ancestors,
-        lifter: tdtd.lifter,
-      }
-      type_discs.push(tdtd)
+      fields[tdtd.fld.serializedName] = tdtd.ufd
+      type_discs.push(tdtd.fld)
     }
   })
   function lift(json0: Json): Json {
-    let json1 = liftTypeDiscriminations(dresolver, json0, { max_version, type_discs })
+    let json1 = json0
+    const mtd = type_discs.filter((type_disc: TypeDisc) => {
+      const expanded_texpr = expandTypes(dresolver, type_disc.typeExpr, {})
+      return matchTypeDiscrimination(dresolver, json0, expanded_texpr)
+    })
+    if (mtd.length > 1) {
+      throw Error(`ambiguous matching type discriminators ${mtd.map(el => el.name)}`)
+    }
+    if (mtd.length === 1) {
+      json1 = {}
+      json1[mtd[0].serializedName] = json0
+      // json1["@v"] = mtd[0].disc.version
+    }
     if (isJsonObject(json1)) {
       const keys = Object.keys(json1).filter(k => k != "@v")
       if (keys.length != 1) {
@@ -206,18 +211,14 @@ export function createUnionLifter(
       }
       if (ufd.max_version > -1) {
         json1["@v"] = ufd.max_version
-      } 
+      }
+      json1[keys[0]] = ufd.lifter.lift(json1[keys[0]])
       if (ufd.ancestors.length > 0) {
         for (const an of ufd.ancestors) {
           const j3: Json = {}
           j3[an.name] = json1
           j3["@v"] = an.max_version
           json1 = j3
-        }
-      } else {
-        json1[keys[0]] = ufd.lifter.lift(json1[keys[0]])
-        if (max_version != -1) {
-          json1["@v"] = max_version
         }
       }
       return json1
@@ -234,7 +235,7 @@ function transitiveTypeDisc(
   ancestors: Ancestor[],
   boundTypeParams: Record<string, Lifter>,
   jb: JsonBinding<ANN.TypeDiscrimination>,
-): (TypeDisc & UnionFieldDetails)[] {
+): { fld: TypeDisc, ufd: UnionFieldDetails }[] {
   switch (ftexpr.typeRef.kind) {
     case "reference":
       const ast = dresolver(ftexpr.typeRef.value)
@@ -244,10 +245,10 @@ function transitiveTypeDisc(
         case "type_":
           return transitiveTypeDisc(dresolver, ast.decl.type_.value.typeExpr, ancestors, boundTypeParams, jb)
         case "struct_":
-        return []
+          return []
         case 'union_':
-          const ret: (TypeDisc & UnionFieldDetails)[] = []
-          const newBoundTypeParams2 = createBoundTypeParams(dresolver, ast.decl.type_.value.typeParams, ftexpr.parameters, boundTypeParams);
+          const ret: { fld: TypeDisc, ufd: UnionFieldDetails }[] = []
+          const newBoundTypeParams2 = bindTypeParams(ast.decl.type_.value.typeParams, ftexpr.parameters, (te: AST.TypeExpr) => buildLifter(dresolver, te, boundTypeParams));
           const max_version = ast.decl.type_.value.fields.reduce((p, fld) => {
             const disc = getAnnotation(jb, fld.annotations)
             if (disc) {
@@ -261,16 +262,20 @@ function transitiveTypeDisc(
             const disc = getAnnotation(jb, fld.annotations)
             if (disc) {
               ret.push({
-                ...fld,
-                max_version,
-                lifter: buildLifter(dresolver, fld.typeExpr, newBoundTypeParams2),
-                disc,
-                ancestors,
-      })
-    }
+                fld: {
+                  ...fld,
+                  disc,
+                },
+                ufd: {
+                  max_version,
+                  lifter: buildLifter(dresolver, fld.typeExpr, newBoundTypeParams2),
+                  ancestors,
+                }
+              })
+            }
             ret.push(...transitiveTypeDisc(dresolver, fld.typeExpr, [{ name: fld.serializedName, max_version }, ...ancestors], newBoundTypeParams2, jb))
           })
-  return ret
+          return ret
       }
   }
   return []
@@ -281,101 +286,68 @@ const idLifter = {
   lift: (json: Json) => json
 }
 
-export function liftTypeDiscriminations(
+function matchTypeDiscrimination(
   dresolver: DeclResolver,
   json: Json,
-  type_discs: TypeDiscs,
-): Json {
-  const isDisc = (type_disc: TypeDisc) => {
-    const expanded_texpr = expandTypes(
-      dresolver,
-      type_disc.typeExpr,
-      { expandNewType: true, expandTypeAliases: true },
-    )
-    return matchTypeDiscrimination(dresolver, json, type_disc, expanded_texpr)
-  }
-  const mtd = type_discs.type_discs.filter(isDisc)
-  if (mtd.length === 0) {
-    return json
-  }
-  if (mtd.length > 1) {
-    throw Error(`ambiguous matching type discriminators ${mtd.map(el => el.name)}`)
-  }
-  const json1: Json = {}
-    json1[mtd[0].serializedName] = json
-  return json1
-}
-
-export function matchTypeDiscrimination(
-  dresolver: DeclResolver,
-  json: Json,
-  type_disc: TypeDisc,
-  expanded_texpr: AST.TypeExpr,
+  texpr: AST.TypeExpr,
 ): boolean {
-  let typeRef = expanded_texpr.typeRef
+  let typeRef = texpr.typeRef
   if (typeRef.kind === "typeParam") {
     return false
   }
   if (typeRef.kind === "primitive" && (typeRef.value === "Json" || typeRef.value === "Void")) {
     throw Error(`cannot use Json or Void as a type discriminator`)
   }
-  switch (type_disc.disc.disc_cfg.kind) {
-    case "by_type": {
-      if (json === null) {
-        if (typeRef.kind === "primitive" && typeRef.value === "Nullable") {
-          return true
-        }
-        throw Error(`primitive type mismatch. expected "Nullable" received ${JSON.stringify(typeRef)}`)
-      }
-      if (Array.isArray(json)) {
-        return json.find(j => !matchTypeDiscrimination(dresolver, j, type_disc, expanded_texpr.parameters[0])) === undefined
-      }
-      if (typeRef.kind === "primitive" && typeRef.value === "Nullable") {
-        typeRef = expanded_texpr.parameters[0].typeRef
-        if (typeRef.kind === "primitive" && typeRef.value === "Vector") {
-          throw Error(`lifting of Nullable<Vector<>> not implemented`)
-        }
-        if (typeRef.kind === "primitive" && typeRef.value === "Nullable") {
-          throw Error(`lifting of Nullable<Nullable<>> not implemented`)
-        }
-      }
-      switch (typeof json) {
-        case "string":
-          return isPrimitiveOf(typeRef, "String")
-        case "object":
-          return matchObject(dresolver, json, type_disc.name, expanded_texpr)
-        case "number":
-          return isPrimitiveOfs(typeRef, adlNumbers)
-        case "boolean":
-          return isPrimitiveOf(typeRef, "Bool")
-        // case "bigint":
-        default:
-          break
-      }
+  if (json === null) {
+    if (typeRef.kind === "primitive" && typeRef.value === "Nullable") {
+      return true
+    }
+    throw Error(`primitive type mismatch. expected "Nullable" received ${JSON.stringify(typeRef)}`)
+  }
+  if (Array.isArray(json)) {
+    if (typeRef.kind === "primitive" && typeRef.value !== "Vector") {
       return false
     }
-    case "obj_props":
-      if (json === null) {
-        return isPrimitiveOf(typeRef, "Nullable")
-      }
-      if (Array.isArray(json)) {
-        throw Error("not implemented or not implementable - TODO: figure out which")
-      }
-      const jobj = asJsonObject(json)
-      if (jobj === undefined) {
-        throw Error("expecting object")
-      }
-      return matchObject(dresolver, jobj, type_disc.name, expanded_texpr)
-    default:
-      assertNever(type_disc.disc.disc_cfg)
+    return json.find(j => !matchTypeDiscrimination(dresolver, j, texpr.parameters[0])) === undefined
   }
+  if (typeRef.kind === "primitive" && typeRef.value === "Nullable") {
+    typeRef = texpr.parameters[0].typeRef
+    if (typeRef.kind === "primitive" && typeRef.value === "Vector") {
+      throw Error(`lifting of Nullable<Vector<>> not implemented`)
+    }
+    if (typeRef.kind === "primitive" && typeRef.value === "Nullable") {
+      throw Error(`lifting of Nullable<Nullable<>> not implemented`)
+    }
+  }
+  switch (typeof json) {
+    case "string":
+      if (typeRef.kind === "primitive" && typeRef.value === "String") {
+        return true
+      }
+      return false
+    case "object":
+      return matchObject(dresolver, json, texpr)
+    case "number":
+      if (typeRef.kind === "primitive" && adlNumbers.includes(typeRef.value)) {
+        return true
+      }
+      return false
+    // throw Error(`primitive type mismatch. expected ${adlNumbers} received ${JSON.stringify(typeRef)}`)
+    case "boolean":
+      if (typeRef.kind === "primitive" && typeRef.value === "Bool") {
+        return true
+      }
+      return false
+    // case "bigint":
+    default:
+      break
+  }
+  return false
 }
 
 function matchObject(
   dresolver: DeclResolver,
   json: JsonObject,
-  fname: string,
-  // type_disc: TypeDisc,
   expanded_texpr: AST.TypeExpr,
 ): boolean {
   const typeRef = expanded_texpr.typeRef
@@ -401,21 +373,6 @@ function matchObject(
     }
   }
   return false
-}
-
-function isPrimitiveOf(typeRef: AST.TypeRef, type_: string): boolean {
-  if (typeRef.kind === "primitive" && typeRef.value === type_) {
-    return true
-  }
-  // throw Error(`primitive type mismatch. expected ${type_} received ${JSON.stringify(typeRef)}`)
-  return false
-}
-
-function isPrimitiveOfs(typeRef: AST.TypeRef, types: string[]): boolean {
-  if (typeRef.kind === "primitive" && types.includes(typeRef.value)) {
-    return true
-  }
-  throw Error(`primitive type mismatch. expected ${types} received ${JSON.stringify(typeRef)}`)
 }
 
 const adlNumbers = [
@@ -462,85 +419,72 @@ export function substituteTypeVariables(
   return typeExpr;
 }
 
-export function expandTypeAlias(
-  resolver: DeclResolver,
-  typeExpr: AST.TypeExpr,
-): AST.TypeExpr | null {
-  if (typeExpr.typeRef.kind == "reference") {
-    const sdecl = resolver(typeExpr.typeRef.value);
-    const dtype = sdecl.decl.type_;
-    if (dtype.kind == "type_") {
-      const tparams = dtype.value.typeParams;
-      const tvalues = typeExpr.parameters;
-      return substituteTypeVariables(dtype.value.typeExpr, tparams, tvalues);
-    }
-  }
-  return null;
-}
-
-export function expandNewType(
-  resolver: DeclResolver,
-  typeExpr: AST.TypeExpr,
-): AST.TypeExpr | null {
-  if (typeExpr.typeRef.kind == "reference") {
-    const sdecl = resolver(typeExpr.typeRef.value);
-    const dtype = sdecl.decl.type_;
-    if (dtype.kind == "newtype_") {
-      const tparams = dtype.value.typeParams;
-      const tvalues = typeExpr.parameters;
-      return substituteTypeVariables(dtype.value.typeExpr, tparams, tvalues);
-    }
-  }
-  return null;
-}
-
 /**
  * Recursively xpand type aliases and/or newtypes by substitution
  */
-export function expandTypes(
+function expandTypes(
   resolver: DeclResolver,
-  typeExpr: AST.TypeExpr,
-  options: ExpandTypeOptions,
+  texpr: AST.TypeExpr,
+  boundTypeParams: Record<string, AST.TypeExpr>,
 ): AST.TypeExpr {
-  switch (typeExpr.typeRef.kind) {
+  // console.log("expandTypes", texpr, boundTypeParams)
+  switch (texpr.typeRef.kind) {
     case "primitive":
-      break;
+      if (texpr.parameters.length == 0) {
+        return texpr;
+      }
+      const te0 = expandTypes(resolver, texpr.parameters[0], boundTypeParams)
+      return AST.makeTypeExpr({ typeRef: texpr.typeRef, parameters: [te0] })
     case "reference":
-      let texpr2 = null;
-      if (options.expandTypeAliases) {
-        texpr2 = texpr2 || expandTypeAlias(resolver, typeExpr);
-      }
-      if (options.expandNewType) {
-        texpr2 = texpr2 || expandNewType(resolver, typeExpr);
-      }
-      if (texpr2) {
-        return expandTypes(resolver, texpr2, options);
-      }
-      break;
-    case "typeParam":
-      break;
-  }
-  return typeExpr;
-}
+      const ast = resolver(texpr.typeRef.value);
+      switch (ast.decl.type_.kind) {
+        case "struct_":
+          if (texpr.parameters.length == 0) {
+            return texpr;
+          }
+          return texpr
+          // const nbp = bindTypeParams(ast.decl.type_.value.typeParams, texpr.parameters, (te: AST.TypeExpr) => te);
+          // const fields = ast.decl.type_.value.fields.map(fld => {
+          //   return {
+          //     ...fld,
+          //     typeExpr: expandTypes(resolver, fld.typeExpr, nbp)
+          //   }
+          // })
+          // return {
 
-interface ExpandTypeOptions {
-  expandTypeAliases?: boolean;
-  expandNewType?: boolean;
+          // }
+        case "union_":
+          if (texpr.parameters.length == 0) {
+            return texpr;
+          }
+          return texpr
+        case "newtype_":
+        case "type_": {
+          // console.log("!!! ", texpr, boundTypeParams)
+          const nbp = bindTypeParams(ast.decl.type_.value.typeParams, texpr.parameters, (te: AST.TypeExpr) => te);
+          return expandTypes(resolver, ast.decl.type_.value.typeExpr, nbp);
+        }
+      }
+    case "typeParam":
+      // console.log("*** ", texpr, boundTypeParams)
+      return boundTypeParams[texpr.typeRef.value];
+  }
 }
 
 function assertNever(x: never): never {
   throw new Error('cannot reach here!');
 }
 
-function createBoundTypeParams(
-  dresolver: DeclResolver,
+function bindTypeParams<T>(
+  // dresolver: DeclResolver,
   paramNames: string[],
   paramTypes: AST.TypeExpr[],
-  boundTypeParams: Record<string, Lifter>,
-): Record<string, Lifter> {
-  let result: Record<string, Lifter> = {};
+  // boundTypeParams: Record<string, T>,
+  fn: (te: AST.TypeExpr) => T,
+): Record<string, T> {
+  let result: Record<string, T> = {};
   paramNames.forEach((paramName, i) => {
-    result[paramName] = buildLifter(dresolver, paramTypes[i], boundTypeParams);
+    result[paramName] = fn(paramTypes[i]);
   });
   return result;
 }

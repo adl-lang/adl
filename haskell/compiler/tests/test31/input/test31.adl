@@ -137,5 +137,41 @@ union A4 {
     String d;
 };
 
+type MyString = String;
+type MyVecString = Vector<String>;
+type MyVecMyString = Vector<MyString>;
+
+union B1 {
+    @TypeDiscrimination { "@v": 0 }
+    MyString f1;
+    @TypeDiscrimination { "@v": 0 }
+    Vector<MyString> f2;
+};
+
+union B2 {
+    @TypeDiscrimination { "@v": 0 }
+    MyVecString f3;
+};
+
+union B3 {
+    @TypeDiscrimination { "@v": 0 }
+    MyVecMyString f3;
+};
+
+union GenU<T> {
+    T a;
+};
+
+union B4 {
+    @TypeDiscrimination { "@v": 0 }
+    GenU<String> b;
+};
+
+type MyGenUString = GenU<String>;
+
+union B5 {
+    @TypeDiscrimination { "@v": 0 }
+    MyGenUString b;
+};
 
 };

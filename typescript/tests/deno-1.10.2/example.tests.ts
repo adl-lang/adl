@@ -225,6 +225,30 @@ Deno.test('TypeDiscrimination01', () => {
       want: T31.makeA1("a", T31.makeA2("b", T31.makeA3("c", T31.makeA4("d", "sdaf"))))
     },
     {
+      name: "Deep - lift a4",
+      texpr: T31.texprA1(),
+      json: `{"d": "sdaf", "@v": 9}`,
+      want: T31.makeA1("a", T31.makeA2("b", T31.makeA3("c", T31.makeA4("d", "sdaf"))))
+    },
+    {
+      name: "Deep - lift a3",
+      texpr: T31.texprA1(),
+      json: `{"c": {"d": "sdaf", "@v": 9}, "@v": 8}`,
+      want: T31.makeA1("a", T31.makeA2("b", T31.makeA3("c", T31.makeA4("d", "sdaf"))))
+    },
+    {
+      name: "A3 - lift a3.a4.d",
+      texpr: T31.texprA3(),
+      json: `{"c": "sdaf", "@v": 8}`,
+      want: T31.makeA3("c", T31.makeA4("d", "sdaf")),
+    },
+    {
+      name: "Deep - lift a3.a4.d",
+      texpr: T31.texprA1(),
+      json: `{"c": "sdaf", "@v": 8}`,
+      want: T31.makeA1("a", T31.makeA2("b", T31.makeA3("c", T31.makeA4("d", "sdaf"))))
+    },
+    {
       name: "UnionUnion - lifting all",
       texpr: T31.texprUnionUnion(),
       json: `"a string"`,
@@ -237,11 +261,54 @@ Deno.test('TypeDiscrimination01', () => {
       json: `{"just":"a string"}`,
       want: T31.makeUTypeDiscriminationofMaybe("a", { kind: "just", value: T31.makeUnionUnion("abc", T31.makeU1("a", "a string")) }),
     },
+    {
+      name: "B1 f1",
+      texpr: T31.texprB1(),
+      json: `"a string"`,
+      want: T31.makeB1("f1", "a string"),
+    },
+    {
+      name: "B1 f2",
+      texpr: T31.texprB1(),
+      json: `["a string"]`,
+      want: T31.makeB1("f2", ["a string"]),
+    },
+    {
+      name: "B2 f3",
+      texpr: T31.texprB2(),
+      json: `["a string"]`,
+      want: T31.makeB2("f3", ["a string"]),
+    },
+    {
+      name: "B3 f3",
+      texpr: T31.texprB3(),
+      json: `["a string"]`,
+      want: T31.makeB3("f3", ["a string"]),
+    },
+    {
+      name: "B4 a",
+      texpr: T31.texprB4(),
+      json: `{"a":"asdfghjkl"}`,
+      want: T31.makeB4("b", T31.makeGenU<string,"a">("a", "asdfghjkl")),
+    },
+    {
+      name: "B4 b",
+      texpr: T31.texprB4(),
+      json: `{"b":{"a":"asdfghjkl"}}`,
+      want: T31.makeB4("b", T31.makeGenU<string,"a">("a", "asdfghjkl")),
+    },
+    {
+      name: "B5 a",
+      texpr: T31.texprB5(),
+      json: `{"a":"asdfghjkl"}`,
+      want: T31.makeB5("b", T31.makeGenU<string,"a">("a", "asdfghjkl")),
+    },
   ]
   for (const tt of tests) {
-    // if (tt.name != "Deep") {
+    // if (tt.name != "B5 a") {
     //   continue
     // }
+    console.log(tt.name)
     const j_in = JSON.parse(tt.json)
     let j_out: J.Json = null
     // console.log(tt.name)
