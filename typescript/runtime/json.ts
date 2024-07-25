@@ -556,11 +556,11 @@ export function getAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotation
   return jb.fromJsonE(ann.value);
 }
 
-export function hasAnnotation<T>(jb: JsonBinding<T>, annotations: AST.Annotations): boolean {
-  if (jb.typeExpr.typeRef.kind != 'reference') {
+export function hasAnnotation(typeExpr: AST.TypeExpr, annotations: AST.Annotations): boolean {
+  if (typeExpr.typeRef.kind != 'reference') {
     return false;
   }
-  const annScopedName :AST.ScopedName = jb.typeExpr.typeRef.value;
+  const annScopedName :AST.ScopedName = typeExpr.typeRef.value;
   const ann = annotations.find(el => scopedNamesEqual(el.key, annScopedName));
   if (ann === undefined) {
     return false;

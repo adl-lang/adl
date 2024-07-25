@@ -32,6 +32,12 @@ interface TypeDiscTest {
 Deno.test('TypeDiscrimination01', () => {
   const tests: TypeDiscTest[] = [
     {
+      name: "MyStructV2",
+      texpr: T31.texprMyStructV2(),
+      json: `{"quantity": 42}`,
+      want: T31.makeMyStructV2({ quantity: T31.makeMeasure("count", 42) })
+    },
+    {
       name: "count into measure",
       texpr: T31.texprMeasure(),
       json: `42`,

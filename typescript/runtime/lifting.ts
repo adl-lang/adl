@@ -84,28 +84,7 @@ function buildLifter(
       const ast = dresolver(texpr.typeRef.value);
       switch (ast.decl.type_.kind) {
         case "struct_": {
-          const newBoundTypeParams = bindTypeParams(ast.decl.type_.value.typeParams, texpr.parameters, (te: AST.TypeExpr) => buildLifter(dresolver, te, boundTypeParams));
-          const fieldDetails: Record<string, Lifter> = {}
-          ast.decl.type_.value.fields.forEach(fld => {
-            fieldDetails[fld.serializedName] = buildLifter(dresolver, fld.typeExpr, newBoundTypeParams)
-          })
-          function lift(json: Json): Json {
-            if (isJsonObject(json)) {
-              const jv2: JsonObject = {}
-              for (const k of Object.keys(json)) {
-                const elem_lifter = fieldDetails[k]
-                if (elem_lifter) {
-                  jv2[k] = elem_lifter.lift(json[k])
-                } else {
-                  // keep field not defined in adl
-                  jv2[k] = json[k]
-                }
-              }
-              return jv2
-            }
-            throw Error(`expected object got ${typeof json}`)
-          }
-          return { lift }
+          return buildStructLifter(dresolver, ast.decl.type_.value, texpr, boundTypeParams)
         }
         case "union_":
           if (isEnum(ast.decl.type_.value)) {
@@ -123,6 +102,71 @@ function buildLifter(
         }
       }
   }
+}
+
+function hasTypeDiscrimination(
+  dresolver: DeclResolver,
+  texpr: AST.TypeExpr,
+): boolean {
+  switch (texpr.typeRef.kind) {
+    case "primitive":
+      if (texpr.parameters.length == 0) {
+        return false
+      }
+      return hasTypeDiscrimination(dresolver, texpr.parameters[0])
+    case "typeParam":
+      return false
+    case "reference":
+      const ast = dresolver(texpr.typeRef.value)
+      const dtype = ast.decl.type_
+      switch (dtype.kind) {
+        case "struct_":
+          return dtype.value.fields.find(fld => hasTypeDiscrimination(dresolver, fld.typeExpr)) !== undefined
+        case "union_":
+          const hasTD = dtype.value.fields.find(fld => hasAnnotation(ANN.texprTypeDiscrimination().value, fld.annotations))
+          if (hasTD) {
+            return true
+          }
+          return dtype.value.fields.find(fld => hasTypeDiscrimination(dresolver, fld.typeExpr)) !== undefined
+        case "type_":
+          return hasTypeDiscrimination(dresolver, dtype.value.typeExpr)
+        case "newtype_":
+          return hasTypeDiscrimination(dresolver, dtype.value.typeExpr)
+      }
+  }
+}
+
+function buildStructLifter(
+  dresolver: DeclResolver,
+  struct: AST.Struct,
+  texpr: AST.TypeExpr,
+  boundTypeParams: Record<string, Lifter>,
+): Lifter {
+  if (!hasTypeDiscrimination(dresolver, texpr)) {
+    return idLifter
+  }
+  const newBoundTypeParams = bindTypeParams(struct.typeParams, texpr.parameters, (te: AST.TypeExpr) => buildLifter(dresolver, te, boundTypeParams));
+  const fieldDetails: Record<string, Lifter> = {}
+  struct.fields.forEach(fld => {
+    fieldDetails[fld.serializedName] = buildLifter(dresolver, fld.typeExpr, newBoundTypeParams)
+  })
+  function lift(json: Json): Json {
+    if (isJsonObject(json)) {
+      const jv2: JsonObject = {}
+      for (const k of Object.keys(json)) {
+        const elem_lifter = fieldDetails[k]
+        if (elem_lifter) {
+          jv2[k] = elem_lifter.lift(json[k])
+        } else {
+          // keep field not defined in adl
+          jv2[k] = json[k]
+        }
+      }
+      return jv2
+    }
+    throw Error(`expected object got ${typeof json}`)
+  }
+  return { lift }
 }
 
 interface Ancestor {
@@ -186,7 +230,15 @@ function buildUnionLifter(
       type_discs.push(tdtd.fld)
     }
   })
-  function lift(json0: Json): Json {
+  return { lift: buildLiftUnion(dresolver, type_discs, fields) }
+}
+
+function buildLiftUnion(
+  dresolver: DeclResolver,
+  type_discs: TypeDisc[],
+  fields: Record<string, UnionFieldDetails>,
+) {
+  function liftUnion(json0: Json): Json {
     let json1 = json0
     const mtd = type_discs.filter((type_disc: TypeDisc) => {
       const expanded_texpr = expandTypes(dresolver, type_disc.typeExpr, {})
@@ -207,7 +259,7 @@ function buildUnionLifter(
       }
       const ufd = fields[keys[0]]
       if (ufd === undefined) {
-        throw Error(`branch not defined '${keys[0]}'\n${JSON.stringify(json0)}\n${JSON.stringify(json1)}\n${JSON.stringify(texpr)}`)
+        throw Error(`branch not defined '${keys[0]}'\n${JSON.stringify(json0)}\n${JSON.stringify(json1)}`)
       }
       if (ufd.max_version > -1) {
         json1["@v"] = ufd.max_version
@@ -223,10 +275,10 @@ function buildUnionLifter(
       }
       return json1
     } else {
-      throw Error(`expecting union, value isn't even an object\n${JSON.stringify(json0)}\n${JSON.stringify(json1)}\n${JSON.stringify(texpr)}`)
+      throw Error(`expecting union, value isn't even an object\n${JSON.stringify(json0)}\n${JSON.stringify(json1)}`)
     }
   }
-  return { lift }
+  return liftUnion
 }
 
 function transitiveTypeDisc(
@@ -443,16 +495,16 @@ function expandTypes(
             return texpr;
           }
           return texpr
-          // const nbp = bindTypeParams(ast.decl.type_.value.typeParams, texpr.parameters, (te: AST.TypeExpr) => te);
-          // const fields = ast.decl.type_.value.fields.map(fld => {
-          //   return {
-          //     ...fld,
-          //     typeExpr: expandTypes(resolver, fld.typeExpr, nbp)
-          //   }
-          // })
-          // return {
+        // const nbp = bindTypeParams(ast.decl.type_.value.typeParams, texpr.parameters, (te: AST.TypeExpr) => te);
+        // const fields = ast.decl.type_.value.fields.map(fld => {
+        //   return {
+        //     ...fld,
+        //     typeExpr: expandTypes(resolver, fld.typeExpr, nbp)
+        //   }
+        // })
+        // return {
 
-          // }
+        // }
         case "union_":
           if (texpr.parameters.length == 0) {
             return texpr;
