@@ -54,21 +54,21 @@ Deno.test('TypeDiscrimination01', () => {
       texpr: T31.texprVoidTest(),
       json: `null`,
       want: null,
-      wantErr: `cannot use Json or Void as a type discriminator`,
+      wantErr: `Error: cannot use Json or Void as a type discriminator`,
     },
     {
       name: "UnionOfLiftedUnion type mismatch error test",
       texpr: T31.texprUnionOfLiftedUnion(),
       json: `null`,
       want: null,
-      wantErr: `primitive type mismatch. expected Nullable received {"kind":"reference","value":{"moduleName":"test31","name":"UnionOfLiftedUnion"}}`,
+      wantErr: "Error: union of union branch ambiguity",
     },
     {
       name: "UnionOfLiftedUnion error test",
       texpr: T31.texprUnionOfLiftedUnion(),
       json: `{"def": {"quant": 2, "value": 3}}`,
       want: null,
-      wantErr: `union of union containing TypeDiscrimination branches not supported : ...`,
+      wantErr: "Error: union of union branch ambiguity",
     },
     {
       name: "UnionUnion a",
@@ -135,7 +135,7 @@ Deno.test('TypeDiscrimination01', () => {
       texpr: T31.texprVectorErrorTest(),
       json: `[]`,
       want: T31.makeVectorErrorTest("a", []),
-      wantErr: `ambiguous matching type discriminators a,b`
+      wantErr: `Error: ambiguous matching type discriminators a,b`
     },
     {
       name: "VectorOfTypeDiscriminationUnionTest",
@@ -153,7 +153,7 @@ Deno.test('TypeDiscrimination01', () => {
       texpr: T31.texprUnionOfVectorOfTypeDiscriminationUnionTest(),
       json: `[]`,
       want: T31.makeUnionOfVectorOfTypeDiscriminationUnionTest("b", []),
-      // wantErr: `union of union containing TypeDiscrimination branches not supported`,
+      // wantErr: `Error: union of union containing TypeDiscrimination branches not supported`,
     },
     {
       name: "Ua",
@@ -326,7 +326,9 @@ Deno.test('TypeDiscrimination01', () => {
         console.log(`UNEXPECTED error - '${tt.name}'\n\t${e}`)
         throw e
       }
-      console.log(`expected an error - ${tt.name}\n\t${e}`)
+      if ( !`${e}`.startsWith(tt.wantErr) ) {
+        fail(`expected error doesn't start with wantErr - ${tt.name}\n\t${tt.wantErr}\n\t${e}`)
+      }
       continue
     }
     if (tt.wantErr !== undefined) {

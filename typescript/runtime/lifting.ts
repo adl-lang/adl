@@ -36,6 +36,9 @@ function buildLifter(
   texpr: AST.TypeExpr,
   boundTypeParams: Record<string, Lifter>,
 ): Lifter {
+  if (!hasTypeDiscrimination(dresolver, texpr)) {
+    return idLifter
+  }
   switch (texpr.typeRef.kind) {
     case "primitive": {
       if (texpr.parameters.length === 0) {
@@ -115,7 +118,7 @@ function hasTypeDiscrimination(
       }
       return hasTypeDiscrimination(dresolver, texpr.parameters[0])
     case "typeParam":
-      return false
+      return true // TODO check if this is really true using a binder
     case "reference":
       const ast = dresolver(texpr.typeRef.value)
       const dtype = ast.decl.type_
@@ -142,13 +145,10 @@ function buildStructLifter(
   texpr: AST.TypeExpr,
   boundTypeParams: Record<string, Lifter>,
 ): Lifter {
-  if (!hasTypeDiscrimination(dresolver, texpr)) {
-    return idLifter
-  }
   const newBoundTypeParams = bindTypeParams(struct.typeParams, texpr.parameters, (te: AST.TypeExpr) => buildLifter(dresolver, te, boundTypeParams));
-  const fieldDetails: Record<string, Lifter> = {}
+  const fieldDetails: Record<string, () => Lifter> = {}
   struct.fields.forEach(fld => {
-    fieldDetails[fld.serializedName] = buildLifter(dresolver, fld.typeExpr, newBoundTypeParams)
+    fieldDetails[fld.serializedName] = once(() => buildLifter(dresolver, fld.typeExpr, newBoundTypeParams))
   })
   function lift(json: Json): Json {
     if (isJsonObject(json)) {
@@ -156,7 +156,7 @@ function buildStructLifter(
       for (const k of Object.keys(json)) {
         const elem_lifter = fieldDetails[k]
         if (elem_lifter) {
-          jv2[k] = elem_lifter.lift(json[k])
+          jv2[k] = elem_lifter().lift(json[k])
         } else {
           // keep field not defined in adl
           jv2[k] = json[k]
@@ -176,7 +176,7 @@ interface Ancestor {
 interface UnionFieldDetails {
   ancestors: Ancestor[],
   max_version: number,
-  lifter: Lifter
+  lifter: () => Lifter
 }
 interface TypeDiscs {
   max_version: number,
@@ -213,7 +213,7 @@ function buildUnionLifter(
     fields[fld.serializedName] = {
       max_version,
       ancestors: [],
-      lifter: buildLifter(dresolver, fld.typeExpr, newBoundTypeParams),
+      lifter: once(() => buildLifter(dresolver, fld.typeExpr, newBoundTypeParams)),
     }
   })
   union.fields.forEach(fld => {
@@ -221,7 +221,7 @@ function buildUnionLifter(
       name: fld.serializedName,
       max_version: max_version,
     }
-    const trans_discs = transitiveTypeDisc(dresolver, fld.typeExpr, [anc], newBoundTypeParams, jb)
+    const trans_discs = transitiveTypeDisc(dresolver, fld.typeExpr, [anc], newBoundTypeParams, jb, [])
     for (const tdtd of trans_discs) {
       if (fields[tdtd.fld.serializedName] !== undefined) {
         throw Error(`union of union branch ambiguity '${tdtd.fld.serializedName}' ${JSON.stringify(texpr.typeRef)}`)
@@ -264,7 +264,7 @@ function buildLiftUnion(
       if (ufd.max_version > -1) {
         json1["@v"] = ufd.max_version
       }
-      json1[keys[0]] = ufd.lifter.lift(json1[keys[0]])
+      json1[keys[0]] = ufd.lifter().lift(json1[keys[0]])
       if (ufd.ancestors.length > 0) {
         for (const an of ufd.ancestors) {
           const j3: Json = {}
@@ -287,15 +287,16 @@ function transitiveTypeDisc(
   ancestors: Ancestor[],
   boundTypeParams: Record<string, Lifter>,
   jb: JsonBinding<ANN.TypeDiscrimination>,
+  seen: AST.TypeExpr[],
 ): { fld: TypeDisc, ufd: UnionFieldDetails }[] {
   switch (ftexpr.typeRef.kind) {
     case "reference":
       const ast = dresolver(ftexpr.typeRef.value)
       switch (ast.decl.type_.kind) {
         case "newtype_":
-          return transitiveTypeDisc(dresolver, ast.decl.type_.value.typeExpr, ancestors, boundTypeParams, jb)
+          return transitiveTypeDisc(dresolver, ast.decl.type_.value.typeExpr, ancestors, boundTypeParams, jb, seen)
         case "type_":
-          return transitiveTypeDisc(dresolver, ast.decl.type_.value.typeExpr, ancestors, boundTypeParams, jb)
+          return transitiveTypeDisc(dresolver, ast.decl.type_.value.typeExpr, ancestors, boundTypeParams, jb, seen)
         case "struct_":
           return []
         case 'union_':
@@ -310,7 +311,10 @@ function transitiveTypeDisc(
             }
             return p
           }, -1)
-          ast.decl.type_.value.fields.flatMap(fld => {
+          for (const fld of ast.decl.type_.value.fields) {
+            if (seen.includes(fld.typeExpr)) {
+              continue
+            }
             const disc = getAnnotation(jb, fld.annotations)
             if (disc) {
               ret.push({
@@ -320,13 +324,13 @@ function transitiveTypeDisc(
                 },
                 ufd: {
                   max_version,
-                  lifter: buildLifter(dresolver, fld.typeExpr, newBoundTypeParams2),
+                  lifter: once(() => buildLifter(dresolver, fld.typeExpr, newBoundTypeParams2)),
                   ancestors,
                 }
               })
             }
-            ret.push(...transitiveTypeDisc(dresolver, fld.typeExpr, [{ name: fld.serializedName, max_version }, ...ancestors], newBoundTypeParams2, jb))
-          })
+            ret.push(...transitiveTypeDisc(dresolver, fld.typeExpr, [{ name: fld.serializedName, max_version }, ...ancestors], newBoundTypeParams2, jb, [fld.typeExpr, ...seen]))
+          }
           return ret
       }
   }
@@ -539,4 +543,18 @@ function bindTypeParams<T>(
     result[paramName] = fn(paramTypes[i]);
   });
   return result;
+}
+
+/**
+ * Helper function that takes a thunk, and evaluates it only on the first call. Subsequent
+ * calls return the previous value
+ */
+function once<T>(run : () => T) : () => T {
+  let result : T | null = null;
+  return () => {
+    if(result === null) {
+      result = run();
+    }
+    return result;
+  };
 }
