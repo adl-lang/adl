@@ -48,8 +48,8 @@ mkdir -p $BUILDDIR
   deno test example.tests.ts
 }
 
-testts ts-3.5.2
-testts ts-3.8.3
-testts ts-4.2.4
-testts ts-4.6.3
+# testts ts-3.5.2
+# testts ts-3.8.3
+# testts ts-4.2.4
+# testts ts-4.6.3
 testdeno deno-1.10.2

@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@adllang/jsonbinding@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@adllang/jsonbinding/-/jsonbinding-0.2.3.tgz#6f301946ca0b7c7364c333d0e00e64b75715de3f"
+  integrity sha512-It03dmA1woSkLig34Ybv+RxDYU0QHCTBaQ3RWyceQGFBH1iwcjQ6PwD2mK0ZTkvtxdtw61tr6UEexQlUFA/wMA==
+
 "@ampproject/remapping@^2.1.0":
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/@ampproject/remapping/-/remapping-2.2.0.tgz#56c133824780de3174aed5ab6834f3026790154d"

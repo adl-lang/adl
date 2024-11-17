@@ -1,30 +1,14 @@
 import {DeclResolver,ATypeExpr} from './adl$TSEXT';
 import * as AST from './sys/adlast$TSEXT';
 $TSB64IMPORT;
+import * as JB from '@adllang/jsonbinding';
 import {isVoid, isEnum, scopedNamesEqual} from './utils$TSEXT';
 
 /** A type for json serialised values */
 
-export type Json = JsonObject | JsonArray | JsonValue;
-export type JsonArray = Json[];
-export type JsonValue = string | number | JsonObject | JsonArray | boolean | null;
-export interface JsonObject {
-  [key: string]: Json
-};
+export type Json = JB.Json;
+export type JsonObject = JB.JsonObject;
 
-function asJsonObject(jv: Json): JsonObject | undefined {
-  if (jv instanceof Object && !(jv instanceof Array)) {
-    return jv as JsonObject;
-  }
-  return undefined;
-}
-
-function asJsonArray(jv: Json): JsonArray | undefined{
-  if(jv instanceof Array) {
-    return jv as JsonArray;
-  }
-  return undefined;
-}
 
 /**
  * A JsonBinding is a de/serialiser for a give ADL type
@@ -219,7 +203,7 @@ function vectorJsonBinding<T>(dresolver : DeclResolver, texpr : AST.TypeExpr, bo
   }
 
   function fromJson(json : Json) : T[] {
-      const jarr = asJsonArray(json);
+      const jarr = JB.asJsonArray(json);
       if (jarr == undefined) {
         throw jsonParseException('expected an array');
       }
@@ -253,7 +237,7 @@ function stringMapJsonBinding<T>(dresolver : DeclResolver, texpr : AST.TypeExpr,
   }
 
   function fromJson(json : Json) : StringMap<T> {
-    const jobj = asJsonObject(json);
+    const jobj = JB.asJsonObject(json);
     if (!jobj) {
       throw jsonParseException('expected an object');
     }
@@ -330,7 +314,7 @@ function structJsonBinding<T extends Record<string, unknown>>(dresolver : DeclRe
   }
 
   function fromJson(json: Json): T {
-    const jobj = asJsonObject(json);
+    const jobj = JB.asJsonObject(json);
     if (!jobj) {
       throw jsonParseException("expected an object");
     }
@@ -440,7 +424,7 @@ function unionJsonBinding(dresolver : DeclResolver, union : AST.Union, params : 
       }
       return { kind : details.field.name };
     }
-    const jobj = asJsonObject(json);
+    const jobj = JB.asJsonObject(json);
     if (jobj) {
       for (let k in jobj) {
         let details = lookupDetails(k);
