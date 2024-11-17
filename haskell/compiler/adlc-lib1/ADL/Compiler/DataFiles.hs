@@ -54,7 +54,7 @@ stdlibCustomTypesCpp :: FilePath -> FilePath
 stdlibCustomTypesCpp libdir = libdir </> "adl/sys/types/cpp-custom-types.json"
 
 typescriptRuntimeDir :: FilePath -> FilePath
-typescriptRuntimeDir libdir = libdir </> "typescript/runtime"
+typescriptRuntimeDir libdir = libdir </> "typescript/runtime/embedded"
 
 rustRuntimeDir :: FilePath -> FilePath
 rustRuntimeDir libdir = libdir </> "rust/runtime"

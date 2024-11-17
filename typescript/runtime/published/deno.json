@@ -1,0 +1,11 @@
+{
+  
+  "name": "@adllang/adl-runtime",
+  "version": "0.0.2",
+  "license": "BSD",
+  "exports": "./src/mod.ts",
+  "imports": {
+    "@adllang/jsonbinding": "jsr:@adllang/jsonbinding@^0.2.3",
+    "@std/encoding": "jsr:@std/encoding@^1.0.5"
+  }
+}

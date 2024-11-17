@@ -1,0 +1,24 @@
+{
+  "version": "3",
+  "packages": {
+    "specifiers": {
+      "jsr:@adllang/jsonbinding@^0.2.3": "jsr:@adllang/jsonbinding@0.2.3",
+      "jsr:@std/encoding@^1.0.5": "jsr:@std/encoding@1.0.5"
+    },
+    "jsr": {
+      "@adllang/jsonbinding@0.2.3": {
+        "integrity": "7206e24c31290b3572c00f2e9039dbce29b3a36ca616256337eafbcdf364d7fa"
+      },
+      "@std/encoding@1.0.5": {
+        "integrity": "ecf363d4fc25bd85bd915ff6733a7e79b67e0e7806334af15f4645c569fefc04"
+      }
+    }
+  },
+  "remote": {},
+  "workspace": {
+    "dependencies": [
+      "jsr:@adllang/jsonbinding@^0.2.3",
+      "jsr:@std/encoding@^1.0.5"
+    ]
+  }
+}

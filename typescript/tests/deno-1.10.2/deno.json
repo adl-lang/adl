@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@adllang/adl-runtime": "jsr:@adllang/adl-runtime@^0.0.2",
+    "@std/assert": "jsr:@std/assert@^1.0.8"
+  }
+}
