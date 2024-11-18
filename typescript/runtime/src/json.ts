@@ -1,8 +1,9 @@
-import {DeclResolver,ATypeExpr} from './adl$TSEXT';
-import * as AST from './sys/adlast$TSEXT';
-$TSB64IMPORT;
+import {DeclResolver,ATypeExpr} from './mod.ts';
+
+import * as AST from './sys/adlast.ts';
+import {encodeBase64 as b64Encode, decodeBase64 as b64Decode} from '@std/encoding';
 import * as JB from '@adllang/jsonbinding';
-import {isVoid, isEnum, scopedNamesEqual} from './utils$TSEXT';
+import {isVoid, isEnum, scopedNamesEqual} from './utils.ts';
 
 /** A type for json serialised values */
 

@@ -1,6 +1,6 @@
 /* @generated from adl module sys.adlast */
 
-import * as sys_types from './types$TSEXT';
+import * as sys_types from './types.ts';
 
 export type ModuleName = string;
 

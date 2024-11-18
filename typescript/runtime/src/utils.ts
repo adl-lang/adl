@@ -1,4 +1,4 @@
-import * as AST from './sys/adlast$TSEXT';
+import * as AST from './sys/adlast.ts';
 
 export function isEnum(union : AST.Union) : boolean {
   for (let field of union.fields) {

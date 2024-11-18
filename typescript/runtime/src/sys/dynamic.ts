@@ -1,6 +1,6 @@
 /* @generated from adl module sys.dynamic */
 
-import * as sys_adlast from './adlast$TSEXT';
+import * as sys_adlast from './adlast.ts';
 
 /**
  * A serialised value along with  its type

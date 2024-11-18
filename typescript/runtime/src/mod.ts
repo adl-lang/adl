@@ -1,36 +1,14 @@
-import * as AST from './sys/adlast$TSEXT';
+import * as AST from './sys/adlast.ts';
+
+export * from './utils.ts';
+export * from './json.ts';
+export * from './dynamic.ts';
+export * from './resolver.ts';
 
 export type ScopedName = AST.ScopedName;
 export type ScopedDecl = AST.ScopedDecl;
 export type ATypeRef<_T> = {value: AST.TypeRef};
 export type ATypeExpr<_T> = {value : AST.TypeExpr};
-
-/**
- * A function to obtain details on a declared type.
- */
-export interface DeclResolver {
-    (decl : AST.ScopedName): AST.ScopedDecl;
-};
-
-export function declResolver(...astMaps : ({[key:string] : AST.ScopedDecl})[]) {
-  const astMap :  {[key:string] : AST.ScopedDecl} = {};
-  for (let map of astMaps) {
-    for (let scopedName in map) {
-      astMap[scopedName] = map[scopedName];
-    }
-  }
-
-  function resolver(scopedName : AST.ScopedName) : AST.ScopedDecl {
-    const scopedNameStr = scopedName.moduleName + "." + scopedName.name;
-    const result = astMap[scopedNameStr];
-    if (result === undefined) {
-      throw new Error("Unable to resolve ADL type " + scopedNameStr);
-    }
-    return result;
-  }
-
-  return resolver;
-}
 
 type Unknown = {} | null;
 type Json = {} | null;
