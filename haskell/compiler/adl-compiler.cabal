@@ -48,13 +48,13 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/java/runtime/org/adl/runtime/Lazy.java
                     , lib/java/runtime/org/adl/runtime/MaybeHelpers.java
                     , lib/java/runtime/org/adl/runtime/TypeToken.java
-                    , lib/typescript/runtime/adl.ts
-                    , lib/typescript/runtime/dynamic.ts
-                    , lib/typescript/runtime/json.ts
-                    , lib/typescript/runtime/sys/adlast.ts
-                    , lib/typescript/runtime/sys/dynamic.ts
-                    , lib/typescript/runtime/sys/types.ts
-                    , lib/typescript/runtime/utils.ts
+                    , lib/typescript/runtime/embedded/adl.ts
+                    , lib/typescript/runtime/embedded/dynamic.ts
+                    , lib/typescript/runtime/embedded/json.ts
+                    , lib/typescript/runtime/embedded/sys/adlast.ts
+                    , lib/typescript/runtime/embedded/sys/dynamic.ts
+                    , lib/typescript/runtime/embedded/sys/types.ts
+                    , lib/typescript/runtime/embedded/utils.ts
                     , lib/rust/runtime/custom/mod.rs
                     , lib/rust/runtime/custom/sys/mod.rs
                     , lib/rust/runtime/custom/sys/types/map.rs

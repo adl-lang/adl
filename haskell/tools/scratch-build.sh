@@ -36,7 +36,15 @@ stack exec adlc -- typescript \
  --exclude-ast \
  --verbose \
  --ts-style template \
- -O ../typescript/runtime \
+ -O ../typescript/runtime/embedded \
+ -I $ADL_STDLIB_DIR \
+ $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
+stack exec adlc -- typescript \
+ --no-overwrite \
+ --exclude-ast \
+ --verbose \
+ --ts-style deno \
+ -O ../typescript/runtime/published/src \
  -I $ADL_STDLIB_DIR \
  $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
 

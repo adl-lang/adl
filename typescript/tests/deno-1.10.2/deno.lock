@@ -1,0 +1,43 @@
+{
+  "version": "3",
+  "packages": {
+    "specifiers": {
+      "jsr:@adllang/adl-runtime@^0.0.2": "jsr:@adllang/adl-runtime@0.0.2",
+      "jsr:@adllang/jsonbinding@^0.2.3": "jsr:@adllang/jsonbinding@0.2.3",
+      "jsr:@std/assert@^1.0.8": "jsr:@std/assert@1.0.8",
+      "jsr:@std/encoding@^1.0.5": "jsr:@std/encoding@1.0.5",
+      "jsr:@std/internal@^1.0.5": "jsr:@std/internal@1.0.5"
+    },
+    "jsr": {
+      "@adllang/adl-runtime@0.0.2": {
+        "integrity": "3c542479ed5ccaba4ac364e215c46457eae3b6db1c6bfae0a52e2bb70f7df17f",
+        "dependencies": [
+          "jsr:@adllang/jsonbinding@^0.2.3",
+          "jsr:@std/encoding@^1.0.5"
+        ]
+      },
+      "@adllang/jsonbinding@0.2.3": {
+        "integrity": "7206e24c31290b3572c00f2e9039dbce29b3a36ca616256337eafbcdf364d7fa"
+      },
+      "@std/assert@1.0.8": {
+        "integrity": "ebe0bd7eb488ee39686f77003992f389a06c3da1bbd8022184804852b2fa641b",
+        "dependencies": [
+          "jsr:@std/internal@^1.0.5"
+        ]
+      },
+      "@std/encoding@1.0.5": {
+        "integrity": "ecf363d4fc25bd85bd915ff6733a7e79b67e0e7806334af15f4645c569fefc04"
+      },
+      "@std/internal@1.0.5": {
+        "integrity": "54a546004f769c1ac9e025abd15a76b6671ddc9687e2313b67376125650dc7ba"
+      }
+    }
+  },
+  "remote": {},
+  "workspace": {
+    "dependencies": [
+      "jsr:@adllang/adl-runtime@^0.0.2",
+      "jsr:@std/assert@^1.0.8"
+    ]
+  }
+}

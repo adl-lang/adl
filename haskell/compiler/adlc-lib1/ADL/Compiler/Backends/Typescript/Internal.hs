@@ -89,10 +89,16 @@ data ModuleFile = ModuleFile {
   mfCodeGenProfile :: CodeGenProfile
 }
 
-data TSImport = TSImport {
-  iAsName       :: Ident,
-  iModulePath :: [Ident]
-} deriving (Eq, Show, Ord)
+data TSImport
+  = TSImport {
+      iAsName       :: Ident,
+      iModulePath :: [Ident]
+    }
+  | TSImportRaw {
+      iAsName :: Ident,
+      iFrom :: T.Text
+    }
+  deriving (Eq, Show, Ord)
 
 -- data structure to capture all of the details
 -- we need for a field
@@ -581,6 +587,7 @@ genImport tf intoModule TSImport{iAsName=asName, iModulePath=importPath} = ctemp
     relativePath [] ps2 = ps2
     relativePath (p1:ps1) (p2:ps2) | p1 == p2 = relativePath ps1 ps2
     relativePath ps1 ps2 = (map (const "..") ps1) <> ps2
+genImport tf intoModule TSImportRaw{iAsName=asName, iFrom=from} = ctemplate "import * as $1 from \'$2\';" [asName, from]
 
 moduleExt:: TypescriptFlags -> T.Text
 moduleExt tf =

@@ -70,7 +70,7 @@ generateResolver af tf fileWriter ms = do
     gms = sortOn m_name (filter (generateCode . m_annotations) ms)
     code
       =  cline "/* @generated from adl */"
-      <> ctemplate "import { declResolver, ScopedDecl } from \"./$1/adl$2\";" [T.pack (tsRuntimeDir tf), mext]
+      <> ctemplate "import { declResolver, ScopedDecl } from \"$1\";" [runtimeFrom tf]
       <> mconcat [ctemplate "import { _AST_MAP as $1 } from \"./$2$3\";" [moduleNameText m, modulePathText m, mext] | m <- gms]
       <> cline ""
       <> cline "export const ADL: { [key: string]: ScopedDecl } = {"
@@ -81,6 +81,12 @@ generateResolver af tf fileWriter ms = do
     moduleNameText m = T.intercalate "_" (unModuleName (m_name m))
     modulePathText m = T.intercalate "/" (unModuleName (m_name m))
     mext = moduleExt tf
+
+runtimeFrom :: TypescriptFlags -> T.Text
+runtimeFrom tf =
+ if tsRuntimeDir tf == ""
+   then adlDefaultRuntimePackage
+   else template "./$1/adl$2" [T.pack (tsRuntimeDir tf), moduleExt tf]
 
 -- | Generate and the typescript code for a single ADL module, and
 -- save the resulting code to the apppropriate file
@@ -98,14 +104,18 @@ generateModule tf fileWriter m0 = do
             Nothing  -> (/=) (ScopedName (ModuleName ["sys", "annotations"]) "Doc")
             (Just sns) -> (\sn -> sn `notElem` sns)
       }
-      mf = execState (genModule m) (emptyModuleFile (m_name m) cgp)
+      mf = execState (genModule tf m) (emptyModuleFile (m_name m) cgp)
   liftIO $ fileWriter (moduleFilePath (unModuleName moduleName) <.> "ts") (genModuleCode tf "adlc" mf)
 
-genModule :: CModule -> CState ()
-genModule m = do
+genModule :: TypescriptFlags -> CModule -> CState ()
+genModule tf m = do
   includeAst <- fmap (cgp_includeAst . mfCodeGenProfile) get
   when includeAst $ do
-    addImport "ADL" (TSImport "ADL" ["runtime","adl"])
+    addImport "ADL" (
+     if tsRuntimeDir tf == ""
+       then TSImportRaw "ADL" adlDefaultRuntimePackage
+       else TSImport "ADL" ["runtime","adl"]
+     )
 
   -- Generate each declaration
   for_ (getOrderedDecls m) $ \decl ->
@@ -244,3 +254,6 @@ genTypedef m decl typedef@Typedef{t_typeParams=typeParams0} = do
     typeDecl = ctemplate "export type $1$2 = $3;" [d_name decl, typeParamsExpr typeParams, typeExprOutput]
   addDeclaration (renderCommentForDeclaration decl <> typeDecl)
   addAstDeclaration m decl
+
+adlDefaultRuntimePackage :: T.Text
+adlDefaultRuntimePackage = "@adllang/adl-runtime" 

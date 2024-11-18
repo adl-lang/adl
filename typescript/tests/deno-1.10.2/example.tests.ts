@@ -1,10 +1,10 @@
-import {JsonBinding,createJsonBinding} from './build/runtime/json.ts'
-import {fromDynamic, toDynamic} from './build/runtime/dynamic.ts'
+import {JsonBinding,createJsonBinding} from '@adllang/adl-runtime'
+import {fromDynamic, toDynamic} from '@adllang/adl-runtime'
 import * as example from './build/example.ts'
 import {Dynamic} from './build/sys/dynamic.ts'
 import {RESOLVER} from './build/resolver.ts'
 
-import { assert, assertEquals } from "https://deno.land/std@0.85.0/testing/asserts.ts";
+import { assertEquals } from "@std/assert";
 
 const personJsonBinding : JsonBinding<example.Person> = createJsonBinding(RESOLVER,example.texprPerson());
 
