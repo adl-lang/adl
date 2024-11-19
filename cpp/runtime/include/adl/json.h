@@ -148,7 +148,7 @@ void ignore( JsonReader &json );
 inline bool
 matchField0( const std::string &f, JsonReader &json )
 {
-    if( json.type() != JsonReader::FIELD )
+    if( (json.type() != JsonReader::FIELD) && (json.type() != JsonReader::NULLV) )
         throw json_parse_failure("Field match failed");
     bool match = json.fieldName() == f;
     if( match )
@@ -168,7 +168,7 @@ template <class T>
 bool
 readField( typename Serialiser<T>::Ptr js, T &v, const std::string &f, JsonReader &json )
 {
-    if( json.type() != JsonReader::FIELD )
+    if( (json.type() != JsonReader::FIELD) && (json.type() != JsonReader::NULLV) )
         throw json_parse_failure("readField failed");
     if( json.fieldName() != f )
         return false;
@@ -394,12 +394,23 @@ public:
 
     void toJson( JsonWriter &json, const _O & v ) const
     {
-        // implement
+      if (v.has_value()) {
+        js()->toJson(json, v.value());
+      } else {
+        js()->toJson(json, nullptr);
+      }
     }
 
     void fromJson( _O &optional, JsonReader &json ) const
     {
-        // implement
+      if (json.type() == JsonReader::NULLV) {
+        json.next();
+        optional.reset();
+      } else {
+        V v;
+        js()->fromJson(v, json);
+        optional = v;
+      }
     }
 
 private:
