@@ -397,7 +397,7 @@ public:
       if (v.has_value()) {
         js()->toJson(json, v.value());
       } else {
-        js()->toJson(json, nullptr);
+        json.nullV();
       }
     }
 
