@@ -46,6 +46,13 @@ export function scopedNamesEqual(sn1: AST.ScopedName, sn2: AST.ScopedName): bool
   return sn1.moduleName === sn2.moduleName && sn1.name === sn2.name;
 }
 
+export function scopedName(
+  moduleName: string,
+  name: string,
+): AST.ScopedName {
+  return { moduleName, name };
+}
+
 function typeExprToStringImpl(te: AST.TypeExpr, withScopedNames: boolean) : string {
   let result = "";
   if (te.typeRef.kind == "primitive") {
