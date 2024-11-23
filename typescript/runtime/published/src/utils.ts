@@ -1,5 +1,9 @@
 import * as AST from './sys/adlast.ts';
 
+/**
+ * Returns true if all branches of the union are the
+ * the unit type
+ */
 export function isEnum(union : AST.Union) : boolean {
   for (let field of union.fields) {
     if (!isVoid(field.typeExpr)) {
@@ -9,6 +13,9 @@ export function isEnum(union : AST.Union) : boolean {
   return true;
 }
 
+/**
+ * Returns true if the expression is the unit type (aka Void)
+ */
 export function isVoid(texpr : AST.TypeExpr) : boolean {
   if (texpr.typeRef.kind === "primitive") {
     return texpr.typeRef.value === "Void";
@@ -16,6 +23,9 @@ export function isVoid(texpr : AST.TypeExpr) : boolean {
   return false;
 }
 
+/**
+ * Returns true if the two type expressions are equal
+ */
 export function typeExprsEqual(texpr1 : AST.TypeExpr, texpr2 : AST.TypeExpr) : boolean {
   if (!typeRefsEqual(texpr1.typeRef, texpr2.typeRef)) {
     return false;
@@ -31,6 +41,9 @@ export function typeExprsEqual(texpr1 : AST.TypeExpr, texpr2 : AST.TypeExpr) : b
   return true;
 }
 
+/**
+ * Returns true if the two type references are equal
+ */
 export function typeRefsEqual(tref1 : AST.TypeRef, tref2 : AST.TypeRef) : boolean {
   if (tref1.kind === "primitive" && tref2.kind === "primitive") {
     return tref1.value === tref2.value;
@@ -42,10 +55,16 @@ export function typeRefsEqual(tref1 : AST.TypeRef, tref2 : AST.TypeRef) : boolea
   return false;
 }
 
+/**
+ * Returns true if the two ScopedNames are equal
+ */
 export function scopedNamesEqual(sn1: AST.ScopedName, sn2: AST.ScopedName): boolean {
   return sn1.moduleName === sn2.moduleName && sn1.name === sn2.name;
 }
 
+/**
+ * Construct a scoped name
+ */
 export function scopedName(
   moduleName: string,
   name: string,
@@ -70,14 +89,16 @@ function typeExprToStringImpl(te: AST.TypeExpr, withScopedNames: boolean) : stri
   return result;
 }
 
-/* Convert a type expression to a string, with fully scoped names */
-
+/**
+ * Convert a type expression to a string, with fully scoped names
+ */
 export function typeExprToString(te: AST.TypeExpr) : string {
   return typeExprToStringImpl(te, true);
 }
 
-/* Convert a type expression to a string, with unscoped names */
-
+/**
+ * Convert a type expression to a string, with unscoped names
+ */
 export function typeExprToStringUnscoped(te: AST.TypeExpr) : string {
   return typeExprToStringImpl(te, false);
 }
