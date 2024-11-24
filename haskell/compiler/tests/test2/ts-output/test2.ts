@@ -1,6 +1,6 @@
 /* @generated from adl module test2 */
 
-import * as ADL from './runtime/adl';
+import * as ADL from '@adllang/adl-runtime';
 
 /**
  * An empty structure.

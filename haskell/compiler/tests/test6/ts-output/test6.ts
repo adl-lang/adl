@@ -1,6 +1,6 @@
 /* @generated from adl module test6 */
 
-import * as ADL from './runtime/adl';
+import * as ADL from '@adllang/adl-runtime';
 import * as sys_types from './sys/types';
 
 export interface S {

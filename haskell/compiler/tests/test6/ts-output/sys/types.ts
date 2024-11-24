@@ -1,6 +1,6 @@
 /* @generated from adl module sys.types */
 
-import * as ADL from './../runtime/adl';
+import * as ADL from '@adllang/adl-runtime';
 
 export interface Pair<T1, T2> {
   v1: T1;

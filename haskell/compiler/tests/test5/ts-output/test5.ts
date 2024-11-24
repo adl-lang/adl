@@ -1,6 +1,6 @@
 /* @generated from adl module test5 */
 
-import * as ADL from './runtime/adl';
+import * as ADL from '@adllang/adl-runtime';
 
 export type U1 = 'v';
 export const valuesU1 : U1[] = ['v'];

@@ -1,6 +1,6 @@
 /* @generated from adl module test7 */
 
-import * as ADL from './runtime/adl';
+import * as ADL from '@adllang/adl-runtime';
 
 export interface Point<T> {
   x: T;

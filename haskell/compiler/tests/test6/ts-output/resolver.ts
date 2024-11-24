@@ -1,5 +1,5 @@
 /* @generated from adl */
-import { declResolver, ScopedDecl } from "./runtime/adl";
+import { declResolver, ScopedDecl } from "@adllang/adl-runtime";
 import { _AST_MAP as sys_adlast } from "./sys/adlast";
 import { _AST_MAP as sys_dynamic } from "./sys/dynamic";
 import { _AST_MAP as sys_types } from "./sys/types";

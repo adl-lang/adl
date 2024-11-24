@@ -1,6 +1,6 @@
 /* @generated from adl module picture */
 
-import * as ADL from './runtime/adl';
+import * as ADL from '@adllang/adl-runtime';
 
 export interface Picture_Circle {
   kind: 'circle';

@@ -1,6 +1,6 @@
 /* @generated from adl module test29 */
 
-import * as ADL from './runtime/adl';
+import * as ADL from '@adllang/adl-runtime';
 
 /**
  * An example with weird "quoting" conventions, designed to break things

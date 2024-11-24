@@ -1,6 +1,6 @@
 /* @generated from adl module sys.adlast */
 
-import * as ADL from './../runtime/adl';
+import * as ADL from '@adllang/adl-runtime';
 import * as sys_types from './types';
 
 export type ModuleName = string;
