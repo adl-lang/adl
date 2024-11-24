@@ -89,6 +89,13 @@ export const DECL_RESOLVER = adl.declResolver({
 });
 ```
 
+# Runtime
+
+A small amount of runtime code is required to support the ADL generated typescript. This code is referenced as `@adllang/adl-runtime` and  published to both [JSR][adl-runtime-jsr] and [NPM][adl-runtime-npm].
+
+Alternatively, the adl compiler can embed the runtime code in the generated typescript via the `--include-rt` and 
+`--runtime-dir` flags.
+
 # Serialization
 
 The [json module][ts-json] makes use of the runtime ast to provide
@@ -131,8 +138,8 @@ modules or declarations to disable code generation. This is useful if
 you have a large tree of ADL only some of which needs generated typescript
 code.
 
-[ts-rectangle]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L52
-[ts-makerectangle]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L57
+[ts-rectangle]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L65
+[ts-makerectangle]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L70
 [ts-picture]:../haskell/compiler/tests/demo1/ts-output/picture.ts#L22
 [ts-advancedtypes]:https://www.typescriptlang.org/docs/handbook/advanced-types.html
 [ts-scopeddecl]:../adl/stdlib/sys/adlast.adl#L93
@@ -141,3 +148,5 @@ code.
 [ts-declresolverhelper]:../typescript/runtime/adl.ts#14
 [ts-json]:../typescript/runtime/json.ts
 [typescript-annotations]:../haskell/compiler/lib/adl/adlc/config/typescript.adl
+[adl-runtime-jsr]: https://jsr.io/@adllang/adl-runtime
+[adl-runtime-npm]: https://www.npmjs.com/package/@adllang/adl-runtime
