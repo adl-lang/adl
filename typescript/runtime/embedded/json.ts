@@ -159,7 +159,6 @@ function buildJsonBinding<T>(dresolver : DeclResolver, texpr : AST.TypeExpr, bou
 
 function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params : AST.TypeExpr[], boundTypeParams : BoundTypeParams ) : JsonBinding0<unknown> {
   if      (ptype === "String")     { return identityJsonBinding("a string", (v) => typeof(v) === 'string'); }
-  else if (ptype === "Int8")       { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
   else if (ptype === "Void")       { return identityJsonBinding("a null", (v) => v === null); }
   else if (ptype === "Bool")       { return identityJsonBinding("a bool", (v) => typeof(v) === 'boolean'); }
   else if (ptype === "Int8")       { return identityJsonBinding("a number", (v) => typeof(v) === 'number'); }
@@ -177,6 +176,7 @@ function primitiveJsonBinding(dresolver : DeclResolver, ptype : string, params :
   else if (ptype === "Vector")     { return vectorJsonBinding(dresolver, params[0], boundTypeParams); }
   else if (ptype === "StringMap")  { return stringMapJsonBinding(dresolver, params[0], boundTypeParams); }
   else if (ptype === "Nullable")   { return nullableJsonBinding(dresolver, params[0], boundTypeParams); }
+  else if (ptype === "TypeToken")  { return typeTokenJsonBinding(params[0]); }
   else throw new Error("Unimplemented json binding for primitive " + ptype);
 };
 
@@ -289,6 +289,22 @@ function nullableJsonBinding<T>(dresolver : DeclResolver, texpr : AST.TypeExpr, 
       return null;
     }
     return elementBinding().fromJson(json);
+  }
+
+  return {toJson,fromJson};
+}
+
+function typeTokenJsonBinding<T>(texpr : AST.TypeExpr) : JsonBinding0<ATypeExpr<T>> {
+
+  function toJson(_v : ATypeExpr<T>) : Json {
+    return null;
+  }
+
+  function fromJson(json : Json) : ATypeExpr<T> {
+    if (json !== null) {
+      throw jsonParseException('expected null');
+    }
+    return {value: texpr}
   }
 
   return {toJson,fromJson};

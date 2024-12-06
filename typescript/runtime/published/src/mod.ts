@@ -80,3 +80,7 @@ export function texprStringMap<T>(etype: ATypeExpr<T>) : ATypeExpr<{[key:string]
 export function texprNullable<T>(etype: ATypeExpr<T>) : ATypeExpr<T|null> {
   return texprPrimitive1("Nullable", etype);
 }
+
+export function makeATypeExpr<T>(value: AST.TypeExpr): ATypeExpr<T> {
+  return {value}
+}
