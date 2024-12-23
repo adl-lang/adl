@@ -30,6 +30,7 @@ import System.Console.GetOpt
 import System.Environment (getArgs)
 import System.Exit
 import System.FilePath(joinPath)
+import System.IO(stderr)
 
 stdAdlFlags :: FilePath -> [String] -> AdlFlags
 stdAdlFlags libDir mergeFileExtensions =
@@ -360,5 +361,5 @@ main = do
       a <- unEIO $ eio
       case a of
         (Left perr) ->
-          T.putStrLn perr >> exitWith (ExitFailure 1)
+          T.hPutStrLn stderr perr >> exitWith (ExitFailure 1)
         (Right _) -> exitWith ExitSuccess

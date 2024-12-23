@@ -5,6 +5,7 @@ import System.Console.GetOpt
 import System.Exit
 import System.Environment (getArgs)
 import System.FilePath(joinPath)
+import System.IO(stderr)
 import Data.List(intercalate,partition)
 
 import qualified Data.Text as T
@@ -93,5 +94,5 @@ main = do
       a <- unEIO $ eio
       case a of
         (Left perr) ->
-          T.putStrLn perr >> exitWith (ExitFailure 1)
+          T.hPutStrLn stderr perr >> exitWith (ExitFailure 1)
         (Right _) -> exitWith ExitSuccess
