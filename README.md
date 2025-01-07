@@ -18,7 +18,7 @@ code generators for several target languages, and runtimes for these languages.
     * [rust][]
 * [install][] - installation instructions
 
-Also see the [adl-demo][] repository, which contains working demonstrations of ADL usage.
+Also see the [protoapp][] repository, which contains a demonstration 3 tier system built with ADL.
 
 [introduction]:docs/introduction.md
 [language]:docs/language.md
@@ -30,6 +30,6 @@ Also see the [adl-demo][] repository, which contains working demonstrations of A
 [java]:docs/backend-java.md
 [cpp]:docs/backend-cpp.md
 [rust]:docs/backend-rust.md
-[adl-demo]:https://github.com/timbod7/adl-demo
+[protoapp]:https://github.com/adl-lang/protoapp
 
 ![](https://github.com/timbod7/adl/workflows/Build%20and%20test/badge.svg)
