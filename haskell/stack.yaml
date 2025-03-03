@@ -4,4 +4,4 @@ packages:
 - compiler
 - generated-tests
 extra-deps:
-resolver: lts-22.12
+resolver: lts-23.10
