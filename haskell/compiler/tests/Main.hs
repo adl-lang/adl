@@ -381,6 +381,9 @@ runTests = do
     it "generates correct keys for stringmap literals" $ do
       collectResults (runJavaBackend1 "test29/input/test29.adl")
         `shouldReturn` MatchOutput
+    it "doesn't intefer with template parameters in literal strings" $ do
+      collectResults (runJavaBackend1 "test30/input/test30.adl")
+        `shouldReturn` MatchOutput
 
   describe "adlc javascript backend" $ do
     it "generates expected code for the standard library" $ do
@@ -458,7 +461,7 @@ runTests = do
     it "generates correct keys for stringmap literals" $ do
       collectResults (runRsBackend [stdsrc] ["test29/input/test29.adl"] "test29/rs-output" "test29::adl")
         `shouldReturn` MatchOutput
- 
+
   where
     collectResults1 resultvar test = do
       r <- test

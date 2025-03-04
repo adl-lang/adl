@@ -1,0 +1,8 @@
+module test30 {
+  struct AStruct {
+    BStruct b = {};
+  };
+  struct BStruct {
+    String foo = "abc $10";
+  };
+};
