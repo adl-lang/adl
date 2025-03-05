@@ -16,7 +16,7 @@ jobs:
       - name: Setup Stack
         uses: haskell-actions/setup@v2.6.2
         with:
-          ghc-version: '9.6.4' # Exact version of ghc to use, should match the stackage resolver ghc version
+          ghc-version: '9.8.4' # Exact version of ghc to use, should match the stackage resolver ghc version
           # cabal-version: 'latest'. Omitted, but defaults to 'latest'
           enable-stack: true
           stack-version: 'latest'
@@ -37,7 +37,7 @@ jobs:
         run: "cd haskell; stack build adl-compiler; ./tools/make-dist.hs"
 
       - name: Upload dist directory artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-${{ runner.os }}-${{ runner.arch }}
           path: dist
@@ -57,19 +57,19 @@ jobs:
         echo "version=${GITHUB_REF:11}" >> $GITHUB_OUTPUT
 
     - name: Fetch linux build
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: dist-Linux-X64
         path: dist-Linux-X64
 
     - name: Fetch macOS X64 build
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: dist-macOS-X64
         path: dist-macOS-X64
           
     - name: Fetch macOS ARM64 build
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: dist-macOS-ARM64
         path: dist-macOS-ARM64
