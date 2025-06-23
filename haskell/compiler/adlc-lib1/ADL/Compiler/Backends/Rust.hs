@@ -107,8 +107,14 @@ generateModFiles rf fileWriter ms = do
   -- build up the map of required mod files
   let modfiles :: M.Map [Ident] (S.Set Ident)
       modfiles = foldr addParents M.empty ms
-      addParents m map = foldr addParent map (tail (L.inits (unModuleName (m_name m))))
-      addParent m = M.insertWith (<>) (init m) (S.singleton (last m))
+      addParents m map = foldr addParent map (parents m)
+      addParent m = case L.unsnoc m of
+        Just (init, last) -> M.insertWith (<>) init (S.singleton last)
+        _ -> id
+      parents m = case L.inits (unModuleName (m_name m)) of
+        (_:ps) -> ps
+        _ -> []
+        
   -- Write them to the output tree
   for_ (M.toList modfiles) $ \(parent,children) -> do
     let filePath = moduleFilePath (unRustScopedName (rs_module rf) <> parent <> ["mod"]) <.> "rs"

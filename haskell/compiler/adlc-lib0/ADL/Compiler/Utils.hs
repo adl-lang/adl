@@ -3,7 +3,9 @@ module ADL.Compiler.Utils(
   OutputArgs(..),
   FileWriter,
   writeOutputFile,
-  withManifest
+  withManifest,
+  headNote,
+  tailNote,
   )where
 
 import Prelude hiding (catch)
@@ -21,6 +23,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Set as Set
+import GHC.Stack (HasCallStack)
 
 data OutputArgs = OutputArgs {
   oa_log :: String -> IO (),
@@ -108,3 +111,13 @@ withManifest oa ma = do
   a <- ma (wwm_writeFile wwm)
   liftIO $ wwm_writeManifest wwm
   return a
+
+
+headNote:: HasCallStack => String -> [a] -> a
+headNote _ (a:as) = a
+headNote err _ = error err
+
+tailNote :: HasCallStack => String -> [a] -> [a]
+tailNote  _ (a:as) = as
+tailNote  err _ = error err
+

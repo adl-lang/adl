@@ -18,7 +18,6 @@ instance Functor (EIO e) where
             (Right a) -> return (Right (f a))
 
 instance Monad (EIO e) where
-    return a = EIO (return (Right a))
     (EIO mea) >>= fmb = EIO $ do
         ea <- mea
         case ea of
@@ -26,7 +25,7 @@ instance Monad (EIO e) where
             (Right a) -> unEIO (fmb a)
 
 instance Applicative (EIO e) where
-    pure a = return a
+    pure a = EIO (return (Right a))
     af <*> aa = do {f <- af; a <- aa; return (f a)}
 
 instance MonadIO (EIO e) where

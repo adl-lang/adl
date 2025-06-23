@@ -30,6 +30,7 @@ import Data.Maybe(fromMaybe)
 import Data.Monoid
 import Data.Scientific(isInteger)
 import System.FilePath(joinPath)
+import ADL.Compiler.Utils (headNote)
 
 -- | Command line flags to control the backend.
 -- (once we have them)
@@ -455,7 +456,7 @@ rustUse rsname = do
   let userRefs = mf_useRefs state
       shortName = last (unRustScopedName rsname)
       asCandidates = [shortName] <> [shortName <> "_" <> fshow n | n <- [1,2..]]
-      uniqueShortName = head (filter (shortNameOk userRefs) asCandidates)
+      uniqueShortName = headNote "BUG: failed to find rust import short name" (filter (shortNameOk userRefs) asCandidates)
   put state{mf_useRefs=M.insert uniqueShortName rsname userRefs}
 
   return uniqueShortName

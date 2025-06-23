@@ -148,7 +148,7 @@ readFromParcel te mtotype tovar from = do
         Nothing -> tovar
         (Just totype) -> totype <> " " <> tovar
   case te of
-    (TypeExpr (RT_Primitive P_Void) _) -> return $ctemplate "$1 = null;" [to]
+    (TypeExpr (RT_Primitive P_Void) _) -> return $ ctemplate "$1 = null;" [to]
     (TypeExpr (RT_Primitive P_Bool) _) -> return $ ctemplate "$1 = $2.readByte() != 0;" [to,from]
     (TypeExpr (RT_Primitive P_Int8) _) -> return $ ctemplate "$1 = $2.readByte();" [to,from]
     (TypeExpr (RT_Primitive P_Int16) _) -> return $ ctemplate "$1 = $2.readInt();" [to,from]

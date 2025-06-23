@@ -75,7 +75,19 @@ executable adlc-bootstrap
   hs-source-dirs:     adlc-bootstrap
                     , adlc-lib0
   ghc-options:       -fwarn-incomplete-patterns
-  other-modules:      BootstrapCustomTypes
+  other-modules:      BootstrapCustomTypes,
+                      ADL.Compiler.AST,
+                      ADL.Compiler.Backends.Haskell,
+                      ADL.Compiler.Backends.Verify,
+                      ADL.Compiler.EIO,
+                      ADL.Compiler.ParserP,
+                      ADL.Compiler.Primitive,
+                      ADL.Compiler.Processing,
+                      ADL.Compiler.Utils,
+                      ADL.Utils.FileDiff,
+                      ADL.Utils.Format,
+                      ADL.Utils.IndentedCode
+  
   if flag(bootstrap)
     buildable:        True
   else

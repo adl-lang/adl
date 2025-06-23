@@ -167,7 +167,7 @@ generateNewtype codeProfile moduleName javaPackageFn decl newtype_ = execState g
       fieldDetails <- generateCoreStruct codeProfile moduleName javaPackageFn decl struct
 
       -- Json
-      generateNewtypeJson codeProfile decl newtype_ (fd_memberVarName (head fieldDetails))
+      generateNewtypeJson codeProfile decl newtype_ (fd_memberVarName (headNote "BUG: java newtype with no fields"  fieldDetails))
 
       -- Parcelable
       when (cgp_parcelable codeProfile) $ do

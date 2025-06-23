@@ -25,6 +25,7 @@ import qualified Text.Parsec.Error as P
 import qualified Text.Parsec.Combinator as P
 
 import ADL.Compiler.AST
+import ADL.Compiler.Utils(headNote)
 
 whiteSpace :: P.Parser ()
 whiteSpace
@@ -236,7 +237,7 @@ jsonValue =  p_null <|> p_true <|> p_false <|> p_string <|> p_number <|> p_array
     p_uni = check =<< P.count 4 P.hexDigit
       where check x | code <= max_char  = pure (toEnum code)
                     | otherwise         = empty
-              where code      = fst $ head $ readHex x
+              where code      = fst $ headNote "BUG: coudn't convert hex string" $ readHex x
                     max_char  = fromEnum (maxBound :: Char)
 
     p_number = (P.try (JSON.Number . S.fromFloatDigits <$> parseDouble) <|>

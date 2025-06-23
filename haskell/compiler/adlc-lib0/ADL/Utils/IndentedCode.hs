@@ -73,12 +73,11 @@ joinSpannedText :: T.Text -> [T.Text] -> [T.Text] -> [T.Text]
 joinSpannedText _ [] [] = []
 joinSpannedText _ list1 [] = list1
 joinSpannedText _ [] list2 = list2
-joinSpannedText prefix list1 list2 =
-  L.init list1 <>  [joinedLine] <> L.tail list2
+joinSpannedText prefix list1 (l2head:l2tail) =
+  L.init list1 <>  [joinedLine] <> l2tail
   where
-    joinedLine = (L.last list1) <> lines2HeadUnindented
-    (_, lines2HeadUnindented) = T.splitAt (T.length prefix) list2Head
-    list2Head = L.head list2
+    joinedLine = L.last list1 <> lines2HeadUnindented
+    (_, lines2HeadUnindented) = T.splitAt (T.length prefix) l2head
 
 breakLine :: Maybe Int -> T.Text -> [T.Text]
 breakLine Nothing t = [t]

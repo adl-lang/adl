@@ -22,7 +22,7 @@ import qualified Data.Aeson as JSON
 import Data.Char(toUpper)
 import Data.Maybe(fromMaybe,isJust)
 import Data.Foldable(for_,fold)
-import Data.List(intersperse,replicate,sort,stripPrefix)
+import Data.List(intersperse,replicate,sort,stripPrefix, uncons)
 import Data.Monoid
 import Data.String(IsString(..))
 import Data.Traversable(for)
@@ -101,7 +101,7 @@ data CustomType = CustomType {
 -- information.
 
 type CResolvedType = ResolvedTypeT (Maybe CustomType)
-type CTypeExpr = TypeExpr (CResolvedType)
+type CTypeExpr = TypeExpr CResolvedType
 type CModule = Module (Maybe CustomType) CResolvedType
 type CDecl = Decl (Maybe CustomType) CResolvedType
 
@@ -1138,9 +1138,11 @@ generateUnionJson cgp decl union fieldDetails = do
                           _ ->
                             ctemplate "return $1.$2$3($4.unionValueFromJson(_json, $5.get()));" [className0,typeArgs,fd_unionCtorName fd, jsonBindingsI, fd_varName fd]
                         | fd <- fieldDetails]
-                  in ctemplate "if (_key.equals(\"$1\")) {" [fd_serializedName (head fieldDetails)]
+                      (fieldDetails0, fieldDetailsN) = fromMaybe (error "BUG: union with no fields") (uncons fieldDetails)
+                      (returnStatement0, returnStatementsN) = fromMaybe (error "BUG: union with no fields") (uncons returnStatements)
+                  in ctemplate "if (_key.equals(\"$1\")) {" [fd_serializedName fieldDetails0]
                        <>
-                       indent (head returnStatements)
+                       indent returnStatement0
                        <>
                        mconcat [
                          cline "}"
@@ -1148,7 +1150,7 @@ generateUnionJson cgp decl union fieldDetails = do
                          ctemplate "else if (_key.equals(\"$1\")) {" [fd_serializedName fd]
                          <>
                          indent returnCase
-                         | (fd,returnCase) <- zip (tail fieldDetails) (tail returnStatements)]
+                         | (fd,returnCase) <- zip fieldDetailsN returnStatementsN]
                        <>
                        cline "}"
                   <>

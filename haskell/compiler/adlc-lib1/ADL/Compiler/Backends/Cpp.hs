@@ -711,7 +711,7 @@ generateDecl dn d@(Decl{d_type=(Decl_Union u)}) = do
     wt "$1::$2()" [ctnameP,ctname]
     -- FIXME :: Confirm that typechecker disallows empty unions, so the
     -- head below is ok.
-    let fd = head fds
+    let fd = headNote "BUG: union with no fields" fds
         lv = if fd_isVoidType fd
              then "0"
              else template "new $1" [fd_defPValue fd]
