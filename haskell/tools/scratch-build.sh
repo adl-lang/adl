@@ -24,6 +24,7 @@ adlcb -I $CONFIG_ADL_DIR -O compiler/adlc-lib1 $CONFIG_ADL_DIR/rust.adl
 # Generate ADL specified elements of the haskell runtime
 adlcb -O runtime/src $ADL_STDLIB_DIR/sys/types.adl
 adlcb -O runtime/src $ADL_STDLIB_DIR/sys/adlast.adl
+adlcb -O runtime/src $ADL_STDLIB_DIR/sys/workspace.adl
 
 # Build and test the compiler itself
 stack build --test adl-compiler 
@@ -38,15 +39,15 @@ stack exec adlc -- typescript \
  --ts-style template \
  -O ../typescript/runtime/embedded \
  -I $ADL_STDLIB_DIR \
- $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
-stack exec adlc -- typescript \
+ $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/workspace.adl $ADL_STDLIB_DIR/sys/dynamic.adl
+ stack exec adlc -- typescript \
  --no-overwrite \
  --exclude-ast \
  --verbose \
  --ts-style deno \
  -O ../typescript/runtime/published/src \
  -I $ADL_STDLIB_DIR \
- $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
+ $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/workspace.adl $ADL_STDLIB_DIR/sys/dynamic.adl
 
 # Generate ADL specified elements of the c++ runtime
 CPP_RUNTIME_DIR=../cpp/runtime/src-generated 
@@ -56,7 +57,7 @@ stack exec adlc -- cpp \
  --include-prefix adl \
  -O $CPP_RUNTIME_DIR \
  -I $ADL_STDLIB_DIR \
- $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
+ $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl  $ADL_STDLIB_DIR/sys/workspace.adl $ADL_STDLIB_DIR/sys/dynamic.adl
 
 # Run some tests for each target language
 stack build generated-tests

@@ -1,0 +1,12 @@
+module sys.workspace {
+
+/// Metadata contained in a file named `adl.workspace.json`.
+/// Used be ADL tooling (adl-lsp, aldc, etc.)
+struct AdlWorkspace {
+  Vector<RelDirPath> uses = [];
+};
+
+/// A relative directory path, used to refer to subdirectories containing an ADL bundle.
+type RelDirPath = String;
+
+};

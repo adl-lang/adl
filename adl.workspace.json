@@ -1,0 +1,6 @@
+{
+    "uses": [
+        "./adl/stdlib",
+        "./haskell/compiler/lib/adl"
+    ]
+}
