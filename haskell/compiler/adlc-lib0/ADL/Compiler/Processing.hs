@@ -28,9 +28,14 @@ import qualified Data.Text.IO as T
 import qualified Text.Parsec as P
 import qualified Data.Vector as V
 import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Text as JSON
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Scientific as S
+
+import qualified Data.Text.Lazy as LT
+import qualified Data.Text.Lazy.Builder as LT
+import qualified Data.Text.Encoding as T
 
 import qualified ADL.Compiler.ParserP as P
 
@@ -638,7 +643,7 @@ literalForTypeExpr te v = litForTE Map.empty te v
             lit <- litForTE pm ftype v
             Right (f_name f,lit)
           Nothing ->
-            Left (T.concat ["Field ",AKey.toText k, " in literal doesn't match any in union definition for", d_name decl])
+            Left (T.concat ["Object ",AKey.toText k, " in literal doesn't match any in union definition for ", d_name decl])
         _ -> Left "literal union must have a single key/value pair"
     unionField m decl u tes (JSON.String k) = do
       pm <- createParamMap (u_typeParams u) tes m
@@ -646,8 +651,8 @@ literalForTypeExpr te v = litForTE Map.empty te v
           (Just f) | isVoidType (f_type f) -> Right (f_name f,Literal (f_type f) (LPrimitive JSON.Null))
                    | otherwise -> Left (T.concat ["Field ",k, " in literal for ", d_name decl, " must be an object"])
           Nothing ->
-            Left (T.concat ["Field ",k, " in literal doesn't match any in union definition for", d_name decl])
-    unionField _ _ _ _ _ = Left "expected an object"
+            Left (T.concat ["String ",k, " in literal doesn't match any in union definition for ", d_name decl])
+    unionField _ decl _ _ k = Left (T.concat ["expected an object for ", d_name decl, " received value ", jsonToStr k ])
 
     typedefLiteral m t tes v = do
       pm <- createParamMap (t_typeParams t) tes m
@@ -953,3 +958,5 @@ getSerializedWithInternalTag annotations = case Map.lookup serializedWithInterna
 customSerialization = ScopedName (ModuleName ["sys","annotations"]) "CustomSerialization"
 serializedWithInternalTag = ScopedName (ModuleName ["sys", "annotations"]) "SerializedWithInternalTag"
 
+jsonToStr :: JSON.Value -> T.Text
+jsonToStr = LT.toStrict . LT.toLazyText . JSON.encodeToTextBuilder
