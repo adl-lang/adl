@@ -45,7 +45,7 @@ import           ADL.Compiler.DataFiles
 -- for validity, and then generate the code for it.
 generate :: AdlFlags -> RustFlags -> FileWriter -> [FilePath] -> EIOT ()
 generate af rf fileWriter modulePaths = catchAllExceptions  $ do
-  (ms0,tms) <- loadAndCheckModules af modulePaths
+  (ms0,tms) <- loadAndCheckFiles af modulePaths
   let ms = if (af_generateTransitive af) then tms else ms0
   mms <- for ms $ \m -> do
     let m' = fullyScopedModule m

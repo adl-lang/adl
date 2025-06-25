@@ -63,7 +63,7 @@ generate af jf fileWriter modulePaths = catchAllExceptions  $ do
 generateModules :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT (Set.Set JavaClass)
 generateModules af jf fileWriter modulePaths = do
   let cgp = (jf_codeGenProfile jf)
-  (mods0,moddeps) <- loadAndCheckModules af modulePaths
+  (mods0,moddeps) <- loadAndCheckFiles af modulePaths
   let mods = if (af_generateTransitive af) then moddeps else mods0
   imports <- for mods $ \mod -> do
     if generateCode (m_annotations mod)

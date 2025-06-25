@@ -51,35 +51,59 @@ type ModuleFinder = ModuleName -> [FilePath]
 -- to merge.
 type FileSetGenerator = FilePath -> [FilePath]
 
+data LoadCtx = LoadCtx {
+  lc_log :: String -> IO (),
+  lc_findm :: ModuleFinder,
+  lc_filesetfn :: FileSetGenerator
+}
 -- | Load and parse an adl file and all of its dependencies
-loadModule :: (String -> IO ()) -> FilePath -> ModuleFinder -> FileSetGenerator -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
-loadModule log fpath0 findm filesetfn mm = do
-    m0 <- parseAndCheckFileSet fpath0
-    mm' <- addDeps m0 mm
-    return (m0,mm')
+loadFile :: LoadCtx -> FilePath -> SModuleMap -> EIO T.Text (SModule,SModuleMap)
+loadFile lc fpath0 smm = do
+    m0 <- parseAndCheckFileSet lc fpath0
+    smm1 <- addSModuleDeps lc m0 smm
+    let smm2 = Map.insert (m_name m0) m0 smm1
+    return (m0,smm2)
+
+-- | Find, load and parse adl modules and their dependencies
+loadSModules:: LoadCtx -> [ModuleName] -> EIOT SModuleMap
+loadSModules lc = foldM (loadSModule lc) mempty
+
+-- | Find, load and parse an adl module and all of its dependencies
+loadSModule :: LoadCtx -> SModuleMap -> ModuleName -> EIO T.Text SModuleMap
+loadSModule lc mm mname = do
+    case Map.lookup mname mm of
+      Just m0 -> pure  mm
+      Nothing -> do
+        m0 <- findSModule lc mname
+        addSModuleDeps lc m0 mm
+
+findSModule :: LoadCtx -> ModuleName -> EIO T.Text SModule
+findSModule lc mname = do
+  let locations = lc_findm lc mname
+  findm mname locations
   where
-    addDeps :: SModule -> SModuleMap -> EIO T.Text SModuleMap
-    addDeps m mm = foldM addDep mm (Set.toList (getReferencedModules m))
-      where
-        addDep mm mname = case Map.member mname mm of
-            True -> return mm
-            False -> do
-              m <- findModule mname (findm mname)
-              let mm' = Map.insert mname m mm
-              addDeps m mm'
+    findm mname [] = eioError (template "Unable to find module '$1'" [formatText mname] )
+    findm mname (fpath:fpaths) = do
+     exists <- liftIO (doesFileExist fpath)
+     if exists
+        then parseAndCheckFileSet lc fpath
+        else findm mname fpaths
 
-    findModule :: ModuleName -> [FilePath] -> EIO T.Text SModule
-    findModule mname [] = eioError (template "\"$1\":\nUnable to find module '$2'" [T.pack fpath0,formatText mname] )
-    findModule mname (fpath:fpaths) = do
-      exists <- liftIO (doesFileExist fpath)
-      if exists
-         then parseAndCheckFileSet fpath
-         else findModule mname fpaths
+addSModuleDeps :: LoadCtx -> SModule -> SModuleMap -> EIO T.Text SModuleMap
+addSModuleDeps lc m mm = foldM addDep mm (Set.toList (getReferencedModules m))
+  where
+    addDep mm mname = if Map.member mname mm
+      then
+        return mm
+      else do
+        m <- findSModule lc mname
+        let mm' = Map.insert mname m mm
+        addSModuleDeps lc m mm'
 
-    parseAndCheckFileSet :: FilePath -> EIO T.Text SModule
-    parseAndCheckFileSet path = do
-      extraFiles <- liftIO (filterM doesFileExist (filesetfn path))
-      parseAndCheckFile log path extraFiles
+parseAndCheckFileSet :: LoadCtx -> FilePath -> EIO T.Text SModule
+parseAndCheckFileSet lc path = do
+  extraFiles <- liftIO (filterM doesFileExist (lc_filesetfn lc path))
+  parseAndCheckFile (lc_log lc) path extraFiles
 
 -- | Load and parse a single file, applying checks that can be
 -- done on that file alone. Extra files can be specified, that must
@@ -260,7 +284,7 @@ liftSerializedNames = lsnModule
     lsnDeclType (Decl_Union u@Union{u_fields=fs}) = Decl_Union u{u_fields=map lsnField fs}
     lsnDeclType dt = dt
 
-    lsnField f = 
+    lsnField f =
       case Map.lookup serializedNameAttr (f_annotations f) of
         Just (_, JSON.String s) -> f{
           f_serializedName = s,
@@ -719,33 +743,53 @@ defaultAdlFlags = AdlFlags
 --
 -- Returns the specified modules, and all modules
 -- including transitive dependencies
-loadAndCheckModules :: AdlFlags -> [FilePath] -> EIOT ([RModule],[RModule])
-loadAndCheckModules af modulePaths = do
-  cms <- mapM (loadAndCheckModule1 af) modulePaths
-  let ms = map fst cms
-      rms = Map.elems ((moduleMap ms) <> (mconcat (map (moduleMap . snd) cms)))
-  return (ms,rms)
+loadAndCheckFiles :: AdlFlags -> [FilePath] -> EIOT ([RModule],[RModule])
+loadAndCheckFiles af modulePaths = do
+  (moduleNames,smm) <- foldM loadf ([], mempty) modulePaths
+  rmm <- checkRModules smm
+  let requested = map (lookupm rmm) (reverse moduleNames)
+  pure (requested, Map.elems rmm)
   where
-    moduleMap :: [RModule] -> Map.Map ModuleName RModule
-    moduleMap rms = Map.fromList [(m_name rm,rm) | rm <- rms]
+    lc = lcFromAf af
+    loadf (moduleNames, smm) modulePath = do
+      (sm,smm') <- loadFile lc modulePath smm
+      pure (m_name sm:moduleNames, smm')
+    lookupm rmm mn = case Map.lookup mn rmm of 
+      Nothing -> error "BUG: failed to find checked module"
+      Just rm -> rm
 
-loadAndCheckModule :: AdlFlags -> FilePath -> EIOT RModule
-loadAndCheckModule af modulePath = fst <$> loadAndCheckModule1 af modulePath
+loadAndCheckFile :: AdlFlags -> FilePath -> EIOT RModule
+loadAndCheckFile af modulePath = do
+  let lc = lcFromAf af
+  (m,smm) <- loadFile lc modulePath mempty
+  rmm <- checkRModules smm
+  case Map.lookup (m_name m) rmm of
+    Just rm -> pure rm
+    Nothing -> eioError "BUG: failed to find checked module"
 
-loadAndCheckModule1 :: AdlFlags -> FilePath -> EIOT (RModule,[RModule])
-loadAndCheckModule1 af modulePath = do
-    (m,mm) <- loadModule1
-    mapM_ checkModuleForDuplicates (m:Map.elems mm)
+lcFromAf :: AdlFlags -> LoadCtx
+lcFromAf af =
+    LoadCtx {
+      lc_log = af_log af,
+      lc_findm = moduleFinder (af_searchPath af),
+      lc_filesetfn = fileSetGenerator (af_mergeFileExtensions af)
+    }
+
+loadAndCheckRModules :: LoadCtx -> [ModuleName] -> EIOT RModuleMap
+loadAndCheckRModules lc moduleNames = do
+  smm <- loadSModules lc moduleNames
+  checkRModules smm
+
+checkRModules :: SModuleMap -> EIOT RModuleMap
+checkRModules mm = do
+    mapM_ checkModuleForDuplicates (Map.elems mm)
     case sortByDeps (Map.elems mm) of
       Nothing -> eioError (template "Mutually dependent modules are not allowed: $1" [T.intercalate ", " (map formatText (Map.keys mm))])
       (Just mmSorted) -> do
-        (ns,rms) <- resolveN mmSorted emptyNameScope
-        (_,rm) <- resolve1 m ns
-        return (rm,rms)
+        (_,rms) <- resolveN mmSorted emptyNameScope
+        let rmm = Map.fromList (map (\rm -> (m_name rm, rm)) rms)
+        pure rmm
   where
-    loadModule1 :: EIOT (SModule, SModuleMap)
-    loadModule1 = loadModule (af_log af) modulePath (moduleFinder (af_searchPath af)) (fileSetGenerator (af_mergeFileExtensions af)) Map.empty
-
     checkModuleForDuplicates :: SModule -> EIOT ()
     checkModuleForDuplicates m = failOnErrors m (checkDuplicates m)
 
@@ -765,7 +809,7 @@ loadAndCheckModule1 af modulePath = do
         failOnErrors rm (checkModuleAnnotations rm)
         failOnErrors rm (checkSerializedWithInternalTag rm)
 
-        let mdecls = Map.mapKeys (\i -> ScopedName (m_name rm) i) (fmap (mapDecl (fullyScopedType (m_name m))) (m_decls rm))
+        let mdecls = Map.mapKeys (ScopedName (m_name rm)) (fmap (mapDecl (fullyScopedType (m_name m))) (m_decls rm))
             ns' = ns{ns_globals=Map.union (ns_globals ns) mdecls}
         return (ns', rm)
 
@@ -773,13 +817,13 @@ loadAndCheckModule1 af modulePath = do
     failOnErrors _ [] = return ()
     failOnErrors m errs = eioError mesg
       where
-        mesg = T.intercalate " " ["In module",formatText(m_name m),":\n"] `T.append`
+        mesg = T.intercalate " " ["In module",formatText (m_name m),":\n"] `T.append`
                T.intercalate "\n  " (map formatText errs)
 
     emptyNameScope = NameScope Map.empty Map.empty Map.empty Set.empty
-
+ 
 sortByDeps :: [SModule] -> Maybe [SModule]
-sortByDeps ms = topologicalSort m_name getReferencedModules ms
+sortByDeps = topologicalSort m_name getReferencedModules
 
 -- | Sort a list topologically, given a function idf to label each element, and
 -- a function depf to calculate the elements dependencies. If the implied graph is not

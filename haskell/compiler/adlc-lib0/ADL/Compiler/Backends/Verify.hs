@@ -12,5 +12,5 @@ import ADL.Compiler.Processing
 
 verify :: AdlFlags -> [FilePath] -> EIO T.Text ()
 verify af modulePaths = catchAllExceptions $ forM_ modulePaths $ \modulePath -> do
-  loadAndCheckModule af modulePath
+  loadAndCheckFile af modulePath
 
