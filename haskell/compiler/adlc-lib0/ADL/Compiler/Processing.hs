@@ -1,6 +1,39 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
-module ADL.Compiler.Processing where
+module ADL.Compiler.Processing(
+  AdlFlags(..),
+  associateCustomTypes,
+  checkCustomSerializations,
+  defaultAdlFlags,
+  expandModuleTypedefs,
+  expandTypedefs,
+  fullyScopedModule,
+  getSerializedWithInternalTag,
+  isEnumeration,
+  isTypeParamUsedInFields,
+  isTypeParamUsedInTypeExpr,
+  isVoidLiteral,
+  isVoidType,
+  Literal(..),
+  literalForTypeExpr,
+  LiteralType(..),
+  litNumber,
+  loadAndCheckFile,
+  loadAndCheckFiles,
+  RDecl,
+  refEnumeration,
+  removeModuleTypedefs,
+  ResolvedType,
+  ResolvedTypeT(..),
+  RModule,
+  RModuleMap,
+  SDecl,
+  SModule,
+  SModuleMap,
+  topologicalSort,
+  TypeExprRT,
+  typeExprTypeParams,
+) where
 
 import Prelude
 
