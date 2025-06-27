@@ -14,7 +14,7 @@ module ADL.Compiler.Processing(
   isTypeParamUsedInTypeExpr,
   isVoidLiteral,
   isVoidType,
-  lcFromAf,
+  buildLoadContext,
   Literal(..),
   literalForTypeExpr,
   LiteralType(..),
@@ -776,19 +776,27 @@ defaultAdlFlags = AdlFlags
   , af_generateTransitive = False
   }
 
+buildLoadContext :: AdlFlags -> EIOT LoadCtx
+buildLoadContext af =
+    pure LoadCtx {
+      lc_log = af_log af,
+      lc_findm = moduleFinder (af_searchPath af),
+      lc_filesetfn = fileSetGenerator (af_mergeFileExtensions af)
+    }
+
 -- load and check each of the adl files.
 --
 -- Returns the specified modules, and all modules
 -- including transitive dependencies
 loadAndCheckFiles :: AdlFlags -> [FilePath] -> EIOT ([RModule],[RModule])
 loadAndCheckFiles af modulePaths = do
-  (moduleNames,smm) <- foldM loadf ([], mempty) modulePaths
+  lc <- buildLoadContext af
+  (moduleNames,smm) <- foldM (loadf lc) ([], mempty) modulePaths
   rmm <- checkRModules smm
   let requested = map (lookupm rmm) (reverse moduleNames)
   pure (requested, Map.elems rmm)
   where
-    lc = lcFromAf af
-    loadf (moduleNames, smm) modulePath = do
+    loadf lc (moduleNames, smm) modulePath = do
       (sm,smm') <- loadFile lc modulePath smm
       pure (m_name sm:moduleNames, smm')
     lookupm rmm mn = case Map.lookup mn rmm of 
@@ -797,20 +805,12 @@ loadAndCheckFiles af modulePaths = do
 
 loadAndCheckFile :: AdlFlags -> FilePath -> EIOT RModule
 loadAndCheckFile af modulePath = do
-  let lc = lcFromAf af
+  lc <- buildLoadContext af
   (m,smm) <- loadFile lc modulePath mempty
   rmm <- checkRModules smm
   case Map.lookup (m_name m) rmm of
     Just rm -> pure rm
     Nothing -> eioError "BUG: failed to find checked module"
-
-lcFromAf :: AdlFlags -> LoadCtx
-lcFromAf af =
-    LoadCtx {
-      lc_log = af_log af,
-      lc_findm = moduleFinder (af_searchPath af),
-      lc_filesetfn = fileSetGenerator (af_mergeFileExtensions af)
-    }
 
 loadAndCheckRModules :: LoadCtx -> [ModuleName] -> EIOT RModuleMap
 loadAndCheckRModules lc moduleNames = do

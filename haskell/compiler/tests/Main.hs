@@ -171,8 +171,8 @@ runTsBackend flagsfn ipaths mpaths epath = do
   er <- unEIO $ TS.generate af js fileWriter mpaths
   processCompilerOutput epath tempDir er
 
-runRsBackend :: [FilePath] -> [FilePath] -> FilePath -> T.Text -> IO CodeGenResult
-runRsBackend ipaths mpaths epath rsModule = do
+runRsBackend :: [FilePath] -> [String] -> FilePath -> T.Text -> IO CodeGenResult
+runRsBackend ipaths mnames epath rsModule = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adlt.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-rs"]}
@@ -183,7 +183,7 @@ runRsBackend ipaths mpaths epath rsModule = do
         RS.rs_includeRuntime = False
       }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir Nothing)
-  er <- unEIO $ RS.generate af js fileWriter mpaths
+  er <- unEIO $ RS.generate af js fileWriter mnames
   processCompilerOutput epath tempDir er
 
 stdsrc :: FilePath
@@ -193,6 +193,9 @@ stdfiles, stdHsCustomTypes, stdCppCustomTypes :: [FilePath]
 stdfiles = map (combine stdsrc) ["sys/types.adl", "sys/adlast.adl", "sys/dynamic.adl"]
 stdHsCustomTypes = ["../../compiler/lib/adl/sys/types/hs-custom-types.json"]
 stdCppCustomTypes = ["../../compiler/lib/adl/sys/types/cpp-custom-types.json"]
+
+stdModules :: [String]
+stdModules = ["sys.types", "sys.adlast", "sys.dynamic"]
 
 runTests :: IO ()
 runTests = do
@@ -426,41 +429,41 @@ runTests = do
 
   describe "adlc rust backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runRsBackend [stdsrc] ["test1/input/test1.adl"] "test1/rs-output" "test1::adl")
+      collectResults (runRsBackend [stdsrc, "test1/input"] ["test1"] "test1/rs-output" "test1::adl")
         `shouldReturn` MatchOutput
     it "generates expected output for various structures" $
-      collectResults (runRsBackend [stdsrc] ["test2/input/test2.adl"] "test2/rs-output" "test2::adl")
+      collectResults (runRsBackend [stdsrc, "test2/input"] ["test2"] "test2/rs-output" "test2::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runRsBackend [stdsrc] ["test3/input/test3.adl"] "test3/rs-output" "test3::adl")
+      collectResults (runRsBackend [stdsrc, "test3/input"] ["test3"] "test3/rs-output" "test3::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runRsBackend [stdsrc] ["test4/input/test4.adl", stdsrc </> "sys/types.adl"] "test4/rs-output" "test4::adl")
+      collectResults (runRsBackend [stdsrc, "test4/input"] ["test4", "sys.types"] "test4/rs-output" "test4::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runRsBackend [stdsrc] ["test5/input/test5.adl"] "test5/rs-output" "test5::adl")
+      collectResults (runRsBackend [stdsrc, "test5/input"] ["test5"] "test5/rs-output" "test5::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runRsBackend [stdsrc] ["test7/input/test7.adl"] "test7/rs-output" "test7::adl")
+      collectResults (runRsBackend [stdsrc, "test7/input"] ["test7"] "test7/rs-output" "test7::adl")
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
-      collectResults (runRsBackend [stdsrc] ["test18/input/test18.adl"] "test18/rs-output" "test18::adl")
+      collectResults (runRsBackend [stdsrc, "test18/input"] ["test18"] "test18/rs-output" "test18::adl")
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains rust reserved words" $ do
-      collectResults (runRsBackend [stdsrc] ["test14/input/test14.adl"] "test14/rs-output" "test14::adl")
+      collectResults (runRsBackend [stdsrc, "test14/input"] ["test14"] "test14/rs-output" "test14::adl")
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
-      collectResults (runRsBackend [stdsrc] ["test20/input/test20.adl"] "test20/rs-output" "test20::adl")
+      collectResults (runRsBackend [stdsrc,"test20/input"] ["test20"] "test20/rs-output" "test20::adl")
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
-      collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output" "demo1::adl")
+      collectResults (runRsBackend [stdsrc,"demo1/input"] ["picture"] "demo1/rs-output" "demo1::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      let srcs = stdfiles <> ["test6/input/test6.adl"]
-      collectResults (runRsBackend [stdsrc] srcs "test6/rs-output" "test6::adl")
+      let modules = stdModules <> ["test6"]
+      collectResults (runRsBackend [stdsrc, "test6/input"] modules "test6/rs-output" "test6::adl")
           `shouldReturn` MatchOutput
     it "generates correct keys for stringmap literals" $ do
-      collectResults (runRsBackend [stdsrc] ["test29/input/test29.adl"] "test29/rs-output" "test29::adl")
+      collectResults (runRsBackend [stdsrc,"test29/input"] ["test29"] "test29/rs-output" "test29::adl")
         `shouldReturn` MatchOutput
 
   where

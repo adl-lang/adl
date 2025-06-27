@@ -290,11 +290,11 @@ runTypescript args = do
 runRust args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-rs"]
-  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
-    RS.generate (f_adl flags) (f_backend flags) writer paths
+    RS.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc rust [OPTION...] files..."
+    header = "Usage: adlc rust [OPTION...] modules..."
 
     flags0 libDir = RS.RustFlags {
       RS.rs_libDir = libDir,
@@ -338,7 +338,7 @@ usage = T.intercalate "\n"
   , "       adlc java [OPTION..] <modulePath>..."
   , "       adlc javascript [OPTION..] <modulePath>..."
   , "       adlc typescript [OPTION..] <modulePath>..."
-  , "       adlc rust [OPTION..] <modulePath>..."
+  , "       adlc rust [OPTION..] <module>..."
   , "       adlc show --version"
   , "       adlc show --adlstdlib"
   ]
