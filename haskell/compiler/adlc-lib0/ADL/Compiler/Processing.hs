@@ -14,12 +14,15 @@ module ADL.Compiler.Processing(
   isTypeParamUsedInTypeExpr,
   isVoidLiteral,
   isVoidType,
+  lcFromAf,
   Literal(..),
   literalForTypeExpr,
   LiteralType(..),
   litNumber,
   loadAndCheckFile,
   loadAndCheckFiles,
+  loadAndCheckRModules,
+  parseModuleName,
   RDecl,
   refEnumeration,
   removeModuleTypedefs,
@@ -103,12 +106,13 @@ loadSModules lc = foldM (loadSModule lc) mempty
 
 -- | Find, load and parse an adl module and all of its dependencies
 loadSModule :: LoadCtx -> SModuleMap -> ModuleName -> EIO T.Text SModuleMap
-loadSModule lc mm mname = do
-    case Map.lookup mname mm of
-      Just m0 -> pure  mm
+loadSModule lc smm mname = do
+    case Map.lookup mname smm of
+      Just m0 -> pure  smm
       Nothing -> do
         m0 <- findSModule lc mname
-        addSModuleDeps lc m0 mm
+        let smm' = Map.insert mname m0 smm
+        addSModuleDeps lc m0 smm'
 
 findSModule :: LoadCtx -> ModuleName -> EIO T.Text SModule
 findSModule lc mname = do
@@ -1030,3 +1034,7 @@ getSerializedWithInternalTag annotations = case Map.lookup serializedWithInterna
 customSerialization = ScopedName (ModuleName ["sys","annotations"]) "CustomSerialization"
 serializedWithInternalTag = ScopedName (ModuleName ["sys", "annotations"]) "SerializedWithInternalTag"
 
+parseModuleName:: String -> EIOT ModuleName
+parseModuleName s = case P.fromString P.moduleName s of
+  Left _ -> eioError (template "invalid module name '$1'" [T.pack s] )
+  Right mn -> pure mn
