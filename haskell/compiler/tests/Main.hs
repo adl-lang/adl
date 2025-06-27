@@ -228,32 +228,32 @@ runTests = do
 
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runHaskellBackend1 "test1/input/test.adl")
+      collectResults (runHaskellBackend1 "test1/input/test1.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      collectResults (runHaskellBackend1 "test2/input/test.adl")
+      collectResults (runHaskellBackend1 "test2/input/test2.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runHaskellBackend1 "test3/input/test.adl")
+      collectResults (runHaskellBackend1 "test3/input/test3.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runHaskellBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/hs-output")
+      collectResults (runHaskellBackend ["test4/input",stdsrc] ["test4/input/test4.adl"] "test4/hs-output")
           `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runHaskellBackend1 "test5/input/test.adl")
+      collectResults (runHaskellBackend1 "test5/input/test5.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      let srcs = stdfiles <> ["test6/input/test.adl"]
+      let srcs = stdfiles <> ["test6/input/test6.adl"]
       collectResults (runHaskellBackend [stdsrc] srcs "test6/hs-output")
           `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runHaskellBackend1 "test7/input/test.adl")
+      collectResults (runHaskellBackend1 "test7/input/test7.adl")
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
-      collectResults (runHaskellBackend1 "test18/input/test.adl")
+      collectResults (runHaskellBackend1 "test18/input/test18.adl")
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
-      collectResults (runHaskellBackend1 "test20/input/test.adl")
+      collectResults (runHaskellBackend1 "test20/input/test20.adl")
         `shouldReturn` MatchOutput
     it "generated code for type token primitives" $ do
       collectResults (runHaskellBackend1 "test24/input/test24.adl")
@@ -275,43 +275,43 @@ runTests = do
 
   describe "adlc cpp backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runCppBackend1 "test1/input/test.adl")
+      collectResults (runCppBackend1 "test1/input/test1.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      collectResults (runCppBackend1 "test2/input/test.adl")
+      collectResults (runCppBackend1 "test2/input/test2.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runCppBackend1 "test3/input/test.adl")
+      collectResults (runCppBackend1 "test3/input/test3.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runCppBackend ["test4/input",stdsrc] ["test4/input/test.adl"] "test4/cpp-output" "")
+      collectResults (runCppBackend ["test4/input",stdsrc] ["test4/input/test4.adl"] "test4/cpp-output" "")
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runCppBackend1 "test5/input/test.adl")
+      collectResults (runCppBackend1 "test5/input/test5.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for nullable" $ do
-      collectResults (runCppBackend1 "test6/input/test.adl")
+      collectResults (runCppBackend1 "test6/input/test6.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
       collectResults (runCppBackend [stdsrc] stdfiles "test6/cpp-output-std" "")
         `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
-      collectResults (runCppBackend1 "test7/input/test.adl")
+      collectResults (runCppBackend1 "test7/input/test7.adl")
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains C++ reserved words" $ do
-      collectResults (runCppBackend1 "test14/input/test.adl")
+      collectResults (runCppBackend1 "test14/input/test14.adl")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
       collectResults (runCppBackend ["test16/input",stdsrc] ["test16/input/test.adl"] "test16/cpp-output" "adl")
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation when necessary" $ do
-      collectResults (runCppBackend1 "test17/input/test.adl")
+      collectResults (runCppBackend1 "test17/input/test17.adl")
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
-      collectResults (runCppBackend1 "test18/input/test.adl")
+      collectResults (runCppBackend1 "test18/input/test18.adl")
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
-      collectResults (runCppBackend1 "test20/input/test.adl")
+      collectResults (runCppBackend1 "test20/input/test20.adl")
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runCppBackend1 "demo1/input/picture.adl")
@@ -322,40 +322,40 @@ runTests = do
 
   describe "adlc java backend" $ do
     it "generates expected code for various structures" $ do
-      collectResults (runJavaBackend1 "test2/input/test.adl")
+      collectResults (runJavaBackend1 "test2/input/test2.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runJavaBackend1 "test3/input/test.adl")
+      collectResults (runJavaBackend1 "test3/input/test3.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
       collectResults (runJavaBackend
-          ["test4/input",stdsrc] ["test4/input/test.adl"]
+          ["test4/input",stdsrc] ["test4/input/test4.adl"]
           "test4/java-output"
           (withJavaOutputPackage "org.adl")
           )
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runJavaBackend1 "test5/input/test.adl")
+      collectResults (runJavaBackend1 "test5/input/test5.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runJavaBackend1 "test7/input/test.adl")
+      collectResults (runJavaBackend1 "test7/input/test7.adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
-      let srcs = ["test6/input/test.adl"] <> stdfiles
+      let srcs = ["test6/input/test6.adl"] <> stdfiles
       collectResults (runJavaBackend [stdsrc] srcs "test6/java-output"
                       (withJavaOutputPackage "org.adl"))
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do
-      collectResults (runJavaBackend1 "test14/input/test.adl")
+      collectResults (runJavaBackend1 "test14/input/test14.adl")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
       collectResults (runJavaBackend ["test16/input",stdsrc] ["test16/input/test.adl","test16/input/test2.adl"] "test16/java-output" id)
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation" $ do
-      collectResults (runJavaBackend1 "test17/input/test.adl")
+      collectResults (runJavaBackend1 "test17/input/test17.adl")
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
-      collectResults (runJavaBackend1 "test20/input/test.adl")
+      collectResults (runJavaBackend1 "test20/input/test20.adl")
         `shouldReturn` MatchOutput
     it "generates to packages controlled by annotations" $ do
       collectResults (runJavaBackend
@@ -396,20 +396,20 @@ runTests = do
 
   describe "adlc typescript backend" $ do
     it "generates expected output for various structures" $
-      collectResults (runTsBackend id [stdsrc] ["test2/input/test.adl"] "test2/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test2/input/test2.adl"] "test2/ts-output")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runTsBackend id [stdsrc] ["test3/input/test.adl"] "test3/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test3/input/test3.adl"] "test3/ts-output")
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runTsBackend id [stdsrc] ["test5/input/test.adl"] "test5/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test5/input/test5.adl"] "test5/ts-output")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      let srcs = stdfiles <> ["test6/input/test.adl"]
+      let srcs = stdfiles <> ["test6/input/test6.adl"]
       collectResults (runTsBackend id [stdsrc] srcs "test6/ts-output")
           `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runTsBackend id [stdsrc] ["test7/input/test.adl"] "test7/ts-output")
+      collectResults (runTsBackend id [stdsrc] ["test7/input/test7.adl"] "test7/ts-output")
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runTsBackend id [stdsrc] ["demo1/input/picture.adl"] "demo1/ts-output")
@@ -426,37 +426,37 @@ runTests = do
 
   describe "adlc rust backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runRsBackend [stdsrc] ["test1/input/test.adl"] "test1/rs-output" "test1::adl")
+      collectResults (runRsBackend [stdsrc] ["test1/input/test1.adl"] "test1/rs-output" "test1::adl")
         `shouldReturn` MatchOutput
     it "generates expected output for various structures" $
-      collectResults (runRsBackend [stdsrc] ["test2/input/test.adl"] "test2/rs-output" "test2::adl")
+      collectResults (runRsBackend [stdsrc] ["test2/input/test2.adl"] "test2/rs-output" "test2::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runRsBackend [stdsrc] ["test3/input/test.adl"] "test3/rs-output" "test3::adl")
+      collectResults (runRsBackend [stdsrc] ["test3/input/test3.adl"] "test3/rs-output" "test3::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runRsBackend [stdsrc] ["test4/input/test.adl", stdsrc </> "sys/types.adl"] "test4/rs-output" "test4::adl")
+      collectResults (runRsBackend [stdsrc] ["test4/input/test4.adl", stdsrc </> "sys/types.adl"] "test4/rs-output" "test4::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runRsBackend [stdsrc] ["test5/input/test.adl"] "test5/rs-output" "test5::adl")
+      collectResults (runRsBackend [stdsrc] ["test5/input/test5.adl"] "test5/rs-output" "test5::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runRsBackend [stdsrc] ["test7/input/test.adl"] "test7/rs-output" "test7::adl")
+      collectResults (runRsBackend [stdsrc] ["test7/input/test7.adl"] "test7/rs-output" "test7::adl")
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
-      collectResults (runRsBackend [stdsrc] ["test18/input/test.adl"] "test18/rs-output" "test18::adl")
+      collectResults (runRsBackend [stdsrc] ["test18/input/test18.adl"] "test18/rs-output" "test18::adl")
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains rust reserved words" $ do
-      collectResults (runRsBackend [stdsrc] ["test14/input/test.adl"] "test14/rs-output" "test14::adl")
+      collectResults (runRsBackend [stdsrc] ["test14/input/test14.adl"] "test14/rs-output" "test14::adl")
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
-      collectResults (runRsBackend [stdsrc] ["test20/input/test.adl"] "test20/rs-output" "test20::adl")
+      collectResults (runRsBackend [stdsrc] ["test20/input/test20.adl"] "test20/rs-output" "test20::adl")
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
       collectResults (runRsBackend [stdsrc] ["demo1/input/picture.adl"] "demo1/rs-output" "demo1::adl")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      let srcs = stdfiles <> ["test6/input/test.adl"]
+      let srcs = stdfiles <> ["test6/input/test6.adl"]
       collectResults (runRsBackend [stdsrc] srcs "test6/rs-output" "test6::adl")
           `shouldReturn` MatchOutput
     it "generates correct keys for stringmap literals" $ do
