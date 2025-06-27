@@ -22,12 +22,14 @@ import qualified Data.Map                                   as M
 import qualified Data.Set                                   as S
 import qualified Data.Text                                  as T
 import qualified Data.Text.Encoding                         as T
+import qualified Data.Text.IO                               as T
+
 
 import           ADL.Compiler.EIO
 import           ADL.Compiler.Processing
 import           ADL.Compiler.Utils
 import           ADL.Utils.IndentedCode
-import           Control.Monad                              (when)
+import           Control.Monad                              (when, join)
 import           Control.Monad.Trans                        (liftIO)
 import           Control.Monad.Trans.State.Strict
 import           Data.Foldable                              (for_)
@@ -43,23 +45,25 @@ import           ADL.Compiler.DataFiles
 
 -- | Run this backend on a list of ADL modules. Check each module
 -- for validity, and then generate the code for it.
-generate :: AdlFlags -> RustFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af rf fileWriter modulePaths = catchAllExceptions  $ do
-  (ms0,tms) <- loadAndCheckFiles af modulePaths
-  let ms = if (af_generateTransitive af) then tms else ms0
+generate :: AdlFlags -> RustFlags -> FileWriter -> [String] -> EIOT ()
+generate af rf fileWriter moduleNameStrs = catchAllExceptions  $ do
+  moduleNames <- mapM parseModuleName moduleNameStrs
+  lc <- buildLoadContext af
+  rmm <- loadAndCheckRModules lc moduleNames
+  let ms = (if af_generateTransitive af then id else filter (\rm -> m_name rm `elem` moduleNames)) (M.elems rmm)
   mms <- for ms $ \m -> do
     let m' = fullyScopedModule m
-    if (generateCode (m_annotations m'))
+    if generateCode (m_annotations m')
       then do
         generateModule rf fileWriter m'
         return (Just m')
       else do
         return Nothing
   generateModFiles rf fileWriter (catMaybes mms)
-  when (rs_includeRuntime rf) (generateRuntime af rf fileWriter modulePaths)
+  when (rs_includeRuntime rf) (generateRuntime af rf fileWriter)
 
-generateRuntime :: AdlFlags -> RustFlags -> FileWriter -> [FilePath] -> EIOT ()
-generateRuntime af rf fileWriter modulePaths = do
+generateRuntime :: AdlFlags -> RustFlags -> FileWriter -> EIOT ()
+generateRuntime af rf fileWriter = do
     files <- liftIO $ dirContents runtimeLibDir
     liftIO $ for_ files $ \inpath -> do
       content <- LBS.readFile (runtimeLibDir </> inpath)
@@ -71,8 +75,8 @@ generateRuntime af rf fileWriter modulePaths = do
       adjustContent :: LBS.ByteString -> LBS.ByteString
       adjustContent origLBS = LBS.fromStrict (T.encodeUtf8 newT)
         where origT = T.decodeUtf8 (LBS.toStrict origLBS)
-              newT = T.replace ("crate::adl") ("crate::" <> T.intercalate "::" (unRustScopedName (rs_module rf)))
-                   $ T.replace ("crate::adlrt") ("crate::" <> T.intercalate "::" (unRustScopedName (rs_runtimeModule rf)))
+              newT = T.replace "crate::adl" ("crate::" <> T.intercalate "::" (unRustScopedName (rs_module rf)))
+                   $ T.replace "crate::adlrt" ("crate::" <> T.intercalate "::" (unRustScopedName (rs_runtimeModule rf)))
                    $ origT
 
 -- | Generate and the rust code for a single ADL module, and
