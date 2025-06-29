@@ -12,14 +12,14 @@ adlcb () {
 
 # Start clean, and build the bootstrap compiler
 stack clean
-stack build --flag adl-compiler:bootstrap adl-compiler:adlc-bootstrap
+stack build adl-lib0:adlc-bootstrap
 
 # Generate the haskell code for the per-language annotation types
-adlcb -I $CONFIG_ADL_DIR -O compiler/adlc-lib1 $CONFIG_ADL_DIR/haskell.adl
-adlcb -I $CONFIG_ADL_DIR -O compiler/adlc-lib1 $CONFIG_ADL_DIR/cpp.adl
-adlcb -I $CONFIG_ADL_DIR -O compiler/adlc-lib1 $CONFIG_ADL_DIR/java.adl
-adlcb -I $CONFIG_ADL_DIR -O compiler/adlc-lib1 $CONFIG_ADL_DIR/typescript.adl
-adlcb -I $CONFIG_ADL_DIR -O compiler/adlc-lib1 $CONFIG_ADL_DIR/rust.adl
+adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/haskell.adl
+adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/cpp.adl
+adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/java.adl
+adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/typescript.adl
+adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/rust.adl
 
 # Generate ADL specified elements of the haskell runtime
 adlcb -O runtime/src $ADL_STDLIB_DIR/sys/types.adl
