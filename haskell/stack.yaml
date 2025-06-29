@@ -1,7 +1,8 @@
 flags: {}
 packages:
-- runtime
+- lib0
 - compiler
+- runtime
 - generated-tests
 extra-deps:
 resolver: lts-23.10

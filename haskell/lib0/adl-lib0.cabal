@@ -1,0 +1,58 @@
+cabal-version:       2.4
+name:                adl-lib0
+version:             1.2.4
+synopsis:            adl bootstrap compiler library and exe
+license:             BSD-3-Clause
+license-file:        ../../LICENSE
+author:              Tim Docker
+maintainer:          tim@dockerz.net
+copyright:           (c) 2013-2025 Tim Docker
+category:            Network
+build-type:          Simple
+
+library
+  hs-source-dirs:     lib
+  ghc-options:       -fwarn-incomplete-patterns
+  exposed-modules:    ADL.Compiler.AST
+                    , ADL.Compiler.Backends.Verify
+                    , ADL.Compiler.Backends.Haskell
+                    , ADL.Compiler.Flags
+                    , ADL.Compiler.EIO
+                    , ADL.Compiler.ExternalAST
+                    , ADL.Compiler.ParserP
+                    , ADL.Compiler.Primitive
+                    , ADL.Compiler.Processing
+                    , ADL.Compiler.Utils
+                    , ADL.Utils.FileDiff
+                    , ADL.Utils.Format
+                    , ADL.Utils.IndentedCode
+  build-depends:      base
+                    , bytestring
+                    , cases
+                    , text
+                    , containers
+                    , parsec
+                    , mtl
+                    , stm
+                    , transformers
+                    , filepath
+                    , directory
+                    , unordered-containers
+                    , vector
+                    , base64-bytestring
+                    , attoparsec
+                    , aeson
+                    , scientific
+                    , aeson-pretty
+                    , executable-path
+                    , adl-runtime
+
+executable adlc-bootstrap
+  main-is:            Main.hs
+  ghc-options:       -fwarn-incomplete-patterns
+  other-modules:      BootstrapCustomTypes
+  build-depends:      adl-lib0
+                    , base
+                    , containers
+                    , filepath
+                    , text

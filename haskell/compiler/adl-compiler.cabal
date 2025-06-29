@@ -66,65 +66,17 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/rust/runtime/custom/sys/types/mapentry.rs
                     , lib/rust/runtime/mod.rs
 
-Flag bootstrap
-  Description:   Build just the bootstrap compiler
-  Default:       False
-
-executable adlc-bootstrap
-  main-is:            Main.hs
-  hs-source-dirs:     adlc-bootstrap
-                    , adlc-lib0
-  ghc-options:       -fwarn-incomplete-patterns
-  other-modules:      BootstrapCustomTypes,
-                      ADL.Compiler.AST,
-                      ADL.Compiler.Backends.Haskell,
-                      ADL.Compiler.Backends.Verify,
-                      ADL.Compiler.EIO,
-                      ADL.Compiler.ParserP,
-                      ADL.Compiler.Primitive,
-                      ADL.Compiler.Processing,
-                      ADL.Compiler.Utils,
-                      ADL.Utils.FileDiff,
-                      ADL.Utils.Format,
-                      ADL.Utils.IndentedCode
-  
-  if flag(bootstrap)
-    buildable:        True
-  else
-    buildable:        False
-  build-depends:      base
-                    , bytestring
-                    , containers
-                    , directory
-                    , parsec
-                    , vector
-                    , text
-                    , mtl
-                    , unordered-containers
-                    , transformers
-                    , filepath
-                    , base64-bytestring
-                    , attoparsec
-                    , aeson
-                    , scientific
-                    , stm
-                    , executable-path
-                    , adl-runtime
-
 executable adlc
   main-is:            Main.hs
   hs-source-dirs:     adlc
   ghc-options:       -fwarn-incomplete-patterns
   other-modules:      Paths_adl_compiler
-  if flag(bootstrap)
-    buildable:        False
-  else
-    buildable:        True
   build-depends:      base
                     , text
                     , mtl
                     , filepath
                     , executable-path
+                    , adl-lib0
                     , adl-runtime
                     , adl-compiler
 
@@ -133,10 +85,6 @@ test-suite adlc-tests
   main-is:            Main.hs
   hs-source-dirs:     tests
   ghc-options:       -fwarn-incomplete-patterns
-  if flag(bootstrap)
-    buildable:        False
-  else
-    buildable:        True
   build-depends:      base
                     , bytestring
                     , text
@@ -145,31 +93,16 @@ test-suite adlc-tests
                     , hspec
                     , stm
                     , temporary
+                    , adl-lib0
                     , adl-runtime
                     , adl-compiler
 
--- Library code including generated ADL (so not available to the bootstrap compiler)
+-- Library code including generated ADL
 -- publically referenceable by other projects as `adl-compiler`
 library
-  hs-source-dirs:     adlc-lib0
-                    , adlc-lib1
+  hs-source-dirs:    src
   ghc-options:       -fwarn-incomplete-patterns
-  exposed-modules:    ADL.Compiler.AST
-                    , ADL.Compiler.Primitive
-                    , ADL.Compiler.ParserP
-                    , ADL.Compiler.Utils
-                    , ADL.Compiler.EIO
-                    , ADL.Compiler.Processing
-                    , ADL.Compiler.Flags
-                    , ADL.Compiler.ExternalAST
-                    , ADL.Compiler.Backends.Verify
-                    , ADL.Compiler.Backends.Haskell
-                    , ADL.Utils.DelayIO
-                    , ADL.Utils.FileDiff
-                    , ADL.Utils.Format
-                    , ADL.Utils.IndentedCode
-                    , ADL.Utils.Resource
-                    , ADL.Compiler.Backends.AST
+  exposed-modules:    ADL.Compiler.Backends.AST
                     , ADL.Compiler.Backends.Cpp
                     , ADL.Compiler.Backends.Java
                     , ADL.Compiler.Backends.Java.Internal
@@ -186,11 +119,8 @@ library
                     , ADL.Adlc.Config.Rust
                     , HaskellCustomTypes
                     , Paths_adl_compiler
-  if flag(bootstrap)
-    buildable:        False
-  else
-    buildable:        True
-  build-depends:      base
+  build-depends:      adl-lib0
+                    , base
                     , bytestring
                     , cases
                     , text
