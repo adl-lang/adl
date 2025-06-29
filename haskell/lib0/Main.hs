@@ -13,7 +13,7 @@ import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
 import ADL.Compiler.Utils
-import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
+import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags, parseModuleName)
 import ADL.Compiler.Backends.Haskell as H
 import ADL.Compiler.Backends.Verify as V
 import BootstrapCustomTypes
@@ -35,7 +35,9 @@ noOverwriteOption ufn =
 
 runVerify args0 =
   case getOpt Permute optDescs args0 of
-    (opts,args,[]) -> V.verify (mkFlags opts) args
+    (opts,args,[]) -> do
+      moduleNames <- mapM parseModuleName args
+      V.verify (mkFlags opts) moduleNames
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl verify [OPTION...] files..."

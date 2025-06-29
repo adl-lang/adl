@@ -47,22 +47,27 @@ writeModuleFile fileWriter m = do
 
   liftIO $ fileWriter fpath (JSON.encodePretty' encodeDef v)
 
-generate :: AdlFlags -> AstFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af astFlags fileWriter modulePaths = case astf_combinedModuleFile astFlags of
-  Nothing -> generateIndividualModuleFiles af fileWriter modulePaths
-  (Just file) -> generateCombinedModuleFile af (fileWriter file) modulePaths
+generate :: AdlFlags -> AstFlags -> FileWriter -> [ModuleName] -> EIOT ()
+generate af astFlags fileWriter moduleNames = case astf_combinedModuleFile astFlags of
+  Nothing -> generateIndividualModuleFiles af fileWriter moduleNames
+  (Just file) -> generateCombinedModuleFile af (fileWriter file) moduleNames
 
-generateIndividualModuleFiles af fileWriter modulePaths = do
-  catchAllExceptions  $ forM_ modulePaths $ \modulePath -> do
-    rm <- loadAndCheckFile af modulePath
-    writeModuleFile fileWriter rm
+generateIndividualModuleFiles af fileWriter moduleNames = do
+  lc <- buildLoadContext af
+  allModules <- catchAllExceptions  $ loadAndCheckRModules lc moduleNames
+  catchAllExceptions  $ forM_ moduleNames $ \moduleName -> do
+    let rm = Map.lookup moduleName allModules
+    case rm of
+      Just rm -> writeModuleFile fileWriter rm
+      Nothing -> pure ()
 
 -- Write a combined single json file containing the specified modules, and all of the
 -- ADL files upon which they depend. The json in the file will have type
 --    StringMap<AST.Module>
-generateCombinedModuleFile af writeFile modulePaths = do
-  (_,allModules) <- catchAllExceptions  $ loadAndCheckFiles af modulePaths
-  let modulesByName = mconcat (map keyedModule allModules)
+generateCombinedModuleFile af writeFile moduleNames = do
+  lc <- buildLoadContext af
+  allModules <- catchAllExceptions  $ loadAndCheckRModules lc  moduleNames
+  let modulesByName = mconcat (map keyedModule (Map.elems allModules))
   liftIO $ writeFile (JSON.encodePretty' JSON.defConfig (adlToJson modulesByName))
   where
     keyedModule m = SM.singleton (moduleNameToA2 (m_name m)) (moduleToA2 (fullyScopedModule m))
