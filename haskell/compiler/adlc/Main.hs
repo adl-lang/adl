@@ -18,7 +18,7 @@ import ADL.Compiler.DataFiles
 import ADL.Compiler.EIO
 import ADL.Compiler.Flags
 import ADL.Compiler.AST
-import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
+import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags, parseModuleName)
 import ADL.Compiler.Utils
 import Control.Monad.Trans
 import Data.List(intercalate,partition)
@@ -65,10 +65,11 @@ runVerify args0 =
       libDir <- liftIO $ getLibDir
       let af = stdAdlFlags libDir []
       let flags = buildFlags af () opts
-      V.verify (f_adl flags) args
+      moduleNames <- mapM parseModuleName args
+      V.verify (f_adl flags) moduleNames
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
-    header = "Usage: adlc verify [OPTION...] files..."
+    header = "Usage: adlc verify [OPTION...] modules..."
 
     optDescs =
       [ searchDirOption addToSearchPath
@@ -79,10 +80,11 @@ runAst args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir []
   (flags,paths) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
+  moduleNames <- mapM parseModuleName args
   withManifest (f_output flags) $ \ writer -> do
-    A.generate (f_adl flags) (f_backend flags) writer  paths
+    A.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc ast [OPTION...] files..."
+    header = "Usage: adlc ast [OPTION...] modules..."
 
     flags0 libDir = A.AstFlags {
       A.astf_combinedModuleFile = Nothing
@@ -290,8 +292,9 @@ runTypescript args = do
 runRust args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-rs"]
-  (flags,moduleNames) <- parseArguments header af (flags0 libDir) optDescs args
+  (flags,moduleNameStrs) <- parseArguments header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
+    moduleNames <- mapM parseModuleName moduleNameStrs
     RS.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
     header = "Usage: adlc rust [OPTION...] modules..."
@@ -331,8 +334,8 @@ runShow args0 =
     _ -> eioError "Usage: adlc show [OPTION...]"
 
 usage = T.intercalate "\n"
-  [ "Usage: adlc verify [OPTION..] <modulePath>..."
-  , "       adlc ast [OPTION..] <modulePath>..."
+  [ "Usage: adlc verify [OPTION..] <module>..."
+  , "       adlc ast [OPTION..] <module>..."
   , "       adlc haskell [OPTION..] <modulePath>..."
   , "       adlc cpp [OPTION..] <modulePath>..."
   , "       adlc java [OPTION..] <modulePath>..."

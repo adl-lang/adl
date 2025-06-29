@@ -45,9 +45,8 @@ import           ADL.Compiler.DataFiles
 
 -- | Run this backend on a list of ADL modules. Check each module
 -- for validity, and then generate the code for it.
-generate :: AdlFlags -> RustFlags -> FileWriter -> [String] -> EIOT ()
-generate af rf fileWriter moduleNameStrs = catchAllExceptions  $ do
-  moduleNames <- mapM parseModuleName moduleNameStrs
+generate :: AdlFlags -> RustFlags -> FileWriter -> [ModuleName] -> EIOT ()
+generate af rf fileWriter moduleNames = catchAllExceptions  $ do
   lc <- buildLoadContext af
   rmm <- loadAndCheckRModules lc moduleNames
   let ms = (if af_generateTransitive af then id else filter (\rm -> m_name rm `elem` moduleNames)) (M.elems rmm)
