@@ -17,7 +17,7 @@ import HaskellCustomTypes
 
 import ADL.Compiler.EIO
 import ADL.Compiler.Utils
-import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
+import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags,parseModuleName)
 
 import qualified ADL.Compiler.Backends.Verify as V
 import qualified ADL.Compiler.Backends.Haskell as H
@@ -53,16 +53,15 @@ processCompilerOutput epath tempDir (Right ()) = do
       cwd <- getCurrentDirectory
       return (OutputDiff (cwd </> epath) tempDir diffs)
 
-runVerifyBackend :: [FilePath] -> [FilePath] -> IO CodeGenResult
-runVerifyBackend ipath mpaths = do
-  let af =  defaultAdlFlags{af_searchPath=ipath}
-  er <- unEIO $ V.verify af mpaths
+runVerifyBackend :: [FilePath] -> [String] -> IO CodeGenResult
+runVerifyBackend ipath moduleNameStrs = do
+  let af =  defaultAdlFlags{af_searchPath=[stdsrc] <> ipath}
+  er <- unEIO $ do
+    moduleNames <- mapM parseModuleName moduleNameStrs
+    V.verify af moduleNames
   case er of
    (Left err) -> return (CompilerFailed err)
    (Right ()) -> return MatchOutput
-
-runVerifyBackend1 :: FilePath -> IO CodeGenResult
-runVerifyBackend1 mpath = runVerifyBackend [stdsrc,takeDirectory mpath] [mpath]
 
 runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
 runHaskellBackend ipaths mpaths epath = do
@@ -103,21 +102,17 @@ runCppBackend1 mpath = runCppBackend [ipath,stdsrc] [mpath] epath ""
     ipath = takeDirectory mpath
     epath = (takeDirectory ipath) </> "cpp-output"
 
-runAstBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
-runAstBackend ipath mpaths epath = do
+runAstBackend :: [FilePath] -> [String] -> FilePath -> IO CodeGenResult
+runAstBackend ipath moduleNameStrs epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af = defaultAdlFlags{af_searchPath=ipath,af_mergeFileExtensions=[".ann"]}
+  let af = defaultAdlFlags{af_searchPath=[stdsrc] <> ipath,af_mergeFileExtensions=[".ann"]}
       bf = AST.AstFlags Nothing
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
-  er <- unEIO $ AST.generate af bf fileWriter mpaths
+  er <- unEIO $ do
+    moduleNames <- mapM parseModuleName moduleNameStrs
+    AST.generate af bf fileWriter moduleNames
   processCompilerOutput epath tempDir er
-
-runAstBackend1 :: FilePath-> IO CodeGenResult
-runAstBackend1 mpath = runAstBackend [ipath,stdsrc] [mpath] epath
-  where
-    ipath = takeDirectory mpath
-    epath = (takeDirectory ipath) </> "ast-output"
 
 runJavaBackend :: [FilePath] -> [FilePath] -> FilePath -> (J.JavaFlags -> J.JavaFlags) -> IO CodeGenResult
 runJavaBackend ipaths mpaths epath updateflags = do
@@ -172,7 +167,7 @@ runTsBackend flagsfn ipaths mpaths epath = do
   processCompilerOutput epath tempDir er
 
 runRsBackend :: [FilePath] -> [String] -> FilePath -> T.Text -> IO CodeGenResult
-runRsBackend ipaths mnames epath rsModule = do
+runRsBackend ipaths moduleNameStrs epath rsModule = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adlt.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-rs"]}
@@ -183,7 +178,9 @@ runRsBackend ipaths mnames epath rsModule = do
         RS.rs_includeRuntime = False
       }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir Nothing)
-  er <- unEIO $ RS.generate af js fileWriter mnames
+  er <- unEIO $ do
+    moduleNames <- mapM parseModuleName moduleNameStrs
+    RS.generate af js fileWriter moduleNames
   processCompilerOutput epath tempDir er
 
 stdsrc :: FilePath
@@ -205,28 +202,28 @@ runTests = do
   hspec $ afterAll_ (printRsyncCommands resultvar) $ do
   describe "adlc verify backend" $ do
     it "aborts with error for duplicate definitions of a name" $ do
-      runVerifyBackend1 "test8/input/test.adl"
+      runVerifyBackend ["test8/input"] ["test"]
         `shouldReturn` (CompilerFailed "multiple definitions for X")
     it "aborts with error for inconsistent versioned/unversioned definitions of a name" $ do
-      runVerifyBackend1 "test9/input/test.adl"
+      runVerifyBackend ["test9/input"] ["test"]
         `shouldReturn` (CompilerFailed "inconsistent version/unversioned definitions for X")
     it "succeeds for correctly numbered versions of a name" $ do
-      runVerifyBackend1 "test10/input/test.adl"
+      runVerifyBackend ["test10/input"] ["test"]
         `shouldReturn` MatchOutput
     it "aborts with error for inconsistently numbered versions of a name" $ do
-      runVerifyBackend1 "test11/input/test.adl"
+      runVerifyBackend ["test11/input"] ["test"]
         `shouldReturn` (CompilerFailed "inconsistent version numbers for X")
     it "aborts with error for duplicate field names in structs and unions" $ do
-      runVerifyBackend1 "test12/input/test.adl"
+      runVerifyBackend ["test12/input"] ["test"]
         `shouldReturn` (CompilerFailed "In module Test :\nduplicate definition of field v in struct X\n  duplicate definition of field v in union Y")
     it "aborts with error for duplicate type parameter names in all decl types" $ do
-      runVerifyBackend1 "test13/input/test.adl"
+      runVerifyBackend ["test13/input"] ["test"]
         `shouldReturn` (CompilerFailed "In module Test :\nduplicate definition of type parameter a in struct X\n  duplicate definition of type parameter b in union Y\n  duplicate definition of type parameter t in type alias A\n  duplicate definition of type parameter t in newtype B")
     it "aborts with error for type constructors applied to incorrect numbers of arguments" $ do
-      runVerifyBackend1 "test19/input/test.adl"
+      runVerifyBackend ["test19/input"] ["test"]
         `shouldReturn` (CompilerFailed "In module test :\ntype X doesn't take arguments\n  type constructor Pair expected 2 arguments, but was passed 1")
     it "aborts with error with extra content at end of module file" $ do
-      runVerifyBackend1 "test28/input/test28.adl"
+      runVerifyBackend ["test28/input"] ["test28"]
         `shouldReturn` (CompilerFailed "\"test28/input/test28.adl\" (line 4, column 1):\nunexpected 's'\nexpecting space, \"//\" or end of input")
 
   describe "adlc haskell backend" $ do
@@ -270,10 +267,10 @@ runTests = do
 
   describe "adlc ast backend" $ do
     it "generates expected json serialisation for each type of decl" $ do
-      collectResults (runAstBackend1 "test15/input/test.adl")
+      collectResults (runAstBackend ["test15/input"] ["test"] "test15/ast-output")
         `shouldReturn` MatchOutput
     it "generates expected json serialisation for custom annotation types" $ do
-      collectResults (runAstBackend1 "test21/input/test.adl")
+      collectResults (runAstBackend ["test21/input"] ["test"] "test21/ast-output")
         `shouldReturn` MatchOutput
 
   describe "adlc cpp backend" $ do
