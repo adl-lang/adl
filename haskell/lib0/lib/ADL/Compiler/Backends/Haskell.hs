@@ -814,11 +814,12 @@ data HaskellFlags = HaskellFlags {
   hf_runtimePackage :: T.Text
 }
 
-generate :: AdlFlags -> HaskellFlags -> FileWriter -> (ScopedName -> RDecl -> Maybe CustomType) -> [FilePath] -> EIOT ()
-generate af hf fileWriter getCustomType modulePaths = catchAllExceptions $ do
-  (ms0,tms) <- loadAndCheckFiles af modulePaths
-  let rms = if (af_generateTransitive af) then tms else ms0
-  forM_ rms $ \rm -> do
+generate :: AdlFlags -> HaskellFlags -> FileWriter -> (ScopedName -> RDecl -> Maybe CustomType) -> [ModuleName] -> EIOT ()
+generate af hf fileWriter getCustomType moduleNames = catchAllExceptions $ do
+  lc <- buildLoadContext af
+  rmm <- loadAndCheckRModules lc moduleNames
+  let ms = (if af_generateTransitive af then id else filter (\rm -> m_name rm `elem` moduleNames)) (Map.elems rmm)
+  forM_ ms $ \rm -> do
     writeModuleFile (moduleMapper (hf_modulePrefix hf))
                     (hf_runtimePackage hf)
                     fileMapper

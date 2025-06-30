@@ -6,8 +6,9 @@ import qualified Data.Text.IO as T
 
 import ADL.Compiler.EIO
 import ADL.Compiler.Utils
-import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags)
+import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags, parseModuleName)
 import System.Console.GetOpt
+import ADL.Compiler.AST (ModuleName)
 
 -- Hold a set of flags for the adl frontend, a given backend
 -- and the output writer
@@ -118,4 +119,13 @@ parseArguments header adlflags0 flags0 optdescs args = do
     (opts,paths,[]) -> do
       let flags = buildFlags adlflags0 flags0 opts
       return (flags,paths)
+    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optdescs))
+
+parseArguments2 :: String -> AdlFlags -> b -> [OptDescr (Flags b -> Flags b)] -> [String] -> EIO T.Text (Flags b,[ModuleName])
+parseArguments2 header adlflags0 flags0 optdescs args = do
+  case getOpt Permute optdescs args of
+    (opts,moduleNameStrs,[]) -> do
+      let flags = buildFlags adlflags0 flags0 opts
+      moduleNames <- mapM parseModuleName moduleNameStrs
+      return (flags,moduleNames)
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optdescs))

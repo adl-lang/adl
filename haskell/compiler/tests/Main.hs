@@ -63,8 +63,8 @@ runVerifyBackend ipath moduleNameStrs = do
    (Left err) -> return (CompilerFailed err)
    (Right ()) -> return MatchOutput
 
-runHaskellBackend :: [FilePath] -> [FilePath] -> FilePath -> IO CodeGenResult
-runHaskellBackend ipaths mpaths epath = do
+runHaskellBackend :: [FilePath] -> [String] -> FilePath -> IO CodeGenResult
+runHaskellBackend ipaths moduleNameStrs epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let af =  defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-hs"]}
@@ -74,14 +74,10 @@ runHaskellBackend ipaths mpaths epath = do
         , H.hf_runtimePackage = "ADL.Core"
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
-  er <- unEIO $ H.generate af hf fileWriter getCustomType mpaths
+  er <- unEIO $ do
+    moduleNames <- mapM parseModuleName moduleNameStrs
+    H.generate af hf fileWriter getCustomType moduleNames
   processCompilerOutput epath tempDir er
-
-runHaskellBackend1 :: FilePath-> IO CodeGenResult
-runHaskellBackend1 mpath = runHaskellBackend [ipath,stdsrc] [mpath] epath
-  where
-    ipath = takeDirectory mpath
-    epath = (takeDirectory ipath) </> "hs-output"
 
 runCppBackend :: [FilePath] -> [FilePath] -> FilePath -> FilePath -> IO CodeGenResult
 runCppBackend ipaths mpaths epath iprefix = do
@@ -228,41 +224,40 @@ runTests = do
 
   describe "adlc haskell backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runHaskellBackend1 "test1/input/test1.adl")
+      collectResults (runHaskellBackend [stdsrc, "test1/input"] ["test1"] "test1/hs-output")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      collectResults (runHaskellBackend1 "test2/input/test2.adl")
+      collectResults (runHaskellBackend [stdsrc, "test2/input"] ["test2"] "test2/hs-output" )
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runHaskellBackend1 "test3/input/test3.adl")
+      collectResults (runHaskellBackend [stdsrc, "test3/input"] ["test3"] "test3/hs-output" )
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runHaskellBackend ["test4/input",stdsrc] ["test4/input/test4.adl"] "test4/hs-output")
+      collectResults (runHaskellBackend [stdsrc, "test4/input"] ["test4/input/test4"] "test4/hs-output")
           `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runHaskellBackend1 "test5/input/test5.adl")
+      collectResults (runHaskellBackend [stdsrc, "test5/input"] ["test5"] "test5/hs-output" )
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      let srcs = stdfiles <> ["test6/input/test6.adl"]
-      collectResults (runHaskellBackend [stdsrc] srcs "test6/hs-output")
+      collectResults (runHaskellBackend [stdsrc, "test6/input"] (stdModules <> ["test6"]) "test6/hs-output")
           `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runHaskellBackend1 "test7/input/test7.adl")
+      collectResults (runHaskellBackend [stdsrc, "test7/input"] ["test7"] "test7/hs-output" )
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
-      collectResults (runHaskellBackend1 "test18/input/test18.adl")
+      collectResults (runHaskellBackend [stdsrc, "test18/input"] ["test18"] "test18/hs-output" )
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
-      collectResults (runHaskellBackend1 "test20/input/test20.adl")
+      collectResults (runHaskellBackend [stdsrc, "test20/input"] ["test20"] "test20/hs-output" )
         `shouldReturn` MatchOutput
     it "generated code for type token primitives" $ do
-      collectResults (runHaskellBackend1 "test24/input/test24.adl")
+      collectResults (runHaskellBackend [stdsrc, "test24/input"] ["test24"] "test24/hs-output" )
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
-      collectResults (runHaskellBackend1 "demo1/input/picture.adl")
+      collectResults (runHaskellBackend [stdsrc, "demo1/input"] ["picture"] "demo1/hs-output" )
         `shouldReturn` MatchOutput
     it "generates correct keys for stringmap literals" $ do
-      collectResults (runHaskellBackend1 "test29/input/test29.adl")
+      collectResults (runHaskellBackend [stdsrc, "test29/input"] ["test29"] "test29/hs-output" )
         `shouldReturn` MatchOutput
 
   describe "adlc ast backend" $ do
