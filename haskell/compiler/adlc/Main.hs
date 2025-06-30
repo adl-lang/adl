@@ -79,8 +79,7 @@ runVerify args0 =
 runAst args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir []
-  (flags,paths) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
-  moduleNames <- mapM parseModuleName args
+  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) (mkOptDescs libDir) args
   withManifest (f_output flags) $ \ writer -> do
     A.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
@@ -99,11 +98,11 @@ runAst args = do
 runHaskell args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-hs"]
-  (flags,paths) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
+  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) (mkOptDescs libDir) args
   withManifest (f_output flags) $ \ writer -> do
-    H.generate (f_adl flags) (f_backend flags) writer getCustomType paths
+    H.generate (f_adl flags) (f_backend flags) writer getCustomType moduleNames
   where
-    header = "Usage: adlc haskell [OPTION...] files..."
+    header = "Usage: adlc haskell [OPTION...] modules..."
 
     flags0 libDir = H.HaskellFlags
       { H.hf_modulePrefix="ADL.Generated"
@@ -292,9 +291,8 @@ runTypescript args = do
 runRust args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-rs"]
-  (flags,moduleNameStrs) <- parseArguments header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
-    moduleNames <- mapM parseModuleName moduleNameStrs
     RS.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
     header = "Usage: adlc rust [OPTION...] modules..."
@@ -336,7 +334,7 @@ runShow args0 =
 usage = T.intercalate "\n"
   [ "Usage: adlc verify [OPTION..] <module>..."
   , "       adlc ast [OPTION..] <module>..."
-  , "       adlc haskell [OPTION..] <modulePath>..."
+  , "       adlc haskell [OPTION..] <module>..."
   , "       adlc cpp [OPTION..] <modulePath>..."
   , "       adlc java [OPTION..] <modulePath>..."
   , "       adlc javascript [OPTION..] <modulePath>..."

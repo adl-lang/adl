@@ -52,7 +52,8 @@ runHaskell args0 =
   case getOpt Permute optDescs args0 of
     (opts,args,[]) -> do
       let (af,flags,out) = mkFlags opts
-      H.generate af flags (writeOutputFile out) getCustomType args
+      moduleNames <- mapM parseModuleName args
+      H.generate af flags (writeOutputFile out) getCustomType moduleNames
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
     header = "Usage: adl haskell [OPTION...] files..."
