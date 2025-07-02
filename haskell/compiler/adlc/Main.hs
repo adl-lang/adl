@@ -208,12 +208,12 @@ runJava args = do
 runJavascript args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-js"]
-  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \writer -> do
-    JS.generate (f_adl flags) (f_backend flags) writer paths
+    JS.generate (f_adl flags) (f_backend flags) writer (moduleNames)
 
   where
-    header = "Usage: adlc javascript [OPTION...] files..."
+    header = "Usage: adlc javascript [OPTION...] modules..."
 
     flags0 libDir = JS.JavascriptFlags {
     }
@@ -223,11 +223,11 @@ runJavascript args = do
 runTypescript args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-ts"]
-  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
-    TS.generate (f_adl flags) (f_backend flags) writer paths
+    TS.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc typescript [OPTION...] files..."
+    header = "Usage: adlc typescript [OPTION...] modules..."
 
     flags0 libDir = TS.TypescriptFlags {
       TS.tsStyle=TS.Tsc,
@@ -337,8 +337,8 @@ usage = T.intercalate "\n"
   , "       adlc haskell [OPTION..] <module>..."
   , "       adlc cpp [OPTION..] <modulePath>..."
   , "       adlc java [OPTION..] <modulePath>..."
-  , "       adlc javascript [OPTION..] <modulePath>..."
-  , "       adlc typescript [OPTION..] <modulePath>..."
+  , "       adlc javascript [OPTION..] <module>..."
+  , "       adlc typescript [OPTION..] <module>..."
   , "       adlc rust [OPTION..] <module>..."
   , "       adlc show --version"
   , "       adlc show --adlstdlib"
