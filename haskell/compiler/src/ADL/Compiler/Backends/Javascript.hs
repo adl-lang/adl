@@ -94,11 +94,15 @@ data TypeDetails = TypeDetails {
 emptyModuleFile :: ModuleName -> ModuleFile
 emptyModuleFile mn = ModuleFile mn Set.empty [] []
 
-generate :: AdlFlags -> JavascriptFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af jf fileWriter modulePaths = catchAllExceptions  $ do
-    for_ modulePaths $ \modulePath -> do
-      m <- loadAndCheckFile af modulePath
-      generateModule jf fileWriter m
+generate :: AdlFlags -> JavascriptFlags -> FileWriter -> [ModuleName] -> EIOT ()
+generate af jf fileWriter moduleNames = catchAllExceptions  $ do
+    lc <- buildLoadContext af
+    rmm <- loadAndCheckRModules lc moduleNames
+    for_ moduleNames $ \moduleName -> do
+      let m = Map.lookup moduleName rmm
+      case m of
+        (Just m) -> generateModule jf fileWriter m
+        Nothing -> pure ()
 
 -- | Generate and write the javascript code for a single ADL module
 generateModule :: JavascriptFlags ->

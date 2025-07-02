@@ -41,20 +41,21 @@ import           ADL.Compiler.DataFiles
 
 -- | Run this backend on a list of ADL modules. Check each module
 -- for validity, and then generate the code for it.
-generate :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af tf fileWriter modulePaths = catchAllExceptions  $ do
-  (ms0,tms) <- loadAndCheckFiles af modulePaths
-  let ms = if (af_generateTransitive af) then tms else ms0
-  for ms $ \m -> do
+generate :: AdlFlags -> TypescriptFlags -> FileWriter -> [ModuleName] -> EIOT ()
+generate af tf fileWriter moduleNames = catchAllExceptions  $ do
+  lc <- buildLoadContext af
+  rmm <- loadAndCheckRModules lc moduleNames
+  let ms = (if af_generateTransitive af then id else filter (\rm -> m_name rm `elem` moduleNames)) (M.elems rmm)
+  for_ ms $ \m -> do
     let m' = fullyScopedModule m
     when (generateCode (m_annotations m')) (generateModule tf fileWriter m')
     return m'
-  when (tsIncludeRuntime tf) (generateRuntime af tf fileWriter modulePaths)
+  when (tsIncludeRuntime tf) (generateRuntime af tf fileWriter)
   when (tsIncludeResolver tf) (generateResolver af tf fileWriter ms)
 
 -- JS.generate af (JS.JavascriptFlags {}) fileWriter
-generateRuntime :: AdlFlags -> TypescriptFlags -> FileWriter -> [FilePath] -> EIOT ()
-generateRuntime af tf fileWriter modulePaths = do
+generateRuntime :: AdlFlags -> TypescriptFlags -> FileWriter -> EIOT ()
+generateRuntime af tf fileWriter = do
     files <- liftIO $ dirContents runtimeLibDir
     liftIO $ for_ files $ \inpath -> do
       content0 <- LBS.readFile (runtimeLibDir </> inpath)
