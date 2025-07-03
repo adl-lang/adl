@@ -79,8 +79,8 @@ runHaskellBackend ipaths moduleNameStrs epath = do
     H.generate af hf fileWriter getCustomType moduleNames
   processCompilerOutput epath tempDir er
 
-runCppBackend :: [FilePath] -> [FilePath] -> FilePath -> FilePath -> IO CodeGenResult
-runCppBackend ipaths mpaths epath iprefix = do
+runCppBackend :: [FilePath] -> [String] -> FilePath -> FilePath -> IO CodeGenResult
+runCppBackend ipaths moduleNameStrs epath iprefix = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let af =  defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-cpp"]}
@@ -89,14 +89,16 @@ runCppBackend ipaths mpaths epath iprefix = do
         CPP.cf_includeRelops = True
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
-  er <- unEIO $ CPP.generate af cf fileWriter mpaths
+  er <- unEIO $ do
+    moduleNames <- mapM parseModuleName moduleNameStrs
+    CPP.generate af cf fileWriter moduleNames
   processCompilerOutput epath tempDir er
 
-runCppBackend1 :: FilePath-> IO CodeGenResult
-runCppBackend1 mpath = runCppBackend [ipath,stdsrc] [mpath] epath ""
+runCppBackend1 :: String -> IO CodeGenResult
+runCppBackend1 moduleName = runCppBackend [ipath,stdsrc] [moduleName] epath ""
   where
-    ipath = takeDirectory mpath
-    epath = (takeDirectory ipath) </> "cpp-output"
+    ipath = moduleName <> "/input"
+    epath = moduleName <> "/cpp-output"
 
 runAstBackend :: [FilePath] -> [String] -> FilePath -> IO CodeGenResult
 runAstBackend ipath moduleNameStrs epath = do
@@ -274,49 +276,49 @@ runTests = do
 
   describe "adlc cpp backend" $ do
     it "generates expected code for an empty module" $ do
-      collectResults (runCppBackend1 "test1/input/test1.adl")
+      collectResults (runCppBackend1 "test1")
         `shouldReturn` MatchOutput
     it "generates expected code for various structures" $ do
-      collectResults (runCppBackend1 "test2/input/test2.adl")
+      collectResults (runCppBackend1 "test2")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runCppBackend1 "test3/input/test3.adl")
+      collectResults (runCppBackend1 "test3")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
-      collectResults (runCppBackend ["test4/input",stdsrc] ["test4/input/test4.adl"] "test4/cpp-output" "")
+      collectResults (runCppBackend ["test4/input",stdsrc] ["test4"] "test4/cpp-output" "")
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runCppBackend1 "test5/input/test5.adl")
+      collectResults (runCppBackend1 "test5")
         `shouldReturn` MatchOutput
     it "generates expected code for nullable" $ do
-      collectResults (runCppBackend1 "test6/input/test6.adl")
+      collectResults (runCppBackend1 "test6")
         `shouldReturn` MatchOutput
     it "generates expected code for the standard library" $ do
-      collectResults (runCppBackend [stdsrc] stdfiles "test6/cpp-output-std" "")
+      collectResults (runCppBackend [stdsrc] stdModules "test6/cpp-output-std" "")
         `shouldReturn` MatchOutput
     it "generates expected code type aliases and newtypes" $ do
-      collectResults (runCppBackend1 "test7/input/test7.adl")
+      collectResults (runCppBackend1 "test7")
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains C++ reserved words" $ do
-      collectResults (runCppBackend1 "test14/input/test14.adl")
+      collectResults (runCppBackend1 "test14")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      collectResults (runCppBackend ["test16/input",stdsrc] ["test16/input/test.adl"] "test16/cpp-output" "adl")
+      collectResults (runCppBackend ["test16/input",stdsrc] ["test"] "test16/cpp-output" "adl")
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation when necessary" $ do
-      collectResults (runCppBackend1 "test17/input/test17.adl")
+      collectResults (runCppBackend1 "test17")
         `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
-      collectResults (runCppBackend1 "test18/input/test18.adl")
+      collectResults (runCppBackend1 "test18")
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
-      collectResults (runCppBackend1 "test20/input/test20.adl")
+      collectResults (runCppBackend1 "test20")
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
-      collectResults (runCppBackend1 "demo1/input/picture.adl")
+      collectResults (runCppBackend ["demo1/input",stdsrc] ["picture"] "demo1/cpp-output" "")
         `shouldReturn` MatchOutput
     it "generates correct keys for stringmap literals" $ do
-      collectResults (runCppBackend1 "test29/input/test29.adl")
+      collectResults (runCppBackend1 "test29")
         `shouldReturn` MatchOutput
 
   describe "adlc java backend" $ do
