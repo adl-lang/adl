@@ -121,11 +121,11 @@ runHaskell args = do
 runCpp args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-cpp"]
-  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
-    C.generate (f_adl flags) (f_backend flags) writer paths
+    C.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc cpp [OPTION...] files..."
+    header = "Usage: adlc cpp [OPTION...] modules..."
 
     flags0 libDir = C.CppFlags {
       C.cf_incFilePrefix="",
@@ -335,7 +335,7 @@ usage = T.intercalate "\n"
   [ "Usage: adlc verify [OPTION..] <module>..."
   , "       adlc ast [OPTION..] <module>..."
   , "       adlc haskell [OPTION..] <module>..."
-  , "       adlc cpp [OPTION..] <modulePath>..."
+  , "       adlc cpp [OPTION..] <module>..."
   , "       adlc java [OPTION..] <modulePath>..."
   , "       adlc javascript [OPTION..] <module>..."
   , "       adlc typescript [OPTION..] <module>..."

@@ -1199,11 +1199,12 @@ incFileGenerator prefix mn = prefix </> T.unpack (T.intercalate "." (unModuleNam
 fileGenerator :: ModuleName -> FilePath
 fileGenerator mn = T.unpack (T.intercalate "." (unModuleName mn))
 
-generate :: AdlFlags -> CppFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af cf fileWriter modulePaths = catchAllExceptions  $ do
-  (mods0,moddeps) <- loadAndCheckFiles af modulePaths
-  let mods = if (af_generateTransitive af) then moddeps else mods0
-  forM_ mods $ \m0 -> do
+generate :: AdlFlags -> CppFlags -> FileWriter -> [ModuleName] -> EIOT ()
+generate af cf fileWriter moduleNames = catchAllExceptions  $ do
+  lc <- buildLoadContext af
+  rmm <- loadAndCheckRModules lc moduleNames
+  let ms = (if af_generateTransitive af then id else filter (\rm -> m_name rm `elem` moduleNames)) (Map.elems rmm)
+  forM_ ms $ \m0 -> do
     let m = associateCustomTypes getCustomType (m_name m0) m0
     checkCustomSerializations m
     writeModuleFile namespaceGenerator
