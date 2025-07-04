@@ -48,28 +48,24 @@ import ADL.Utils.Format
 
 type JavaPackageFn = ModuleName -> JavaPackage
 
-generate :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT ()
-generate af jf fileWriter modulePaths = catchAllExceptions  $ do
-  imports1 <- generateModules af jf fileWriter modulePaths
+generate :: AdlFlags -> JavaFlags -> FileWriter -> [ModuleName] -> EIOT ()
+generate af jf fileWriter moduleNames = catchAllExceptions  $ do
+  imports1 <- generateModules af jf fileWriter moduleNames
   when (jf_includeRuntime jf) $ do
-    sysModulePaths <- getSystemModulePaths
-    imports2 <- generateModules af jf fileWriter sysModulePaths
+    imports2 <- generateModules af jf fileWriter sysModules
     generateRuntime jf fileWriter (imports1 <> imports2)
-  where
-    getSystemModulePaths = liftIO $ do
-      libDir <- getLibDir
-      return [systemAdlDir libDir </> adl | adl <- sysModules]
 
-generateModules :: AdlFlags -> JavaFlags -> FileWriter -> [FilePath] -> EIOT (Set.Set JavaClass)
-generateModules af jf fileWriter modulePaths = do
-  let cgp = (jf_codeGenProfile jf)
-  (mods0,moddeps) <- loadAndCheckFiles af modulePaths
-  let mods = if (af_generateTransitive af) then moddeps else mods0
-  imports <- for mods $ \mod -> do
+generateModules :: AdlFlags -> JavaFlags -> FileWriter -> [ModuleName] -> EIOT (Set.Set JavaClass)
+generateModules af jf fileWriter moduleNames = do
+  let cgp = jf_codeGenProfile jf
+  lc <- buildLoadContext af
+  rmm <- loadAndCheckRModules lc moduleNames
+  let ms = (if af_generateTransitive af then id else filter (\rm -> m_name rm `elem` moduleNames)) (Map.elems rmm)
+  imports <- for ms $ \mod -> do
     if generateCode (m_annotations mod)
       then generateModule jf fileWriter
                           (const cgp)
-                          (mkJavaPackageFn cgp (mod:moddeps) (jf_package jf))
+                          (mkJavaPackageFn cgp rmm (jf_package jf))
                           mod
       else return Set.empty
   return (mconcat imports)
@@ -665,7 +661,7 @@ generateUnion codeProfile moduleName javaPackageFn decl union =  execState gen s
                   cline ""
                   <>
                   typeExprMethodCode
-                  <> 
+                  <>
                   cline ""
                   <>
                   coverride (template "public JsonBinding<$1$2> jsonBinding()" [className,typeArgs]) (
@@ -785,12 +781,12 @@ generateRuntime jf fileWriter imports = liftIO $ do
 -- @JavaPackage annotation to create a mapping from
 -- adl module names to java packages
 
-mkJavaPackageFn :: CodeGenProfile -> [RModule] -> JavaPackage -> JavaPackageFn
-mkJavaPackageFn cgp mods defJavaPackage = \modName -> case Map.lookup modName packageMap of
+mkJavaPackageFn :: CodeGenProfile -> RModuleMap -> JavaPackage -> JavaPackageFn
+mkJavaPackageFn cgp rmm defJavaPackage = \modName -> case Map.lookup modName packageMap of
   Nothing -> defJavaPackage <> JavaPackage (unModuleName modName)
   (Just pkg) -> pkg
  where
-   packageMap = mconcat (map getCustomJavaPackage mods)
+   packageMap = mconcat (map getCustomJavaPackage (Map.elems rmm))
 
    getCustomJavaPackage :: RModule -> Map.Map ModuleName JavaPackage
    getCustomJavaPackage mod = case Map.lookup snJavaPackage (m_annotations mod) of
@@ -832,5 +828,9 @@ snJavaPackage = ScopedName (ModuleName ["adlc","config","java"]) "JavaPackage"
 snJavaGenerate :: ScopedName
 snJavaGenerate = ScopedName (ModuleName ["adlc","config","java"]) "JavaGenerate"
 
-sysModules :: [FilePath]
-sysModules = ["sys/types.adl", "sys/dynamic.adl", "sys/adlast.adl"]
+sysModules :: [ModuleName]
+sysModules = [
+               ModuleName ["sys", "types.adl"],
+               ModuleName ["sys", "dynamic.adl"],
+               ModuleName ["sys", "adlast.adl"]
+             ]
