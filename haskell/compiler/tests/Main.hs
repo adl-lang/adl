@@ -112,8 +112,8 @@ runAstBackend ipath moduleNameStrs epath = do
     AST.generate af bf fileWriter moduleNames
   processCompilerOutput epath tempDir er
 
-runJavaBackend :: [FilePath] -> [FilePath] -> FilePath -> (J.JavaFlags -> J.JavaFlags) -> IO CodeGenResult
-runJavaBackend ipaths mpaths epath updateflags = do
+runJavaBackend :: [FilePath] -> [String] -> FilePath -> (J.JavaFlags -> J.JavaFlags) -> IO CodeGenResult
+runJavaBackend ipaths moduleNameStrs epath updateflags = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
   let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-java"]}
@@ -124,17 +124,19 @@ runJavaBackend ipaths mpaths epath updateflags = do
         J.jf_codeGenProfile = J.defaultCodeGenProfile
         }
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
-  er <- unEIO $ J.generate af (updateflags jf) fileWriter mpaths
+  er <- unEIO $ do
+    moduleNames <- mapM parseModuleName moduleNameStrs
+    J.generate af (updateflags jf) fileWriter moduleNames
   processCompilerOutput epath tempDir er
 
 withJavaOutputPackage :: T.Text -> J.JavaFlags -> J.JavaFlags
 withJavaOutputPackage package flags = flags{J.jf_package=J.javaPackage package}
 
-runJavaBackend1 :: FilePath -> IO CodeGenResult
-runJavaBackend1 mpath = runJavaBackend [ipath,stdsrc] [mpath] epath id
+runJavaBackend1 :: String -> IO CodeGenResult
+runJavaBackend1 moduleName = runJavaBackend [ipath,stdsrc] [moduleName] epath id
   where
-    ipath = takeDirectory mpath
-    epath = (takeDirectory ipath) </> "java-output"
+    ipath = moduleName </> "input"
+    epath = moduleName </> "java-output"
 
 runJsBackend :: [FilePath] -> [String] -> FilePath -> IO CodeGenResult
 runJsBackend ipaths moduleNameStrs epath = do
@@ -323,10 +325,10 @@ runTests = do
 
   describe "adlc java backend" $ do
     it "generates expected code for various structures" $ do
-      collectResults (runJavaBackend1 "test2/input/test2.adl")
+      collectResults (runJavaBackend1 "test2")
         `shouldReturn` MatchOutput
     it "generates expected code for structures with default overrides" $ do
-      collectResults (runJavaBackend1 "test3/input/test3.adl")
+      collectResults (runJavaBackend1 "test3")
         `shouldReturn` MatchOutput
     it "generates expected code for custom type mappings" $ do
       collectResults (runJavaBackend
@@ -336,55 +338,55 @@ runTests = do
           )
         `shouldReturn` MatchOutput
     it "generates expected code for various unions" $ do
-      collectResults (runJavaBackend1 "test5/input/test5.adl")
+      collectResults (runJavaBackend1 "test5")
         `shouldReturn` MatchOutput
     it "generates expected code for type aliases and newtypes" $ do
-      collectResults (runJavaBackend1 "test7/input/test7.adl")
+      collectResults (runJavaBackend1 "test7")
         `shouldReturn` MatchOutput
     it "generates expected code for the core standard library" $ do
-      let srcs = ["test6/input/test6.adl"] <> stdfiles
-      collectResults (runJavaBackend [stdsrc] srcs "test6/java-output"
+      let modules = ["test6"] <> stdModules
+      collectResults (runJavaBackend ["test6/input", stdsrc] modules "test6/java-output"
                       (withJavaOutputPackage "org.adl"))
         `shouldReturn` MatchOutput
     it "generates valid names when ADL contains java reserved words" $ do
-      collectResults (runJavaBackend1 "test14/input/test14.adl")
+      collectResults (runJavaBackend1 "test14")
         `shouldReturn` MatchOutput
     it "generates/references include files with a custom prefix" $ do
-      collectResults (runJavaBackend ["test16/input",stdsrc] ["test16/input/test.adl","test16/input/test2.adl"] "test16/java-output" id)
+      collectResults (runJavaBackend ["test16/input",stdsrc] ["test","test2"] "test16/java-output" id)
         `shouldReturn` MatchOutput
     it "Expands typedefs in code generation" $ do
-      collectResults (runJavaBackend1 "test17/input/test17.adl")
+      collectResults (runJavaBackend1 "test17")
         `shouldReturn` MatchOutput
     it "Correctly uses specified serialisation field names" $ do
-      collectResults (runJavaBackend1 "test20/input/test20.adl")
+      collectResults (runJavaBackend1 "test20")
         `shouldReturn` MatchOutput
     it "generates to packages controlled by annotations" $ do
       collectResults (runJavaBackend
-          ["test22/input",stdsrc] ["test22/input/test22a.adl","test22/input/test22b.adl"]
+          ["test22/input",stdsrc] ["test22a","test22b"]
           "test22/java-output"
           (withJavaOutputPackage "org.adl")
           )
         `shouldReturn` MatchOutput
     it "generated code for type token primitives" $ do
-      collectResults (runJavaBackend1 "test24/input/test24.adl")
+      collectResults (runJavaBackend1 "test24")
         `shouldReturn` MatchOutput
     it "generated code for type aliases accross modules" $ do
-      collectResults (runJavaBackend ["test25/input",stdsrc] ["test25/input/admin.adl"] "test25/java-output" id)
+      collectResults (runJavaBackend ["test25/input",stdsrc] ["admin"] "test25/java-output" id)
         `shouldReturn` MatchOutput
     it "generated code for SerializedWithInternalTag union annotation" $ do
-      collectResults (runJavaBackend1 "test26/input/test26.adl")
+      collectResults (runJavaBackend1 "test26")
         `shouldReturn` MatchOutput
     it "generated code for types that reference another type of the same name" $ do
-      collectResults (runJavaBackend1 "test27/input/test27.adl")
+      collectResults (runJavaBackend1 "test27")
         `shouldReturn` MatchOutput
     it "Generates the correct code for the picture demo" $ do
-      collectResults (runJavaBackend1 "demo1/input/picture.adl")
+      collectResults (runJavaBackend ["demo1/input",stdsrc] ["picture"] "demo1/java-output" id)
         `shouldReturn` MatchOutput
     it "generates correct keys for stringmap literals" $ do
-      collectResults (runJavaBackend1 "test29/input/test29.adl")
+      collectResults (runJavaBackend1 "test29")
         `shouldReturn` MatchOutput
     it "doesn't intefer with template parameters in literal strings" $ do
-      collectResults (runJavaBackend1 "test30/input/test30.adl")
+      collectResults (runJavaBackend1 "test30")
         `shouldReturn` MatchOutput
 
   describe "adlc javascript backend" $ do

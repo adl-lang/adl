@@ -152,9 +152,9 @@ runCpp args = do
 runJava args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-java"]
-  (flags,paths) <- parseArguments header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
-    J.generate (f_adl flags) (f_backend flags) writer paths
+    J.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
     header = "Usage: adlc java [OPTION...] files..."
 
