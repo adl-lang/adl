@@ -1,7 +1,7 @@
 # ADL java backend
 
 ```
-Usage: adlc java [OPTION...] files...
+Usage: adlc java [OPTION...] <module>...
   -I DIR  --searchdir=DIR                          Add the specifed directory to the ADL searchpath
   -O DIR  --outputdir=DIR                          Set the directory where generated code is written
           --merge-adlext=EXT                       Add the specifed adl file extension to merged on loading

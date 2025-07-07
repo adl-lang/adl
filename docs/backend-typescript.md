@@ -1,7 +1,7 @@
 # ADL typescript backend
 
 ```
-Usage: adlc typescript [OPTION...] files...
+Usage: adlc typescript [OPTION...] <module>...
   -I DIR  --searchdir=DIR                         Add the specifed directory to the ADL searchpath
   -O DIR  --outputdir=DIR                         Set the directory where generated code is written
           --merge-adlext=EXT                      Add the specifed adl file extension to merged on loading

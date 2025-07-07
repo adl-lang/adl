@@ -4,13 +4,14 @@ The ADL compiler reads and checks ADL definitions, and generates code
 in a target programming language.
 
 ```
-Usage: adlc verify [OPTION..] <modulePath>...
-       adlc ast [OPTION..] <modulePath>...
-       adlc haskell [OPTION..] <modulePath>...
-       adlc cpp [OPTION..] <modulePath>...
-       adlc java [OPTION..] <modulePath>...
-       adlc javascript [OPTION..] <modulePath>...
-       adlc typescript [OPTION..] <modulePath>...
+Usage: adlc verify [OPTION..] <module>...
+       adlc ast [OPTION..] <module>...
+       adlc haskell [OPTION..] <module>...
+       adlc cpp [OPTION..] <module>...
+       adlc java [OPTION..] <module>...
+       adlc javascript [OPTION..] <module>...
+       adlc typescript [OPTION..] <module>...
+       adlc rust [OPTION..] <module>...
        adlc show --version
        adlc show --adlstdlib
 ```
@@ -19,7 +20,7 @@ Usage: adlc verify [OPTION..] <modulePath>...
 ## verify backend
 
 ```
-Usage: adlc verify [OPTION...] files...
+Usage: adlc verify [OPTION...] <module>...
   -I DIR  --searchdir=DIR     Add the specifed directory to the ADL searchpath
           --merge-adlext=EXT  Add the specifed adl file extension to merged on loading
 ```
@@ -42,13 +43,16 @@ See the [typescript backend guide][backend-typescript].
 ## cpp backend
 
 ```
-Usage: adlc cpp [OPTION...] files...
-  -I DIR  --searchdir=DIR       Add the specifed directory to the ADL searchpath
-  -O DIR  --outputdir=DIR       Set the directory where generated code is written
-          --merge-adlext=EXT    Add the specifed adl file extension to merged on loading
-          --verbose             Print extra diagnostic information, especially about files being read/written
-          --no-overwrite        Don't update files that haven't changed
-          --include-prefix=DIR  The prefix to be used to generate/reference include files
+Usage: adlc cpp [OPTION...] <module>...
+  -I DIR  --searchdir=DIR        Add the specifed directory to the ADL searchpath
+  -O DIR  --outputdir=DIR        Set the directory where generated code is written
+          --merge-adlext=EXT     Add the specifed adl file extension to merged on loading
+          --verbose              Print extra diagnostic information, especially about files being read/written
+          --no-overwrite         Don't update files that haven't changed
+          --manifest=FILE        Write a manifest file recording generated files
+          --generate-transitive  Also generate code for the transitive dependencies of the specified adl files
+          --include-prefix=DIR   The prefix to be used to generate/reference include files
+          --exclude-relops       Exclude generated code for relational operators
 ```
 
 The cpp backend generates parses and checks the supplied ADL
@@ -65,12 +69,14 @@ C++ code is generated according to the C++11 standard.
 ## ast backend
 
 ```
-Usage: adlc ast [OPTION...] files...
-  -I DIR  --searchdir=DIR     Add the specifed directory to the ADL searchpath
-  -O DIR  --outputdir=DIR     Set the directory where generated code is written
-          --merge-adlext=EXT  Add the specifed adl file extension to merged on loading
-          --verbose           Print extra diagnostic information, especially about files being read/written
-          --no-overwrite      Don't update files that haven't changed
+Usage: adlc ast [OPTION...] <module>...
+  -I DIR  --searchdir=DIR            Add the specifed directory to the ADL searchpath
+  -O DIR  --outputdir=DIR            Set the directory where generated code is written
+          --merge-adlext=EXT         Add the specifed adl file extension to merged on loading
+          --verbose                  Print extra diagnostic information, especially about files being read/written
+          --no-overwrite             Don't update files that haven't changed
+          --manifest=FILE            Write a manifest file recording generated files
+          --combined-output=OUTFILE  The json file to which all adl modules will be written
 ```
 
 The ast backend generates parses and checks the supplied ADL files,

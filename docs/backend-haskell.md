@@ -4,7 +4,7 @@ For a tutorial on using ADL in haskell, see the [adl-demo-hs repository][adl-dem
 
 # Usage
 ```
-Usage: adlc haskell [OPTION...] files...
+Usage: adlc haskell [OPTION...] <module>...
   -I DIR  --searchdir=DIR        Add the specifed directory to the ADL searchpath
   -O DIR  --outputdir=DIR        Set the directory where generated code is written
           --merge-adlext=EXT     Add the specifed adl file extension to merged on loading
