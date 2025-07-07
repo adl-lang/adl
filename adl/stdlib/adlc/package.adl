@@ -1,4 +1,4 @@
-module sys.package {
+module adlc.package {
 
 /// Metadata for an ADL package
 struct AdlPackage {
@@ -12,9 +12,6 @@ struct AdlPackage {
 /// potentially will be extended in future with
 /// sources 
 union AdlPackageRef {
-
-  /// The stdlib package included in the ADL toolchain
-  Void stdlib;
 
   /// A package stored in a directory in the local
   /// filesystem. A relative path is relative to the

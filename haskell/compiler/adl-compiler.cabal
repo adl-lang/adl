@@ -15,6 +15,7 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/adl/adlc/config/java.adl
                     , lib/adl/adlc/config/rust.adl
                     , lib/adl/adlc/config/typescript.adl
+                    , lib/adl/adlc/package.adl
                     , lib/adl/sys/adlast.adl
                     , lib/adl/sys/adlast.adl-java
                     , lib/adl/sys/annotations.adl
