@@ -14,7 +14,7 @@ testts() {
   BUILDDIR=$TESTDIR/build
   rm -rf $BUILDDIR
   mkdir -p $BUILDDIR
-  (cd $HASKELLDIR; stack exec adlc -- typescript -I $ADLSTDLIBDIR -O $BUILDDIR --include-rt --include-resolver --runtime-dir runtime $HERE/example.adl $ADLSTDLIBDIR/sys/types.adl $ADLSTDLIBDIR/sys/adlast.adl $ADLSTDLIBDIR/sys/dynamic.adl)
+  (cd $HASKELLDIR; stack exec adlc -- typescript -O $BUILDDIR --include-rt --include-resolver --runtime-dir runtime --searchdir $HERE  example sys.types sys.adlast sys.dynamic)
 
   echo "### Setting up node_modules"
   cd $TESTDIR
@@ -42,7 +42,7 @@ echo "### Generating typescript from adl"
 BUILDDIR=$TESTDIR/build
 rm -rf $BUILDDIR
 mkdir -p $BUILDDIR
-(cd $HASKELLDIR; stack exec adlc -- typescript -I $ADLSTDLIBDIR -O $BUILDDIR --ts-style deno --include-resolver $HERE/example.adl $ADLSTDLIBDIR/sys/types.adl $ADLSTDLIBDIR/sys/adlast.adl $ADLSTDLIBDIR/sys/dynamic.adl)
+(cd $HASKELLDIR; stack exec adlc -- typescript -O $BUILDDIR --ts-style deno --include-resolver --searchdir $HERE example sys.types sys.adlast sys.dynamic)
 
   echo "### Running tests"
   deno test example.tests.ts
