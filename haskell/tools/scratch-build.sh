@@ -3,7 +3,7 @@
 HASKELL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 cd $HASKELL_DIR
 
-ADL_STDLIB_DIR=compiler/lib/adl
+ADL_STDLIB_DIR=$HASKELL_DIR/../adl/stdlib
 
 adlcb () {
   stack exec adlc-bootstrap -- haskell --package=ADL --no-overwrite -I$ADL_STDLIB_DIR "$@"
