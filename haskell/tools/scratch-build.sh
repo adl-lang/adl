@@ -4,7 +4,6 @@ HASKELL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd 
 cd $HASKELL_DIR
 
 ADL_STDLIB_DIR=compiler/lib/adl
-CONFIG_ADL_DIR=compiler/lib/adl/adlc/config
 
 adlcb () {
   stack exec adlc-bootstrap -- haskell --package=ADL --no-overwrite -I$ADL_STDLIB_DIR "$@"
@@ -15,15 +14,15 @@ stack clean
 stack build adl-lib0:adlc-bootstrap
 
 # Generate the haskell code for the per-language annotation types
-adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/haskell.adl
-adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/cpp.adl
-adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/java.adl
-adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/typescript.adl
-adlcb -I $CONFIG_ADL_DIR -O compiler/src $CONFIG_ADL_DIR/rust.adl
+adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.haskell
+adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.cpp
+adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.java
+adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.typescript
+adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.rust
 
 # Generate ADL specified elements of the haskell runtime
-adlcb -O runtime/src $ADL_STDLIB_DIR/sys/types.adl
-adlcb -O runtime/src $ADL_STDLIB_DIR/sys/adlast.adl
+adlcb -O runtime/src -I $ADL_STDLIB_DIR sys.types
+adlcb -O runtime/src -I $ADL_STDLIB_DIR sys.adlast
 
 # Build and test the compiler itself
 stack build --test adl-compiler 
@@ -38,7 +37,7 @@ stack exec adlc -- typescript \
  --ts-style template \
  -O ../typescript/runtime/embedded \
  -I $ADL_STDLIB_DIR \
- $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
+ sys.types sys.adlast sys.dynamic
 stack exec adlc -- typescript \
  --no-overwrite \
  --exclude-ast \
@@ -46,7 +45,7 @@ stack exec adlc -- typescript \
  --ts-style deno \
  -O ../typescript/runtime/published/src \
  -I $ADL_STDLIB_DIR \
- $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
+ sys.types sys.adlast sys.dynamic
 
 # Generate ADL specified elements of the c++ runtime
 CPP_RUNTIME_DIR=../cpp/runtime/src-generated 
@@ -56,7 +55,7 @@ stack exec adlc -- cpp \
  --include-prefix adl \
  -O $CPP_RUNTIME_DIR \
  -I $ADL_STDLIB_DIR \
- $ADL_STDLIB_DIR/sys/types.adl $ADL_STDLIB_DIR/sys/adlast.adl $ADL_STDLIB_DIR/sys/dynamic.adl
+ sys.types sys.adlast sys.dynamic
 
 # Run some tests for each target language
 stack build generated-tests
