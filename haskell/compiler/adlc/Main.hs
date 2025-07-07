@@ -69,7 +69,7 @@ runVerify args0 =
       V.verify (f_adl flags) moduleNames
     (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optDescs))
   where
-    header = "Usage: adlc verify [OPTION...] modules..."
+    header = "Usage: adlc verify [OPTION...] <module>..."
 
     optDescs =
       [ searchDirOption addToSearchPath
@@ -83,7 +83,7 @@ runAst args = do
   withManifest (f_output flags) $ \ writer -> do
     A.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc ast [OPTION...] modules..."
+    header = "Usage: adlc ast [OPTION...] <module>..."
 
     flags0 libDir = A.AstFlags {
       A.astf_combinedModuleFile = Nothing
@@ -102,7 +102,7 @@ runHaskell args = do
   withManifest (f_output flags) $ \ writer -> do
     H.generate (f_adl flags) (f_backend flags) writer getCustomType moduleNames
   where
-    header = "Usage: adlc haskell [OPTION...] modules..."
+    header = "Usage: adlc haskell [OPTION...] <module>..."
 
     flags0 libDir = H.HaskellFlags
       { H.hf_modulePrefix="ADL.Generated"
@@ -125,7 +125,7 @@ runCpp args = do
   withManifest (f_output flags) $ \ writer -> do
     C.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc cpp [OPTION...] modules..."
+    header = "Usage: adlc cpp [OPTION...] <module>..."
 
     flags0 libDir = C.CppFlags {
       C.cf_incFilePrefix="",
@@ -156,7 +156,7 @@ runJava args = do
   withManifest (f_output flags) $ \ writer -> do
     J.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc java [OPTION...] files..."
+    header = "Usage: adlc java [OPTION...] <module>..."
 
     flags0 libDir = J.JavaFlags {
       J.jf_libDir=libDir,
@@ -213,7 +213,7 @@ runJavascript args = do
     JS.generate (f_adl flags) (f_backend flags) writer (moduleNames)
 
   where
-    header = "Usage: adlc javascript [OPTION...] modules..."
+    header = "Usage: adlc javascript [OPTION...] <module>..."
 
     flags0 libDir = JS.JavascriptFlags {
     }
@@ -227,7 +227,7 @@ runTypescript args = do
   withManifest (f_output flags) $ \ writer -> do
     TS.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc typescript [OPTION...] modules..."
+    header = "Usage: adlc typescript [OPTION...] <module>..."
 
     flags0 libDir = TS.TypescriptFlags {
       TS.tsStyle=TS.Tsc,
@@ -295,7 +295,7 @@ runRust args = do
   withManifest (f_output flags) $ \ writer -> do
     RS.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
-    header = "Usage: adlc rust [OPTION...] modules..."
+    header = "Usage: adlc rust [OPTION...] <module>..."
 
     flags0 libDir = RS.RustFlags {
       RS.rs_libDir = libDir,
@@ -336,7 +336,7 @@ usage = T.intercalate "\n"
   , "       adlc ast [OPTION..] <module>..."
   , "       adlc haskell [OPTION..] <module>..."
   , "       adlc cpp [OPTION..] <module>..."
-  , "       adlc java [OPTION..] <modulePath>..."
+  , "       adlc java [OPTION..] <module>..."
   , "       adlc javascript [OPTION..] <module>..."
   , "       adlc typescript [OPTION..] <module>..."
   , "       adlc rust [OPTION..] <module>..."

@@ -23,7 +23,7 @@ Intended applications for ADL include:
 
 # Example
 
-Here is a small ADL example:
+Here is a small ADL example, (`picture.adl`):
 
 ```
 module picture
@@ -63,7 +63,7 @@ The adl compiler can generate the code corresponding to this data model
 in any of the target languages. For example, this command
 
 ```
-adlc java --json picture.adl
+adlc java --searchdir . picture
 ```
 
 will generate [these java classes][examplejava] (which include json
@@ -71,7 +71,7 @@ serialization functions). The command to generate the corresponding
 [haskell types][examplehaskell] is
 
 ```
-adlc haskell picture.adl
+adlc haskell --searchdir . picture
 ```
 
 # More information
