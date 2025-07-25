@@ -20,12 +20,15 @@ import ADL.Compiler.Flags
 import ADL.Compiler.AST
 import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags, parseModuleName)
 import ADL.Compiler.Utils
+
 import Control.Monad.Trans
 import Data.List(intercalate,partition)
 import Data.Monoid
 import Data.String(IsString(..))
 import Data.Version(showVersion)
 import HaskellCustomTypes
+import PackageFile(packageDepsFromPackageFile)
+
 import System.Console.GetOpt
 import System.Environment (getArgs)
 import System.Exit
@@ -37,6 +40,7 @@ stdAdlFlags libDir mergeFileExtensions =
   defaultAdlFlags
    { af_searchPath=[systemAdlDir libDir]
    , af_mergeFileExtensions=mergeFileExtensions
+   , af_getPackageDeps=packageDepsFromPackageFile
    }
 
 outputPackageOption ufn =
@@ -79,7 +83,7 @@ runVerify args0 =
 runAst args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir []
-  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) (mkOptDescs libDir) args
+  (flags,moduleNames) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
   withManifest (f_output flags) $ \ writer -> do
     A.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
@@ -98,7 +102,7 @@ runAst args = do
 runHaskell args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-hs"]
-  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) (mkOptDescs libDir) args
+  (flags,moduleNames) <- parseArguments header af (flags0 libDir) (mkOptDescs libDir) args
   withManifest (f_output flags) $ \ writer -> do
     H.generate (f_adl flags) (f_backend flags) writer getCustomType moduleNames
   where
@@ -121,7 +125,7 @@ runHaskell args = do
 runCpp args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-cpp"]
-  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
     C.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
@@ -152,7 +156,7 @@ runCpp args = do
 runJava args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-java"]
-  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
     J.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
@@ -208,7 +212,7 @@ runJava args = do
 runJavascript args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-js"]
-  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \writer -> do
     JS.generate (f_adl flags) (f_backend flags) writer (moduleNames)
 
@@ -223,7 +227,7 @@ runJavascript args = do
 runTypescript args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-ts"]
-  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
     TS.generate (f_adl flags) (f_backend flags) writer moduleNames
   where
@@ -291,7 +295,7 @@ runTypescript args = do
 runRust args = do
   libDir <- liftIO $ getLibDir
   let af = stdAdlFlags libDir ["adl-rs"]
-  (flags,moduleNames) <- parseArguments2 header af (flags0 libDir) optDescs args
+  (flags,moduleNames) <- parseArguments header af (flags0 libDir) optDescs args
   withManifest (f_output flags) $ \ writer -> do
     RS.generate (f_adl flags) (f_backend flags) writer moduleNames
   where

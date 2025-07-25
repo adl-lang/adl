@@ -17,7 +17,9 @@ import HaskellCustomTypes
 
 import ADL.Compiler.EIO
 import ADL.Compiler.Utils
-import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags,parseModuleName)
+import ADL.Compiler.Processing(AdlFlags(..),defaultAdlFlags, parseModuleName)
+import PackageFile(packageDepsFromPackageFile)
+
 
 import qualified ADL.Compiler.Backends.Verify as V
 import qualified ADL.Compiler.Backends.Haskell as H
@@ -38,6 +40,9 @@ instance Show CodeGenResult where
   show (CompilerFailed t) = "compiler failure: " ++ T.unpack t
   show (OutputDiff expected actual diffs ) = "diff " ++ actual ++ "/ " ++ expected ++ "/ (details: " ++ show diffs ++ ")"
 
+adlFlags = defaultAdlFlags {
+  af_getPackageDeps=packageDepsFromPackageFile
+}
 
 processCompilerOutput :: FilePath -> FilePath -> Either T.Text () -> IO CodeGenResult
 processCompilerOutput _ tempDir (Left err) = do
@@ -55,7 +60,7 @@ processCompilerOutput epath tempDir (Right ()) = do
 
 runVerifyBackend :: [FilePath] -> [String] -> IO CodeGenResult
 runVerifyBackend ipath moduleNameStrs = do
-  let af =  defaultAdlFlags{af_searchPath=[stdsrc] <> ipath}
+  let af =  adlFlags{af_searchPath=[stdsrc] <> ipath}
   er <- unEIO $ do
     moduleNames <- mapM parseModuleName moduleNameStrs
     V.verify af moduleNames
@@ -67,7 +72,7 @@ runHaskellBackend :: [FilePath] -> [String] -> FilePath -> IO CodeGenResult
 runHaskellBackend ipaths moduleNameStrs epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af =  defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-hs"]}
+  let af =  adlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-hs"]}
       hf =  H.HaskellFlags
         { H.hf_modulePrefix = "ADL"
         , H.hf_includeRuntime = Nothing
@@ -83,7 +88,7 @@ runCppBackend :: [FilePath] -> [String] -> FilePath -> FilePath -> IO CodeGenRes
 runCppBackend ipaths moduleNameStrs epath iprefix = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af =  defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-cpp"]}
+  let af =  adlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-cpp"]}
       cf = CPP.CppFlags {
         CPP.cf_incFilePrefix = iprefix,
         CPP.cf_includeRelops = True
@@ -104,7 +109,7 @@ runAstBackend :: [FilePath] -> [String] -> FilePath -> IO CodeGenResult
 runAstBackend ipath moduleNameStrs epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af = defaultAdlFlags{af_searchPath=[stdsrc] <> ipath,af_mergeFileExtensions=[".ann"]}
+  let af = adlFlags{af_searchPath=[stdsrc] <> ipath,af_mergeFileExtensions=[".ann"]}
       bf = AST.AstFlags Nothing
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
   er <- unEIO $ do
@@ -116,7 +121,7 @@ runJavaBackend :: [FilePath] -> [String] -> FilePath -> (J.JavaFlags -> J.JavaFl
 runJavaBackend ipaths moduleNameStrs epath updateflags = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-java"]}
+  let af = adlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-java"]}
       jf = J.JavaFlags {
         J.jf_libDir = "LIBDIR",
         J.jf_package = J.javaPackage "adl",
@@ -142,7 +147,7 @@ runJsBackend :: [FilePath] -> [String] -> FilePath -> IO CodeGenResult
 runJsBackend ipaths moduleNameStrs epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adl.test."
-  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
+  let af = adlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
       jf = JS.JavascriptFlags {}
       fileWriter = writeOutputFile (OutputArgs (\_-> return ()) False tempDir Nothing)
   er <- unEIO $ do
@@ -154,7 +159,7 @@ runTsBackend :: (TS.TypescriptFlags -> TS.TypescriptFlags) -> [FilePath] -> [Str
 runTsBackend flagsfn ipaths moduleNameStrs epath = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adlt.test."
-  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
+  let af = adlFlags{af_searchPath=ipaths,af_mergeFileExtensions=[]}
       js = flagsfn $ TS.TypescriptFlags {
         TS.tsStyle=TS.Tsc,
         TS.tsIncludeRuntime=False,
@@ -174,7 +179,7 @@ runRsBackend :: [FilePath] -> [String] -> FilePath -> T.Text -> IO CodeGenResult
 runRsBackend ipaths moduleNameStrs epath rsModule = do
   tdir <- getTemporaryDirectory
   tempDir <- createTempDirectory tdir "adlt.test."
-  let af = defaultAdlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-rs"]}
+  let af = adlFlags{af_searchPath=ipaths,af_mergeFileExtensions=["adl-rs"]}
       js = RS.RustFlags {
         RS.rs_libDir = ".",
         RS.rs_module = RS.rustScopedName rsModule,
@@ -274,6 +279,9 @@ runTests = do
         `shouldReturn` MatchOutput
     it "generates expected json serialisation for custom annotation types" $ do
       collectResults (runAstBackend ["test21/input"] ["test"] "test21/ast-output")
+        `shouldReturn` MatchOutput
+    it "follows package references" $ do
+      collectResults (runAstBackend ["test31/input/package-a"] ["a.test", "b.foo", "b.bar"] "test31/ast-output")
         `shouldReturn` MatchOutput
 
   describe "adlc cpp backend" $ do

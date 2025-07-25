@@ -113,16 +113,8 @@ standardOptions =
   , manifestOption setManifest
   ]
 
-parseArguments :: String -> AdlFlags -> b -> [OptDescr (Flags b -> Flags b)] -> [String] -> EIO T.Text (Flags b,[FilePath])
+parseArguments :: String -> AdlFlags -> b -> [OptDescr (Flags b -> Flags b)] -> [String] -> EIO T.Text (Flags b,[ModuleName])
 parseArguments header adlflags0 flags0 optdescs args = do
-  case getOpt Permute optdescs args of
-    (opts,paths,[]) -> do
-      let flags = buildFlags adlflags0 flags0 opts
-      return (flags,paths)
-    (_,_,errs) -> eioError (T.pack (concat errs ++ usageInfo header optdescs))
-
-parseArguments2 :: String -> AdlFlags -> b -> [OptDescr (Flags b -> Flags b)] -> [String] -> EIO T.Text (Flags b,[ModuleName])
-parseArguments2 header adlflags0 flags0 optdescs args = do
   case getOpt Permute optdescs args of
     (opts,moduleNameStrs,[]) -> do
       let flags = buildFlags adlflags0 flags0 opts

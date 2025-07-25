@@ -118,7 +118,9 @@ library
                     , ADL.Adlc.Config.Haskell
                     , ADL.Adlc.Config.Java
                     , ADL.Adlc.Config.Rust
+                    , ADL.Adlc.Package
                     , HaskellCustomTypes
+                    , PackageFile
                     , Paths_adl_compiler
   build-depends:      adl-lib0
                     , base

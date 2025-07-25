@@ -99,6 +99,10 @@ processing adl files, an import of the form:
 references definition z from the a.b.c module. The first file found on
 the ADL search path with name a/b/c.adl will be used for this import.
 
+If a directory on the search path contains an `adl-package.json` file,
+it will be loaded and parsed as the [AdlPackage][adl-package] type.
+Dependencies specified there will be added to ADL the search path.
+
 ##  outputdir
 
     --outputdir <dir> | -O <dir>
@@ -137,3 +141,4 @@ if that file exists.
 [backend-haskell]: backend-haskell.md
 [backend-java]: backend-java.md
 [backend-typescript]: backend-typescript.md
+[adl-package]: ../adl/stdlib/adlc/package.adl
