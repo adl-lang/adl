@@ -1,0 +1,65 @@
+{
+    "annotations": [],
+    "decls": {
+        "S": {
+            "annotations": [],
+            "name": "S",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "s1",
+                            "serializedName": "s1",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "reference": {
+                                        "moduleName": "b.foo",
+                                        "name": "Foo"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "s2",
+                            "serializedName": "s2",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "reference": {
+                                        "moduleName": "b.bar",
+                                        "name": "Bar"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        }
+    },
+    "imports": [
+        {
+            "moduleName": "sys.annotations"
+        },
+        {
+            "scopedName": {
+                "moduleName": "b.foo",
+                "name": "Foo"
+            }
+        },
+        {
+            "scopedName": {
+                "moduleName": "b.bar",
+                "name": "Bar"
+            }
+        }
+    ],
+    "name": "a.test"
+}

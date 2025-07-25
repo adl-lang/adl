@@ -15,6 +15,7 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/adl/adlc/config/java.adl
                     , lib/adl/adlc/config/rust.adl
                     , lib/adl/adlc/config/typescript.adl
+                    , lib/adl/adlc/package.adl
                     , lib/adl/sys/adlast.adl
                     , lib/adl/sys/adlast.adl-java
                     , lib/adl/sys/annotations.adl
@@ -117,7 +118,9 @@ library
                     , ADL.Adlc.Config.Haskell
                     , ADL.Adlc.Config.Java
                     , ADL.Adlc.Config.Rust
+                    , ADL.Adlc.Package
                     , HaskellCustomTypes
+                    , PackageFile
                     , Paths_adl_compiler
   build-depends:      adl-lib0
                     , base

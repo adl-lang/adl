@@ -19,6 +19,7 @@ adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.cpp
 adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.java
 adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.typescript
 adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.rust
+adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.package
 
 # Generate ADL specified elements of the haskell runtime
 adlcb -O runtime/src -I $ADL_STDLIB_DIR sys.types

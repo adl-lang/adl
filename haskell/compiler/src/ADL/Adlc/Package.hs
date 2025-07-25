@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module ADL.Sys.Package(
+module ADL.Adlc.Package(
     AdlPackage(..),
     AdlPackageRef(..),
     mkAdlPackage,
@@ -23,7 +23,7 @@ mkAdlPackage :: T.Text -> AdlPackage
 mkAdlPackage name = AdlPackage name [  ]
 
 instance AdlValue AdlPackage where
-    atype _ = "sys.package.AdlPackage"
+    atype _ = "adlc.package.AdlPackage"
     
     jsonGen = genObject
         [ genField "name" adlPackage_name
@@ -35,19 +35,16 @@ instance AdlValue AdlPackage where
         <*> parseFieldDef "dependencies" [  ]
 
 data AdlPackageRef
-    = AdlPackageRef_stdlib
-    | AdlPackageRef_localdir T.Text
+    = AdlPackageRef_localdir T.Text
     deriving (Prelude.Eq,Prelude.Ord,Prelude.Show)
 
 instance AdlValue AdlPackageRef where
-    atype _ = "sys.package.AdlPackageRef"
+    atype _ = "adlc.package.AdlPackageRef"
     
     jsonGen = genUnion (\jv -> case jv of
-        AdlPackageRef_stdlib -> genUnionVoid "stdlib"
         AdlPackageRef_localdir v -> genUnionValue "localdir" v
         )
     
     jsonParser = parseUnion $ \disc -> case disc of
-        "stdlib" -> parseUnionVoid AdlPackageRef_stdlib
         "localdir" ->  parseUnionValue AdlPackageRef_localdir
-        _ -> parseFail "expected a discriminator for AdlPackageRef (stdlib,localdir)" 
+        _ -> parseFail "expected a discriminator for AdlPackageRef (localdir)" 

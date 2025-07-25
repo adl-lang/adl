@@ -1,0 +1,9 @@
+module b.bar {
+
+struct Bar {
+  Int32 i1;
+  Int32 i2;
+};
+
+};
+

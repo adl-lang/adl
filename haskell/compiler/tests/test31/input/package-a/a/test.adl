@@ -1,0 +1,11 @@
+module a.test {
+
+import b.foo.Foo;
+import b.bar.Bar;
+
+struct S {
+  Foo s1;
+  Bar s2;
+};  
+
+};

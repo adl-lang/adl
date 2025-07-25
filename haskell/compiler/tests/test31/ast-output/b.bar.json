@@ -1,0 +1,47 @@
+{
+    "annotations": [],
+    "decls": {
+        "Bar": {
+            "annotations": [],
+            "name": "Bar",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "i1",
+                            "serializedName": "i1",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "Int32"
+                                }
+                            }
+                        },
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "i2",
+                            "serializedName": "i2",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "Int32"
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        }
+    },
+    "imports": [
+        {
+            "moduleName": "sys.annotations"
+        }
+    ],
+    "name": "b.bar"
+}

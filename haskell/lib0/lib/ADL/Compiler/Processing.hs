@@ -22,6 +22,7 @@ module ADL.Compiler.Processing(
   loadAndCheckFile,
   loadAndCheckFiles,
   loadAndCheckRModules,
+  LogFn,
   parseModuleName,
   RDecl,
   refEnumeration,
@@ -765,25 +766,50 @@ data AdlFlags = AdlFlags {
   af_searchPath :: [FilePath],
   af_mergeFileExtensions :: [String],
   af_generateTransitive :: Bool,
-  af_log :: String -> IO ()
+  af_getPackageDeps :: LogFn -> FilePath -> EIOT [FilePath],
+  af_log :: LogFn
 }
+
+type LogFn = String -> IO ()
 
 defaultAdlFlags :: AdlFlags
 defaultAdlFlags = AdlFlags
   { af_searchPath = []
   , af_log = const (return ())
   , af_mergeFileExtensions = []
+  , af_getPackageDeps = \_ _ -> pure []
   , af_generateTransitive = False
   }
 
 buildLoadContext :: AdlFlags -> EIOT LoadCtx
-buildLoadContext af =
-    pure LoadCtx {
-      lc_log = af_log af,
-      lc_findm = moduleFinder (af_searchPath af),
-      lc_filesetfn = fileSetGenerator (af_mergeFileExtensions af)
-    }
+buildLoadContext af = do
 
+  packageDirs <- findPackageDirs (af_searchPath af)
+
+  pure LoadCtx {
+    lc_log = af_log af,
+    lc_findm = moduleFinder packageDirs,
+    lc_filesetfn = fileSetGenerator (af_mergeFileExtensions af)
+  }
+  where
+    findPackageDirs :: [FilePath] -> EIOT [FilePath]
+    findPackageDirs searchPath = do
+      pset <- foldM (addPackage ".") Set.empty searchPath 
+      let packageDirs = Set.elems pset
+      liftIO $ af_log af ("final search path: " <> show packageDirs)
+      pure packageDirs
+
+    addPackage :: FilePath -> Set.Set FilePath -> FilePath -> EIOT (Set.Set FilePath)
+    addPackage  root pset  packageDir = do
+      if Set.member packageDir pset
+        then
+          pure pset
+        else do
+          let pset' = Set.insert packageDir pset
+          let packageFile = joinPath [packageDir, "adl-package.json"]
+          deps <- af_getPackageDeps af (af_log af) packageDir
+          foldM (addPackage packageDir) pset' deps
+  
 -- load and check each of the adl files.
 --
 -- Returns the specified modules, and all modules

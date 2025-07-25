@@ -1,0 +1,47 @@
+{
+    "annotations": [],
+    "decls": {
+        "Foo": {
+            "annotations": [],
+            "name": "Foo",
+            "type_": {
+                "struct_": {
+                    "fields": [
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "s1",
+                            "serializedName": "s1",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "String"
+                                }
+                            }
+                        },
+                        {
+                            "annotations": [],
+                            "default": "nothing",
+                            "name": "s2",
+                            "serializedName": "s2",
+                            "typeExpr": {
+                                "parameters": [],
+                                "typeRef": {
+                                    "primitive": "String"
+                                }
+                            }
+                        }
+                    ],
+                    "typeParams": []
+                }
+            },
+            "version": "nothing"
+        }
+    },
+    "imports": [
+        {
+            "moduleName": "sys.annotations"
+        }
+    ],
+    "name": "b.foo"
+}
