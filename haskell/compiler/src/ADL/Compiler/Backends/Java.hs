@@ -830,7 +830,7 @@ snJavaGenerate = ScopedName (ModuleName ["adlc","config","java"]) "JavaGenerate"
 
 sysModules :: [ModuleName]
 sysModules = [
-               ModuleName ["sys", "types.adl"],
-               ModuleName ["sys", "dynamic.adl"],
-               ModuleName ["sys", "adlast.adl"]
+               ModuleName ["sys", "types"],
+               ModuleName ["sys", "dynamic"],
+               ModuleName ["sys", "adlast"]
              ]
