@@ -13,25 +13,17 @@ jobs:
         os: [ubuntu-latest, macos-14]
 
     steps:
-      - name: Setup Stack
-        uses: haskell-actions/setup@v2.6.2
-        with:
-          ghc-version: '9.8.4' # Exact version of ghc to use, should match the stackage resolver ghc version
-          # cabal-version: 'latest'. Omitted, but defaults to 'latest'
-          enable-stack: true
-          stack-version: 'latest'
+      - name: Setup GHC
+        uses: haskell/ghcup-setup@v1
+      - run: |
+          ghcup install ghc --set 9.8.4
+          ghcup install cabal 3.14.2.0
 
       - name: Clone project
         uses: actions/checkout@v3
         # Fetch all history so git describe works
       - run: |
           git fetch --prune --unshallow
-
-      - name: Cache ~/.stack
-        uses: actions/cache@v3
-        with:
-          path: ~/.stack
-          key: stack-${{ runner.os }}-${{ runner.arch }}
 
       - name: Build compiler and generate zip
         run: "export REPO_ROOT=$(pwd); ./haskell/tools/make-dist.hs"
