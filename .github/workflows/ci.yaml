@@ -1,6 +1,7 @@
 name: Build and test
 on:
   pull_request:
+    types: [opened, synchronize]
   push:
     branches:
       - master
@@ -10,22 +11,19 @@ jobs:
     name: CI
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Stack
-        uses: haskell/actions/setup@v2
-        with:
-          ghc-version: '8.8.4' # Exact version of ghc to use
-          # cabal-version: 'latest'. Omitted, but defaults to 'latest'
-          enable-stack: true
-          stack-version: 'latest'
+      - name: Setup GHC
+        uses: haskell/ghcup-setup@v1
+      - run: |
+          ghcup install ghc --set 9.8.4
+          ghcup install cabal 3.14.2.0
+          cabal update
+
 
       - name: Clone project
         uses: actions/checkout@v3
 
-      - name: Cache ~/.stack
-        uses: actions/cache@v3
-        with:
-          path: ~/.stack
-          key: stack-${{ runner.os }}-${{ runner.arch }}
-
       - name: Build and run tests
-        run: "cd haskell; stack build --fast adl-compiler; stack test --fast --no-terminal adl-compiler"
+        run: |
+          cd haskell
+          cabal build all --enable-tests
+          cabal test all
