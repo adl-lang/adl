@@ -41,28 +41,28 @@ exec $cachedir/$adlversion/bin/adlc "$@"
 
 # Building from source
 
-The build process relies on [stack][].
+The build process relies on [ghcup][] and [cabal][].
 
 After checking out the git repository (as `$REPO`), run the following:
 
 
 ```
 cd $REPO/haskell
-stack build --fast adl-compiler
-stack install
+ghcup install ghc 9.8.2
+ghcup install cabal
+cabal build compiler
 ```
 
-Then, you should be able to run the compiler installed into your home
-directory:
+Then, you should be able to run the compiler 
 
 ```
-$ ~/.local/bin/adlc --help
+$ cabal run compiler:adlc
 Usage: adlc verify [OPTION..] <modulePath>...
        adlc ast [OPTION..] <modulePath>...
        adlc haskell [OPTION..] <modulePath>...
        adlc cpp [OPTION..] <modulePath>...
        adlc java [OPTION..] <modulePath>...
-$ ~/.local/bin/adlc java  --help
+$ cabal run compiler:adlc -- java --help
 unrecognized option `--help'
 Usage: adlc java [OPTION...] files...
   -I DIR  --searchdir=DIR            Add the specifed directory to the ADL searchpath
@@ -87,5 +87,6 @@ cd $REPO/haskell
 ./tools/scratch-build.sh
 ```
 
-[stack]: https://docs.haskellstack.org/en/stable/README/
+[ghcup]: https://www.haskell.org/ghcup/
+[cabal]: https://www.haskell.org/cabal/
 [releases]: https://github.com/timbod7/adl/releases

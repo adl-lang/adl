@@ -1,0 +1,6 @@
+packages:
+  ./lib0
+  ./compiler
+  ./runtime
+  ./generated-tests
+

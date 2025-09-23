@@ -34,7 +34,7 @@ jobs:
           key: stack-${{ runner.os }}-${{ runner.arch }}
 
       - name: Build compiler and generate zip
-        run: "cd haskell; stack build adl-compiler; ./tools/make-dist.hs"
+        run: "export REPO_ROOT=$(pwd); ./haskell/tools/make-dist.hs"
 
       - name: Upload dist directory artifacts
         uses: actions/upload-artifact@v4

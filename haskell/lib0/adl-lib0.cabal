@@ -1,9 +1,9 @@
-cabal-version:       2.4
+cabal-version:       3.14
 name:                adl-lib0
 version:             1.2.4
 synopsis:            adl bootstrap compiler library and exe
 license:             BSD-3-Clause
-license-file:        ../../LICENSE
+license-file:        LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
 copyright:           (c) 2013-2025 Tim Docker

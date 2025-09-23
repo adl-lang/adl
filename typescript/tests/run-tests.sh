@@ -4,7 +4,7 @@ set -e
 
 HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HASKELLDIR=$HERE/../../haskell
-ADLSTDLIBDIR=$(cd $HASKELLDIR; stack exec adlc -- show --adlstdlib)
+ADLSTDLIBDIR=$(cd $HASKELLDIR; cabal run adlc -- show --adlstdlib)
 
 testts() {
   echo "--------- testing $1 ---------"
@@ -14,7 +14,7 @@ testts() {
   BUILDDIR=$TESTDIR/build
   rm -rf $BUILDDIR
   mkdir -p $BUILDDIR
-  (cd $HASKELLDIR; stack exec adlc -- typescript -O $BUILDDIR --include-rt --include-resolver --runtime-dir runtime --searchdir $HERE  example sys.types sys.adlast sys.dynamic)
+  (cd $HASKELLDIR; cabal run adlc -- typescript -O $BUILDDIR --include-rt --include-resolver --runtime-dir runtime --searchdir $HERE  example sys.types sys.adlast sys.dynamic)
 
   echo "### Setting up node_modules"
   cd $TESTDIR
@@ -42,7 +42,7 @@ echo "### Generating typescript from adl"
 BUILDDIR=$TESTDIR/build
 rm -rf $BUILDDIR
 mkdir -p $BUILDDIR
-(cd $HASKELLDIR; stack exec adlc -- typescript -O $BUILDDIR --ts-style deno --include-resolver --searchdir $HERE example sys.types sys.adlast sys.dynamic)
+(cd $HASKELLDIR; cabal run adlc -- typescript -O $BUILDDIR --ts-style deno --include-resolver --searchdir $HERE example sys.types sys.adlast sys.dynamic)
 
   echo "### Running tests"
   deno test example.tests.ts

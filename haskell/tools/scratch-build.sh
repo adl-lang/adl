@@ -7,12 +7,12 @@ cd $HASKELL_DIR
 ADL_STDLIB_DIR=$HASKELL_DIR/../adl/stdlib
 
 adlcb () {
-  stack exec adlc-bootstrap -- haskell --package=ADL --no-overwrite -I$ADL_STDLIB_DIR "$@"
+  cabal run adl-lib0:adlc-bootstrap -- haskell --package=ADL --no-overwrite -I$ADL_STDLIB_DIR "$@"
 }
 
 # Start clean, and build the bootstrap compiler
-stack clean
-stack build adl-lib0:adlc-bootstrap
+cabal clean
+cabal build adl-lib0:adlc-bootstrap
 
 # Generate the haskell code for the per-language annotation types
 adlcb -I $ADL_STDLIB_DIR -O compiler/src adlc.config.haskell
@@ -27,12 +27,13 @@ adlcb -O runtime/src -I $ADL_STDLIB_DIR sys.types
 adlcb -O runtime/src -I $ADL_STDLIB_DIR sys.adlast
 
 # Build and test the compiler itself
-stack build --test adl-compiler 
+cabal build all --enable-tests
+cabal test all
 
 # Generate ADL specified elements of the typescript runtime
 # these are in the style "template" so they can be converted
 # to tsc or deno style later
-stack exec adlc -- typescript \
+cabal run adlc -- typescript \
  --no-overwrite \
  --exclude-ast \
  --verbose \
@@ -40,7 +41,7 @@ stack exec adlc -- typescript \
  -O ../typescript/runtime/embedded \
  -I $ADL_STDLIB_DIR \
  sys.types sys.adlast sys.dynamic
-stack exec adlc -- typescript \
+cabal run adlc -- typescript \
  --no-overwrite \
  --exclude-ast \
  --verbose \
@@ -51,7 +52,7 @@ stack exec adlc -- typescript \
 
 # Generate ADL specified elements of the c++ runtime
 CPP_RUNTIME_DIR=../cpp/runtime/src-generated 
-stack exec adlc -- cpp \
+cabal run adlc -- cpp \
  --no-overwrite \
  --verbose \
  --include-prefix adl \
@@ -60,7 +61,6 @@ stack exec adlc -- cpp \
  sys.types sys.adlast sys.dynamic
 
 # Run some tests for each target language
-stack build generated-tests
 (cd ../typescript/tests; ./run-tests.sh)
 (cd ../java; gradle build; gradle test)
 (cd ../rust/tests; cargo build; cargo test)

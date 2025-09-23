@@ -1,14 +1,14 @@
+cabal-version:       3.14
 name:                generated-tests
 version:             0.1.0.0
 synopsis:            Verify that the haskell runtime and all of the adlc test output builds ok
-license:             BSD3
-license-file:        ../../LICENSE
+license:             BSD-3-Clause
+license-file:        LICENSE
 author:              Tim Docker
 maintainer:          tim@dockerz.net
 copyright:           2017, Tim Docker
 category:            Test
 build-type:          Simple
-cabal-version:       >=1.10
 
 library
   hs-source-dirs:      ../runtime/src

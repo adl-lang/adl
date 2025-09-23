@@ -3,7 +3,7 @@
 set -xe
 HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HASKELLDIR=$HERE/../../haskell
-ADLSTDLIBDIR=$(cd $HASKELLDIR; stack exec adlc -- show --adlstdlib)
+ADLSTDLIBDIR=$(cd $HASKELLDIR; cabal run adlc -- show --adlstdlib)
 TESTDIR=$HASKELLDIR/compiler/tests
 
 CXXFLAGS="--std=c++17 -I $HERE/../../cpp/runtime/3rd-party -I $HERE/../../cpp/runtime/include -I $HERE/../../cpp/runtime/src-generated/adl -I . -o /tmp/test.o"

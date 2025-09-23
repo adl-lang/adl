@@ -5,12 +5,15 @@ in
 
 pkgs.mkShell {
   packages = with pkgs; [
+    cabal-install
     cmake
     deno
+    haskell.compiler.ghc984Binary
     gradle
     jdk11
     rustup
-    stack
+    unzip
     yarn
+    zip
   ];
 }
