@@ -7,7 +7,8 @@ build-depends: base, temporary, unix, process, filepath, directory
 import Control.Monad(when)
 import Data.Char(isSpace,toLower)
 import Data.Foldable(for_)
-import Data.List(dropWhile, dropWhileEnd, isSuffixOf)
+import Data.List(dropWhile, dropWhileEnd, isSuffixOf, stripPrefix)
+import Data.Maybe(catMaybes)
 import Data.Monoid((<>))
 import System.Directory(createDirectoryIfMissing,copyFile,getDirectoryContents, setCurrentDirectory)
 import System.Environment (getEnv)
@@ -18,22 +19,6 @@ import System.Process(readCreateProcess, shell, callCommand)
 
 trim :: String -> String
 trim = dropWhileEnd isSpace . dropWhile isSpace
-
-copyFiles :: FilePath -> FilePath -> (FilePath -> Bool) -> IO ()
-copyFiles src target match = do
-  createDirectoryIfMissing True target
-  files <- getDirectoryContents src
-  for_ files $ \file -> do
-    status <- getFileStatus (src </> file)
-    when (isRegularFile status && match file) $ do
-      copyFile (src </> file) (target  </> file)
-    when (isDirectory status && not (specialFile file)) $ do
-      copyFiles (src </> file) (target  </> file) match
-
-specialFile :: FilePath -> Bool
-specialFile "." = True
-specialFile ".." = True
-specialFile _ = False
 
 cabalCmd :: String -> IO String
 cabalCmd args = trim <$> readCreateProcess (shell ("cabal " <> args)) ""
@@ -46,9 +31,18 @@ main = do
   withSystemTempDirectory "distXXXX" $ \zipDir -> do
     cabalCmd ("install adlc --install-method=copy --installdir=" <> (zipDir </> "bin"))
 
-    let zipLib = zipDir </> "lib"
-    copyFiles (repoRoot </> "adl/stdlib") (zipLib </> "adl") (const True)
+    srcFiles <- lines <$> cabalCmd "sdist adl-compiler --list-only"
+    let srcLib = "./compiler/lib/" 
+        libFiles = (catMaybes . map (stripPrefix srcLib)) srcFiles
+        zipLib = zipDir </> "lib"
 
+    for_ libFiles $ \f -> do
+      let src = srcLib </> f
+          target = zipLib </> f
+          targetDir = takeDirectory target
+      createDirectoryIfMissing True targetDir
+      copyFile src target
+      
     putStrLn ("creating " <> zipFile)
     createDirectoryIfMissing True (takeDirectory zipFile)
     callCommand ("(cd " <> zipDir <> "; zip -r -q " <> zipFile <> " *)")

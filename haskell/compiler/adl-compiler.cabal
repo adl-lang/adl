@@ -1,6 +1,6 @@
 cabal-version:       3.14
 name:                adl-compiler
-version:             1.3.2
+version:             1.3.3
 synopsis:            A compiler for the Algebraic Data Language (ADL)
 license:             BSD-3-Clause
 license-file:        LICENSE
