@@ -24,7 +24,7 @@ impl<T> Point<T> {
 
 pub type Int1 = i64;
 
-#[derive(Clone,Eq,Hash,PartialEq)]
+#[derive(Clone,Debug,Eq,Hash,PartialEq)]
 pub struct Int2(pub i64);
 
 impl Serialize for Int2

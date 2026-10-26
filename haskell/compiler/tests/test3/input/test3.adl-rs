@@ -1,0 +1,13 @@
+module test3
+{
+
+import adlc.config.rust.*;
+
+// Debug is not one of the standard derived traits, so it only appears if
+// RustExtraDeriveTraits is honoured. Clone already is derived, and is listed
+// here to pin that duplicates are dropped rather than emitted twice.
+annotation A RustExtraDeriveTraits ["Debug", "Clone"];
+
+annotation U RustExtraDeriveTraits ["Debug"];
+
+};

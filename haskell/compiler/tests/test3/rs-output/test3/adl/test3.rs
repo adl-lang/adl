@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json;
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub struct A {
   pub f_int: i16,
 
@@ -67,7 +67,7 @@ impl<T> B<T> {
   }
 }
 
-#[derive(Clone,Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Clone,Debug,Deserialize,Eq,Hash,PartialEq,Serialize)]
 pub enum U {
   #[serde(rename="f_int")]
   FInt(i16),

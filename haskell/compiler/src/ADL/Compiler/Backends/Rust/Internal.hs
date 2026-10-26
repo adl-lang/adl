@@ -67,7 +67,7 @@ data CustomType = CustomType {
   ct_scopedName :: RustScopedName,
   ct_helpers :: RustScopedName,
   ct_generateOrigType :: Maybe Ident,
-  ct_stdTraits :: StdTraits
+  ct_stdTraits :: DeriveTraits
 } deriving (Show)
 
 -- We use a state monad to accumulate details of the rust file
@@ -478,12 +478,12 @@ jsonToText = LT.toStrict . JS.encodeToLazyText
 --
 --
 --
-type StdTraits = S.Set Ident
+type DeriveTraits = S.Set Ident
 
-stdTraitsFor :: TypeExpr CResolvedType -> StdTraits
+stdTraitsFor :: TypeExpr CResolvedType -> DeriveTraits
 stdTraitsFor = stdTraitsFor1 S.empty M.empty
 
-stdTraitsFor1 :: S.Set ScopedName -> TypeBindingMap -> TypeExpr CResolvedType -> StdTraits
+stdTraitsFor1 :: S.Set ScopedName -> TypeBindingMap -> TypeExpr CResolvedType -> DeriveTraits
 stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Vector) [te]) = stdTraitsFor1 sns tbmap te
 stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_StringMap) [te]) = S.delete "Hash" (stdTraitsFor1 sns tbmap te)
 stdTraitsFor1 sns tbmap (TypeExpr (RT_Primitive P_Nullable) [te]) = stdTraitsFor1 sns tbmap te
@@ -506,10 +506,10 @@ stdTraitsFor1 sns tbmap (TypeExpr (RT_Named (sn,decl)) tes) = case S.member sn s
       Decl{d_type=Decl_Typedef t} -> stdTraitsFor1 sns' (withTypeBindings (t_typeParams t) tes tbmap) (t_typeExpr t)
       Decl{d_type=Decl_Newtype n} -> stdTraitsFor1 sns' (withTypeBindings (n_typeParams n) tes tbmap) (n_typeExpr n)
 
-stdTraitsForFields1 :: S.Set ScopedName -> TypeBindingMap -> [Field CResolvedType] -> StdTraits
+stdTraitsForFields1 :: S.Set ScopedName -> TypeBindingMap -> [Field CResolvedType] -> DeriveTraits
 stdTraitsForFields1 sns tbmap fields = foldr S.intersection defaultStdTraits [stdTraitsFor1 sns tbmap (f_type f) | f <- fields]
 
-stdTraitsForFields :: [Field CResolvedType] -> StdTraits
+stdTraitsForFields :: [Field CResolvedType] -> DeriveTraits
 stdTraitsForFields = stdTraitsForFields1 S.empty M.empty
 
 defaultStdTraits = S.fromList ["PartialEq", "Eq", "Hash", "Serialize", "Deserialize", "Clone"]
@@ -594,6 +594,21 @@ getRustStorageModel f = fromMaybe RA.RustStorageModel_standard (getTypedAnnotati
   where
     rustStorageModel = ScopedName (ModuleName ["adlc","config","rust"]) "RustStorageModel"
 
+-- | The full set of traits to emit in a declaration's derive attribute:
+-- the standard traits its fields support, plus any extras it asked for.
+deriveTraitsForFields :: CDecl -> [Field CResolvedType] -> DeriveTraits
+deriveTraitsForFields decl fields =
+  S.union (getRustExtraDeriveTraits decl) (stdTraitsForFields fields)
+
+-- | The extra derive traits requested on a declaration.
+--
+-- These are unioned with the standard traits at the point they are emitted.
+-- They must not be fed through stdTraitsForFields, which only ever intersects,
+-- and would hence discard any trait the fields don't themselves support.
+getRustExtraDeriveTraits :: CDecl -> DeriveTraits
+getRustExtraDeriveTraits decl =
+  S.fromList (fromMaybe [] (getTypedAnnotation snRustExtraDeriveTraits (d_annotations decl)))
+
 getTypedAnnotation :: (AdlValue a) => ScopedName -> Annotations r -> Maybe a
 getTypedAnnotation sn annotations = case M.lookup sn annotations of
   Nothing -> Nothing
@@ -604,3 +619,6 @@ getTypedAnnotation sn annotations = case M.lookup sn annotations of
 
 snRustGenerate :: ScopedName
 snRustGenerate = ScopedName (ModuleName ["adlc","config","rust"]) "RustGenerate"
+
+snRustExtraDeriveTraits :: ScopedName
+snRustExtraDeriveTraits = ScopedName (ModuleName ["adlc","config","rust"]) "RustExtraDeriveTraits"

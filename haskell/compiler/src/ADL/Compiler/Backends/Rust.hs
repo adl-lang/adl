@@ -147,7 +147,7 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
         )
       where
         renderDecl
-          =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (stdTraitsForFields (map fd_field fields)))]
+          =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (deriveTraitsForFields decl (map fd_field fields)))]
           <> cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
 
         renderedFields
@@ -202,7 +202,7 @@ genUnion m decl union@Union{u_typeParams=typeParams} = do
   where
     render :: T.Text -> [Ident] -> [FieldDetails] -> Code
     render name typeParams fields
-      =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (stdTraitsForFields (map fd_field fields)))]
+      =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (deriveTraitsForFields decl (map fd_field fields)))]
       <> cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
       where
         renderedFields = mconcat (L.intersperse (cline "") [renderField fd| fd <- fields])
@@ -287,7 +287,12 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
       <> cline "}"
     realTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))
     phantomTypeParams = S.toList (S.difference (S.fromList typeParams) (typeExprTypeParams te))
-    traits = S.difference (stdTraitsFor te) (S.fromList ["Serialize", "Deserialize"])
+    -- Serialize and Deserialize are hand written below, so they are excluded
+    -- from the extra traits too: deriving them here would collide with those
+    -- impls rather than being harmlessly redundant.
+    traits = S.difference
+               (S.union (getRustExtraDeriveTraits decl) (stdTraitsFor te))
+               (S.fromList ["Serialize", "Deserialize"])
     turboize s = let (a,b) = T.breakOn "<" s in if T.null b then a else (a <> "::" <> b) -- hack
 
 

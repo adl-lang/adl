@@ -1,0 +1,14 @@
+module test7
+{
+
+import adlc.config.rust.*;
+
+// The newtype derive site. Serialize and Deserialize are hand written for a
+// newtype, so listing them here must be ignored rather than emitted, which
+// would collide with those impls.
+annotation Int2 RustExtraDeriveTraits ["Debug", "Serialize"];
+
+// A type alias has no derive attribute, so this is silently inert.
+annotation Int1 RustExtraDeriveTraits ["Debug"];
+
+};
