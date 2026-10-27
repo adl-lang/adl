@@ -2,6 +2,11 @@
 .make/
 dist-newstyle
 
+# direnv: the cache, and the .envrc itself, so it is free for local
+# environment variables. shell.nix says what it should contain.
+.direnv/
+.envrc
+
 ext/
 
 cpp/runtime/Makefile.in
