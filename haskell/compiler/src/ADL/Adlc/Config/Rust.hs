@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module ADL.Adlc.Config.Rust(
     RustCustomType(..),
+    RustEmitAnnotation,
     RustExtraDeriveTraits,
     RustGenerate,
     RustStorageModel(..),
@@ -41,6 +42,8 @@ instance AdlValue RustCustomType where
         <*> parseField "helpers"
         <*> parseFieldDef "generateOrigADLType" ""
         <*> parseField "stdTraits"
+
+type RustEmitAnnotation = ()
 
 type RustExtraDeriveTraits = [T.Text]
 

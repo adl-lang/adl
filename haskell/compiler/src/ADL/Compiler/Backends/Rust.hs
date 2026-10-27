@@ -148,6 +148,7 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
       where
         renderDecl
           =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (deriveTraitsForFields decl (map fd_field fields)))]
+          <> adlAnnotationAttributes (d_annotations decl)
           <> cblock (template "pub struct $1$2" [name, typeParamsExpr typeParams]) renderedFields
 
         renderedFields
@@ -165,6 +166,7 @@ genStruct m decl struct@Struct{s_typeParams=typeParams} = do
               else mempty
             )
           <> serdeRenameAttribute fd (structFieldName fd)
+          <> adlAnnotationAttributes (f_annotations (fd_field fd))
           <> ctemplate "pub $1: $2," [structFieldName fd, fd_typeExprStr fd]
 
         renderDefaultValueFn fd defv
@@ -203,6 +205,7 @@ genUnion m decl union@Union{u_typeParams=typeParams} = do
     render :: T.Text -> [Ident] -> [FieldDetails] -> Code
     render name typeParams fields
       =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList (deriveTraitsForFields decl (map fd_field fields)))]
+      <> adlAnnotationAttributes (d_annotations decl)
       <> cblock (template "pub enum $1$2" [name, typeParamsExpr typeParams]) renderedFields
       where
         renderedFields = mconcat (L.intersperse (cline "") [renderField fd| fd <- fields])
@@ -210,6 +213,7 @@ genUnion m decl union@Union{u_typeParams=typeParams} = do
         renderField fd
           =  renderCommentForField (fd_field fd)
           <> serdeRenameAttribute fd (enumVariantName fd)
+          <> adlAnnotationAttributes (f_annotations (fd_field fd))
           <> renderFieldDeclaration fd
     
         renderFieldDeclaration :: FieldDetails -> Code
@@ -260,6 +264,7 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
     render :: T.Text -> [Ident] -> T.Text -> [T.Text] -> Code
     render name typeParams typeExprStr phantomFields
       =  ctemplate "#[derive($1)]" [T.intercalate "," (S.toList traits)]
+      <> adlAnnotationAttributes (d_annotations decl)
       <> ctemplate "pub struct $1$2($3);"
           [name, typeParamsExpr typeParams, T.intercalate ", " (["pub " <> typeExprStr] <> (map ("pub " <>)  phantomFields))]
       <> cline ""
@@ -291,7 +296,10 @@ genNewType m decl Newtype{n_typeParams=typeParams, n_typeExpr=te} = do
     -- from the extra traits too: deriving them here would collide with those
     -- impls rather than being harmlessly redundant.
     traits = S.difference
-               (S.union (getRustExtraDeriveTraits decl) (stdTraitsFor te))
+               (S.unions [ getRustExtraDeriveTraits decl
+                         , stdTraitsFor te
+                         , annotationsDerive [d_annotations decl]
+                         ])
                (S.fromList ["Serialize", "Deserialize"])
     turboize s = let (a,b) = T.breakOn "<" s in if T.null b then a else (a <> "::" <> b) -- hack
 

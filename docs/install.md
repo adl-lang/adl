@@ -50,19 +50,19 @@ After checking out the git repository (as `$REPO`), run the following:
 cd $REPO/haskell
 ghcup install ghc 9.8.2
 ghcup install cabal
-cabal build compiler
+cabal build adl-compiler
 ```
 
 Then, you should be able to run the compiler 
 
 ```
-$ cabal run compiler:adlc
+$ cabal run adl-compiler:adlc
 Usage: adlc verify [OPTION..] <modulePath>...
        adlc ast [OPTION..] <modulePath>...
        adlc haskell [OPTION..] <modulePath>...
        adlc cpp [OPTION..] <modulePath>...
        adlc java [OPTION..] <modulePath>...
-$ cabal run compiler:adlc -- java --help
+$ cabal run adl-compiler:adlc -- java --help
 unrecognized option `--help'
 Usage: adlc java [OPTION...] files...
   -I DIR  --searchdir=DIR            Add the specifed directory to the ADL searchpath

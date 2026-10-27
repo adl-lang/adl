@@ -1,0 +1,18 @@
+# Companion proc macro crate to ../runtime.
+#
+# A proc macro cannot be vendored as plain source the way ../runtime is: it
+# needs its own compilation unit with `proc-macro = true`, because it is
+# compiled for the host and linked into the compiler rather than into the
+# program being built. So this is a crate, and a generated project depends on
+# it by path or by copy.
+[package]
+name = "adl_rt_derive"
+version = "0.1.0"
+edition = "2021"
+description = "Derive macros supporting adlc generated rust code"
+
+[lib]
+proc-macro = true
+
+# Deliberately none: see src/lib.rs.
+[dependencies]

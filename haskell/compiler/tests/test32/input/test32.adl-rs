@@ -1,0 +1,9 @@
+module test32
+{
+
+import adlc.config.rust.*;
+
+annotation MyPath RustEmitAnnotation null;
+annotation Weight RustEmitAnnotation null;
+
+};

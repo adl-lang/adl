@@ -595,10 +595,79 @@ getRustStorageModel f = fromMaybe RA.RustStorageModel_standard (getTypedAnnotati
     rustStorageModel = ScopedName (ModuleName ["adlc","config","rust"]) "RustStorageModel"
 
 -- | The full set of traits to emit in a declaration's derive attribute:
--- the standard traits its fields support, plus any extras it asked for.
+-- the standard traits its fields support, plus any extras it asked for, plus
+-- the derive needed to introduce any emitted annotation attributes.
 deriveTraitsForFields :: CDecl -> [Field CResolvedType] -> DeriveTraits
 deriveTraitsForFields decl fields =
-  S.union (getRustExtraDeriveTraits decl) (stdTraitsForFields fields)
+  S.unions
+    [ getRustExtraDeriveTraits decl
+    , stdTraitsForFields fields
+    , annotationsDerive (d_annotations decl : map f_annotations fields)
+    ]
+
+-- | The derive macro that introduces the #[adl_annotation(..)] attribute,
+-- needed on any item that carries one.
+--
+-- Rust rejects an attribute that no derive on the item has declared as a
+-- helper (see the reference, "Derive macro helper attributes"), so emitting
+-- an annotation without this would generate code that does not compile.
+annotationsDerive :: [Annotations CResolvedType] -> DeriveTraits
+annotationsDerive annotationSets
+  | any (not . null . emittedAnnotations) annotationSets = S.singleton snAdlAnnotationsDerive
+  | otherwise                                            = S.empty
+
+-- | Named through the runtime crate, which re-exports it, so that a project
+-- needs only the one dependency. This mirrors serde, where serde::Serialize
+-- is a re-export of serde_derive::Serialize.
+snAdlAnnotationsDerive :: Ident
+snAdlAnnotationsDerive = "adl_rt::AdlAnnotations"
+
+-- | Those annotations whose own declaration is marked RustEmitAnnotation,
+-- and which are hence carried through into the generated rust.
+--
+-- The declaring Decl travels with every annotation (see resolveAnnotations in
+-- ADL.Compiler.Processing), so the meta annotation is reachable from each use
+-- site without resolving anything again.
+emittedAnnotations :: Annotations CResolvedType -> [(ScopedName, JS.Value)]
+emittedAnnotations annotations =
+  [ (sn, jv)
+  | (sn, (rt, jv)) <- M.toList annotations
+  , emitted rt
+  ]
+  where
+    emitted (RT_Named (_, decl)) = M.member snRustEmitAnnotation (d_annotations decl)
+    emitted _                    = False
+
+-- | The emitted annotations of an item, as rust attributes.
+--
+-- The value is the annotation's json encoding, passed through
+-- uninterpreted, so this works for an annotation of any type. M.toList gives
+-- a deterministic order, so the output is stable.
+--
+-- On a declaration these must be emitted *after* its derive attribute, never
+-- before: a derive helper attribute is only in scope for attributes applied
+-- lexically after the derive that introduces it. Using one earlier currently
+-- works but is deprecated and slated to become an error (rust-lang/rust
+-- #79202). Attributes on fields and variants have no such ordering
+-- constraint.
+adlAnnotationAttributes :: Annotations CResolvedType -> Code
+adlAnnotationAttributes annotations = mconcat
+  [ ctemplate "#[adl_annotation(name=$1, value=$2)]"
+      [rustStringLit (formatText sn), rustStringLit (jsonToText jv)]
+  | (sn, jv) <- emittedAnnotations annotations
+  ]
+
+-- | Text as a rust string literal. Not a raw literal, which would break on a
+-- payload containing the closing delimiter.
+rustStringLit :: T.Text -> T.Text
+rustStringLit t = "\"" <> T.concatMap esc t <> "\""
+  where
+    esc '\\' = "\\\\"
+    esc '"'  = "\\\""
+    esc '\n' = "\\n"
+    esc '\r' = "\\r"
+    esc '\t' = "\\t"
+    esc c    = T.singleton c
 
 -- | The extra derive traits requested on a declaration.
 --
@@ -622,3 +691,6 @@ snRustGenerate = ScopedName (ModuleName ["adlc","config","rust"]) "RustGenerate"
 
 snRustExtraDeriveTraits :: ScopedName
 snRustExtraDeriveTraits = ScopedName (ModuleName ["adlc","config","rust"]) "RustExtraDeriveTraits"
+
+snRustEmitAnnotation :: ScopedName
+snRustEmitAnnotation = ScopedName (ModuleName ["adlc","config","rust"]) "RustEmitAnnotation"

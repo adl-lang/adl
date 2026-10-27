@@ -454,6 +454,9 @@ runTests = do
     it "generates expected code for type aliases and newtypes" $ do
       collectResults (runRsBackend [stdsrc, "test7/input"] ["test7"] "test7/rs-output" "test7::adl")
         `shouldReturn` MatchOutput
+    it "emits annotations marked RustEmitAnnotation, and the derive they need" $ do
+      collectResults (runRsBackend [stdsrc, "test32/input"] ["test32"] "test32/rs-output" "test32::adl")
+        `shouldReturn` MatchOutput
     it "Generates code correctly for mutually recursive types" $ do
       collectResults (runRsBackend [stdsrc, "test18/input"] ["test18"] "test18/rs-output" "test18::adl")
         `shouldReturn` MatchOutput

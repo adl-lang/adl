@@ -1,0 +1,38 @@
+module test32 {
+
+/// An annotation carried through into the generated rust.
+type MyPath = String;
+
+/// Another, with a value that is not a string.
+type Weight = Int32;
+
+/// Not marked for emission, so it must not reach the rust.
+type Ignored = String;
+
+@MyPath "/decl"
+@Weight 42
+@Ignored "invisible"
+struct S {
+  @MyPath "/field \"quoted\" and \\ escaped"
+  String f1;
+
+  Int32 f2;
+};
+
+@MyPath "/union"
+union U {
+  @MyPath "/branch"
+  Void a;
+
+  String b;
+};
+
+@MyPath "/newtype"
+newtype N = String;
+
+/// A type alias has no derive attribute, and so cannot introduce the
+/// attribute that an emitted annotation needs. Nothing is emitted here.
+@MyPath "/typedef"
+type TD = String;
+
+};
