@@ -5,16 +5,17 @@ authors = ["Tim Docker <tim@dockerz.net>"]
 edition = "2018"
 
 [dependencies]
-base64 = "0.21.2"
+base64 = { workspace = true }
+serde = { workspace = true }
 serde_json = "1.0.40"
-serde = { version = "1.0", features = ["derive"] }
 chrono = "0.4.7"
 
 # Introduces the #[adl_annotation(..)] attribute that adlc emits for
 # annotations marked RustEmitAnnotation (exercised by test32).
 #
 # Generated code names the derive as adl_rt::AdlAnnotations, because the
-# published runtime crate re-exports it. This crate vendors the runtime as
-# source under src/adlrt instead, so the derive crate is renamed here to
-# supply that path on its own.
+# runtime crate re-exports it from adl_rt_derive. This crate vendors the
+# runtime as source under src/adlrt instead of depending on it, as a project
+# using --include-rt does, so the derive crate is renamed here to supply that
+# path without pulling in a second copy of the runtime.
 adl_rt = { path = "../runtime-derive", package = "adl_rt_derive" }

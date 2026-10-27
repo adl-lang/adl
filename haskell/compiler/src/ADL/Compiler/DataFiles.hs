@@ -57,4 +57,6 @@ typescriptRuntimeDir :: FilePath -> FilePath
 typescriptRuntimeDir libdir = libdir </> "typescript/runtime/embedded"
 
 rustRuntimeDir :: FilePath -> FilePath
-rustRuntimeDir libdir = libdir </> "rust/runtime"
+-- The runtime is a crate (see rust/runtime/Cargo.toml); --include-rt copies
+-- the contents of its src/ into a generated project as a plain module.
+rustRuntimeDir libdir = libdir </> "rust/runtime/src"

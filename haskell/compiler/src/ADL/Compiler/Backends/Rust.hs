@@ -64,7 +64,11 @@ generate af rf fileWriter moduleNames = catchAllExceptions  $ do
 generateRuntime :: AdlFlags -> RustFlags -> FileWriter -> EIOT ()
 generateRuntime af rf fileWriter = do
     files <- liftIO $ dirContents runtimeLibDir
-    liftIO $ for_ files $ \inpath -> do
+    -- lib.rs is the runtime crate's root, holding what suits a crate but not
+    -- a vendored copy: notably the re-export of the AdlAnnotations derive,
+    -- which would not resolve in a project that has only copied this source.
+    -- mod.rs is the root of the copied module.
+    liftIO $ for_ (S.delete "lib.rs" files) $ \inpath -> do
       content <- LBS.readFile (runtimeLibDir </> inpath)
       let filePath = moduleFilePath (unRustScopedName (rs_runtimeModule rf)) </> inpath
       fileWriter filePath (adjustContent content)

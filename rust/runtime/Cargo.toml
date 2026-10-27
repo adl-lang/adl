@@ -1,0 +1,16 @@
+# The adl rust runtime: the custom type implementations that bridge ADL's
+# sys.types vocabulary (Map, Set, Maybe, Pair, Result) to the rust standard
+# library, plus ByteVector for ADL's Bytes.
+#
+# adlc's --include-rt flag copies src/ into a generated project as a plain
+# module, so this crate and that flag are two ways to obtain the same code.
+[package]
+name = "adl_rt"
+version = "0.1.0"
+edition = "2021"
+description = "Runtime support for adlc generated rust code"
+
+[dependencies]
+adl_rt_derive = { path = "../runtime-derive", version = "0.1.0" }
+base64 = { workspace = true }
+serde = { workspace = true }

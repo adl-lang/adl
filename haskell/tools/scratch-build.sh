@@ -63,5 +63,5 @@ cabal run adlc -- cpp \
 # Run some tests for each target language
 (cd ../typescript/tests; ./run-tests.sh)
 (cd ../java; gradle build; gradle test)
-(cd ../rust/tests; cargo build; cargo test)
+(cd ../rust; cargo build; cargo test)
 (cd ../cpp/tests; ./run-tests.sh)

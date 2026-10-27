@@ -56,16 +56,16 @@ data-files:           lib/adl/adlc/config/cpp.adl
                     , lib/typescript/runtime/embedded/sys/dynamic.ts
                     , lib/typescript/runtime/embedded/sys/types.ts
                     , lib/typescript/runtime/embedded/utils.ts
-                    , lib/rust/runtime/custom/mod.rs
-                    , lib/rust/runtime/custom/sys/mod.rs
-                    , lib/rust/runtime/custom/sys/types/map.rs
-                    , lib/rust/runtime/custom/sys/types/maybe.rs
-                    , lib/rust/runtime/custom/sys/types/mod.rs
-                    , lib/rust/runtime/custom/sys/types/pair.rs
-                    , lib/rust/runtime/custom/sys/types/result.rs
-                    , lib/rust/runtime/custom/sys/types/set.rs
-                    , lib/rust/runtime/custom/sys/types/mapentry.rs
-                    , lib/rust/runtime/mod.rs
+                    , lib/rust/runtime/src/custom/mod.rs
+                    , lib/rust/runtime/src/custom/sys/mod.rs
+                    , lib/rust/runtime/src/custom/sys/types/map.rs
+                    , lib/rust/runtime/src/custom/sys/types/maybe.rs
+                    , lib/rust/runtime/src/custom/sys/types/mod.rs
+                    , lib/rust/runtime/src/custom/sys/types/pair.rs
+                    , lib/rust/runtime/src/custom/sys/types/result.rs
+                    , lib/rust/runtime/src/custom/sys/types/set.rs
+                    , lib/rust/runtime/src/custom/sys/types/mapentry.rs
+                    , lib/rust/runtime/src/mod.rs
 
 executable adlc
   main-is:            Main.hs

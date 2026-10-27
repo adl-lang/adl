@@ -1,0 +1,16 @@
+# The rust crates of this repo: the adl runtime, its companion proc macro
+# crate, and the suite that compiles the golden generated code.
+#
+# A workspace so that one `cargo build` covers all three, and so that the
+# dependencies the runtime and the test suite share are stated once.
+[workspace]
+resolver = "2"
+members = [
+    "runtime",
+    "runtime-derive",
+    "tests",
+]
+
+[workspace.dependencies]
+base64 = "0.21.2"
+serde = { version = "1.0", features = ["derive"] }
