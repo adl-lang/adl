@@ -4,12 +4,16 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::result;
 
-#[derive(Clone,Eq,PartialEq)]
-pub struct Set<T:Eq + Hash>(HashSet<T>);
+/// ADL's `sys.types.Set`, a [`HashSet`] serialized as a json array.
+#[derive(Clone, Eq, PartialEq)]
+pub struct Set<T: Eq + Hash>(
+    /// The elements.
+    pub HashSet<T>,
+);
 
-impl<T:Eq + Hash> Set<T> {
-    pub fn new(v: Vec<T>) -> Set<T>
-    {
+impl<T: Eq + Hash> Set<T> {
+    /// A set of the given elements, discarding duplicates.
+    pub fn new(v: Vec<T>) -> Set<T> {
         Set(v.into_iter().collect())
     }
 }
@@ -43,6 +47,5 @@ where
     }
 }
 
-
-#[derive(Deserialize,Serialize)]
+#[derive(Deserialize, Serialize)]
 struct SetImpl<T>(pub Vec<T>);

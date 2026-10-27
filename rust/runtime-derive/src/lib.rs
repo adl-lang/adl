@@ -6,10 +6,9 @@ use proc_macro::TokenStream;
 ///
 /// adlc emits that attribute for every ADL annotation whose declaration is
 /// marked `adlc.config.rust.RustEmitAnnotation`, carrying the annotation's
-/// scoped name and its value in ADL's json encoding:
-///
-/// adlc names it through `adl_rt`, which re-exports it, so that generated
-/// code needs only that one dependency:
+/// scoped name and its value in ADL's json encoding. It names the derive
+/// through `adl_rt`, which re-exports it, so that generated code needs only
+/// that one dependency:
 ///
 /// ```ignore
 /// #[derive(Clone, /* ... */ adl_rt::AdlAnnotations)]

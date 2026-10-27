@@ -1,20 +1,26 @@
+use super::mapentry::MapEntry;
 use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::result;
-use super::mapentry::MapEntry;
 
+/// ADL's `sys.types.Map`, a [`HashMap`] serialized as an array of
+/// [`MapEntry`] rather than as a json object, so that a key can be of any
+/// type.
+#[derive(Clone, Eq, PartialEq)]
+pub struct Map<K: Eq + Hash, V>(
+    /// The entries, keyed as a rust map rather than as ADL's array of
+    /// [`MapEntry`].
+    pub HashMap<K, V>,
+);
 
-#[derive(Clone,Eq,PartialEq)]
-pub struct Map<K:Eq + Hash, V>(HashMap<K, V>);
-
-impl<K:Eq + Hash, V> Map<K, V> {
-    pub fn new(v: Vec<MapEntry<K, V>>) -> Map<K, V>
-    {
+impl<K: Eq + Hash, V> Map<K, V> {
+    /// A map of the given entries. A repeated key keeps its last value.
+    pub fn new(v: Vec<MapEntry<K, V>>) -> Map<K, V> {
         let mut hm = HashMap::new();
-        for MapEntry{key,value} in v {
-            hm.insert(key,value);
+        for MapEntry { key, value } in v {
+            hm.insert(key, value);
         }
         Map(hm)
     }
@@ -31,7 +37,7 @@ where
     {
         let mut ventries: Vec<MapEntry<&K, &V>> = Vec::new();
         for (key, value) in &self.0 {
-            ventries.push(MapEntry{key, value});
+            ventries.push(MapEntry { key, value });
         }
         MapImpl(ventries).serialize(serializer)
     }
@@ -51,6 +57,5 @@ where
     }
 }
 
-#[derive(Deserialize,Eq,Hash,PartialEq,Serialize)]
+#[derive(Deserialize, Eq, Hash, PartialEq, Serialize)]
 struct MapImpl<K, V>(pub Vec<MapEntry<K, V>>);
-

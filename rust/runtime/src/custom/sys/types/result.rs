@@ -1,15 +1,18 @@
 use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
 
-
-#[derive(Clone,Eq,Hash,PartialEq)]
+/// ADL's `sys.types.Result`, a [`std::result::Result`] serialized as
+/// `{"ok": v}` or `{"error": e}`.
+#[derive(Clone, Eq, Hash, PartialEq)]
 pub struct Result<T, E>(pub std::result::Result<T, E>);
 
 impl<T, E> Result<T, E> {
+    /// A success carrying `value`.
     pub fn ok(value: T) -> Result<T, E> {
         Result(Ok(value))
     }
 
+    /// A failure carrying `e`.
     pub fn err(e: E) -> Result<T, E> {
         Result(Err(e))
     }
@@ -49,13 +52,11 @@ where
     }
 }
 
-
-#[derive(Deserialize,Serialize)]
+#[derive(Deserialize, Serialize)]
 enum ResultImpl<T, E> {
-  #[serde(rename="ok")]
-  Ok(T),
+    #[serde(rename = "ok")]
+    Ok(T),
 
-  #[serde(rename="error")]
-  Error(E),
+    #[serde(rename = "error")]
+    Error(E),
 }
-

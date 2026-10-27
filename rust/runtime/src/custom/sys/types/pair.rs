@@ -2,10 +2,13 @@ use serde::{Deserialize, Deserializer};
 use serde::{Serialize, Serializer};
 use std::result;
 
-#[derive(Clone,Eq,Hash,PartialEq)]
-pub struct Pair<A,B> (pub (A,B));
+/// ADL's `sys.types.Pair`, a two element tuple serialized as an object with
+/// the fields `v1` and `v2`.
+#[derive(Clone, Eq, Hash, PartialEq)]
+pub struct Pair<A, B>(pub (A, B));
 
 impl<A, B> Pair<A, B> {
+    /// The pair of `a` and `b`.
     pub fn new(a: A, b: B) -> Pair<A, B> {
         Pair((a, b))
     }
@@ -39,11 +42,11 @@ where
     }
 }
 
-#[derive(Deserialize,Serialize)]
+#[derive(Deserialize, Serialize)]
 struct PairImpl<A, B> {
-  #[serde(rename="v1")]
-  pub v_1: A,
+    #[serde(rename = "v1")]
+    pub v_1: A,
 
-  #[serde(rename="v2")]
-  pub v_2: B,
+    #[serde(rename = "v2")]
+    pub v_2: B,
 }

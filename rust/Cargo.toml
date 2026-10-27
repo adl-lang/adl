@@ -11,6 +11,15 @@ members = [
     "tests",
 ]
 
+# Shared by the two published crates. They are released together, because
+# adl_rt re-exports adl_rt_derive, so the version lives here too.
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "BSD-3-Clause"
+repository = "https://github.com/adl-lang/adl"
+authors = ["Tim Docker <tim@dockerz.net>"]
+
 [workspace.dependencies]
 base64 = "0.21.2"
 serde = { version = "1.0", features = ["derive"] }

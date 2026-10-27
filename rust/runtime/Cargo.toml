@@ -6,9 +6,15 @@
 # module, so this crate and that flag are two ways to obtain the same code.
 [package]
 name = "adl_rt"
-version = "0.1.0"
-edition = "2021"
 description = "Runtime support for adlc generated rust code"
+readme = "README.md"
+keywords = ["adl", "codegen", "serde", "serialization"]
+categories = ["encoding", "development-tools"]
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 
 [dependencies]
 adl_rt_derive = { path = "../runtime-derive", version = "0.1.0" }

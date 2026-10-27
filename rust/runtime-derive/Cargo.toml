@@ -7,9 +7,15 @@
 # it by path or by copy.
 [package]
 name = "adl_rt_derive"
-version = "0.1.0"
-edition = "2021"
 description = "Derive macros supporting adlc generated rust code"
+readme = "README.md"
+keywords = ["adl", "codegen", "derive", "macro"]
+categories = ["development-tools::procedural-macro-helpers", "encoding"]
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 
 [lib]
 proc-macro = true
