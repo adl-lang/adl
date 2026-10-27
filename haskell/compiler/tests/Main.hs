@@ -183,7 +183,10 @@ runRsBackend ipaths moduleNameStrs epath rsModule = do
       js = RS.RustFlags {
         RS.rs_libDir = ".",
         RS.rs_module = RS.rustScopedName rsModule,
-        RS.rs_runtimeModule = RS.rustScopedName "adlrt",
+        -- As --runtime-module adlrt: the goldens are compiled by rust/tests,
+        -- which vendors the runtime as a module rather than depending on the
+        -- published crate.
+        RS.rs_runtimeModule = RS.rustScopedName "crate::adlrt",
         RS.rs_includeRuntime = False
       }
       fileWriter = writeOutputFile (OutputArgs (\_ -> return ()) False tempDir Nothing)

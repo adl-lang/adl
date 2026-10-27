@@ -304,7 +304,7 @@ runRust args = do
     flags0 libDir = RS.RustFlags {
       RS.rs_libDir = libDir,
       RS.rs_module = RS.rustScopedName "adl",
-      RS.rs_runtimeModule = RS.rustScopedName "adlrt",
+      RS.rs_runtimeModule = RS.rustScopedName RS.defaultRustRuntimeCrate,
       RS.rs_includeRuntime = False
     }
 
@@ -312,7 +312,7 @@ runRust args = do
       standardOptions <>
       [ generateTransitiveOption setGenerateTransitive
       , rsModuleOption (\s -> updateBackendFlags (\rf -> rf{RS.rs_module=RS.rustScopedName (T.pack s)}))
-      , rsRuntimeModuleOption (\s -> updateBackendFlags (\rf -> rf{RS.rs_runtimeModule=RS.rustScopedName (T.pack s)}))
+      , rsRuntimeModuleOption (\s -> updateBackendFlags (\rf -> rf{RS.rs_runtimeModule=RS.rustScopedName ("crate::" <> T.pack s)}))
       , includeRuntimeOption (updateBackendFlags (\rf ->rf{RS.rs_includeRuntime=True}))
       ]
 
@@ -321,10 +321,13 @@ runRust args = do
         (ReqArg ufn "DIR")
         "Set the module where the code is generated, relative to crate root"
 
+    -- No short option: -R is already taken by --module above.
     rsRuntimeModuleOption ufn =
-      Option "R" ["runtime-module"]
+      Option "" ["runtime-module"]
         (ReqArg ufn "DIR")
-        "Set the module where the runtime is located, relative to crate root"
+        ("Set the module where the runtime is located, relative to the crate root. "
+         <> "Omit it to reference the published " <> T.unpack RS.defaultRustRuntimeCrate <> " crate "
+         <> "instead, in which case --include-rt has nowhere to write to.")
 
 runShow args0 =
   case args0 of

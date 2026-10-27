@@ -41,13 +41,25 @@ data RustFlags = RustFlags {
   -- relative to the crate root
   rs_module :: RustScopedName,
 
-  -- The absolute rust module path containing the runtime
-  -- relative to the crate root
+  -- The rust path at which the runtime is found, used verbatim.
+  -- Either an external crate, as in the default "adl_rt", or a module
+  -- of the crate being generated into, as in "crate::adlrt", which is
+  -- what --runtime-module builds from its argument.
   rs_runtimeModule :: RustScopedName,
 
   -- Whether to output the runtime code
   rs_includeRuntime :: Bool
 }
+
+-- | The crate holding the runtime, referenced when --runtime-module is not
+-- given. Published from rust/runtime of this repo.
+defaultRustRuntimeCrate :: T.Text
+defaultRustRuntimeCrate = "adl_rt"
+
+-- | The segment --runtime-module's argument is made relative to, and hence
+-- the one --include-rt strips back off to get an output directory.
+crateRoot :: Ident
+crateRoot = "crate"
 
 data RustScopedName = RustScopedName {unRustScopedName :: [Ident]}
   deriving (Eq, Ord, Show)
@@ -433,7 +445,7 @@ getCustomType runtimeModule sn decl = case getTypedAnnotation rustCustomType (d_
 
     fixRuntimeModule :: RustScopedName -> RustScopedName
     fixRuntimeModule rsn = case rsn  of
-      RustScopedName (m:ms) | m == "{{STDLIBMODULE}}" -> RustScopedName ("crate" : unRustScopedName runtimeModule <> ms)
+      RustScopedName (m:ms) | m == "{{STDLIBMODULE}}" -> RustScopedName (unRustScopedName runtimeModule <> ms)
       _ -> rsn
    
 emptyModuleFile :: ModuleName -> RustFlags -> CodeGenProfile -> ModuleFile
@@ -468,7 +480,7 @@ rustUse rsname = do
 rtPackage:: CState T.Text
 rtPackage = do
   state <- get
-  return (T.intercalate "::" ("crate" : unRustScopedName (mf_runtimeModule state)))
+  return (T.intercalate "::" (unRustScopedName (mf_runtimeModule state)))
 
 jsonToText :: JS.Value -> T.Text
 jsonToText = LT.toStrict . JS.encodeToLazyText

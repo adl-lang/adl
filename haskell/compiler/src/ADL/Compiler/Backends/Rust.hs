@@ -10,6 +10,7 @@ module ADL.Compiler.Backends.Rust(
  generate,
  RustFlags(..),
  rustScopedName,
+ defaultRustRuntimeCrate,
  ) where
 
 import           ADL.Compiler.AST
@@ -63,6 +64,7 @@ generate af rf fileWriter moduleNames = catchAllExceptions  $ do
 
 generateRuntime :: AdlFlags -> RustFlags -> FileWriter -> EIOT ()
 generateRuntime af rf fileWriter = do
+    outputDir <- runtimeOutputDir rf
     files <- liftIO $ dirContents runtimeLibDir
     -- lib.rs is the runtime crate's root, holding what suits a crate but not
     -- a vendored copy: notably the re-export of the AdlAnnotations derive,
@@ -70,8 +72,7 @@ generateRuntime af rf fileWriter = do
     -- mod.rs is the root of the copied module.
     liftIO $ for_ (S.delete "lib.rs" files) $ \inpath -> do
       content <- LBS.readFile (runtimeLibDir </> inpath)
-      let filePath = moduleFilePath (unRustScopedName (rs_runtimeModule rf)) </> inpath
-      fileWriter filePath (adjustContent content)
+      fileWriter (outputDir </> inpath) (adjustContent content)
     where
       runtimeLibDir = rustRuntimeDir (rs_libDir rf)
 
@@ -81,6 +82,20 @@ generateRuntime af rf fileWriter = do
               newT = T.replace "crate::adl" ("crate::" <> T.intercalate "::" (unRustScopedName (rs_module rf)))
                    $ T.replace "crate::adlrt" ("crate::" <> T.intercalate "::" (unRustScopedName (rs_runtimeModule rf)))
                    $ origT
+
+-- | Where --include-rt writes the runtime source.
+--
+-- The runtime path is used verbatim in generated code, so it is only a place
+-- this compiler can write to when it names a module of the crate being
+-- generated into. That is what --runtime-module produces; its absence leaves
+-- the path naming an external crate, which is already somebody else's to
+-- publish.
+runtimeOutputDir :: RustFlags -> EIOT FilePath
+runtimeOutputDir rf = case unRustScopedName (rs_runtimeModule rf) of
+  (m:ms) | m == crateRoot -> return (moduleFilePath ms)
+  path -> eioError (template
+    "--include-rt writes the runtime into the generated crate, but the runtime is $1. Pass --runtime-module to put it in a module of this crate, or drop --include-rt and depend on the $1 crate."
+    [T.intercalate "::" path])
 
 -- | Generate and the rust code for a single ADL module, and
 -- save the resulting code to the  apppropriate file

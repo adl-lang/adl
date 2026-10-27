@@ -10,8 +10,36 @@ Usage: adlc rust [OPTION...] files...
           --manifest=FILE        Write a manifest file recording generated files
           --generate-transitive  Also generate code for the transitive dependencies of the specified adl files
           --package=PACKAGE      The language package into which the generated ADL code will be placed
-  -R DIR  --runtime-module=DIR   Set the module where the runtime is located
+          --runtime-module=DIR   Set the module where the runtime is located, relative to the crate root
+          --include-rt           Write the runtime source into --runtime-module
 ```
+
+# The runtime
+
+Generated code needs the ADL custom types — `Map`, `Set`, `Maybe`, `Pair`,
+`Result` and `ByteVector` — and, where annotations are emitted, the
+`AdlAnnotations` derive. There are two ways to supply them.
+
+**The `adl_rt` crate**, which is what you get by passing neither option.
+Generated code then refers to it absolutely, as `adl_rt::...`, and the project
+adds one dependency:
+
+```toml
+[dependencies]
+adl_rt = "0.1"
+```
+
+**A module of your own crate**, by passing `--runtime-module`. Its argument is
+relative to the crate root, so `--runtime-module adlrt` makes generated code
+refer to `crate::adlrt::...`. Adding `--include-rt` writes the runtime source
+into that module for you; without it, supplying the module is your problem.
+`--include-rt` on its own is an error, since the default runtime path names a
+crate this compiler has nowhere to write to.
+
+The two produce the same types from the same source: `rust/runtime` in this
+repo is both the published crate and what `--include-rt` copies. The crate is
+the direction of travel, and is the only form carrying the `AdlAnnotations`
+re-export.
 
 # Generated Code
 
@@ -243,11 +271,9 @@ inert. Other derive macros on the same item can still read it, as rust makes
 helper attributes visible to every macro rather than only to the one that
 declared them.
 
-`--include-rt`, which copies the runtime in as source rather than depending on
-the crate, remains supported and unchanged. A project combining it with
-emitted annotations needs `adl_rt` for the derive regardless, and so carries a
-second, unused copy of the runtime types. The two are alternatives; depending
-on the crate is the direction of travel.
+A project using `--include-rt` (see "The runtime" above) needs `adl_rt` for the
+derive regardless, and so carries a second, unused copy of the runtime types.
+Depending on the crate avoids that.
 
 Emission works on struct and union declarations, struct fields, union branches,
 and newtype declarations. It does **not** work on a type alias, which has no
