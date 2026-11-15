@@ -3,7 +3,7 @@
 dist-newstyle
 
 # direnv: the cache, and the .envrc itself, so it is free for local
-# environment variables. shell.nix says what it should contain.
+# environment variables. flake.nix says what it should contain.
 .direnv/
 .envrc
 
@@ -23,3 +23,4 @@ cpp/runtime/ltmain.sh
 cpp/runtime/missing
 cpp/runtime/build/
 cpp/runtime/test-driver
+result

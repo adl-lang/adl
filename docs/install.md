@@ -90,3 +90,17 @@ cd $REPO/haskell
 [ghcup]: https://www.haskell.org/ghcup/
 [cabal]: https://www.haskell.org/cabal/
 [releases]: https://github.com/timbod7/adl/releases
+
+## Building with Nix
+
+The repo is a flake. With flakes enabled:
+
+```
+nix build github:adl-lang/adl#adlc     # build the compiler (use . in a checkout)
+nix run github:adl-lang/adl -- show --version
+nix develop                            # dev shell with cabal, ghc, deno, jdk, ...
+```
+
+To use `adlc` from another flake, add this repo as an input and use either
+`inputs.adl.packages.${system}.default` or `inputs.adl.overlays.default`
+(which adds `pkgs.adlc`).
