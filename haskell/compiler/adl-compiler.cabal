@@ -77,6 +77,8 @@ executable adlc
                     , mtl
                     , filepath
                     , executable-path
+                    , directory
+                    , process
                     , adl-lib0
                     , adl-runtime
                     , adl-compiler

@@ -29,10 +29,13 @@ import Data.Version(showVersion)
 import HaskellCustomTypes
 import PackageFile(packageDepsFromPackageFile)
 
+import Control.Exception(SomeException,try)
 import System.Console.GetOpt
-import System.Environment (getArgs)
+import System.Directory(findExecutable)
+import System.Environment (getArgs,getEnvironment)
 import System.Exit
-import System.FilePath(joinPath)
+import System.FilePath(joinPath,takeDirectory,takeFileName)
+import System.Process(proc,createProcess,waitForProcess,env)
 import System.IO(stderr)
 
 stdAdlFlags :: FilePath -> [String] -> AdlFlags
@@ -349,7 +352,30 @@ usage = T.intercalate "\n"
   , "       adlc rust [OPTION..] <module>..."
   , "       adlc show --version"
   , "       adlc show --adlstdlib"
+  , "       adlc <command> [ARG..]    (runs adlc-<command> from the PATH)"
   ]
+
+-- | Run the external subcommand adlc-<cmd>, if there is one on the
+-- PATH, in the style of git. The child inherits our stdio, and
+-- ADL_ROOT is set (if not already) so that it can find the stdlib.
+runExternal :: String -> [String] -> IO ()
+runExternal cmd args = do
+  let exe = "adlc-" ++ cmd
+  mpath <- findExecutable exe
+  case mpath of
+    Nothing -> do
+      T.hPutStrLn stderr (T.pack ("adlc: '" ++ cmd ++ "' is not an adlc command, and " ++ exe ++ " was not found on the PATH\n"))
+      T.hPutStrLn stderr usage
+      exitWith (ExitFailure 1)
+    Just path -> do
+      curEnv <- getEnvironment
+      mlib <- try getLibDir :: IO (Either SomeException FilePath)
+      let childEnv = case mlib of
+            Right libDir | takeFileName libDir == "lib", Nothing <- lookup "ADL_ROOT" curEnv ->
+              Just (("ADL_ROOT", takeDirectory libDir) : curEnv)
+            _ -> Nothing
+      (_,_,_,ph) <- createProcess (proc path args) { env = childEnv }
+      waitForProcess ph >>= exitWith
 
 main = do
   args <- getArgs
@@ -363,6 +389,7 @@ main = do
     ("typescript":args) -> runTypescript args
     ("rust":args) -> runRust args
     ("show":args) -> runShow args
+    (cmd@(c:_):args) | c /= '-' -> liftIO (runExternal cmd args)
     _ -> eioError usage
   where
     runEIO eio = do
